@@ -1,12 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { BookOpen, Briefcase, User, Package } from 'lucide-react';
 
-import BusinessVerification from '../../../components/freelancer/oracleDashboard/BusinessVerification';
-import EducationVerification from '../../../components/freelancer/oracleDashboard/EducationVerification';
-import ProjectVerification from '../../../components/freelancer/oracleDashboard/ProjectVerification';
-import WorkExpVerification from '../../../components/freelancer/oracleDashboard/WorkExpVerification';
-
+import BusinessVerification from '@/components/freelancer/oracleDashboard/BusinessVerification';
+import EducationVerification from '@/components/freelancer/oracleDashboard/EducationVerification';
+import ProjectVerification from '@/components/freelancer/oracleDashboard/ProjectVerification';
+import WorkExpVerification from '@/components/freelancer/oracleDashboard/WorkExpVerification';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -16,11 +16,33 @@ import {
 import Header from '@/components/header/header';
 
 export default function OracleDashboardPage() {
-  const [activeTab, setActiveTab] = useState('business');
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Get the last segment of the URL for the active tab
+  const lastSegment = pathname.split('/').pop() || '';
+  const validTabs = ['business', 'experience', 'project', 'education'];
+  const currentTabFromURL = validTabs.includes(lastSegment)
+    ? lastSegment
+    : 'business';
+
+  const [activeTab, setActiveTab] = useState(currentTabFromURL);
+
+  // Sync state if user navigates directly via URL
+  useEffect(() => {
+    if (currentTabFromURL !== activeTab) {
+      setActiveTab(currentTabFromURL);
+    }
+  }, [currentTabFromURL, activeTab]);
+
+  // Update URL when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    router.push(`/freelancer/oracleDashboard/${tab}`);
+  };
 
   return (
     <div className="flex min-h-screen bg-muted/40 w-full flex-col pb-10">
-      {/* Sidebar */}
       <SidebarMenu
         menuItemsTop={freelancerMenuItemsTop}
         menuItemsBottom={freelancerMenuItemsBottom}
@@ -33,15 +55,17 @@ export default function OracleDashboardPage() {
           activeMenu="Oracle"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Oracle Dashboard', link: '/freelancer/oracleDashboard' },
+            {
+              label: 'Oracle Dashboard',
+              link: '/freelancer/oracleDashboard/business',
+            },
           ]}
         />
-        {/* Main Content */}
         <div className="flex-1 px-4 py-6">
           <div className="mx-auto w-full max-w-7xl">
             <Tabs
-              defaultValue={activeTab}
-              onValueChange={setActiveTab}
+              value={activeTab}
+              onValueChange={handleTabChange}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-4">
@@ -74,6 +98,7 @@ export default function OracleDashboardPage() {
                   <span>Education</span>
                 </TabsTrigger>
               </TabsList>
+
               <TabsContent value="business">
                 <BusinessVerification />
               </TabsContent>
