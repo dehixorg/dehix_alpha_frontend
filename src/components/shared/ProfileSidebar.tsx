@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import {
   VolumeX,
   ShieldX,
@@ -23,8 +22,11 @@ import {
   query,
   orderBy,
   getDocs,
+  getFirestore,
   writeBatch,
 } from 'firebase/firestore';
+import { useSelector } from 'react-redux';
+
 
 import { AddMembersDialog } from './AddMembersDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
@@ -32,6 +34,8 @@ import { ConfirmActionDialog } from './ConfirmActionDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
+
+// Simple file item type for shared files list
 export type FileItem = {
   id: string;
   name: string;
@@ -60,7 +64,6 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
 import type { CombinedUser } from '@/hooks/useAllUsers';
@@ -76,6 +79,7 @@ export type ProfileUser = {
   displayName: string;
   status?: string;
   lastSeen?: string;
+  mutedUsers?: string[];
 };
 
 export type ProfileGroupMember = {
@@ -103,6 +107,7 @@ export type ProfileGroup = {
   createdAtFormatted?: string;
   // Placeholder for admin details if needed directly in ProfileGroup
   adminDetails?: ProfileUser[]; // Could be populated if FE needs more admin info than just IDs
+  mutedUsers?: string[];
 };
 
 interface ProfileSidebarProps {
@@ -132,35 +137,26 @@ export function ProfileSidebar({
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [refreshDataKey, setRefreshDataKey] = useState(0);
-
-  // Hooks
-  const user = useSelector((state: RootState) => state.user);
-  const { toast } = useToast();
-
+  const [isConfirmLeaveGroupOpen, setIsConfirmLeaveGroupOpen] = useState(false);
+  const [isConfirmClearChatOpen, setIsConfirmClearChatOpen] = useState(false);
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
     description: '',
     onConfirm: () => {},
-    confirmButtonText: '', // Add missing property
-    confirmButtonVariant: 'destructive' as
-      | 'default'
-      | 'destructive'
-      | 'outline'
-      | 'secondary'
-      | 'ghost'
-      | 'link'
-      | null
-      | undefined,
+    confirmButtonText: 'Confirm',
+    confirmButtonVariant: 'default' as 'default' | 'destructive',
   });
+
+  const { toast } = useToast();
+  const db = getFirestore();
+  const user = useSelector((state: RootState) => state.user);
 
   const internalFetchProfileData = async () => {
     setLoading(true);
@@ -254,7 +250,7 @@ export function ProfileSidebar({
       }
     } catch (error: any) {
       console.error('Error fetching profile data:', error);
-      setError(error.message || 'Failed to load profile data');
+      setError('Failed to load profile data.');
     } finally {
       setLoading(false);
     }
@@ -265,30 +261,66 @@ export function ProfileSidebar({
     setSharedMedia([]);
 
     try {
-      // Get messages from Firestore
-      const messagesQuery = query(
-        collection(db, `conversations/${conversationId}/messages`),
-        orderBy('timestamp', 'desc'),
+      const messagesRef = collection(
+        db,
+        `conversations/${conversationId}/messages`,
       );
-
+      const messagesQuery = query(messagesRef, orderBy('timestamp', 'desc'));
       const messagesSnapshot = await getDocs(messagesQuery);
       const extractedMedia: MediaItem[] = [];
 
+      const s3BucketUrl = 'https://de-test-bucket-8285.s3.ap-south-1.amazonaws.com/';
+
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
-        if (
-          Array.isArray(message.attachments) &&
-          message.attachments.length > 0
-        ) {
-          for (const attachment of message.attachments) {
-            if (attachment.url && attachment.type && attachment.fileName) {
-              extractedMedia.push({
-                id: `${doc.id}-${attachment.fileName}`,
-                url: attachment.url,
-                type: attachment.type,
-                fileName: attachment.fileName,
-              });
+        let mediaUrl = '';
+        
+        if (message.voiceMessage && typeof message.content === 'string' && message.content.startsWith(s3BucketUrl)) {
+            mediaUrl = message.content;
+        } else if (typeof message.content === 'string' && message.content.startsWith(s3BucketUrl)) {
+            // This handles images, videos, and other files sent as plain links
+            mediaUrl = message.content;
+        }
+
+        if (mediaUrl) {
+          try {
+            const url = new URL(mediaUrl);
+            const fileName = decodeURIComponent(url.pathname.substring(1));
+            const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+            let type = 'application/octet-stream';
+
+            if (message.voiceMessage) {
+              type = 'audio/webm';
+            } else {
+              // Simple mapping from extension to MIME type
+              const mimeTypes: { [key: string]: string } = {
+                'png': 'image/png',
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'gif': 'image/gif',
+                'mp4': 'video/mp4',
+                'webm': 'video/webm',
+                'mp3': 'audio/mpeg',
+                'wav': 'audio/wav',
+                'pdf': 'application/pdf',
+                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'ppt': 'application/vnd.ms-powerpoint',
+                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'doc': 'application/msword',
+                // Add other types as needed
+              };
+              type = mimeTypes[fileExtension] || 'application/octet-stream';
             }
+
+            extractedMedia.push({
+              id: `${doc.id}-${fileName}`,
+              url: mediaUrl,
+              type: type,
+
+              fileName: fileName,
+            });
+          } catch (e) {
+            console.error("Could not parse media URL:", e);
           }
         }
       });
@@ -306,94 +338,69 @@ export function ProfileSidebar({
     }
   };
 
-  const fetchSharedFiles = async (conversationId: string) => {
-    setIsLoadingFiles(true);
-    setSharedFiles([]);
-
-    try {
-      // Get messages from Firestore
-      const messagesQuery = query(
-        collection(db, `conversations/${conversationId}/messages`),
-        orderBy('timestamp', 'desc'),
-      );
-
-      const messagesSnapshot = await getDocs(messagesQuery);
-      const extractedFiles: FileItem[] = [];
-
-      messagesSnapshot.forEach((doc) => {
-        const message = doc.data();
-        if (
-          Array.isArray(message.attachments) &&
-          message.attachments.length > 0
-        ) {
-          for (const attachment of message.attachments) {
-            if (attachment.url && attachment.type && attachment.fileName) {
-              extractedFiles.push({
-                id: `${doc.id}-${attachment.fileName}`,
-                name: attachment.fileName,
-                type: attachment.type,
-                size: attachment.size || 'Unknown',
-                url: attachment.url,
-              });
-            }
-          }
-        }
-      });
-
-      setSharedFiles(extractedFiles);
-    } catch (error) {
-      console.error('Error fetching shared files:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load shared files',
-      });
-    } finally {
-      setIsLoadingFiles(false);
-    }
-  };
-
   useEffect(() => {
     const executeFetches = async () => {
-      if (isOpen && profileId && profileType) {
-        // Initial resets for this effect run
+      if (isOpen && profileId) {
         setProfileData(null);
         setSharedMedia([]);
-        setLoading(true); // For profile data loading
-        setIsLoadingMedia(true); // For media data loading
+        setLoading(true);
+        setIsLoadingMedia(true);
 
-        // Run fetches in parallel
         await Promise.allSettled([
-          internalFetchProfileData(), // This function will set its own setLoading(false)
-          fetchSharedMedia(profileId), // This function will set its own setLoadingMedia(false)
-          fetchSharedFiles(profileId), // This function will set its own setLoadingFiles(false)
+          internalFetchProfileData(),
+          fetchSharedMedia(profileId),
         ]);
 
-        // If one of the above functions didn't manage its loading state properly in case of an early return
-        // or error, ensure they are false here. However, they should manage their own state.
-        // For example, if internalFetchProfileData returns early without error but also without setting setLoading(false)
         if (loading) {
           setLoading(false);
-        } // Only if still true
+        }
         if (isLoadingMedia) {
           setIsLoadingMedia(false);
-        } // Only if still true
-        if (isLoadingFiles) {
-          setIsLoadingFiles(false);
-        } // Only if still true
-      } else {
-        // Clear data and stop loading if sidebar is closed or essential props are missing
-        setProfileData(null);
-        setSharedMedia([]);
-        setLoading(false);
-        setIsLoadingMedia(false);
-        setIsLoadingFiles(false);
+        }
       }
     };
 
     executeFetches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, profileId, profileType, refreshDataKey, initialData]); // Added initialData to dependency array
+  }, [isOpen, profileId, profileType]);
+
+  const handleMuteToggle = async () => {
+    if (!profileData || !user) return;
+
+    const conversationId = profileData.id;
+    const isMuted = profileData.mutedUsers?.includes(user.uid);
+
+    try {
+      await updateDoc(doc(db, 'conversations', conversationId), {
+        mutedUsers: isMuted
+          ? arrayRemove(user.uid)
+          : arrayUnion(user.uid),
+      });
+
+      setProfileData((prev) => {
+        if (!prev) return null;
+        const updatedMutedUsers = isMuted
+          ? prev.mutedUsers?.filter((id) => id !== user.uid)
+          : [...(prev.mutedUsers || []), user.uid];
+
+        return {
+          ...prev,
+          mutedUsers: updatedMutedUsers,
+        };
+      });
+
+      toast({
+        title: isMuted ? 'Unmuted' : 'Muted',
+        description: `You have been ${isMuted ? 'unmuted' : 'muted'} this conversation.`,
+      });
+    } catch (error) {
+      console.error('Error toggling mute:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update mute status',
+      });
+    }
+  };
 
   const handleAddMembersToGroup = async (
     selectedUsers: CombinedUser[],
@@ -799,68 +806,60 @@ export function ProfileSidebar({
                           <span className="text-xs text-muted-foreground">
                             Bio
                           </span>
-                          <p className="text-sm whitespace-pre-wrap">
+                          <p className="text-sm text-[hsl(var(--foreground))] whitespace-pre-wrap">
                             {(profileData as ProfileUser).bio ||
                               'No bio available.'}
                           </p>
                         </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">
-                          Shared Media
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {isLoadingMedia ? (
-                          <div className="flex justify-center items-center h-20">
-                            <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
-                          </div>
-                        ) : sharedMedia.length > 0 ? (
-                          <SharedMediaDisplay mediaItems={sharedMedia} />
-                        ) : (
-                          <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                            <p>No media has been shared yet.</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Actions</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          disabled
-                        >
-                          <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          disabled
-                        >
-                          <ShieldX className="h-4 w-4 mr-2" /> Block User
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          disabled
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          className="w-full justify-start"
-                          disabled
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
-                        </Button>
+                        <div>
+                          <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mt-4 mb-2">
+                            Shared Media
+                          </h3>
+                          {isLoadingMedia ? (
+                            <div className="flex justify-center items-center h-20">
+                              <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                            </div>
+                          ) : sharedMedia.length > 0 ? (
+                            <SharedMediaDisplay mediaItems={sharedMedia} />
+                          ) : (
+                            <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                              <p>No media has been shared yet.</p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
+                          <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">
+                            Actions
+                          </h3>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                            disabled
+                          >
+                            <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                            disabled
+                          >
+                            <ShieldX className="h-4 w-4 mr-2" /> Block User
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                            disabled
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            className="w-full justify-start"
+                            disabled
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   </>
@@ -988,6 +987,8 @@ export function ProfileSidebar({
                         ) : (
                           <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
                             <p>No media or files have been shared yet.</p>
+                            {/* Placeholder for future file upload/browsing */}
+                            {/* <Button variant="link" size="sm" className="mt-1">Browse Files</Button> */}
                           </div>
                         )}
                       </CardContent>
