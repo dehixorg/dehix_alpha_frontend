@@ -669,6 +669,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormLabel className="ml-2 mb-2">Upload Resume</FormLabel>
                 <div className="w-full">
                   <ResumeUpload
+                    maxResumeSize={5 * 1024 * 1024}
                     onResumeUpdate={() =>
                       setResumeRefreshTrigger((prev) => prev + 1)
                     }
