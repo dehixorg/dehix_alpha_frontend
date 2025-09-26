@@ -266,7 +266,7 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="w-full flex flex-col sm:gap-4 mb-8 sm:pl-14">
+      <div className="w-full flex flex-col mb-8 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -278,7 +278,7 @@ const Page = () => {
           ]}
         />
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto">
           <AnimatePresence>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
