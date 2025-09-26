@@ -3,7 +3,7 @@ import { Check, ChevronsUpDown, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FormLabel } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import {
   Popover,
   PopoverContent,
@@ -74,7 +74,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
 
   return (
     <div className={className}>
-      <FormLabel>{label}</FormLabel>
+      <Label>{label}</Label>
       <div className="mt-2">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>

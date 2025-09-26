@@ -69,6 +69,7 @@ import {
 import { FreelancerProfile } from '@/types/freelancer';
 import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
 import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 
 export default function ProfileDetailPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -89,9 +90,92 @@ export default function ProfileDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isProjectDetailsOpen, setIsProjectDetailsOpen] = useState(false);
-  const [tmpSkill, setTmpSkill] = useState<string>('');
-  const [tmpDomain, setTmpDomain] = useState<string>('');
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+
+  // Reusable section for Skills/Domains
+  const TagSection = ({
+    title,
+    Icon,
+    options,
+    selectedIds,
+    getNameById,
+    onAdd,
+    onRemove,
+  }: {
+    title: string;
+    Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    options: any[];
+    selectedIds: string[];
+    getNameById: (id: string) => string;
+    onAdd: (value: string) => void;
+    onRemove: (name: string) => void;
+  }) => (
+    <div className="space-y-2">
+      <Label className="flex items-center gap-2">
+        <Icon className="h-4 w-4 text-muted-foreground" /> {title}
+      </Label>
+      {isEditMode ? (
+        <SelectTagPicker
+          className="mt-2"
+          label=""
+          options={options}
+          selected={(selectedIds || []).map((id: string) => ({
+            name: getNameById(id),
+          }))}
+          onAdd={onAdd}
+          onRemove={onRemove}
+          optionLabelKey="label"
+          selectedNameKey="name"
+          selectPlaceholder={`Select ${title.toLowerCase().slice(0, -1)}`}
+          searchPlaceholder={`Search ${title.toLowerCase()}...`}
+        />
+      ) : null}
+      <div className="flex flex-wrap gap-2 mt-5">
+        {selectedIds?.length > 0 &&
+          !isEditMode &&
+          selectedIds.map((id: string, index: number) => (
+            <Badge
+              key={index}
+              className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white"
+            >
+              {getNameById(id)}
+            </Badge>
+          ))}
+        {selectedIds?.length === 0 && !isEditMode && (
+          <Card className="w-full bg-muted/30">
+            <CardContent className="py-6 flex items-center gap-3">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="opacity-60"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="8"
+                  stroke="#9CA3AF"
+                  strokeWidth="1.5"
+                />
+                <path d="M8 12H16" stroke="#9CA3AF" strokeWidth="1.5" />
+                <path d="M12 8V16" stroke="#9CA3AF" strokeWidth="1.5" />
+              </svg>
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  No {title.toLowerCase()} added yet.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Use Edit to add relevant {title.toLowerCase()}.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
 
   useEffect(() => {
     if (profileId) {
@@ -333,83 +417,6 @@ export default function ProfileDetailPage() {
     setEditingProfileData((prev: any) => ({
       ...prev,
       [field]: value,
-    }));
-  };
-
-  const handleAddSkill = () => {
-    if (!tmpSkill || !editingProfileData) return;
-
-    const selectedSkill = skillsOptions.find(
-      (skill: any) => (skill.label || skill.name) === tmpSkill,
-    );
-
-    if (selectedSkill) {
-      const skillIdToAdd = selectedSkill._id;
-
-      const isAlreadyAdded = (editingProfileData.skills || []).includes(
-        skillIdToAdd,
-      );
-
-      if (!isAlreadyAdded) {
-        const updatedSkills = [
-          ...(editingProfileData.skills || []),
-          skillIdToAdd,
-        ];
-        setEditingProfileData((prev: any) => ({
-          ...prev,
-          skills: updatedSkills,
-        }));
-      }
-      setTmpSkill('');
-    }
-  };
-
-  const handleAddDomain = () => {
-    if (!tmpDomain || !editingProfileData) return;
-
-    const selectedDomain = domainsOptions.find(
-      (domain: any) => (domain.label || domain.name) === tmpDomain,
-    );
-
-    if (selectedDomain) {
-      const domainIdToAdd = selectedDomain._id;
-
-      const isAlreadyAdded = (editingProfileData.domains || []).includes(
-        domainIdToAdd,
-      );
-
-      if (!isAlreadyAdded) {
-        const updatedDomains = [
-          ...(editingProfileData.domains || []),
-          domainIdToAdd,
-        ];
-        setEditingProfileData((prev: any) => ({
-          ...prev,
-          domains: updatedDomains,
-        }));
-      }
-      setTmpDomain('');
-    }
-  };
-
-  const handleDeleteSkill = (skillIdToDelete: string) => {
-    if (!editingProfileData || !editingProfileData.skills) return;
-
-    const updatedSkills = editingProfileData.skills.filter(
-      (id: string) => id !== skillIdToDelete,
-    );
-    setEditingProfileData((prev: any) => ({ ...prev, skills: updatedSkills }));
-  };
-
-  const handleDeleteDomain = (domainIdToDelete: string) => {
-    if (!editingProfileData || !editingProfileData.domains) return;
-
-    const updatedDomains = editingProfileData.domains.filter(
-      (id: string) => id !== domainIdToDelete,
-    );
-    setEditingProfileData((prev: any) => ({
-      ...prev,
-      domains: updatedDomains,
     }));
   };
 
@@ -1017,211 +1024,72 @@ export default function ProfileDetailPage() {
                 <Separator />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Tags className="h-4 w-4 text-muted-foreground" /> Skills
-                    </Label>
-                    {isEditMode ? (
-                      <div className="flex items-center mt-2">
-                        <Select
-                          onValueChange={(value) => setTmpSkill(value)}
-                          value={tmpSkill || ''}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select skill" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {skillsOptions
-                              .filter(
-                                (skill: any) =>
-                                  !editingProfileData.skills?.includes(
-                                    skill._id,
-                                  ),
-                              )
-                              .map((skill: any) => (
-                                <SelectItem
-                                  key={skill._id}
-                                  value={skill.label || skill.name}
-                                >
-                                  {skill.label || skill.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          size="icon"
-                          className="ml-2"
-                          disabled={!tmpSkill}
-                          onClick={handleAddSkill}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : null}
-                    <div className="flex flex-wrap gap-2 mt-5">
-                      {editingProfileData.skills?.length > 0 ? (
-                        editingProfileData.skills.map(
-                          (skillId: string, index: number) => (
-                            <Badge
-                              key={index}
-                              className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                            >
-                              {getSkillNameById(skillId)}
-                              {isEditMode ? (
-                                <X
-                                  className="ml-2 h-3 w-3 cursor-pointer"
-                                  onClick={() => handleDeleteSkill(skillId)}
-                                />
-                              ) : null}
-                            </Badge>
-                          ),
-                        )
-                      ) : (
-                        <Card className="w-full bg-muted/30">
-                          <CardContent className="py-6 flex items-center gap-3">
-                            <svg
-                              width="28"
-                              height="28"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="opacity-60"
-                            >
-                              <circle
-                                cx="12"
-                                cy="12"
-                                r="8"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                              <path
-                                d="M8 12H16"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                              <path
-                                d="M12 8V16"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-sm text-muted-foreground">
-                                No skills added yet.
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Use Edit to add relevant skills you actively
-                                use.
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-muted-foreground" />{' '}
-                      Domains
-                    </Label>
-                    {isEditMode ? (
-                      <div className="flex items-center mt-2">
-                        <Select
-                          onValueChange={(value) => setTmpDomain(value)}
-                          value={tmpDomain || ''}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select domain" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {domainsOptions
-                              .filter(
-                                (domain: any) =>
-                                  !editingProfileData.domains?.includes(
-                                    domain._id,
-                                  ),
-                              )
-                              .map((domain: any) => (
-                                <SelectItem
-                                  key={domain._id}
-                                  value={domain.label || domain.name}
-                                >
-                                  {domain.label || domain.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          size="icon"
-                          className="ml-2"
-                          disabled={!tmpDomain}
-                          onClick={handleAddDomain}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : null}
-                    <div className="flex flex-wrap gap-2 mt-5">
-                      {editingProfileData.domains?.length > 0 ? (
-                        editingProfileData.domains.map(
-                          (domainId: string, index: number) => (
-                            <Badge
-                              key={index}
-                              className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                            >
-                              {getDomainNameById(domainId)}
-                              {isEditMode ? (
-                                <X
-                                  className="ml-2 h-3 w-3 cursor-pointer"
-                                  onClick={() => handleDeleteDomain(domainId)}
-                                />
-                              ) : null}
-                            </Badge>
-                          ),
-                        )
-                      ) : (
-                        <Card className="w-full bg-muted/30">
-                          <CardContent className="py-6 flex items-center gap-3">
-                            <svg
-                              width="28"
-                              height="28"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="opacity-60"
-                            >
-                              <rect
-                                x="5"
-                                y="5"
-                                width="14"
-                                height="14"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                              <path
-                                d="M5 12H19"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-sm text-muted-foreground">
-                                No domains added yet.
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Use Edit to add the industries or areas you
-                                focus on.
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  </div>
+                  <TagSection
+                    title="Skills"
+                    Icon={Tags}
+                    options={skillsOptions}
+                    selectedIds={editingProfileData.skills || []}
+                    getNameById={getSkillNameById}
+                    onAdd={(value: string) => {
+                      const selectedSkill = skillsOptions.find(
+                        (s: any) => (s.label || s.name) === value,
+                      );
+                      if (!selectedSkill) return;
+                      const id = selectedSkill._id;
+                      if ((editingProfileData.skills || []).includes(id))
+                        return;
+                      setEditingProfileData((prev: any) => ({
+                        ...prev,
+                        skills: [...(prev.skills || []), id],
+                      }));
+                    }}
+                    onRemove={(name: string) => {
+                      const skill = skillsOptions.find(
+                        (s: any) => (s.label || s.name) === name,
+                      );
+                      const id = skill?._id;
+                      if (!id) return;
+                      setEditingProfileData((prev: any) => ({
+                        ...prev,
+                        skills: (prev.skills || []).filter(
+                          (sid: string) => sid !== id,
+                        ),
+                      }));
+                    }}
+                  />
+                  <TagSection
+                    title="Domains"
+                    Icon={Layers}
+                    options={domainsOptions}
+                    selectedIds={editingProfileData.domains || []}
+                    getNameById={getDomainNameById}
+                    onAdd={(value: string) => {
+                      const selectedDomain = domainsOptions.find(
+                        (d: any) => (d.label || d.name) === value,
+                      );
+                      if (!selectedDomain) return;
+                      const id = selectedDomain._id;
+                      if ((editingProfileData.domains || []).includes(id))
+                        return;
+                      setEditingProfileData((prev: any) => ({
+                        ...prev,
+                        domains: [...(prev.domains || []), id],
+                      }));
+                    }}
+                    onRemove={(name: string) => {
+                      const domain = domainsOptions.find(
+                        (d: any) => (d.label || d.name) === name,
+                      );
+                      const id = domain?._id;
+                      if (!id) return;
+                      setEditingProfileData((prev: any) => ({
+                        ...prev,
+                        domains: (prev.domains || []).filter(
+                          (did: string) => did !== id,
+                        ),
+                      }));
+                    }}
+                  />
                 </div>
 
                 {isEditMode && <Separator />}

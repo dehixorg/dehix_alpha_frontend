@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FileText, ExternalLink } from 'lucide-react';
 
 import {
@@ -9,6 +9,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface ResumeUploadProps {
   maxResumeSize?: number;
@@ -51,7 +52,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
           setExistingResumeUrl(null);
           setUploadedFileName(null);
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     };
@@ -81,7 +82,6 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
 
       toast({ title: 'Success', description: 'Resume uploaded successfully!' });
       onResumeUpdate?.();
-      // refresh current resume view
       setExistingResumeUrl(Location);
       setUploadedFileName(extractFileNameFromUrl(Location));
       setFiles(undefined);
@@ -95,6 +95,21 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
       setIsUploading(false);
     }
   };
+
+  // If filename starts with a numeric timestamp like 1758897821196-filename.pdf
+  const { cleanedName, uploadedAtLabel } = useMemo(() => {
+    const name = uploadedFileName || '';
+    const match = name.match(/^(\d{10,})-(.+)$/);
+    if (!match)
+      return { cleanedName: name, uploadedAtLabel: null as string | null };
+    const tsRaw = match[1];
+    const rest = match[2];
+    let ms = Number(tsRaw);
+    if (tsRaw.length === 10) ms *= 1000; // seconds -> ms
+    const d = new Date(ms);
+    const label = isNaN(d.getTime()) ? null : `Uploaded ${d.toLocaleString()}`;
+    return { cleanedName: rest, uploadedAtLabel: label };
+  }, [uploadedFileName]);
 
   return (
     <>
@@ -137,12 +152,19 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 Current Resume
               </p>
-              <p
-                className="text-sm font-medium text-foreground truncate"
-                title={uploadedFileName || undefined}
-              >
-                {uploadedFileName}
-              </p>
+              <div className="flex items-center gap-2 min-w-0">
+                <p
+                  className="text-sm font-medium text-foreground truncate"
+                  title={cleanedName || uploadedFileName || undefined}
+                >
+                  {cleanedName || uploadedFileName}
+                </p>
+                {uploadedAtLabel && (
+                  <Badge variant="secondary" className="shrink-0">
+                    {uploadedAtLabel}
+                  </Badge>
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
               <Button
