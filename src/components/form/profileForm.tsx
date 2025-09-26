@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { User, FileText, Tags, Layers, FolderKanban, Upload, Save } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
 
 import { Card } from '../ui/card';
@@ -26,19 +26,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectTrigger,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-} from '@/components/ui/select';
 import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { addSkill } from '@/utils/skillUtils';
 import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -91,13 +84,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [user, setUser] = useState<any>({});
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
   const [domains, setDomains] = useState<any>([]);
   const [currDomains, setCurrDomains] = useState<any>([]);
-  const [tmpDomain, setTmpDomain] = useState<any>('');
   const [projectDomains, setProjectDomains] = useState<any>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
-  const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [, setResumeRefreshTrigger] = useState(0);
@@ -141,29 +131,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     },
     mode: 'all',
   });
-
-  const handleAddSkill = () => {
-    addSkill(tmpSkill, skills, setSkills);
-    if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
-      setCurrSkills([
-        ...currSkills,
-        {
-          name: tmpSkill,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
-      setLastAddedItems((prev) => ({
-        ...prev,
-        skills: [...prev.skills, { name: tmpSkill }],
-      }));
-
-      setTmpSkill('');
-    }
-  };
 
   const handleAddCustomSkill = async () => {
     if (!customSkill.label.trim()) {
@@ -311,16 +278,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
-  const handleAddDomain = () => {
-    addDomain(tmpDomain, domains, setDomains);
-    if (
-      tmpDomain &&
-      !currDomains.some((domain: any) => domain.name === tmpDomain)
-    ) {
-      setCurrDomains([
-        ...currDomains,
+  // New: add-by-value helpers for reusable component
+  const handleAddSkillByValue = (value: string) => {
+    addSkill(value, skills, setSkills);
+    if (value && !currSkills.some((skill: any) => skill.name === value)) {
+      setCurrSkills([
+        ...currSkills,
         {
-          name: tmpDomain,
+          name: value,
           level: '',
           experience: '',
           interviewStatus: StatusEnum.PENDING,
@@ -330,23 +295,44 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       ]);
       setLastAddedItems((prev) => ({
         ...prev,
-        domains: [...prev.domains, { name: tmpDomain }],
+        skills: [...prev.skills, { name: value }],
       }));
-      setTmpDomain('');
     }
   };
-  const handleAddprojectDomain = () => {
-    addProjectDomain(tmpProjectDomains, projectDomains, setProjectDomains);
+
+  const handleAddDomainByValue = (value: string) => {
+    addDomain(value, domains, setDomains);
+    if (value && !currDomains.some((domain: any) => domain.name === value)) {
+      setCurrDomains([
+        ...currDomains,
+        {
+          name: value,
+          level: '',
+          experience: '',
+          interviewStatus: StatusEnum.PENDING,
+          interviewInfo: '',
+          interviewerRating: 0,
+        },
+      ]);
+      setLastAddedItems((prev) => ({
+        ...prev,
+        domains: [...prev.domains, { name: value }],
+      }));
+    }
+  };
+
+  const handleAddProjectDomainByValue = (value: string) => {
+    addProjectDomain(value, projectDomains, setProjectDomains);
     if (
-      tmpProjectDomains &&
+      value &&
       !currProjectDomains.some(
-        (projectDomains: any) => projectDomains.name === projectDomains,
+        (projectDomain: any) => projectDomain.name === value,
       )
     ) {
       setCurrProjectDomains([
         ...currProjectDomains,
         {
-          name: tmpProjectDomains,
+          name: value,
           level: '',
           experience: '',
           interviewStatus: StatusEnum.PENDING,
@@ -356,9 +342,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       ]);
       setLastAddedItems((prev) => ({
         ...prev,
-        projectsDomains: [...prev.projectsDomains, { name: tmpProjectDomains }],
+        projectsDomains: [...prev.projectsDomains, { name: value }],
       }));
-      setTmpProjectDomains('');
     }
   };
 
@@ -381,7 +366,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     );
   };
 
-  const [searchQuery, setSearchQuery] = useState('');
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -506,450 +490,185 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-10">
+    <Card className="p-6 bg-muted-foreground/20 dark:bg-muted/20">
+      {/* Page Header */}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-xl md:text-2xl font-semibold tracking-tight flex items-center gap-2">
+          <User className="h-5 w-5" /> Personal Information
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Keep your profile up to date. Your details help businesses find you faster.
+        </p>
+      </div>
       <Form {...form}>
         <ProfilePictureUpload
           profile={user.profilePic}
           entityType={Type.FREELANCER}
         />
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="grid gap-10 grid-cols-1 sm:grid-cols-2 mt-4"
-        >
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your first name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your last name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your username"
-                    {...field}
-                    readOnly
-                  />
-                </FormControl>
-                <FormMessage />
-                <FormDescription>Non editable field</FormDescription>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your email" {...field} readOnly />
-                </FormControl>
-                <FormDescription>Non editable field</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2">
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Enter description" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="+91" {...field} readOnly />
-                </FormControl>
-                <FormMessage />
-                <FormDescription>Non editable field</FormDescription>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="personalWebsite"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Personal Website URL</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your LinkedIn URL"
-                    type="url"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Enter your Personal Website URL
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+            {/* Basic Info */}
+            <div className="md:col-span-2 -mb-2">
+              <h3 className="text-xs font-semibold mb-1 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                <FileText className="h-4 w-4" /> Basic Details
+              </h3>
+            </div>
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your first name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your last name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your username"
+                      {...field}
+                      readOnly
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <FormDescription>Non editable field</FormDescription>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your email" {...field} readOnly />
+                  </FormControl>
+                  <FormDescription>Non editable field</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel className="flex items-center gap-2">
+                    About You
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Enter description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+91" {...field} readOnly />
+                  </FormControl>
+                  <FormMessage />
+                  <FormDescription>Non editable field</FormDescription>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="personalWebsite"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Personal Website URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your LinkedIn URL"
+                      type="url"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Enter your Personal Website URL
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-          <Separator className="col-span-2" />
-          <div className="sm:col-span-2">
-            <div className="grid gap-10 grid-cols-1 sm:grid-cols-6">
-              <div className="sm:col-span-2">
-                <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
-                  <FormLabel>Skills</FormLabel>
-                  <div className="flex items-center mt-2">
-                    <Select
-                      onValueChange={(value) => {
-                        setTmpSkill(value);
-                        setSearchQuery(''); // Reset search query when a value is selected
-                      }}
-                      value={tmpSkill || ''}
-                      onOpenChange={(open) => {
-                        if (!open) setSearchQuery('');
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={tmpSkill ? tmpSkill : 'Select skill'}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {/* Add search input */}
-                        <div className="p-2 relative">
-                          <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                            placeholder="Search skills"
-                          />
-                          {searchQuery && (
-                            <button
-                              onClick={() => setSearchQuery('')}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                        {/* Filtered skill list */}
-                        {skills
-                          .filter(
-                            (skill: any) =>
-                              skill.label
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase()) &&
-                              !currSkills.some(
-                                (s: any) => s.name === skill.label,
-                              ),
-                          )
-                          .map((skill: any, index: number) => (
-                            <SelectItem key={index} value={skill.label}>
-                              {skill.label}
-                            </SelectItem>
-                          ))}
-                        {/* No matching skills */}
-                        {skills.filter(
-                          (skill: any) =>
-                            skill.label
-                              .toLowerCase()
-                              .includes(searchQuery.toLowerCase()) &&
-                            !currSkills.some(
-                              (s: any) => s.name === skill.label,
-                            ),
-                        ).length === 0 && (
-                          <div className="p-2 text-gray-500 italic text-center">
-                            No matching skills
-                          </div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      type="button"
-                      size="icon"
-                      className="ml-2"
-                      disabled={!tmpSkill}
-                      onClick={() => {
-                        handleAddSkill();
-                        setTmpSkill('');
-                        setSearchQuery(''); // Reset search query
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-5">
-                    {currSkills.map((skill: any, index: number) => (
-                      <Badge
-                        className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                        key={index}
-                      >
-                        {skill.name}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteSkill(skill.name)}
-                          className="ml-2 text-red-500 hover:text-red-700"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+          <Separator className="my-6" />
+          <div className="col-span-1 md:col-span-2">
+            <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+              <Tags className="h-4 w-4" /> Skills & Domains
+            </h3>
+            <div className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-3">
+              <div className="col-span-1">
+                <SelectTagPicker
+                  label="Skills"
+                  options={skills}
+                  selected={currSkills}
+                  onAdd={handleAddSkillByValue}
+                  onRemove={handleDeleteSkill}
+                  selectPlaceholder="Select skill"
+                  searchPlaceholder="Search skills"
+                />
               </div>
-              <div className="sm:col-span-2">
-                <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
-                  <FormLabel>Domains</FormLabel>
-                  <div className="flex items-center mt-2">
-                    <Select
-                      onValueChange={(value) => {
-                        setTmpDomain(value);
-                        setSearchQuery(''); // Reset search query when a value is selected
-                      }}
-                      value={tmpDomain || ''}
-                      onOpenChange={(open) => {
-                        if (!open) setSearchQuery('');
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={tmpDomain ? tmpDomain : 'Select domain'}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {/* Add search input */}
-                        <div className="p-2 relative">
-                          <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                            placeholder="Search domains"
-                          />
-                          {searchQuery && (
-                            <button
-                              onClick={() => setSearchQuery('')}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                        {/* Filtered domain list */}
-                        {domains
-                          .filter(
-                            (domain: any) =>
-                              domain.label
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase()) &&
-                              !currDomains.some(
-                                (s: any) => s.name === domain.label,
-                              ),
-                          )
-                          .map((domain: any, index: number) => (
-                            <SelectItem key={index} value={domain.label}>
-                              {domain.label}
-                            </SelectItem>
-                          ))}
-                        {/* No matching domains */}
-                        {domains.filter(
-                          (Domain: any) =>
-                            Domain.label
-                              .toLowerCase()
-                              .includes(searchQuery.toLowerCase()) &&
-                            !currDomains.some(
-                              (s: any) => s.name === domains.name,
-                            ),
-                        ).length === 0 && (
-                          <div className="p-2 text-gray-500 italic text-center">
-                            No matching domains
-                          </div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      type="button"
-                      size="icon"
-                      className="ml-2"
-                      disabled={!tmpDomain}
-                      onClick={() => {
-                        handleAddDomain();
-                        setTmpDomain('');
-                        setSearchQuery(''); // Reset search query
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-5">
-                    {currDomains.map((Domain: any, index: number) => (
-                      <Badge
-                        className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                        key={index}
-                      >
-                        {Domain.name}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteDomain(Domain.name)}
-                          className="ml-2 text-red-500 hover:text-red-700"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+              <div className="col-span-1">
+                <SelectTagPicker
+                  label="Domains"
+                  options={domains}
+                  selected={currDomains}
+                  onAdd={handleAddDomainByValue}
+                  onRemove={handleDeleteDomain}
+                  selectPlaceholder="Select domain"
+                  searchPlaceholder="Search domains"
+                />
               </div>
-              <div className="sm:col-span-2">
-                <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
-                  <FormLabel>Project Domains</FormLabel>
-                  <div className="flex items-center mt-2">
-                    <Select
-                      onValueChange={(value) => {
-                        setTmpProjectDomains(value);
-                        setSearchQuery(''); // Reset search query when a value is selected
-                      }}
-                      value={tmpProjectDomains || ''}
-                      onOpenChange={(open) => {
-                        if (!open) setSearchQuery('');
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            tmpProjectDomains
-                              ? tmpProjectDomains
-                              : 'Select project domain'
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {/* Add search input */}
-                        <div className="p-2 relative">
-                          <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                            placeholder="Search project domains"
-                          />
-                          {searchQuery && (
-                            <button
-                              onClick={() => setSearchQuery('')}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                        {/* Filtered domain list */}
-                        {projectDomains
-                          .filter(
-                            (projectDomain: any) =>
-                              projectDomain.label
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase()) &&
-                              !currProjectDomains.some(
-                                (s: any) => s.name === projectDomain.label,
-                              ),
-                          )
-                          .map((projectDomain: any, index: number) => (
-                            <SelectItem key={index} value={projectDomain.label}>
-                              {projectDomain.label}
-                            </SelectItem>
-                          ))}
-                        {/* No matching domains */}
-                        {projectDomains.filter(
-                          (projectDomain: any) =>
-                            projectDomain.label
-                              .toLowerCase()
-                              .includes(searchQuery.toLowerCase()) &&
-                            !currProjectDomains.some(
-                              (s: any) => s.name === projectDomains.name,
-                            ),
-                        ).length === 0 && (
-                          <div className="p-2 text-gray-500 italic text-center">
-                            No matching domains
-                          </div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      type="button"
-                      size="icon"
-                      className="ml-2"
-                      disabled={!tmpProjectDomains}
-                      onClick={() => {
-                        handleAddprojectDomain();
-                        setTmpProjectDomains('');
-                        setSearchQuery(''); // Reset search query
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-5">
-                    {currProjectDomains.map(
-                      (projectDomain: any, index: number) => (
-                        <Badge
-                          className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                          key={index}
-                        >
-                          {projectDomain.name}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDeleteProjDomain(projectDomain.name)
-                            }
-                            className="ml-2 text-red-500 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </Badge>
-                      ),
-                    )}
-                  </div>
-                </div>
+              <div className="col-span-1">
+                <SelectTagPicker
+                  label="Project Domains"
+                  options={projectDomains}
+                  selected={currProjectDomains}
+                  onAdd={handleAddProjectDomainByValue}
+                  onRemove={handleDeleteProjDomain}
+                  selectPlaceholder="Select project domain"
+                  searchPlaceholder="Search project domains"
+                />
               </div>
             </div>
           </div>
-          <Separator className="col-span-2 mt-0" />
-          <div className="col-span-2">
-            <div className="grid gap-10 grid-cols-1 sm:grid-cols-2">
+          <Separator className="col-span-1 md:col-span-2 my-6" />
+          <div className="col-span-1 md:col-span-2">
+            <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+              <Upload className="h-4 w-4" /> Resume & Cover Letter
+            </h3>
+            <div className="grid gap-6 md:gap-10 grid-cols-1 md:grid-cols-2">
               <div className="flex flex-col items-start">
                 <FormLabel className="ml-2">Upload Resume</FormLabel>
                 <div className="w-full">
@@ -981,13 +700,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               />
             </div>
           </div>
-          <div className="col-span-2">
-            <Button
-              type="submit"
-              className="sm:col-span-2 w-full"
-              disabled={loading}
-            >
-              {loading ? 'Loading...' : 'Update Profile'}
+          <div className="col-span-1 md:col-span-2 mt-6">
+            <Button type="submit" className="w-full" disabled={loading}>
+              <Save className="h-4 w-4 mr-2" />
+              {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
 
