@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, ChevronsUpDown, Plus, X, Check } from 'lucide-react';
+import { Copy, ChevronsUpDown, Plus, X, Check, Info } from 'lucide-react';
+import Image from 'next/image';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -41,6 +42,13 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { getStatusBadge } from '@/utils/statusBadge';
 import {
   Popover,
@@ -91,6 +99,8 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   const { text: projectStatus, className: statusBadgeStyle } = getStatusBadge(
     story.storyStatus,
   );
+
+  const taskCount = story?.tasks?.length || 0;
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
@@ -355,18 +365,29 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     <AccordionItem
       key={story._id}
       value={story._id ?? ''}
-      className={`py-2  ${idx === milestoneStoriesLength - 1 ? 'border-b-0 ' : 'border-b-2'} `}
+      className={`py-2 ${idx === milestoneStoriesLength - 1 ? 'border-b-0' : 'border-b'} transition-colors`}
     >
       <AccordionTrigger
-        className={`flex hover:no-underline items-center under px-4 w-full `}
+        className={`flex hover:no-underline items-center px-2 md:px-4 w-full`}
       >
-        <div className="flex justify-between items-center w-full px-4 py-1 rounded-lg duration-300">
-          <div className="flex items-center">
-            <h3 className="text-lg md:text-xl font-semibold">{story.title}</h3>
+        <div className="flex justify-between items-center w-full px-2 md:px-4 py-1 md:py-2 rounded-lg hover:bg-muted/40 transition-colors">
+          <div className="flex items-center gap-2 min-w-0">
+            <h3
+              className="text-base md:text-lg font-semibold truncate"
+              title={story.title}
+            >
+              {story.title}
+            </h3>
+            <Badge
+              variant="secondary"
+              className="rounded-full hidden sm:inline"
+            >
+              {taskCount} tasks
+            </Badge>
             <Button
               variant="ghost"
               size="sm"
-              className="p-1 h-auto ml-2"
+              className="p-1 h-auto ml-1"
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedTask({
@@ -377,34 +398,27 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                   freelancers: [],
                 } as any);
               }}
+              aria-label="View story summary"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Info className="w-4 h-4" />
             </Button>
           </div>
-          <span className="text-sm">
+          <span className="text-sm flex items-center gap-2">
             {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
               ? !story?.tasks[0]?.freelancers[0]?.acceptanceFreelancer &&
                 story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
                 !story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
                 story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
-                  <>
-                    {/* <span className="text-yellow-500 ml-5 hidden md:flex">
-                      Update Req
-                    </span> */}
-                    <span className="text-yellow-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-yellow-500"></span>
-                  </>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-yellow-500 rounded-full flex w-2 h-2 bg-yellow-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Update requested</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )
               : !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceBusiness &&
                 story?.tasks?.[0]?.freelancers?.[0]
@@ -412,31 +426,46 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 !story?.tasks?.[0]?.freelancers?.[0]
                   ?.updatePermissionBusiness &&
                 story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
-                  <>
-                    <span className="text-yellow-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-yellow-500"></span>
-                  </>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-yellow-500 rounded-full flex w-2 h-2 bg-yellow-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Update requested</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
             {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
               ? story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
                 story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
                 !story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
-                  <>
-                    <span className="text-green-500 ml-5 hidden md:flex">
-                      Req Approve
-                    </span>
-                    <span className="text-green-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-green-500"></span>
-                  </>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-green-500 rounded-full flex w-2 h-2 bg-green-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Request approved</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )
               : story?.tasks?.[0]?.freelancers?.[0]
                   ?.updatePermissionFreelancer &&
                 story?.tasks?.[0]?.freelancers?.[0]?.updatePermissionBusiness &&
                 !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
-                  <>
-                    <span className="text-green-500 ml-5 hidden md:flex">
-                      Req Approve
-                    </span>
-                    <span className="text-green-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-green-500"></span>
-                  </>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-green-500 rounded-full flex w-2 h-2 bg-green-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Request approved</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
           </span>
           <Badge
@@ -463,6 +492,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 <h4 className="text-lg md:text-xl font-semibold mt-2">
                   Important URLs:
                 </h4>
+                <Separator orientation="vertical" className="h-8" />
                 <Popover open={open} onOpenChange={setOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -533,16 +563,24 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               {story?.tasks?.length > 0 ? (
                 <div className="bg-transparent">
                   <div className="flex justify-between items-center px-3 mt-4">
-                    <h4 className="text-lg md:text-xl font-semibold">Tasks:</h4>
+                    <div className="flex items-center gap-3">
+                      <h4 className="text-lg md:text-xl font-semibold">
+                        Tasks
+                      </h4>
+                      <Badge variant="secondary" className="rounded-full">
+                        {taskCount}
+                      </Badge>
+                    </div>
                     {!isFreelancer && (
                       <Button
-                        className="md:px-3 px-2 py-0 md:py-1 text-sm sm:text-base"
+                        className="md:px-3 px-2 py-0 md:py-1 text-sm sm:text-base rounded-full"
                         onClick={() => setIsTaskDialogOpen(true)}
                       >
                         <Plus size={15} /> Add Task
                       </Button>
                     )}
                   </div>
+                  <Separator className="my-3" />
                   <Carousel className="w-[85vw] md:w-full relative mt-4">
                     <CarouselContent className="flex flex-nowrap gap-2 md:gap-0">
                       {story.tasks.map((task: any) => {
@@ -723,26 +761,35 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                   </Carousel>
                 </div>
               ) : (
-                <div className="text-center mt-12 p-4 rounded-md">
-                  {!isFreelancer ? (
-                    <p>
-                      This {story.title} currently has no tasks. Add tasks to
-                      ensure smooth progress and better tracking.
-                    </p>
-                  ) : (
-                    <p>
-                      This {story.title} currently has no tasks. Wait until the
-                      business assigns you to any task.
-                    </p>
-                  )}
-                  {!isFreelancer && (
-                    <Button
-                      className="mt-2 px-3 py-1 text-sm sm:text-base"
-                      onClick={() => setIsTaskDialogOpen(true)}
-                    >
-                      <Plus size={15} /> Add Task
-                    </Button>
-                  )}
+                <div className="text-center mt-10 p-6 rounded-md border bg-muted/20">
+                  <div className="flex flex-col items-center gap-3">
+                    <Image
+                      src="/banner1.svg"
+                      alt="Empty tasks"
+                      width={200}
+                      height={90}
+                      className="opacity-90 select-none pointer-events-none"
+                    />
+                    {!isFreelancer ? (
+                      <p>
+                        This {story.title} currently has no tasks. Add tasks to
+                        ensure smooth progress and better tracking.
+                      </p>
+                    ) : (
+                      <p>
+                        This {story.title} currently has no tasks. Wait until
+                        the business assigns you to any task.
+                      </p>
+                    )}
+                    {!isFreelancer && (
+                      <Button
+                        className="mt-2 px-3 py-1 text-sm sm:text-base rounded-full"
+                        onClick={() => setIsTaskDialogOpen(true)}
+                      >
+                        <Plus size={15} className="mr-1" /> Add Task
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
