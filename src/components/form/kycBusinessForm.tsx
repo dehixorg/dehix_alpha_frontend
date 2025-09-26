@@ -163,7 +163,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-8 md:p-12 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto">
+    <Card className="p-8 md:p-12 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto bg-muted-foreground/20 dark:bg-muted/20">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Business KYC Verification</h2>
         <Badge

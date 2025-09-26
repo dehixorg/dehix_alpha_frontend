@@ -457,12 +457,13 @@ const ProjectApplicationForm = ({
           <div className="w-full sm:w-auto">
             {selectedProfile ? (
               <div className="flex items-center gap-2">
-                <Badge className="px-3 py-1.5">
+                <Badge className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white">
                   {selectedProfile.domain} ({selectedProfile.profileType})
                 </Badge>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
+                  className="rounded-full bg-red-700/20 hover:bg-red-700/40"
                   onClick={() => {
                     setSelectedProfile(null);
                     setSelectedFreelancerProfile(null);
@@ -475,7 +476,7 @@ const ProjectApplicationForm = ({
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full sm:w-auto">
-                    Select a project profile
+                    Select profile
                     <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
@@ -714,10 +715,15 @@ const ProjectApplicationForm = ({
             </div>
           </div>
         ) : (
-          <div className="text-center py-10">
-            <p className="text-muted-foreground">
-              Please select a project profile to see available freelancer
-              profiles
+          <div className="text-center py-10 text-muted-foreground dark:text-muted-foreground/40">
+            <Lightbulb className="h-6 w-6 mx-auto mb-2" />
+            <p>
+              Select a project profile above to see matching freelancer
+              profiles.
+            </p>
+            <p className="text-xs mt-1">
+              Tip: Click “Select profile” and choose the role you want to apply
+              with.
             </p>
           </div>
         )}

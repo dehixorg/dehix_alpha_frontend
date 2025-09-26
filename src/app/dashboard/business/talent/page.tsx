@@ -26,7 +26,7 @@ export default function Talent() {
             { label: 'Dehix Talent', link: '#' },
           ]}
         />
-        <main className="ml-5">
+        <main>
           <SkillDomainForm />
         </main>
       </div>

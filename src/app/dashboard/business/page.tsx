@@ -258,8 +258,27 @@ export default function Dashboard() {
                     />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} />
                     <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                    <Tooltip
+                      wrapperStyle={{ outline: 'none' }}
+                      contentStyle={{
+                        background: 'hsl(var(--popover))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: 6,
+                        color: 'hsl(var(--popover-foreground))',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                      }}
+                      labelStyle={{
+                        color: 'hsl(var(--popover-foreground))',
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.2 }}
+                    />
+                    <Bar
+                      dataKey="value"
+                      barSize={12}
+                      fill="hsl(var(--primary))"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
