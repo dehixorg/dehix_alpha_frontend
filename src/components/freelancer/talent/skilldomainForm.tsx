@@ -17,7 +17,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { axiosInstance } from '@/lib/axiosinstance';
+import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import type { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { toast } from '@/components/ui/use-toast';
+import { formatCurrency } from '@/utils/format';
 
 interface Skill {
   _id: string;
@@ -181,17 +182,22 @@ const SkillDomainForm: React.FC = () => {
         );
 
         // Note: removed unused counters for cleaner code
-      } catch (error) {
+      } catch (error: any) {
+        if (error?.code === 'ERR_CANCELED') return;
         console.error('Error fetching data:', error);
         toast({
+          variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong. Please try again.',
+          description: 'Something went wrong.Please try again.',
         }); // Error toast
       } finally {
         setLoading(false);
       }
     }
     fetchData();
+    return () => {
+      cancelAllRequests();
+    };
   }, [user?.uid]);
 
   const handleToggleVisibility = async (
@@ -218,17 +224,6 @@ const SkillDomainForm: React.FC = () => {
         description: 'Something went wrong.Please try again.',
       }); // Error toast
     }
-  };
-
-  // Format currency helper
-  const formatCurrency = (value: string | number) => {
-    const num = typeof value === 'string' ? Number(value) : value;
-    if (Number.isNaN(num)) return '$0';
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(num as number);
   };
 
   return (
@@ -263,14 +258,18 @@ const SkillDomainForm: React.FC = () => {
           <Card>
             <div className="w-full overflow-x-auto">
               <Table className="table-auto">
-                <TableHeader className="sticky top-0 z-10 bg-muted-foreground/20 dark:bg-muted/20">
+                <TableHeader className="sticky top-0 z-10 bg-background">
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-center">Label</TableHead>
-                    <TableHead className="text-center">Experience</TableHead>
-                    <TableHead className="text-center">Monthly Pay</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-center">Visibility</TableHead>
+                    <TableHead scope="col">Type</TableHead>
+                    <TableHead scope="col">Label</TableHead>
+                    <TableHead scope="col">Experience</TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Monthly Pay
+                    </TableHead>
+                    <TableHead scope="col">Status</TableHead>
+                    <TableHead scope="col" className="text-right">
+                      Visibility
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -343,6 +342,7 @@ const SkillDomainForm: React.FC = () => {
                                 ? handleToggleVisibility(index, value, item.uid)
                                 : console.error('UID missing for item', item)
                             }
+                            aria-label={`Toggle visibility for ${item.label}`}
                           />
                         </TableCell>
                       </TableRow>

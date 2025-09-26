@@ -144,6 +144,7 @@ const Market: React.FC = () => {
       try {
         setIsLoading(true);
         const skillsRes = await axiosInstance.get('/skills');
+        console.log(skillsRes.data.data);
         setSkills(skillsRes.data.data.map((s: any) => s.label));
         const domainsRes = await axiosInstance.get('/domain');
         setDomains(domainsRes.data.data.map((d: any) => d.label));
@@ -180,15 +181,14 @@ const Market: React.FC = () => {
 
   // Fetch jobs when filters change or component mounts
   const fetchJobs = useCallback(
-    async (options: FilterState & { signal?: AbortSignal }) => {
-      const { signal, ...appliedFilters } = options;
+    async (options: FilterState) => {
+      const appliedFilters = options;
       try {
         setIsLoading(true);
         const query = constructQueryString(appliedFilters);
 
         const jobsRes = await axiosInstance.get(
           `/project/freelancer/${user.uid}${query ? `?${query}` : ''}`,
-          { signal },
         );
 
         const allJobs = jobsRes.data?.data || [];
@@ -288,8 +288,6 @@ const Market: React.FC = () => {
       return;
     }
 
-    const controller = new AbortController();
-    const { signal } = controller;
     let isMounted = true;
 
     const fetchData = async () => {
@@ -299,7 +297,7 @@ const Market: React.FC = () => {
         setIsLoading(true);
 
         // Create a clean filters object with all filter properties
-        const fetchOptions: FilterState & { signal?: AbortSignal } = {
+        const fetchOptions: FilterState = {
           jobType: filters.jobType || [],
           domain: filters.domain || [],
           skills: filters.skills || [],
@@ -310,18 +308,17 @@ const Market: React.FC = () => {
           maxRate: filters.maxRate || '',
           favourites: filters.favourites || false,
           consultant: filters.consultant || false,
-          signal,
         };
 
         await fetchJobs(fetchOptions);
       } catch (error) {
-        if (!signal.aborted && isMounted) {
+        if (isMounted) {
           console.error('Error in fetchData:', error);
           const isCanceledError =
             error &&
             typeof error === 'object' &&
             'name' in error &&
-            error.name === 'CanceledError';
+            (error as any).name === 'Cancel';
           if (!isCanceledError) {
             toast({
               variant: 'destructive',
@@ -331,7 +328,7 @@ const Market: React.FC = () => {
           }
         }
       } finally {
-        if (!signal.aborted && isMounted) {
+        if (isMounted) {
           setIsLoading(false);
         }
       }
@@ -344,7 +341,7 @@ const Market: React.FC = () => {
     return () => {
       isMounted = false;
       clearTimeout(timer);
-      controller.abort();
+      // Do not cancel globally here; avoid canceling unrelated in-flight requests
     };
   }, [filters, user?.uid, fetchJobs]);
 
