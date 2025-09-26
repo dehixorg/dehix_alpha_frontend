@@ -13,10 +13,11 @@ import {
   DollarSign,
   FileText,
   Linkedin,
-  Globe2,
+  Globe,
   Layers,
   Github,
   Award,
+  UserCog,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -665,17 +666,15 @@ export default function ProfileDetailPage() {
           ]}
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
-          <div className="space-y-6">
-            <div>
-              <Button
-                variant="outline"
-                onClick={() => router.push('/freelancer/settings/profiles')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Profiles
-              </Button>
-            </div>
+          <div className="space-y-6 w-full">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/freelancer/settings/profiles')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Profiles
+            </Button>
 
             {!isEditMode && (
               <Alert className="bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-300">
@@ -781,7 +780,7 @@ export default function ProfileDetailPage() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
-                                    <Globe2 className="h-4 w-4" />
+                                    <Globe className="h-4 w-4" />
                                     <span className="hidden md:inline">
                                       {' '}
                                       Website
@@ -1109,7 +1108,7 @@ export default function ProfileDetailPage() {
 
                 {isEditMode && <Separator />}
 
-                <div className="flex flex-1 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     {isEditMode ? (
                       <>
@@ -1233,7 +1232,7 @@ export default function ProfileDetailPage() {
                           htmlFor="personalWebsite"
                           className="flex items-center gap-2"
                         >
-                          <Globe2 className="h-4 w-4 text-muted-foreground" />{' '}
+                          <Globe className="h-4 w-4 text-muted-foreground" />{' '}
                           Website
                         </Label>
 
@@ -1256,30 +1255,7 @@ export default function ProfileDetailPage() {
                     ) : (
                       <Card className="bg-muted/30">
                         <CardContent className="py-4 flex items-center gap-3">
-                          <svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="opacity-60"
-                          >
-                            <path
-                              d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2Z"
-                              stroke="#9CA3AF"
-                              strokeWidth="1.2"
-                            />
-                            <path
-                              d="M2 12H22"
-                              stroke="#9CA3AF"
-                              strokeWidth="1.2"
-                            />
-                            <path
-                              d="M12 2C9 5.5 9 18.5 12 22C15 18.5 15 5.5 12 2Z"
-                              stroke="#9CA3AF"
-                              strokeWidth="1.2"
-                            />
-                          </svg>
+                          <Globe className="h-4 w-4 text-muted-foreground" />
                           <div>
                             <p className="text-sm text-muted-foreground">
                               No website
@@ -1292,10 +1268,13 @@ export default function ProfileDetailPage() {
                       </Card>
                     )}
                   </div>
-                  <div className="space-y-2">
+                  <div>
                     {isEditMode && (
                       <>
-                        <Label htmlFor="availability">Availability</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <UserCog className="h-4 w-4 text-muted-foreground" />
+                          <Label htmlFor="availability">Availability</Label>
+                        </div>
                         <Select
                           value={editingProfileData.availability || 'FREELANCE'}
                           onValueChange={(value) =>

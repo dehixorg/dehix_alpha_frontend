@@ -3,19 +3,40 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, BarChart3, Sparkles } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import {
+  BarChart as ReBarChart,
+  Bar as ReBar,
+  XAxis as ReXAxis,
+  YAxis as ReYAxis,
+  CartesianGrid as ReCartesianGrid,
+  Tooltip as ReTooltip,
+  ResponsiveContainer as ReResponsiveContainer,
+} from 'recharts';
 
 import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import ProfileSummaryCard from '@/components/cards/ProfileSummaryCard';
+import { FreelancerProfile } from '@/types/freelancer';
+import StatItem from '@/components/shared/StatItem';
 import {
   Dialog,
   DialogContent,
@@ -24,12 +45,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import ProfileSummaryCard from '@/components/cards/ProfileSummaryCard';
-import { FreelancerProfile } from '@/types/freelancer';
 
 export default function ProfilesPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -276,110 +291,162 @@ export default function ProfilesPage() {
                   {/* Overview */}
                   <TabsContent value="overview" className="m-0">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                      <Card className="bg-background/50">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm text-muted-foreground">
-                            Total Profiles
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-2xl font-bold">
-                          {totalProfiles}
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-background/50">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm text-muted-foreground">
-                            Freelancer
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-2xl font-bold">
-                          {totalFreelancer}
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-background/50">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm text-muted-foreground">
-                            Consultant
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-2xl font-bold">
-                          {totalConsultant}
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-background/50">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm text-muted-foreground">
-                            Avg Projects / Profile
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-2xl font-bold">
-                          {avgProjects}
-                        </CardContent>
-                      </Card>
+                      <StatItem
+                        variant="card"
+                        color="blue"
+                        label="Total Profiles"
+                        value={totalProfiles}
+                      />
+                      <StatItem
+                        variant="card"
+                        color="green"
+                        label="Freelancer"
+                        value={totalFreelancer}
+                      />
+                      <StatItem
+                        variant="card"
+                        color="amber"
+                        label="Consultant"
+                        value={totalConsultant}
+                      />
+                      <StatItem
+                        variant="card"
+                        label="Avg Projects / Profile"
+                        value={avgProjects}
+                      />
                     </div>
 
-                    <Card className="bg-background/50">
+                    <Card className="bg-gradient-to-br from-background/70 to-muted/40 border border-border/60">
                       <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
                           <BarChart3 className="h-4 w-4" /> Top Profiles by
                           Projects
                         </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Profiles ranked by number of projects. Higher bars
+                          indicate more projects.
+                        </p>
                       </CardHeader>
                       <CardContent>
                         {topProjectProfiles.length === 0 ? (
-                          <div className="text-sm text-muted-foreground">
-                            No data available yet. Create your first profile to
-                            see analytics.
+                          <div className="flex items-center justify-center p-8">
+                            <div className="flex items-center gap-6">
+                              <svg
+                                width="120"
+                                height="80"
+                                viewBox="0 0 120 80"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="opacity-80"
+                              >
+                                <defs>
+                                  <linearGradient
+                                    id="emptyGrad"
+                                    x1="0"
+                                    x2="1"
+                                    y1="0"
+                                    y2="1"
+                                  >
+                                    <stop
+                                      offset="0%"
+                                      stopColor="#cbd5e1"
+                                      stopOpacity="0.6"
+                                    />
+                                    <stop
+                                      offset="100%"
+                                      stopColor="#a3a3a3"
+                                      stopOpacity="0.3"
+                                    />
+                                  </linearGradient>
+                                </defs>
+                                <rect
+                                  x="8"
+                                  y="20"
+                                  width="18"
+                                  height="40"
+                                  rx="3"
+                                  fill="url(#emptyGrad)"
+                                />
+                                <rect
+                                  x="36"
+                                  y="12"
+                                  width="18"
+                                  height="48"
+                                  rx="3"
+                                  fill="url(#emptyGrad)"
+                                />
+                                <rect
+                                  x="64"
+                                  y="28"
+                                  width="18"
+                                  height="32"
+                                  rx="3"
+                                  fill="url(#emptyGrad)"
+                                />
+                                <rect
+                                  x="92"
+                                  y="24"
+                                  width="18"
+                                  height="36"
+                                  rx="3"
+                                  fill="url(#emptyGrad)"
+                                />
+                              </svg>
+                              <div>
+                                <p className="text-sm text-muted-foreground">
+                                  No data available yet. Create your first
+                                  profile to see analytics.
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         ) : (
-                          <div className="w-full overflow-x-auto">
-                            <svg
-                              viewBox={`0 0 400 ${topProjectProfiles.length * 34}`}
-                              className="min-w-[360px]"
-                            >
-                              {topProjectProfiles.map((p, i) => {
-                                const max = Math.max(
-                                  ...topProjectProfiles.map(
-                                    (tp) => tp.projects?.length || 0,
-                                  ),
-                                  1,
-                                );
-                                const value = p.projects?.length || 0;
-                                const barWidth = (value / max) * 300;
-                                const y = i * 34 + 8;
-                                return (
-                                  <g key={p._id || i}>
-                                    <text
-                                      x={0}
-                                      y={y + 12}
-                                      className="fill-current text-xs"
-                                      style={{ fontSize: 12 }}
-                                    >
-                                      {(p.profileName || 'Profile').slice(
-                                        0,
-                                        18,
-                                      )}
-                                    </text>
-                                    <rect
-                                      x={120}
-                                      y={y}
-                                      width={barWidth}
-                                      height={16}
-                                      className="fill-primary/70"
-                                      rx={4}
-                                    />
-                                    <text
-                                      x={120 + barWidth + 8}
-                                      y={y + 12}
-                                      className="fill-current text-xs"
-                                      style={{ fontSize: 12 }}
-                                    >
-                                      {value}
-                                    </text>
-                                  </g>
-                                );
-                              })}
-                            </svg>
+                          <div className="w-full">
+                            <ReResponsiveContainer width="100%" height={240}>
+                              <ReBarChart
+                                data={topProjectProfiles.map((p: any) => ({
+                                  name: String(
+                                    p.profileName || 'Profile',
+                                  ).slice(0, 18),
+                                  projects: (p.projects || []).length,
+                                }))}
+                              >
+                                <ReCartesianGrid
+                                  vertical={false}
+                                  stroke="#f0f0f0"
+                                />
+                                <ReXAxis
+                                  dataKey="name"
+                                  tickLine={false}
+                                  axisLine={false}
+                                  tickMargin={10}
+                                />
+                                <ReYAxis axisLine={false} tickLine={false} />
+                                <ReTooltip
+                                  wrapperStyle={{ outline: 'none' }}
+                                  contentStyle={{
+                                    background: 'hsl(var(--popover))',
+                                    border: '1px solid hsl(var(--border))',
+                                    borderRadius: 6,
+                                    color: 'hsl(var(--popover-foreground))',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                  }}
+                                  labelStyle={{
+                                    color: 'hsl(var(--popover-foreground))',
+                                    fontWeight: 600,
+                                  }}
+                                  cursor={{
+                                    fill: 'hsl(var(--muted))',
+                                    fillOpacity: 0.2,
+                                  }}
+                                />
+                                <ReBar
+                                  dataKey="projects"
+                                  barSize={12}
+                                  fill="hsl(var(--primary))"
+                                  radius={[4, 4, 0, 0]}
+                                />
+                              </ReBarChart>
+                            </ReResponsiveContainer>
                           </div>
                         )}
                       </CardContent>
