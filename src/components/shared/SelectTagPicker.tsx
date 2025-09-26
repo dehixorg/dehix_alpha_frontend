@@ -129,7 +129,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
       <div className="flex flex-wrap gap-2 mt-5">
         {(selected || []).map((item, index) => (
           <Badge
-            className="uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white"
+            className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white"
             key={`${String((item as any)[selectedNameKey])}-${index}`}
           >
             {String((item as any)[selectedNameKey])}

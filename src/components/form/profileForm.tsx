@@ -666,7 +666,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             </h3>
             <div className="grid gap-6 md:gap-10 grid-cols-1 md:grid-cols-2">
               <div className="flex flex-col items-start">
-                <FormLabel className="ml-2">Upload Resume</FormLabel>
+                <FormLabel className="ml-2 mb-2">Upload Resume</FormLabel>
                 <div className="w-full">
                   <ResumeUpload
                     onResumeUpdate={() =>
