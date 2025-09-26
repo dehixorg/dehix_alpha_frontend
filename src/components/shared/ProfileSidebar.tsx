@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Pencil } from "lucide-react";
-import {
+import { 
   VolumeX,
   ShieldX,
   Trash2,
@@ -11,10 +10,12 @@ import {
   LogOut,
   MinusCircle,
   LoaderCircle,
+  Pencil
 } from 'lucide-react';
 import {
   doc,
   getDoc,
+  setDoc,
   updateDoc,
   arrayUnion,
   arrayRemove,
@@ -26,6 +27,30 @@ import {
   getDocs,
   writeBatch,
 } from 'firebase/firestore';
+import { useToast } from '@/components/ui/use-toast';
+import { Badge } from "@/components/ui/badge";
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { db } from '@/config/firebaseConfig';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import type { CombinedUser } from '@/hooks/useAllUsers';
 
 import { AddMembersDialog } from './AddMembersDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
@@ -41,32 +66,7 @@ export type FileItem = {
   url: string;
 };
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
-import { useToast } from '@/components/ui/use-toast';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { db } from '@/config/firebaseConfig';
-import { RootState } from '@/lib/store';
-import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
-import type { CombinedUser } from '@/hooks/useAllUsers';
-
-export type ProfileUser = {
+export interface ProfileUser {
   _id: string;
   id: string;
   userName: string;
@@ -74,11 +74,11 @@ export type ProfileUser = {
   email: string;
   profilePic?: string;
   bio?: string;
+  description?: string;
   displayName: string;
   status?: string;
   lastSeen?: string;
 };
-
 export type ProfileGroupMember = {
   id: string; // User's _id from API's members array
   userName: string;
@@ -126,10 +126,19 @@ export function ProfileSidebar({
   // currentUser prop is available via Redux store
   initialData,
 }: ProfileSidebarProps) {
-  // State management
-  const [profileData, setProfileData] = useState<
-    ProfileUser | ProfileGroup | null
-  >(null);
+  // Get current user from Redux
+  const [profileData, setProfileData] = useState<ProfileUser | ProfileGroup | null>(null);
+
+  // Helper function to safely get profile picture based on profile type
+  const getProfilePicture = (data: ProfileUser | ProfileGroup | null, type: 'user' | 'group' | null): string => {
+    if (!data) return '';
+    if (type === 'user' && 'profilePic' in data) {
+      return (data as ProfileUser).profilePic || '';
+    } else if (type === 'group' && 'avatar' in data) {
+      return (data as ProfileGroup).avatar || '';
+    }
+    return '';
+  };
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
@@ -142,25 +151,216 @@ export function ProfileSidebar({
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [refreshDataKey, setRefreshDataKey] = useState(0);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editingDescription, setEditingDescription] = useState('');
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [editingBio, setEditingBio] = useState('');
 
-  // Hooks
-  const user = useSelector((state: RootState) => state.user);
   const { toast } = useToast();
+  
+  // Load bio/description when profile data changes
+  useEffect(() => {
+    if (profileData) {
+      if (profileType === 'user') {
+        // For private chats (users), use the bio field
+        const bio = 'bio' in profileData ? profileData.bio : '';
+        setEditingBio(bio || '');
+      } else if (profileType === 'group') {
+        // For groups, use the description field
+        const description = 'description' in profileData ? profileData.description : '';
+        setEditingDescription(description || '');
+      }
+    } else {
+      setEditingBio('');
+      setEditingDescription('');
+    }
+  }, [profileData, profileType]);
+
+  // Get current user from Redux with proper typing
+  const user = useSelector((state: RootState) => state.user);
+  
+  // Handle bio/description edit changes
+  const handleEditBio = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (profileType === 'user') {
+      setEditingBio(e.target.value);
+    } else if (profileType === 'group') {
+      setEditingDescription(e.target.value);
+    }
+  };
+
+  // Save bio/description changes
+  const handleSaveBio = async () => {
+    if (profileType === 'user') {
+      await handleUpdateBio();
+    } else if (profileType === 'group') {
+      await handleUpdateDescription();
+    }
+  };
+
+  // Cancel bio/description editing
+  const handleCancelEditBio = () => {
+    if (profileData) {
+      if (profileType === 'user' && 'bio' in profileData) {
+        setEditingBio(profileData.bio || '');
+      } else if (profileType === 'group' && 'description' in profileData) {
+        setEditingDescription(profileData.description || '');
+      }
+    }
+    setIsEditingBio(false);
+  };
+
+  // Update description for group in Firestore
+  const handleUpdateDescription = async () => {
+    if (!profileId || !profileData || profileType !== 'group') {
+      console.error('Missing required data for updating group description:', { profileId, profileData, profileType });
+      return;
+    }
+
+    try {
+      const groupRef = doc(db, 'groups', profileId);
+      await updateDoc(groupRef, {
+        description: editingDescription
+      });
+      
+      // Update local state
+      setProfileData(prev => prev ? { ...prev, description: editingDescription } : null);
+      
+      toast({
+        title: 'Description updated',
+        description: 'The group description has been updated successfully.',
+      });
+      
+      setIsEditingBio(false);
+    } catch (error) {
+      console.error('Error updating group description:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update group description. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Update bio for user profile in Firestore
+  const handleUpdateBio = async () => {
+    if (!profileId || !profileData || profileType !== 'user') {
+      console.error('Missing required data for updating bio:', { profileId, profileData, profileType });
+      return;
+    }
+    
+    try {
+      if (profileType === 'user') {
+        // For private chats, update the conversation document with bio
+        console.log('Attempting to update bio with data:', { bio: editingBio.trim() });
+        const conversationRef = doc(db, 'conversations', profileId);
+        
+        // Check if the document exists first
+        const conversationDoc = await getDoc(conversationRef);
+        
+        if (conversationDoc.exists()) {
+          // Update existing document
+          await updateDoc(conversationRef, {
+            bio: editingBio.trim(),
+            updatedAt: new Date().toISOString(),
+          });
+        } else {
+          // Create new document if it doesn't exist
+          if (!profileId || !user?.uid) {
+            throw new Error('Missing required user or profile ID');
+          }
+          
+          const participantDetails = {
+            [user.uid]: {
+              userName: user?.displayName || '',
+              profilePic: user?.photoURL || '',
+              email: user?.email || ''
+            },
+            [profileId]: {
+              userName: (profileData as ProfileUser)?.userName || (profileData as ProfileGroup)?.groupName || '',
+              profilePic: getProfilePicture(profileData, profileType),
+              email: (profileData as ProfileUser)?.email || ''
+            }
+          };
+          
+          await setDoc(conversationRef, {
+            id: profileId,
+            type: 'private',
+            participants: [user.uid, profileId],
+            participantDetails,
+            bio: editingBio.trim(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+
+        // Update local state if profileData exists
+        if (profileData) {
+          setProfileData({
+            ...profileData,
+            bio: editingBio.trim(),
+          });
+        }
+
+        setIsEditingBio(false);
+        
+        toast({
+          title: 'Success',
+          description: 'Bio updated successfully',
+        });
+      } else if (profileType === 'group' && profileId) {
+        try {
+          // For groups, update the description field
+          console.log('Attempting to update group description:', { description: editingDescription.trim() });
+          const groupRef = doc(db, 'conversations', profileId);
+          
+          // First, check if the document exists
+          const groupDoc = await getDoc(groupRef);
+          
+          if (!groupDoc.exists()) {
+            throw new Error('Group not found');
+          }
+          
+          // Update the document
+          await updateDoc(groupRef, {
+            description: editingDescription.trim(),
+            updatedAt: new Date().toISOString(),
+          });
+
+          // Update local state
+          setProfileData({
+            ...profileData,
+            description: editingDescription.trim(),
+          });
+
+          setIsEditingDescription(false);
+          
+          toast({
+            title: 'Success',
+            description: 'Group description updated successfully',
+          });
+        } catch (error) {
+          console.error('Error updating group description:', error);
+          throw error; // Re-throw to be caught by the outer try-catch
+        }
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: profileType === 'user' ? 'Failed to update bio' : 'Failed to update group description',
+      });
+    }
+  };
 
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
     description: '',
     onConfirm: () => {},
-    confirmButtonText: '', // Add missing property
-    confirmButtonVariant: 'destructive' as
-      | 'default'
-      | 'destructive'
-      | 'outline'
-      | 'secondary'
-      | 'ghost'
-      | 'link'
-      | null
-      | undefined,
+    confirmButtonText: 'Confirm',
+    confirmButtonVariant: 'destructive' as const,
+    onCancel: () => {},
+    cancelButtonText: 'Cancel',
   });
 
   const internalFetchProfileData = async () => {
@@ -560,6 +760,12 @@ export function ProfileSidebar({
     const newInviteLink = `https://your-app.com/join/${groupId}?inviteCode=${randomComponent}`;
     const groupDocRef = doc(db, 'conversations', groupId);
     try {
+      // Check if the document exists first
+      const groupDoc = await getDoc(groupDocRef);
+      if (!groupDoc.exists()) {
+        throw new Error('Group not found');
+      }
+      
       await updateDoc(groupDocRef, {
         inviteLink: newInviteLink,
         updatedAt: new Date().toISOString(),
@@ -601,6 +807,12 @@ export function ProfileSidebar({
     }
     const groupDocRef = doc(db, 'conversations', profileId);
     try {
+      // Check if the document exists first
+      const groupDoc = await getDoc(groupDocRef);
+      if (!groupDoc.exists()) {
+        throw new Error('Group not found');
+      }
+      
       await updateDoc(groupDocRef, {
         participants: arrayRemove(memberIdToRemove),
         [`participantDetails.${memberIdToRemove}`]: deleteField(),
@@ -684,38 +896,70 @@ export function ProfileSidebar({
     }
   }
 
-function UserBio({ profileData }: { profileData: any }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [bio, setBio] = useState(profileData.bio || "");
+// Bio section component
+const UserBio = ({ profileData, isEditingBio, editingBio, onEditBio, onSaveBio, onCancelEdit }: {
+  profileData: ProfileUser | ProfileGroup | null;
+  isEditingBio: boolean;
+  editingBio: string;
+  onEditBio: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onSaveBio: () => void;
+  onCancelEdit: () => void;
+}) => {
+  const bioText = profileData && 'bio' in profileData ? profileData.bio || '' : '';
+  const displayText = isEditingBio ? editingBio : bioText;
 
   return (
-    <div>
-      {/* Bio Label + Pencil */}
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">Bio</span>
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="p-1 hover:bg-gray-100 rounded-full"
-        >
-          <Pencil className="w-3 h-3 text-gray-500" />
-        </button>
+        {!isEditingBio && (
+          <button
+            onClick={() => onCancelEdit()}
+            className="p-1 hover:bg-gray-100 rounded-full"
+          >
+            <Pencil className="w-3 h-3 text-gray-500" />
+          </button>
+        )}
       </div>
 
-      {/* Bio text OR editable textarea */}
-      {isEditing ? (
-        <textarea
-          className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-        />
+      {isEditingBio ? (
+        <div className="space-y-2">
+          <textarea
+            className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px]"
+            value={editingBio}
+            onChange={onEditBio}
+            placeholder="Tell others about yourself..."
+          />
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCancelEdit}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={onSaveBio}
+              disabled={!editingBio.trim()}
+            >
+              Save
+            </Button>
+          </div>
+        </div>
       ) : (
-        <p className="text-sm whitespace-pre-wrap mt-1">
-          {bio || "No bio available."}
-        </p>
+        <div 
+          onClick={() => setIsEditingBio(true)}
+          className="cursor-pointer"
+        >
+          <p className="text-sm whitespace-pre-wrap mt-1">
+            {displayText || "No bio available. Click to add a bio."}
+          </p>
+        </div>
       )}
     </div>
   );
-}
+};
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -807,11 +1051,57 @@ function UserBio({ profileData }: { profileData: any }) {
                         </CardDescription>
                       )}
                     {profileType === 'group' && (
-                      <CardDescription>
-                        {(profileData as ProfileGroup).description || (
-                          <span className="italic">No group description.</span>
+                      <div className="relative group">
+                        {isEditingDescription ? (
+                          <div className="flex flex-col space-y-2">
+                            <textarea
+                              value={editingDescription}
+                              onChange={(e) => setEditingDescription(e.target.value)}
+                              className="w-full p-2 border rounded-md text-sm"
+                              rows={3}
+                              placeholder="Enter group description"
+                            />
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                onClick={handleUpdateBio}
+                                disabled={!editingDescription.trim()}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setIsEditingDescription(false);
+                                  setEditingDescription((profileData as ProfileGroup).description || '');
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div 
+                            className="relative cursor-pointer hover:bg-accent/50 rounded p-1 -m-1 transition-colors duration-150"
+                            onClick={() => {
+                              setEditingDescription((profileData as ProfileGroup).description || '');
+                              setIsEditingDescription(true);
+                            }}
+                          >
+                            <CardDescription>
+                              <div className="flex items-center justify-between">
+                                <span className="flex-1">
+                                  {(profileData as ProfileGroup).description || (
+                                    <span className="italic">No group description. Click to add one.</span>
+                                  )}
+                                </span>
+                                <Pencil className="w-3 h-3 text-muted-foreground opacity-70 hover:opacity-100 transition-opacity ml-2" />
+                              </div>
+                            </CardDescription>
+                          </div>
                         )}
-                      </CardDescription>
+                      </div>
                     )}
                   </CardHeader>
                 </Card>
@@ -827,26 +1117,93 @@ function UserBio({ profileData }: { profileData: any }) {
                           Presence and profile info
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            Status
-                          </span>
-                          <Badge variant="secondary" className="text-xs">
-                            {(profileData as ProfileUser).status || 'Unknown'}
-                          </Badge>
+                      <CardContent className="space-y-4">
+                        <div className="relative group">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">About</span>
+                          </div>
+                          {isEditingBio ? (
+                            <div className="space-y-2 mt-1">
+                              <textarea
+                                value={editingBio}
+                                onChange={(e) => setEditingBio(e.target.value)}
+                                className="w-full p-2 border rounded-md text-sm min-h-[80px]"
+                                placeholder="Tell us about yourself..."
+                                rows={3}
+                              />
+                              <div className="flex space-x-2">
+                                <Button
+                                  size="sm"
+                                  onClick={handleUpdateBio}
+                                  disabled={!editingBio.trim()}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setIsEditingBio(false);
+                                    setEditingBio(('bio' in profileData ? profileData.bio : '') || '');
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div 
+                              className="relative cursor-pointer hover:bg-accent/50 rounded p-1 -m-1 transition-colors duration-150"
+                              onClick={() => {
+                                setEditingBio(('bio' in profileData ? profileData.bio : '') || '');
+                                setIsEditingBio(true);
+                              }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="flex-1">
+                                  {'bio' in profileData && profileData.bio ? (
+                                    <p className="text-sm whitespace-pre-wrap">{profileData.bio}</p>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground italic">
+                                      {(() => {
+                                        const type = profileType as 'user' | 'group' | null;
+                                        switch (type) {
+                                          case 'group':
+                                            return 'No group description available. Click to add one.';
+                                          case 'user':
+                                            return 'No bio available. Click to add one.';
+                                          default:
+                                            return 'No information available.';
+                                        }
+                                      })()}
+                                    </span>
+                                  )}
+                                </span>
+                                <Pencil className="w-3 h-3 text-muted-foreground opacity-70 hover:opacity-100 transition-opacity ml-2" />
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <Separator />
-                        <div>
-                          <span className="text-xs text-muted-foreground">
-                            Last Seen
-                          </span>
-                          <p className="text-sm">
-                            {(profileData as ProfileUser).lastSeen || 'Unknown'}
-                          </p>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">
+                              Status
+                            </span>
+                            <Badge variant="secondary" className="text-xs">
+                              {(profileData as ProfileUser).status || 'Unknown'}
+                            </Badge>
+                          </div>
+                          <Separator />
+                          <div>
+                            <span className="text-xs text-muted-foreground">
+                              Last Seen
+                            </span>
+                            <p className="text-sm">
+                              {(profileData as ProfileUser).lastSeen || 'Unknown'}
+                            </p>
+                          </div>
                         </div>
-                        <Separator />
-                        <UserBio profileData={profileData as ProfileUser} />
                       </CardContent>
                     </Card>
 
@@ -990,15 +1347,16 @@ function UserBio({ profileData }: { profileData: any }) {
                                         className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setConfirmDialogProps({
+setConfirmDialogProps({
                                             title: 'Confirm Removal',
                                             description: `Are you sure you want to remove ${member.userName} from the group?`,
-                                            onConfirm: () =>
-                                              handleConfirmRemoveMember(
-                                                member.id,
-                                              ),
+                                            onConfirm: async () => {
+                                              await handleConfirmRemoveMember(member.id);
+                                            },
                                             confirmButtonText: 'Remove Member',
-                                            confirmButtonVariant: 'destructive',
+                                            confirmButtonVariant: 'destructive' as const,
+                                            onCancel: () => {},
+                                            cancelButtonText: 'Cancel'
                                           });
                                           setIsConfirmDialogOpen(true);
                                         }}
@@ -1084,8 +1442,7 @@ function UserBio({ profileData }: { profileData: any }) {
                           onClick={() => {
                             setConfirmDialogProps({
                               title: 'Leave Group',
-                              description:
-                                'Are you sure you want to leave this group?',
+                              description: 'Are you sure you want to leave this group?',
                               onConfirm: async () => {
                                 try {
                                   if (
@@ -1099,11 +1456,18 @@ function UserBio({ profileData }: { profileData: any }) {
                                       'conversations',
                                       profileId,
                                     );
+                                    // Check if the document exists first
+                                    const groupDoc = await getDoc(groupRef);
+                                    if (!groupDoc.exists()) {
+                                      throw new Error('Group not found');
+                                    }
+                                    
                                     await updateDoc(groupRef, {
                                       [`participantDetails.${user.uid}`]:
                                         deleteField(),
                                       members: arrayRemove(user.uid),
                                       admins: arrayRemove(user.uid),
+                                      updatedAt: new Date().toISOString(),
                                     });
 
                                     // Close the profile sidebar
@@ -1126,7 +1490,9 @@ function UserBio({ profileData }: { profileData: any }) {
                                 }
                               },
                               confirmButtonText: 'Leave',
-                              confirmButtonVariant: 'destructive',
+                              confirmButtonVariant: 'destructive' as const,
+                              onCancel: () => {},
+                              cancelButtonText: 'Cancel'
                             });
                             setIsConfirmDialogOpen(true);
                           }}
@@ -1151,7 +1517,9 @@ function UserBio({ profileData }: { profileData: any }) {
                                         (profileData as ProfileGroup).id,
                                       ),
                                     confirmButtonText: 'Yes, Delete This Group',
-                                    confirmButtonVariant: 'destructive',
+                                    confirmButtonVariant: 'destructive' as const,
+                                    onCancel: () => {},
+                                    cancelButtonText: 'Cancel'
                                   });
                                   setIsConfirmDialogOpen(true);
                                 }
@@ -1220,8 +1588,23 @@ function UserBio({ profileData }: { profileData: any }) {
           />
           <ConfirmActionDialog
             isOpen={isConfirmDialogOpen}
-            onClose={() => setIsConfirmDialogOpen(false)}
-            {...confirmDialogProps}
+            onClose={() => {
+              setIsConfirmDialogOpen(false);
+              // Call onCancel if it exists in confirmDialogProps
+              if (confirmDialogProps.onCancel) {
+                confirmDialogProps.onCancel();
+              }
+            }}
+            onConfirm={() => {
+              // Call the onConfirm from confirmDialogProps
+              confirmDialogProps.onConfirm();
+              // Close the dialog after confirmation
+              setIsConfirmDialogOpen(false);
+            }}
+            title={confirmDialogProps.title}
+            description={confirmDialogProps.description}
+            confirmButtonText={confirmDialogProps.confirmButtonText}
+            confirmButtonVariant={confirmDialogProps.confirmButtonVariant}
           />
         </>
       )}

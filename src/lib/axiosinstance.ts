@@ -1,20 +1,42 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+
+// Default base URL if environment variable is not set
+const DEFAULT_BASE_URL = 'http://localhost:8080';
+
+// Get base URL from environment variable with fallback
+const getBaseUrl = () => {
+  // Try both NEXT_PUBLIC_BASE_URL and NEXT_PUBLIC__BASE_URL for backward compatibility
+  return process.env.NEXT_PUBLIC_BASE_URL || 
+         process.env.NEXT_PUBLIC__BASE_URL || 
+         DEFAULT_BASE_URL;
+};
+
+// Log the base URL for debugging
+console.log('Initializing axios with base URL:', getBaseUrl());
 
 // Create an Axios instance
 let axiosInstance: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC__BASE_URL,
+  baseURL: getBaseUrl(),
+  timeout: 10000, // 10 second timeout
 });
-
-// Log the base URL for debugging
 
 // Function to initialize Axios with Bearer token
 const initializeAxiosWithToken = (token: string | null) => {
+  if (!token) {
+    console.warn('No token provided to initializeAxiosWithToken');
+    return;
+  }
+  
   axiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC__BASE_URL,
+    baseURL: getBaseUrl(),
+    timeout: 10000, // 10 second timeout
     headers: {
-      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
     },
   });
+  
+  console.log('Axios instance reinitialized with token');
 };
 
 // Request interceptor to add Authorization header
