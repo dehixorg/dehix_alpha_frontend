@@ -9,7 +9,7 @@ import ProfilePictureUpload from '../fileUpload/profilePicture';
 import { Label } from '../ui/label';
 
 import { Card } from '@/components/ui/card';
-import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -91,7 +91,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
     };
 
     fetchData();
-    return () => cancelAllRequests();
+    return () => {};
   }, [user_id]);
 
   useEffect(() => {

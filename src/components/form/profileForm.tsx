@@ -12,7 +12,7 @@ import ResumeUpload from '../fileUpload/resume';
 
 import CoverLetterTextarea from './CoverLetterTextarea';
 
-import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -396,7 +396,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     };
 
     fetchData();
-    return () => cancelAllRequests();
+    return () => {};
   }, [user_id, form]);
 
   useEffect(() => {

@@ -13,7 +13,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
@@ -118,11 +118,7 @@ const Market: React.FC = () => {
       setBidProfiles(profileIds);
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.');
     }
   }, [user.uid]);
   useEffect(() => {
@@ -152,11 +148,7 @@ const Market: React.FC = () => {
         setProjectDomains(projDomRes.data.data.map((pd: any) => pd.label));
       } catch (err) {
         console.error('Error loading filters', err);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load filter options.',
-        });
+        notifyError('Failed to load filter options.');
       } finally {
         setIsLoading(false);
       }
@@ -260,21 +252,14 @@ const Market: React.FC = () => {
         if (err instanceof Error) {
           if (err.name !== 'AbortError') {
             console.error('Fetch jobs error:', err);
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: 'Failed to load job listings.',
-            });
+            notifyError('Failed to load job listings.');
           }
         } else {
           // Handle non-Error objects
           console.error('An unknown error occurred:', err);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description:
-              'An unexpected error occurred while loading job listings.',
-          });
+          notifyError(
+            'An unexpected error occurred while loading job listings.',
+          );
         }
       } finally {
         setIsLoading(false);
@@ -320,11 +305,7 @@ const Market: React.FC = () => {
             'name' in error &&
             (error as any).name === 'Cancel';
           if (!isCanceledError) {
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: 'Failed to load job listings. Please try again.',
-            });
+            notifyError('Failed to load job listings. Please try again.');
           }
         }
       } finally {
@@ -392,17 +373,10 @@ const Market: React.FC = () => {
       setTimeout(() => {
         fetchJobs(filters);
       }, 500);
-      toast({
-        title: 'Success',
-        description: 'Project marked as not interested.',
-      });
+      notifySuccess('Project marked as not interested.', 'Success');
     } catch (err) {
       console.error('Remove job error:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update project status.',
-      });
+      notifyError('Failed to update project status.');
     }
   };
   const activeFilterCount = getActiveFilterCount(filters);

@@ -14,7 +14,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 export default function Projects() {
   const user = useSelector((state: RootState) => state.user);
@@ -56,6 +56,7 @@ export default function Projects() {
     setSelectedProject(null);
   };
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
@@ -64,23 +65,23 @@ export default function Projects() {
 
         if (!projectsData || typeof projectsData !== 'object') {
           console.warn('No projects data found, setting empty array.');
-          setProjects([]);
+          if (isMounted) setProjects([]);
           return;
         }
 
-        setProjects(Object.values(response?.data?.data?.projects));
+        if (isMounted)
+          setProjects(Object.values(response?.data?.data?.projects));
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.');
         console.error('API Error:', error);
-        setProjects([]);
+        if (isMounted) setProjects([]);
       }
     };
 
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, [user.uid, refresh]);
 
   return (

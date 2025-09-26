@@ -16,8 +16,8 @@ import { motion } from 'framer-motion';
 
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
-import { useToast } from '@/components/ui/use-toast';
-import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
@@ -135,7 +135,6 @@ const ProjectApplicationForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appliedProfileIds, setAppliedProfileIds] = useState<string[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const { toast } = useToast();
   const user = useSelector((state: RootState) => state.user);
   const fetchFreelancerProfiles = useCallback(async () => {
     setIsLoadingProfiles(true);
@@ -156,17 +155,14 @@ const ProjectApplicationForm = ({
       return validProfiles;
     } catch (error: any) {
       console.error('Error fetching freelancer profiles:', error);
-      toast({
-        title: 'Error',
-        description:
-          'Failed to load freelancer profiles. Please try again later.',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Failed to load freelancer profiles. Please try again later.',
+      );
       return [];
     } finally {
       setIsLoadingProfiles(false);
     }
-  }, [toast]);
+  }, []);
 
   // Filter freelancer profiles based on selected project profile
   const filteredFreelancerProfiles = useMemo(() => {
@@ -211,14 +207,10 @@ const ProjectApplicationForm = ({
       return profilesUserAppliedFor;
     } catch (error: any) {
       console.error('API Error fetching applied data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to retrieve application status. Please try again.',
-      });
+      notifyError('Failed to retrieve application status. Please try again.');
       return [];
     }
-  }, [user.uid, project._id, toast]);
+  }, [user.uid, project._id]);
   // Initial data load
   useEffect(() => {
     const loadData = async () => {
@@ -232,18 +224,15 @@ const ProjectApplicationForm = ({
 
     loadData();
 
-    return () => {
-      cancelAllRequests();
-    };
+    return () => {};
   }, [fetchAppliedData, fetchFreelancerProfiles]);
 
   const handleApplyClick = () => {
     if (!selectedProfile) {
-      toast({
-        title: 'Action Required',
-        description: 'Please select a profile to apply with before proceeding.',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Please select a profile to apply with before proceeding.',
+        'Action Required',
+      );
       return;
     }
     setDialogOpen(true);
@@ -253,11 +242,7 @@ const ProjectApplicationForm = ({
 
     // Validate profile selection
     if (!selectedProfile?._id) {
-      toast({
-        title: 'Error',
-        description: 'No profile selected for bidding',
-        variant: 'destructive',
-      });
+      notifyError('No profile selected for bidding');
       return;
     }
 
@@ -270,40 +255,33 @@ const ProjectApplicationForm = ({
     // Check minimum bid amount (minConnect from profile)
     const minBid = selectedProfile?.minConnect ?? 0;
     if (isNaN(bidAmount) || bidAmount < minBid) {
-      toast({
-        title: 'Bid Too Low',
-        description: `Minimum bid amount is ${minBid} connects.`,
-        variant: 'destructive',
-      });
+      notifyError(`Minimum bid amount is ${minBid} connects.`, 'Bid Too Low');
       return;
     }
 
     // Check available connects
     if (isNaN(currentConnects) || bidAmount > currentConnects) {
-      toast({
-        title: 'Insufficient Connects',
-        description: 'You do not have enough connects to place this bid.',
-        variant: 'destructive',
-      });
+      notifyError(
+        'You do not have enough connects to place this bid.',
+        'Insufficient Connects',
+      );
       return;
     }
 
     // Validate cover letter length
     if (coverLetter.length < minChars) {
-      toast({
-        title: 'Cover Letter Too Short',
-        description: `Please write at least ${minChars} characters.`,
-        variant: 'destructive',
-      });
+      notifyError(
+        `Please write at least ${minChars} characters.`,
+        'Cover Letter Too Short',
+      );
       return;
     }
 
     if (coverLetter.length > maxChars) {
-      toast({
-        title: 'Cover Letter Too Long',
-        description: `Maximum allowed is ${maxChars} characters.`,
-        variant: 'destructive',
-      });
+      notifyError(
+        `Maximum allowed is ${maxChars} characters.`,
+        'Cover Letter Too Long',
+      );
       return;
     }
 
@@ -339,10 +317,10 @@ const ProjectApplicationForm = ({
       setSelectedFreelancerProfile(null);
 
       // Show success message
-      toast({
-        title: 'Application Submitted',
-        description: 'Your application has been successfully submitted.',
-      });
+      notifySuccess(
+        'Your application has been successfully submitted.',
+        'Application Submitted',
+      );
 
       // Refresh data
       await fetchAppliedData();
@@ -358,11 +336,7 @@ const ProjectApplicationForm = ({
         }
       }
 
-      toast({
-        title: 'Submission Failed',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      notifyError(errorMessage, 'Submission Failed');
     } finally {
       setIsSubmitting(false);
     }

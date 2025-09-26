@@ -12,7 +12,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
 import Header from '@/components/header/header';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 export default function Education() {
   const user = useSelector((state: RootState) => state.user);
@@ -24,6 +24,7 @@ export default function Education() {
   };
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
@@ -32,23 +33,23 @@ export default function Education() {
 
         if (!educationData || typeof educationData !== 'object') {
           console.warn('No education data found, setting empty array.');
-          setEducationInfo([]);
+          if (isMounted) setEducationInfo([]);
           return;
         }
 
-        setEducationInfo(Object.values(response.data.data.education));
+        if (isMounted)
+          setEducationInfo(Object.values(response.data.data.education));
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.');
         console.error('API Error:', error);
-        setEducationInfo([]); // Ensure UI doesn't break
+        if (isMounted) setEducationInfo([]); // Ensure UI doesn't break
       }
     };
 
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, [user.uid, refresh]);
 
   return (

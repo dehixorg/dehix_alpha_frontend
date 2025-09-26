@@ -48,7 +48,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { useToast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -156,7 +156,22 @@ export function ProfileSidebar({
     confirmButtonVariant: 'default' as 'default' | 'destructive',
   });
 
-  const { toast } = useToast();
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description, title || 'Error');
+    } else {
+      notifySuccess(description, title);
+    }
+  };
   const db = getFirestore();
 
   const internalFetchProfileData = async () => {

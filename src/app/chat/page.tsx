@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { db } from '@/config/firebaseConfig';
-import { toast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CardsChat } from '@/components/shared/chat';
@@ -34,7 +34,22 @@ type UserType = 'freelancer' | 'business' | undefined;
 const getUserType = (type: string | undefined): UserType => {
   return type === 'freelancer' || type === 'business' ? type : undefined;
 };
-
+// Toast wrapper to keep existing call sites working without edits
+const toast = ({
+  variant,
+  title,
+  description,
+}: {
+  variant?: 'destructive';
+  title?: string;
+  description: string;
+}) => {
+  if (variant === 'destructive') {
+    notifyError(description, title || 'Error');
+  } else {
+    notifySuccess(description, title);
+  }
+};
 // Helper function to check if two arrays contain the same elements, regardless of order
 const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {
   if (arr1.length !== arr2.length) return false;
@@ -292,11 +307,13 @@ const HomePage = () => {
   useEffect(() => {
     if (!user.uid) return;
 
+    let isMounted = true;
     setLoading(true);
     const unsubscribe = subscribeToUserConversations(
       'conversations',
       user.uid,
       (data) => {
+        if (!isMounted) return;
         const typedData = data as Conversation[];
         setConversations(typedData);
         setLoading(false);
@@ -304,6 +321,7 @@ const HomePage = () => {
     );
 
     return () => {
+      isMounted = false;
       if (unsubscribe) unsubscribe();
     };
   }, [user.uid]);

@@ -12,7 +12,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -26,6 +26,7 @@ export default function ProfessionalInfo() {
     setRefresh((prev) => !prev);
   };
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         setIsLoading(true);
@@ -38,25 +39,24 @@ export default function ProfessionalInfo() {
           console.warn(
             'No professional experience data found, setting empty array.',
           );
-          setExperiences([]); // Empty array set kar diya taaki error na aaye
+          if (isMounted) setExperiences([]);
           return;
         }
 
-        setExperiences(Object.values(professionalInfo));
+        if (isMounted) setExperiences(Object.values(professionalInfo));
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.');
         console.error('API Error:', error);
-        setExperiences([]); // UI break hone se bachega
+        if (isMounted) setExperiences([]);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, [user.uid, refresh]);
 
   return (
