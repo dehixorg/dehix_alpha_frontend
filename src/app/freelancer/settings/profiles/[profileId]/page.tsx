@@ -14,9 +14,9 @@ import {
   FileText,
   Linkedin,
   Globe2,
-  Tags,
   Layers,
   Github,
+  Award,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -91,6 +91,10 @@ export default function ProfileDetailPage() {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isProjectDetailsOpen, setIsProjectDetailsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [pendingProjects, setPendingProjects] = useState<any[] | null>(null);
+  const [pendingExperiences, setPendingExperiences] = useState<any[] | null>(
+    null,
+  );
 
   // Reusable section for Skills/Domains
   const TagSection = ({
@@ -380,7 +384,15 @@ export default function ProfileDetailPage() {
 
     setIsUpdating(true);
     try {
-      const updatePayload = transformProfileForAPI(editingProfileData);
+      const updatePayload: any = {
+        ...transformProfileForAPI(editingProfileData),
+      };
+      if (pendingProjects && Array.isArray(pendingProjects)) {
+        updatePayload.projects = pendingProjects;
+      }
+      if (pendingExperiences && Array.isArray(pendingExperiences)) {
+        updatePayload.experiences = pendingExperiences;
+      }
 
       await axiosInstance.put(
         `/freelancer/profile/${profile._id}`,
@@ -391,6 +403,9 @@ export default function ProfileDetailPage() {
         title: 'Success',
         description: 'Profile updated successfully',
       });
+      // Clear any pending project selections after successful save
+      setPendingProjects(null);
+      setPendingExperiences(null);
       await fetchProfile();
       setIsEditMode(false);
     } catch (error) {
@@ -1026,7 +1041,7 @@ export default function ProfileDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <TagSection
                     title="Skills"
-                    Icon={Tags}
+                    Icon={Award}
                     options={skillsOptions}
                     selectedIds={editingProfileData.skills || []}
                     getNameById={getSkillNameById}
@@ -1521,8 +1536,19 @@ export default function ProfileDetailPage() {
         onOpenChange={setShowProjectDialog}
         freelancerId={user.uid}
         currentProfileId={profileId}
-        onSuccess={() => {
-          fetchProfile();
+        onSuccess={(selectedProjects: any[]) => {
+          // Merge with existing full objects to reflect in UI. Defer API to Save.
+          const existing = Array.isArray(editingProfileData.projects)
+            ? editingProfileData.projects
+            : [];
+          const byId = new Map<string, any>();
+          for (const p of existing) byId.set(String(p._id), p);
+          for (const p of selectedProjects) byId.set(String(p._id), p);
+          const merged = Array.from(byId.values());
+
+          setPendingProjects(merged);
+          // Update UI immediately so user can see the selection reflected
+          setEditingProfileData((prev: any) => ({ ...prev, projects: merged }));
         }}
       />
 
@@ -1531,8 +1557,21 @@ export default function ProfileDetailPage() {
         onOpenChange={setShowExperienceDialog}
         freelancerId={user.uid}
         currentProfileId={profileId}
-        onSuccess={() => {
-          fetchProfile();
+        onSuccess={(selectedExperiences: any[]) => {
+          // Merge with existing full objects and stage until Save
+          const existing = Array.isArray(editingProfileData.experiences)
+            ? editingProfileData.experiences
+            : [];
+          const byId = new Map<string, any>();
+          for (const e of existing) byId.set(String(e._id), e);
+          for (const e of selectedExperiences) byId.set(String(e._id), e);
+          const merged = Array.from(byId.values());
+
+          setPendingExperiences(merged);
+          setEditingProfileData((prev: any) => ({
+            ...prev,
+            experiences: merged,
+          }));
         }}
       />
 
