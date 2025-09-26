@@ -223,12 +223,10 @@ const Market: React.FC = () => {
                   {freelancers.length === 1 ? 'result' : 'results'}
                 </span>
               </div>
-              <div className="space-y-4">
-                <FreelancerList
-                  freelancers={freelancers}
-                  isLoading={isDataLoading}
-                />
-              </div>
+              <FreelancerList
+                freelancers={freelancers}
+                isLoading={isDataLoading}
+              />
             </div>
           </div>
         </div>

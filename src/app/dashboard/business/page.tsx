@@ -193,15 +193,15 @@ export default function Dashboard() {
                       : 0;
                   const completionColor =
                     completionPercentage >= 70
-                      ? 'bg-green-500'
+                      ? '[&>*]:bg-green-500'
                       : completionPercentage >= 30
-                        ? 'bg-amber-500'
-                        : 'bg-red-500';
+                        ? '[&>*]:bg-amber-500'
+                        : '[&>*]:bg-red-500';
 
                   return (
                     <Progress
                       value={completionPercentage}
-                      className={cn('h-1 w-full', `[&>*]:${completionColor}`)}
+                      className={cn('h-1 w-full', completionColor)}
                     />
                   );
                 })()}
