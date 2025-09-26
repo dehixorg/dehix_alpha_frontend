@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { User, FileText, Tags, Layers, FolderKanban, Upload, Save } from 'lucide-react';
+import { User, Tags, Upload, Save } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -497,7 +497,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           <User className="h-5 w-5" /> Personal Information
         </h1>
         <p className="text-sm text-muted-foreground">
-          Keep your profile up to date. Your details help businesses find you faster.
+          Keep your profile up to date. Your details help businesses find you
+          faster.
         </p>
       </div>
       <Form {...form}>
@@ -508,11 +509,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6">
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
             {/* Basic Info */}
-            <div className="md:col-span-2 -mb-2">
-              <h3 className="text-xs font-semibold mb-1 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
-                <FileText className="h-4 w-4" /> Basic Details
-              </h3>
-            </div>
             <FormField
               control={form.control}
               name="firstName"
@@ -622,7 +618,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             />
           </div>
 
-          <Separator className="my-6" />
+          <Separator className="my-6 bg-muted-foreground/20" />
           <div className="col-span-1 md:col-span-2">
             <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
               <Tags className="h-4 w-4" /> Skills & Domains
@@ -663,7 +659,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </div>
             </div>
           </div>
-          <Separator className="col-span-1 md:col-span-2 my-6" />
+          <Separator className="col-span-1 md:col-span-2 my-6 bg-muted-foreground/20" />
           <div className="col-span-1 md:col-span-2">
             <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
               <Upload className="h-4 w-4" /> Resume & Cover Letter
