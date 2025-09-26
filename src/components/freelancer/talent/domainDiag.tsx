@@ -125,8 +125,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Domain
+        <Button size="sm">
+          <Plus className="h-4 w-4" /> Add Domain
         </Button>
       </DialogTrigger>
       <DialogContent>
