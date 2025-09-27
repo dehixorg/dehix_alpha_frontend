@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 // ---------------- Types ----------------
@@ -132,33 +132,21 @@ export default function CurrentInterviews() {
     try {
       setSubmitting(true);
       if (!rating || rating < 1) {
-        toast({
-          variant: 'destructive',
-          title: 'Rating required',
-          description: 'Please select a rating before submitting.',
-        });
+        notifyError('Please select a rating before submitting.', 'Rating required');
         return;
       }
 
       await completeBid(interview._id, rating, feedback, 'CANCELLED');
       setIsDialogOpen(false);
 
-      toast({
-        title: 'Rejected submitted',
-        description: 'Your rejection and feedback have been saved.',
-      });
+      notifySuccess('Your rejection and feedback have been saved.', 'Rejected submitted');
 
       setfeedback('');
       setRating(0);
       setHover(0);
     } catch (e: any) {
       console.error('Error in handleRejected:', e);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to submit',
-        description:
-          e?.response?.data?.message || e?.message || 'Something went wrong.',
-      });
+      notifyError(e?.response?.data?.message || e?.message || 'Something went wrong.', 'Failed to submit');
     } finally {
       setSubmitting(false);
     }
@@ -168,11 +156,7 @@ export default function CurrentInterviews() {
     try {
       setSubmitting(true);
       if (!rating || rating < 1) {
-        toast({
-          variant: 'destructive',
-          title: 'Rating required',
-          description: 'Please select a rating before submitting.',
-        });
+        notifyError('Please select a rating before submitting.', 'Rating required');
         return;
       }
       const status =
@@ -183,22 +167,17 @@ export default function CurrentInterviews() {
       await completeInterviewerBid(interview._id, rating, feedback, status);
       setIsDialogOpen(false);
 
-      toast({
-        title: 'Feedback submitted',
-        description: 'Your rating and feedback have been saved.',
-      });
+      notifySuccess('Your rating and feedback have been saved.', 'Feedback submitted');
 
       setfeedback('');
       setRating(0);
       setHover(0);
     } catch (e: any) {
       console.error('Error in handleSubmit:', e);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to submit',
-        description:
-          e?.response?.data?.message || e?.message || 'Something went wrong.',
-      });
+      notifyError(
+        e?.response?.data?.message || e?.message || 'Something went wrong.',
+        'Failed to submit',
+      );
     } finally {
       setSubmitting(false);
     }
