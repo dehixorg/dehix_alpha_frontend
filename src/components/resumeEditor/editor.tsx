@@ -27,12 +27,12 @@ import { WorkExperienceInfo } from '../form/resumeform/WorkExperienceInfo';
 import { SummaryInfo } from '../form/resumeform/SummaryInfo';
 import { AchievementInfo } from '../form/resumeform/Achievement';
 import { ProjectInfo } from '../form/resumeform/ProjectInfo';
-import { toast } from '../ui/use-toast';
 
 import { ResumePreview1 } from './ResumePreview1';
 import { ResumePreview2 } from './ResumePreview2';
 import { AtsScore } from './atsScore';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -88,6 +88,22 @@ export default function ResumeEditor({
   initialResume,
   onCancel,
 }: ResumeEditorProps) {
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description?: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description || '', title || 'Error');
+    } else {
+      notifySuccess(description || '', title);
+    }
+  };
   const user = useSelector((state: RootState) => state.user);
   const resumeRef = useRef<HTMLDivElement>(null);
 

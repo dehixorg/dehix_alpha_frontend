@@ -16,7 +16,7 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { CreateMilestoneDialog } from '@/components/shared/CreateMilestoneDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { Milestone, Story } from '@/utils/types/Milestone';
 import type { RootState } from '@/lib/store';
 import { CreateProjectGroupDialog } from '@/components/shared/CreateProjectGroupDialog';
@@ -56,6 +56,22 @@ const Page = () => {
     number | null
   >(0);
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description?: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description || '', title || 'Error');
+    } else {
+      notifySuccess(description || '', title);
+    }
+  };
 
   const handleChatClick = useCallback(
     async (freelancerId: string, freelancerName: string) => {
@@ -196,7 +212,6 @@ const Page = () => {
         description: isTask
           ? 'Task added successfully!'
           : 'Story added successfully!',
-        duration: 3000,
       });
 
       fetchMilestones();
@@ -209,7 +224,6 @@ const Page = () => {
         title: 'Error',
         description: 'Failed to update milestone.',
         variant: 'destructive',
-        duration: 3000,
       });
     }
   };

@@ -24,7 +24,7 @@ import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BidsDetails from '@/components/freelancer/project/bidsDetail';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import Header from '@/components/header/header';
 import AddProfileDialog from '@/components/dialogs/addProfileDialog';
 
@@ -87,6 +87,22 @@ export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description?: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description || '', title || 'Error');
+    } else {
+      notifySuccess(description || '', title);
+    }
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {

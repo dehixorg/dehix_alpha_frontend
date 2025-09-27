@@ -13,7 +13,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Milestone, Story } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
@@ -29,6 +29,22 @@ const Page = () => {
   const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<
     number | null
   >(0);
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description?: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description || '', title || 'Error');
+    } else {
+      notifySuccess(description || '', title);
+    }
+  };
 
   // Handle chat with other freelancers
   const handleChatClick = useCallback(
@@ -157,7 +173,6 @@ const Page = () => {
         description: isTask
           ? 'Task added successfully!'
           : 'Story added successfully!',
-        duration: 3000,
       });
 
       fetchMilestones();
@@ -170,7 +185,6 @@ const Page = () => {
         title: 'Error',
         description: 'Failed to update milestone.',
         variant: 'destructive',
-        duration: 3000,
       });
     }
   };

@@ -16,7 +16,6 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '../ui/hover-card';
-import { toast } from '../ui/use-toast';
 import {
   Dialog,
   DialogClose,
@@ -37,6 +36,7 @@ import {
 import TaskDropdown from './TaskDropdown';
 import FreelancerTaskStatus from './FreelancerTaskStatus';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
   AccordionItem,
   AccordionTrigger,
@@ -96,6 +96,22 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   freelancerId,
   fetchMilestones,
 }) => {
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description?: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description || '', title || 'Error');
+    } else {
+      notifySuccess(description || '', title);
+    }
+  };
   const { text: projectStatus, className: statusBadgeStyle } = getStatusBadge(
     story.storyStatus,
   );
@@ -188,7 +204,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         return newSet;
       });
 
-      toast({ description: 'Task accepted!', duration: 3000 });
+      toast({ description: 'Task accepted!' });
       fetchMilestones(); // Refresh milestones
     } catch (error) {
       console.error('Error accepting task:', error);
@@ -232,7 +248,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
 
       toast({
         description: 'Task rejected and update requests removed!',
-        duration: 3000,
       });
       fetchMilestones(); // Refresh milestones
     } catch (error) {
@@ -284,7 +299,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
         payload,
       );
-      toast({ description: 'Update permission approved!', duration: 3000 });
+      toast({ description: 'Update permission approved!' });
       fetchMilestones(); // Refresh milestones
       return true;
     } catch (error) {
@@ -334,7 +349,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
         payload,
       );
-      toast({ description: 'Update permission rejected!', duration: 3000 });
+      toast({ description: 'Update permission rejected!' });
       fetchMilestones(); // Refresh milestones
       return true;
     } catch (error) {
@@ -349,7 +364,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
 
   const handleCopy = (url: string) => {
     navigator.clipboard.writeText(url);
-    toast({ description: 'URL copied!!', duration: 900 });
+    toast({ description: 'URL copied!!' });
     setOpen(false);
     setValue('');
   };

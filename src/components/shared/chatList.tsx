@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { RootState } from '@/lib/store';
-import { toast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { CombinedUser } from '@/hooks/useAllUsers';
 import { useAllUsers } from '@/hooks/useAllUsers';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -71,6 +71,22 @@ export function ChatList({
   onSelectUser,
   openNewChat,
 }: ChatListProps) {
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description?: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description || '', title || 'Error');
+    } else {
+      notifySuccess(description || '', title);
+    }
+  };
   const [lastUpdatedTimes, setLastUpdatedTimes] = useState<
     Record<string, string>
   >({});

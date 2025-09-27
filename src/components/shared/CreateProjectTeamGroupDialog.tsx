@@ -20,7 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { db } from '@/config/firebaseConfig';
@@ -54,6 +54,22 @@ export function CreateProjectTeamGroupDialog({
   currentUserUid,
   onGroupCreated,
 }: CreateProjectTeamGroupDialogProps) {
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description?: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description || '', title || 'Error');
+    } else {
+      notifySuccess(description || '', title);
+    }
+  };
   const user = useSelector((state: RootState) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [groupName, setGroupName] = useState('');

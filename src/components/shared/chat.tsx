@@ -69,7 +69,7 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { toast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
   Dialog,
@@ -168,6 +168,22 @@ export function CardsChat({
   onToggleExpand,
   onOpenProfileSidebar,
 }: CardsChatProps) {
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description?: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description || '', title || 'Error');
+    } else {
+      notifySuccess(description || '', title);
+    }
+  };
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',

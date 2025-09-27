@@ -9,7 +9,7 @@ let axiosInstance: AxiosInstance = axios.create({
   },
 });
 
-// Simple in-flight request tracking for cancellation helpers
+// Simple in flight request tracking for cancellation helpers
 const inFlightControllers = new Map<string, AbortController>();
 let requestCounter = 0;
 const nextRequestId = () => `req_${Date.now()}_${++requestCounter}`;
@@ -67,9 +67,100 @@ function attachInterceptors(instance: AxiosInstance) {
       } catch (err) {
         console.error('Error deleting request from inFlightControllers', err);
       }
-      return Promise.reject(error);
+      return handleRetry(error);
     },
   );
+}
+
+// -----------------------------
+// Lightweight retry/backoff
+// -----------------------------
+
+type RetryMeta = {
+  retryCount?: number;
+  requestId?: string;
+};
+
+const MAX_RETRIES = Number(process.env.NEXT_PUBLIC_HTTP_MAX_RETRIES || 2);
+const BASE_DELAY_MS = Number(
+  process.env.NEXT_PUBLIC_HTTP_RETRY_BASE_DELAY_MS || 300,
+);
+const MAX_DELAY_MS = Number(
+  process.env.NEXT_PUBLIC_HTTP_RETRY_MAX_DELAY_MS || 3000,
+);
+
+function isIdempotent(method?: string) {
+  const m = (method || 'get').toUpperCase();
+  return m === 'GET' || m === 'HEAD' || m === 'OPTIONS';
+}
+
+function isRetriableStatus(status?: number) {
+  if (!status) return false;
+  return status === 429 || status === 503 || status === 502 || status === 408; // too many, service unavailable, bad gateway, timeout
+}
+
+function isNetworkError(err: any) {
+  const code = err?.code;
+  return (
+    err?.message === 'Network Error' ||
+    code === 'ECONNABORTED' ||
+    code === 'ETIMEDOUT' ||
+    code === 'ERR_NETWORK'
+  );
+}
+
+function sleep(ms: number) {
+  return new Promise((res) => setTimeout(res, ms));
+}
+
+function computeDelay(attempt: number) {
+  const exp = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, attempt));
+  const jitter = Math.random() * 0.25 * exp; // +/- 25% jitter
+  return Math.floor(exp - jitter);
+}
+
+async function handleRetry(error: any) {
+  const config = error?.config as AxiosRequestConfig & { metadata?: RetryMeta };
+  if (!config) return Promise.reject(error);
+
+  // Do not retry if explicitly disabled
+  const retryDisabled = (config as any)?.noRetry === true;
+  if (retryDisabled) return Promise.reject(error);
+
+  // Only retry idempotent methods
+  if (!isIdempotent(config.method)) return Promise.reject(error);
+
+  // Determine if error is retriable
+  const status = error?.response?.status as number | undefined;
+  const retriable = isNetworkError(error) || isRetriableStatus(status);
+  if (!retriable) return Promise.reject(error);
+
+  // Track attempts on metadata
+  const meta = (config.metadata ||= {} as RetryMeta);
+  meta.retryCount = (meta.retryCount || 0) + 1;
+  if (meta.retryCount > MAX_RETRIES) return Promise.reject(error);
+
+  const delay = computeDelay(meta.retryCount - 1);
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Retrying ${config.method?.toUpperCase()} ${config.url} (attempt ${meta.retryCount}/${MAX_RETRIES}) in ${delay}ms`,
+    );
+  }
+  await sleep(delay);
+
+  // Recreate AbortController for the retry
+  const newController = new AbortController();
+  (config as any).signal = newController.signal;
+  // Preserve requestId if present; keep it tracked
+  try {
+    const requestId = meta.requestId;
+    if (requestId) inFlightControllers.set(requestId, newController);
+  } catch (err) {
+    console.error('Error deleting request from inFlightControllers', err);
+  }
+
+  return axiosInstance.request(config);
 }
 
 attachInterceptors(axiosInstance);

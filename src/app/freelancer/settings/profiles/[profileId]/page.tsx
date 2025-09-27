@@ -30,7 +30,7 @@ import {
 import Header from '@/components/header/header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -77,6 +77,23 @@ export default function ProfileDetailPage() {
   const router = useRouter();
   const params = useParams();
   const profileId = params.profileId as string;
+
+  // Toast wrapper to keep existing call sites unchanged
+  const toast = ({
+    variant,
+    title,
+    description,
+  }: {
+    variant?: 'destructive';
+    title?: string;
+    description?: string;
+  }) => {
+    if (variant === 'destructive') {
+      notifyError(description || '', title || 'Error');
+    } else {
+      notifySuccess(description || '', title);
+    }
+  };
 
   const [profile, setProfile] = useState<FreelancerProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
