@@ -32,7 +32,7 @@ interface ExperienceSelectionDialogProps {
   onOpenChange: (open: boolean) => void;
   freelancerId: string;
   currentProfileId: string;
-  onSuccess?: () => void;
+  onSuccess?: (selectedExperiences: Experience[]) => void;
 }
 
 export default function ExperienceSelectionDialog({
@@ -56,7 +56,7 @@ export default function ExperienceSelectionDialog({
       fetchExperiences();
       fetchCurrentProfileExperiences();
     }
-  });
+  }, [open, freelancerId, currentProfileId]);
 
   const fetchExperiences = async () => {
     setIsLoading(true);
@@ -130,25 +130,24 @@ export default function ExperienceSelectionDialog({
 
     setIsAddingExperiences(true);
     try {
+      const selectedObjects = experiences.filter((exp) =>
+        selectedExperiences.includes(exp._id),
+      );
+
       toast({
-        title: 'Success',
-        description: `${selectedExperiences.length} experience(s) added to profile successfully!`,
+        title: 'Selected',
+        description: `${selectedObjects.length} experience(s) selected. Save the profile to persist changes.`,
       });
+
+      onSuccess?.(selectedObjects);
 
       setSelectedExperiences([]);
       onOpenChange(false);
-
-      // Call onSuccess to refresh the parent component
-      if (onSuccess) {
-        onSuccess();
-      }
     } catch (error: any) {
-      console.error('Error adding experiences:', error);
+      console.error('Error preparing selected experiences:', error);
       toast({
         title: 'Error',
-        description:
-          error.response?.data?.message ||
-          'Failed to add experiences to profile',
+        description: 'Could not process selected experiences',
         variant: 'destructive',
       });
     } finally {

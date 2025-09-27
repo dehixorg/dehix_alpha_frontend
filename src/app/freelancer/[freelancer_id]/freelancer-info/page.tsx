@@ -142,7 +142,7 @@ const FreelancerInfo: React.FC = () => {
         menuItemsBottom={menuItemsBottom}
         active="Personal Info"
       />
-      <div className="flex flex-col mb-8 sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:border-0  sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}

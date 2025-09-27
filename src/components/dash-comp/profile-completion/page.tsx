@@ -209,10 +209,10 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
 
   const completionColor =
     completionPercentage < 30
-      ? 'bg-red-500'
+      ? '[&>*]:bg-red-500'
       : completionPercentage < 70
-        ? 'bg-yellow-500'
-        : 'bg-green-500';
+        ? '[&>*]:bg-yellow-500'
+        : '[&>*]:bg-green-500';
 
   return (
     <Card className="rounded-none rounded-b-lg w-full overflow-hidden border-0 shadow-sm bg-gradient-to-br from-card to-card/70">
@@ -265,7 +265,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
             </div>
             <Progress
               value={completionPercentage}
-              className={cn('h-1', `[&>*]:${completionColor}`)}
+              className={cn('h-1', completionColor)}
             />
           </div>
 

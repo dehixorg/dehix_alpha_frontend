@@ -1,21 +1,37 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, Eye, User, Briefcase, Pencil } from 'lucide-react';
+import { Plus, BarChart3, Sparkles } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import {
+  BarChart as ReBarChart,
+  Bar as ReBar,
+  XAxis as ReXAxis,
+  YAxis as ReYAxis,
+  CartesianGrid as ReCartesianGrid,
+  Tooltip as ReTooltip,
+  ResponsiveContainer as ReResponsiveContainer,
+} from 'recharts';
 
 import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import ProfileSummaryCard from '@/components/cards/ProfileSummaryCard';
+import { FreelancerProfile } from '@/types/freelancer';
+import StatItem from '@/components/shared/StatItem';
 import {
   Dialog,
   DialogContent,
@@ -24,9 +40,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FreelancerProfile } from '@/types/freelancer';
 
 export default function ProfilesPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -38,6 +51,12 @@ export default function ProfilesPage() {
   const [newProfileDescription, setNewProfileDescription] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'freelancer' | 'consultant'
+  >('overview');
+  const [newProfileType, setNewProfileType] = useState<
+    'Freelancer' | 'Consultant'
+  >('Freelancer');
 
   const fetchProfiles = useCallback(async () => {
     if (!user.uid) return;
@@ -105,6 +124,7 @@ export default function ProfilesPage() {
       const profilePayload = {
         profileName: newProfileName.trim(),
         description: description,
+        profileType: newProfileType,
         skills: [],
         domains: [],
         projects: [],
@@ -122,11 +142,21 @@ export default function ProfilesPage() {
       );
 
       const newProfile = response.data.data;
+      // Ensure correct local type so it appears in the right tab immediately
+      const localProfile = {
+        ...newProfile,
+        profileType: newProfileType,
+      } as FreelancerProfile;
 
-      setProfiles([...profiles, newProfile]);
+      setProfiles((prev) => [...prev, localProfile]);
       setNewProfileName('');
       setNewProfileDescription('');
       setIsCreateDialogOpen(false);
+
+      // Switch to the relevant tab so the newly created profile is visible immediately
+      setActiveTab(
+        newProfileType === 'Consultant' ? 'consultant' : 'freelancer',
+      );
 
       toast({
         title: 'Success',
@@ -170,20 +200,38 @@ export default function ProfilesPage() {
       setProfileToDelete(null);
     }
   };
+  const freelancerProfiles = profiles.filter(
+    (p) => p.profileType === 'Freelancer' || !p.profileType, // Handles old profiles
+  );
+  const consultantProfiles = profiles.filter(
+    (p) => p.profileType === 'Consultant',
+  );
 
-  const handleViewProfile = (profileId: string) => {
-    router.push(`/freelancer/settings/profiles/${profileId}`);
-  };
+  // --- Derived stats for Overview ---
+  const totalProfiles = profiles.length;
+  const totalFreelancer = freelancerProfiles.length;
+  const totalConsultant = consultantProfiles.length;
+  const avgProjects =
+    totalProfiles === 0
+      ? 0
+      : Math.round(
+          (profiles.reduce((acc, p) => acc + (p.projects?.length || 0), 0) /
+            totalProfiles) *
+            10,
+        ) / 10;
+  const topProjectProfiles = [...profiles]
+    .sort((a, b) => (b.projects?.length || 0) - (a.projects?.length || 0))
+    .slice(0, 5);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Profiles"
         isKycCheck={true}
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-6 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -195,214 +243,334 @@ export default function ProfilesPage() {
           ]}
         />
         <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold">Professional Profiles</h1>
-                <p className="text-muted-foreground">
-                  Create and manage multiple professional profiles to showcase
-                  different aspects of your expertise.
-                </p>
-              </div>
+          <div className="w-full mx-auto max-w-6xl">
+            <div className="flex flex-col gap-2 mb-6">
+              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" /> Profiles Center
+              </h1>
+              <p className="text-muted-foreground">
+                Create and manage profiles to showcase your expertise.
+              </p>
             </div>
 
-            {isLoading ? (
-              <div className="text-center py-12">
-                <p>Loading profiles...</p>
-              </div>
-            ) : profiles.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-12">
-                <p className="text-gray-500 mb-4">No profiles found</p>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsCreateDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {profiles.map((profile) => (
-                  <Card
-                    key={profile._id}
-                    className="hover:shadow-lg transition-shadow flex flex-col h-full"
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                            <User className="h-5 w-5" />
-                            {profile.profileName}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {profile.description &&
-                            profile.description.length > 100
-                              ? `${profile.description.substring(0, 100)}...`
-                              : profile.description ||
-                                'No description available'}
-                          </p>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4 flex-1 flex flex-col">
-                      <div className="flex-1 space-y-4">
-                        {/* Skills */}
-                        <div className="min-h-[60px]">
-                          {profile.skills && profile.skills.length > 0 ? (
-                            <div>
-                              <p className="text-sm font-medium mb-2">
-                                Skills:
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {profile.skills
-                                  .slice(0, 3)
-                                  .map((skill: any, index: number) => (
-                                    <Badge
-                                      key={index}
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      {typeof skill === 'string'
-                                        ? skill
-                                        : skill.name || skill.skillName}
-                                    </Badge>
-                                  ))}
-                                {profile.skills.length > 3 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{profile.skills.length - 3} more
-                                  </Badge>
-                                )}
+            <div className="bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+              <Tabs
+                value={activeTab}
+                onValueChange={(v) => setActiveTab(v as any)}
+                className="w-full"
+              >
+                <div className="border-b px-6">
+                  <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
+                    <TabsTrigger
+                      value="overview"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <BarChart3 className="mr-2 h-4 w-4" /> Overview
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="freelancer"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      Freelancer ({freelancerProfiles.length})
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="consultant"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      Consultant ({consultantProfiles.length})
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <div className="p-6">
+                  {/* Overview */}
+                  <TabsContent value="overview" className="m-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                      <StatItem
+                        variant="card"
+                        color="blue"
+                        label="Total Profiles"
+                        value={totalProfiles}
+                      />
+                      <StatItem
+                        variant="card"
+                        color="green"
+                        label="Freelancer"
+                        value={totalFreelancer}
+                      />
+                      <StatItem
+                        variant="card"
+                        color="amber"
+                        label="Consultant"
+                        value={totalConsultant}
+                      />
+                      <StatItem
+                        variant="card"
+                        label="Avg Projects / Profile"
+                        value={avgProjects}
+                      />
+                    </div>
+
+                    <Card className="bg-gradient-to-br from-background/70 to-muted/40 border border-border/60">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <BarChart3 className="h-4 w-4" /> Top Profiles by
+                          Projects
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Profiles ranked by number of projects. Higher bars
+                          indicate more projects.
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        {topProjectProfiles.length === 0 ? (
+                          <div className="flex items-center justify-center p-8">
+                            <div className="flex items-center gap-6">
+                              <svg
+                                width="120"
+                                height="80"
+                                viewBox="0 0 120 80"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="opacity-80"
+                              >
+                                <defs>
+                                  <linearGradient
+                                    id="emptyGrad"
+                                    x1="0"
+                                    x2="1"
+                                    y1="0"
+                                    y2="1"
+                                  >
+                                    <stop
+                                      offset="0%"
+                                      stopColor="#cbd5e1"
+                                      stopOpacity="0.6"
+                                    />
+                                    <stop
+                                      offset="100%"
+                                      stopColor="#a3a3a3"
+                                      stopOpacity="0.3"
+                                    />
+                                  </linearGradient>
+                                </defs>
+                                <rect
+                                  x="8"
+                                  y="20"
+                                  width="18"
+                                  height="40"
+                                  rx="3"
+                                  fill="url(#emptyGrad)"
+                                />
+                                <rect
+                                  x="36"
+                                  y="12"
+                                  width="18"
+                                  height="48"
+                                  rx="3"
+                                  fill="url(#emptyGrad)"
+                                />
+                                <rect
+                                  x="64"
+                                  y="28"
+                                  width="18"
+                                  height="32"
+                                  rx="3"
+                                  fill="url(#emptyGrad)"
+                                />
+                                <rect
+                                  x="92"
+                                  y="24"
+                                  width="18"
+                                  height="36"
+                                  rx="3"
+                                  fill="url(#emptyGrad)"
+                                />
+                              </svg>
+                              <div>
+                                <p className="text-sm text-muted-foreground">
+                                  No data available yet. Create your first
+                                  profile to see analytics.
+                                </p>
                               </div>
                             </div>
-                          ) : (
-                            <div>
-                              <p className="text-sm font-medium mb-2">
-                                Skills:
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                No skills added
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Domains */}
-                        <div className="min-h-[60px]">
-                          {profile.domains && profile.domains.length > 0 ? (
-                            <div>
-                              <p className="text-sm font-medium mb-2">
-                                Domains:
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {profile.domains
-                                  .slice(0, 2)
-                                  .map((domain: any, index: number) => (
-                                    <Badge
-                                      key={index}
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      {typeof domain === 'string'
-                                        ? domain
-                                        : domain.name || domain.domainName}
-                                    </Badge>
-                                  ))}
-                                {profile.domains.length > 2 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{profile.domains.length - 2} more
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            <div>
-                              <p className="text-sm font-medium mb-2">
-                                Domains:
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                No domains added
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Projects & Experience Count */}
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Briefcase className="h-4 w-4" />
-                            <span>
-                              {profile.projects?.length || 0} Projects
-                            </span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <User className="h-4 w-4" />
-                            <span>
-                              {profile.experiences?.length || 0} Experience
-                            </span>
+                        ) : (
+                          <div className="w-full">
+                            <ReResponsiveContainer width="100%" height={240}>
+                              <ReBarChart
+                                data={topProjectProfiles.map((p: any) => ({
+                                  name: String(
+                                    p.profileName || 'Profile',
+                                  ).slice(0, 18),
+                                  projects: (p.projects || []).length,
+                                }))}
+                              >
+                                <ReCartesianGrid
+                                  vertical={false}
+                                  stroke="#f0f0f0"
+                                />
+                                <ReXAxis
+                                  dataKey="name"
+                                  tickLine={false}
+                                  axisLine={false}
+                                  tickMargin={10}
+                                />
+                                <ReYAxis axisLine={false} tickLine={false} />
+                                <ReTooltip
+                                  wrapperStyle={{ outline: 'none' }}
+                                  contentStyle={{
+                                    background: 'hsl(var(--popover))',
+                                    border: '1px solid hsl(var(--border))',
+                                    borderRadius: 6,
+                                    color: 'hsl(var(--popover-foreground))',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                  }}
+                                  labelStyle={{
+                                    color: 'hsl(var(--popover-foreground))',
+                                    fontWeight: 600,
+                                  }}
+                                  cursor={{
+                                    fill: 'hsl(var(--muted))',
+                                    fillOpacity: 0.2,
+                                  }}
+                                />
+                                <ReBar
+                                  dataKey="projects"
+                                  barSize={12}
+                                  fill="hsl(var(--primary))"
+                                  radius={[4, 4, 0, 0]}
+                                />
+                              </ReBarChart>
+                            </ReResponsiveContainer>
                           </div>
-                        </div>
+                        )}
+                      </CardContent>
+                    </Card>
 
-                        {/* Hourly Rate */}
-                        <div className="text-sm min-h-[20px]">
-                          {profile.hourlyRate ? (
-                            <>
-                              <span className="font-medium">Rate: </span>
-                              <span className="text-green-600">
-                                ${profile.hourlyRate}/hr
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">
-                              No rate set
-                            </span>
-                          )}
-                        </div>
+                    <Separator className="my-6" />
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        onClick={() => {
+                          setNewProfileType('Freelancer');
+                          setIsCreateDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Create Freelancer
+                        Profile
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setNewProfileType('Consultant');
+                          setIsCreateDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Create Consultant
+                        Profile
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  {/* Freelancer */}
+                  <TabsContent value="freelancer" className="m-0">
+                    {isLoading ? (
+                      <div className="text-center py-12">
+                        <p>Loading profiles...</p>
                       </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2 pt-4 mt-auto">
+                    ) : freelancerProfiles.length === 0 ? (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground mb-4">
+                          No Freelancer profiles found.
+                        </p>
                         <Button
-                          onClick={() =>
-                            router.push(
-                              `/freelancer/settings/profiles/view/${profile._id!}`,
-                            )
-                          }
+                          onClick={() => {
+                            setNewProfileType('Freelancer');
+                            setIsCreateDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> Create Freelancer
+                          Profile
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {freelancerProfiles.map((profile) => (
+                          <ProfileSummaryCard
+                            key={profile._id}
+                            profile={profile}
+                            onView={() =>
+                              router.push(
+                                `/freelancer/settings/profiles/${profile._id!}`,
+                              )
+                            }
+                            onDelete={() => handleDeleteProfile(profile._id!)}
+                          />
+                        ))}
+                        <Button
                           variant="outline"
-                          className="flex-1 flex items-center gap-2"
+                          onClick={() => {
+                            setNewProfileType('Freelancer');
+                            setIsCreateDialogOpen(true);
+                          }}
+                          className="flex items-center justify-center h-full min-h-[200px] bg-muted-foreground/20 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl"
                         >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </Button>
-                        <Button
-                          onClick={() => handleViewProfile(profile._id!)}
-                          className="flex-1 flex items-center gap-2"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteProfile(profile._id!)}
-                          className="flex items-center gap-2"
-                        >
-                          <Trash2 className="h-4 w-4" />
+                          <Plus className="h-6 w-6" />
                         </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsCreateDialogOpen(true)}
-                  className="my-auto"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+                    )}
+                  </TabsContent>
+
+                  {/* Consultant */}
+                  <TabsContent value="consultant" className="m-0">
+                    {isLoading ? (
+                      <div className="text-center py-12">
+                        <p>Loading profiles...</p>
+                      </div>
+                    ) : consultantProfiles.length === 0 ? (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground mb-4">
+                          No Consultant profiles found.
+                        </p>
+                        <Button
+                          onClick={() => {
+                            setNewProfileType('Consultant');
+                            setIsCreateDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> Create Consultant
+                          Profile
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {consultantProfiles.map((profile) => (
+                          <ProfileSummaryCard
+                            key={profile._id}
+                            profile={profile}
+                            onView={() =>
+                              router.push(
+                                `/freelancer/settings/profiles/${profile._id!}`,
+                              )
+                            }
+                            onDelete={() => handleDeleteProfile(profile._id!)}
+                          />
+                        ))}
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setNewProfileType('Consultant');
+                            setIsCreateDialogOpen(true);
+                          }}
+                          className="flex items-center justify-center h-full min-h-[200px] bg-muted-foreground/20 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl"
+                        >
+                          <Plus className="h-6 w-6" />
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
           </div>
         </main>
       </div>
@@ -466,28 +634,15 @@ export default function ProfilesPage() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Profile</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this profile? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDeleteProfile}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Profile"
+        description="Are you sure you want to delete this profile? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteProfile}
+      />
     </div>
   );
 }

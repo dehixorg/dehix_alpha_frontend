@@ -431,12 +431,9 @@ const Market: React.FC = () => {
           <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex flex-col space-y-2">
-                <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
+                <h2 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
                   Find Your Next Opportunity
-                </h1>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight block md:hidden">
-                  Marketplace
-                </h1>
+                </h2>
                 <p className="hidden md:block text-muted-foreground">
                   Browse through available projects and find your next gig
                 </p>
@@ -464,6 +461,12 @@ const Market: React.FC = () => {
                 projectDomains={projectDomains}
                 onReset={handleReset}
               />
+            </div>
+            {/* Results count */}
+            <div className="flex items-center justify-between px-1">
+              <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+                {jobs.length} {jobs.length === 1 ? 'result' : 'results'}
+              </span>
             </div>
           </div>
         </div>

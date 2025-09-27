@@ -1,9 +1,17 @@
 'use client';
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 
 import ScheduleInterviewNavbar from '@/components/freelancer/scheduleInterview/ScheduleInterviewNavbar';
 
 export default function TalentInterviewPage() {
+  const router = useRouter();
+
+  // Redirect to default URL with /current
+  React.useEffect(() => {
+    router.replace('/freelancer/scheduleInterview/talent/current');
+  }, [router]);
+
   return (
     <div className="flex min-h-screen w-full">
       <ScheduleInterviewNavbar />

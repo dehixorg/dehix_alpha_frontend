@@ -93,10 +93,7 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-black"
-        >
+        <Button variant="outline" size="sm">
           Verify
         </Button>
       </DialogTrigger>

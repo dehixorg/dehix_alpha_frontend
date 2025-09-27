@@ -510,7 +510,7 @@ export default function ResumeEditor({
         menuItemsBottom={menuItemsBottom}
         active="Resume Editor"
       />
-      <div className="flex flex-1 flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-1 flex-col sm:gap-4 sm:py-0 sm:pl-14">
         <Header
           activeMenu="Resume Editor"
           breadcrumbItems={[

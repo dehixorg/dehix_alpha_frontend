@@ -9,13 +9,13 @@ import Header from '@/components/header/header';
 
 export default function Talent() {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Talent"
       />
-      <div className="flex flex-col sm:gap-0 sm:py-0 mb-8 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:pb-4 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -25,7 +25,7 @@ export default function Talent() {
             { label: 'Dehix Talent', link: '#' },
           ]}
         />
-        <main className="ml-5">
+        <main>
           <SkillDomainForm />
         </main>
       </div>

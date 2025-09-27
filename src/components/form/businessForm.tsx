@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useDispatch } from 'react-redux';
+import { Building2, Save } from 'lucide-react';
 
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import { Label } from '../ui/label';
@@ -133,8 +134,9 @@ export function BusinessForm({ user_id }: { user_id: string }) {
       if (res.status === 200) {
         const updatedUser = {
           ...userInfo,
-          ...data,
         };
+
+        updatedUser.uid = userInfo._id;
 
         dispatch(setUser(updatedUser));
         setUserInfo(updatedUser);
@@ -164,7 +166,22 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-10">
+    <Card className="p-6 bg-muted-foreground/20 dark:bg-muted/20">
+      {/* Page Header */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight flex items-center gap-2">
+              <Building2 className="h-5 w-5" /> Business Information
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Keep your business profile accurate. It helps freelancers trust
+              and recognize you.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <Form {...form}>
         <ProfilePictureUpload
           profile={userInfo.profilePic}
@@ -343,7 +360,8 @@ export function BusinessForm({ user_id }: { user_id: string }) {
           </div>
           <Separator className="col-span-2" />
           <Button className="w-full" type="submit" disabled={loading}>
-            {loading ? 'Loading...' : 'Save changes'}
+            <Save className="h-4 w-4 mr-2" />
+            {loading ? 'Saving...' : 'Save Changes'}
           </Button>
         </form>
       </Form>
