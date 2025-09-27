@@ -216,7 +216,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                                   MonthlyPay
                                 </td>
                                 <td className="border-b px-4 py-2">
-                                  {monthlyPay && monthlyPay.trim()
+                                  {monthlyPay 
                                     ? `${monthlyPay}$`
                                     : 'N/A'}
                                 </td>

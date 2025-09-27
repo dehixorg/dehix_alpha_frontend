@@ -9,8 +9,9 @@ interface FreelancerListProps {
 
 const FreelancerList: React.FC<FreelancerListProps> = ({
   freelancers,
-  isLoading = false,
-}) => {
+  isLoading = false, 
+})  => {
+  console.log("freelancer from Api", freelancers)
   return (
     <div className="lg:ml-10 space-y-4 w-full">
       {isLoading ? (
@@ -52,11 +53,11 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
             key={index}
             name={freelancer.firstName + ' ' + freelancer.lastName}
             skills={freelancer.skills}
-            domains={freelancer.domains}
+            domains={freelancer.domain}
             experience={freelancer.workExperience}
             profile={freelancer.profilePic}
             userName={freelancer.userName}
-            monthlyPay={freelancer.monthlyPay}
+            monthlyPay={freelancer.perHourPrice}
             Github={freelancer.github}
             LinkedIn={freelancer.linkedin}
           />

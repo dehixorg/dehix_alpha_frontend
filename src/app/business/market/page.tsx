@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
@@ -86,48 +86,85 @@ const Market: React.FC = () => {
     });
   };
 
+  
+  // const constructQueryString = (filters: FilterState) => {
+  //   const queryParts: string[] = [];
+    
+  //   if (Array.isArray(filters.experience) && filters.experience.length > 0) {
+  //     const sortedExperience = filters.experience
+  //     .map(Number)
+  //     .sort((a, b) => a - b);
+  //     const from = sortedExperience[0];
+  //     const to = sortedExperience[sortedExperience.length - 1];
+      
+  //     if (from !== undefined) queryParts.push(`workExperienceFrom=${from}`);
+  //     if (to !== undefined) queryParts.push(`workExperienceTo=${to}`);
+  //   }
+    
+  //   Object.entries(filters).forEach(([key, value]) => {
+  //     if (key === 'experience') return;
+      
+  //     if (Array.isArray(value) && value.length > 0) {
+  //       const cleanedValues = value.filter(
+  //         (v) => v !== undefined && v !== null && v !== '',
+  //       );
+  //       if (cleanedValues.length > 0) {
+  //         queryParts.push(`${key}=${cleanedValues.join(',')}`);
+  //       }
+  //     } else if (typeof value === 'string') {
+  //       queryParts.push(
+  //         `${key}=${value
+  //           .split(',')
+  //           .map((v) => v.trim())
+  //           .join(',')}`,
+  //         );
+  //       }
+  //     });
+      
+  //     return queryParts.join('&');
+  //   };
+
   const constructQueryString = (filters: FilterState) => {
-    const queryParts: string[] = [];
+  const queryParts: string[] = [];
 
-    if (Array.isArray(filters.experience) && filters.experience.length > 0) {
-      const sortedExperience = filters.experience
-        .map(Number)
-        .sort((a, b) => a - b);
-      const from = sortedExperience[0];
-      const to = sortedExperience[sortedExperience.length - 1];
+  if (Array.isArray(filters.experience) && filters.experience.length > 0) {
+    const sortedExperience = filters.experience.map(Number).sort((a, b) => a - b);
+    const from = sortedExperience[0];
+    const to = sortedExperience[sortedExperience.length - 1];
 
-      if (from !== undefined) queryParts.push(`workExperienceFrom=${from}`);
-      if (to !== undefined) queryParts.push(`workExperienceTo=${to}`);
-    }
+    if (from !== undefined) queryParts.push(`workExperienceFrom=${from}`);
+    if (to !== undefined) queryParts.push(`workExperienceTo=${to}`);
+  }
 
-    Object.entries(filters).forEach(([key, value]) => {
-      if (key === 'experience') return;
+  Object.entries(filters).forEach(([key, value]) => {
+    if (key === "experience") return;
 
-      if (Array.isArray(value) && value.length > 0) {
-        const cleanedValues = value.filter(
-          (v) => v !== undefined && v !== null && v !== '',
-        );
-        if (cleanedValues.length > 0) {
-          queryParts.push(`${key}=${cleanedValues.join(',')}`);
-        }
-      } else if (typeof value === 'string') {
-        queryParts.push(
-          `${key}=${value
-            .split(',')
-            .map((v) => v.trim())
-            .join(',')}`,
-        );
+    if (Array.isArray(value) && value.length > 0) {
+      const cleanedValues = value.filter((v) => v !== undefined && v !== null && v !== "");
+      if (cleanedValues.length > 0) {
+        queryParts.push(`${key}=${cleanedValues.join(",")}`);
       }
-    });
+    } else if (typeof value === "string" && value.trim() !== "") {
+      queryParts.push(
+        `${key}=${value
+          .split(",")
+          .map((v) => v.trim())
+          .join(",")}`,
+      );
+    }
+  });
 
-    return queryParts.join('&');
-  };
+  return queryParts.join("&");
+};
 
   const fetchData = useCallback(async (appliedFilters: FilterState) => {
     try {
       setIsDataLoading(true);
+      console.log("fetchData called with filters:", appliedFilters)
       const queryString = constructQueryString(appliedFilters);
+      console.log("Frontend: Query string sent to /freelancer:", queryString)
       const response = await axiosInstance.get(`/freelancer?${queryString}`);
+      console.log("Frontend : API response:", response.data)
 
       setFreelancers(response.data.data);
     } catch (error) {
@@ -141,7 +178,8 @@ const Market: React.FC = () => {
       setIsDataLoading(false);
     }
   }, []);
-
+  
+//Working fine
   useEffect(() => {
     async function fetchInitialData() {
       try {
@@ -176,6 +214,10 @@ const Market: React.FC = () => {
     setShowFilters(!showFilters);
   };
 
+  console.log("this is show filters",showFilters)
+  console.log("these are skills",skills)
+  console.log("these are domains",domains)
+  console.log("these are freelancers",freelancers)
   return (
     <section className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -192,7 +234,7 @@ const Market: React.FC = () => {
             skills={skills}
             handleFilterChange={handleFilterChange}
             handleReset={handleReset}
-          />
+          /> 
           <FreelancerList freelancers={freelancers} isLoading={isDataLoading} />
         </div>
       </div>
