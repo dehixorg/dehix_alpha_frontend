@@ -16,7 +16,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -128,11 +128,7 @@ const ProjectList = ({
         const response = await axiosInstance.get(url);
         setProjects(response.data.data);
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('API Error:', error);
       } finally {
         setIsLoading(false);

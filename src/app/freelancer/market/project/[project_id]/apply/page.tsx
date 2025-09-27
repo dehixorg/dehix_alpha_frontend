@@ -13,7 +13,7 @@ import {
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { useToast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -87,7 +87,7 @@ interface ProjectData {
 const Page = () => {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
+
   const [isLoading, setIsLoading] = useState(false);
   const [project, setProject] = useState<ProjectData | null>(null);
 
@@ -101,12 +101,10 @@ const Page = () => {
         setProject(response.data.data);
       } catch (error) {
         console.error('Error fetching project:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description:
-            'Failed to load project details. Please try again later.',
-        });
+        notifyError(
+          'Failed to load project details. Please try again later.',
+          'Error',
+        );
         router.push('/freelancer/market');
       } finally {
         setIsLoading(false);

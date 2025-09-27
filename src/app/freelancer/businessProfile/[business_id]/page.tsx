@@ -8,7 +8,7 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,11 +42,7 @@ export default function BusinessProfile() {
           }
         } catch (error) {
           console.error('Error fetching business details', error);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Failed to fetch business details.',
-          });
+          notifyError('Failed to fetch business details.', 'Error');
         } finally {
           setLoading(false);
         }
@@ -67,11 +63,7 @@ export default function BusinessProfile() {
         .share(shareData)
         .catch((err) => console.error('Error sharing:', err));
     } else {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Sharing is not supported on this browser.',
-      });
+      notifyError('Sharing is not supported on this browser.', 'Error');
     }
   };
   return (

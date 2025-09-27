@@ -18,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 interface BidDialogProps {
   handleUpdateStatus: (bidId: string, status: string) => void;
@@ -59,11 +59,7 @@ const BidDialog: React.FC<BidDialogProps> = ({
       } catch (error) {
         setError('Error fetching bid details.');
         console.error('Error fetching bid details:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong.Please try again.', 'Error');
       } finally {
         setLoading(false);
       }

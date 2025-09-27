@@ -19,7 +19,7 @@ import MeetingDialog from '@/components/ui/meetingDialog';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Project } from '@/types/project';
 import {
   Card,
@@ -46,11 +46,7 @@ export default function Dashboard() {
         setLoadingStats(false);
       }
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.', 'Error');
       console.error('API Error:', error);
     } finally {
       setLoading(false);

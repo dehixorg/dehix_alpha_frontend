@@ -30,7 +30,7 @@ import { auth } from '@/config/firebaseConfig';
 import { setUser } from '@/lib/userSlice';
 import { getUserData } from '@/lib/utils';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/hooks/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 interface OtpLoginProps {
   phoneNumber: string;
@@ -103,11 +103,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         router.replace(`/dashboard/${claims.type}`);
       } catch (error) {
         setError('Failed to verify OTP. Please check the OTP.');
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong.Please try again.', 'Error');
       }
     });
   }, [confirmationResult, otp, dispatch, router, phone]);

@@ -33,7 +33,7 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
@@ -113,11 +113,7 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
         },
       );
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      });
+      notifyError('Something went wrong.Please try again.', 'Error');
     }
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
