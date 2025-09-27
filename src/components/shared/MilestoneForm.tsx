@@ -63,9 +63,6 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
     <div className="flex justify-center items-center py-4">
       <div className="w-full max-w-lg shadow-lg">
         <div>
-          <h2 className="text-xl font-semibold">Create Milestone</h2>
-        </div>
-        <div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="title" className="block text-sm font-medium mb-2">

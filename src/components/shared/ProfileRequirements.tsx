@@ -10,8 +10,10 @@ interface Profile {
   skills: string[];
   experience: number;
   freelancersRequired: string | number;
+  consultantRequired?: string | number;
   className?: string;
   icon?: React.ReactNode;
+  profileType: string;
 }
 
 interface ProfileRequirementsProps {
@@ -41,12 +43,11 @@ export function ProfileRequirements({
   variant = 'default',
 }: ProfileRequirementsProps) {
   const DomainIcon = getDomainIcon(profile.domain);
-
   if (variant === 'compact') {
     return (
       <Card
         className={cn(
-          'overflow-hidden hover:shadow-md transition-shadow',
+          'overflow-hidden hover:shadow-md transition-shadow relative',
           className,
         )}
       >
@@ -121,8 +122,8 @@ export function ProfileRequirements({
               {DomainIcon}
             </div>
             <div>
-              <CardTitle className="text-lg font-semibold">
-                {profile.domain} Profile
+              <CardTitle className="text-lg font-semibold ">
+                <span>{profile.domain} Profile </span>
               </CardTitle>
               <p className="text-sm text-muted-foreground">
                 Looking for {profile.freelancersRequired}{' '}
@@ -130,6 +131,13 @@ export function ProfileRequirements({
                   ? 'freelancer'
                   : 'freelancers'}
               </p>
+            </div>
+            <div className="flex justify-between">
+              {profile.profileType && (
+                <Badge variant="default" className="text-xs font-medium">
+                  {profile.profileType}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
@@ -194,8 +202,16 @@ export function ProfileRequirements({
                   <Users className="h-5 w-5 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Freelancers</p>
-                  <p className="font-semibold">{profile.freelancersRequired}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {profile.profileType === 'CONSULTANT'
+                      ? 'Consultant'
+                      : 'Freelancer'}
+                  </p>
+                  <p className="font-semibold">
+                    {profile.profileType === 'CONSULTANT'
+                      ? profile.consultantRequired || 0
+                      : profile.freelancersRequired}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">

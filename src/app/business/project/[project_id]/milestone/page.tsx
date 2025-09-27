@@ -14,7 +14,6 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import { Button } from '@/components/ui/button';
 import { CreateMilestoneDialog } from '@/components/shared/CreateMilestoneDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
@@ -252,19 +251,17 @@ const Page = () => {
             { label: 'Milestone', link: '#' },
           ]}
         />
-        <div className="py-4 px-2 md:px-4 w-full max-w-full overflow-hidden">
+        <div className="px-2 md:px-4 w-full max-w-full overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl md:text-2xl font-bold">
               Project Milestones
             </h1>
 
             <div className="flex gap-2">
-              <Button className="px-3 py-1 ">
-                <CreateMilestoneDialog
-                  projectId={project_id}
-                  fetchMilestones={fetchMilestones}
-                />
-              </Button>
+              <CreateMilestoneDialog
+                projectId={project_id}
+                fetchMilestones={fetchMilestones}
+              />
             </div>
           </div>
 
@@ -289,34 +286,28 @@ const Page = () => {
                   {/* Right Part */}
                   <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
                     {/* Top: MilestoneTimeline */}
-                    <div className="min-w-0 w-full max-w-full md:h-[280px]">
-                      <div className="w-full max-w-full">
-                        <MilestoneTimeline
-                          fetchMilestones={fetchMilestones}
-                          milestones={milestones}
-                          handleStorySubmit={handleStorySubmit}
-                          selectedIndex={selectedMilestoneIndex}
-                          onMilestoneSelect={(index) =>
-                            setSelectedMilestoneIndex(index)
-                          }
-                        />
-                      </div>
-                    </div>
+                    <MilestoneTimeline
+                      fetchMilestones={fetchMilestones}
+                      milestones={milestones}
+                      handleStorySubmit={handleStorySubmit}
+                      selectedIndex={selectedMilestoneIndex}
+                      onMilestoneSelect={(index) =>
+                        setSelectedMilestoneIndex(index)
+                      }
+                    />
 
                     {/* Bottom: StoriesSection (milestone cards) */}
                     {selectedMilestoneIndex !== null && (
-                      <div className="min-w-0 w-full max-w-full">
-                        <StoriesSection
-                          key={
-                            milestones[selectedMilestoneIndex]?._id ??
-                            selectedMilestoneIndex
-                          }
-                          milestone={milestones[selectedMilestoneIndex]}
-                          fetchMilestones={fetchMilestones}
-                          handleStorySubmit={handleStorySubmit}
-                          isFreelancer={false}
-                        />
-                      </div>
+                      <StoriesSection
+                        key={
+                          milestones[selectedMilestoneIndex]?._id ??
+                          selectedMilestoneIndex
+                        }
+                        milestone={milestones[selectedMilestoneIndex]}
+                        fetchMilestones={fetchMilestones}
+                        handleStorySubmit={handleStorySubmit}
+                        isFreelancer={false}
+                      />
                     )}
                   </div>
                 </div>
