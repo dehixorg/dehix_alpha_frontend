@@ -24,7 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
 
 interface Skill {
@@ -185,11 +185,7 @@ const SkillDomainForm: React.FC = () => {
       } catch (error: any) {
         if (error?.code === 'ERR_CANCELED') return;
         console.error('Error fetching data:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong.Please try again.', 'Error');
       } finally {
         setLoading(false);
       }
@@ -218,11 +214,7 @@ const SkillDomainForm: React.FC = () => {
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong.Please try again.', 'Error');
     }
   };
 

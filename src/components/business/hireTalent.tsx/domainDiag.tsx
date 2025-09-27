@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 
 // Define the type for a domain
@@ -113,10 +113,10 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         });
         reset();
         setOpen(false); // Close the dialog after successful submission
-        toast({
-          title: 'Talent Added',
-          description: 'The Talent has been successfully added.',
-        });
+        notifySuccess(
+          'The Talent has been successfully added.',
+          'Talent Added',
+        );
 
         const connectsCost = parseInt(
           process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
@@ -133,11 +133,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     } catch (error) {
       console.error('Error submitting domain data', error);
       reset();
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add talent. Please try again.',
-      });
+      notifyError('Failed to add talent. Please try again.', 'Error');
     } finally {
       setLoading(false); // Ensure this runs after all logic
     }
