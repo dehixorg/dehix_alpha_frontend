@@ -898,70 +898,79 @@ export function ProfileSidebar({
                       <CardContent className="p-0">
                         <ScrollArea className="max-h-80 px-2 overflow-y-auto">
                           <ul className="divide-y divide-gray-200 bg-white dark:bg-gray-900 rounded-lg shadow-sm py-2">
-                            {(profileData as ProfileGroup).members.map((member) => (
-                              <li
-                                key={member.id}
-                                className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group"
-                              >
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage src={member.profilePic} alt={member.userName} />
-                                  <AvatarFallback>
-                                    {member.userName?.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                {/* Status dot */}
-                                <span className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${member.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                                <div className="flex-1 min-w-0">
-                                  <span className="text-sm font-medium truncate">
-                                    {member.userName}
+                            {(profileData as ProfileGroup).members.map(
+                              (member) => (
+                                <li
+                                  key={member.id}
+                                  className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group"
+                                >
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarImage
+                                      src={member.profilePic}
+                                      alt={member.userName}
+                                    />
+                                    <AvatarFallback>
+                                      {member.userName?.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  {/* Status dot */}
+                                  <span
+                                    className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${member.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}
+                                  ></span>
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-sm font-medium truncate">
+                                      {member.userName}
+                                    </span>
+                                    {(
+                                      profileData as ProfileGroup
+                                    ).admins?.includes(member.id) && (
+                                      <Badge
+                                        variant="outline"
+                                        className="ml-2 text-[10px] border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300 border"
+                                      >
+                                        Admin
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
+                                    {member.status === 'online'
+                                      ? 'Online'
+                                      : 'Offline'}
                                   </span>
-                                  {(
-                                    profileData as ProfileGroup
-                                  ).admins?.includes(member.id) && (
-                                    <Badge
-                                      variant="outline"
-                                      className="ml-2 text-[10px] border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300 border"
-                                    >
-                                      Admin
-                                    </Badge>
-                                  )}
-                                </div>
-                                <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
-                                  {member.status === 'online' ? 'Online' : 'Offline'}
-                                </span>
-                                {user &&
-                                  (
-                                    profileData as ProfileGroup
-                                  ).admins?.includes(user.uid) &&
-                                  member.id !== user.uid &&
-                                  !(
-                                    profileData as ProfileGroup
-                                  ).admins?.includes(member.id) && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setConfirmDialogProps({
-                                          title: 'Confirm Removal',
-                                          description: `Are you sure you want to remove ${member.userName} from the group?`,
-                                          onConfirm: () =>
-                                            handleConfirmRemoveMember(
-                                              member.id,
-                                            ),
-                                          confirmButtonText: 'Remove Member',
-                                          confirmButtonVariant: 'destructive',
-                                        });
-                                        setIsConfirmDialogOpen(true);
-                                      }}
-                                      aria-label={`Remove ${member.userName} from group`}
-                                    >
-                                      <MinusCircle className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                              </li>
-                            ))}
+                                  {user &&
+                                    (
+                                      profileData as ProfileGroup
+                                    ).admins?.includes(user.uid) &&
+                                    member.id !== user.uid &&
+                                    !(
+                                      profileData as ProfileGroup
+                                    ).admins?.includes(member.id) && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setConfirmDialogProps({
+                                            title: 'Confirm Removal',
+                                            description: `Are you sure you want to remove ${member.userName} from the group?`,
+                                            onConfirm: () =>
+                                              handleConfirmRemoveMember(
+                                                member.id,
+                                              ),
+                                            confirmButtonText: 'Remove Member',
+                                            confirmButtonVariant: 'destructive',
+                                          });
+                                          setIsConfirmDialogOpen(true);
+                                        }}
+                                        aria-label={`Remove ${member.userName} from group`}
+                                      >
+                                        <MinusCircle className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                </li>
+                              ),
+                            )}
                           </ul>
                         </ScrollArea>
                       </CardContent>
