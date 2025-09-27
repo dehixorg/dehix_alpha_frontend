@@ -39,6 +39,7 @@ import { CustomTable } from '@/components/custom-table/CustomTable';
 import { FieldType } from '@/components/custom-table/FieldTypes';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
 import StatItem from '@/components/shared/StatItem';
+import { formatCurrency } from '@/utils/format';
 // Constants - Backend expects uppercase values
 const BID_STATUSES = [
   'PENDING',
@@ -1317,15 +1318,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const formatUSD = (value?: number | string | null) => {
     if (value === null || value === undefined || isNaN(Number(value)))
       return 'N/A';
-    try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0,
-      }).format(Number(value));
-    } catch {
-      return `$${value}`;
-    }
+    return formatCurrency(value, 'USD', 0);
   };
 
   if (loading) {

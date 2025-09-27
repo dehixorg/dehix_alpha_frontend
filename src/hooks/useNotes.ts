@@ -13,17 +13,9 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
   const [selectedTypeNote, setSelectedTypeNote] = useState<Note | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const showError = (message: string) => {
-    notifyError(message, 'Error');
-  };
-
-  const showSuccess = (message: string) => {
-    notifySuccess(message);
-  };
-
   const handleSaveEditNote = async (note: Note) => {
     if (!note._id) {
-      showError('Missing required fields for updating the note.');
+      notifyError('Missing required fields for updating the note.', 'Error');
       return;
     }
 
@@ -35,39 +27,41 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
         banner: note.banner || '',
         isHTML: note.isHTML || false,
         entityID: note.entityID || '',
-        entityType: note.entityType || '',
         noteType: note?.noteType || NoteType.NOTE,
         type: note?.type || LabelType.PERSONAL,
       });
 
       if (response?.status === 200) {
-        showSuccess('Note updated successfully.');
+        notifySuccess('Note updated successfully.', 'Success');
+        await fetchNotes();
+        setSelectedNote(null);
       }
-    } catch (error) {
-      showError('Failed to update the note.');
-    } finally {
-      await fetchNotes(); // Refresh notes
-      setSelectedNote(null); // Clear selection
+    } catch (error: any) {
+      notifyError(
+        error?.response?.data?.message || 'Failed to update the note.',
+        'Error',
+      );
     }
   };
 
   const handleDialogClose = () => {
     setSelectedNote(null);
+    setSelectedDeleteNote(null);
+    setSelectedTypeNote(null);
     setIsDeleting(false);
   };
 
   const handleDeletePermanently = async (noteId: string | null) => {
     if (!noteId) {
-      showError('Invalid note ID.');
+      notifyError('Invalid note ID.', 'Error');
       return;
     }
     try {
       await axiosInstance.delete(`/notes/${noteId}`);
-      showSuccess('Note deleted permanently.');
-      fetchNotes();
+      notifySuccess('Note deleted permanently.', 'Success');
+      await fetchNotes();
     } catch (error) {
-      showError('Failed to delete the note.');
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Failed to delete the note.', 'Error');
     }
     setIsDeleting(false);
   };
@@ -79,7 +73,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
-      showError('Note not found.');
+      notifyError('Note not found.', 'Error');
       return;
     }
     try {
@@ -89,12 +83,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       });
 
       if (response?.status == 200) {
-        showSuccess(`Note Banner updated`);
+        notifySuccess('Note banner updated.', 'Success');
       }
       await fetchNotes();
     } catch (error) {
-      showError(`Failed to update the note banner.`);
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Failed to update the note banner.', 'Error');
     }
   };
 
@@ -105,7 +98,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
-      showError('Note not found.');
+      notifyError('Note not found.', 'Error');
       return;
     }
     try {
@@ -115,11 +108,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       });
 
       if (response?.status == 200) {
-        showSuccess(`Note moved to ${type.toLowerCase()}`);
+        notifySuccess(`Note moved to ${type.toLowerCase()}.`, 'Success');
       }
       await fetchNotes();
     } catch (error) {
-      showError(`Failed to update the note label.`);
+      notifyError('Failed to update the note label.', 'Error');
     }
   };
 
@@ -130,7 +123,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
-      showError('Note not found.');
+      notifyError('Note not found.', 'Error');
       return;
     }
     try {
@@ -140,11 +133,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       });
 
       if (response?.status == 200) {
-        showSuccess(`Note Label updated`);
+        notifySuccess('Note label updated.', 'Success');
       }
       await fetchNotes();
     } catch (error) {
-      showError(`Failed to update the note label.`);
+      notifyError('Failed to update the note label.', 'Error');
     }
   };
 

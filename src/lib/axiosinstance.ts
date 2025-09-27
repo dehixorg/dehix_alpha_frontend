@@ -198,9 +198,11 @@ export function makeCancelable<T = any>(
       : ({ metadata: { ...meta, requestId: id } } as any)),
   };
 
-  const promise = (axiosInstance as any)[method](url, finalConfig) as Promise<
-    AxiosResponse<T>
-  >;
+  const promise = axiosInstance.request<T>({
+    method,
+    url,
+    ...(finalConfig as any),
+  }) as Promise<AxiosResponse<T>>;
   const cancel = () => cancelRequest(id);
   return { id, cancel, promise } as const;
 }

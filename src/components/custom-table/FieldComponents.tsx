@@ -13,12 +13,9 @@ import {
 import { Switch } from '../ui/switch';
 import { ToolTip } from '../ToolTip';
 
-import {
-  Actions,
-  Currency,
-  FieldComponentProps,
-  FieldType,
-} from './FieldTypes';
+import { Actions, FieldComponentProps, FieldType } from './FieldTypes';
+
+import { formatCurrency } from '@/utils/format';
 
 const DateTimeField = ({ value }: FieldComponentProps<string>) => {
   const date = new Date(value);
@@ -167,15 +164,13 @@ const ActionField = ({
   );
 };
 
-const numberFormat = (value: string, currency: Currency = Currency.INR) =>
-  new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: currency,
-    maximumFractionDigits: 0,
-  }).format(Number(value));
-
 const CurrencyField = ({ fieldData, value }: FieldComponentProps<string>) => {
-  return <span>{numberFormat(value, fieldData.currency)}</span>;
+  const formatted = formatCurrency(
+    value,
+    String(fieldData.currency || 'USD'),
+    0,
+  );
+  return <span>{formatted}</span>;
 };
 
 const StatusField = ({ value, fieldData }: FieldComponentProps<string>) => {
