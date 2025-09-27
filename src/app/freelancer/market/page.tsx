@@ -140,7 +140,6 @@ const Market: React.FC = () => {
       try {
         setIsLoading(true);
         const skillsRes = await axiosInstance.get('/skills');
-        console.log(skillsRes.data.data);
         setSkills(skillsRes.data.data.map((s: any) => s.label));
         const domainsRes = await axiosInstance.get('/domain');
         setDomains(domainsRes.data.data.map((d: any) => d.label));
