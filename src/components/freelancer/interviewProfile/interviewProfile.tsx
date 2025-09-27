@@ -6,7 +6,6 @@ import { Plus, Edit2, ListFilter, Info } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -215,7 +214,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           );
           setSkillData(updatedSkills);
 
-          notifySuccess(`${data.name} skill updated successfully.`, 'Skill Updated');
+          notifySuccess(
+            `${data.name} skill updated successfully.`,
+            'Skill Updated',
+          );
         } else {
           // Handle non-200 responses (optional)
           throw new Error('Failed to update skill');
@@ -236,7 +238,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               interviewStatus: defaultStatus,
             },
           ]);
-          notifySuccess(`${data.name} skill added successfully.`, 'Skill Added');
+          notifySuccess(
+            `${data.name} skill added successfully.`,
+            'Skill Added',
+          );
         } else {
           // Handle non-200 responses (optional)
           throw new Error('Failed to add skill');
@@ -283,7 +288,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               : item,
           );
           setDomainData(updatedDomains);
-          notifySuccess(`${data.name} domain updated successfully.`, 'Domain Updated');
+          notifySuccess(
+            `${data.name} domain updated successfully.`,
+            'Domain Updated',
+          );
         } else {
           // Handle non-200 responses (optional)
           throw new Error('Failed to update domain');
@@ -299,7 +307,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             interviewStatus: defaultStatus,
           },
         ]);
-        notifySuccess(`${data.name} domain added successfully.`, 'Domain Added');
+        notifySuccess(
+          `${data.name} domain added successfully.`,
+          'Domain Added',
+        );
       }
       resetDomain();
       setOpenDomainDialog(false);
