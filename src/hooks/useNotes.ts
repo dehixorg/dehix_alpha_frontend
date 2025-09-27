@@ -2,7 +2,7 @@
 import { useState } from 'react';
 
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Note, NoteType, LabelType } from '@/utils/types/note';
 
 const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
@@ -14,19 +14,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const showError = (message: string) => {
-    toast({
-      title: 'Error',
-      description: message,
-      variant: 'destructive',
-      duration: 5000,
-    });
+    notifyError(message, 'Error');
   };
 
   const showSuccess = (message: string) => {
-    toast({
-      description: message,
-      duration: 5000,
-    });
+    notifySuccess(message);
   };
 
   const handleSaveEditNote = async (note: Note) => {
@@ -75,11 +67,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       fetchNotes();
     } catch (error) {
       showError('Failed to delete the note.');
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong.Please try again.', 'Error');
     }
     setIsDeleting(false);
   };
@@ -106,11 +94,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       await fetchNotes();
     } catch (error) {
       showError(`Failed to update the note banner.`);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong.Please try again.', 'Error');
     }
   };
 

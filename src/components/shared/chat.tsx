@@ -168,22 +168,6 @@ export function CardsChat({
   onToggleExpand,
   onOpenProfileSidebar,
 }: CardsChatProps) {
-  // Toast wrapper to keep existing call sites unchanged
-  const toast = ({
-    variant,
-    title,
-    description,
-  }: {
-    variant?: 'destructive';
-    title?: string;
-    description?: string;
-  }) => {
-    if (variant === 'destructive') {
-      notifyError(description || '', title || 'Error');
-    } else {
-      notifySuccess(description || '', title);
-    }
-  };
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -459,11 +443,7 @@ export function CardsChat({
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        toast({
-          variant: 'destructive',
-          title: 'File too large',
-          description: 'File size should not exceed 10MB',
-        });
+        notifyError('File size should not exceed 10MB', 'File too large');
         return;
       }
 
@@ -480,11 +460,10 @@ export function CardsChat({
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid file type',
-          description: 'Please upload an image, PDF, Word, or PowerPoint file',
-        });
+        notifyError(
+          'Please upload an image, PDF, Word, or PowerPoint file',
+          'Invalid file type',
+        );
         return;
       }
 
@@ -534,10 +513,7 @@ export function CardsChat({
 
         await sendMessage(conversation, message, setInput);
 
-        toast({
-          title: 'Success',
-          description: 'File uploaded successfully',
-        });
+        notifySuccess('File uploaded successfully', 'Success');
       } catch (error: any) {
         console.error('Error uploading file:', {
           error: error.message,
@@ -556,11 +532,7 @@ export function CardsChat({
           errorMessage = error.response.data.message;
         }
 
-        toast({
-          variant: 'destructive',
-          title: 'Upload failed',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Upload failed');
       } finally {
         setIsSending(false);
       }
@@ -665,17 +637,13 @@ export function CardsChat({
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
       setRecordingStatus('recording');
-      toast({
-        title: 'Recording started',
-        description: 'Speak into your microphone.',
-      });
+      notifySuccess('Speak into your microphone.', 'Recording started');
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Microphone Error',
-        description: 'Could not access microphone. Please check permissions.',
-      });
+      notifyError(
+        'Could not access microphone. Please check permissions.',
+        'Microphone Error',
+      );
       setRecordingStatus('idle');
     }
   };
@@ -719,16 +687,15 @@ export function CardsChat({
     if (recordingDurationIntervalRef.current) {
       clearInterval(recordingDurationIntervalRef.current);
     }
-    toast({ title: 'Recording discarded' });
+    notifySuccess('Recording discarded');
   };
 
   const handleSendVoiceMessage = async () => {
     if (!audioBlob || !user || !conversation) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No audio recorded or user/conversation not found.',
-      });
+      notifyError(
+        'No audio recorded or user/conversation not found.',
+        'Error',
+      );
       return;
     }
 
@@ -794,7 +761,7 @@ export function CardsChat({
       // Step 6: Send message using the same working sendMessage function
       await sendMessage(conversation, message, setInput);
 
-      toast({ title: 'Success', description: 'Voice message sent!' });
+      notifySuccess('Voice message sent!', 'Success');
     } catch (error: any) {
       console.error('Error sending voice message:', error);
       console.error('Error details:', {
@@ -831,11 +798,7 @@ export function CardsChat({
         errorMessage = `Error: ${error.message}`;
       }
 
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: errorMessage,
-      });
+      notifyError(errorMessage, 'Upload Failed');
     } finally {
       discardRecording(); // Clean up states regardless of success/failure
       setRecordingStatus('idle');

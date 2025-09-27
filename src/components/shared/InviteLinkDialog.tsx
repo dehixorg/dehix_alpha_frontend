@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 // Label might not be strictly needed if input has an id and is self-descriptive, but can be added for accessibility.
 // import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast'; // Corrected import path
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
 interface InviteLinkDialogProps {
   isOpen: boolean;
@@ -34,7 +34,6 @@ export function InviteLinkDialog({
   const [displayedLink, setDisplayedLink] = useState(currentInviteLink || '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -50,24 +49,16 @@ export function InviteLinkDialog({
       const newLink = await onGenerateLink();
       if (newLink) {
         setDisplayedLink(newLink);
-        toast({
-          title: 'Success',
-          description: 'New invite link generated.',
-        });
+        notifySuccess('New invite link generated.', 'Success');
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to generate new invite link. Please try again.',
-        });
+        notifyError(
+          'Failed to generate new invite link. Please try again.',
+          'Error',
+        );
       }
     } catch (error) {
       console.error('Error generating invite link:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-      });
+      notifyError('An unexpected error occurred. Please try again.', 'Error');
     } finally {
       setIsGenerating(false);
     }
@@ -75,28 +66,17 @@ export function InviteLinkDialog({
 
   const handleCopyLink = async () => {
     if (!displayedLink) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No link to copy.',
-      });
+      notifyError('No link to copy.', 'Error');
       return;
     }
     try {
       await navigator.clipboard.writeText(displayedLink);
       setIsCopied(true);
-      toast({
-        title: 'Copied!',
-        description: 'Invite link copied to clipboard.',
-      });
+      notifySuccess('Invite link copied to clipboard.', 'Copied!');
       setTimeout(() => setIsCopied(false), 2000); // Reset icon after 2 seconds
     } catch (err) {
       console.error('Failed to copy link: ', err);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to copy link. Please try again.',
-      });
+      notifyError('Failed to copy link. Please try again.', 'Error');
     }
   };
 

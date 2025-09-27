@@ -96,22 +96,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   freelancerId,
   fetchMilestones,
 }) => {
-  // Toast wrapper to keep existing call sites unchanged
-  const toast = ({
-    variant,
-    title,
-    description,
-  }: {
-    variant?: 'destructive';
-    title?: string;
-    description?: string;
-  }) => {
-    if (variant === 'destructive') {
-      notifyError(description || '', title || 'Error');
-    } else {
-      notifySuccess(description || '', title);
-    }
-  };
   const { text: projectStatus, className: statusBadgeStyle } = getStatusBadge(
     story.storyStatus,
   );
@@ -180,10 +164,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     try {
       if (!milestoneId || !story._id) {
         console.warn('Missing milestone or story ID in handleAcceptTask');
-        toast({
-          description: 'Missing milestone or story ID',
-          variant: 'destructive',
-        });
+        notifyError('Missing milestone or story ID', 'Error');
         return;
       }
 
@@ -204,11 +185,11 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         return newSet;
       });
 
-      toast({ description: 'Task accepted!' });
+      notifySuccess('Task accepted!');
       fetchMilestones(); // Refresh milestones
     } catch (error) {
       console.error('Error accepting task:', error);
-      toast({ description: 'Failed to accept task.', variant: 'destructive' });
+      notifyError('Failed to accept task.', 'Error');
       // Remove from acted upon tasks if the request failed
       setActedUponTasks((prev) => {
         const newSet = new Set(prev);
@@ -222,10 +203,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     try {
       if (!milestoneId || !story._id) {
         console.warn('Missing milestone or story ID in handleRejectTask');
-        toast({
-          description: 'Missing milestone or story ID',
-          variant: 'destructive',
-        });
+        notifyError('Missing milestone or story ID', 'Error');
         return;
       }
 
@@ -246,13 +224,11 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         return newSet;
       });
 
-      toast({
-        description: 'Task rejected and update requests removed!',
-      });
+      notifySuccess('Task rejected and update requests removed!');
       fetchMilestones(); // Refresh milestones
     } catch (error) {
       console.error('Error rejecting task:', error);
-      toast({ description: 'Failed to reject task.', variant: 'destructive' });
+      notifyError('Failed to reject task.', 'Error');
       // Remove from acted upon tasks if the request failed
       setActedUponTasks((prev) => {
         const newSet = new Set(prev);
@@ -270,10 +246,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         console.warn(
           'Missing milestone or story ID in handleApproveUpdatePermission',
         );
-        toast({
-          description: 'Missing milestone or story ID',
-          variant: 'destructive',
-        });
+        notifyError('Missing milestone or story ID', 'Error');
         return false;
       }
 
@@ -299,15 +272,12 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
         payload,
       );
-      toast({ description: 'Update permission approved!' });
+      notifySuccess('Update permission approved!');
       fetchMilestones(); // Refresh milestones
       return true;
     } catch (error) {
       console.error('Error approving update permission:', error);
-      toast({
-        description: 'Failed to approve update permission.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to approve update permission.', 'Error');
       return false;
     }
   };
@@ -320,10 +290,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         console.warn(
           'Missing milestone or story ID in handleRejectUpdatePermission',
         );
-        toast({
-          description: 'Missing milestone or story ID',
-          variant: 'destructive',
-        });
+        notifyError('Missing milestone or story ID', 'Error');
         return false;
       }
 
@@ -349,22 +316,19 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
         payload,
       );
-      toast({ description: 'Update permission rejected!' });
+      notifySuccess('Update permission rejected!');
       fetchMilestones(); // Refresh milestones
       return true;
     } catch (error) {
       console.error('Error rejecting update permission:', error);
-      toast({
-        description: 'Failed to reject update permission.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to reject update permission.', 'Error');
       return false;
     }
   };
 
   const handleCopy = (url: string) => {
     navigator.clipboard.writeText(url);
-    toast({ description: 'URL copied!!' });
+    notifySuccess('URL copied!!');
     setOpen(false);
     setValue('');
   };

@@ -32,7 +32,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomTable } from '@/components/custom-table/CustomTable';
@@ -744,11 +744,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         const errorMessage =
           error.response?.data?.message || 'Failed to fetch project data';
         setError(errorMessage);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Error');
       } finally {
         setLoading(false);
       }
@@ -848,11 +844,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         const errorMessage =
           error.response?.data?.message || 'Failed to fetch bid details';
         setError(errorMessage);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Error');
       } finally {
         setLoadingFreelancerDetails(false);
       }
@@ -1019,11 +1011,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           }
         }
 
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to fetch profile details.',
-        });
+        notifyError('Failed to fetch profile details.', 'Error');
       } finally {
         setLoadingProfile(false);
       }
@@ -1085,19 +1073,15 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           ),
         );
 
-        toast({
-          title: 'Success',
-          description: `Bid status updated to ${status.toLowerCase()}.`,
-        });
+        notifySuccess(
+          `Bid status updated to ${status.toLowerCase()}.`,
+          'Success',
+        );
       } catch (error: any) {
         const errorMessage =
           error.response?.data?.message || 'Failed to update bid status';
         setError(errorMessage);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Error');
       } finally {
         setLoadingBids((prev) => ({ ...prev, [bidId]: false }));
       }

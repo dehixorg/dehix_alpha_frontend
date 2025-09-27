@@ -87,22 +87,6 @@ export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
-  // Toast wrapper to keep existing call sites unchanged
-  const toast = ({
-    variant,
-    title,
-    description,
-  }: {
-    variant?: 'destructive';
-    title?: string;
-    description?: string;
-  }) => {
-    if (variant === 'destructive') {
-      notifyError(description || '', title || 'Error');
-    } else {
-      notifySuccess(description || '', title);
-    }
-  };
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -113,11 +97,7 @@ export default function Dashboard() {
           setProject(projectData);
         }
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('API Error:', error);
       }
     };
@@ -126,11 +106,7 @@ export default function Dashboard() {
 
   const handleCompleteProject = (): void => {
     if (!project_id) {
-      toast({
-        title: 'Error',
-        description: 'Project ID is missing.',
-        variant: 'destructive',
-      });
+      notifyError('Project ID is missing.', 'Error');
       return;
     }
 
@@ -141,37 +117,25 @@ export default function Dashboard() {
           setProject((prev) =>
             prev ? { ...prev, status: StatusEnum.COMPLETED } : prev,
           );
-          toast({
-            title: 'Success',
-            description: 'Project marked as completed!',
-          });
+          notifySuccess('Project marked as completed!', 'Success');
         } else {
           console.error('Unexpected response:', response);
-          toast({
-            title: 'Failed',
-            description: 'Failed to mark project as completed.',
-            variant: 'destructive',
-          });
+          notifyError('Failed to mark project as completed.', 'Failed');
         }
       })
       .catch((error) => {
         console.error('Error updating project status:', error);
-        toast({
-          title: 'Error',
-          description: 'An error occurred while updating the project status.',
-          variant: 'destructive',
-        });
+        notifyError(
+          'An error occurred while updating the project status.',
+          'Error',
+        );
       });
   };
 
   // Handle project start
   const handleStartProject = (): void => {
     if (!project_id) {
-      toast({
-        title: 'Error',
-        description: 'Project ID is missing.',
-        variant: 'destructive',
-      });
+      notifyError('Project ID is missing.', 'Error');
       return;
     }
 
@@ -182,26 +146,15 @@ export default function Dashboard() {
           setProject((prev) =>
             prev ? { ...prev, status: StatusEnum.ACTIVE } : prev,
           );
-          toast({
-            title: 'Success',
-            description: 'Project started successfully!',
-          });
+          notifySuccess('Project started successfully!', 'Success');
         } else {
           console.error('Unexpected response:', response);
-          toast({
-            title: 'Failed',
-            description: 'Failed to start the project.',
-            variant: 'destructive',
-          });
+          notifyError('Failed to start the project.', 'Failed');
         }
       })
       .catch((error) => {
         console.error('Error updating project status:', error);
-        toast({
-          title: 'Error',
-          description: 'An error occurred while starting the project.',
-          variant: 'destructive',
-        });
+        notifyError('An error occurred while starting the project.', 'Error');
       });
   };
 
@@ -222,11 +175,7 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error refetching project:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to refresh project data.',
-      });
+      notifyError('Failed to refresh project data.', 'Error');
     }
   };
 

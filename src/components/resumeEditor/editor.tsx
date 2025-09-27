@@ -88,22 +88,6 @@ export default function ResumeEditor({
   initialResume,
   onCancel,
 }: ResumeEditorProps) {
-  // Toast wrapper to keep existing call sites unchanged
-  const toast = ({
-    variant,
-    title,
-    description,
-  }: {
-    variant?: 'destructive';
-    title?: string;
-    description?: string;
-  }) => {
-    if (variant === 'destructive') {
-      notifyError(description || '', title || 'Error');
-    } else {
-      notifySuccess(description || '', title);
-    }
-  };
   const user = useSelector((state: RootState) => state.user);
   const resumeRef = useRef<HTMLDivElement>(null);
 
@@ -354,24 +338,14 @@ export default function ResumeEditor({
 
       if (initialResume?._id) {
         await axiosInstance.put(`/resume/${initialResume._id}`, resumeData);
-        toast({
-          title: 'Success',
-          description: 'Resume updated successfully!',
-        });
+        notifySuccess('Resume updated successfully!', 'Success');
       } else {
         await axiosInstance.post('/resume', resumeData);
-        toast({
-          title: 'Success',
-          description: 'Resume created successfully!',
-        });
+        notifySuccess('Resume created successfully!', 'Success');
       }
     } catch (error) {
       console.error('Error saving resume:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save resume',
-        variant: 'destructive',
-      });
+      notifyError('Failed to save resume', 'Error');
     } finally {
       setIsSubmitting(false);
     }
@@ -470,17 +444,10 @@ export default function ResumeEditor({
       pdf.save(
         `Resume-${personalData[0]?.firstName || ''}-${personalData[0]?.lastName || ''}-${new Date().toISOString().slice(0, 10)}.pdf`,
       );
-      toast({
-        title: 'Success',
-        description: 'Resume PDF generated successfully!',
-      });
+      notifySuccess('Resume PDF generated successfully!', 'Success');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to generate PDF. Please try again.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to generate PDF. Please try again.', 'Error');
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -489,11 +456,7 @@ export default function ResumeEditor({
   // Delete resume
   const handleDeleteResume = async () => {
     if (!initialResume?._id) {
-      toast({
-        title: 'Error',
-        description: 'No resume to delete',
-        variant: 'destructive',
-      });
+      notifyError('No resume to delete', 'Error');
       return;
     }
     setIsDeleting(true);
@@ -501,16 +464,12 @@ export default function ResumeEditor({
       await axiosInstance.put(`/resume/${initialResume._id}`, {
         status: 'inactive',
       });
-      toast({ title: 'Success', description: 'Resume deleted successfully!' });
+      notifySuccess('Resume deleted successfully!', 'Success');
       setShowDeleteDialog(false);
       onCancel();
     } catch (error) {
       console.error('Error deleting resume:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete resume',
-        variant: 'destructive',
-      });
+      notifyError('Failed to delete resume', 'Error');
       setShowDeleteDialog(false);
     } finally {
       setIsDeleting(false);

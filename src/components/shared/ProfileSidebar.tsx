@@ -156,22 +156,6 @@ export function ProfileSidebar({
     confirmButtonVariant: 'default' as 'default' | 'destructive',
   });
 
-  // Toast wrapper to keep existing call sites unchanged
-  const toast = ({
-    variant,
-    title,
-    description,
-  }: {
-    variant?: 'destructive';
-    title?: string;
-    description: string;
-  }) => {
-    if (variant === 'destructive') {
-      notifyError(description, title || 'Error');
-    } else {
-      notifySuccess(description, title);
-    }
-  };
   const db = getFirestore();
 
   const internalFetchProfileData = async () => {
@@ -353,11 +337,7 @@ export function ProfileSidebar({
       setSharedMedia(extractedMedia);
     } catch (error) {
       console.error('Error fetching shared media:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load shared media',
-      });
+      notifyError('Failed to load shared media', 'Error');
     } finally {
       setIsLoadingMedia(false);
     }
@@ -420,11 +400,7 @@ export function ProfileSidebar({
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error adding members:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add members. Please try again.',
-      });
+      notifyError('Failed to add members. Please try again.', 'Error');
     }
   };
 
@@ -434,19 +410,11 @@ export function ProfileSidebar({
     groupId: string,
   ) => {
     if (!newName.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Group name cannot be empty.',
-      });
+      notifyError('Group name cannot be empty.', 'Validation Error');
       return;
     }
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return;
     }
     const groupDocRef = doc(db, 'conversations', groupId);
@@ -476,24 +444,17 @@ export function ProfileSidebar({
       updateData.avatar = '';
     }
     if (Object.keys(updateData).length === 0) {
-      toast({ title: 'Info', description: 'No changes were made.' });
+      notifySuccess('No changes were made.', 'Info');
       return;
     }
     updateData.updatedAt = new Date().toISOString();
     try {
       await updateDoc(groupDocRef, updateData);
-      toast({
-        title: 'Success',
-        description: 'Group information updated successfully.',
-      });
+      notifySuccess('Group information updated successfully.', 'Success');
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error updating group info:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update group information.',
-      });
+      notifyError('Failed to update group information.', 'Error');
     }
   };
 
@@ -501,11 +462,7 @@ export function ProfileSidebar({
     groupId: string,
   ): Promise<string | null> => {
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return null;
     }
     const randomComponent = Math.random().toString(36).substring(2, 10);
@@ -516,30 +473,19 @@ export function ProfileSidebar({
         inviteLink: newInviteLink,
         updatedAt: new Date().toISOString(),
       });
-      toast({
-        title: 'Success',
-        description: 'New invite link generated and saved.',
-      });
+      notifySuccess('New invite link generated and saved.', 'Success');
       setRefreshKey((prev) => prev + 1);
       return newInviteLink;
     } catch (error) {
       console.error('Error generating and saving invite link:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to generate invite link.',
-      });
+      notifyError('Failed to generate invite link.', 'Error');
       return null;
     }
   };
 
   const handleRemoveAdmin = async (groupId: string, memberId: string) => {
     if (!groupId || !memberId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group or Member ID is missing.',
-      });
+      notifyError('Group or Member ID is missing.', 'Error');
       return;
     }
 
@@ -550,30 +496,18 @@ export function ProfileSidebar({
         admins: arrayRemove(memberId),
         updatedAt: new Date().toISOString(),
       });
-
-      toast({
-        title: 'Success',
-        description: 'Admin privileges have been revoked.',
-      });
+      notifySuccess('Admin privileges have been revoked.', 'Success');
 
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing admin:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to remove admin privileges.',
-      });
+      notifyError('Failed to remove admin privileges.', 'Error');
     }
   };
 
   const handleMakeAdmin = async (groupId: string, memberId: string) => {
     if (!groupId || !memberId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group or Member ID is missing.',
-      });
+      notifyError('Group or Member ID is missing.', 'Error');
       return;
     }
 
@@ -584,38 +518,22 @@ export function ProfileSidebar({
         admins: arrayUnion(memberId),
         updatedAt: new Date().toISOString(),
       });
-
-      toast({
-        title: 'Success',
-        description: 'Member has been promoted to admin.',
-      });
+      notifySuccess('Member has been promoted to admin.', 'Success');
 
       setRefreshKey((prev) => prev + 1); // Refresh data to show updated admin status
     } catch (error) {
       console.error('Error making member admin:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to promote member to admin.',
-      });
+      notifyError('Failed to promote member to admin.', 'Error');
     }
   };
 
   const handleConfirmRemoveMember = async (memberIdToRemove: string) => {
     if (!profileId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return;
     }
     if (!memberIdToRemove) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Member ID is missing.',
-      });
+      notifyError('Member ID is missing.', 'Error');
       return;
     }
     const groupDocRef = doc(db, 'conversations', profileId);
@@ -625,15 +543,11 @@ export function ProfileSidebar({
         [`participantDetails.${memberIdToRemove}`]: deleteField(),
         updatedAt: new Date().toISOString(),
       });
-      toast({ title: 'Success', description: 'Member removed successfully.' });
+      notifySuccess('Member removed successfully.', 'Success');
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing member:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to remove member.',
-      });
+      notifyError('Failed to remove member.', 'Error');
     } finally {
       setIsConfirmDialogOpen(false);
     }
@@ -641,38 +555,23 @@ export function ProfileSidebar({
 
   const handleDeleteGroup = async (groupId: string) => {
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing for deletion.',
-      });
+      notifyError('Group ID is missing for deletion.', 'Error');
       setIsConfirmDialogOpen(false);
       return;
     }
     if (!user || !(profileData as ProfileGroup)?.admins?.includes(user.uid)) {
-      toast({
-        variant: 'destructive',
-        title: 'Unauthorized',
-        description: 'Only admins can delete groups.',
-      });
+      notifyError('Only admins can delete groups.', 'Unauthorized');
       setIsConfirmDialogOpen(false);
       return;
     }
     const groupDocRef = doc(db, 'conversations', groupId);
     try {
       await deleteDoc(groupDocRef);
-      toast({
-        title: 'Success',
-        description: 'Group has been permanently deleted.',
-      });
+      notifySuccess('Group has been permanently deleted.', 'Success');
       onClose();
     } catch (error) {
       console.error('Error deleting group:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete group. Please try again.',
-      });
+      notifyError('Failed to delete group. Please try again.', 'Error');
     } finally {
       setIsConfirmDialogOpen(false);
     }
@@ -1171,21 +1070,17 @@ export function ProfileSidebar({
 
                                     // Trigger data reload
                                     setRefreshKey((prev) => prev + 1);
-
-                                    toast({
-                                      title: 'Left group',
-                                      description:
-                                        'You have left the group successfully.',
-                                    });
+                                    notifySuccess(
+                                      'You have left the group successfully.',
+                                      'Left group',
+                                    );
                                   }
                                 } catch (error) {
                                   console.error('Error leaving group:', error);
-                                  toast({
-                                    title: 'Error',
-                                    description:
-                                      'Failed to leave the group. Please try again.',
-                                    variant: 'destructive',
-                                  });
+                                  notifyError(
+                                    'Failed to leave the group. Please try again.',
+                                    'Error',
+                                  );
                                 }
                               },
                               confirmButtonText: 'Leave',

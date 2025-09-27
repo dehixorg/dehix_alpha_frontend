@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
-import { toast } from '../ui/use-toast';
-
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
@@ -56,11 +55,7 @@ export default function ConnectsDialog({
         status: 'PENDING',
         dateTime: new Date().toISOString(),
       });
-      toast({
-        title: 'Success!',
-        description: 'Request to add connects has been sent.',
-        duration: 3000,
-      });
+      notifySuccess('Request to add connects has been sent.', 'Success!');
       const newConnect = {
         userId: userId,
         amount: 100,
@@ -73,12 +68,7 @@ export default function ConnectsDialog({
       );
     } catch (error: any) {
       console.error('Error requesting more connects:', error.response);
-      toast({
-        variant: 'destructive',
-        title: 'Error!',
-        description: 'Failed to request connects. Try again!',
-        duration: 3000,
-      });
+      notifyError('Failed to request connects. Try again!', 'Error!');
     }
   };
 

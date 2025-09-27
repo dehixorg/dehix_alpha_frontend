@@ -78,23 +78,6 @@ export default function ProfileDetailPage() {
   const params = useParams();
   const profileId = params.profileId as string;
 
-  // Toast wrapper to keep existing call sites unchanged
-  const toast = ({
-    variant,
-    title,
-    description,
-  }: {
-    variant?: 'destructive';
-    title?: string;
-    description?: string;
-  }) => {
-    if (variant === 'destructive') {
-      notifyError(description || '', title || 'Error');
-    } else {
-      notifySuccess(description || '', title);
-    }
-  };
-
   const [profile, setProfile] = useState<FreelancerProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -308,11 +291,7 @@ export default function ProfileDetailPage() {
       setEditingProfileData(processedProfileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to load profile', 'Error');
       router.push('/freelancer/settings/profiles');
     }
   };
@@ -351,12 +330,10 @@ export default function ProfileDetailPage() {
       setSkillsAndDomainsLoaded(true);
     } catch (error) {
       console.error('Error fetching skills and domains:', error);
-      toast({
-        title: 'Error',
-        description:
-          'Could not load skills and domains. Please ensure you have added skills to your main profile.',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Could not load skills and domains. Please ensure you have added skills to your main profile.',
+        'Error',
+      );
     }
   };
 
@@ -380,11 +357,7 @@ export default function ProfileDetailPage() {
       !editingProfileData.profileName ||
       editingProfileData.profileName.trim().length === 0
     ) {
-      toast({
-        title: 'Validation Error',
-        description: 'Profile name is required',
-        variant: 'destructive',
-      });
+      notifyError('Profile name is required', 'Validation Error');
       return;
     }
 
@@ -392,11 +365,10 @@ export default function ProfileDetailPage() {
       !editingProfileData.description ||
       editingProfileData.description.trim().length < 10
     ) {
-      toast({
-        title: 'Validation Error',
-        description: 'Description must be at least 10 characters long',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Description must be at least 10 characters long',
+        'Validation Error',
+      );
       return;
     }
 
@@ -417,10 +389,7 @@ export default function ProfileDetailPage() {
         updatePayload,
       );
 
-      toast({
-        title: 'Success',
-        description: 'Profile updated successfully',
-      });
+      notifySuccess('Profile updated successfully', 'Success');
       // Clear any pending project selections after successful save
       setPendingProjects(null);
       setPendingExperiences(null);
@@ -428,11 +397,7 @@ export default function ProfileDetailPage() {
       setIsEditMode(false);
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to update profile', 'Error');
     } finally {
       setIsUpdating(false);
     }
@@ -476,18 +441,11 @@ export default function ProfileDetailPage() {
         updatePayload,
       );
 
-      toast({
-        title: 'Success',
-        description: 'Project removed from profile successfully',
-      });
+      notifySuccess('Project removed from profile successfully', 'Success');
       await fetchProfile();
     } catch (error: any) {
       console.error('Error removing project:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to remove project from profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to remove project from profile', 'Error');
     }
   };
 
@@ -514,18 +472,11 @@ export default function ProfileDetailPage() {
         updatePayload,
       );
 
-      toast({
-        title: 'Success',
-        description: 'Experience removed from profile successfully',
-      });
+      notifySuccess('Experience removed from profile successfully', 'Success');
       await fetchProfile();
     } catch (error: any) {
       console.error('Error removing experience:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to remove experience from profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to remove experience from profile', 'Error');
     }
   };
 
@@ -544,18 +495,14 @@ export default function ProfileDetailPage() {
 
     try {
       await axiosInstance.delete(`/freelancer/profile/${profile._id}`);
-      toast({
-        title: 'Profile Deleted',
-        description: 'Profile has been successfully deleted.',
-      });
+      notifySuccess(
+        'Profile has been successfully deleted.',
+        'Profile Deleted',
+      );
       router.push('/freelancer/settings/profiles');
     } catch (error) {
       console.error('Error deleting profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to delete profile', 'Error');
     } finally {
       setDeleteDialogOpen(false);
     }

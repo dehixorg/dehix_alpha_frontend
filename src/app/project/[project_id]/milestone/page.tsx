@@ -29,32 +29,12 @@ const Page = () => {
   const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<
     number | null
   >(0);
-  // Toast wrapper to keep existing call sites unchanged
-  const toast = ({
-    variant,
-    title,
-    description,
-  }: {
-    variant?: 'destructive';
-    title?: string;
-    description?: string;
-  }) => {
-    if (variant === 'destructive') {
-      notifyError(description || '', title || 'Error');
-    } else {
-      notifySuccess(description || '', title);
-    }
-  };
 
   // Handle chat with other freelancers
   const handleChatClick = useCallback(
     async (freelancerId: string, freelancerName: string) => {
       if (!user?.uid) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'You must be logged in to start a chat.',
-        });
+        notifyError('You must be logged in to start a chat.', 'Error');
         return;
       }
 
@@ -67,17 +47,10 @@ const Page = () => {
 
         router.push('/chat');
 
-        toast({
-          title: 'Chat',
-          description: `Opening chat with ${freelancerName}...`,
-        });
+        notifySuccess(`Opening chat with ${freelancerName}...`, 'Chat');
       } catch (error) {
         console.error('Error opening chat:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to open chat. Please try again.',
-        });
+        notifyError('Failed to open chat. Please try again.', 'Error');
       }
     },
     [router, user],
@@ -120,11 +93,7 @@ const Page = () => {
       setMilestones(fetchedMilestones);
       setLoading(false);
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong.Please try again.', 'Error');
       console.error('Error fetching milestones:', error);
       setLoading(false);
     }
@@ -168,12 +137,10 @@ const Page = () => {
         milestoneData,
       );
 
-      toast({
-        title: 'Success',
-        description: isTask
-          ? 'Task added successfully!'
-          : 'Story added successfully!',
-      });
+      notifySuccess(
+        isTask ? 'Task added successfully!' : 'Story added successfully!',
+        'Success',
+      );
 
       fetchMilestones();
     } catch (error) {
@@ -181,11 +148,7 @@ const Page = () => {
         'Error updating milestone:',
         (error as any).response?.data || (error as any).message,
       );
-      toast({
-        title: 'Error',
-        description: 'Failed to update milestone.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to update milestone.', 'Error');
     }
   };
 
