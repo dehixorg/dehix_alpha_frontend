@@ -1318,7 +1318,8 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const formatUSD = (value?: number | string | null) => {
     if (value === null || value === undefined || isNaN(Number(value)))
       return 'N/A';
-    return formatCurrency(value, 'USD', 0);
+    const fractionDigits = 2; // USD typically uses 2 decimal places
+    return formatCurrency(value, 'USD', fractionDigits, fractionDigits);
   };
 
   if (loading) {

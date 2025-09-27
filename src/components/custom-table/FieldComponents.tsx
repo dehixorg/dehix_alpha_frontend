@@ -17,6 +17,20 @@ import { Actions, FieldComponentProps, FieldType } from './FieldTypes';
 
 import { formatCurrency } from '@/utils/format';
 
+// Determine fraction digits per currency (extend as needed)
+const getCurrencyFractionDigits = (currencyCode: string): number => {
+  const code = (currencyCode || '').toUpperCase();
+  const special: Record<string, number> = {
+    JPY: 0,
+    KRW: 0,
+    VND: 0,
+    BTC: 8,
+    ETH: 6,
+    USDT: 2,
+  };
+  return special[code] ?? 2;
+};
+
 const DateTimeField = ({ value }: FieldComponentProps<string>) => {
   const date = new Date(value);
   return <>{date.toUTCString()}</>;
@@ -165,10 +179,13 @@ const ActionField = ({
 };
 
 const CurrencyField = ({ fieldData, value }: FieldComponentProps<string>) => {
+  const currency = String(fieldData.currency || 'USD');
+  const fractionDigits = getCurrencyFractionDigits(currency);
   const formatted = formatCurrency(
     value,
-    String(fieldData.currency || 'USD'),
-    0,
+    currency,
+    fractionDigits,
+    fractionDigits,
   );
   return <span>{formatted}</span>;
 };

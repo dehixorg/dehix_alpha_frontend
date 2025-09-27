@@ -54,6 +54,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
   const handleDeletePermanently = async (noteId: string | null) => {
     if (!noteId) {
       notifyError('Invalid note ID.', 'Error');
+      setIsDeleting(false);
       return;
     }
     try {
