@@ -21,7 +21,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -68,11 +68,7 @@ export default function ProfilesPage() {
       setProfiles(profilesData);
     } catch (error) {
       console.error('Error fetching profiles:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load profiles',
-        variant: 'destructive',
-      });
+      notifyError('Failed to load profiles');
       setProfiles([]);
     } finally {
       setIsLoading(false);
@@ -85,11 +81,7 @@ export default function ProfilesPage() {
 
   const handleCreateProfile = async () => {
     if (!newProfileName.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Profile name is required',
-        variant: 'destructive',
-      });
+      notifyError('Profile name is required');
       return;
     }
 
@@ -98,11 +90,7 @@ export default function ProfilesPage() {
       `Professional profile for ${newProfileName.trim()}. This profile showcases my skills and experience in this domain.`;
 
     if (description.length < 10) {
-      toast({
-        title: 'Error',
-        description: 'Description must be at least 10 characters long',
-        variant: 'destructive',
-      });
+      notifyError('Description must be at least 10 characters long');
       return;
     }
 
@@ -158,17 +146,10 @@ export default function ProfilesPage() {
         newProfileType === 'Consultant' ? 'consultant' : 'freelancer',
       );
 
-      toast({
-        title: 'Success',
-        description: 'Profile created successfully',
-      });
+      notifySuccess('Profile created successfully', 'Success');
     } catch (error) {
       console.error('Error creating profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to create profile');
     }
   };
 
@@ -182,19 +163,14 @@ export default function ProfilesPage() {
 
     try {
       await axiosInstance.delete(`/freelancer/profile/${profileToDelete}`);
-
-      toast({
-        title: 'Profile Deleted',
-        description: 'Profile has been successfully deleted.',
-      });
+      notifySuccess(
+        'Profile has been successfully deleted.',
+        'Profile Deleted',
+      );
       fetchProfiles();
     } catch (error) {
       console.error('Error deleting profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to delete profile');
     } finally {
       setDeleteDialogOpen(false);
       setProfileToDelete(null);

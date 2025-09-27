@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -80,11 +80,10 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
       onGroupCreated();
     }
 
-    toast({
-      title: 'Group Created',
-      description:
-        'Your team group has been created and will appear in the list.',
-    });
+    notifySuccess(
+      'Your team group has been created and will appear in the list.',
+      'Group Created',
+    );
   }, [onGroupCreated]);
 
   // Fetch freelancers with accepted bids for this project
@@ -196,11 +195,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
       setFreelancers(acceptedFreelancers);
     } catch (error) {
       console.error('Error fetching freelancers:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch freelancers. Please try again.',
-      });
+      notifyError('Failed to fetch freelancers. Please try again.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -274,10 +269,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
       );
     } else {
       // Default behavior - could integrate with existing chat system
-      toast({
-        title: 'Chat',
-        description: `Opening chat with ${freelancer.userName}...`,
-      });
+      notifySuccess(`Opening chat with ${freelancer.userName}...`, 'Chat');
     }
   };
 
@@ -288,10 +280,10 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
       onChatClick(group.id, group.project_name);
     } else {
       // Default behavior for group click
-      toast({
-        title: 'Group Chat',
-        description: `Opening group chat: ${group.project_name}...`,
-      });
+      notifySuccess(
+        `Opening group chat: ${group.project_name}...`,
+        'Group Chat',
+      );
     }
   };
 

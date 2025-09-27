@@ -20,7 +20,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 
-import { toast } from '../ui/use-toast';
 import {
   Card,
   CardContent,
@@ -41,6 +40,7 @@ import {
 import { NewReportTab } from '../report-tabs/NewReportTabs';
 import { getReportTypeFromPath } from '../../utils/getReporttypeFromPath';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { AppDispatch, RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
@@ -154,19 +154,17 @@ const JobCard: React.FC<JobCardProps> = ({
 
       if (response.status === 200) {
         dispatch(addDraftedProject(job._id));
-        toast({
-          title: 'Added to saved projects',
-          description: 'You can find this project in your saved items.',
-          variant: 'default',
-        });
+        notifySuccess(
+          'You can find this project in your saved items.',
+          'Added to saved projects',
+        );
       }
     } catch (error: any) {
       console.error('Failed to add project to draft:', error);
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to save project',
-        variant: 'destructive',
-      });
+      notifyError(
+        error.response?.data?.message || 'Failed to save project',
+        'Error',
+      );
     } finally {
       setLoading(false);
     }
@@ -184,20 +182,17 @@ const JobCard: React.FC<JobCardProps> = ({
 
       if (response.status === 200) {
         dispatch(removeDraftedProject(job._id));
-        toast({
-          title: 'Removed from saved projects',
-          description: 'This project has been removed from your saved items.',
-          variant: 'default',
-        });
+        notifySuccess(
+          'This project has been removed from your saved items.',
+          'Removed from saved projects',
+        );
       }
     } catch (error: any) {
       console.error('Failed to remove project from draft:', error);
-      toast({
-        title: 'Error',
-        description:
-          error.response?.data?.message || 'Failed to remove project',
-        variant: 'destructive',
-      });
+      notifyError(
+        error.response?.data?.message || 'Failed to remove project',
+        'Error',
+      );
     } finally {
       setLoading(false);
     }

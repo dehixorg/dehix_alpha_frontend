@@ -6,7 +6,7 @@ import {
   DropzoneEmptyState,
   DropzoneContent,
 } from '@/components/ui/shadcn-io/dropzone';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -80,23 +80,19 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
       if (putResponse.status !== 200)
         throw new Error('Failed to update resume.');
 
-      toast({ title: 'Success', description: 'Resume uploaded successfully!' });
       onResumeUpdate?.();
       setExistingResumeUrl(Location);
       setUploadedFileName(extractFileNameFromUrl(Location));
       setFiles(undefined);
     } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Upload error',
-        description: err?.message || 'Something went wrong. Please try again.',
-      });
+      notifyError(
+        err?.message || 'Something went wrong. Please try again.',
+        'Upload error',
+      );
     } finally {
       setIsUploading(false);
     }
   };
-
-  // If filename starts with a numeric timestamp like 1758897821196-filename.pdf
   const { cleanedName, uploadedAtLabel } = useMemo(() => {
     const name = uploadedFileName || '';
     const match = name.match(/^(\d{10,})-(.+)$/);
@@ -128,13 +124,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
           const file = accepted?.[0];
           if (file) await uploadFile(file);
         }}
-        onError={(err) =>
-          toast({
-            variant: 'destructive',
-            title: 'Upload error',
-            description: err.message,
-          })
-        }
+        onError={(err) => notifyError(err.message, 'Upload error')}
         className="w-full"
         disabled={isUploading}
       >

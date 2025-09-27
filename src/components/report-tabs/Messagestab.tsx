@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 import { apiHelperService } from '@/services/report';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 interface MessagesTabProps {
   id: string;
@@ -26,11 +26,7 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
         setMessages(newMessages);
       }
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch messages.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to fetch messages.', 'Error');
     }
   };
 
@@ -49,11 +45,7 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
       ]);
       setText('');
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to send message.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to send message.', 'Error');
     } finally {
       setSending(false);
     }

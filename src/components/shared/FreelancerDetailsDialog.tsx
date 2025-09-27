@@ -13,7 +13,7 @@ import {
 import { Button } from '../ui/button';
 
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/hooks/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 interface FreelancerDetailsDialogProps {
   freelancerId: string;
@@ -38,11 +38,7 @@ const FreelancerDetailsDialog: React.FC<FreelancerDetailsDialogProps> = ({
           setFreelancerDetails(response.data);
         } catch (error) {
           console.error('Error fetching freelancer details:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Something went wrong.Please try again.',
-          }); // Error toast
+          notifyError('Something went wrong. Please try again.', 'Error');
         } finally {
           setLoading(false);
         }

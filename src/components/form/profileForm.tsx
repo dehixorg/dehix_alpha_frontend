@@ -24,7 +24,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -32,7 +31,7 @@ import { addSkill } from '@/utils/skillUtils';
 import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
-
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
     message: 'First Name must be at least 2 characters.',
@@ -59,10 +58,7 @@ const profileFormSchema = z.object({
     .optional()
     .refine(
       (val) => {
-        // If no value provided, it's valid (optional field)
         if (!val || val.trim() === '') return true;
-
-        // If value is provided, check minimum word requirements
         const wordCount = val
           .trim()
           .split(/\s+/)
@@ -170,11 +166,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to add skill:',
         error.response?.data || error.message,
       );
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add skill. Please try again.',
-      });
+      notifyError('Failed to add skill. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -218,11 +210,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to add domain:',
         error.response?.data || error.message,
       );
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add domain. Please try again.',
-      });
+      notifyError('Failed to add domain. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -268,11 +256,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to add project domain:',
         error.response?.data || error.message,
       );
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add project domain. Please try again.',
-      });
+      notifyError('Failed to add project domain. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -405,17 +389,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           coverLetter: cleanCoverLetter,
           description: userResponse.data.data.description || '',
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.');
       }
     };
 
     fetchData();
+    return () => {};
   }, [user_id, form]);
 
   useEffect(() => {
@@ -468,10 +449,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         domain: currDomains,
         projectDomains: currProjectDomains,
       });
-      toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been successfully updated.',
-      });
+      notifySuccess(
+        'Your profile has been successfully updated.',
+        'Profile Updated',
+      );
 
       // Trigger resume component refresh with a small delay to ensure backend processing
       setTimeout(() => {
@@ -479,11 +460,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       }, 500);
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update profile. Please try again later.',
-      });
+      notifyError('Failed to update profile. Please try again later.');
     } finally {
       setLoading(false);
     }

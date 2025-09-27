@@ -11,7 +11,7 @@ import { MilestoneStatus } from '@/utils/types/Milestone';
 import { useFormState } from '@/hooks/useFormState';
 import { useNestedFormState } from '@/hooks/useNestedFormState';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
 interface MilestoneFormProps {
   projectId: string;
@@ -41,18 +41,10 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
           userId,
           projectId,
         });
-        toast({
-          title: 'Success',
-          description: 'Milestone created successfully!',
-          variant: 'default',
-        });
+        notifySuccess('Milestone created successfully!', 'Success');
         fetchMilestones();
       } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to create milestone.',
-          variant: 'destructive',
-        });
+        notifyError('Failed to create milestone.', 'Error');
       } finally {
         closeDialog();
       }

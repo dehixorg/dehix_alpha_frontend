@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { RootState } from '@/lib/store';
-import { toast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { CombinedUser } from '@/hooks/useAllUsers';
 import { useAllUsers } from '@/hooks/useAllUsers';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -138,11 +138,7 @@ export function ChatList({
       setSearchResults(filtered);
     } catch (error) {
       console.error('Error filtering users:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to search users. Please try again.',
-      });
+      notifyError('Failed to search users. Please try again.', 'Error');
     } finally {
       setIsSearching(false);
     }
@@ -234,21 +230,20 @@ export function ChatList({
                     } else {
                       // Fallback: open the generic new chat dialog
                       onOpenNewChatDialog();
-                      toast({
-                        title: 'Starting new chat',
-                        description: `Preparing a new chat with ${user.displayName || user.email}`,
-                      });
+                      notifySuccess(
+                        `Preparing a new chat with ${user.displayName || user.email}`,
+                        'Starting new chat',
+                      );
                     }
                     // Close search UI
                     setSearchTerm('');
                     setSearchResults([]);
                   } catch (err: any) {
                     console.error('Failed to start chat:', err);
-                    toast({
-                      variant: 'destructive',
-                      title: 'Could not start chat',
-                      description: err?.message || 'Please try again',
-                    });
+                    notifyError(
+                      err?.message || 'Please try again',
+                      'Could not start chat',
+                    );
                   } finally {
                     setIsSearching(false);
                   }

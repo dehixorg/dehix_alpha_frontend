@@ -33,7 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RootState } from '@/lib/store';
 import { clearUser } from '@/lib/userSlice';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/hooks/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -88,11 +88,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
         setReferralCode(fetchCode);
       } catch (error) {
         console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setLoading(false);
       }
@@ -292,11 +288,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
                 if (user?.uid && userType) {
                   router.push(`/reports?type=${reportType}`);
                 } else {
-                  toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: 'User information is missing.',
-                  });
+                  notifyError('User information is missing.', 'Error');
                 }
               }}
               className="rounded-lg px-3 py-2 cursor-pointer"

@@ -19,7 +19,7 @@ import ProfileCard from '@/components/opportunities/jobs/profileCard';
 import { getStatusBadge } from '@/utils/statusBadge';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 
@@ -88,11 +88,7 @@ const JobCard: React.FC<JobCardProps> = ({
       setBidProfiles(profileIds);
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   }, [user.uid]);
 
@@ -121,10 +117,10 @@ const JobCard: React.FC<JobCardProps> = ({
     if (onInvite) {
       onInvite(id);
     } else {
-      toast({
-        title: 'Invitation sent',
-        description: 'Your invitation has been sent successfully',
-      });
+      notifySuccess(
+        'Your invitation has been sent successfully',
+        'Invitation sent',
+      );
     }
   };
 

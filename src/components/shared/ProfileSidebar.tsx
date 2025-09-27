@@ -46,7 +46,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { useToast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -132,7 +132,7 @@ export function ProfileSidebar({
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [, setSharedFiles] = useState<FileItem[]>([]);
+  const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
@@ -144,7 +144,6 @@ export function ProfileSidebar({
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
-  const { toast } = useToast();
 
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
@@ -296,11 +295,7 @@ export function ProfileSidebar({
       setSharedMedia(extractedMedia);
     } catch (error) {
       console.error('Error fetching shared media:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load shared media',
-      });
+      notifyError('Failed to load shared media', 'Error');
     } finally {
       setIsLoadingMedia(false);
     }
@@ -343,11 +338,7 @@ export function ProfileSidebar({
       setSharedFiles(extractedFiles);
     } catch (error) {
       console.error('Error fetching shared files:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load shared files',
-      });
+      notifyError('Failed to load shared files', 'Error');
     } finally {
       setIsLoadingFiles(false);
     }
@@ -400,20 +391,12 @@ export function ProfileSidebar({
     groupId: string,
   ) => {
     if (!selectedUsers || selectedUsers.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No users selected',
-        description: 'Please select users to add.',
-      });
+      notifyError('Please select users to add.', 'No users selected');
       return;
     }
 
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return;
     }
 
@@ -458,17 +441,13 @@ export function ProfileSidebar({
       // Update local state to reflect the changes
       setRefreshDataKey((prev) => prev + 1);
 
-      toast({
-        title: 'Success',
-        description: `${selectedUsers.length} member(s) added successfully.`,
-      });
+      notifySuccess(
+        `${selectedUsers.length} member(s) added successfully.`,
+        'Success',
+      );
     } catch (error) {
       console.error('Error adding members:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add members. Please try again.',
-      });
+      notifyError('Failed to add members. Please try again.', 'Error');
       throw error; // Re-throw to allow caller to handle if needed
     }
   };
@@ -480,19 +459,11 @@ export function ProfileSidebar({
   ) => {
     // ... (existing implementation)
     if (!newName.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Group name cannot be empty.',
-      });
+      notifyError('Group name cannot be empty.', 'Validation Error');
       return;
     }
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return;
     }
     const groupDocRef = doc(db, 'conversations', groupId);
@@ -522,24 +493,17 @@ export function ProfileSidebar({
       updateData.avatar = '';
     }
     if (Object.keys(updateData).length === 0) {
-      toast({ title: 'Info', description: 'No changes were made.' });
+      notifySuccess('No changes were made.', 'Info');
       return;
     }
     updateData.updatedAt = new Date().toISOString();
     try {
       await updateDoc(groupDocRef, updateData);
-      toast({
-        title: 'Success',
-        description: 'Group information updated successfully.',
-      });
+      notifySuccess('Group information updated successfully.', 'Success');
       setRefreshDataKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error updating group info:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update group information.',
-      });
+      notifyError('Failed to update group information.', 'Error');
     }
   };
 
@@ -548,11 +512,7 @@ export function ProfileSidebar({
   ): Promise<string | null> => {
     // ... (existing implementation)
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return null;
     }
     const randomComponent = Math.random().toString(36).substring(2, 10);
@@ -563,19 +523,12 @@ export function ProfileSidebar({
         inviteLink: newInviteLink,
         updatedAt: new Date().toISOString(),
       });
-      toast({
-        title: 'Success',
-        description: 'New invite link generated and saved.',
-      });
+      notifySuccess('New invite link generated and saved.', 'Success');
       setRefreshDataKey((prev) => prev + 1);
       return newInviteLink;
     } catch (error) {
       console.error('Error generating and saving invite link:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to generate invite link.',
-      });
+      notifyError('Failed to generate invite link.', 'Error');
       return null;
     }
   };
@@ -583,19 +536,11 @@ export function ProfileSidebar({
   const handleConfirmRemoveMember = async (memberIdToRemove: string) => {
     // ... (existing implementation)
     if (!profileId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return;
     }
     if (!memberIdToRemove) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Member ID is missing.',
-      });
+      notifyError('Member ID is missing.', 'Error');
       return;
     }
     const groupDocRef = doc(db, 'conversations', profileId);
@@ -605,15 +550,11 @@ export function ProfileSidebar({
         [`participantDetails.${memberIdToRemove}`]: deleteField(),
         updatedAt: new Date().toISOString(),
       });
-      toast({ title: 'Success', description: 'Member removed successfully.' });
+      notifySuccess('Member removed successfully.', 'Success');
       setRefreshDataKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing member:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to remove member.',
-      });
+      notifyError('Failed to remove member.', 'Error');
     } finally {
       setIsConfirmDialogOpen(false);
     }
@@ -622,38 +563,23 @@ export function ProfileSidebar({
   const handleDeleteGroup = async (groupId: string) => {
     // ... (existing implementation)
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing for deletion.',
-      });
+      notifyError('Group ID is missing for deletion.', 'Error');
       setIsConfirmDialogOpen(false);
       return;
     }
     if (!user || !(profileData as ProfileGroup)?.admins?.includes(user.uid)) {
-      toast({
-        variant: 'destructive',
-        title: 'Unauthorized',
-        description: 'Only admins can delete groups.',
-      });
+      notifyError('Only admins can delete groups.', 'Unauthorized');
       setIsConfirmDialogOpen(false);
       return;
     }
     const groupDocRef = doc(db, 'conversations', groupId);
     try {
       await deleteDoc(groupDocRef);
-      toast({
-        title: 'Success',
-        description: 'Group has been permanently deleted.',
-      });
+      notifySuccess('Group has been permanently deleted.', 'Success');
       onClose();
     } catch (error) {
       console.error('Error deleting group:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete group. Please try again.',
-      });
+      notifyError('Failed to delete group. Please try again.', 'Error');
     } finally {
       setIsConfirmDialogOpen(false);
     }
@@ -823,6 +749,60 @@ export function ProfileSidebar({
                         ) : (
                           <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
                             <p>No media has been shared yet.</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">
+                          Shared Files
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {isLoadingFiles ? (
+                          <div className="flex justify-center items-center h-20">
+                            <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                          </div>
+                        ) : sharedFiles.length > 0 ? (
+                          <ul className="space-y-2">
+                            {sharedFiles.map((file) => (
+                              <li
+                                key={file.id}
+                                className="flex items-center justify-between border rounded-md p-2"
+                              >
+                                <div className="min-w-0 mr-2">
+                                  <p className="text-sm font-medium truncate">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {file.type}
+                                    {file.size ? ` • ${file.size}` : ''}
+                                  </p>
+                                </div>
+                                <div className="shrink-0 flex items-center gap-2">
+                                  <Button asChild size="sm" variant="outline">
+                                    <a
+                                      href={file.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      Open
+                                    </a>
+                                  </Button>
+                                  <Button asChild size="sm">
+                                    <a href={file.url} download>
+                                      Download
+                                    </a>
+                                  </Button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                            <p>No files have been shared yet.</p>
                           </div>
                         )}
                       </CardContent>
@@ -1070,20 +1050,17 @@ export function ProfileSidebar({
                                     // Close the profile sidebar
                                     onClose();
 
-                                    toast({
-                                      title: 'Left group',
-                                      description:
-                                        'You have left the group successfully.',
-                                    });
+                                    notifySuccess(
+                                      'You have left the group successfully.',
+                                      'Left group',
+                                    );
                                   }
                                 } catch (error) {
                                   console.error('Error leaving group:', error);
-                                  toast({
-                                    title: 'Error',
-                                    description:
-                                      'Failed to leave the group. Please try again.',
-                                    variant: 'destructive',
-                                  });
+                                  notifyError(
+                                    'Failed to leave the group. Please try again.',
+                                    'Error',
+                                  );
                                 }
                               },
                               confirmButtonText: 'Leave',

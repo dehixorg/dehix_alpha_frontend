@@ -13,7 +13,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
@@ -55,11 +55,7 @@ const BusinessVerification = () => {
       setBusinessData(flattenedData);
     } catch (error) {
       console.error('Error in getting verification data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   }, []);
 

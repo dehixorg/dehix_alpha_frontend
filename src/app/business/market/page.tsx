@@ -10,7 +10,7 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import FreelancerList from '@/components/business/market/FreelancerList';
 import { BusinessFilterSheet } from '@/components/business/market/BusinessFilterSheet';
 import Header from '@/components/header/header';
@@ -127,11 +127,7 @@ const Market: React.FC = () => {
 
       setFreelancers(response.data.data);
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.', 'Error');
       console.error('API Error:', error);
     } finally {
       setIsDataLoading(false);
@@ -153,11 +149,7 @@ const Market: React.FC = () => {
         );
         setDomains(domainLabels);
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('Error fetching data:', error);
       }
     }

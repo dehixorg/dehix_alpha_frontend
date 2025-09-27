@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { useToast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
 interface VerifyDialogProps {
   talentType: string;
@@ -37,18 +37,13 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
   const [date, setDate] = React.useState<Date>();
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
 
     if (!date) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please select an interview date',
-      });
+      notifyError('Please select an interview date', 'Error');
       setLoading(false);
       return;
     }
@@ -72,19 +67,14 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
       );
 
       if (response.status === 200 || response.status === 201) {
-        toast({
-          title: 'Success',
-          description: 'Interview scheduled successfully',
-        });
+        notifySuccess('Interview scheduled successfully', 'Success');
         setOpen(false);
       }
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          error.response?.data?.message || 'Failed to schedule interview',
-      });
+      notifyError(
+        error.response?.data?.message || 'Failed to schedule interview',
+        'Error',
+      );
     } finally {
       setLoading(false);
     }

@@ -24,7 +24,7 @@ import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BidsDetails from '@/components/freelancer/project/bidsDetail';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import Header from '@/components/header/header';
 import AddProfileDialog from '@/components/dialogs/addProfileDialog';
 
@@ -97,11 +97,7 @@ export default function Dashboard() {
           setProject(projectData);
         }
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('API Error:', error);
       }
     };
@@ -110,11 +106,7 @@ export default function Dashboard() {
 
   const handleCompleteProject = (): void => {
     if (!project_id) {
-      toast({
-        title: 'Error',
-        description: 'Project ID is missing.',
-        variant: 'destructive',
-      });
+      notifyError('Project ID is missing.', 'Error');
       return;
     }
 
@@ -125,37 +117,25 @@ export default function Dashboard() {
           setProject((prev) =>
             prev ? { ...prev, status: StatusEnum.COMPLETED } : prev,
           );
-          toast({
-            title: 'Success',
-            description: 'Project marked as completed!',
-          });
+          notifySuccess('Project marked as completed!', 'Success');
         } else {
           console.error('Unexpected response:', response);
-          toast({
-            title: 'Failed',
-            description: 'Failed to mark project as completed.',
-            variant: 'destructive',
-          });
+          notifyError('Failed to mark project as completed.', 'Failed');
         }
       })
       .catch((error) => {
         console.error('Error updating project status:', error);
-        toast({
-          title: 'Error',
-          description: 'An error occurred while updating the project status.',
-          variant: 'destructive',
-        });
+        notifyError(
+          'An error occurred while updating the project status.',
+          'Error',
+        );
       });
   };
 
   // Handle project start
   const handleStartProject = (): void => {
     if (!project_id) {
-      toast({
-        title: 'Error',
-        description: 'Project ID is missing.',
-        variant: 'destructive',
-      });
+      notifyError('Project ID is missing.', 'Error');
       return;
     }
 
@@ -166,26 +146,15 @@ export default function Dashboard() {
           setProject((prev) =>
             prev ? { ...prev, status: StatusEnum.ACTIVE } : prev,
           );
-          toast({
-            title: 'Success',
-            description: 'Project started successfully!',
-          });
+          notifySuccess('Project started successfully!', 'Success');
         } else {
           console.error('Unexpected response:', response);
-          toast({
-            title: 'Failed',
-            description: 'Failed to start the project.',
-            variant: 'destructive',
-          });
+          notifyError('Failed to start the project.', 'Failed');
         }
       })
       .catch((error) => {
         console.error('Error updating project status:', error);
-        toast({
-          title: 'Error',
-          description: 'An error occurred while starting the project.',
-          variant: 'destructive',
-        });
+        notifyError('An error occurred while starting the project.', 'Error');
       });
   };
 
@@ -206,11 +175,7 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error refetching project:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to refresh project data.',
-      });
+      notifyError('Failed to refresh project data.', 'Error');
     }
   };
 

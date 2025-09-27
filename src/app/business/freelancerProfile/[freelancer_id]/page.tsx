@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 
 import ProjectCard from '@/components/cards/freelancerProjectCard';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
   menuItemsBottom,
@@ -141,11 +141,7 @@ const FreelancerProfile = () => {
           }
         } catch (error) {
           console.error('Error fetching freelancer details', error);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Failed to fetch freelancer details.',
-          });
+          notifyError('Failed to fetch freelancer details.', 'Error');
         } finally {
           setLoading(false);
         }

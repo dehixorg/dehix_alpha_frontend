@@ -9,7 +9,6 @@ import ProfilePictureUpload from '../fileUpload/profilePicture';
 import { Label } from '../ui/label';
 
 import { Card } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Type } from '@/utils/enum';
 import { Separator } from '@/components/ui/separator';
 import { setUser } from '@/lib/userSlice';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -86,15 +86,12 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         setUserInfo(response.data);
       } catch (error) {
         console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.');
       }
     };
 
     fetchData();
+    return () => {};
   }, [user_id]);
 
   useEffect(() => {
@@ -141,25 +138,17 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         dispatch(setUser(updatedUser));
         setUserInfo(updatedUser);
 
-        toast({
-          title: 'Profile Updated',
-          description: 'Your profile has been successfully updated.',
-        });
+        notifySuccess(
+          'Your profile has been successfully updated.',
+          'Profile Updated',
+        );
       } else {
         console.error('Unexpected status code:', res.status);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to update profile. Unexpected server response.',
-        });
+        notifyError('Failed to update profile. Unexpected server response.');
       }
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update profile. Please try again later.',
-      });
+      notifyError('Failed to update profile. Please try again later.');
     } finally {
       setLoading(false);
     }
