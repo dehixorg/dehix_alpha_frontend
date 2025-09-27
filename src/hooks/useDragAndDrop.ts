@@ -53,15 +53,15 @@ const useDragAndDrop = (notes: Note[], setNotes: (notes: Note[]) => void) => {
 
           if (response.status != 200) {
             console.error('Failed to update note order:', response.statusText);
-            notifyError('Something went wrong.Please try again.', 'Error');
+            notifyError('Something went wrong. Please try again.', 'Error');
           }
         } catch (error: any) {
           console.error('Error updating note order:', error.message);
-          notifyError('Something went wrong.Please try again.', 'Error');
+          notifyError('Something went wrong. Please try again.', 'Error');
         }
       } else {
         console.error('User ID is missing. Cannot update note order.');
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
       }
     }
 

@@ -86,7 +86,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         setUserInfo(response.data);
       } catch (error) {
         console.error('API Error:', error);
-        notifyError('Something went wrong.Please try again.');
+        notifyError('Something went wrong. Please try again.');
       }
     };
 

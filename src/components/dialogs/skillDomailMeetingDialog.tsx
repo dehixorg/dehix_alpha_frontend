@@ -109,7 +109,7 @@ export function SkillDomainMeetingDialog({
       }
     } catch (error) {
       console.error('Error fetching Google Auth URL:', error);
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   };
 
@@ -123,7 +123,7 @@ export function SkillDomainMeetingDialog({
           setInterviewer(response?.data?.data);
         } catch (error) {
           console.error('Error fetching data:', error);
-          notifyError('Something went wrong.Please try again.', 'Error');
+          notifyError('Something went wrong. Please try again.', 'Error');
         }
       }
     }

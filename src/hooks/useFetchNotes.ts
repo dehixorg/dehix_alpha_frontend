@@ -26,7 +26,7 @@ const useFetchNotes = (userId: string | undefined) => {
       }
     } catch (error) {
       console.error('Failed to fetch notes:', error);
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
     } finally {
       setIsLoading(false);
     }

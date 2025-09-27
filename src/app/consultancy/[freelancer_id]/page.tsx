@@ -96,7 +96,7 @@ export default function ConsultancyPage() {
         const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
       } catch (error) {
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('API Error:', error);
       }
     };
@@ -154,7 +154,7 @@ export default function ConsultancyPage() {
       form.reset();
       setIsDialogOpen(false);
     } catch (error) {
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
       console.error('Error:', error);
     }
   };

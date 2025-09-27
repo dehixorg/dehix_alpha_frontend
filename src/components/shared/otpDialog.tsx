@@ -103,7 +103,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         router.replace(`/dashboard/${claims.type}`);
       } catch (error) {
         setError('Failed to verify OTP. Please check the OTP.');
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
       }
     });
   }, [confirmationResult, otp, dispatch, router, phone]);

@@ -88,7 +88,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
         setReferralCode(fetchCode);
       } catch (error) {
         console.error('API Error:', error);
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setLoading(false);
       }

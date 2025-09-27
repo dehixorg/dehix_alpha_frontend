@@ -71,7 +71,7 @@ const WorkExpVerification = () => {
       );
       setJobData(flattenedData);
     } catch (error) {
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   }, []);
 

@@ -109,7 +109,7 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         verification_status: data.type,
       });
     } catch (error) {
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);

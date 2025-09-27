@@ -185,7 +185,7 @@ const SkillDomainForm: React.FC = () => {
       } catch (error: any) {
         if (error?.code === 'ERR_CANCELED') return;
         console.error('Error fetching data:', error);
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setLoading(false);
       }
@@ -214,7 +214,7 @@ const SkillDomainForm: React.FC = () => {
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   };
 

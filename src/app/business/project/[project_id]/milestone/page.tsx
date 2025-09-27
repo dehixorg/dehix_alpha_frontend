@@ -127,7 +127,7 @@ const Page = () => {
       setMilestones(fetchedMilestones);
       setLoading(false);
     } catch (error) {
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
       console.error('Error fetching milestones:', error);
       setLoading(false);
     }

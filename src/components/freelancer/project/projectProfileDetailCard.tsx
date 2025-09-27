@@ -95,7 +95,7 @@ export function ProjectProfileDetailCard({
       // window.location.reload();
     } catch (error) {
       console.error('Error submitting bid:', error);
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   };
 
@@ -107,7 +107,7 @@ export function ProjectProfileDetailCard({
         setBidProfiles(profileIds);
       } catch (error) {
         console.error('API Error:', error);
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
       }
     }
     fetchData();

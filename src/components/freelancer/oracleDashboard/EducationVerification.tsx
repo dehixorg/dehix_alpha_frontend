@@ -69,7 +69,7 @@ const EducationVerification = () => {
       );
       setEducationData(flattenedData);
     } catch (error) {
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   }, []);
 

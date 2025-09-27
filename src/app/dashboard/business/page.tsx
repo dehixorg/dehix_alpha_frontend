@@ -70,7 +70,7 @@ export default function Dashboard() {
           setResponseData(response.data.data); // Store response data in state
         }
       } catch (error) {
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('API Error:', error);
       }
     };

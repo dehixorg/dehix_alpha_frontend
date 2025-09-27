@@ -59,7 +59,7 @@ const BidDialog: React.FC<BidDialogProps> = ({
       } catch (error) {
         setError('Error fetching bid details.');
         console.error('Error fetching bid details:', error);
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setLoading(false);
       }

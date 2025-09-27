@@ -48,7 +48,7 @@ const BusinessProfile: React.FC = () => {
           setProfileData(response.data);
         } catch (error) {
           console.error('Error fetching profile data:', error);
-          notifyError('Something went wrong.Please try again.', 'Error');
+          notifyError('Something went wrong. Please try again.', 'Error');
         }
       };
       fetchData();

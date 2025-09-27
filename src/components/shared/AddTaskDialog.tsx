@@ -123,7 +123,7 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
         setFilteredFreelancers(freelancerData);
       } catch (error) {
         console.error('Failed to fetch freelancers:', error);
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setIsLoading(false);
       }

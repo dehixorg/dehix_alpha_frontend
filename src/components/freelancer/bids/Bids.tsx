@@ -205,7 +205,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
         setBidsData(finalList);
       } catch (error) {
         console.error('Error fetching interview bids', error);
-        notifyError('Something went wrong.Please try again.', 'Error');
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setLoading(false);
       }
@@ -326,7 +326,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
       );
     } catch (error) {
       console.error('Error updating interview bid:', error);
-      notifyError('Something went wrong.Please try again.', 'Error');
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
 
     setConfirmAction(null);
