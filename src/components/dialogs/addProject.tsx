@@ -26,7 +26,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Select,
@@ -130,11 +130,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
     // Check if required fields are filled
     if (!projectName || !description || !start || !end) {
-      toast({
-        variant: 'destructive',
-        title: 'Missing fields',
-        description: 'Please fill all required fields in Step 1.',
-      });
+      notifyError(
+        'Please fill all required fields in Step 1.',
+        'Missing fields',
+      );
       return false;
     }
 
@@ -149,11 +148,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
     // Check if at least one skill is added
     if (currSkills.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Skills required',
-        description: 'Please add at least one skill.',
-      });
+      notifyError('Please add at least one skill.', 'Skills required');
       return false;
     }
 
@@ -198,11 +193,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         setSkills(transformedSkills);
       } catch (error) {
         console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
       }
     };
     fetchData();
@@ -290,17 +281,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       onFormSubmit();
       resetForm(); // Reset form after successful submission
       setIsDialogOpen(false);
-      toast({
-        title: 'Project Added',
-        description: 'The project has been successfully added.',
-      });
+      notifySuccess(
+        'The project has been successfully added.',
+        'Project Added',
+      );
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add project. Please try again later.',
-      });
+      notifyError('Failed to add project. Please try again later.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -315,7 +302,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="my-auto">
+        <Button variant="outline" size="icon" className="my-auto bg-muted/20">
           <Plus className="h-4 w-4" />
         </Button>
       </DialogTrigger>

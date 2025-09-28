@@ -12,7 +12,7 @@ import {
 } from '@/lib/api/interviews';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
   Table,
   TableBody,
@@ -34,7 +34,7 @@ const capitalizeFirstLetter = (str: string): string => {
 export default function BidedInterviews() {
   const user = useSelector((state: RootState) => state.user);
   const intervieweeId = user?.uid;
-  const { toast } = useToast();
+  
 
   const [bids, setBids] = useState<PendingBid[]>([]);
   const [loading, setLoading] = useState(false);
@@ -158,20 +158,13 @@ export default function BidedInterviews() {
       setAcceptingId(getRowKey(bid));
       await acceptBid(bid.interviewId, bid.bidKey);
 
-      toast({
-        title: 'Interview Scheduled!',
-        description: 'Your interview has been scheduled successfully.',
-      });
+      notifySuccess('Your interview has been scheduled successfully.', 'Interview Scheduled!');
 
       setBids((prevBids) =>
         prevBids.filter((b) => getRowKey(b) !== getRowKey(bid)),
       );
     } catch (e: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: e.response?.data?.message || 'Failed to accept bid',
-      });
+      notifyError(e.response?.data?.message || 'Failed to accept bid', 'Error');
     } finally {
       setAcceptingId(null);
     }

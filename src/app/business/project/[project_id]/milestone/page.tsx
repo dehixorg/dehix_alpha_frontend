@@ -14,10 +14,9 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import { Button } from '@/components/ui/button';
 import { CreateMilestoneDialog } from '@/components/shared/CreateMilestoneDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { Milestone, Story } from '@/utils/types/Milestone';
 import type { RootState } from '@/lib/store';
 import { CreateProjectGroupDialog } from '@/components/shared/CreateProjectGroupDialog';
@@ -61,11 +60,7 @@ const Page = () => {
   const handleChatClick = useCallback(
     async (freelancerId: string, freelancerName: string) => {
       if (!user?.uid) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'You must be logged in to start a chat.',
-        });
+        notifyError('You must be logged in to start a chat.', 'Error');
         return;
       }
 
@@ -78,28 +73,20 @@ const Page = () => {
 
         router.push('/chat');
 
-        toast({
-          title: 'Chat',
-          description: `Opening chat with ${freelancerName}...`,
-        });
+        notifySuccess(`Opening chat with ${freelancerName}...`, 'Chat');
       } catch (error) {
         console.error('Error opening chat:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to open chat. Please try again.',
-        });
+        notifyError('Failed to open chat. Please try again.', 'Error');
       }
     },
     [router, user],
   );
 
   const handleGroupCreated = () => {
-    toast({
-      title: 'Group Created',
-      description:
-        'Your group has been created successfully. It will appear in the team members list.',
-    });
+    notifySuccess(
+      'Your group has been created successfully. It will appear in the team members list.',
+      'Group Created',
+    );
   };
 
   const fetchProject = useCallback(async () => {
@@ -109,11 +96,7 @@ const Page = () => {
       setProject(projectData);
     } catch (error) {
       console.error('Error fetching project:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch project data.',
-      });
+      notifyError('Failed to fetch project data.', 'Error');
     }
   }, [project_id]);
 
@@ -144,11 +127,7 @@ const Page = () => {
       setMilestones(fetchedMilestones);
       setLoading(false);
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.', 'Error');
       console.error('Error fetching milestones:', error);
       setLoading(false);
     }
@@ -192,13 +171,10 @@ const Page = () => {
         milestoneData,
       );
 
-      toast({
-        title: 'Success',
-        description: isTask
-          ? 'Task added successfully!'
-          : 'Story added successfully!',
-        duration: 3000,
-      });
+      notifySuccess(
+        isTask ? 'Task added successfully!' : 'Story added successfully!',
+        'Success',
+      );
 
       fetchMilestones();
     } catch (error) {
@@ -206,12 +182,7 @@ const Page = () => {
         'Error updating milestone:',
         (error as any).response?.data || (error as any).message,
       );
-      toast({
-        title: 'Error',
-        description: 'Failed to update milestone.',
-        variant: 'destructive',
-        duration: 3000,
-      });
+      notifyError('Failed to update milestone.', 'Error');
     }
   };
 
@@ -231,13 +202,13 @@ const Page = () => {
   }, [milestones]);
 
   return (
-    <div className="flex h-auto w-full flex-col bg-muted/40 overflow-x-hidden">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-2 sm:py-0 sm:pl-14 min-w-0 max-w-full overflow-hidden">
+      <div className="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -252,19 +223,17 @@ const Page = () => {
             { label: 'Milestone', link: '#' },
           ]}
         />
-        <div className="py-4 px-2 md:px-4 w-full max-w-full overflow-hidden">
+        <div className="px-2 md:px-4 w-full max-w-full overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl md:text-2xl font-bold">
               Project Milestones
             </h1>
 
             <div className="flex gap-2">
-              <Button className="px-3 py-1 ">
-                <CreateMilestoneDialog
-                  projectId={project_id}
-                  fetchMilestones={fetchMilestones}
-                />
-              </Button>
+              <CreateMilestoneDialog
+                projectId={project_id}
+                fetchMilestones={fetchMilestones}
+              />
             </div>
           </div>
 
@@ -289,34 +258,28 @@ const Page = () => {
                   {/* Right Part */}
                   <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
                     {/* Top: MilestoneTimeline */}
-                    <div className="min-w-0 w-full max-w-full md:h-[280px]">
-                      <div className="w-full max-w-full">
-                        <MilestoneTimeline
-                          fetchMilestones={fetchMilestones}
-                          milestones={milestones}
-                          handleStorySubmit={handleStorySubmit}
-                          selectedIndex={selectedMilestoneIndex}
-                          onMilestoneSelect={(index) =>
-                            setSelectedMilestoneIndex(index)
-                          }
-                        />
-                      </div>
-                    </div>
+                    <MilestoneTimeline
+                      fetchMilestones={fetchMilestones}
+                      milestones={milestones}
+                      handleStorySubmit={handleStorySubmit}
+                      selectedIndex={selectedMilestoneIndex}
+                      onMilestoneSelect={(index) =>
+                        setSelectedMilestoneIndex(index)
+                      }
+                    />
 
                     {/* Bottom: StoriesSection (milestone cards) */}
                     {selectedMilestoneIndex !== null && (
-                      <div className="min-w-0 w-full max-w-full">
-                        <StoriesSection
-                          key={
-                            milestones[selectedMilestoneIndex]?._id ??
-                            selectedMilestoneIndex
-                          }
-                          milestone={milestones[selectedMilestoneIndex]}
-                          fetchMilestones={fetchMilestones}
-                          handleStorySubmit={handleStorySubmit}
-                          isFreelancer={false}
-                        />
-                      </div>
+                      <StoriesSection
+                        key={
+                          milestones[selectedMilestoneIndex]?._id ??
+                          selectedMilestoneIndex
+                        }
+                        milestone={milestones[selectedMilestoneIndex]}
+                        fetchMilestones={fetchMilestones}
+                        handleStorySubmit={handleStorySubmit}
+                        isFreelancer={false}
+                      />
                     )}
                   </div>
                 </div>

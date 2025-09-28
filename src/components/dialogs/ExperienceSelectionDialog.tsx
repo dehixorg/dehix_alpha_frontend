@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 interface Experience {
@@ -32,7 +32,7 @@ interface ExperienceSelectionDialogProps {
   onOpenChange: (open: boolean) => void;
   freelancerId: string;
   currentProfileId: string;
-  onSuccess?: () => void;
+  onSuccess?: (selectedExperiences: Experience[]) => void;
 }
 
 export default function ExperienceSelectionDialog({
@@ -49,14 +49,13 @@ export default function ExperienceSelectionDialog({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isAddingExperiences, setIsAddingExperiences] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (open && freelancerId && currentProfileId) {
       fetchExperiences();
       fetchCurrentProfileExperiences();
     }
-  });
+  }, [open, freelancerId, currentProfileId]);
 
   const fetchExperiences = async () => {
     setIsLoading(true);
@@ -77,11 +76,7 @@ export default function ExperienceSelectionDialog({
       }
     } catch (error) {
       console.error('Error fetching experiences:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load experiences',
-        variant: 'destructive',
-      });
+      notifyError('Failed to load experiences', 'Error');
       setExperiences([]);
     } finally {
       setIsLoading(false);
@@ -120,37 +115,31 @@ export default function ExperienceSelectionDialog({
     }
 
     if (selectedExperiences.length === 0) {
-      toast({
-        title: 'No Selection',
-        description: 'Please select at least one experience to add',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Please select at least one experience to add',
+        'No Selection',
+      );
       return;
     }
 
     setIsAddingExperiences(true);
     try {
-      toast({
-        title: 'Success',
-        description: `${selectedExperiences.length} experience(s) added to profile successfully!`,
-      });
+      const selectedObjects = experiences.filter((exp) =>
+        selectedExperiences.includes(exp._id),
+      );
+
+      notifySuccess(
+        `${selectedObjects.length} experience(s) selected. Save the profile to persist changes.`,
+        'Selected',
+      );
+
+      onSuccess?.(selectedObjects);
 
       setSelectedExperiences([]);
       onOpenChange(false);
-
-      // Call onSuccess to refresh the parent component
-      if (onSuccess) {
-        onSuccess();
-      }
     } catch (error: any) {
-      console.error('Error adding experiences:', error);
-      toast({
-        title: 'Error',
-        description:
-          error.response?.data?.message ||
-          'Failed to add experiences to profile',
-        variant: 'destructive',
-      });
+      console.error('Error preparing selected experiences:', error);
+      notifyError('Could not process selected experiences', 'Error');
     } finally {
       setIsAddingExperiences(false);
     }

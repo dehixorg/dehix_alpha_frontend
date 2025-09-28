@@ -20,7 +20,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 
-import { toast } from '../ui/use-toast';
 import {
   Card,
   CardContent,
@@ -41,6 +40,7 @@ import {
 import { NewReportTab } from '../report-tabs/NewReportTabs';
 import { getReportTypeFromPath } from '../../utils/getReporttypeFromPath';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { AppDispatch, RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
@@ -154,19 +154,17 @@ const JobCard: React.FC<JobCardProps> = ({
 
       if (response.status === 200) {
         dispatch(addDraftedProject(job._id));
-        toast({
-          title: 'Added to saved projects',
-          description: 'You can find this project in your saved items.',
-          variant: 'default',
-        });
+        notifySuccess(
+          'You can find this project in your saved items.',
+          'Added to saved projects',
+        );
       }
     } catch (error: any) {
       console.error('Failed to add project to draft:', error);
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to save project',
-        variant: 'destructive',
-      });
+      notifyError(
+        error.response?.data?.message || 'Failed to save project',
+        'Error',
+      );
     } finally {
       setLoading(false);
     }
@@ -184,33 +182,23 @@ const JobCard: React.FC<JobCardProps> = ({
 
       if (response.status === 200) {
         dispatch(removeDraftedProject(job._id));
-        toast({
-          title: 'Removed from saved projects',
-          description: 'This project has been removed from your saved items.',
-          variant: 'default',
-        });
+        notifySuccess(
+          'This project has been removed from your saved items.',
+          'Removed from saved projects',
+        );
       }
     } catch (error: any) {
       console.error('Failed to remove project from draft:', error);
-      toast({
-        title: 'Error',
-        description:
-          error.response?.data?.message || 'Failed to remove project',
-        variant: 'destructive',
-      });
+      notifyError(
+        error.response?.data?.message || 'Failed to remove project',
+        'Error',
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const router = useRouter();
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Only navigate if the click was directly on the card, not on interactive elements
-    if (!(e.target as HTMLElement).closest('button, a, [role="button"]')) {
-      router.push(`/project/${job._id}`);
-    }
-  };
 
   const profile =
     job.profiles && job.profiles.length > 0 ? job.profiles[0] : null;
@@ -242,10 +230,7 @@ const JobCard: React.FC<JobCardProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Card
-          className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20 cursor-pointer"
-          onClick={handleCardClick}
-        >
+        <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20">
           <CardHeader className="pb-2 px-6 pt-6">
             <div className="flex flex-col space-y-3">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4">

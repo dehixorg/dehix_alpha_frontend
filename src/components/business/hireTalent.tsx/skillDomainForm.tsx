@@ -17,7 +17,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Badge } from '@/components/ui/badge';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 
@@ -71,11 +71,10 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         setDomains(domainsResponse.data?.data || []);
       } catch (error) {
         console.error('Error fetching skills and domains:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load skills and domains. Please try again.',
-        });
+        notifyError(
+          'Failed to load skills and domains. Please try again.',
+          'Error',
+        );
       }
     };
 
@@ -183,11 +182,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
       }
     } catch (error: any) {
       console.error('Error fetching user data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   }, [user?.uid, setFilterSkill, setFilterDomain]);
 
@@ -243,11 +238,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   };
 

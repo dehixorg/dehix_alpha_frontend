@@ -13,7 +13,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Milestone, Story } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
@@ -34,11 +34,7 @@ const Page = () => {
   const handleChatClick = useCallback(
     async (freelancerId: string, freelancerName: string) => {
       if (!user?.uid) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'You must be logged in to start a chat.',
-        });
+        notifyError('You must be logged in to start a chat.', 'Error');
         return;
       }
 
@@ -51,17 +47,10 @@ const Page = () => {
 
         router.push('/chat');
 
-        toast({
-          title: 'Chat',
-          description: `Opening chat with ${freelancerName}...`,
-        });
+        notifySuccess(`Opening chat with ${freelancerName}...`, 'Chat');
       } catch (error) {
         console.error('Error opening chat:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to open chat. Please try again.',
-        });
+        notifyError('Failed to open chat. Please try again.', 'Error');
       }
     },
     [router, user],
@@ -104,11 +93,7 @@ const Page = () => {
       setMilestones(fetchedMilestones);
       setLoading(false);
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
       console.error('Error fetching milestones:', error);
       setLoading(false);
     }
@@ -152,13 +137,10 @@ const Page = () => {
         milestoneData,
       );
 
-      toast({
-        title: 'Success',
-        description: isTask
-          ? 'Task added successfully!'
-          : 'Story added successfully!',
-        duration: 3000,
-      });
+      notifySuccess(
+        isTask ? 'Task added successfully!' : 'Story added successfully!',
+        'Success',
+      );
 
       fetchMilestones();
     } catch (error) {
@@ -166,12 +148,7 @@ const Page = () => {
         'Error updating milestone:',
         (error as any).response?.data || (error as any).message,
       );
-      toast({
-        title: 'Error',
-        description: 'Failed to update milestone.',
-        variant: 'destructive',
-        duration: 3000,
-      });
+      notifyError('Failed to update milestone.', 'Error');
     }
   };
 
@@ -186,7 +163,7 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-4 md:py-0 sm:py-4 sm:pl-14 min-w-0">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 min-w-0">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

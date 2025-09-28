@@ -88,7 +88,7 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong.Please try again.',
+        description: 'Something went wrong. Please try again.',
       }); // Error toast
     }
   };

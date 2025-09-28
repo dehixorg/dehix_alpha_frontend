@@ -13,7 +13,7 @@ import {
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { useToast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -52,6 +52,7 @@ interface Profile {
   minConnect?: number;
   rate?: number;
   description?: string;
+  totalBid?: string[];
   profileType: 'FREELANCER' | 'CONSULTANT';
 }
 
@@ -86,7 +87,7 @@ interface ProjectData {
 const Page = () => {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
+
   const [isLoading, setIsLoading] = useState(false);
   const [project, setProject] = useState<ProjectData | null>(null);
 
@@ -100,12 +101,10 @@ const Page = () => {
         setProject(response.data.data);
       } catch (error) {
         console.error('Error fetching project:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description:
-            'Failed to load project details. Please try again later.',
-        });
+        notifyError(
+          'Failed to load project details. Please try again later.',
+          'Error',
+        );
         router.push('/freelancer/market');
       } finally {
         setIsLoading(false);
@@ -265,7 +264,7 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col flex-1">
+      <div className="w-full flex flex-col mb-8 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -277,13 +276,13 @@ const Page = () => {
           ]}
         />
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto">
           <AnimatePresence>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="space-y-8 md:pl-12 xl:pl-0"
+              className="space-y-8"
             >
               {/* Header Section */}
               <div className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-lg border">
@@ -421,8 +420,16 @@ const Page = () => {
                                   Proposals
                                 </p>
                                 <p className="font-medium">
-                                  {project?.bids?.length || 0}{' '}
-                                  {project?.bids?.length === 1
+                                  {project?.profiles?.reduce(
+                                    (total, profile) =>
+                                      total + (profile.totalBid?.length || 0),
+                                    0,
+                                  ) || 0}{' '}
+                                  {project?.profiles?.reduce(
+                                    (total, profile) =>
+                                      total + (profile.totalBid?.length || 0),
+                                    0,
+                                  ) === 1
                                     ? 'proposal'
                                     : 'proposals'}
                                 </p>

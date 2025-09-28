@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import {
   VolumeX,
   ShieldX,
@@ -8,9 +9,8 @@ import {
   Link2,
   LogOut,
   MinusCircle,
-  Volume2,
   LoaderCircle,
-} from 'lucide-react'; // Added LoaderCircle
+} from 'lucide-react';
 import {
   doc,
   getDoc,
@@ -23,16 +23,15 @@ import {
   query,
   orderBy,
   getDocs,
+  writeBatch,
 } from 'firebase/firestore';
-import { useSelector } from 'react-redux';
 
 import { AddMembersDialog } from './AddMembersDialog';
-import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
+import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
-// Simple file item type for shared files list
 export type FileItem = {
   id: string;
   name: string;
@@ -47,6 +46,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -62,9 +62,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
-import { useToast } from '@/hooks/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
-import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser
+import type { CombinedUser } from '@/hooks/useAllUsers';
 
 export type ProfileUser = {
   _id: string;
@@ -118,31 +117,34 @@ interface ProfileSidebarProps {
   initialData?: { userName?: string; email?: string; profilePic?: string };
 }
 
-const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
+export function ProfileSidebar({
   isOpen,
   onClose,
   profileId,
   profileType,
   // currentUser prop is available via Redux store
   initialData,
-}) => {
+}: ProfileSidebarProps) {
+  // State management
   const [profileData, setProfileData] = useState<
     ProfileUser | ProfileGroup | null
   >(null);
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [, setSharedFiles] = useState<FileItem[]>([]);
+  const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
-  const user = useSelector((state: RootState) => state.user);
-  const { toast } = useToast();
-
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [refreshDataKey, setRefreshDataKey] = useState(0);
+
+  // Hooks
+  const user = useSelector((state: RootState) => state.user);
+
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
     description: '',
@@ -158,8 +160,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       | null
       | undefined,
   });
-
-  const [refreshDataKey, setRefreshDataKey] = useState(0);
 
   const internalFetchProfileData = async () => {
     setLoading(true);
@@ -232,16 +232,20 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
               | 'offline', // Type assertion to fix the error
           }));
 
+          // Use the avatar from initialData if available, otherwise fall back to groupData.avatar
+          const avatarUrl = initialData?.profilePic || groupData.avatar;
+
           setProfileData({
-            _id: conversationDoc.id, // Add the missing _id field
+            _id: conversationDoc.id,
             id: conversationDoc.id,
-            groupName: groupData.groupName || 'Unnamed Group', // Add the missing groupName field
-            displayName: groupData.groupName || 'Unnamed Group', // Add the missing displayName field
+            groupName: groupData.groupName || 'Unnamed Group',
+            displayName: groupData.groupName || 'Unnamed Group',
             description: groupData.description || '',
+            avatar: avatarUrl, // Set the avatar URL here
             createdAt: groupData.createdAt || new Date().toISOString(),
             members,
             admins: groupData.admins || [],
-            participantDetails: groupData.participantDetails, // Add the missing participantDetails field
+            participantDetails: groupData.participantDetails,
           });
         } else {
           throw new Error('Group not found');
@@ -291,11 +295,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       setSharedMedia(extractedMedia);
     } catch (error) {
       console.error('Error fetching shared media:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load shared media',
-      });
+      notifyError('Failed to load shared media', 'Error');
     } finally {
       setIsLoadingMedia(false);
     }
@@ -338,11 +338,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       setSharedFiles(extractedFiles);
     } catch (error) {
       console.error('Error fetching shared files:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load shared files',
-      });
+      notifyError('Failed to load shared files', 'Error');
     } finally {
       setIsLoadingFiles(false);
     }
@@ -395,55 +391,64 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     groupId: string,
   ) => {
     if (!selectedUsers || selectedUsers.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No users selected',
-        description: 'Please select users to add.',
-      });
+      notifyError('Please select users to add.', 'No users selected');
       return;
     }
+
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return;
     }
+
     const groupDocRef = doc(db, 'conversations', groupId);
+
     try {
-      // No need to fetch groupSnap if we are just updating, unless we need to validate something from it first.
-      // For now, assuming direct update is fine.
+      const batch = writeBatch(db);
+      const updates: any = {};
+      const memberUpdates: string[] = [];
 
-      const newParticipantDetailsUpdates: { [key: string]: any } = {};
-      const selectedUserIds = selectedUsers.map((user) => user.id);
+      // Prepare participant details updates
+      selectedUsers.forEach((user) => {
+        if (!user.id) return; // Skip if no user ID
 
-      for (const user of selectedUsers) {
-        newParticipantDetailsUpdates[`participantDetails.${user.id}`] = {
-          email: user.email,
-          userName: user.displayName, // Using displayName from CombinedUser
-          profilePic: user.profilePic,
-          userType: user.userType, // Storing userType
+        updates[`participantDetails.${user.id}`] = {
+          userName: user.displayName || 'User',
+          email: user.email || '',
+          profilePic: user.profilePic || null, // Ensure profilePic is never undefined
+          userType: user.userType || 'user', // Default to 'user' if not specified
         };
+
+        memberUpdates.push(user.id);
+      });
+
+      if (Object.keys(updates).length === 0) {
+        throw new Error('No valid users to add');
       }
 
-      await updateDoc(groupDocRef, {
-        participants: arrayUnion(...selectedUserIds),
-        ...newParticipantDetailsUpdates,
-        updatedAt: new Date().toISOString(),
-      });
-      toast({
-        title: 'Success',
-        description: `${selectedUsers.length} member(s) added successfully.`,
-      });
-      setRefreshDataKey((prev) => prev + 1); // Trigger data refresh for the sidebar
+      // Add members to the group
+      updates.members = arrayUnion(...memberUpdates);
+      updates.updatedAt = new Date().toISOString();
+
+      // Update the document with all changes
+      batch.update(groupDocRef, updates);
+      await batch.commit();
+
+      // Refresh the profile data to show the new members
+      if (profileData && 'refreshData' in profileData) {
+        await (profileData as any).refreshData();
+      }
+
+      // Update local state to reflect the changes
+      setRefreshDataKey((prev) => prev + 1);
+
+      notifySuccess(
+        `${selectedUsers.length} member(s) added successfully.`,
+        'Success',
+      );
     } catch (error) {
       console.error('Error adding members:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add members. Please try again.',
-      });
+      notifyError('Failed to add members. Please try again.', 'Error');
+      throw error; // Re-throw to allow caller to handle if needed
     }
   };
 
@@ -454,19 +459,11 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   ) => {
     // ... (existing implementation)
     if (!newName.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Group name cannot be empty.',
-      });
+      notifyError('Group name cannot be empty.', 'Validation Error');
       return;
     }
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return;
     }
     const groupDocRef = doc(db, 'conversations', groupId);
@@ -496,24 +493,17 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       updateData.avatar = '';
     }
     if (Object.keys(updateData).length === 0) {
-      toast({ title: 'Info', description: 'No changes were made.' });
+      notifySuccess('No changes were made.', 'Info');
       return;
     }
     updateData.updatedAt = new Date().toISOString();
     try {
       await updateDoc(groupDocRef, updateData);
-      toast({
-        title: 'Success',
-        description: 'Group information updated successfully.',
-      });
+      notifySuccess('Group information updated successfully.', 'Success');
       setRefreshDataKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error updating group info:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update group information.',
-      });
+      notifyError('Failed to update group information.', 'Error');
     }
   };
 
@@ -522,11 +512,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   ): Promise<string | null> => {
     // ... (existing implementation)
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return null;
     }
     const randomComponent = Math.random().toString(36).substring(2, 10);
@@ -537,19 +523,12 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         inviteLink: newInviteLink,
         updatedAt: new Date().toISOString(),
       });
-      toast({
-        title: 'Success',
-        description: 'New invite link generated and saved.',
-      });
+      notifySuccess('New invite link generated and saved.', 'Success');
       setRefreshDataKey((prev) => prev + 1);
       return newInviteLink;
     } catch (error) {
       console.error('Error generating and saving invite link:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to generate invite link.',
-      });
+      notifyError('Failed to generate invite link.', 'Error');
       return null;
     }
   };
@@ -557,19 +536,11 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   const handleConfirmRemoveMember = async (memberIdToRemove: string) => {
     // ... (existing implementation)
     if (!profileId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
+      notifyError('Group ID is missing.', 'Error');
       return;
     }
     if (!memberIdToRemove) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Member ID is missing.',
-      });
+      notifyError('Member ID is missing.', 'Error');
       return;
     }
     const groupDocRef = doc(db, 'conversations', profileId);
@@ -579,115 +550,11 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         [`participantDetails.${memberIdToRemove}`]: deleteField(),
         updatedAt: new Date().toISOString(),
       });
-      toast({ title: 'Success', description: 'Member removed successfully.' });
+      notifySuccess('Member removed successfully.', 'Success');
       setRefreshDataKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing member:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to remove member.',
-      });
-    } finally {
-      setIsConfirmDialogOpen(false);
-    }
-  };
-
-  const handleToggleMuteGroup = async (
-    groupId: string,
-    isCurrentlyMuted: boolean,
-  ) => {
-    // ... (existing implementation)
-    if (!user || !user.uid) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'User not found or not logged in.',
-      });
-      return;
-    }
-    if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
-      return;
-    }
-    const userDocRef = doc(db, 'users', user.uid);
-    try {
-      if (isCurrentlyMuted) {
-        await updateDoc(userDocRef, {
-          mutedGroups: arrayRemove(groupId),
-        });
-        toast({
-          title: 'Success',
-          description: 'Group unmuted. You will now receive notifications.',
-        });
-      } else {
-        await updateDoc(userDocRef, {
-          mutedGroups: arrayUnion(groupId),
-        });
-        toast({
-          title: 'Success',
-          description: 'Group muted. You will no longer receive notifications.',
-        });
-      }
-      // TODO: IMPORTANT - Dispatch an action to update the Redux store for `currentUser.mutedGroups`.
-    } catch (error) {
-      console.error('Error updating mute status:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update mute status.',
-      });
-    }
-  };
-
-  const handleLeaveGroup = async (groupId: string, userIdToLeave: string) => {
-    // ... (existing implementation)
-    if (!groupId || !userIdToLeave) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group or User ID is missing.',
-      });
-      setIsConfirmDialogOpen(false);
-      return;
-    }
-    const groupDocRef = doc(db, 'conversations', groupId);
-    const updateData: any = {
-      participants: arrayRemove(userIdToLeave),
-      [`participantDetails.${userIdToLeave}`]: deleteField(),
-      updatedAt: new Date().toISOString(),
-    };
-    const groupData = profileData as ProfileGroup;
-    if (groupData && groupData.admins?.includes(userIdToLeave)) {
-      updateData.admins = arrayRemove(userIdToLeave);
-      if (
-        groupData.admins.length === 1 &&
-        groupData.admins[0] === userIdToLeave
-      ) {
-        toast({
-          variant: 'default',
-          title: 'Last Admin Left',
-          description:
-            'The last admin has left the group. The group currently has no administrators.',
-          duration: 7000,
-        });
-      }
-    }
-    try {
-      await updateDoc(groupDocRef, updateData);
-      toast({ title: 'Success', description: 'You have left the group.' });
-      onClose();
-    } catch (error) {
-      console.error('Error leaving group:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to leave group.',
-      });
+      notifyError('Failed to remove member.', 'Error');
     } finally {
       setIsConfirmDialogOpen(false);
     }
@@ -696,38 +563,23 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   const handleDeleteGroup = async (groupId: string) => {
     // ... (existing implementation)
     if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing for deletion.',
-      });
+      notifyError('Group ID is missing for deletion.', 'Error');
       setIsConfirmDialogOpen(false);
       return;
     }
     if (!user || !(profileData as ProfileGroup)?.admins?.includes(user.uid)) {
-      toast({
-        variant: 'destructive',
-        title: 'Unauthorized',
-        description: 'Only admins can delete groups.',
-      });
+      notifyError('Only admins can delete groups.', 'Unauthorized');
       setIsConfirmDialogOpen(false);
       return;
     }
     const groupDocRef = doc(db, 'conversations', groupId);
     try {
       await deleteDoc(groupDocRef);
-      toast({
-        title: 'Success',
-        description: 'Group has been permanently deleted.',
-      });
+      notifySuccess('Group has been permanently deleted.', 'Success');
       onClose();
     } catch (error) {
       console.error('Error deleting group:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete group. Please try again.',
-      });
+      notifyError('Failed to delete group. Please try again.', 'Error');
     } finally {
       setIsConfirmDialogOpen(false);
     }
@@ -739,23 +591,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     if (!data || !data.displayName || !data.displayName.trim()) return 'P';
     return data.displayName.charAt(0).toUpperCase();
   };
-
-  const isCurrentlyMuted =
-    profileType === 'group' &&
-    profileData &&
-    user?.mutedGroups?.includes((profileData as ProfileGroup).id);
-
-  let avatarSrc = '';
-  if (profileData) {
-    if (profileType === 'user') {
-      avatarSrc = (profileData as ProfileUser).profilePic || '';
-    } else if (profileType === 'group') {
-      const groupData = profileData as ProfileGroup;
-      avatarSrc =
-        groupData.participantDetails?.[groupData.id]?.profilePic ||
-        `https://api.adorable.io/avatars/285/group-${groupData.id}.png`;
-    }
-  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -808,10 +643,31 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                 <Card>
                   <CardHeader className="items-center text-center">
                     <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]">
-                      <AvatarImage
-                        src={avatarSrc}
-                        alt={profileData.displayName}
-                      />
+                      {profileType === 'group' ? (
+                        <AvatarImage
+                          src={(profileData as ProfileGroup).avatar || ''}
+                          alt={profileData.displayName}
+                          onError={(e) => {
+                            console.error('Error loading group avatar:', e);
+                            console.log(
+                              'Failed to load group avatar with src:',
+                              e.currentTarget.src,
+                            );
+                          }}
+                        />
+                      ) : (
+                        <AvatarImage
+                          src={(profileData as ProfileUser).profilePic || ''}
+                          alt={profileData.displayName}
+                          onError={(e) => {
+                            console.error('Error loading user avatar:', e);
+                            console.log(
+                              'Failed to load user avatar with src:',
+                              e.currentTarget.src,
+                            );
+                          }}
+                        />
+                      )}
                       <AvatarFallback className="text-3xl">
                         {getFallbackName(profileData)}
                       </AvatarFallback>
@@ -900,6 +756,60 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 
                     <Card>
                       <CardHeader>
+                        <CardTitle className="text-base">
+                          Shared Files
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {isLoadingFiles ? (
+                          <div className="flex justify-center items-center h-20">
+                            <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                          </div>
+                        ) : sharedFiles.length > 0 ? (
+                          <ul className="space-y-2">
+                            {sharedFiles.map((file) => (
+                              <li
+                                key={file.id}
+                                className="flex items-center justify-between border rounded-md p-2"
+                              >
+                                <div className="min-w-0 mr-2">
+                                  <p className="text-sm font-medium truncate">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {file.type}
+                                    {file.size ? ` • ${file.size}` : ''}
+                                  </p>
+                                </div>
+                                <div className="shrink-0 flex items-center gap-2">
+                                  <Button asChild size="sm" variant="outline">
+                                    <a
+                                      href={file.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      Open
+                                    </a>
+                                  </Button>
+                                  <Button asChild size="sm">
+                                    <a href={file.url} download>
+                                      Download
+                                    </a>
+                                  </Button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                            <p>No files have been shared yet.</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
                         <CardTitle className="text-base">Actions</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
@@ -966,13 +876,13 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
-                        <ScrollArea className="max-h-60 px-4">
-                          <ul className="space-y-1 py-2">
+                        <ScrollArea className="max-h-80 px-2 overflow-y-auto">
+                          <ul className="divide-y divide-gray-200 bg-white dark:bg-gray-900 rounded-lg shadow-sm py-2">
                             {(profileData as ProfileGroup).members.map(
                               (member) => (
                                 <li
                                   key={member.id}
-                                  className="flex items-center gap-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)] group"
+                                  className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group"
                                 >
                                   <Avatar className="w-8 h-8">
                                     <AvatarImage
@@ -983,6 +893,10 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                       {member.userName?.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                   </Avatar>
+                                  {/* Status dot */}
+                                  <span
+                                    className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${member.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}
+                                  ></span>
                                   <div className="flex-1 min-w-0">
                                     <span className="text-sm font-medium truncate">
                                       {member.userName}
@@ -992,7 +906,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                     ).admins?.includes(member.id) && (
                                       <Badge
                                         variant="outline"
-                                        className="ml-2 text-[10px]"
+                                        className="ml-2 text-[10px] border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300 border"
                                       >
                                         Admin
                                       </Badge>
@@ -1106,53 +1020,53 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                             </>
                           )}
                         <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            if (
-                              profileData &&
-                              profileType === 'group' &&
-                              user?.uid
-                            ) {
-                              handleToggleMuteGroup(
-                                (profileData as ProfileGroup).id,
-                                !!isCurrentlyMuted,
-                              );
-                            }
-                          }}
-                        >
-                          {isCurrentlyMuted ? (
-                            <Volume2 className="h-4 w-4 mr-2" />
-                          ) : (
-                            <VolumeX className="h-4 w-4 mr-2" />
-                          )}
-                          {isCurrentlyMuted
-                            ? 'Unmute Notifications'
-                            : 'Mute Notifications'}
-                        </Button>
-                        <Button
                           variant="destructive"
                           className="w-full justify-start"
                           onClick={() => {
-                            if (
-                              profileData &&
-                              profileType === 'group' &&
-                              user?.uid
-                            ) {
-                              setConfirmDialogProps({
-                                title: 'Leave Group?',
-                                description:
-                                  'Are you sure you want to leave this group? You will need to be re-invited to join again.',
-                                onConfirm: () =>
-                                  handleLeaveGroup(
-                                    (profileData as ProfileGroup).id,
-                                    user.uid,
-                                  ),
-                                confirmButtonText: 'Leave Group',
-                                confirmButtonVariant: 'destructive',
-                              });
-                              setIsConfirmDialogOpen(true);
-                            }
+                            setConfirmDialogProps({
+                              title: 'Leave Group',
+                              description:
+                                'Are you sure you want to leave this group?',
+                              onConfirm: async () => {
+                                try {
+                                  if (
+                                    profileType === 'group' &&
+                                    profileId &&
+                                    user?.uid
+                                  ) {
+                                    // Remove user from the group
+                                    const groupRef = doc(
+                                      db,
+                                      'conversations',
+                                      profileId,
+                                    );
+                                    await updateDoc(groupRef, {
+                                      [`participantDetails.${user.uid}`]:
+                                        deleteField(),
+                                      members: arrayRemove(user.uid),
+                                      admins: arrayRemove(user.uid),
+                                    });
+
+                                    // Close the profile sidebar
+                                    onClose();
+
+                                    notifySuccess(
+                                      'You have left the group successfully.',
+                                      'Left group',
+                                    );
+                                  }
+                                } catch (error) {
+                                  console.error('Error leaving group:', error);
+                                  notifyError(
+                                    'Failed to leave the group. Please try again.',
+                                    'Error',
+                                  );
+                                }
+                              },
+                              confirmButtonText: 'Leave',
+                              confirmButtonVariant: 'destructive',
+                            });
+                            setIsConfirmDialogOpen(true);
                           }}
                         >
                           <LogOut className="h-4 w-4 mr-2" /> Leave Group
@@ -1251,6 +1165,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       )}
     </Sheet>
   );
-};
+}
 
 export default ProfileSidebar;

@@ -14,7 +14,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 export default function Projects() {
   const user = useSelector((state: RootState) => state.user);
@@ -56,6 +56,7 @@ export default function Projects() {
     setSelectedProject(null);
   };
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
@@ -64,34 +65,34 @@ export default function Projects() {
 
         if (!projectsData || typeof projectsData !== 'object') {
           console.warn('No projects data found, setting empty array.');
-          setProjects([]);
+          if (isMounted) setProjects([]);
           return;
         }
 
-        setProjects(Object.values(response?.data?.data?.projects));
+        if (isMounted)
+          setProjects(Object.values(response?.data?.data?.projects));
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.');
         console.error('API Error:', error);
-        setProjects([]);
+        if (isMounted) setProjects([]);
       }
     };
 
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, [user.uid, refresh]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Projects"
         isKycCheck={true}
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -103,7 +104,7 @@ export default function Projects() {
           ]}
         />
         <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {projects.map((project: any, index: number) => (

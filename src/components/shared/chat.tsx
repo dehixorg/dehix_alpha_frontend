@@ -28,7 +28,7 @@ import { usePathname } from 'next/navigation';
 import { formatDistanceToNow, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import DOMPurify from 'dompurify'; // <-- add import later
+import DOMPurify from 'dompurify';
 
 import { EmojiPicker } from '../emojiPicker';
 import {
@@ -38,11 +38,13 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip';
 import {
-  DropdownMenu,
+  DropdownMenu, 
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '../ui/dropdown-menu';
+import { Input } from '../ui/input';
+import { ScrollArea } from '../ui/scroll-area';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import Reactions from './reactions';
@@ -67,7 +69,7 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { toast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
   Dialog,
@@ -110,6 +112,21 @@ function isSameDay(d1: Date, d2: Date) {
     d1.getDate() === d2.getDate()
   );
 }
+
+  function useDebounce<T> (value: T, delay: number = 500): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      return () => {
+        clearTimeout(handler); // cleanup on value change or unmount
+      };
+    }, [value, delay]) // Add [value, delay] as dependencies
+
+    return debouncedValue;
+  }
 
 type User = {
   userName: string;
@@ -157,6 +174,9 @@ export function CardsChat({
     profilePic: '',
   });
 
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const debouncedSearch = useDebounce(searchValue, 500) /* wait for .5 sec */
   const [messages, setMessages] = useState<DocumentData[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -172,6 +192,7 @@ export function CardsChat({
   const prevMessagesLength = useRef(messages.length);
   const [, setOpenDrawer] = useState(false);
 
+  
   // States for voice recording
   type RecordingStatus =
     | 'idle'
@@ -282,6 +303,33 @@ export function CardsChat({
   };
 
   useEffect(() => {
+    if(debouncedSearch.trim() && messages){
+      /* logic to filter out the conversation/message of the chat */
+      const searchTerm = debouncedSearch.toLowerCase();
+
+      const filteredConversations = messages.filter((message) =>
+        (message.content ?? "").toLowerCase().includes(searchTerm)
+      );
+
+      if(filteredConversations.length > 0) {
+        const firstMatchId = `message-${filteredConversations[0].id}`;
+        const element = document.getElementById(firstMatchId);
+        if(element){
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        
+          /* add temporary style here to highlight the message */
+          element.classList.add('message-highlight');
+
+          /* remove the added style from the matched message element */
+          setTimeout(() => {
+            element.classList.remove('message-highlight');
+          }, 2000);
+        }
+      }
+    }
+  }, [debouncedSearch])
+
+  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
         setOpenDrawer(false);
@@ -331,7 +379,7 @@ export function CardsChat({
       profilePic: participantDetails?.profilePic || '',
     });
   }, [conversation, user.uid]);
-
+ 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -395,11 +443,7 @@ export function CardsChat({
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        toast({
-          variant: 'destructive',
-          title: 'File too large',
-          description: 'File size should not exceed 10MB',
-        });
+        notifyError('File size should not exceed 10MB', 'File too large');
         return;
       }
 
@@ -416,11 +460,10 @@ export function CardsChat({
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid file type',
-          description: 'Please upload an image, PDF, Word, or PowerPoint file',
-        });
+        notifyError(
+          'Please upload an image, PDF, Word, or PowerPoint file',
+          'Invalid file type',
+        );
         return;
       }
 
@@ -470,10 +513,7 @@ export function CardsChat({
 
         await sendMessage(conversation, message, setInput);
 
-        toast({
-          title: 'Success',
-          description: 'File uploaded successfully',
-        });
+        notifySuccess('File uploaded successfully', 'Success');
       } catch (error: any) {
         console.error('Error uploading file:', {
           error: error.message,
@@ -492,11 +532,7 @@ export function CardsChat({
           errorMessage = error.response.data.message;
         }
 
-        toast({
-          variant: 'destructive',
-          title: 'Upload failed',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Upload failed');
       } finally {
         setIsSending(false);
       }
@@ -601,17 +637,13 @@ export function CardsChat({
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
       setRecordingStatus('recording');
-      toast({
-        title: 'Recording started',
-        description: 'Speak into your microphone.',
-      });
+      notifySuccess('Speak into your microphone.', 'Recording started');
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Microphone Error',
-        description: 'Could not access microphone. Please check permissions.',
-      });
+      notifyError(
+        'Could not access microphone. Please check permissions.',
+        'Microphone Error',
+      );
       setRecordingStatus('idle');
     }
   };
@@ -655,16 +687,15 @@ export function CardsChat({
     if (recordingDurationIntervalRef.current) {
       clearInterval(recordingDurationIntervalRef.current);
     }
-    toast({ title: 'Recording discarded' });
+    notifySuccess('Recording discarded');
   };
 
   const handleSendVoiceMessage = async () => {
     if (!audioBlob || !user || !conversation) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No audio recorded or user/conversation not found.',
-      });
+      notifyError(
+        'No audio recorded or user/conversation not found.',
+        'Error',
+      );
       return;
     }
 
@@ -730,7 +761,7 @@ export function CardsChat({
       // Step 6: Send message using the same working sendMessage function
       await sendMessage(conversation, message, setInput);
 
-      toast({ title: 'Success', description: 'Voice message sent!' });
+      notifySuccess('Voice message sent!', 'Success');
     } catch (error: any) {
       console.error('Error sending voice message:', error);
       console.error('Error details:', {
@@ -767,11 +798,7 @@ export function CardsChat({
         errorMessage = `Error: ${error.message}`;
       }
 
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: errorMessage,
-      });
+      notifyError(errorMessage, 'Upload Failed');
     } finally {
       discardRecording(); // Clean up states regardless of success/failure
       setRecordingStatus('idle');
@@ -853,7 +880,7 @@ export function CardsChat({
         </div>
       )}
       {loading ? (
-        <div className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
           {/* Header Skeleton */}
           <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
             <div className="flex items-center space-x-3">
@@ -897,11 +924,11 @@ export function CardsChat({
               <Skeleton className="h-10 w-10 rounded-full" />
             </div>
           </div>
-        </div>
+        </Card>
       ) : (
         <>
-          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm">
+          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-xl">
+            <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-background text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
               <button
                 onClick={handleHeaderClick}
                 className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
@@ -911,10 +938,7 @@ export function CardsChat({
                   <AvatarImage
                     src={
                       conversation.type === 'group'
-                        ? (conversation.participantDetails &&
-                            conversation.participantDetails[conversation.id]
-                              ?.profilePic) ||
-                          `https://api.adorable.io/avatars/285/group-${conversation.id}.png`
+                        ? conversation.avatar || ''
                         : primaryUser.profilePic
                     }
                     alt={
@@ -943,87 +967,109 @@ export function CardsChat({
                   </p>
                   <p className="text-xs text-[hsl(var(--muted-foreground))]">
                     {conversation.type === 'group'
-                      ? `${conversation.participants.length} members`
+                      ? `${Object.keys(conversation.participantDetails || {}).length} members`
                       : primaryUser.email || 'Click to view profile'}
                   </p>
                 </div>
               </button>
+              {/* create a search bar input here to take input from user to search conversation */}
               <div className="flex items-center space-x-0.5 sm:space-x-1">
+              {/* Search Toggle */}
+              {isSearchVisible ? (
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder="Search in conversation..."
+                    className="w-40 sm:w-56 rounded-full text-sm"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Close search"
+                    onClick={() => {
+                      setIsSearchVisible(false);
+                      setSearchValue("");
+                    }}
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   variant="ghost"
                   size="icon"
                   aria-label="Search in chat"
+                  onClick={() => setIsSearchVisible(true)}
                   className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                 >
                   <Search className="h-5 w-5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Video call"
-                  onClick={handleCreateMeet}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                >
-                  <Video className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
-                  onClick={() => {
-                    if (onToggleExpand) {
-                      onToggleExpand();
-                    } else {
-                      console.error('[CardsChat] onToggleExpand is undefined!');
-                    }
-                  }}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                >
-                  {isChatExpanded ? (
-                    <Minimize2 className="h-5 w-5" />
-                  ) : (
-                    <Maximize2 className="h-5 w-5" />
-                  )}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="More options"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      <MoreVertical className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={5}
-                    className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+              )}
+
+              {/* Video call */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Video call"
+                onClick={handleCreateMeet}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                <Video className="h-5 w-5" />
+              </Button>
+
+              {/* Expand/collapse */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"}
+                onClick={() => {
+                  if (onToggleExpand) {
+                    onToggleExpand();
+                  } else {
+                    console.error("[CardsChat] onToggleExpand is undefined!");
+                  }
+                }}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                {isChatExpanded ? (
+                  <Minimize2 className="h-5 w-5" />
+                ) : (
+                  <Maximize2 className="h-5 w-5" />
+                )}
+              </Button>
+
+              {/* More options */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="More options"
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                   >
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setOpenReport(true);
-                      }}
-                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span className="text-sm font-medium">Report</span>
-                    </DropdownMenuItem>
-                    {/* <DropdownMenuItem
-                      className="text-black dark:text-[hsl(var(--popover-foreground))] cursor-pointer"
-                      onSelect={() => router.push('/report')} // Use onSelect for dropdowns
-                    >
-                      <HelpCircle className="mr-2 h-4 w-4" />
-                      <span>Help</span>
-                    </DropdownMenuItem> */}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={5}
+                  className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+                >
+                  <DropdownMenuItem
+                    onClick={() => setOpenReport(true)}
+                    className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                  >
+                    <Flag className="h-4 w-4" />
+                    <span className="text-sm font-medium">Report</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
-              <div className="flex flex-col space-y-3 ">
-                <div />
+              <ScrollArea className="flex flex-col space-y-3">
                 {messages.map((message, index) => {
                   const formattedTimestamp = formatChatTimestamp(
                     message.timestamp,
@@ -1069,11 +1115,19 @@ export function CardsChat({
                   const readableTimestamp =
                     formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                   const isSender = message.senderId === user.uid;
+                  const isGroupChat = conversation.type === 'group';
+                  const showSenderName = isGroupChat && 
+                    (index === 0 || messages[index - 1]?.senderId !== message.senderId);
+                  const senderName = isGroupChat && !isSender 
+                    ? conversation.participantDetails?.[message.senderId]?.userName 
+                      || 'Unknown User' 
+                    : '';
+                    
 
                   return (
-                    <React.Fragment key={message.id}>
+                    <div key={message.id} className="w-full">
                       {isNewDay && (
-                        <div className="w-full flex justify-center my-2 ">
+                        <div className="w-full flex justify-center my-2">
                           <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-0.5 rounded-full text-[hsl(var(--muted-foreground))]">
                             {formatDateHeader(message.timestamp)}
                           </span>
@@ -1081,45 +1135,54 @@ export function CardsChat({
                       )}
                       <div
                         id={message.id}
-                        key={index}
                         className={cn(
-                          'flex flex-row items-start relative group',
+                          'flex items-start group w-full mb-2',
                           isSender ? 'justify-end' : 'justify-start',
                         )}
                         onMouseEnter={() => setHoveredMessageId(message.id)}
                         onMouseLeave={() => setHoveredMessageId(null)}
                       >
+                        {/* Avatar for received messages */}
                         {!isSender && (
-                          <Avatar
-                            key={index}
-                            className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0"
-                          >
-                            <AvatarImage
-                              src={primaryUser.profilePic}
-                              alt={message.senderId}
-                            />
-                            <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
-                              {primaryUser.userName
-                                ? primaryUser.userName.charAt(0).toUpperCase()
-                                : 'U'}
-                            </AvatarFallback>
-                          </Avatar>
+                          <div className="flex-shrink-0 mr-2">
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage
+                                src={conversation.participantDetails?.[message.senderId]?.profilePic}
+                                alt={conversation.participantDetails?.[message.senderId]?.userName}
+                              />
+                              <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
+                                {senderName ? senderName.charAt(0).toUpperCase() : 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
                         )}
-                        <div
-                          className={cn(
-                            'flex w-max max-w-[98%] md:max-w-[90%] flex-col gap-1 rounded-2xl px-4 py-2 text-sm shadow-sm',
-                            message.content.match(
-                              /\.(jpeg|jpg|gif|png)(\?|$)/i,
-                            ) ||
+
+                        {/* Message content container */}
+                        <div id={`message-${message.id}`} className={cn('flex flex-col', isSender ? 'items-end' : 'items-start', 'max-w-[80%]')}>
+                          {/* Sender name in group chats */}
+                          {isGroupChat && showSenderName && !isSender && (
+                            <div className="mb-0.5">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                {senderName}
+                              </span>
+                            </div>
+                          )}
+                          <div
+                            
+                            className={cn(
+                              'flex w-max max-w-full flex-col gap-1 rounded-2xl px-4 py-2 text-sm shadow-sm',
+                              message.content.match(
+                                /\.(jpeg|jpg|gif|png)(\?|$)/i,
+                              ) ||
                               isEmojiOnly ||
                               (message.voiceMessage &&
                                 message.voiceMessage.type === 'voice')
-                              ? isSender
-                                ? 'ml-auto bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
-                                : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none'
-                              : isSender
-                                ? 'ml-auto bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
-                                : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none relative flex justify-center items-center pr-20 min-w-[180px]',
+                                ? isSender
+                                  ? 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
+                                  : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none'
+                                : isSender
+                                  ? 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
+                                  : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none relative flex justify-center items-center pr-20 min-w-[180px]',
                           )}
                           onClick={() => {
                             if (message.replyTo) {
@@ -1313,11 +1376,14 @@ export function CardsChat({
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
-                          <Reactions
-                            messageId={message.id}
-                            reactions={message.reactions || {}}
-                            toggleReaction={toggleReaction}
-                          />
+                          {/* Reactions moved to bottom-left of message bubble */}
+                          <div className="absolute -bottom-3 left-2 z-10">
+                            <Reactions
+                              messageId={message.id}
+                              reactions={message.reactions || {}}
+                              toggleReaction={toggleReaction}
+                            />
+                          </div>
                           <div
                             className={cn(
                               'flex items-center text-xs mt-1',
@@ -1346,18 +1412,20 @@ export function CardsChat({
                               ))}
                           </div>
                         </div>
+                        </div>
+                        
+                        {/* Message actions (emoji + reply) */}
                         <div
                           className={cn(
-                            'relative opacity-0 group-hover:opacity-100 transition-opacity',
-                            isSender ? 'mr-1' : 'ml-1',
+                            'flex items-start pt-2 opacity-0 group-hover:opacity-100 transition-opacity',
+                            isSender ? 'ml-2' : 'mr-2'
                           )}
                         >
                           {!isSender && (
                             <EmojiPicker
                               aria-label="Add reaction"
-                              onSelect={(emoji: string) =>
-                                toggleReaction(message.id, emoji)
-                              }
+                              onSelect={(emoji: string) => toggleReaction(message.id, emoji)}
+                              className="mr-1"
                             />
                           )}
                           <Button
@@ -1376,14 +1444,14 @@ export function CardsChat({
                           </Button>
                         </div>
                       </div>
+
                       <div ref={messagesEndRef} />
-                      {/* Date header (appears below current bubble due to flex-col-reverse order) */}
-                    </React.Fragment>
+                    </div>
                   );
                 })}
-              </div>
+              </ScrollArea>
             </CardContent>
-            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm">
+            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-b-xl">
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
@@ -1592,7 +1660,7 @@ export function CardsChat({
                   </TooltipProvider>
 
                   {showFormattingOptions && (
-                    <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] p-1 rounded-md">
+                    <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] rounded-md">
                       <Button
                         type="button"
                         variant="ghost"

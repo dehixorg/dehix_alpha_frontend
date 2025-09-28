@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ToastAction } from '@radix-ui/react-toast';
+import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,7 +14,6 @@ import {
   User,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Link from 'next/link';
@@ -43,7 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
 import TermsDialog from '@/components/shared/BusinessTermsDialog';
@@ -261,29 +260,25 @@ function BusinessRegisterForm({
           if (response.data.duplicate === false) {
             setCurrentStep(currentStep + 1);
           } else {
-            toast({
-              variant: 'destructive',
-              title: 'User Already Exists',
-              description:
-                'This username is already taken. Please choose another one.',
-            });
+            notifyError(
+              'This username is already taken. Please choose another one.',
+              'User Already Exists',
+            );
             setLastCheckedUsername(username);
           }
         } catch (error: any) {
-          toast({
-            variant: 'destructive',
-            title: 'API Error',
-            description: 'There was an error while checking the username.',
-          });
+          notifyError(
+            'There was an error while checking the username.',
+            'API Error',
+          );
         } finally {
           setIsVerified(false);
         }
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Validation Error',
-          description: 'Please fill in all required fields before proceeding.',
-        });
+        notifyError(
+          'Please fill in all required fields before proceeding.',
+          'Validation Error',
+        );
       }
     } else if (currentStep === 1) {
       const isValid = await form.trigger([
@@ -297,11 +292,10 @@ function BusinessRegisterForm({
       if (isValid) {
         setCurrentStep(currentStep + 1);
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Validation Error',
-          description: 'Please fill in all required fields before proceeding.',
-        });
+        notifyError(
+          'Please fill in all required fields before proceeding.',
+          'Validation Error',
+        );
       }
     }
   };
@@ -336,25 +330,27 @@ function BusinessRegisterForm({
       : '/register/business';
     try {
       await axiosInstance.post(url, formData);
-      toast({
-        title: 'Account created successfully!',
-        description: 'Your business account has been created.',
-      });
+      notifySuccess(
+        'Your business account has been created.',
+        'Account created successfully!',
+      );
       setIsModalOpen(true);
     } catch (error: any) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: `Error: ${
-          error.response?.data.message || 'Something went wrong!'
-        }`,
-        action: <ToastAction altText="Try again">Try again</ToastAction>,
-      });
+      notifyError(
+        `Error: ${error.response?.data.message || 'Something went wrong!'}`,
+        'Uh oh! Something went wrong.',
+      );
     } finally {
       setIsLoading(false);
     }
   };
+  useEffect(() => {
+    const referralCode = searchParams.get('referral');
+    if (referralCode) {
+      form.setValue('referralCode', referralCode);
+    }
+  }, [searchParams, form]);
 
   return (
     <Form {...form}>

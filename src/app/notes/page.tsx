@@ -10,7 +10,7 @@ import NotesHeader from '@/components/business/market/NotesHeader';
 import NotesRender from '@/components/shared/NotesRender';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { LabelType, Note, NoteType } from '@/utils/types/note';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import Header from '@/components/header/header';
 import { menuItemsBottom } from '@/config/menuItems/freelancer/dashboardMenuItems';
@@ -29,11 +29,10 @@ const Notes = () => {
 
   const handleCreateNote = async (note: Partial<Note>) => {
     if (!note.title || !note.content || !userId) {
-      toast({
-        title: 'Missing required fields',
-        description: 'Title and content are required to create a note.',
-        duration: 3000,
-      });
+      notifyError(
+        'Title and content are required to create a note.',
+        'Missing required fields',
+      );
       return;
     }
 
@@ -53,20 +52,12 @@ const Notes = () => {
     try {
       const response = await axiosInstance.post('/notes', tempNote);
       if (response?.data) {
-        toast({
-          title: 'Note Created',
-          description: 'Your note was successfully created.',
-          duration: 3000,
-        });
+        notifySuccess('Your note was successfully created.', 'Note Created');
         fetchNotes();
       }
     } catch (error) {
       console.error('Failed to create note:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create the note.',
-        duration: 3000,
-      });
+      notifyError('Failed to create the note.', 'Error');
 
       // Revert UI on error
       setNotes((prev) => prev.filter((n) => n !== tempNote));
@@ -82,7 +73,7 @@ const Notes = () => {
         active="Notes"
       />
 
-      <div className="flex flex-col sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
         <div>
           <Header
             menuItemsTop={notesMenu}

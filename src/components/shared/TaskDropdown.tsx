@@ -8,11 +8,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { toast } from '../ui/use-toast';
 
 import FreelancerDetailsDialog from './FreelancerDetailsDialog';
 import TaskUpdateDeatilDialog from './TaskUpdateDetailDialog';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
@@ -57,20 +57,11 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
         successMessage = 'Task accepted successfully.';
       }
 
-      toast({
-        title: 'Success',
-        description: successMessage,
-        duration: 3000,
-      });
+      notifySuccess(successMessage, 'Success');
       fetchMilestones();
     } catch (error) {
       console.error('Error during permission request:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update permissions. Please try again.',
-        variant: 'destructive',
-        duration: 3000,
-      });
+      notifyError('Failed to update permissions. Please try again.', 'Error');
     }
   };
 

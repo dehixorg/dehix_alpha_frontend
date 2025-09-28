@@ -13,7 +13,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
@@ -118,11 +118,7 @@ const Market: React.FC = () => {
       setBidProfiles(profileIds);
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.');
     }
   }, [user.uid]);
   useEffect(() => {
@@ -151,11 +147,7 @@ const Market: React.FC = () => {
         setProjectDomains(projDomRes.data.data.map((pd: any) => pd.label));
       } catch (err) {
         console.error('Error loading filters', err);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load filter options.',
-        });
+        notifyError('Failed to load filter options.');
       } finally {
         setIsLoading(false);
       }
@@ -180,15 +172,14 @@ const Market: React.FC = () => {
 
   // Fetch jobs when filters change or component mounts
   const fetchJobs = useCallback(
-    async (options: FilterState & { signal?: AbortSignal }) => {
-      const { signal, ...appliedFilters } = options;
+    async (options: FilterState) => {
+      const appliedFilters = options;
       try {
         setIsLoading(true);
         const query = constructQueryString(appliedFilters);
 
         const jobsRes = await axiosInstance.get(
           `/project/freelancer/${user.uid}${query ? `?${query}` : ''}`,
-          { signal },
         );
 
         const allJobs = jobsRes.data?.data || [];
@@ -260,21 +251,14 @@ const Market: React.FC = () => {
         if (err instanceof Error) {
           if (err.name !== 'AbortError') {
             console.error('Fetch jobs error:', err);
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: 'Failed to load job listings.',
-            });
+            notifyError('Failed to load job listings.');
           }
         } else {
           // Handle non-Error objects
           console.error('An unknown error occurred:', err);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description:
-              'An unexpected error occurred while loading job listings.',
-          });
+          notifyError(
+            'An unexpected error occurred while loading job listings.',
+          );
         }
       } finally {
         setIsLoading(false);
@@ -288,8 +272,6 @@ const Market: React.FC = () => {
       return;
     }
 
-    const controller = new AbortController();
-    const { signal } = controller;
     let isMounted = true;
 
     const fetchData = async () => {
@@ -299,7 +281,7 @@ const Market: React.FC = () => {
         setIsLoading(true);
 
         // Create a clean filters object with all filter properties
-        const fetchOptions: FilterState & { signal?: AbortSignal } = {
+        const fetchOptions: FilterState = {
           jobType: filters.jobType || [],
           domain: filters.domain || [],
           skills: filters.skills || [],
@@ -310,28 +292,23 @@ const Market: React.FC = () => {
           maxRate: filters.maxRate || '',
           favourites: filters.favourites || false,
           consultant: filters.consultant || false,
-          signal,
         };
 
         await fetchJobs(fetchOptions);
       } catch (error) {
-        if (!signal.aborted && isMounted) {
+        if (isMounted) {
           console.error('Error in fetchData:', error);
           const isCanceledError =
             error &&
             typeof error === 'object' &&
             'name' in error &&
-            error.name === 'CanceledError';
+            (error as any).name === 'Cancel';
           if (!isCanceledError) {
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: 'Failed to load job listings. Please try again.',
-            });
+            notifyError('Failed to load job listings. Please try again.');
           }
         }
       } finally {
-        if (!signal.aborted && isMounted) {
+        if (isMounted) {
           setIsLoading(false);
         }
       }
@@ -344,7 +321,7 @@ const Market: React.FC = () => {
     return () => {
       isMounted = false;
       clearTimeout(timer);
-      controller.abort();
+      // Do not cancel globally here; avoid canceling unrelated in-flight requests
     };
   }, [filters, user?.uid, fetchJobs]);
 
@@ -395,17 +372,10 @@ const Market: React.FC = () => {
       setTimeout(() => {
         fetchJobs(filters);
       }, 500);
-      toast({
-        title: 'Success',
-        description: 'Project marked as not interested.',
-      });
+      notifySuccess('Project marked as not interested.', 'Success');
     } catch (err) {
       console.error('Remove job error:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update project status.',
-      });
+      notifyError('Failed to update project status.');
     }
   };
   const activeFilterCount = getActiveFilterCount(filters);
@@ -431,12 +401,9 @@ const Market: React.FC = () => {
           <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex flex-col space-y-2">
-                <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
+                <h2 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
                   Find Your Next Opportunity
-                </h1>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight block md:hidden">
-                  Marketplace
-                </h1>
+                </h2>
                 <p className="hidden md:block text-muted-foreground">
                   Browse through available projects and find your next gig
                 </p>
@@ -464,6 +431,12 @@ const Market: React.FC = () => {
                 projectDomains={projectDomains}
                 onReset={handleReset}
               />
+            </div>
+            {/* Results count */}
+            <div className="flex items-center justify-between px-1">
+              <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+                {jobs.length} {jobs.length === 1 ? 'result' : 'results'}
+              </span>
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@ import Image from 'next/image';
 import LiveCaptureField from './register/livecapture';
 
 import { Card } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Badge } from '@/components/ui/badge';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -84,11 +84,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
         });
       } catch (error) {
         console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load KYC data. Please try again.',
-        });
+        notifyError('Failed to load KYC data. Please try again.', 'Error');
       }
     };
     fetchData();
@@ -146,24 +142,17 @@ export function KYCForm({ user_id }: { user_id: string }) {
       await axiosInstance.put(`/business/kyc`, payload);
       setKycStatus('APPLIED');
 
-      toast({
-        title: 'KYC Updated',
-        description: 'Your KYC has been successfully updated.',
-      });
+      notifySuccess('Your KYC has been successfully updated.', 'KYC Updated');
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update KYC. Please try again later.',
-      });
+      notifyError('Failed to update KYC. Please try again later.', 'Error');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Card className="p-8 md:p-12 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto">
+    <Card className="p-8 md:p-12 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto bg-muted-foreground/20 dark:bg-muted/20">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Business KYC Verification</h2>
         <Badge

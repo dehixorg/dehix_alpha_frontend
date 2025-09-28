@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { BidstatusEnum } from '@/utils/enum';
-import { toast } from '@/hooks/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 interface Action {
   label: string;
   type: string;
@@ -48,11 +48,7 @@ const BidItem: React.FC<BidItemProps> = ({ bid, onAction, actions }) => {
         const name = response.data.data.projectName;
         setProjectname(name);
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('Error fetching project name:', error);
       }
     };
@@ -67,11 +63,7 @@ const BidItem: React.FC<BidItemProps> = ({ bid, onAction, actions }) => {
         const name = response.data.userName;
         setbiddername(name);
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('Error fetching bidder name:', error);
       }
     };
@@ -85,11 +77,7 @@ const BidItem: React.FC<BidItemProps> = ({ bid, onAction, actions }) => {
       setStatusMessage(`Candidate ${actionType}ed`);
       setButtonsVisible(false);
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
       setStatusMessage(`Error performing ${actionType} action.`);
       console.error('Error updating bid status:', error);
     }

@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -205,11 +205,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
         setBidsData(finalList);
       } catch (error) {
         console.error('Error fetching interview bids', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setLoading(false);
       }
@@ -258,7 +254,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
 
       try {
         await axiosInstance.put(`/interview/${interviewId}`, updatedInterview);
-        toast({ title: 'Bid placed successfully' });
+        notifySuccess('Bid placed successfully');
         // Refresh list
         setBidsData((prev) =>
           prev.map((iv) =>
@@ -267,11 +263,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
         );
       } catch (err) {
         console.error(err);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to place bid',
-        });
+        notifyError('Failed to place bid', 'Error');
       }
 
       setBidFee('');
@@ -334,11 +326,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
       );
     } catch (error) {
       console.error('Error updating interview bid:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
 
     setConfirmAction(null);
