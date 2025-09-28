@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
@@ -109,11 +109,7 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         verification_status: data.type,
       });
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);

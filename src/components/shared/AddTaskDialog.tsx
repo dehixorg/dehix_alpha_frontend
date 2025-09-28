@@ -37,7 +37,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 interface AddTaskDialogProps {
   isDialogOpen: boolean;
@@ -113,24 +113,17 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
         const freelancerData = response.data.freelancers.freelancerData || [];
 
         if (freelancerData.length === 0) {
-          toast({
-            title: 'No Freelancers Available',
-            description:
-              'No freelancers with accepted bids found for this project. Please accept some bids first.',
-            variant: 'destructive',
-            duration: 5000,
-          });
+          notifyError(
+            'No freelancers with accepted bids found for this project. Please accept some bids first.',
+            'No Freelancers Available',
+          );
         }
 
         setFreelancersData(freelancerData);
         setFilteredFreelancers(freelancerData);
       } catch (error) {
         console.error('Failed to fetch freelancers:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setIsLoading(false);
       }

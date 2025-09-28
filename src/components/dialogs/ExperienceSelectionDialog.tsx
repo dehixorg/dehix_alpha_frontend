@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 interface Experience {
@@ -49,7 +49,6 @@ export default function ExperienceSelectionDialog({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isAddingExperiences, setIsAddingExperiences] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (open && freelancerId && currentProfileId) {
@@ -77,11 +76,7 @@ export default function ExperienceSelectionDialog({
       }
     } catch (error) {
       console.error('Error fetching experiences:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load experiences',
-        variant: 'destructive',
-      });
+      notifyError('Failed to load experiences', 'Error');
       setExperiences([]);
     } finally {
       setIsLoading(false);
@@ -120,11 +115,10 @@ export default function ExperienceSelectionDialog({
     }
 
     if (selectedExperiences.length === 0) {
-      toast({
-        title: 'No Selection',
-        description: 'Please select at least one experience to add',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Please select at least one experience to add',
+        'No Selection',
+      );
       return;
     }
 
@@ -134,10 +128,10 @@ export default function ExperienceSelectionDialog({
         selectedExperiences.includes(exp._id),
       );
 
-      toast({
-        title: 'Selected',
-        description: `${selectedObjects.length} experience(s) selected. Save the profile to persist changes.`,
-      });
+      notifySuccess(
+        `${selectedObjects.length} experience(s) selected. Save the profile to persist changes.`,
+        'Selected',
+      );
 
       onSuccess?.(selectedObjects);
 
@@ -145,11 +139,7 @@ export default function ExperienceSelectionDialog({
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error preparing selected experiences:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not process selected experiences',
-        variant: 'destructive',
-      });
+      notifyError('Could not process selected experiences', 'Error');
     } finally {
       setIsAddingExperiences(false);
     }

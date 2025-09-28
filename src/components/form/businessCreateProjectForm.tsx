@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
@@ -312,11 +312,7 @@ export function CreateProjectBusinessForm() {
           })),
         );
       } catch {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
       }
     };
     fetchData();
@@ -381,11 +377,7 @@ export function CreateProjectBusinessForm() {
     const isOtherValid = hasOtherValues(formValues);
     const isProfileValid = hasProfiles(formValues.profiles);
     if (!isOtherValid && !isProfileValid) {
-      toast({
-        variant: 'destructive',
-        title: 'Empty Draft',
-        description: 'Cannot save an empty draft.',
-      });
+      notifyError('Cannot save an empty draft.', 'Empty Draft');
       return;
     }
     const DraftProfile = formValues.profiles?.map(
@@ -396,10 +388,7 @@ export function CreateProjectBusinessForm() {
     );
     const DraftData = { ...formValues, profiles: DraftProfile };
     localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(DraftData));
-    toast({
-      title: 'Draft Saved',
-      description: 'Your form data has been saved as a draft.',
-    });
+    notifySuccess('Your form data has been saved as a draft.', 'Draft Saved');
   };
 
   const loadDraft = () => {
@@ -414,16 +403,12 @@ export function CreateProjectBusinessForm() {
             Array.isArray(profile.skills) ? profile.skills : [],
           ) || [],
         );
-        toast({
-          title: 'Draft loaded',
-          description: 'Your saved draft has been loaded.',
-        });
+        notifySuccess('Your saved draft has been loaded.', 'Draft loaded');
       } catch {
-        toast({
-          title: 'Error loading draft',
-          description: 'There was a problem loading your draft.',
-          variant: 'destructive',
-        });
+        notifyError(
+          'There was a problem loading your draft.',
+          'Error loading draft',
+        );
       }
     }
     setShowLoadDraftDialog(false);
@@ -432,10 +417,7 @@ export function CreateProjectBusinessForm() {
   const discardDraft = () => {
     localStorage.removeItem(FORM_DRAFT_KEY);
     setShowLoadDraftDialog(false);
-    toast({
-      title: 'Draft discarded',
-      description: 'Your saved draft has been discarded.',
-    });
+    notifySuccess('Your saved draft has been discarded.', 'Draft discarded');
   };
 
   // Budget formatting for API
@@ -480,10 +462,10 @@ export function CreateProjectBusinessForm() {
         profiles: profilesWithFormattedBudget,
       };
       await axiosInstance.post(`/project/business`, payload);
-      toast({
-        title: 'Project Added',
-        description: 'Your project has been successfully added.',
-      });
+      notifySuccess(
+        'Your project has been successfully added.',
+        'Project Added',
+      );
       const connectsCost = parseInt(
         process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
         10,
@@ -495,11 +477,7 @@ export function CreateProjectBusinessForm() {
       localStorage.removeItem(FORM_DRAFT_KEY);
       window.dispatchEvent(new Event('connectsUpdated'));
     } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add project. Please try again later.',
-      });
+      notifyError('Failed to add project. Please try again later.', 'Error');
     } finally {
       setLoading(false);
     }

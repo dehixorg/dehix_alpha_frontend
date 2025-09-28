@@ -1,20 +1,17 @@
 'use client';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
-
-// Define Toast variant type
-type ToastVariant = 'destructive' | 'default' | null | undefined;
 
 interface Project {
   _id: string;
@@ -58,15 +55,6 @@ const BidsPage = () => {
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
 
-  const errorToast = useMemo(
-    () => ({
-      variant: 'destructive' as ToastVariant, // Explicitly typing it
-      title: 'Error',
-      description: 'Something went wrong. Please try again.',
-    }),
-    [],
-  );
-
   useEffect(() => {
     const fetchProjectIds = async () => {
       try {
@@ -102,7 +90,7 @@ const BidsPage = () => {
 
         setBidsArray(pendingBids);
       } catch (error) {
-        toast(errorToast);
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('Error fetching bids:', error);
       }
     };
@@ -110,7 +98,7 @@ const BidsPage = () => {
     if (projectIds.length) {
       fetchBidsForProjects();
     }
-  }, [projectIds, errorToast]);
+  }, [projectIds]);
 
   const handleAction = async (bidId: string, actionType: string) => {
     let updatedStatus;
@@ -124,7 +112,7 @@ const BidsPage = () => {
         bid_status: updatedStatus,
       });
     } catch (error) {
-      toast(errorToast);
+      notifyError('Something went wrong. Please try again.', 'Error');
       console.error('Error updating bid status:', error);
     }
   };

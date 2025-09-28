@@ -21,8 +21,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
-import { toast } from '@/components/ui/use-toast';
 import {
   Dehix_Talent_Card_Pagination,
   type HireDehixTalentStatusEnum,
@@ -178,11 +178,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setDomains(domainsResponse.data?.data || []);
       } catch (error) {
         console.error('Error fetching skills and domains:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load skills and domains. Please try again.',
-        });
+        notifyError(
+          'Failed to load skills and domains. Please try again.',
+          'Error',
+        );
       }
     };
 
@@ -291,11 +290,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
       if (error.response && error.response.status === 404) {
         // Do Nothing
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
       }
     }
   }, [user?.uid, skillDomainFormProps]);
@@ -346,11 +341,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         if (error.response && error.response.status === 404) {
           setHasMore(false); // No more data to fetch
         } else {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Something went wrong. Please try again.',
-          });
+          notifyError('Something went wrong. Please try again.', 'Error');
         }
       } finally {
         setLoading(false);
@@ -415,11 +406,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
     });
 
     if (matchedTalentIds.length === 0 || matchedTalentUids.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No Skills Selected',
-        description: 'Please add some skills before adding to lobby.',
-      });
+      notifyError(
+        'Please add some skills before adding to lobby.',
+        'No Skills Selected',
+      );
       return;
     }
     setIsLoading(true);
@@ -434,18 +424,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
       );
 
       if (response.status === 200) {
-        toast({
-          title: 'Success',
-          description: 'Freelancer added to lobby',
-        });
+        notifySuccess('Freelancer added to lobby', 'Success');
         setCurrSkills([]);
       }
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.', 'Error');
     } finally {
       setIsLoading(false);
     }

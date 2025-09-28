@@ -4,9 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
 
-import { toast } from '../ui/use-toast';
 import DraftDialog from '../shared/DraftDialog';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -116,19 +116,13 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
       await axiosInstance.post(`/freelancer/education`, formattedData);
       onFormSubmit();
       setIsDialogOpen(false);
-      toast({
-        title: 'Education Added',
-        description: 'The education has been successfully added.',
-        duration: 1500,
-      });
+      notifySuccess(
+        'The education has been successfully added.',
+        'Education Added',
+      );
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add education. Please try again later.',
-        duration: 1500,
-      });
+      notifyError('Failed to add education. Please try again later.', 'Error');
     } finally {
       setLoading(false); // Reset loading state after submission completes
     }

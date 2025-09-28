@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 
@@ -55,7 +55,6 @@ export default function ProjectSelectionDialog({
   const [existingProjectIds, setExistingProjectIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddingProjects, setIsAddingProjects] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (open && freelancerId && currentProfileId) {
@@ -81,11 +80,7 @@ export default function ProjectSelectionDialog({
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load projects',
-        variant: 'destructive',
-      });
+      notifyError('Failed to load projects', 'Error');
       setProjects([]);
     } finally {
       setIsLoading(false);
@@ -123,11 +118,7 @@ export default function ProjectSelectionDialog({
     }
 
     if (selectedProjects.length === 0) {
-      toast({
-        title: 'No Selection',
-        description: 'Please select at least one project to add',
-        variant: 'destructive',
-      });
+      notifyError('Please select at least one project to add', 'No Selection');
       return;
     }
 
@@ -138,10 +129,10 @@ export default function ProjectSelectionDialog({
         selectedProjects.includes(p._id),
       );
 
-      toast({
-        title: 'Selected',
-        description: `${selectedObjects.length} project(s) selected. Save the profile to persist changes.`,
-      });
+      notifySuccess(
+        `${selectedObjects.length} project(s) selected. Save the profile to persist changes.`,
+        'Selected',
+      );
 
       // Return selection to parent; parent will merge and persist on save
       onSuccess?.(selectedObjects);
@@ -150,11 +141,7 @@ export default function ProjectSelectionDialog({
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error preparing selected projects:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not process selected projects',
-        variant: 'destructive',
-      });
+      notifyError('Could not process selected projects', 'Error');
     } finally {
       setIsAddingProjects(false);
     }
