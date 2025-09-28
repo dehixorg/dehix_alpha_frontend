@@ -26,6 +26,7 @@ interface FilterSidebarProps {
     selectedValues: string | string[],
   ) => void;
   handleReset: () => void;
+  handleApply: () => void;
 }
 
 const FilterSidebar: React.FC<FilterSidebarProps> = ({
@@ -34,12 +35,15 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   skills,
   handleFilterChange,
   handleReset,
+  handleApply,
 }) => {
   return (
     <div className="hidden mb-10 lg:block lg:sticky lg:top-16 lg:w-[400px] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar no-scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
       <div className="h-full px-4 flex flex-col space-y-4">
         {/* Correctly wire the Apply button */}
-        <Button className="w-full">Apply Filters</Button>
+        <Button className="w-full" onClick={handleApply}>
+          Apply Filters
+        </Button>
         <Button
           onClick={handleReset}
           variant="outline"

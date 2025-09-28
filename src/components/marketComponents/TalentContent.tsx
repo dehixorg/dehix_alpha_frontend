@@ -6,7 +6,7 @@ import InvitedProfileCards from './sidebar-projectComponents/profileCards.tsx/in
 import AcceptedProfileCards from './sidebar-projectComponents/profileCards.tsx/acceptedProfileCards';
 import RejectedProfileCards from './sidebar-projectComponents/profileCards.tsx/rejectedProfileCards';
 
-import { calculateExperience } from '@/components/marketComponents/TalentLayout'; // Import from the new location
+import { calculateExperience } from '@/components/marketComponents/TalentLayout'; //
 
 interface TalentContentProps {
   activeTab: 'invited' | 'accepted' | 'rejected' | 'overview';

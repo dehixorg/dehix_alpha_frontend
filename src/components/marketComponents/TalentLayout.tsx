@@ -357,8 +357,8 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                             <Checkbox
                               id={`skill-${skill}`}
                               checked={filters.skills.includes(skill)}
-                              onCheckedChange={(isChecked: boolean) =>
-                                handleToggleFilter('skills', skill, isChecked)
+                              onCheckedChange={(Checked) =>
+                                handleToggleFilter('skills', skill, !!Checked)
                               }
                             />
                             <Label
@@ -399,11 +399,11 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                             <Checkbox
                               id={`exp-${label}`}
                               checked={filters.experience.includes(value)}
-                              onCheckedChange={(isChecked: boolean) =>
+                              onCheckedChange={(Checked) =>
                                 handleToggleFilter(
                                   'experience',
                                   value,
-                                  isChecked,
+                                  !!Checked,
                                 )
                               }
                             />
@@ -430,7 +430,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
             <div className="col-span-9">
               <TalentContent
                 activeTab={activeTab}
-                talents={talentData[activeTab]}
+                talents={activeTab === 'overview' ? [] : talentData[activeTab]}
                 loading={loading}
               />
             </div>

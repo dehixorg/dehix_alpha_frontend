@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 interface Skill {
-  _id: string;
+  _id?: string;
   name: string;
 }
 interface ProfessionalExperience {
@@ -127,8 +127,11 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                   <span>{talent.email}</span>
                 </div>
                 <div className="flex flex-wrap gap-2 pt-2">
-                  {talent.skills.map((skill: Skill) => (
-                    <Badge key={skill._id} variant="secondary">
+                  {talent.skills.map((skill: Skill, skillIndex) => (
+                    <Badge
+                      key={skill._id ?? `${talent._id}-skill-${skillIndex}`}
+                      variant="secondary"
+                    >
                       {skill.name}
                     </Badge>
                   ))}
