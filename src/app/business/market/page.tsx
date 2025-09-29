@@ -89,27 +89,53 @@ const Market: React.FC = () => {
     if (to !== undefined) queryParts.push(`workExperienceTo=${to}`);
   }
 
-    Object.entries(filters).forEach(([key, value]) => {
-      // Skip experience as it's already handled above
-      if (key === 'experience') return;
+  //   Object.entries(filters).forEach(([key, value]) => {
+  //     // Skip experience as it's already handled above
+  //     if (key === 'experience') return;
 
-      // Skip minRate and maxRate if they are empty strings
-      if ((key === 'minRate' || key === 'maxRate') && value === '') return;
+  //     // Skip minRate and maxRate if they are empty strings
+  //     if ((key === 'minRate' || key === 'maxRate') && value === '') return;
 
-    if (Array.isArray(value) && value.length > 0) {
-      const cleanedValues = value.filter((v) => v !== undefined && v !== null && v !== "");
-      if (cleanedValues.length > 0) {
-        queryParts.push(`${key}=${cleanedValues.join(",")}`);
-      }
-    } else if (typeof value === "string" && value.trim() !== "") {
-      queryParts.push(
-        `${key}=${value
-          .split(",")
-          .map((v) => v.trim())
-          .join(",")}`,
-      );
+  //   if (Array.isArray(value) && value.length > 0) {
+  //     const cleanedValues = value.filter((v) => v !== undefined && v !== null && v !== "");
+  //     if (cleanedValues.length > 0) {
+  //       queryParts.push(`${key}=${cleanedValues.join(",")}`);
+  //     }
+  //   } else if (typeof value === "string" && value.trim() !== "") {
+  //     queryParts.push(
+  //       `${key}=${value
+  //         .split(",")
+  //         .map((v) => v.trim())
+  //         .join(",")}`,
+  //     );
+  //   }
+  // });
+  
+  Object.entries(filters).forEach(([key, value]) => {
+  if (key === 'experience') return; // already handled
+
+  // Skip empty minRate/maxRate
+  if ((key === 'minRate' || key === 'maxRate') && (value === '' || value === null || value === undefined)) return;
+
+  if (Array.isArray(value) && value.length > 0) {
+    const cleanedValues = value.filter((v) => v !== undefined && v !== null && v !== "");
+    if (cleanedValues.length > 0) {
+      queryParts.push(`${key}=${cleanedValues.join(",")}`);
     }
-  });
+  } else if (typeof value === "string" && value.trim() !== "") {
+  if (key === "minRate" || key === "maxRate") {
+    queryParts.push(`${key}=${Number(value)}`);
+  } else {
+    queryParts.push(
+      `${key}=${value
+        .split(",")
+        .map((v) => v.trim())
+        .join(",")}`
+    );
+  }
+}
+
+});
 
   return queryParts.join("&");
 };
