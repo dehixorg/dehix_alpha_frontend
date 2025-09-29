@@ -1366,8 +1366,7 @@ export default function ProfileDetailPage() {
                 )}
               </CardContent>
             </Card>
-
-            <Card className="bg-muted-foreground/20 dark:bg-muted/20">
+            <Card className="bg-muted-foreground/20 dark:bg-black/20">
               <CardHeader>
                 <div className="flex justify-between items-center w-full">
                   <div>
@@ -1393,70 +1392,80 @@ export default function ProfileDetailPage() {
               <CardContent>
                 {editingProfileData.experiences &&
                 editingProfileData.experiences.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {editingProfileData.experiences.map((experience: any) => (
-                      <Card
-                        key={experience._id}
-                        className="p-4 bg-background border relative"
-                      >
-                        <div className="flex flex-col justify-between h-full">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-lg mb-1">
-                              {experience.jobTitle || experience.title}
-                            </h4>
-                            <p className="text-sm text-muted-foreground mb-2">
-                              {experience.company}
-                            </p>
-                            <p className="text-xs text-muted-foreground mb-3">
-                              {new Date(experience.workFrom).toLocaleDateString(
-                                'en-US',
-                                {
-                                  year: 'numeric',
-                                  month: 'short',
-                                },
-                              )}{' '}
-                              -{' '}
-                              {experience.workTo
-                                ? new Date(
-                                    experience.workTo,
-                                  ).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                  })
-                                : 'Present'}
-                            </p>
-                            {experience.workDescription && (
-                              <p className="text-sm text-foreground">
-                                {experience.workDescription}
-                              </p>
-                            )}
-                            {experience.referencePersonName && (
-                              <p className="text-sm text-muted-foreground mt-2">
-                                Reference: {experience.referencePersonName}
-                              </p>
-                            )}
-                          </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {editingProfileData.experiences.map((experience: any) => {
+                      // Ensure dates are Date objects
+                      const workFrom = new Date(experience.workFrom);
+                      const workTo = experience.workTo
+                        ? new Date(experience.workTo)
+                        : null;
 
+                      return (
+                        <Card
+                          key={experience._id}
+                          className="relative p-3 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm aspect-square flex flex-col justify-between transition-all"
+                        >
+                          {/* Delete Icon */}
                           {isEditMode && (
-                            <div className="flex justify-end mt-3">
-                              <Button
-                                variant="destructive"
-                                size="sm"
+                            <div className="absolute top-2 right-2">
+                              <Trash2
+                                className="h-4 w-4 text-red-500 cursor-pointer hover:text-red-700"
                                 onClick={() =>
                                   handleRemoveExperience(experience._id)
                                 }
-                              >
-                                Delete
-                              </Button>
+                              />
                             </div>
                           )}
-                        </div>
-                      </Card>
-                    ))}
+
+                          <div className="flex flex-col gap-1 h-full justify-between">
+                            <div>
+                              {/* Job Title */}
+                              <h4 className="font-semibold text-md text-gray-900 dark:text-gray-100 line-clamp-2">
+                                {experience.jobTitle || experience.title}
+                              </h4>
+
+                              {/* Company */}
+                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
+                                {experience.company}
+                              </p>
+
+                              {/* Duration */}
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {workFrom.toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                })}{' '}
+                                -{' '}
+                                {workTo
+                                  ? workTo.toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                    })
+                                  : 'Present'}
+                              </p>
+
+                              {/* Work Description */}
+                              {experience.workDescription && (
+                                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mt-1">
+                                  {experience.workDescription}
+                                </p>
+                              )}
+
+                              {/* Reference */}
+                              {experience.referencePersonName && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                                  Reference: {experience.referencePersonName}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
                   </div>
                 ) : (
-                  <Card className="flex flex-col items-center justify-center py-12">
-                    <p className="text-muted-foreground mb-4">
+                  <Card className="flex flex-col items-center justify-center py-12 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm">
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
                       No experience added to this profile yet
                     </p>
                     {isEditMode && (
@@ -1481,7 +1490,7 @@ export default function ProfileDetailPage() {
               onSuccess={(newExperiences) => {
                 setEditingProfileData((prev: any) => ({
                   ...prev,
-                  experiences: [...(prev.experiences || []), ...newExperiences], // append multiple
+                  experiences: [...(prev.experiences || []), ...newExperiences],
                 }));
               }}
             />

@@ -200,49 +200,42 @@ export default function ExperienceSelectionDialog({
           </p>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2">
               {experiences.map((exp) => {
-                const isAdded = existingExperienceIds.includes(exp._id);
                 const isSelected = selectedExperiences.includes(exp._id);
                 return (
                   <Card
                     key={exp._id}
-                    onClick={() => !isAdded && handleToggle(exp._id)}
-                    className={`cursor-pointer transition-all p-4 ${
-                      isAdded
-                        ? 'bg-green-50 border-green-200 opacity-60'
-                        : isSelected
-                          ? 'bg-primary/10 border-primary'
-                          : 'hover:bg-accent'
-                    }`}
+                    onClick={() => handleToggle(exp._id)}
+                    className={`cursor-pointer p-3 border rounded-lg shadow-md transition-all
+          ${
+            isSelected
+              ? 'border-primary bg-primary/10 dark:bg-primary/20'
+              : 'border-gray-300 bg-white dark:bg-black dark:border-gray-700'
+          }`}
                   >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Briefcase className="h-5 w-5" />
+                    <CardHeader className="pb-1">
+                      <CardTitle className="text-md flex items-center gap-2 text-gray-900 dark:text-white">
+                        <Briefcase className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                         {exp.jobTitle}
-                        {isAdded && (
-                          <Badge className="bg-green-600 text-xs">
-                            Already Added
-                          </Badge>
-                        )}
-                        {isSelected && !isAdded && (
-                          <CheckCircle className="text-primary h-5 w-5" />
+                        {isSelected && (
+                          <CheckCircle className="text-primary h-4 w-4" />
                         )}
                       </CardTitle>
-                      <p className="text-muted-foreground font-medium">
+                      <p className="text-gray-700 dark:text-gray-300 font-medium text-sm">
                         {exp.company}
                       </p>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                      <p className="text-sm text-muted-foreground line-clamp-3">
+                    <CardContent className="space-y-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
                         {exp.workDescription}
                       </p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
+                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                        <Calendar className="h-3 w-3 text-gray-500 dark:text-gray-400" />
                         {formatDate(exp.workFrom)} - {formatDate(exp.workTo)}
                       </div>
                       {exp.referencePersonName && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           Reference: {exp.referencePersonName}
                         </p>
                       )}
@@ -252,8 +245,8 @@ export default function ExperienceSelectionDialog({
               })}
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground">
+            <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700 mt-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {selectedExperiences.length} selected,{' '}
                 {existingExperienceIds.length} already in profile
               </p>
