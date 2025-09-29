@@ -934,13 +934,13 @@ export function ProfileSidebar({
                       <CardHeader>
                         <CardTitle className="text-base">
                           Members (
-                          {(profileData as ProfileGroup).members.length})
+                          {(profileData as ProfileGroup).members?.length || 0})
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <ScrollArea className="max-h-60 px-4">
                           <ul className="space-y-1 py-2">
-                            {(profileData as ProfileGroup).members
+                            {((profileData as ProfileGroup).members || [])
                               .slice(0, showAllMembers ? undefined : 7)
                               .map((member) => {
                                 const group = profileData as ProfileGroup;
@@ -1042,7 +1042,8 @@ export function ProfileSidebar({
                               })}
                           </ul>
                         </ScrollArea>
-                        {(profileData as ProfileGroup).members.length > 7 &&
+                        {((profileData as ProfileGroup).members?.length || 0) >
+                          7 &&
                           !showAllMembers && (
                             <div className="p-4 pt-0">
                               <Button
