@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // Added useRef
 import { useSelector } from 'react-redux';
 import { 
   VolumeX,
@@ -26,6 +26,7 @@ import {
   orderBy,
   getDocs,
   writeBatch,
+  onSnapshot,
 } from 'firebase/firestore';
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from "@/components/ui/badge";
@@ -79,31 +80,30 @@ export interface ProfileUser {
   status?: string;
   lastSeen?: string;
 };
+
 export type ProfileGroupMember = {
-  id: string; // User's _id from API's members array
+  id: string;
   userName: string;
   profilePic?: string;
-  status?: 'online' | 'offline'; // Retain for mock display if needed
+  status?: 'online' | 'offline';
 };
 
 export type ProfileGroup = {
-  _id: string; // From API
-  id: string; // To be populated from _id
-  groupName: string; // From API
-  avatar?: string; // From API (S3 URL)
-  description?: string; // From API
-  createdAt: string; // ISO String from API
-  members: ProfileGroupMember[]; // From API
-  admins: string[]; // Array of user IDs from API
+  id: string;
+  groupName: string;
+  avatar?: string;
+  description?: string;
+  createdAt: string;
+  updatedAt?: string;
+  members: ProfileGroupMember[];
+  admins: string[];
   participantDetails?: {
     [uid: string]: { userName: string; profilePic?: string; email?: string };
-  }; // From API
-  inviteLink?: string; // From API
-  // Derived/processed fields
+  };
+  inviteLink?: string;
   displayName: string;
   createdAtFormatted?: string;
-  // Placeholder for admin details if needed directly in ProfileGroup
-  adminDetails?: ProfileUser[]; // Could be populated if FE needs more admin info than just IDs
+  adminDetails?: ProfileUser[];
 };
 
 interface ProfileSidebarProps {
@@ -111,9 +111,6 @@ interface ProfileSidebarProps {
   onClose: () => void;
   profileId: string | null;
   profileType: 'user' | 'group' | null;
-  // currentUser prop as requested by the subtask, though it's also available via Redux store
-  // We will primarily use the Redux store version for consistency within this component,
-  // but including it in props if direct passing is ever preferred.
   currentUser?: CombinedUser | null;
   initialData?: { userName?: string; email?: string; profilePic?: string };
 }
@@ -123,13 +120,9 @@ export function ProfileSidebar({
   onClose,
   profileId,
   profileType,
-  // currentUser prop is available via Redux store
   initialData,
 }: ProfileSidebarProps) {
-  // Get current user from Redux
   const [profileData, setProfileData] = useState<ProfileUser | ProfileGroup | null>(null);
-
-  // Helper function to safely get profile picture based on profile type
   const getProfilePicture = (data: ProfileUser | ProfileGroup | null, type: 'user' | 'group' | null): string => {
     if (!data) return '';
     if (type === 'user' && 'profilePic' in data) {
@@ -146,8 +139,7 @@ export function ProfileSidebar({
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
-  const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
-    useState(false);
+  const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] = useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [refreshDataKey, setRefreshDataKey] = useState(0);
@@ -155,18 +147,16 @@ export function ProfileSidebar({
   const [editingDescription, setEditingDescription] = useState('');
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [editingBio, setEditingBio] = useState('');
+  const [isEditingGroupDescription, setIsEditingGroupDescription] = useState(false);
 
   const { toast } = useToast();
   
-  // Load bio/description when profile data changes
   useEffect(() => {
     if (profileData) {
       if (profileType === 'user') {
-        // For private chats (users), use the bio field
         const bio = 'bio' in profileData ? profileData.bio : '';
         setEditingBio(bio || '');
       } else if (profileType === 'group') {
-        // For groups, use the description field
         const description = 'description' in profileData ? profileData.description : '';
         setEditingDescription(description || '');
       }
@@ -176,19 +166,17 @@ export function ProfileSidebar({
     }
   }, [profileData, profileType]);
 
-  // Get current user from Redux with proper typing
   const user = useSelector((state: RootState) => state.user);
   
-  // Handle bio/description edit changes
   const handleEditBio = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
     if (profileType === 'user') {
-      setEditingBio(e.target.value);
+      setEditingBio(value);
     } else if (profileType === 'group') {
-      setEditingDescription(e.target.value);
+      setEditingDescription(value);
     }
   };
 
-  // Save bio/description changes
   const handleSaveBio = async () => {
     if (profileType === 'user') {
       await handleUpdateBio();
@@ -197,158 +185,148 @@ export function ProfileSidebar({
     }
   };
 
-  // Cancel bio/description editing
   const handleCancelEditBio = () => {
-    if (profileData) {
-      if (profileType === 'user' && 'bio' in profileData) {
-        setEditingBio(profileData.bio || '');
-      } else if (profileType === 'group' && 'description' in profileData) {
-        setEditingDescription(profileData.description || '');
-      }
+    if (!profileData) {
+      setIsEditingBio(false);
+      return;
     }
+
+    if (profileType === 'user' && 'bio' in profileData) {
+      setEditingBio(profileData.bio || '');
+    } else if (profileType === 'group' && 'description' in profileData) {
+      setEditingDescription(profileData.description || '');
+    }
+    
     setIsEditingBio(false);
   };
 
-  // Update description for group in Firestore
   const handleUpdateDescription = async () => {
     if (!profileId || !profileData || profileType !== 'group') {
-      console.error('Missing required data for updating group description:', { profileId, profileData, profileType });
+      console.error('Missing required data for updating group description:', { 
+        profileId, 
+        hasProfileData: !!profileData, 
+        profileType,
+        isGroup: profileType === 'group'
+      });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Missing required data to update group description.',
+      });
       return;
     }
 
     try {
-      const groupRef = doc(db, 'groups', profileId);
-      await updateDoc(groupRef, {
-        description: editingDescription
-      });
+      const conversationRef = doc(db, 'conversations', profileId);
+      const conversationDoc = await getDoc(conversationRef);
+      const trimmedDescription = editingDescription.trim();
       
-      // Update local state
-      setProfileData(prev => prev ? { ...prev, description: editingDescription } : null);
-      
-      toast({
-        title: 'Description updated',
-        description: 'The group description has been updated successfully.',
-      });
-      
-      setIsEditingBio(false);
+      if (conversationDoc.exists()) {
+        // Update Firestore
+        await updateDoc(conversationRef, {
+          description: trimmedDescription,
+          updatedAt: new Date().toISOString()
+        });
+
+        // Update local state immediately
+        setProfileData(prev => {
+          if (!prev || !('groupName' in prev)) return prev;
+          return {
+            ...prev,
+            description: trimmedDescription,
+            updatedAt: new Date().toISOString()
+          } as ProfileGroup;
+        });
+
+        // Close the edit mode
+        setIsEditingDescription(false);
+        
+        toast({
+          title: 'Description updated',
+          description: 'The group description has been updated successfully.',
+        });
+      } else {
+        // If conversation doesn't exist, this is an error since we expect it to exist
+        throw new Error('Group conversation not found');
+      }
     } catch (error) {
       console.error('Error updating group description:', error);
       toast({
+        variant: 'destructive',
         title: 'Error',
         description: 'Failed to update group description. Please try again.',
-        variant: 'destructive',
       });
     }
   };
 
-  // Update bio for user profile in Firestore
   const handleUpdateBio = async () => {
     if (!profileId || !profileData || profileType !== 'user') {
-      console.error('Missing required data for updating bio:', { profileId, profileData, profileType });
+      console.error('Missing required data for updating bio:', { 
+        profileId, 
+        hasProfileData: !!profileData, 
+        profileType,
+        isUser: profileType === 'user'
+      });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Missing required data to update bio.',
+      });
       return;
     }
     
     try {
-      if (profileType === 'user') {
-        // For private chats, update the conversation document with bio
-        console.log('Attempting to update bio with data:', { bio: editingBio.trim() });
-        const conversationRef = doc(db, 'conversations', profileId);
-        
-        // Check if the document exists first
-        const conversationDoc = await getDoc(conversationRef);
-        
-        if (conversationDoc.exists()) {
-          // Update existing document
-          await updateDoc(conversationRef, {
-            bio: editingBio.trim(),
-            updatedAt: new Date().toISOString(),
-          });
-        } else {
-          // Create new document if it doesn't exist
-          if (!profileId || !user?.uid) {
-            throw new Error('Missing required user or profile ID');
-          }
-          
-          const participantDetails = {
-            [user.uid]: {
-              userName: user?.displayName || '',
-              profilePic: user?.photoURL || '',
-              email: user?.email || ''
-            },
-            [profileId]: {
-              userName: (profileData as ProfileUser)?.userName || (profileData as ProfileGroup)?.groupName || '',
-              profilePic: getProfilePicture(profileData, profileType),
-              email: (profileData as ProfileUser)?.email || ''
-            }
-          };
-          
-          await setDoc(conversationRef, {
-            id: profileId,
-            type: 'private',
-            participants: [user.uid, profileId],
-            participantDetails,
-            bio: editingBio.trim(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
-        }
-
-        // Update local state if profileData exists
-        if (profileData) {
-          setProfileData({
-            ...profileData,
-            bio: editingBio.trim(),
-          });
-        }
-
-        setIsEditingBio(false);
-        
-        toast({
-          title: 'Success',
-          description: 'Bio updated successfully',
+      const conversationRef = doc(db, 'conversations', profileId);
+      const conversationDoc = await getDoc(conversationRef);
+      
+      if (conversationDoc.exists()) {
+        await updateDoc(conversationRef, {
+          bio: editingBio.trim(),
+          updatedAt: new Date().toISOString(),
         });
-      } else if (profileType === 'group' && profileId) {
-        try {
-          // For groups, update the description field
-          console.log('Attempting to update group description:', { description: editingDescription.trim() });
-          const groupRef = doc(db, 'conversations', profileId);
-          
-          // First, check if the document exists
-          const groupDoc = await getDoc(groupRef);
-          
-          if (!groupDoc.exists()) {
-            throw new Error('Group not found');
-          }
-          
-          // Update the document
-          await updateDoc(groupRef, {
-            description: editingDescription.trim(),
-            updatedAt: new Date().toISOString(),
-          });
-
-          // Update local state
-          setProfileData({
-            ...profileData,
-            description: editingDescription.trim(),
-          });
-
-          setIsEditingDescription(false);
-          
-          toast({
-            title: 'Success',
-            description: 'Group description updated successfully',
-          });
-        } catch (error) {
-          console.error('Error updating group description:', error);
-          throw error; // Re-throw to be caught by the outer try-catch
+      } else {
+        if (!profileId || !user?.uid) {
+          throw new Error('Missing required user or profile ID');
         }
+        
+        const participantDetails = {
+          [user.uid]: {
+            userName: user?.displayName || '',
+            profilePic: user?.photoURL || '',
+            email: user?.email || ''
+          },
+          [profileId]: {
+            userName: (profileData as ProfileUser)?.userName || '',
+            profilePic: (profileData as ProfileUser)?.profilePic || '',
+            email: (profileData as ProfileUser)?.email || ''
+          }
+        };
+        
+        await setDoc(conversationRef, {
+          id: profileId,
+          type: 'private',
+          participants: [user.uid, profileId],
+          participantDetails,
+          bio: editingBio.trim(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
       }
+
+      setProfileData(prev => prev ? { ...prev, bio: editingBio.trim() } : null);
+      setRefreshDataKey((prev) => prev + 1);
+      setIsEditingBio(false);
+      
+      toast({
+        title: 'Success',
+        description: 'Bio updated successfully',
+      });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: profileType === 'user' ? 'Failed to update bio' : 'Failed to update group description',
+        description: error instanceof Error ? error.message : 'Failed to update bio',
       });
     }
   };
@@ -366,76 +344,78 @@ export function ProfileSidebar({
   const internalFetchProfileData = async () => {
     setLoading(true);
     setError(null);
-    // Initial population from initialData if available for users
+
     if (profileType === 'user' && initialData && profileId) {
       setProfileData({
-        // Explicitly map to ProfileUser, ensure all required fields are present or defaulted
-        _id: profileId, // Assuming profileId is the _id for users from initialData context
+        _id: profileId,
         id: profileId,
         userName: initialData.userName || '',
-        name: initialData.userName || '', // Often name and userName are similar or name is preferred
+        name: initialData.userName || '',
         email: initialData.email || '',
         profilePic: initialData.profilePic,
-        displayName: initialData.userName || '', // Ensure displayName is set
-        // Initialize other fields as undefined or default if not in initialData
+        displayName: initialData.userName || '',
         bio: undefined,
         status: undefined,
         lastSeen: undefined,
       });
-      // We might still want to set loading to true if an API call will follow to supplement data
-      // setLoading(false); // Or set to false if this is considered enough initial data
     } else {
       setProfileData(null);
     }
 
     try {
       if (profileType === 'user' && profileId) {
-        // Fetch user profile data
         const response = await axiosInstance.get(`/freelancer/${profileId}`);
+        let userData: ProfileUser;
         if (response.data && response.data.data) {
-          const apiData = response.data.data as ProfileUser;
-          setProfileData({
-            ...apiData, // API data as base
-            // Prioritize initialData for specific fields if initialData was provided
-            userName: initialData?.userName || apiData.userName,
-            email: initialData?.email || apiData.email,
-            profilePic: initialData?.profilePic || apiData.profilePic,
-            displayName:
-              initialData?.userName || apiData.userName || apiData.displayName,
-            // Ensure critical identifiers like id are correctly maintained
+          userData = response.data.data as ProfileUser;
+        } else if (initialData) {
+          userData = {
+            _id: profileId,
             id: profileId,
-            _id: apiData._id || profileId, // Prefer API's _id if available, else fallback to profileId
-            // name might need specific handling depending on your data structure
-            name: initialData?.userName || apiData.name || apiData.userName,
-          });
+            userName: initialData.userName || '',
+            name: initialData.userName || '',
+            email: initialData.email || '',
+            profilePic: initialData.profilePic,
+            displayName: initialData.userName || '',
+            bio: undefined,
+            status: undefined,
+            lastSeen: undefined,
+          };
         } else {
-          // If API call fails or returns no data, but we had initialData, retain it.
-          // This part depends on whether an error should clear initialData or not.
-          // For now, if initialData was set and API fails, it remains. If no initialData, then error.
-          if (!initialData) {
-            throw new Error('User not found and no initial data provided');
-          }
+          throw new Error('User not found and no initial data provided');
         }
+
+        const conversationRef = doc(db, 'conversations', profileId);
+        const conversationDoc = await getDoc(conversationRef);
+        let bio = userData.bio || '';
+        if (conversationDoc.exists()) {
+          const conversationData = conversationDoc.data();
+          bio = conversationData.bio || '';
+        }
+
+        setProfileData({
+          ...userData,
+          userName: initialData?.userName || userData.userName,
+          email: initialData?.email || userData.email,
+          profilePic: initialData?.profilePic || userData.profilePic,
+          displayName: initialData?.userName || userData.userName || userData.displayName,
+          id: profileId,
+          _id: userData._id || profileId,
+          name: initialData?.userName || userData.name || userData.userName,
+          bio,
+        });
       } else if (profileType === 'group' && profileId) {
-        // Fetch group data from Firestore
-        const conversationDoc = await getDoc(
-          doc(db, 'conversations', profileId),
-        );
+        const conversationDoc = await getDoc(doc(db, 'conversations', profileId));
         if (conversationDoc.exists()) {
           const groupData = conversationDoc.data();
-          const members = Object.entries(
-            groupData.participantDetails || {},
-          ).map(([id, details]: [string, any]) => ({
-            id,
-            userName: details.userName || 'Unknown Member',
-            profilePic: details.profilePic,
-            status: (Math.random() > 0.5 ? 'online' : 'offline') as
-              | 'online'
-              | 'offline', // Type assertion to fix the error
-          }));
-
-          // Use the avatar from initialData if available, otherwise fall back to groupData.avatar
-          const avatarUrl = initialData?.profilePic || groupData.avatar;
+          const members = Object.entries(groupData.participantDetails || {}).map(
+            ([id, details]: [string, any]) => ({
+              id,
+              userName: details.userName || 'Unknown Member',
+              profilePic: details.profilePic,
+              status: (Math.random() > 0.5 ? 'online' : 'offline') as 'online' | 'offline',
+            })
+          );
 
           setProfileData({
             _id: conversationDoc.id,
@@ -443,7 +423,7 @@ export function ProfileSidebar({
             groupName: groupData.groupName || 'Unnamed Group',
             displayName: groupData.groupName || 'Unnamed Group',
             description: groupData.description || '',
-            avatar: avatarUrl, // Set the avatar URL here
+            avatar: initialData?.profilePic || groupData.avatar,
             createdAt: groupData.createdAt || new Date().toISOString(),
             members,
             admins: groupData.admins || [],
@@ -466,7 +446,6 @@ export function ProfileSidebar({
     setSharedMedia([]);
 
     try {
-      // Get messages from Firestore
       const messagesQuery = query(
         collection(db, `conversations/${conversationId}/messages`),
         orderBy('timestamp', 'desc'),
@@ -477,10 +456,7 @@ export function ProfileSidebar({
 
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
-        if (
-          Array.isArray(message.attachments) &&
-          message.attachments.length > 0
-        ) {
+        if (Array.isArray(message.attachments) && message.attachments.length > 0) {
           for (const attachment of message.attachments) {
             if (attachment.url && attachment.type && attachment.fileName) {
               extractedMedia.push({
@@ -512,7 +488,6 @@ export function ProfileSidebar({
     setSharedFiles([]);
 
     try {
-      // Get messages from Firestore
       const messagesQuery = query(
         collection(db, `conversations/${conversationId}/messages`),
         orderBy('timestamp', 'desc'),
@@ -523,10 +498,7 @@ export function ProfileSidebar({
 
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
-        if (
-          Array.isArray(message.attachments) &&
-          message.attachments.length > 0
-        ) {
+        if (Array.isArray(message.attachments) && message.attachments.length > 0) {
           for (const attachment of message.attachments) {
             if (attachment.url && attachment.type && attachment.fileName) {
               extractedFiles.push({
@@ -555,51 +527,76 @@ export function ProfileSidebar({
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const executeFetches = async () => {
       if (isOpen && profileId && profileType) {
-        // Initial resets for this effect run
-        setProfileData(null);
-        setSharedMedia([]);
-        setLoading(true); // For profile data loading
-        setIsLoadingMedia(true); // For media data loading
+        if (isMounted) {
+          setProfileData(null);
+          setSharedMedia([]);
+          setLoading(true);
+          setIsLoadingMedia(true);
+          setIsLoadingFiles(true);
+        }
 
-        // Run fetches in parallel
-        await Promise.allSettled([
-          internalFetchProfileData(), // This function will set its own setLoading(false)
-          fetchSharedMedia(profileId), // This function will set its own setLoadingMedia(false)
-          fetchSharedFiles(profileId), // This function will set its own setLoadingFiles(false)
-        ]);
-
-        // If one of the above functions didn't manage its loading state properly in case of an early return
-        // or error, ensure they are false here. However, they should manage their own state.
-        // For example, if internalFetchProfileData returns early without error but also without setting setLoading(false)
-        if (loading) {
-          setLoading(false);
-        } // Only if still true
-        if (isLoadingMedia) {
-          setIsLoadingMedia(false);
-        } // Only if still true
-        if (isLoadingFiles) {
-          setIsLoadingFiles(false);
-        } // Only if still true
+        try {
+          await Promise.allSettled([
+            internalFetchProfileData(),
+            fetchSharedMedia(profileId),
+            fetchSharedFiles(profileId),
+          ]);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+            setIsLoadingMedia(false);
+            setIsLoadingFiles(false);
+          }
+        }
       } else {
-        // Clear data and stop loading if sidebar is closed or essential props are missing
-        setProfileData(null);
-        setSharedMedia([]);
-        setLoading(false);
-        setIsLoadingMedia(false);
-        setIsLoadingFiles(false);
+        if (isMounted) {
+          setProfileData(null);
+          setSharedMedia([]);
+          setLoading(false);
+          setIsLoadingMedia(false);
+          setIsLoadingFiles(false);
+        }
       }
     };
 
     executeFetches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, profileId, profileType, refreshDataKey, initialData]); // Added initialData to dependency array
 
-  const handleAddMembersToGroup = async (
-    selectedUsers: CombinedUser[],
-    groupId: string,
-  ) => {
+    // Set up real-time listener for group updates
+    let unsubscribe = () => {};
+    if (isOpen && profileId && profileType === 'group') {
+      const groupRef = doc(db, 'conversations', profileId);
+      unsubscribe = onSnapshot(groupRef, (doc) => {
+        if (doc.exists() && isMounted) {
+          const groupData = doc.data() as Partial<ProfileGroup>;
+          setProfileData(prev => {
+            if (!prev || !('groupName' in prev)) return prev;
+            
+            return {
+              ...prev,
+              description: groupData.description || prev.description || '',
+              groupName: groupData.groupName || (prev as ProfileGroup).groupName,
+              updatedAt: groupData.updatedAt || (prev as ProfileGroup).updatedAt
+            };
+          });
+        }
+      }, (error) => {
+        console.error('Error listening to group updates:', error);
+      });
+    }
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [isOpen, profileId, profileType, refreshDataKey, initialData]);
+
+  const handleAddMembersToGroup = async (selectedUsers: CombinedUser[], groupId: string) => {
     if (!selectedUsers || selectedUsers.length === 0) {
       toast({
         variant: 'destructive',
@@ -625,15 +622,14 @@ export function ProfileSidebar({
       const updates: any = {};
       const memberUpdates: string[] = [];
 
-      // Prepare participant details updates
       selectedUsers.forEach((user) => {
-        if (!user.id) return; // Skip if no user ID
+        if (!user.id) return;
 
         updates[`participantDetails.${user.id}`] = {
           userName: user.displayName || 'User',
           email: user.email || '',
-          profilePic: user.profilePic || null, // Ensure profilePic is never undefined
-          userType: user.userType || 'user', // Default to 'user' if not specified
+          profilePic: user.profilePic || null,
+          userType: user.userType || 'user',
         };
 
         memberUpdates.push(user.id);
@@ -643,20 +639,12 @@ export function ProfileSidebar({
         throw new Error('No valid users to add');
       }
 
-      // Add members to the group
       updates.members = arrayUnion(...memberUpdates);
       updates.updatedAt = new Date().toISOString();
 
-      // Update the document with all changes
       batch.update(groupDocRef, updates);
       await batch.commit();
 
-      // Refresh the profile data to show the new members
-      if (profileData && 'refreshData' in profileData) {
-        await (profileData as any).refreshData();
-      }
-
-      // Update local state to reflect the changes
       setRefreshDataKey((prev) => prev + 1);
 
       toast({
@@ -670,16 +658,11 @@ export function ProfileSidebar({
         title: 'Error',
         description: 'Failed to add members. Please try again.',
       });
-      throw error; // Re-throw to allow caller to handle if needed
+      throw error;
     }
   };
 
-  const handleSaveGroupInfo = async (
-    newName: string,
-    newAvatarUrl: string,
-    groupId: string,
-  ) => {
-    // ... (existing implementation)
+  const handleSaveGroupInfo = async (newName: string, newAvatarUrl: string, groupId: string) => {
     if (!newName.trim()) {
       toast({
         variant: 'destructive',
@@ -710,16 +693,9 @@ export function ProfileSidebar({
       updateData.name = newName.trim();
       updateData.project_name = newName.trim();
     }
-    if (
-      newAvatarUrl !== undefined &&
-      newAvatarUrl.trim() !== (currentGroupData?.avatar || '')
-    ) {
+    if (newAvatarUrl !== undefined && newAvatarUrl.trim() !== (currentGroupData?.avatar || '')) {
       updateData.avatar = newAvatarUrl.trim();
-    } else if (
-      newAvatarUrl !== undefined &&
-      newAvatarUrl.trim() === '' &&
-      currentGroupData?.avatar
-    ) {
+    } else if (newAvatarUrl !== undefined && newAvatarUrl.trim() === '' && currentGroupData?.avatar) {
       updateData.avatar = '';
     }
     if (Object.keys(updateData).length === 0) {
@@ -744,10 +720,7 @@ export function ProfileSidebar({
     }
   };
 
-  const handleGenerateInviteLink = async (
-    groupId: string,
-  ): Promise<string | null> => {
-    // ... (existing implementation)
+  const handleGenerateInviteLink = async (groupId: string): Promise<string | null> => {
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -760,7 +733,6 @@ export function ProfileSidebar({
     const newInviteLink = `https://your-app.com/join/${groupId}?inviteCode=${randomComponent}`;
     const groupDocRef = doc(db, 'conversations', groupId);
     try {
-      // Check if the document exists first
       const groupDoc = await getDoc(groupDocRef);
       if (!groupDoc.exists()) {
         throw new Error('Group not found');
@@ -788,7 +760,6 @@ export function ProfileSidebar({
   };
 
   const handleConfirmRemoveMember = async (memberIdToRemove: string) => {
-    // ... (existing implementation)
     if (!profileId) {
       toast({
         variant: 'destructive',
@@ -807,7 +778,6 @@ export function ProfileSidebar({
     }
     const groupDocRef = doc(db, 'conversations', profileId);
     try {
-      // Check if the document exists first
       const groupDoc = await getDoc(groupDocRef);
       if (!groupDoc.exists()) {
         throw new Error('Group not found');
@@ -833,7 +803,6 @@ export function ProfileSidebar({
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    // ... (existing implementation)
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -896,70 +865,227 @@ export function ProfileSidebar({
     }
   }
 
-// Bio section component
-const UserBio = ({ profileData, isEditingBio, editingBio, onEditBio, onSaveBio, onCancelEdit }: {
-  profileData: ProfileUser | ProfileGroup | null;
-  isEditingBio: boolean;
-  editingBio: string;
-  onEditBio: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onSaveBio: () => void;
-  onCancelEdit: () => void;
-}) => {
-  const bioText = profileData && 'bio' in profileData ? profileData.bio || '' : '';
-  const displayText = isEditingBio ? editingBio : bioText;
+  const GroupDescription = React.memo(({ 
+    profileData, 
+    isEditing, 
+    description, 
+    onEdit, 
+    onSave, 
+    onCancel,
+    onStartEditing
+  }: {
+    profileData: ProfileGroup | null;
+    isEditing: boolean;
+    description: string;
+    onEdit: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+    onSave: () => void;
+    onCancel: () => void;
+    onStartEditing: () => void;
+  }) => {
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [localDescription, setLocalDescription] = React.useState(description);
 
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">Bio</span>
-        {!isEditingBio && (
-          <button
-            onClick={() => onCancelEdit()}
-            className="p-1 hover:bg-gray-100 rounded-full"
+    // Sync local state with prop when it changes
+    React.useEffect(() => {
+      setLocalDescription(description);
+    }, [description]);
+
+    // Focus and select text when entering edit mode
+    React.useEffect(() => {
+      if (isEditing && textareaRef.current) {
+        textareaRef.current.focus();
+        const length = localDescription.length;
+        textareaRef.current.setSelectionRange(length, length);
+      }
+    }, [isEditing, localDescription.length]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setLocalDescription(e.target.value);
+      onEdit(e);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        onSave();
+      }
+    };
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Description</span>
+          {!isEditing && (
+            <button
+              onClick={onStartEditing}
+              className="p-1 hover:bg-gray-100 rounded-full"
+              aria-label="Edit description"
+            >
+              <Pencil className="w-3 h-3 text-gray-500" />
+            </button>
+          )}
+        </div>
+
+        {isEditing ? (
+          <div className="space-y-2">
+            <textarea
+              ref={textareaRef}
+              className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y focus:outline-none focus:border-blue-500"
+              value={localDescription}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Tell others about this group..."
+              rows={3}
+              onFocus={(e) => e.stopPropagation()}
+            />
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCancel}
+                type="button"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={onSave}
+                disabled={!localDescription.trim()}
+                type="button"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div 
+            className="relative flex items-start justify-between cursor-text"
+            onClick={onStartEditing}
           >
-            <Pencil className="w-3 h-3 text-gray-500" />
-          </button>
+            <p className="text-sm whitespace-pre-wrap mt-1 flex-1">
+              {profileData?.description || "No description available. Click to add a description."}
+            </p>
+          </div>
         )}
       </div>
+    );
+  });
+  GroupDescription.displayName = 'GroupDescription';
 
-      {isEditingBio ? (
-        <div className="space-y-2">
-          <textarea
-            className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px]"
-            value={editingBio}
-            onChange={onEditBio}
-            placeholder="Tell others about yourself..."
-          />
-          <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCancelEdit}
+  const UserBio = React.memo(({ 
+    profileData, 
+    isEditingBio, 
+    editingBio, 
+    onEditBio, 
+    onSaveBio, 
+    onCancelEdit,
+    onStartEditing
+  }: {
+    profileData: ProfileUser | null;
+    isEditingBio: boolean;
+    editingBio: string;
+    onEditBio: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+    onSaveBio: () => void;
+    onCancelEdit: () => void;
+    onStartEditing: () => void;
+  }) => {
+    const bioText = profileData?.bio || '';
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [localBio, setLocalBio] = React.useState(editingBio);
+
+    // Sync local state with prop when it changes
+    React.useEffect(() => {
+      setLocalBio(editingBio);
+    }, [editingBio]);
+
+    // Focus and select text when entering edit mode
+    React.useEffect(() => {
+      if (isEditingBio && textareaRef.current) {
+        textareaRef.current.focus();
+        // Set cursor to end of text
+        const length = localBio.length;
+        textareaRef.current.setSelectionRange(length, length);
+      }
+    }, [isEditingBio, localBio.length]);
+
+    const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setLocalBio(e.target.value);
+      onEditBio(e);
+    };
+
+    const handleSave = () => {
+      onSaveBio();
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Bio</span>
+          {!isEditingBio && (
+            <button
+              onClick={onStartEditing}
+              className="p-1 hover:bg-gray-100 rounded-full"
+              aria-label="Edit bio"
             >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={onSaveBio}
-              disabled={!editingBio.trim()}
-            >
-              Save
-            </Button>
+              <Pencil className="w-3 h-3 text-gray-500" />
+            </button>
+          )}
+        </div>
+
+        {isEditingBio ? (
+          <div className="space-y-2">
+            <textarea
+              ref={textareaRef}
+              className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y focus:outline-none focus:border-blue-500"
+              value={localBio}
+              onChange={handleBioChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Tell others about yourself..."
+              rows={3}
+              onFocus={(e) => e.stopPropagation()}
+            />
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCancelEdit}
+                type="button"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={!localBio.trim()}
+                type="button"
+              >
+                Save
+              </Button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div 
-          onClick={() => setIsEditingBio(true)}
-          className="cursor-pointer"
-        >
-          <p className="text-sm whitespace-pre-wrap mt-1">
-            {displayText || "No bio available. Click to add a bio."}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-};
+        ) : (
+          <div 
+            className="relative flex items-start justify-between cursor-text"
+            onClick={onStartEditing}
+          >
+            <p className="text-sm whitespace-pre-wrap mt-1 flex-1">
+              {bioText || "No bio available. Click to add a bio."}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  });
+  
+  // Add display name for better debugging
+  UserBio.displayName = 'UserBio';
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -1064,7 +1190,7 @@ const UserBio = ({ profileData, isEditingBio, editingBio, onEditBio, onSaveBio, 
                             <div className="flex space-x-2">
                               <Button
                                 size="sm"
-                                onClick={handleUpdateBio}
+                                onClick={handleSaveBio}
                                 disabled={!editingDescription.trim()}
                               >
                                 Save
@@ -1118,72 +1244,70 @@ const UserBio = ({ profileData, isEditingBio, editingBio, onEditBio, onSaveBio, 
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <div className="relative group">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">About</span>
-                          </div>
-                          {isEditingBio ? (
-                            <div className="space-y-2 mt-1">
-                              <textarea
-                                value={editingBio}
-                                onChange={(e) => setEditingBio(e.target.value)}
-                                className="w-full p-2 border rounded-md text-sm min-h-[80px]"
-                                placeholder="Tell us about yourself..."
-                                rows={3}
-                              />
-                              <div className="flex space-x-2">
-                                <Button
-                                  size="sm"
-                                  onClick={handleUpdateBio}
-                                  disabled={!editingBio.trim()}
-                                >
-                                  Save
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
+                        {profileType === 'user' ? (
+                          <UserBio
+                            profileData={profileData as ProfileUser}
+                            isEditingBio={isEditingBio}
+                            editingBio={editingBio}
+                            onEditBio={handleEditBio}
+                            onSaveBio={handleSaveBio}
+                            onCancelEdit={handleCancelEditBio}
+                            onStartEditing={() => setIsEditingBio(true)}
+                          />
+                        ) : profileType === 'group' ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Description</span>
+                              {!isEditingDescription && (
+                                <button
                                   onClick={() => {
-                                    setIsEditingBio(false);
-                                    setEditingBio(('bio' in profileData ? profileData.bio : '') || '');
+                                    setEditingDescription((profileData as ProfileGroup).description || '');
+                                    setIsEditingDescription(true);
                                   }}
+                                  className="p-1 hover:bg-gray-100 rounded-full"
+                                  aria-label="Edit description"
                                 >
-                                  Cancel
-                                </Button>
-                              </div>
+                                  <Pencil className="w-3 h-3 text-gray-500" />
+                                </button>
+                              )}
                             </div>
-                          ) : (
-                            <div 
-                              className="relative cursor-pointer hover:bg-accent/50 rounded p-1 -m-1 transition-colors duration-150"
-                              onClick={() => {
-                                setEditingBio(('bio' in profileData ? profileData.bio : '') || '');
-                                setIsEditingBio(true);
-                              }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="flex-1">
-                                  {'bio' in profileData && profileData.bio ? (
-                                    <p className="text-sm whitespace-pre-wrap">{profileData.bio}</p>
-                                  ) : (
-                                    <span className="text-sm text-muted-foreground italic">
-                                      {(() => {
-                                        const type = profileType as 'user' | 'group' | null;
-                                        switch (type) {
-                                          case 'group':
-                                            return 'No group description available. Click to add one.';
-                                          case 'user':
-                                            return 'No bio available. Click to add one.';
-                                          default:
-                                            return 'No information available.';
-                                        }
-                                      })()}
-                                    </span>
-                                  )}
-                                </span>
-                                <Pencil className="w-3 h-3 text-muted-foreground opacity-70 hover:opacity-100 transition-opacity ml-2" />
+                            {isEditingDescription ? (
+                              <div className="space-y-2">
+                                <textarea
+                                  className="w-full p-2 border rounded text-sm min-h-[80px]"
+                                  value={editingDescription}
+                                  onChange={(e) => setEditingDescription(e.target.value)}
+                                  placeholder="Enter group description..."
+                                />
+                                <div className="flex justify-end space-x-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={async (e) => {
+                                      e.preventDefault();
+                                      await handleUpdateDescription();
+                                    }}
+                                  >
+                                    Save
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setIsEditingDescription(false);
+                                      setEditingDescription((profileData as ProfileGroup).description || '');
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
+                            ) : (
+                              <p className="text-sm">
+                                {(profileData as ProfileGroup).description || 'No description provided'}
+                              </p>
+                            )}
+                          </div>
+                        ) : null}
                         <Separator />
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
@@ -1347,7 +1471,7 @@ const UserBio = ({ profileData, isEditingBio, editingBio, onEditBio, onSaveBio, 
                                         className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
                                         onClick={(e) => {
                                           e.stopPropagation();
-setConfirmDialogProps({
+                                          setConfirmDialogProps({
                                             title: 'Confirm Removal',
                                             description: `Are you sure you want to remove ${member.userName} from the group?`,
                                             onConfirm: async () => {
@@ -1450,13 +1574,11 @@ setConfirmDialogProps({
                                     profileId &&
                                     user?.uid
                                   ) {
-                                    // Remove user from the group
                                     const groupRef = doc(
                                       db,
                                       'conversations',
                                       profileId,
                                     );
-                                    // Check if the document exists first
                                     const groupDoc = await getDoc(groupRef);
                                     if (!groupDoc.exists()) {
                                       throw new Error('Group not found');
@@ -1470,7 +1592,6 @@ setConfirmDialogProps({
                                       updatedAt: new Date().toISOString(),
                                     });
 
-                                    // Close the profile sidebar
                                     onClose();
 
                                     toast({
@@ -1590,15 +1711,12 @@ setConfirmDialogProps({
             isOpen={isConfirmDialogOpen}
             onClose={() => {
               setIsConfirmDialogOpen(false);
-              // Call onCancel if it exists in confirmDialogProps
               if (confirmDialogProps.onCancel) {
                 confirmDialogProps.onCancel();
               }
             }}
             onConfirm={() => {
-              // Call the onConfirm from confirmDialogProps
               confirmDialogProps.onConfirm();
-              // Close the dialog after confirmation
               setIsConfirmDialogOpen(false);
             }}
             title={confirmDialogProps.title}
