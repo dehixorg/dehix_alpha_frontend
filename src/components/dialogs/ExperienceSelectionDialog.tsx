@@ -96,7 +96,6 @@ export default function ExperienceSelectionDialog({
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
-
   const handleAddExperiences = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -117,13 +116,13 @@ export default function ExperienceSelectionDialog({
 
     setIsAdding(true);
     try {
-      // ✅ Fetch current profile experiences first
+      // Fetch current profile experiences
       const profileRes = await axiosInstance.get(
         `/freelancer/profile/${currentProfileId}`,
       );
       const currentExperiences = profileRes.data?.data?.experiences || [];
 
-      // ✅ Combine current + new selected experiences
+      // Combine current + new selected experiences without duplicates
       const updatedExperiences = [
         ...currentExperiences,
         ...experiencesToAdd.filter(
@@ -131,7 +130,7 @@ export default function ExperienceSelectionDialog({
         ),
       ];
 
-      // ✅ Send combined array to backend
+      // PUT combined array to backend
       await axiosInstance.put(`/freelancer/profile/${currentProfileId}`, {
         experiences: updatedExperiences.map((e) => ({
           _id: e._id,
@@ -144,26 +143,20 @@ export default function ExperienceSelectionDialog({
         })),
       });
 
+      // ✅ Only one toast for success
       notifySuccess(
-        `${experiencesToAdd.length} experience(s) added to profile successfully!`,
+        `${experiencesToAdd.length} experience(s) added to profile.`,
         'Success',
       );
 
-      const selectedObjects = experiences.filter((exp) =>
-        selectedExperiences.includes(exp._id),
-      );
+      // Call onSuccess callback with added experiences
+      onSuccess?.(experiencesToAdd);
 
-      notifySuccess(
-        `${selectedObjects.length} experience(s) selected. Save the profile to persist changes.`,
-        'Selected',
-      );
-
-      onSuccess?.(selectedObjects);
-
+      // Clear selection and close dialog
       setSelectedExperiences([]);
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error preparing selected experiences:', error);
+      console.error('Error adding experiences:', error);
       notifyError('Could not process selected experiences', 'Error');
     } finally {
       setIsAdding(false);

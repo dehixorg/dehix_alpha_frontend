@@ -1519,29 +1519,6 @@ export default function ProfileDetailPage() {
         }}
       />
 
-      <ExperienceSelectionDialog
-        open={showExperienceDialog}
-        onOpenChange={setShowExperienceDialog}
-        freelancerId={user.uid}
-        currentProfileId={profileId}
-        onSuccess={(selectedExperiences: any[]) => {
-          // Merge with existing full objects and stage until Save
-          const existing = Array.isArray(editingProfileData.experiences)
-            ? editingProfileData.experiences
-            : [];
-          const byId = new Map<string, any>();
-          for (const e of existing) byId.set(String(e._id), e);
-          for (const e of selectedExperiences) byId.set(String(e._id), e);
-          const merged = Array.from(byId.values());
-
-          setPendingExperiences(merged);
-          setEditingProfileData((prev: any) => ({
-            ...prev,
-            experiences: merged,
-          }));
-        }}
-      />
-
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
