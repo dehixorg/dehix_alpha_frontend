@@ -1,6 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+
+import { useRouter, useParams } from 'next/navigation';
 import { BookOpen, Briefcase, User, Package } from 'lucide-react';
 
 import BusinessVerification from '@/components/freelancer/oracleDashboard/BusinessVerification';
@@ -17,32 +17,25 @@ import Header from '@/components/header/header';
 
 export default function OracleDashboardPage() {
   const router = useRouter();
-  const pathname = usePathname();
+  const params = useParams();
 
-  // Get the last segment of the URL for the active tab
-  const lastSegment = pathname.split('/').pop() || '';
+  // Determine active tab from dynamic route params
+  const slugParam = (params as any)?.slug;
+  const lastSegment = Array.isArray(slugParam)
+    ? slugParam[slugParam.length - 1] || ''
+    : slugParam ?? '';
   const validTabs = ['business', 'experience', 'project', 'education'];
   const currentTabFromURL = validTabs.includes(lastSegment)
     ? lastSegment
     : 'business';
 
-  const [activeTab, setActiveTab] = useState(currentTabFromURL);
-
-  // Sync state if user navigates directly via URL
-  useEffect(() => {
-    if (currentTabFromURL !== activeTab) {
-      setActiveTab(currentTabFromURL);
-    }
-  }, [currentTabFromURL, activeTab]);
-
   // Update URL when tab changes
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
     router.push(`/freelancer/oracleDashboard/${tab}`);
   };
 
   return (
-    <div className="flex min-h-screen bg-muted/40 w-full flex-col pb-10">
+    <div className="flex min-h-screen w-full flex-col pb-10">
       <SidebarMenu
         menuItemsTop={freelancerMenuItemsTop}
         menuItemsBottom={freelancerMenuItemsBottom}
@@ -57,14 +50,14 @@ export default function OracleDashboardPage() {
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             {
               label: 'Oracle Dashboard',
-              link: '/freelancer/oracleDashboard/business',
+              link: `/freelancer/oracleDashboard/${currentTabFromURL}`,
             },
           ]}
         />
         <div className="flex-1 px-4 py-6">
           <div className="mx-auto w-full max-w-7xl">
             <Tabs
-              value={activeTab}
+              value={currentTabFromURL}
               onValueChange={handleTabChange}
               className="w-full"
             >

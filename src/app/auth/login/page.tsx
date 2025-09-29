@@ -8,7 +8,7 @@ import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,11 +48,7 @@ export default function Login() {
       return status;
     } catch (error) {
       console.error('KYC Fetch Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch KYC data. Please try again.',
-      });
+      notifyError('Failed to fetch KYC data. Please try again.');
       return null;
     }
   };
@@ -96,26 +92,18 @@ export default function Login() {
           window.location.href = `/dashboard/${claims.type}`;
           // Show toast on the next tick to ensure redirect happens
           setTimeout(() => {
-            toast({
-              title: 'Login Successful',
-              description: 'You have successfully logged in.',
-            });
+            notifySuccess(
+              'You have successfully logged in.',
+              'Login Successful',
+            );
           }, 0);
         } catch (error: any) {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Invalid Email or Password. Please try again.',
-          });
+          notifyError('Invalid Email or Password. Please try again.');
           console.error(error.message);
         }
       }
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Invalid Email or Password. Please try again.',
-      });
+      notifyError('Invalid Email or Password. Please try again.');
       console.error(error.message);
     } finally {
       setIsEmailLoginLoading(false); // Ensures isLoading resets after API call completion
@@ -132,16 +120,12 @@ export default function Login() {
       dispatch(setUser({ ...user, type: claims.type }));
       router.replace(`/dashboard/${claims.type}`);
 
-      toast({
-        title: 'Login Successful',
-        description: 'You have successfully logged in with Google.',
-      }); // Success toast
+      notifySuccess(
+        'You have successfully logged in with Google.',
+        'Login Successful',
+      );
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to login with Google. Please try again.',
-      }); // Error toast
+      notifyError('Failed to login with Google. Please try again.');
       console.error(error.message);
     } finally {
       setIsGoogleLoginLoading(false);

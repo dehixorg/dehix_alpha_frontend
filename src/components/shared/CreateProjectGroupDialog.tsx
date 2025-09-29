@@ -21,7 +21,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import { db } from '@/config/firebaseConfig';
 
@@ -89,29 +89,20 @@ export function CreateProjectGroupDialog({
 
   const handleCreateGroup = async () => {
     if (groupName.trim() === '') {
-      toast({
-        variant: 'destructive',
-        title: 'Group Name Required',
-        description: 'Please enter a group name.',
-      });
+      notifyError('Please enter a group name.', 'Group Name Required');
       return;
     }
 
     if (selectedGroupMembers.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Members Required',
-        description: 'Please select at least one freelancer for the group.',
-      });
+      notifyError(
+        'Please select at least one freelancer for the group.',
+        'Members Required',
+      );
       return;
     }
 
     if (!user?.uid) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'You must be logged in to create a group.',
-      });
+      notifyError('You must be logged in to create a group.', 'Error');
       return;
     }
 
@@ -163,28 +154,19 @@ export function CreateProjectGroupDialog({
       // Actually create the group in Firestore
       await addDoc(collection(db, 'conversations'), newGroupData);
 
-      toast({
-        title: 'Success',
-        description: `Group "${groupName}" created successfully!`,
-      });
+      notifySuccess(`Group "${groupName}" created successfully!`, 'Success');
 
       // Reset form
       setGroupName('');
       setGroupDescription('');
       setSelectedGroupMembers([]);
-      setUserSearchTerm('');
-
       onGroupCreated();
       onClose();
     } catch (error: any) {
-      console.error('Error creating group:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          error?.message || 'Failed to create group. Please try again.',
-      });
-      // Don't call onGroupCreated() or onClose() if there was an error
+      notifyError(
+        error?.message || 'Failed to create group. Please try again.',
+        'Error',
+      );
     } finally {
       setIsCreating(false);
     }

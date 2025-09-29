@@ -28,7 +28,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -117,11 +117,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
         setCompletionFields(fields);
       } catch (error) {
         console.error('Error fetching user profile:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
       }
     };
 
@@ -209,10 +205,10 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
 
   const completionColor =
     completionPercentage < 30
-      ? 'bg-red-500'
+      ? '[&>*]:bg-red-500'
       : completionPercentage < 70
-        ? 'bg-yellow-500'
-        : 'bg-green-500';
+        ? '[&>*]:bg-yellow-500'
+        : '[&>*]:bg-green-500';
 
   return (
     <Card className="rounded-none rounded-b-lg w-full overflow-hidden border-0 shadow-sm bg-gradient-to-br from-card to-card/70">
@@ -265,7 +261,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
             </div>
             <Progress
               value={completionPercentage}
-              className={cn('h-1', `[&>*]:${completionColor}`)}
+              className={cn('h-1', completionColor)}
             />
           </div>
 

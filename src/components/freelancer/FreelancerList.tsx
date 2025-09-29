@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Users, Plus, Search, ChevronDown } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
+import { Badge } from '../ui/badge';
+
 import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   DropdownMenu,
@@ -15,10 +15,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import FreelancerListItem from '@/components/freelancer/FreelancerListItem';
 import { CreateProjectTeamGroupDialog } from '@/components/shared/CreateProjectTeamGroupDialog';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 
@@ -79,11 +80,10 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
       onGroupCreated();
     }
 
-    toast({
-      title: 'Group Created',
-      description:
-        'Your team group has been created and will appear in the list.',
-    });
+    notifySuccess(
+      'Your team group has been created and will appear in the list.',
+      'Group Created',
+    );
   }, [onGroupCreated]);
 
   // Fetch freelancers with accepted bids for this project
@@ -195,11 +195,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
       setFreelancers(acceptedFreelancers);
     } catch (error) {
       console.error('Error fetching freelancers:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch freelancers. Please try again.',
-      });
+      notifyError('Failed to fetch freelancers. Please try again.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -273,10 +269,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
       );
     } else {
       // Default behavior - could integrate with existing chat system
-      toast({
-        title: 'Chat',
-        description: `Opening chat with ${freelancer.userName}...`,
-      });
+      notifySuccess(`Opening chat with ${freelancer.userName}...`, 'Chat');
     }
   };
 
@@ -287,10 +280,10 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
       onChatClick(group.id, group.project_name);
     } else {
       // Default behavior for group click
-      toast({
-        title: 'Group Chat',
-        description: `Opening group chat: ${group.project_name}...`,
-      });
+      notifySuccess(
+        `Opening group chat: ${group.project_name}...`,
+        'Group Chat',
+      );
     }
   };
 
@@ -331,8 +324,13 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
   }, [fetchFreelancers, fetchGroups, user?.uid, isBusinessUser, projectId]);
 
   return (
-    <Card className={cn('w-full h-full flex flex-col', className)}>
-      <CardHeader className="pb-3 flex-shrink-0">
+    <Card
+      className={cn(
+        'w-full h-full flex flex-col rounded-xl border border-border/60 bg-[hsl(var(--card))] shadow-lg',
+        className,
+      )}
+    >
+      <CardHeader className="flex-shrink-0 sticky top-0 z-10 bg-muted-foreground/20 dark:bg-muted/20 border-b relative">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">Team Members</CardTitle>
           {isBusinessUser && (
@@ -407,7 +405,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-3 pr-2">
+            <div className="space-y-3">
               {/* Groups Section */}
               {groups.length > 0 && (
                 <>
@@ -454,51 +452,16 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
               {/* Freelancers Section */}
               {filteredFreelancers.length > 0 && (
                 <>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Freelancers ({filteredFreelancers.length})
+                  <div className="text-sm font-medium text-muted-foreground mt-4">
+                    Freelancers <Badge>{filteredFreelancers.length}</Badge>
                   </div>
                   <div className="space-y-2">
                     {filteredFreelancers.map((freelancer) => (
-                      <div
+                      <FreelancerListItem
                         key={freelancer._id}
-                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <Avatar className="h-10 w-10 flex-shrink-0">
-                            <AvatarImage
-                              src={freelancer.profilePic}
-                              alt={freelancer.userName}
-                            />
-                            <AvatarFallback>
-                              {freelancer.firstName?.[0]?.toUpperCase() ||
-                                freelancer.userName[0]?.toUpperCase() ||
-                                'U'}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              {freelancer.firstName && freelancer.lastName
-                                ? `${freelancer.firstName} ${freelancer.lastName}`
-                                : freelancer.userName}
-                            </p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Badge variant="secondary" className="text-xs">
-                                {freelancer.bid_status}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleChatClick(freelancer)}
-                          className="ml-2 flex-shrink-0"
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                      </div>
+                        freelancer={freelancer}
+                        onChatClick={() => handleChatClick(freelancer)}
+                      />
                     ))}
                   </div>
                 </>
@@ -506,7 +469,6 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
             </div>
           )}
         </div>
-
         {/* Create Project Team Group Dialog */}
         <CreateProjectTeamGroupDialog
           isOpen={showCreateGroupDialog}

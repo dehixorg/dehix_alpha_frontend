@@ -19,7 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 interface NewChatDialogProps {
   isOpen: boolean;
@@ -78,7 +78,7 @@ export function NewChatDialog({
 
   const handleCreateGroup = () => {
     if (groupName.trim() === '') {
-      toast({ variant: 'destructive', title: 'Group Name Required' });
+      notifyError('Group name is required.', 'Validation');
       return;
     }
     onCreateGroup(selectedGroupMembers, groupName, groupDescription);

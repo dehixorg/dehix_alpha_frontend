@@ -53,7 +53,7 @@ function ProjectSkillCard({
   if (isLastCard) {
     return (
       <Card
-        className="flex bg-white-200 w-full items-center justify-center h-[400px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
+        className="flex bg-muted-foreground/20 dark:bg-muted/20 w-full items-center justify-center h-[400px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
         onClick={onAddProfile}
       >
         <Plus className="w-12 h-12 text-gray-400" />
@@ -108,7 +108,7 @@ function ProjectSkillCard({
         ];
 
   return (
-    <Card className="w-full h-[400px] bg-card border rounded-lg shadow-sm flex flex-col">
+    <Card className="w-full h-[400px] bg-muted-foreground/20 dark:bg-muted/20 border rounded-lg shadow-sm flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <HoverCard>

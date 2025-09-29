@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
+import Image from 'next/image';
 
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
+import { Badge } from '../ui/badge';
 
 import MilestoneHeader from './MilestoneHeader';
 import StoryAccordionItem from './StoryAccordionItem';
@@ -107,20 +109,25 @@ const StoriesAccordion = ({
 
   return (
     <div className="w-full px-0 md:px-0 lg:px-0 py-3 md:py-6 max-w-5xl mx-auto rounded-lg">
-      <Card className="pb-5 mx-3">
+      <Card className="pb-5 mx-3 bg-muted/10 dark:bg-muted/20 border shadow-sm">
         <MilestoneHeader milestone={milestone} />
-        <Card
-          className={` px-0 md:px-10  ${openAccordion ? 'mx-0' : 'mx-4'} md:mx-3 my-2`}
-        >
+
+        <Card className={`${openAccordion ? 'mx-0' : 'mx-4'} md:mx-6`}>
           {(milestone.stories ?? []).length > 0 && (
             <div className="flex p-4 justify-between items-center mt-4">
-              <h3 className="text-lg md:text-xl font-semibold">Stories:</h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg md:text-xl font-semibold">Stories</h3>
+                <Badge variant="secondary" className="rounded-full">
+                  {(milestone.stories ?? []).length} total
+                </Badge>
+              </div>
               {!isFreelancer && (
                 <Button
-                  className="px-3 py-1 text-sm sm:text-base"
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setIsStoryDialogOpen(true)}
                 >
-                  <Plus size={15} /> Add Story
+                  <Plus size={13} className="mr-1" /> Add Story
                 </Button>
               )}
             </div>
@@ -147,28 +154,52 @@ const StoriesAccordion = ({
                 />
               ))
             ) : (
-              <div className="text-center mt-4 p-4 rounded-md">
-                {isFreelancer ? (
-                  <p>
-                    This {milestone.title} currently has no associated stories.
-                    Please wait until the business adds a story.
-                  </p>
-                ) : (
-                  <p>
-                    This {milestone.title} currently has no associated stories.
-                    Please add a story to ensure smooth progress and effective
-                    tracking.
-                  </p>
-                )}
+              <div className="mt-4 p-6 sm:p-8">
+                <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 rounded-lg border bg-card text-card-foreground p-6">
+                  <div className="w-full md:w-auto order-2 md:order-1 text-center md:text-left">
+                    {isFreelancer ? (
+                      <>
+                        <h4 className="text-lg font-semibold">
+                          No stories yet
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          This &ldquo;{milestone.title}&rdquo; milestone
+                          doesn&apos;t have any stories yet. The business will
+                          add them soon.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h4 className="text-lg font-semibold">
+                          Start by adding a story
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          This &ldquo;{milestone.title}&rdquo; milestone
+                          currently has no stories. Create one to track tasks
+                          and progress.
+                        </p>
+                      </>
+                    )}
 
-                {!isFreelancer && (
-                  <Button
-                    className="mt-2 px-3 py-1 text-sm sm:text-base"
-                    onClick={() => setIsStoryDialogOpen(true)}
-                  >
-                    <Plus size={15} /> Add Story
-                  </Button>
-                )}
+                    {!isFreelancer && (
+                      <Button
+                        className="mt-3 px-3 py-1 text-sm sm:text-base rounded-full"
+                        onClick={() => setIsStoryDialogOpen(true)}
+                      >
+                        <Plus size={15} className="mr-1" /> Add Story
+                      </Button>
+                    )}
+                  </div>
+                  <div className="order-1 md:order-2">
+                    <Image
+                      src="/banner4.svg"
+                      alt="Empty state illustration"
+                      width={220}
+                      height={120}
+                      className="opacity-90 select-none pointer-events-none"
+                    />
+                  </div>
+                </div>
               </div>
             )}
           </Accordion>

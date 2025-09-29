@@ -46,8 +46,30 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
     hourlyRate,
   } = profile;
 
+  // Extract a display label from various item shapes (string or object)
+  const getItemLabel = (item: any): string => {
+    if (!item) return '';
+    if (typeof item === 'string') return item;
+    if (typeof item === 'object') {
+      return (
+        item.name ||
+        item.skillName ||
+        item.domainName ||
+        item.label ||
+        item.title ||
+        item.value ||
+        item.text ||
+        ''
+      );
+    }
+    return String(item);
+  };
+
   const renderSkillBadges = (items: any[]) => {
-    if (!items || items.length === 0) {
+    const labels = (Array.isArray(items) ? items : [])
+      .map(getItemLabel)
+      .filter(Boolean);
+    if (labels.length === 0) {
       return (
         <div>
           <p className="text-sm font-medium mb-2">Skills:</p>
@@ -59,16 +81,14 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
       <div>
         <p className="text-sm font-medium mb-2">Skills:</p>
         <div className="flex flex-wrap gap-1">
-          {items.slice(0, 3).map((skill: any, index: number) => (
+          {labels.slice(0, 3).map((label: string, index: number) => (
             <Badge key={index} variant="secondary" className="text-xs">
-              {typeof skill === 'string'
-                ? skill
-                : skill.name || skill.skillName}
+              {label}
             </Badge>
           ))}
-          {items.length > 3 && (
+          {labels.length > 3 && (
             <Badge variant="outline" className="text-xs">
-              +{items.length - 3} more
+              +{labels.length - 3} more
             </Badge>
           )}
         </div>
@@ -77,7 +97,10 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
   };
 
   const renderDomainBadges = (items: any[]) => {
-    if (!items || items.length === 0) {
+    const labels = (Array.isArray(items) ? items : [])
+      .map(getItemLabel)
+      .filter(Boolean);
+    if (labels.length === 0) {
       return (
         <div>
           <p className="text-sm font-medium mb-2">Domains:</p>
@@ -89,16 +112,14 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
       <div>
         <p className="text-sm font-medium mb-2">Domains:</p>
         <div className="flex flex-wrap gap-1">
-          {items.slice(0, 2).map((domain: any, index: number) => (
+          {labels.slice(0, 2).map((label: string, index: number) => (
             <Badge key={index} variant="outline" className="text-xs">
-              {typeof domain === 'string'
-                ? domain
-                : domain.name || domain.domainName}
+              {label}
             </Badge>
           ))}
-          {items.length > 2 && (
+          {labels.length > 2 && (
             <Badge variant="outline" className="text-xs">
-              +{items.length - 2} more
+              +{labels.length - 2} more
             </Badge>
           )}
         </div>

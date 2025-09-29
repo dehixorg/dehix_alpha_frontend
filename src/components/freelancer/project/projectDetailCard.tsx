@@ -69,7 +69,7 @@ function ProjectDetailCard({
   const progress = computeProgress(startDate, endDate);
 
   return (
-    <Card className="rounded-xl border border-border/60 shadow-sm hover:shadow-lg transition-shadow bg-card">
+    <Card className="rounded-xl border border-border/60 shadow-sm hover:shadow-lg transition-shadow bg-muted-foreground/20 dark:bg-muted/20 ">
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-xl md:text-2xl font-semibold tracking-tight">

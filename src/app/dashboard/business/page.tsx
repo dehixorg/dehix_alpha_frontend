@@ -43,7 +43,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import StatItem from '@/components/shared/StatItem';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -70,11 +70,7 @@ export default function Dashboard() {
           setResponseData(response.data.data); // Store response data in state
         }
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('API Error:', error);
       }
     };
@@ -193,15 +189,15 @@ export default function Dashboard() {
                       : 0;
                   const completionColor =
                     completionPercentage >= 70
-                      ? 'bg-green-500'
+                      ? '[&>*]:bg-green-500'
                       : completionPercentage >= 30
-                        ? 'bg-amber-500'
-                        : 'bg-red-500';
+                        ? '[&>*]:bg-amber-500'
+                        : '[&>*]:bg-red-500';
 
                   return (
                     <Progress
                       value={completionPercentage}
-                      className={cn('h-1 w-full', `[&>*]:${completionColor}`)}
+                      className={cn('h-1 w-full', completionColor)}
                     />
                   );
                 })()}
@@ -209,7 +205,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Stats Grid */}
-            <div className="grid gap-4 grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
               <StatItem
                 variant="card"
                 color="blue"
@@ -258,8 +254,27 @@ export default function Dashboard() {
                     />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} />
                     <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                    <Tooltip
+                      wrapperStyle={{ outline: 'none' }}
+                      contentStyle={{
+                        background: 'hsl(var(--popover))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: 6,
+                        color: 'hsl(var(--popover-foreground))',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                      }}
+                      labelStyle={{
+                        color: 'hsl(var(--popover-foreground))',
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.2 }}
+                    />
+                    <Bar
+                      dataKey="value"
+                      barSize={12}
+                      fill="hsl(var(--primary))"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

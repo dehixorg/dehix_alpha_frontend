@@ -2,7 +2,7 @@
 import { useState } from 'react';
 
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Note, NoteType, LabelType } from '@/utils/types/note';
 
 const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
@@ -13,25 +13,9 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
   const [selectedTypeNote, setSelectedTypeNote] = useState<Note | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const showError = (message: string) => {
-    toast({
-      title: 'Error',
-      description: message,
-      variant: 'destructive',
-      duration: 5000,
-    });
-  };
-
-  const showSuccess = (message: string) => {
-    toast({
-      description: message,
-      duration: 5000,
-    });
-  };
-
   const handleSaveEditNote = async (note: Note) => {
     if (!note._id) {
-      showError('Missing required fields for updating the note.');
+      notifyError('Missing required fields for updating the note.', 'Error');
       return;
     }
 
@@ -43,43 +27,42 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
         banner: note.banner || '',
         isHTML: note.isHTML || false,
         entityID: note.entityID || '',
-        entityType: note.entityType || '',
         noteType: note?.noteType || NoteType.NOTE,
         type: note?.type || LabelType.PERSONAL,
       });
 
       if (response?.status === 200) {
-        showSuccess('Note updated successfully.');
+        notifySuccess('Note updated successfully.', 'Success');
+        await fetchNotes();
+        setSelectedNote(null);
       }
-    } catch (error) {
-      showError('Failed to update the note.');
-    } finally {
-      await fetchNotes(); // Refresh notes
-      setSelectedNote(null); // Clear selection
+    } catch (error: any) {
+      notifyError(
+        error?.response?.data?.message || 'Failed to update the note.',
+        'Error',
+      );
     }
   };
 
   const handleDialogClose = () => {
     setSelectedNote(null);
+    setSelectedDeleteNote(null);
+    setSelectedTypeNote(null);
     setIsDeleting(false);
   };
 
   const handleDeletePermanently = async (noteId: string | null) => {
     if (!noteId) {
-      showError('Invalid note ID.');
+      notifyError('Invalid note ID.', 'Error');
+      setIsDeleting(false);
       return;
     }
     try {
       await axiosInstance.delete(`/notes/${noteId}`);
-      showSuccess('Note deleted permanently.');
-      fetchNotes();
+      notifySuccess('Note deleted permanently.', 'Success');
+      await fetchNotes();
     } catch (error) {
-      showError('Failed to delete the note.');
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Failed to delete the note.', 'Error');
     }
     setIsDeleting(false);
   };
@@ -91,7 +74,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
-      showError('Note not found.');
+      notifyError('Note not found.', 'Error');
       return;
     }
     try {
@@ -101,16 +84,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       });
 
       if (response?.status == 200) {
-        showSuccess(`Note Banner updated`);
+        notifySuccess('Note banner updated.', 'Success');
       }
       await fetchNotes();
     } catch (error) {
-      showError(`Failed to update the note banner.`);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Failed to update the note banner.', 'Error');
     }
   };
 
@@ -121,7 +99,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
-      showError('Note not found.');
+      notifyError('Note not found.', 'Error');
       return;
     }
     try {
@@ -131,11 +109,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       });
 
       if (response?.status == 200) {
-        showSuccess(`Note moved to ${type.toLowerCase()}`);
+        notifySuccess(`Note moved to ${type.toLowerCase()}.`, 'Success');
       }
       await fetchNotes();
     } catch (error) {
-      showError(`Failed to update the note label.`);
+      notifyError('Failed to update the note label.', 'Error');
     }
   };
 
@@ -146,7 +124,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
-      showError('Note not found.');
+      notifyError('Note not found.', 'Error');
       return;
     }
     try {
@@ -156,11 +134,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       });
 
       if (response?.status == 200) {
-        showSuccess(`Note Label updated`);
+        notifySuccess('Note label updated.', 'Success');
       }
       await fetchNotes();
     } catch (error) {
-      showError(`Failed to update the note label.`);
+      notifyError('Failed to update the note label.', 'Error');
     }
   };
 
