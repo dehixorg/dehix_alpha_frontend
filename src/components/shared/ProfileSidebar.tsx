@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import {
   VolumeX,
   ShieldX,
@@ -24,9 +25,7 @@ import {
   orderBy,
   getDocs,
   getFirestore,
-  writeBatch,
 } from 'firebase/firestore';
-import { useSelector } from 'react-redux';
 
 import { AddMembersDialog } from './AddMembersDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
@@ -64,7 +63,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
-import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
+import { axiosInstance } from '@/lib/axiosinstance';
 import type { CombinedUser } from '@/hooks/useAllUsers';
 
 export type ProfileUser = {
@@ -82,30 +81,28 @@ export type ProfileUser = {
 };
 
 export type ProfileGroupMember = {
-  id: string; // User's _id from API's members array
+  id: string;
   userName: string;
   profilePic?: string;
-  status?: 'online' | 'offline'; // Retain for mock display if needed
+  status?: 'online' | 'offline';
 };
 
 export type ProfileGroup = {
-  _id: string; // From API
-  id: string; // To be populated from _id
-  groupName: string; // From API
-  avatar?: string; // From API (S3 URL)
-  description?: string; // From API
-  createdAt: string; // ISO String from API
-  members: ProfileGroupMember[]; // From API
-  admins: string[]; // Array of user IDs from API
+  _id: string;
+  id: string;
+  groupName: string;
+  avatar?: string;
+  description?: string;
+  createdAt: string;
+  members: ProfileGroupMember[];
+  admins: string[];
   participantDetails?: {
     [uid: string]: { userName: string; profilePic?: string; email?: string };
-  }; // From API
-  inviteLink?: string; // From API
-  // Derived/processed fields
+  };
+  inviteLink?: string;
   displayName: string;
   createdAtFormatted?: string;
-  // Placeholder for admin details if needed directly in ProfileGroup
-  adminDetails?: ProfileUser[]; // Could be populated if FE needs more admin info than just IDs
+  adminDetails?: ProfileUser[];
   mutedUsers?: string[];
 };
 
@@ -114,9 +111,6 @@ interface ProfileSidebarProps {
   onClose: () => void;
   profileId: string | null;
   profileType: 'user' | 'group' | null;
-  // currentUser prop as requested by the subtask, though it's also available via Redux store
-  // We will primarily use the Redux store version for consistency within this component,
-  // but including it in props if direct passing is ever preferred.
   currentUser?: CombinedUser | null;
   initialData?: { userName?: string; email?: string; profilePic?: string };
 }
@@ -126,7 +120,6 @@ export function ProfileSidebar({
   onClose,
   profileId,
   profileType,
-  // currentUser prop is available via Redux store
   initialData,
 }: ProfileSidebarProps) {
   // State management
@@ -136,16 +129,16 @@ export function ProfileSidebar({
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
+  const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(true);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [showAllMedia, setShowAllMedia] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
-  const [isLeaveGroupDialogOpen, setLeaveGroupDialogOpen] = useState(false);
+  const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [showAllMembers, setShowAllMembers] = useState(false);
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
@@ -164,58 +157,46 @@ export function ProfileSidebar({
   const internalFetchProfileData = async () => {
     setLoading(true);
     setError(null);
-    // Initial population from initialData if available for users
+
     if (profileType === 'user' && initialData && profileId) {
       setProfileData({
-        // Explicitly map to ProfileUser, ensure all required fields are present or defaulted
-        _id: profileId, // Assuming profileId is the _id for users from initialData context
+        _id: profileId,
         id: profileId,
         userName: initialData.userName || '',
-        name: initialData.userName || '', // Often name and userName are similar or name is preferred
+        name: initialData.userName || '',
         email: initialData.email || '',
         profilePic: initialData.profilePic,
-        displayName: initialData.userName || '', // Ensure displayName is set
-        // Initialize other fields as undefined or default if not in initialData
+        displayName: initialData.userName || '',
         bio: undefined,
         status: undefined,
         lastSeen: undefined,
       });
-      // We might still want to set loading to true if an API call will follow to supplement data
-      // setLoading(false); // Or set to false if this is considered enough initial data
     } else {
       setProfileData(null);
     }
 
     try {
       if (profileType === 'user' && profileId) {
-        // Fetch user profile data
         const response = await axiosInstance.get(`/freelancer/${profileId}`);
         if (response.data && response.data.data) {
           const apiData = response.data.data as ProfileUser;
           setProfileData({
-            ...apiData, // API data as base
-            // Prioritize initialData for specific fields if initialData was provided
+            ...apiData,
             userName: initialData?.userName || apiData.userName,
             email: initialData?.email || apiData.email,
             profilePic: initialData?.profilePic || apiData.profilePic,
             displayName:
               initialData?.userName || apiData.userName || apiData.displayName,
-            // Ensure critical identifiers like id are correctly maintained
             id: profileId,
-            _id: apiData._id || profileId, // Prefer API's _id if available, else fallback to profileId
-            // name might need specific handling depending on your data structure
+            _id: apiData._id || profileId,
             name: initialData?.userName || apiData.name || apiData.userName,
           });
         } else {
-          // If API call fails or returns no data, but we had initialData, retain it.
-          // This part depends on whether an error should clear initialData or not.
-          // For now, if initialData was set and API fails, it remains. If no initialData, then error.
           if (!initialData) {
             throw new Error('User not found and no initial data provided');
           }
         }
       } else if (profileType === 'group' && profileId) {
-        // Fetch group data from Firestore
         const conversationDoc = await getDoc(
           doc(db, 'conversations', profileId),
         );
@@ -229,10 +210,9 @@ export function ProfileSidebar({
             profilePic: details.profilePic,
             status: (Math.random() > 0.5 ? 'online' : 'offline') as
               | 'online'
-              | 'offline', // Type assertion to fix the error
+              | 'offline',
           }));
 
-          // Use the avatar from initialData if available, otherwise fall back to groupData.avatar
           const avatarUrl = initialData?.profilePic || groupData.avatar;
 
           setProfileData({
@@ -241,7 +221,7 @@ export function ProfileSidebar({
             groupName: groupData.groupName || 'Unnamed Group',
             displayName: groupData.groupName || 'Unnamed Group',
             description: groupData.description || '',
-            avatar: avatarUrl, // Set the avatar URL here
+            avatar: avatarUrl,
             createdAt: groupData.createdAt || new Date().toISOString(),
             members,
             admins: groupData.admins || [],
@@ -289,7 +269,6 @@ export function ProfileSidebar({
           typeof message.content === 'string' &&
           message.content.startsWith(s3BucketUrl)
         ) {
-          // This handles images, videos, and other files sent as plain links
           mediaUrl = message.content;
         }
 
@@ -304,7 +283,6 @@ export function ProfileSidebar({
             if (message.voiceMessage) {
               type = 'audio/webm';
             } else {
-              // Simple mapping from extension to MIME type
               const mimeTypes: { [key: string]: string } = {
                 png: 'image/png',
                 jpg: 'image/jpeg',
@@ -319,7 +297,6 @@ export function ProfileSidebar({
                 ppt: 'application/vnd.ms-powerpoint',
                 docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 doc: 'application/msword',
-                // Add other types as needed
               };
               type = mimeTypes[fileExtension] || 'application/octet-stream';
             }
@@ -328,7 +305,6 @@ export function ProfileSidebar({
               id: `${doc.id}-${fileName}`,
               url: mediaUrl,
               type: type,
-
               fileName: fileName,
             });
           } catch (e) {
@@ -350,17 +326,66 @@ export function ProfileSidebar({
     }
   };
 
+  const fetchSharedFiles = async (conversationId: string) => {
+    setIsLoadingFiles(true);
+    setSharedFiles([]);
+
+    try {
+      const messagesQuery = query(
+        collection(db, `conversations/${conversationId}/messages`),
+        orderBy('timestamp', 'desc'),
+      );
+
+      const messagesSnapshot = await getDocs(messagesQuery);
+      const extractedFiles: FileItem[] = [];
+
+      messagesSnapshot.forEach((doc) => {
+        const message = doc.data();
+        if (
+          Array.isArray(message.attachments) &&
+          message.attachments.length > 0
+        ) {
+          for (const attachment of message.attachments) {
+            if (attachment.url && attachment.type && attachment.fileName) {
+              extractedFiles.push({
+                id: `${doc.id}-${attachment.fileName}`,
+                name: attachment.fileName,
+                type: attachment.type,
+                size: attachment.size || 'Unknown',
+                url: attachment.url,
+              });
+            }
+          }
+        }
+      });
+
+      setSharedFiles(extractedFiles);
+    } catch (error) {
+      console.error('Error fetching shared files:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load shared files',
+      });
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
   useEffect(() => {
     const executeFetches = async () => {
       if (isOpen && profileId) {
         setProfileData(null);
         setSharedMedia([]);
+        setSharedFiles([]);
         setLoading(true);
         setIsLoadingMedia(true);
+        setIsLoadingFiles(true);
 
         await Promise.allSettled([
           internalFetchProfileData(),
           fetchSharedMedia(profileId),
+          fetchSharedFiles(profileId),
         ]);
 
         if (loading) {
@@ -369,42 +394,63 @@ export function ProfileSidebar({
         if (isLoadingMedia) {
           setIsLoadingMedia(false);
         }
+        if (isLoadingFiles) {
+          setIsLoadingFiles(false);
+        }
       }
     };
 
     executeFetches();
   }, [isOpen, profileId, profileType, refreshKey]);
 
-  const handleAddMembers = async (selectedUsers: any[]) => {
-    if (profileType !== 'group' || !profileData) return;
+  const handleAddMembersToGroup = async (
+    selectedUsers: CombinedUser[],
+    groupId: string,
+  ) => {
+    if (!selectedUsers || selectedUsers.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No users selected',
+        description: 'Please select users to add.',
+      });
+      return;
+    }
 
-    const groupId = profileData.id;
+    if (!groupId) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Group ID is missing.',
+      });
+      return;
+    }
+
+    const groupDocRef = doc(db, 'conversations', groupId);
 
     try {
-      // Add members to the group
       const updates: any = {
         members: arrayUnion(...selectedUsers.map((user) => user.id)),
         updatedAt: new Date().toISOString(),
       };
 
-      // Prepare participant details updates
       selectedUsers.forEach((user) => {
-        if (!user.id) return; // Skip if no user ID
+        if (!user.id) return;
 
         updates[`participantDetails.${user.id}`] = {
           userName: user.displayName || 'User',
           email: user.email || '',
-          profilePic: user.profilePic || null, // Ensure profilePic is never undefined
-          userType: user.userType || 'user', // Default to 'user' if not specified
+          profilePic: user.profilePic || null,
+          userType: user.userType || 'user',
         };
       });
 
-      const groupDocRef = doc(db, 'conversations', groupId);
-
       await updateDoc(groupDocRef, updates);
-
-      // Trigger data reload
       setRefreshKey((prev) => prev + 1);
+
+      toast({
+        title: 'Success',
+        description: `${selectedUsers.length} member(s) added successfully.`,
+      });
     } catch (error) {
       console.error('Error adding members:', error);
       toast({
@@ -517,74 +563,6 @@ export function ProfileSidebar({
         description: 'Failed to generate invite link.',
       });
       return null;
-    }
-  };
-
-  const handleRemoveAdmin = async (groupId: string, memberId: string) => {
-    if (!groupId || !memberId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group or Member ID is missing.',
-      });
-      return;
-    }
-
-    const groupDocRef = doc(db, 'conversations', groupId);
-
-    try {
-      await updateDoc(groupDocRef, {
-        admins: arrayRemove(memberId),
-        updatedAt: new Date().toISOString(),
-      });
-
-      toast({
-        title: 'Success',
-        description: 'Admin privileges have been revoked.',
-      });
-
-      setRefreshKey((prev) => prev + 1);
-    } catch (error) {
-      console.error('Error removing admin:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to remove admin privileges.',
-      });
-    }
-  };
-
-  const handleMakeAdmin = async (groupId: string, memberId: string) => {
-    if (!groupId || !memberId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group or Member ID is missing.',
-      });
-      return;
-    }
-
-    const groupDocRef = doc(db, 'conversations', groupId);
-
-    try {
-      await updateDoc(groupDocRef, {
-        admins: arrayUnion(memberId),
-        updatedAt: new Date().toISOString(),
-      });
-
-      toast({
-        title: 'Success',
-        description: 'Member has been promoted to admin.',
-      });
-
-      setRefreshKey((prev) => prev + 1); // Refresh data to show updated admin status
-    } catch (error) {
-      console.error('Error making member admin:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to promote member to admin.',
-      });
     }
   };
 
@@ -742,6 +720,7 @@ export function ProfileSidebar({
                 </CardContent>
               </Card>
             )}
+
             {!loading && !profileData && (
               <div className="flex justify-center items-center h-32">
                 <p className="text-[hsl(var(--muted-foreground))]">
@@ -869,40 +848,96 @@ export function ProfileSidebar({
                             </div>
                           )}
                         </div>
-                        <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
-                          <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">
-                            Actions
-                          </h3>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start"
-                            disabled
-                          >
-                            <VolumeX className="h-4 w-4 mr-2" /> Mute
-                            Conversation
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start"
-                            disabled
-                          >
-                            <ShieldX className="h-4 w-4 mr-2" /> Block User
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start"
-                            disabled
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            className="w-full justify-start"
-                            disabled
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
-                          </Button>
-                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">
+                          Shared Files
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {isLoadingFiles ? (
+                          <div className="flex justify-center items-center h-20">
+                            <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                          </div>
+                        ) : sharedFiles.length > 0 ? (
+                          <ul className="space-y-2">
+                            {sharedFiles.map((file) => (
+                              <li
+                                key={file.id}
+                                className="flex items-center justify-between border rounded-md p-2"
+                              >
+                                <div className="min-w-0 mr-2">
+                                  <p className="text-sm font-medium truncate">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {file.type}
+                                    {file.size ? ` • ${file.size}` : ''}
+                                  </p>
+                                </div>
+                                <div className="shrink-0 flex items-center gap-2">
+                                  <Button asChild size="sm" variant="outline">
+                                    <a
+                                      href={file.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      Open
+                                    </a>
+                                  </Button>
+                                  <Button asChild size="sm">
+                                    <a href={file.url} download>
+                                      Download
+                                    </a>
+                                  </Button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                            <p>No files have been shared yet.</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Actions</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          disabled
+                        >
+                          <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          disabled
+                        >
+                          <ShieldX className="h-4 w-4 mr-2" /> Block User
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          disabled
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="w-full justify-start"
+                          disabled
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
+                        </Button>
                       </CardContent>
                     </Card>
                   </>
@@ -934,15 +969,14 @@ export function ProfileSidebar({
                       <CardHeader>
                         <CardTitle className="text-base">
                           Members (
-                          {(profileData as ProfileGroup).members?.length || 0})
+                          {(profileData as ProfileGroup).members.length})
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
-                        <ScrollArea className="max-h-60 px-4">
-                          <ul className="space-y-1 py-2">
-                            {((profileData as ProfileGroup).members || [])
-                              .slice(0, showAllMembers ? undefined : 7)
-                              .map((member) => {
+                        <ScrollArea className="max-h-80 px-2 overflow-y-auto">
+                          <ul className="divide-y divide-gray-200 bg-white dark:bg-gray-900 rounded-lg shadow-sm py-2">
+                            {(profileData as ProfileGroup).members.map(
+                              (member) => {
                                 const group = profileData as ProfileGroup;
                                 const isCurrentUserAdmin =
                                   user && group.admins?.includes(user.uid);
@@ -955,106 +989,74 @@ export function ProfileSidebar({
                                 return (
                                   <li
                                     key={member.id}
-                                    className="flex items-center justify-between p-2 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)]"
+                                    className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group"
                                   >
-                                    <div className="flex items-center space-x-3">
-                                      <Avatar className="w-9 h-9">
-                                        <AvatarImage
-                                          src={member.profilePic}
-                                          alt={member.userName}
-                                        />
-                                        <AvatarFallback>
-                                          {member.userName
-                                            ?.charAt(0)
-                                            .toUpperCase()}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                        <p className="text-sm font-medium leading-none">
-                                          {member.userName}
-                                        </p>
-                                        {isMemberAdmin && (
-                                          <Badge
-                                            variant="secondary"
-                                            className="text-xs mt-1"
-                                          >
-                                            Admin
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {canPerformAction && (
-                                      <div className="flex items-center space-x-2">
-                                        {!isMemberAdmin ? (
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                              handleMakeAdmin(
-                                                group.id,
-                                                member.id,
-                                              )
-                                            }
-                                          >
-                                            Make Admin
-                                          </Button>
-                                        ) : (
-                                          <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={() =>
-                                              handleRemoveAdmin(
-                                                group.id,
-                                                member.id,
-                                              )
-                                            }
-                                          >
-                                            Remove Admin
-                                          </Button>
-                                        )}
-                                        <Button
+                                    <Avatar className="w-8 h-8">
+                                      <AvatarImage
+                                        src={member.profilePic}
+                                        alt={member.userName}
+                                      />
+                                      <AvatarFallback>
+                                        {member.userName
+                                          ?.charAt(0)
+                                          .toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span
+                                      className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${
+                                        member.status === 'online'
+                                          ? 'bg-green-500'
+                                          : 'bg-gray-400'
+                                      }`}
+                                    ></span>
+                                    <div className="flex-1 min-w-0">
+                                      <span className="text-sm font-medium truncate">
+                                        {member.userName}
+                                      </span>
+                                      {isMemberAdmin && (
+                                        <Badge
                                           variant="outline"
-                                          size="icon"
-                                          className="h-7 w-7"
-                                          onClick={() => {
-                                            setIsConfirmDialogOpen(true);
-                                            setConfirmDialogProps({
-                                              title: 'Remove Member',
-                                              description:
-                                                'Are you sure you want to remove this member from the group?',
-                                              onConfirm: () =>
-                                                handleConfirmRemoveMember(
-                                                  member.id,
-                                                ),
-                                              confirmButtonText: 'Remove',
-                                              confirmButtonVariant:
-                                                'destructive',
-                                            });
-                                          }}
+                                          className="ml-2 text-[10px] border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300 border"
                                         >
-                                          <MinusCircle className="h-4 w-4" />
-                                        </Button>
-                                      </div>
+                                          Admin
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
+                                      {member.status === 'online'
+                                        ? 'Online'
+                                        : 'Offline'}
+                                    </span>
+                                    {canPerformAction && !isMemberAdmin && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setConfirmDialogProps({
+                                            title: 'Confirm Removal',
+                                            description: `Are you sure you want to remove ${member.userName} from the group?`,
+                                            onConfirm: () =>
+                                              handleConfirmRemoveMember(
+                                                member.id,
+                                              ),
+                                            confirmButtonText: 'Remove Member',
+                                            confirmButtonVariant: 'destructive',
+                                          });
+                                          setIsConfirmDialogOpen(true);
+                                        }}
+                                        aria-label={`Remove ${member.userName} from group`}
+                                      >
+                                        <MinusCircle className="h-4 w-4" />
+                                      </Button>
                                     )}
                                   </li>
                                 );
-                              })}
+                              },
+                            )}
                           </ul>
                         </ScrollArea>
-                        {((profileData as ProfileGroup).members?.length || 0) >
-                          7 &&
-                          !showAllMembers && (
-                            <div className="p-4 pt-0">
-                              <Button
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => setShowAllMembers(true)}
-                              >
-                                View All Members
-                              </Button>
-                            </div>
-                          )}
                       </CardContent>
                     </Card>
 
@@ -1100,7 +1102,7 @@ export function ProfileSidebar({
                               <Button
                                 variant="outline"
                                 className="w-full justify-start"
-                                onClick={() => setAddMemberDialogOpen(true)}
+                                onClick={() => setIsAddMembersDialogOpen(true)}
                               >
                                 <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
                                 Members
@@ -1144,7 +1146,6 @@ export function ProfileSidebar({
                                     profileId &&
                                     user?.uid
                                   ) {
-                                    // Remove user from the group
                                     const groupRef = doc(
                                       db,
                                       'conversations',
@@ -1157,8 +1158,7 @@ export function ProfileSidebar({
                                       admins: arrayRemove(user.uid),
                                     });
 
-                                    // Trigger data reload
-                                    setRefreshKey((prev) => prev + 1);
+                                    onClose();
 
                                     toast({
                                       title: 'Left group',
@@ -1223,8 +1223,8 @@ export function ProfileSidebar({
       {profileData && profileType === 'group' && (
         <>
           <AddMembersDialog
-            isOpen={isAddMemberDialogOpen}
-            onClose={() => setAddMemberDialogOpen(false)}
+            isOpen={isAddMembersDialogOpen}
+            onClose={() => setIsAddMembersDialogOpen(false)}
             onAddMembers={(selectedUserIds) => {
               if (profileData && profileData.id && profileType === 'group') {
                 handleAddMembersToGroup(
@@ -1232,7 +1232,7 @@ export function ProfileSidebar({
                   (profileData as ProfileGroup).id,
                 );
               }
-              setAddMemberDialogOpen(false);
+              setIsAddMembersDialogOpen(false);
             }}
             currentMemberIds={
               (profileData as ProfileGroup).members?.map((m) => m.id) || []
