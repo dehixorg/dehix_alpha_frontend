@@ -5,8 +5,7 @@ import { z } from 'zod';
 import { Plus, Edit2, ListFilter, Info } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-import { toast } from '../../ui/use-toast';
-
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -167,11 +166,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         setDomains(updatedDomains);
       } catch (error) {
         console.error('Error fetching data:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to fetch data. Please try again later.',
-        });
+        notifyError('Failed to fetch data. Please try again later.', 'Error');
       } finally {
         setLoading(false);
       }
@@ -219,10 +214,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           );
           setSkillData(updatedSkills);
 
-          toast({
-            title: 'Skill Updated',
-            description: `${data.name} skill updated successfully.`,
-          });
+          notifySuccess(
+            `${data.name} skill updated successfully.`,
+            'Skill Updated',
+          );
         } else {
           // Handle non-200 responses (optional)
           throw new Error('Failed to update skill');
@@ -243,11 +238,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               interviewStatus: defaultStatus,
             },
           ]);
-
-          toast({
-            title: 'Skill Added',
-            description: `${data.name} skill added successfully.`,
-          });
+          notifySuccess(
+            `${data.name} skill added successfully.`,
+            'Skill Added',
+          );
         } else {
           // Handle non-200 responses (optional)
           throw new Error('Failed to add skill');
@@ -262,10 +256,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             interviewStatus: defaultStatus,
           },
         ]);
-        toast({
-          title: 'Skill Added',
-          description: `${data.name} skill added successfully.`,
-        });
+        notifySuccess(`${data.name} skill added successfully.`, 'Skill Added');
       }
       resetSkill();
       setOpenSkillDialog(false);
@@ -297,11 +288,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               : item,
           );
           setDomainData(updatedDomains);
-
-          toast({
-            title: 'Domain Updated',
-            description: `${data.name} domain updated successfully.`,
-          });
+          notifySuccess(
+            `${data.name} domain updated successfully.`,
+            'Domain Updated',
+          );
         } else {
           // Handle non-200 responses (optional)
           throw new Error('Failed to update domain');
@@ -317,10 +307,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             interviewStatus: defaultStatus,
           },
         ]);
-        toast({
-          title: 'Domain Added',
-          description: `${data.name} domain added successfully.`,
-        });
+        notifySuccess(
+          `${data.name} domain added successfully.`,
+          'Domain Added',
+        );
       }
       resetDomain();
       setOpenDomainDialog(false);

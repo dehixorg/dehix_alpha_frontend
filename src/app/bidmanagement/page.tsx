@@ -1,20 +1,18 @@
 'use client';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
-
-// Define Toast variant type
-type ToastVariant = 'destructive' | 'default' | null | undefined;
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Project {
   _id: string;
@@ -57,19 +55,12 @@ const BidsPage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
-
-  const errorToast = useMemo(
-    () => ({
-      variant: 'destructive' as ToastVariant, // Explicitly typing it
-      title: 'Error',
-      description: 'Something went wrong. Please try again.',
-    }),
-    [],
-  );
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchProjectIds = async () => {
       try {
+        setLoading(true);
         const response = await axiosInstance.get(
           `/project/business/?status=Pending`,
         );
@@ -78,6 +69,8 @@ const BidsPage = () => {
         setProjectIds(ids);
       } catch (error) {
         console.error('Error fetching project IDs:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -87,6 +80,7 @@ const BidsPage = () => {
   useEffect(() => {
     const fetchBidsForProjects = async () => {
       try {
+        setLoading(true);
         const pendingBids: Bid[] = [];
 
         for (const projectId of projectIds) {
@@ -102,15 +96,17 @@ const BidsPage = () => {
 
         setBidsArray(pendingBids);
       } catch (error) {
-        toast(errorToast);
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('Error fetching bids:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     if (projectIds.length) {
       fetchBidsForProjects();
     }
-  }, [projectIds, errorToast]);
+  }, [projectIds]);
 
   const handleAction = async (bidId: string, actionType: string) => {
     let updatedStatus;
@@ -124,7 +120,7 @@ const BidsPage = () => {
         bid_status: updatedStatus,
       });
     } catch (error) {
-      toast(errorToast);
+      notifyError('Something went wrong. Please try again.', 'Error');
       console.error('Error updating bid status:', error);
     }
   };
@@ -146,7 +142,23 @@ const BidsPage = () => {
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-4 md:gap-8">
           <div className="bids-page max-w-6xl mx-auto p-8  mb-8">
             <h1 className="text-3xl font-bold mb-8">Manage Bids</h1>
-            {bidsArray.length ? (
+            {loading ? (
+              <div className="space-y-4 animate-in fade-in-50">
+                {[...Array(4)].map((_, idx) => (
+                  <div key={idx} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-9 w-28" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : bidsArray.length ? (
               <AppliedBids bids={bidsArray} onAction={handleAction} />
             ) : (
               <p className="">No bids available.</p>

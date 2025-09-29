@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 interface ProjectDetailsDialogProps {
@@ -63,19 +63,15 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
     setIsDeleting(true);
     try {
       await axiosInstance.delete(`/freelancer/project/${project._id}`);
-      toast({
-        title: 'Project Deleted',
-        description: 'The project has been successfully deleted.',
-      });
+      notifySuccess(
+        'The project has been successfully deleted.',
+        'Project Deleted',
+      );
       onDelete();
       onClose();
     } catch (error) {
       console.error('Delete Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete project. Please try again.',
-      });
+      notifyError('Failed to delete project. Please try again.', 'Error');
     } finally {
       setIsDeleting(false);
     }

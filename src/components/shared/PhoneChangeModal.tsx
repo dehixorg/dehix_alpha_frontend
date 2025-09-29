@@ -13,7 +13,8 @@ import {
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { toast } from '../ui/use-toast';
+
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
 interface PhoneChangeModalProps {
   open: boolean;
@@ -35,11 +36,10 @@ const PhoneChangeModal: React.FC<PhoneChangeModalProps> = ({
     e.preventDefault();
 
     if (newPhone.length !== 10) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid Phone Number',
-        description: 'Please enter a valid 10-digit number.',
-      });
+      notifyError(
+        'Please enter a valid 10-digit number.',
+        'Invalid Phone Number',
+      );
       return;
     }
 
@@ -48,17 +48,16 @@ const PhoneChangeModal: React.FC<PhoneChangeModalProps> = ({
       const formattedPhone = `+91${newPhone}`;
       setPhone(formattedPhone);
       await onSubmit(formattedPhone);
-      toast({
-        title: 'Sending OTP',
-        description: `Sending OTP to ${formattedPhone}. Please wait...`,
-      });
+      notifySuccess(
+        `Sending OTP to ${formattedPhone}. Please wait...`,
+        'Sending OTP',
+      );
       setOpen(false);
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Failed to Send OTP',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError(
+        'Something went wrong. Please try again.',
+        'Failed to Send OTP',
+      );
     } finally {
       setLoading(false);
     }

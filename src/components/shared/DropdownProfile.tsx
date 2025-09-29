@@ -14,8 +14,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
-import { motion, AnimatePresence } from 'framer-motion';
 import { DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
+import { motion } from 'framer-motion';
 
 import { FaqDialog } from './FaqDialog';
 import { ReferralDialog } from './ReferralDialog';
@@ -33,60 +33,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RootState } from '@/lib/store';
 import { clearUser } from '@/lib/userSlice';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/hooks/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// Enhanced Logging out overlay with animation
-const LoggingOutOverlay = () => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-  >
-    <motion.div
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="bg-card p-8 rounded-2xl shadow-xl max-w-md w-full mx-4 flex flex-col items-center space-y-6 border border-border/50"
-    >
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-        className="h-20 w-20 rounded-full flex items-center justify-center"
-      >
-        <div className="h-14 w-14 border-4 border-primary/30 border-t-primary rounded-full"></div>
-      </motion.div>
-      <div className="text-center space-y-3">
-        <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-          Securing Your Account
-        </h3>
-        <p className="text-muted-foreground">
-          Just a moment while we sign you out safely...
-        </p>
-      </div>
-      <div className="w-full bg-muted/30 h-2 rounded-full overflow-hidden">
-        <motion.div
-          className="h-full bg-primary rounded-full"
-          initial={{ width: '10%' }}
-          animate={{ width: '100%' }}
-          transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
-        />
-      </div>
-    </motion.div>
-  </motion.div>
-);
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface DropdownProfileProps {
   setConnects?: (value: number) => void;
 }
-
 export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
-
   const [userType, setUserType] = useState<string | null>(null);
   const [referralCode, setReferralCode] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -124,11 +88,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
         setReferralCode(fetchCode);
       } catch (error) {
         console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setLoading(false);
       }
@@ -145,8 +105,6 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const handleLogout = async () => {
     // Show logging out overlay and prevent interaction
     setIsLoggingOut(true);
-    document.body.style.pointerEvents = 'none';
-    document.body.style.overflow = 'hidden';
 
     try {
       // Clear sensitive data first
@@ -178,7 +136,33 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
 
   return (
     <>
-      <AnimatePresence>{isLoggingOut && <LoggingOutOverlay />}</AnimatePresence>
+      <Dialog
+        open={isLoggingOut}
+        onOpenChange={(open) => {
+          // Prevent closing while logging out; allow programmatic close only
+          if (!isLoggingOut) setIsLoggingOut(open);
+        }}
+      >
+        <DialogContent className="max-w-md [&>button]:hidden">
+          <DialogHeader className="items-center">
+            <DialogTitle className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              Securing Your Account
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Just a moment while we sign you out safely...
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 flex flex-col items-center space-y-6">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              className="h-20 w-20 rounded-full flex items-center justify-center"
+            >
+              <div className="h-14 w-14 border-4 border-primary/30 border-t-primary rounded-full" />
+            </motion.div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -304,11 +288,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
                 if (user?.uid && userType) {
                   router.push(`/reports?type=${reportType}`);
                 } else {
-                  toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: 'User information is missing.',
-                  });
+                  notifyError('User information is missing.', 'Error');
                 }
               }}
               className="rounded-lg px-3 py-2 cursor-pointer"

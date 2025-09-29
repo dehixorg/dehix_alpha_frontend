@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 export default function CurrentComponent() {
   const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
@@ -95,11 +95,7 @@ export default function CurrentComponent() {
           setProjectSkill([]);
           setProjectDomain([]);
         } else {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Something went wrong. Please try again.',
-          });
+          notifyError('Something went wrong. Please try again.', 'Error');
           console.error('Failed to load data. Please try again.', err);
           setSkillData([]);
           setDomainData([]);

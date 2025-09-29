@@ -14,7 +14,6 @@ import {
   TableRow,
 } from '../ui/table';
 import { ToolTip } from '../ToolTip';
-import { useToast } from '../ui/use-toast';
 
 import { FieldType, FiltersArrayElem, Params } from './FieldTypes';
 import { CustomTableCell } from './FieldComponents';
@@ -23,6 +22,7 @@ import { HeaderActionComponent } from './HeaderActionsComponent';
 import { TablePagination } from './Pagination';
 import { TableSelect } from './TableSelect';
 
+import { notifyError } from '@/utils/toastMessage';
 import { apiHelperService } from '@/services/custumTable';
 import { Messages } from '@/utils/common/enum';
 import { cn } from '@/lib/utils';
@@ -52,8 +52,6 @@ export const CustomTable = ({
   const [search, setSearch] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(20);
-
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchData();
@@ -128,11 +126,7 @@ export const CustomTable = ({
       const response = await apiHelperService.fetchData(api, params);
       setData(response.data.data);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: Messages.FETCH_ERROR(title || ''),
-        variant: 'destructive', // Red error message
-      });
+      notifyError(Messages.FETCH_ERROR(title || ''), 'Error');
     } finally {
       setLoading(false);
     }

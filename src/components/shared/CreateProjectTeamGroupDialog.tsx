@@ -20,7 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { db } from '@/config/firebaseConfig';
@@ -176,11 +176,10 @@ export function CreateProjectTeamGroupDialog({
       setAcceptedFreelancers(acceptedFreelancersList);
     } catch (error) {
       console.error('Error fetching accepted freelancers:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch project freelancers. Please try again.',
-      });
+      notifyError(
+        'Failed to fetch project freelancers. Please try again.',
+        'Error',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -221,27 +220,15 @@ export function CreateProjectTeamGroupDialog({
     description: string,
   ) {
     if (!user || !user.uid) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'You must be logged in.',
-      });
+      notifyError('You must be logged in.', 'Error');
       return;
     }
     if (!groupName.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group name cannot be empty.',
-      });
+      notifyError('Group name cannot be empty.', 'Error');
       return;
     }
     if (selectedUsers.length < 1) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'You must select at least one other member.',
-      });
+      notifyError('You must select at least one other member.', 'Error');
       return;
     }
 
@@ -302,10 +289,7 @@ export function CreateProjectTeamGroupDialog({
     try {
       await addDoc(collection(db, 'conversations'), newGroupData);
 
-      toast({
-        title: 'Success',
-        description: `Group "${groupName}" created successfully!`,
-      });
+      notifySuccess(`Group "${groupName}" created successfully!`, 'Success');
 
       // Reset form
       setGroupName('');
@@ -319,11 +303,7 @@ export function CreateProjectTeamGroupDialog({
         createdAt: '[ServerTimestamp]',
         updatedAt: '[ServerTimestamp]',
       });
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to create group. Please try again.',
-      });
+      notifyError('Failed to create group. Please try again.', 'Error');
       // Re-throw the error so it can be caught by handleCreateGroup
       throw error;
     }
@@ -331,20 +311,15 @@ export function CreateProjectTeamGroupDialog({
 
   const handleCreateGroup = async () => {
     if (groupName.trim() === '') {
-      toast({
-        variant: 'destructive',
-        title: 'Group Name Required',
-        description: 'Please enter a group name.',
-      });
+      notifyError('Please enter a group name.', 'Group Name Required');
       return;
     }
 
     if (selectedMembers.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Members Required',
-        description: 'Please select at least one freelancer for the group.',
-      });
+      notifyError(
+        'Please select at least one freelancer for the group.',
+        'Members Required',
+      );
       return;
     }
 

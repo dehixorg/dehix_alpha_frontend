@@ -1,4 +1,21 @@
 import React, { useState } from 'react';
+import { Info } from 'lucide-react';
+
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface MilestoneProps {
   date: string;
@@ -27,59 +44,62 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
 
   return (
     <div
-      className={`flex flex-col group-hover:bg-[#40b3ff] rounded-md items-center gap-2 relative ${
-        isMobile ? 'w-64' : 'w-48 h-20'
-      } ${position === 'top' ? 'mt-[132px]' : position === 'bottom' ? '-mt-[106px]' : ''} 
-          ${isSelected ? 'bg-[#11a0ff] shadow-md' : 'dynamic-card'}
+      className={`flex flex-col group-hover:bg-card rounded-md items-center gap-2 relative ${
+        isMobile ? 'w-64' : 'w-48'
+      } ${position === 'top' ? 'mt-[132px]' : position === 'bottom' ? '-mt-32' : ''} 
+          ${isSelected ? 'bg-card shadow-md' : 'dynamic-card'}
         `}
       style={{
         width: '200px',
-        maxWidth: '100%',
         visibility: title === 'dummy' ? 'hidden' : 'visible',
       }}
     >
       {/* Milestone Content */}
-      <div
-        className={`text-center border-line-bg w-full h-full rounded-md p-4 ${
-          isMobile ? 'text-base' : 'text-sm'
-        } border ${isSelected ? 'border-blue-500' : ''}`}
+      <Card
+        className={`relative w-full h-full rounded-md p-3 md:p-4 hover:shadow-md ${isSelected ? 'border' : ''}`}
       >
-        <p className="text-xs">
-          {new Date(date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </p>
-        <h3 className={`font-bold  ${isMobile ? 'text-lg' : 'text-sm'}`}>
-          {truncateDescription(title, 20)}
-        </h3>
-        {summary && (
-          <div className="flex items-center justify-center mt-1">
-            <button
-              className="p-0.5 h-auto bg-transparent border-none cursor-pointer hover:bg-gray-100 rounded"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsOpen(true);
-              }}
+        {/* Date chip + Title + Action */}
+        <div className="flex flex-col items-center justify-between gap-2 mb-2">
+          <div className="flex flex-row items-center justify-between w-1/2">
+            <h3
+              className={`font-semibold truncate ${isMobile ? 'text-lg' : 'text-sm'}`}
+              title={title}
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button>
+              {truncateDescription(title, 20)}
+            </h3>
+            {summary && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsOpen(true);
+                      }}
+                      aria-label="View description"
+                    >
+                      <Info className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View description</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
-        )}
-      </div>
+          <span className="inline-block px-2 py-0.5 rounded-full bg-muted text-[10px] md:text-xs text-muted-foreground">
+            {new Date(date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </span>
+        </div>
+      </Card>
       {/* Dialog for description */}
       {/* Lazy import to avoid circular deps */}
       {isOpen && (
@@ -96,15 +116,6 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
 
 export default MilestoneCards;
 
-// Lightweight in-file dialog to avoid many imports in parent
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-
 function DescriptionDialog({
   title,
   content,
@@ -118,7 +129,7 @@ function DescriptionDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-[90vw] md:w-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription asChild>

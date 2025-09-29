@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { toast } from '@/hooks/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 interface Interviewer {
   _id: string;
@@ -109,11 +109,7 @@ export function SkillDomainMeetingDialog({
       }
     } catch (error) {
       console.error('Error fetching Google Auth URL:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   };
 
@@ -127,11 +123,7 @@ export function SkillDomainMeetingDialog({
           setInterviewer(response?.data?.data);
         } catch (error) {
           console.error('Error fetching data:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Something went wrong.Please try again.',
-          }); // Error toast
+          notifyError('Something went wrong. Please try again.', 'Error');
         }
       }
     }

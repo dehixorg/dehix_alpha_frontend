@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
 // import Link from 'next/link';
 
@@ -91,18 +91,11 @@ export function ProjectProfileDetailCard({
       setAmount('');
       setDescription('');
       setDialogOpen(false);
-      toast({
-        title: 'Bid Added',
-        description: 'The Bid has been successfully added.',
-      });
+      notifySuccess('The Bid has been successfully added.', 'Bid Added');
       // window.location.reload();
     } catch (error) {
       console.error('Error submitting bid:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   };
 
@@ -114,11 +107,7 @@ export function ProjectProfileDetailCard({
         setBidProfiles(profileIds);
       } catch (error) {
         console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong. Please try again.', 'Error');
       }
     }
     fetchData();

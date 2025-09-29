@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
-import { ToastAction } from '@radix-ui/react-toast';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -29,7 +28,7 @@ import { cn } from '@/lib/utils';
 import TextInput from '@/components/shared/input'; // Import the reusable TextInput component
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Label } from '@/components/ui/label';
 import {
   Form,
@@ -349,11 +348,10 @@ function FreelancerRegisterForm({
       if (isValid) {
         setCurrentStep(currentStep + 1);
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Validation Error',
-          description: 'Please fill in all required fields before proceeding.',
-        });
+        notifyError(
+          'Please fill in all required fields before proceeding.',
+          'Validation Error',
+        );
       }
     } else if (currentStep === 1) {
       const isValid = await form.trigger([
@@ -380,29 +378,25 @@ function FreelancerRegisterForm({
           if (response.data.duplicate === false) {
             setCurrentStep(currentStep + 1);
           } else {
-            toast({
-              variant: 'destructive',
-              title: 'User Already Exists',
-              description:
-                'This username is already taken. Please choose another one.',
-            });
+            notifyError(
+              'This username is already taken. Please choose another one.',
+              'User Already Exists',
+            );
             setLastCheckedUsername(username);
           }
         } catch (error: any) {
-          toast({
-            variant: 'destructive',
-            title: 'API Error',
-            description: 'There was an error while checking the username.',
-          });
+          notifyError(
+            'There was an error while checking the username.',
+            'API Error',
+          );
         } finally {
           setIsVerified(false);
         }
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Validation Error',
-          description: 'Please fill in all required fields before proceeding.',
-        });
+        notifyError(
+          'Please fill in all required fields before proceeding.',
+          'Validation Error',
+        );
       }
     }
   };
@@ -413,7 +407,6 @@ function FreelancerRegisterForm({
     const referralCodeFromForm = data.referralCode;
 
     const referralCode = referralCodeFromQuery || referralCodeFromForm || null;
-
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
     );
@@ -445,23 +438,19 @@ function FreelancerRegisterForm({
       ? `/register/freelancer?referralCode=${referralCode}`
       : '/register/freelancer';
 
+    console.log(url);
     try {
       await axiosInstance.post(url, formData);
-      toast({
-        title: 'Account created successfully!',
-        description: 'Redirecting to login page...',
-      });
+      notifySuccess(
+        'Redirecting to login page...',
+        'Account created successfully!',
+      );
       setIsModalOpen(true);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: errorMessage,
-        action: <ToastAction altText="Try again">Try again</ToastAction>,
-      });
+      notifyError(errorMessage, 'Uh oh! Something went wrong.');
     } finally {
       setTimeout(() => setIsLoading(false), 100);
     }

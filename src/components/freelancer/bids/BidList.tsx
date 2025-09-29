@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { fetchInterviewBids } from '@/lib/api/interviews';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 type InterviewBid = {
   _id?: string;
@@ -52,7 +52,7 @@ const BidList = ({
         }
       } catch (error) {
         console.error(error);
-        toast({ description: 'Failed to fetch interview bids' });
+        notifyError('Failed to fetch interview bids', 'Error');
       }
     };
 

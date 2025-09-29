@@ -1,12 +1,12 @@
 'use client';
-import { useState } from 'react';
+
+import { useRouter, useParams } from 'next/navigation';
 import { BookOpen, Briefcase, User, Package } from 'lucide-react';
 
-import BusinessVerification from '../../../components/freelancer/oracleDashboard/BusinessVerification';
-import EducationVerification from '../../../components/freelancer/oracleDashboard/EducationVerification';
-import ProjectVerification from '../../../components/freelancer/oracleDashboard/ProjectVerification';
-import WorkExpVerification from '../../../components/freelancer/oracleDashboard/WorkExpVerification';
-
+import BusinessVerification from '@/components/freelancer/oracleDashboard/BusinessVerification';
+import EducationVerification from '@/components/freelancer/oracleDashboard/EducationVerification';
+import ProjectVerification from '@/components/freelancer/oracleDashboard/ProjectVerification';
+import WorkExpVerification from '@/components/freelancer/oracleDashboard/WorkExpVerification';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -16,11 +16,26 @@ import {
 import Header from '@/components/header/header';
 
 export default function OracleDashboardPage() {
-  const [activeTab, setActiveTab] = useState('business');
+  const router = useRouter();
+  const params = useParams();
+
+  // Determine active tab from dynamic route params
+  const slugParam = (params as any)?.slug;
+  const lastSegment = Array.isArray(slugParam)
+    ? slugParam[slugParam.length - 1] || ''
+    : slugParam ?? '';
+  const validTabs = ['business', 'experience', 'project', 'education'];
+  const currentTabFromURL = validTabs.includes(lastSegment)
+    ? lastSegment
+    : 'business';
+
+  // Update URL when tab changes
+  const handleTabChange = (tab: string) => {
+    router.push(`/freelancer/oracleDashboard/${tab}`);
+  };
 
   return (
-    <div className="flex min-h-screen bg-muted/40 w-full flex-col pb-10">
-      {/* Sidebar */}
+    <div className="flex min-h-screen w-full flex-col pb-10">
       <SidebarMenu
         menuItemsTop={freelancerMenuItemsTop}
         menuItemsBottom={freelancerMenuItemsBottom}
@@ -33,15 +48,17 @@ export default function OracleDashboardPage() {
           activeMenu="Oracle"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Oracle Dashboard', link: '/freelancer/oracleDashboard' },
+            {
+              label: 'Oracle Dashboard',
+              link: `/freelancer/oracleDashboard/${currentTabFromURL}`,
+            },
           ]}
         />
-        {/* Main Content */}
         <div className="flex-1 px-4 py-6">
           <div className="mx-auto w-full max-w-7xl">
             <Tabs
-              defaultValue={activeTab}
-              onValueChange={setActiveTab}
+              value={currentTabFromURL}
+              onValueChange={handleTabChange}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-4">
@@ -74,6 +91,7 @@ export default function OracleDashboardPage() {
                   <span>Education</span>
                 </TabsTrigger>
               </TabsList>
+
               <TabsContent value="business">
                 <BusinessVerification />
               </TabsContent>

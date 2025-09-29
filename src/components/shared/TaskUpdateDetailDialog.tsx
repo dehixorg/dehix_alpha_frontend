@@ -13,8 +13,8 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
 import { Select, SelectTrigger, SelectContent, SelectItem } from '../ui/select';
-import { toast } from '../ui/use-toast';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 interface TaskUpdateDetailDialogProps {
@@ -103,30 +103,18 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
 
       setShowPermissionDialog(false);
 
-      toast({
-        title: 'Success',
-        description: 'Update request sent successfully.',
-        duration: 3000,
-      });
+      notifySuccess('Update request sent successfully.', 'Success');
       fetchMilestones();
     } catch (error) {
       console.error('Error during update request:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to send update request. Please try again.',
-        variant: 'destructive',
-        duration: 3000,
-      });
+      notifyError('Failed to send update request. Please try again.', 'Error');
     }
   };
 
   const handleSave = async () => {
     // Check if any field has been updated
     if (JSON.stringify(taskData) === JSON.stringify(initialTaskData)) {
-      toast({
-        description: 'No changes detected. Task update not required.',
-        duration: 3000,
-      });
+      notifySuccess('No changes detected. Task update not required.', 'Info');
       return;
     }
 
@@ -142,18 +130,12 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
         summary: taskData.summary,
         taskStatus: taskData.taskStatus,
       });
-      toast({
-        description: 'Task updated',
-        duration: 3000,
-      });
+      notifySuccess('Task updated', 'Success');
       setShowPermissionDialog(false);
       fetchMilestones();
     } catch (error) {
       console.error('Task update failed:', error);
-      toast({
-        description: 'Task not updated, please try again.',
-        duration: 3000,
-      });
+      notifyError('Task not updated, please try again.', 'Error');
     }
   };
 
