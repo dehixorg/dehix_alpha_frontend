@@ -471,14 +471,15 @@ export default function ProfileDetailPage() {
         ...prev,
         experiences: updatedExperiences,
       }));
-<<<<<<< HEAD
-    } catch (error) {
-=======
-
       const updatePayload = transformProfileForAPI({
         ...editingProfileData,
         experiences: updatedExperiences,
       });
+
+      if (!profile) {
+        console.error('Profile is null, cannot update profile');
+        return; // or handle gracefully (e.g., show toast, redirect, etc.)
+      }
 
       await axiosInstance.put(
         `/freelancer/profile/${profile._id}`,
@@ -488,7 +489,6 @@ export default function ProfileDetailPage() {
       notifySuccess('Experience removed from profile successfully', 'Success');
       await fetchProfile();
     } catch (error: any) {
->>>>>>> 8a4f8a99cbb02698af729f516a31b0fb504dc7ac
       console.error('Error removing experience:', error);
       notifyError('Failed to remove experience from profile', 'Error');
     }

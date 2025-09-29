@@ -32,11 +32,7 @@ interface ExperienceSelectionDialogProps {
   onOpenChange: (open: boolean) => void;
   freelancerId: string;
   currentProfileId: string;
-<<<<<<< HEAD
   onSuccess?: (newExperiences: Experience[]) => void;
-=======
-  onSuccess?: (selectedExperiences: Experience[]) => void;
->>>>>>> 8a4f8a99cbb02698af729f516a31b0fb504dc7ac
 }
 
 export default function ExperienceSelectionDialog({
@@ -52,12 +48,7 @@ export default function ExperienceSelectionDialog({
     [],
   );
   const [isLoading, setIsLoading] = useState(false);
-<<<<<<< HEAD
   const [isAdding, setIsAdding] = useState(false);
-  const { toast } = useToast();
-=======
-  const [isAddingExperiences, setIsAddingExperiences] = useState(false);
->>>>>>> 8a4f8a99cbb02698af729f516a31b0fb504dc7ac
 
   useEffect(() => {
     if (open && freelancerId && currentProfileId) {
@@ -77,18 +68,9 @@ export default function ExperienceSelectionDialog({
         : Object.values(professionalInfo || {});
       setExperiences(expArray);
     } catch (error) {
-
-      console.error(error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load experiences',
-        variant: 'destructive',
-      });
-
       console.error('Error fetching experiences:', error);
       notifyError('Failed to load experiences', 'Error');
       setExperiences([]);
-
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +85,7 @@ export default function ExperienceSelectionDialog({
       const profileExps = response.data?.data?.experiences || [];
       setExistingExperienceIds(profileExps.map((e: any) => e._id));
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching profile experiences:', error);
       setExistingExperienceIds([]);
     }
   };
@@ -114,6 +96,7 @@ export default function ExperienceSelectionDialog({
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
+
   const handleAddExperiences = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -134,7 +117,6 @@ export default function ExperienceSelectionDialog({
 
     setIsAdding(true);
     try {
-
       // ✅ Fetch current profile experiences first
       const profileRes = await axiosInstance.get(
         `/freelancer/profile/${currentProfileId}`,
@@ -162,10 +144,10 @@ export default function ExperienceSelectionDialog({
         })),
       });
 
-      toast({
-        title: 'Success',
-        description: `${experiencesToAdd.length} experience(s) added to profile successfully!`,
-      });
+      notifySuccess(
+        `${experiencesToAdd.length} experience(s) added to profile successfully!`,
+        'Success',
+      );
 
       const selectedObjects = experiences.filter((exp) =>
         selectedExperiences.includes(exp._id),
@@ -177,12 +159,6 @@ export default function ExperienceSelectionDialog({
       );
 
       onSuccess?.(selectedObjects);
-
-
-      // ✅ Update parent UI
-      if (onSuccess) {
-        onSuccess(experiencesToAdd);
-      }
 
       setSelectedExperiences([]);
       onOpenChange(false);
