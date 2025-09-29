@@ -51,7 +51,7 @@ export default function Education() {
       isMounted = false;
     };
   }, [user.uid, refresh]);
-   const handleDelete = async (educationId: string) => {
+  const handleDelete = async (educationId: string) => {
     try {
       await axiosInstance.delete(`/freelancer/education/${educationId}`);
       notifySuccess('Education record deleted successfully!');
