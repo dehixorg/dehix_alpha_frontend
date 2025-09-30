@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import Image from 'next/image';
 
-import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -98,7 +97,7 @@ export function ReportForm({
   };
 
   return (
-    <Card className="rounded-lg border-none shadow-none bg-transparent p-1">
+    <div className="rounded-lg border-none shadow-none p-1">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* 🧾 Subject, Report Type & Role in One Row */}
@@ -300,6 +299,6 @@ export function ReportForm({
           </Button>
         </form>
       </Form>
-    </Card>
+    </div>
   );
 }

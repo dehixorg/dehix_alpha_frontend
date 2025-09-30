@@ -36,14 +36,14 @@ export default function Talent() {
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40 overflow-auto">
+    <div className="flex min-h-screen w-full flex-col overflow-auto">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Dehix Talent"
       />
 
-      <div className="flex flex-col sm:gap-4  sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
