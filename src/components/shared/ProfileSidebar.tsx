@@ -254,8 +254,7 @@ export function ProfileSidebar({
       const messagesSnapshot = await getDocs(messagesQuery);
       const extractedMedia: MediaItem[] = [];
 
-      const s3BucketUrl =
-        'https://de-test-bucket-8285.s3.ap-south-1.amazonaws.com/';
+      const s3BucketUrl = process.env.NEXT_PUBLIC_S3_BUCKET_URL ?? '';
 
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
@@ -269,6 +268,7 @@ export function ProfileSidebar({
           mediaUrl = message.content;
         } else if (
           typeof message.content === 'string' &&
+          s3BucketUrl &&
           message.content.startsWith(s3BucketUrl)
         ) {
           mediaUrl = message.content;
