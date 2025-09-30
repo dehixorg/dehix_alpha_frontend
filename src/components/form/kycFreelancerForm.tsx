@@ -409,8 +409,9 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   const statusColors = (status: string) => {
     const s = (status || '').toUpperCase();
     if (s === 'APPROVED' || s === 'VERIFIED' || s === 'SUCCESS')
-      return 'bg-green-500/10 text-green-600';
-    if (s === 'REJECTED' || s === 'FAILED') return 'bg-red-500/10 text-red-600';
+      return 'bg-green-500/10 text-green-600 hover:bg-green-500/20';
+    if (s === 'REJECTED' || s === 'FAILED')
+      return 'bg-red-500/10 text-red-600 hover:bg-red-500/20';
     // Pending-like statuses
     if (
       s === 'PENDING' ||
@@ -418,8 +419,8 @@ export default function KYCForm({ user_id }: { user_id: string }) {
       s === 'IN_REVIEW' ||
       s === 'UNDER_REVIEW'
     )
-      return 'bg-yellow-500/10 text-yellow-600';
-    return 'bg-muted text-muted-foreground';
+      return 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20';
+    return 'bg-muted text-muted-foreground hover:bg-muted/20';
   };
 
   return (
@@ -433,7 +434,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
         </div>
         <Badge
           className={cn(
-            'text-xs md:text-sm font-medium border-0 capitalize',
+            'text-xs md:text-sm font-medium border-0 capitalize hover:bg-primary/60',
             statusColors(kycStatus),
           )}
         >

@@ -199,11 +199,11 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                     {!isCapturing && isMediaSupported && (
                       <Button
                         type="button"
-                        variant="default"
+                        variant="secondary"
                         size="sm"
                         onClick={startLiveCapture}
                       >
-                        <Camera className="w-4 h-4 mr-2" />
+                        <Camera className="w-4 h-4" />
                         Start camera
                       </Button>
                     )}

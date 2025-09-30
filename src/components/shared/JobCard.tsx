@@ -422,7 +422,7 @@ const JobCard: React.FC<JobCardProps> = ({
                       {profile?.freelancersRequired || '1'}{' '}
                       {profile?.freelancersRequired === '1'
                         ? 'Position'
-                        : 'Posions'}
+                        : 'Positions'}
                     </p>
                   </div>
                 </div>
