@@ -668,7 +668,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                               ? URL.createObjectURL(v)
                               : '';
                         return src ? (
-                          <div className="mt-1 inline-block border rounded-lg p-2">
+                          <div className="mt-1 inline-block border rounded-lg">
                             <Image
                               src={src}
                               alt="Selfie"

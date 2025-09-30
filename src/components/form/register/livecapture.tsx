@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Camera } from 'lucide-react';
+import { Camera, RefreshCw, User2 } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
@@ -253,38 +253,7 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
-                        {/* Simple inline illustration */}
-                        <svg
-                          width="80"
-                          height="80"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          className="mb-3"
-                        >
-                          <circle
-                            cx="12"
-                            cy="7"
-                            r="3"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                          />
-                          <path
-                            d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                          <rect
-                            x="2"
-                            y="3"
-                            width="20"
-                            height="18"
-                            rx="3"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            opacity="0.3"
-                          />
-                        </svg>
+                        <User2 className="w-14 h-14 mb-3 border-4 border-muted-foreground rounded-full" />
                         <p className="text-sm">
                           No live preview. Start the camera to capture a selfie.
                         </p>
@@ -295,13 +264,13 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                   {/* Right: Captured preview only (no upload alternative) */}
                   <div className="space-y-3">
                     {previewSrc ? (
-                      <div className="border rounded-md p-2 flex items-center justify-center bg-background">
+                      <div className="rounded-md flex items-center justify-center">
                         <Image
                           src={previewSrc}
                           alt="Selfie preview"
                           width={260}
                           height={260}
-                          className="rounded-md object-cover"
+                          className="rounded-md object-cover border"
                           unoptimized
                         />
                       </div>
@@ -313,27 +282,20 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
 
                     {/* Actions under preview */}
                     {(capturedImage || field.value) && (
-                      <div className="flex gap-2">
+                      <div className="flex-1">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
+                          className="w-full"
                           onClick={() => {
                             setCapturedImage(null);
                             form.setValue('liveCaptureUrl', '');
                             if (isMediaSupported) startLiveCapture();
                           }}
                         >
+                          <RefreshCw className="w-4 h-4" />
                           Retake
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => {
-                            // Keep as is and continue
-                          }}
-                        >
-                          Keep
                         </Button>
                       </div>
                     )}
