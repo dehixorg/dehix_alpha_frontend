@@ -102,6 +102,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
+  const [open, setOpen] = useState(false);
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -390,8 +391,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                   control={form.control}
                   name="techUsed"
                   render={({ field }) => {
-                    const [open, setOpen] = useState(false);
-
                     const toggleSkill = (skillLabel: string) => {
                       let updatedSkills: string[] = [];
                       if (currSkills.includes(skillLabel)) {

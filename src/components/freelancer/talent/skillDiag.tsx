@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogTrigger,
@@ -15,19 +15,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectTrigger,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import SelectTagPicker from '@/components/shared/SelectTagPicker';
+
 interface Skill {
   _id: string;
   label: string;
@@ -71,9 +64,9 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   const {
     control,
     handleSubmit,
-    formState: { errors },
     reset,
     setValue,
+    formState: { errors },
   } = useForm<SkillDomainData>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
@@ -85,19 +78,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
       status: StatusEnum.PENDING,
     },
   });
-
-  const handleSkillSelect = (skillLabel: string) => {
-    const skill = skills.find((s) => s.label === skillLabel);
-    if (skill && !selectedSkills.find((s) => s._id === skill._id)) {
-      setSelectedSkills((prev) => [...prev, skill]);
-      setValue('label', skillLabel); // update form value
-    }
-  };
-
-  const removeSkill = (skillId: string) => {
-    setSelectedSkills((prev) => prev.filter((s) => s._id !== skillId));
-    if (selectedSkills.length === 1) setValue('label', ''); // reset form if no skills
-  };
 
   const onSubmit = async (data: SkillDomainData) => {
     if (selectedSkills.length === 0) {
@@ -134,10 +114,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="h-4 w-4" />
-          Add Skill
-        </Button>
+        <Button size="sm">Add Skill</Button>
       </DialogTrigger>
 
       <DialogContent>
@@ -149,7 +126,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Skill Select */}
           <div className="mb-3">
             <Controller
               control={control}
@@ -193,26 +169,19 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
             )}
           </div>
 
-          {/* Experience input */}
           <div className="mb-3">
             <Controller
               control={control}
               name="experience"
               render={({ field }) => (
-                <div className="relative">
-                  <Input
-                    type="number"
-                    placeholder="Experience (years)"
-                    min={0}
-                    max={50}
-                    step={0.1}
-                    {...field}
-                    className="mt-2 w-full text-white placeholder-white"
-                  />
-                  <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                    YEARS
-                  </span>
-                </div>
+                <Input
+                  type="number"
+                  placeholder="Experience (years)"
+                  min={0}
+                  max={50}
+                  step={0.1}
+                  {...field}
+                />
               )}
             />
             {errors.experience && (
@@ -220,24 +189,17 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
             )}
           </div>
 
-          {/* Monthly Pay input */}
           <div className="mb-3">
             <Controller
               control={control}
               name="monthlyPay"
               render={({ field }) => (
-                <div className="relative">
-                  <Input
-                    type="number"
-                    placeholder="$ Monthly Pay"
-                    min={0}
-                    {...field}
-                    className="mt-2 w-full text-white placeholder-white"
-                  />
-                  <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                    $
-                  </span>
-                </div>
+                <Input
+                  type="number"
+                  placeholder="$ Monthly Pay"
+                  min={0}
+                  {...field}
+                />
               )}
             />
             {errors.monthlyPay && (

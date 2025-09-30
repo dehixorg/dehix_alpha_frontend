@@ -1,11 +1,10 @@
 'use client';
 
-import type React from 'react';
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import React, { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,26 +15,20 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectTrigger,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import SelectTagPicker from '@/components/shared/SelectTagPicker';
+
 interface Domain {
   _id: string;
   label: string;
 }
 
 interface DomainData {
-  domainIds: string[]; // multiple selected domain IDs
-  labels: string[]; // multiple selected labels
+  domainId: string;
+  label: string;
   experience: string;
   monthlyPay: string;
   activeStatus: boolean;
@@ -49,8 +42,8 @@ interface DomainDialogProps {
 }
 
 const domainSchema = z.object({
-  domainIds: z.array(z.string()).min(1, 'Please select at least one domain'),
-  labels: z.array(z.string()),
+  domainId: z.string(),
+  label: z.string().nonempty('Please select at least one domain'),
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -61,12 +54,12 @@ const domainSchema = z.object({
     .regex(/^\d+$/, 'Monthly pay must be a number'),
   activeStatus: z.boolean(),
   status: z.string(),
-  type: z.string(),
 });
 
 const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedDomains, setSelectedDomains] = useState<Domain[]>([]);
 
   const {
     control,
@@ -77,8 +70,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   } = useForm<DomainData>({
     resolver: zodResolver(domainSchema),
     defaultValues: {
-      domainIds: [],
-      labels: [],
+      domainId: '',
+      label: '',
       experience: '',
       monthlyPay: '',
       activeStatus: false,
@@ -88,12 +81,17 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   });
 
   const onSubmit = async (data: DomainData) => {
+    if (selectedDomains.length === 0) {
+      notifyError('Please select at least one domain', 'Error');
+      return;
+    }
+
     setLoading(true);
     try {
-      for (let i = 0; i < data.domainIds.length; i++) {
-        await axiosInstance.post('/freelancer/dehix-talent', {
-          talentId: data.domainIds[i],
-          talentName: data.labels[i],
+      for (const domain of selectedDomains) {
+        await axiosInstance.post(`/freelancer/dehix-talent`, {
+          talentId: domain._id,
+          talentName: domain.label,
           experience: data.experience,
           monthlyPay: data.monthlyPay,
           activeStatus: data.activeStatus,
@@ -102,6 +100,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
         });
       }
       reset();
+      setSelectedDomains([]);
       setOpen(false);
       notifySuccess('Domains added successfully', 'Success');
       onSuccess();
@@ -116,9 +115,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="h-4 w-4" /> Add Domain
-        </Button>
+        <Button size="sm">Add Domain</Button>
       </DialogTrigger>
 
       <DialogContent>
@@ -130,36 +127,33 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Domain Select */}
           <div className="mb-3">
             <Controller
               control={control}
-              name="labels"
+              name="label"
               render={({ field }) => (
                 <SelectTagPicker
                   label="Domains"
                   options={domains.map((d) => ({ label: d.label, _id: d._id }))}
-                  selected={field.value.map((l) => ({ name: l }))}
+                  selected={selectedDomains.map((d) => ({ name: d.label }))}
                   onAdd={(val) => {
                     const domain = domains.find((d) => d.label === val);
-                    if (domain) {
-                      const newLabels = [...field.value, val];
-                      const newIds = [
-                        ...(control._formValues.domainIds || []),
-                        domain._id,
-                      ];
-                      field.onChange(newLabels);
-                      setValue('domainIds', newIds);
+                    if (
+                      domain &&
+                      !selectedDomains.find((d) => d._id === domain._id)
+                    ) {
+                      setSelectedDomains((prev) => [...prev, domain]);
+                      setValue('label', val);
                     }
                   }}
                   onRemove={(val) => {
-                    const index = field.value.indexOf(val);
-                    const newLabels = field.value.filter((l) => l !== val);
-                    const newIds = (control._formValues.domainIds || []).filter(
-                      (_, i) => i !== index,
-                    );
-                    field.onChange(newLabels);
-                    setValue('domainIds', newIds);
+                    const domain = domains.find((d) => d.label === val);
+                    if (domain) {
+                      setSelectedDomains((prev) =>
+                        prev.filter((d) => d._id !== domain._id),
+                      );
+                      if (selectedDomains.length === 1) setValue('label', '');
+                    }
                   }}
                   className="w-full"
                   optionLabelKey="label"
@@ -169,32 +163,26 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
                 />
               )}
             />
-            {errors.domainIds && (
+            {errors.label && (
               <p className="text-red-600 text-sm mt-1">
-                {errors.domainIds.message}
+                {errors.label.message}
               </p>
             )}
           </div>
 
-          {/* Experience Input */}
           <div className="mb-3">
             <Controller
               control={control}
               name="experience"
               render={({ field }) => (
-                <div className="relative">
-                  <Input
-                    type="number"
-                    placeholder="Experience (years)"
-                    min={0}
-                    step={0.1}
-                    {...field}
-                    className="mt-2 w-full"
-                  />
-                  <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
-                    YEARS
-                  </span>
-                </div>
+                <Input
+                  type="number"
+                  placeholder="Experience (years)"
+                  min={0}
+                  max={50}
+                  step={0.1}
+                  {...field}
+                />
               )}
             />
             {errors.experience && (
@@ -202,24 +190,17 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
             )}
           </div>
 
-          {/* Monthly Pay Input */}
           <div className="mb-3">
             <Controller
               control={control}
               name="monthlyPay"
               render={({ field }) => (
-                <div className="relative">
-                  <Input
-                    type="number"
-                    placeholder="$ Monthly Pay"
-                    min={0}
-                    {...field}
-                    className="mt-2 w-full"
-                  />
-                  <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
-                    $
-                  </span>
-                </div>
+                <Input
+                  type="number"
+                  placeholder="$ Monthly Pay"
+                  min={0}
+                  {...field}
+                />
               )}
             />
             {errors.monthlyPay && (
@@ -227,7 +208,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
             )}
           </div>
 
-          <DialogFooter className="mt-3">
+          <DialogFooter className="mt-8">
             <Button type="submit" disabled={loading}>
               {loading ? 'Loading...' : 'Submit'}
             </Button>
