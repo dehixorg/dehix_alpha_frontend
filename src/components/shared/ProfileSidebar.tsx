@@ -254,7 +254,7 @@ export function ProfileSidebar({
       const messagesSnapshot = await getDocs(messagesQuery);
       const extractedMedia: MediaItem[] = [];
 
-      const s3BucketUrl = process.env.NEXT_PUBLIC_S3_BUCKET_URL ?? '';
+      const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL ?? '';
 
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
