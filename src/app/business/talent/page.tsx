@@ -59,7 +59,7 @@ export default function Talent() {
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
             { label: 'HireTalent', link: '#' },
-            { label: "Overview", link: '#' },
+            { label: 'Overview', link: '#' },
           ]}
         />
 
