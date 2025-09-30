@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import StatItem from '@/components/shared/StatItem';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -33,7 +32,6 @@ export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
   const [showMeetingDialog, setShowMeetingDialog] = useState(false);
-  const [currentTab, setCurrentTab] = useState(StatusEnum.ACTIVE);
   const [loading, setLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -72,10 +70,6 @@ export default function Dashboard() {
   useEffect(() => {
     fetchProjectData();
   }, [user.uid]);
-
-  const handleTabChange = (status: StatusEnum) => {
-    setCurrentTab(status);
-  };
 
   const handleCreateMeetClick = () => {
     setShowMeetingDialog(true);
@@ -197,59 +191,8 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Tabs for project filtering */}
-            <div className="overflow-x-auto">
-              <Tabs
-                value={currentTab}
-                onValueChange={(status) =>
-                  handleTabChange(status as StatusEnum)
-                }
-              >
-                <div className="flex items-center">
-                  <TabsList>
-                    <TabsTrigger value={StatusEnum.ACTIVE}>Active</TabsTrigger>
-                    <TabsTrigger value={StatusEnum.PENDING}>
-                      Pending
-                    </TabsTrigger>
-                    <TabsTrigger value={StatusEnum.COMPLETED}>
-                      Completed
-                    </TabsTrigger>
-                    <TabsTrigger value={StatusEnum.REJECTED}>
-                      Rejected
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <TabsContent value={StatusEnum.ACTIVE}>
-                  <ProjectTableCard
-                    type={StatusEnum.ACTIVE}
-                    projects={projects}
-                    loading={loading}
-                  />
-                </TabsContent>
-                <TabsContent value={StatusEnum.PENDING}>
-                  <ProjectTableCard
-                    type={StatusEnum.PENDING}
-                    projects={projects}
-                    loading={loading}
-                  />
-                </TabsContent>
-                <TabsContent value={StatusEnum.COMPLETED}>
-                  <ProjectTableCard
-                    type={StatusEnum.COMPLETED}
-                    projects={projects}
-                    loading={loading}
-                  />
-                </TabsContent>
-                <TabsContent value={StatusEnum.REJECTED}>
-                  <ProjectTableCard
-                    type={StatusEnum.REJECTED}
-                    projects={projects}
-                    loading={loading}
-                  />
-                </TabsContent>
-              </Tabs>
-            </div>
+            {/* Projects with internal tabs */}
+            <ProjectTableCard projects={projects} loading={loading} />
           </div>
 
           {/* Create Meet Section */}

@@ -7,7 +7,6 @@ import { FileText, History as HistoryIcon } from 'lucide-react';
 import { RootState } from '@/lib/store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -102,7 +101,7 @@ export default function NewReportPage() {
             </div>
 
             {/* Main Content */}
-            <div className="bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+            <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
               <Tabs defaultValue="new" className="w-full">
                 <div className="border-b px-6">
                   <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
@@ -124,33 +123,27 @@ export default function NewReportPage() {
                 </div>
 
                 <TabsContent value="new" className="m-0">
-                  <Card className="border-0 shadow-none bg-transparent">
-                    <CardHeader>
-                      <CardTitle className="text-lg">
-                        Create New Report
-                      </CardTitle>
-                      <CardDescription>
-                        Fill in the details below to generate a new report
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <NewReportTab reportData={reportData} />
-                    </CardContent>
-                  </Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Create New Report</CardTitle>
+                    <CardDescription>
+                      Fill in the details below to generate a new report
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <NewReportTab reportData={reportData} />
+                  </CardContent>
                 </TabsContent>
 
                 <TabsContent value="history" className="m-0">
-                  <Card className="border-0 shadow-none bg-transparent">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Report History</CardTitle>
-                      <CardDescription>
-                        View and manage your previously generated reports
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <PastReportsTab />
-                    </CardContent>
-                  </Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Report History</CardTitle>
+                    <CardDescription>
+                      View and manage your previously generated reports
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <PastReportsTab />
+                  </CardContent>
                 </TabsContent>
               </Tabs>
             </div>
