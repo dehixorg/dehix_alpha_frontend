@@ -1,4 +1,3 @@
-// src/app/business/market/accepted/page.tsx
 import React from 'react';
 
 import TalentLayout from '@/components/marketComponents/TalentLayout';

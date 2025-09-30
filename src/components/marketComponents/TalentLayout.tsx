@@ -241,7 +241,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   }, [activeTab, filters, fetchData]);
 
   const handleTabChange = (value: string) => {
-    router.push(`/business/market/${value}`);
+    router.push(`/business/talent/${value}`);
   };
 
   const handleApplyFilters = () => {
