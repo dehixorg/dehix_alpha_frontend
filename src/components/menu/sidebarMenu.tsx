@@ -31,7 +31,7 @@
 // }) => {
 //   return (
 //     <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
-//       <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
+//       <nav className="flex flex-col items-center gap-4 px-2 py-5">
 //         {menuItemsTop.map((item, index) => (
 //           <Tooltip key={index}>
 //             <TooltipTrigger asChild>
@@ -52,7 +52,7 @@
 //       <div className="mt-auto mx-auto">
 //         <ThemeToggle />
 //       </div>
-//       <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
+//       <nav className="flex flex-col items-center gap-4 px-2 py-5">
 //         {menuItemsBottom.map((item, index) => (
 //           <Tooltip key={index}>
 //             <TooltipTrigger asChild>
@@ -276,7 +276,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
 
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
-      <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
+      <nav className="flex flex-col items-center gap-4 px-2 py-5">
         {finalMenuItemsTop.map((item, index) => (
           <MenuIcon key={index} item={item} />
         ))}
@@ -291,7 +291,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       <div className="mt-auto mx-auto">
         <ThemeToggle />
       </div>
-      <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
+      <nav className="flex flex-col items-center gap-4 px-2 py-5">
         {menuItemsBottom.map((item, index) => (
           <MenuIcon key={index} item={item} />
         ))}

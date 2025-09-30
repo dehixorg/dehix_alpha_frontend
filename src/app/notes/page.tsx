@@ -83,17 +83,15 @@ const Notes = () => {
       />
 
       <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
-        <div>
-          <Header
-            menuItemsTop={notesMenu}
-            menuItemsBottom={menuItemsBottom}
-            activeMenu="Notes"
-            breadcrumbItems={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Notes', link: '/notes' },
-            ]}
-          />
-        </div>
+        <Header
+          menuItemsTop={notesMenu}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Notes"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Notes', link: '/notes' },
+          ]}
+        />
         {/* Main content area */}
         <div>
           <NotesHeader

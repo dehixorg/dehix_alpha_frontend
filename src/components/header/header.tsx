@@ -65,7 +65,7 @@ const Header: React.FC<HeaderProps> = ({
   }, [user?.uid]);
 
   return (
-  <header className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 border-b">
+    <header className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 border-b">
       {/* Sidebar Menu */}
       <CollapsibleSidebarMenu
         menuItemsTop={menuItemsTop}
