@@ -119,37 +119,48 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
+      // Helper to ensure we send a URL (upload if File or data URL)
+      const ensureUrl = async (
+        value: unknown,
+        fieldName: 'frontImageUrl' | 'backImageUrl' | 'liveCaptureUrl',
+      ): Promise<string | null> => {
+        try {
+          if (typeof File !== 'undefined' && value instanceof File) {
+            return await uploadImage(value, fieldName);
+          }
+          if (typeof value === 'string') {
+            if (value.startsWith('data:image/')) {
+              // Convert data URL to file and upload
+              const resp = await fetch(value);
+              const blob = await resp.blob();
+              const file = new File([blob], `${fieldName}.jpg`, {
+                type: 'image/jpeg',
+              });
+              return await uploadImage(file, fieldName);
+            }
+            return value; // already a URL
+          }
+        } catch (e) {
+          console.error(`Failed to normalize ${fieldName}`, e);
+        }
+        return null;
+      };
+
       // The API expects userId at the root and KYC details nested under 'kyc'.
       const payload = {
-        userId: user_id, // Pass the userId here
+        userId: user_id,
         kyc: {
           aadharOrGovtId: data.aadharOrGovtId,
           salaryOrEarning: data.salaryOrEarning,
-          frontImageUrl: data.frontImageUrl,
-          backImageUrl: data.backImageUrl,
-          liveCaptureUrl: data.liveCaptureUrl,
-          status: 'PENDING',
+          frontImageUrl: await ensureUrl(data.frontImageUrl, 'frontImageUrl'),
+          backImageUrl: await ensureUrl(data.backImageUrl, 'backImageUrl'),
+          liveCaptureUrl: await ensureUrl(
+            data.liveCaptureUrl,
+            'liveCaptureUrl',
+          ),
+          status: 'APPLIED',
         },
-      };
-
-      if (data.frontImageUrl instanceof File) {
-        payload.kyc.frontImageUrl = await uploadImage(
-          data.frontImageUrl,
-          'frontImageUrl',
-        );
-      }
-      if (data.backImageUrl instanceof File) {
-        payload.kyc.backImageUrl = await uploadImage(
-          data.backImageUrl,
-          'backImageUrl',
-        );
-      }
-      if (data.liveCaptureUrl instanceof File) {
-        payload.kyc.liveCaptureUrl = await uploadImage(
-          data.liveCaptureUrl,
-          'liveCaptureUrl',
-        );
-      }
+      } as const;
 
       await axiosInstance.put(`/freelancer/kyc`, payload);
       setKycStatus('APPLIED');
@@ -596,32 +607,83 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-                    {typeof form.getValues('frontImageUrl') === 'string' && (
-                      <div>
-                        <p className="text-muted-foreground mb-2">
-                          Front Image
-                        </p>
-                        <Image
-                          src={form.getValues('frontImageUrl') as string}
-                          alt="Front Document"
-                          width={280}
-                          height={180}
-                          className="rounded-lg object-contain border shadow-sm"
-                        />
-                      </div>
-                    )}
-                    {typeof form.getValues('backImageUrl') === 'string' && (
-                      <div>
-                        <p className="text-muted-foreground mb-2">Back Image</p>
-                        <Image
-                          src={form.getValues('backImageUrl') as string}
-                          alt="Back Document"
-                          width={280}
-                          height={180}
-                          className="rounded-lg object-contain border shadow-sm"
-                        />
-                      </div>
-                    )}
+                    <div>
+                      <p className="text-muted-foreground mb-2">Front Image</p>
+                      {(() => {
+                        const v = form.getValues('frontImageUrl') as any;
+                        const src =
+                          typeof v === 'string'
+                            ? v
+                            : typeof File !== 'undefined' && v instanceof File
+                              ? URL.createObjectURL(v)
+                              : '';
+                        return src ? (
+                          <Image
+                            src={src}
+                            alt="Front Document"
+                            width={280}
+                            height={180}
+                            className="rounded-lg object-contain border shadow-sm"
+                          />
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No front image
+                          </p>
+                        );
+                      })()}
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground mb-2">Back Image</p>
+                      {(() => {
+                        const v = form.getValues('backImageUrl') as any;
+                        const src =
+                          typeof v === 'string'
+                            ? v
+                            : typeof File !== 'undefined' && v instanceof File
+                              ? URL.createObjectURL(v)
+                              : '';
+                        return src ? (
+                          <Image
+                            src={src}
+                            alt="Back Document"
+                            width={280}
+                            height={180}
+                            className="rounded-lg object-contain border shadow-sm"
+                          />
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No back image
+                          </p>
+                        );
+                      })()}
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Selfie</p>
+                      {(() => {
+                        const v = form.getValues('liveCaptureUrl') as any;
+                        const src =
+                          typeof v === 'string'
+                            ? v
+                            : typeof File !== 'undefined' && v instanceof File
+                              ? URL.createObjectURL(v)
+                              : '';
+                        return src ? (
+                          <div className="mt-1 inline-block border rounded-lg p-2">
+                            <Image
+                              src={src}
+                              alt="Selfie"
+                              width={180}
+                              height={180}
+                              className="rounded-md object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No selfie provided
+                          </p>
+                        );
+                      })()}
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Please confirm that the details and images are correct
@@ -629,7 +691,6 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                   </p>
                 </div>
               )}
-
               {/* Navigation */}
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Button

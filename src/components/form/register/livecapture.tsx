@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Camera } from 'lucide-react';
-import { UseFormReturn } from 'react-hook-form'; // Add this import
-import { axiosInstance } from '@/lib/axiosinstance';
+import { UseFormReturn } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,9 +11,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-// Add interface for props
 interface LiveCaptureFieldProps {
-  form: UseFormReturn<any>; // Use appropriate type for your form
+  form: UseFormReturn<any>;
 }
 
 const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
@@ -24,7 +22,9 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [canShoot, setCanShoot] = useState(false);
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const isMediaSupported =
     typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
 
@@ -50,6 +50,18 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
         videoRef.current.setAttribute('playsinline', 'true');
         videoRef.current.muted = true;
         await videoRef.current.play();
+        // Wait for metadata to ensure width/height
+        await new Promise((resolve) => {
+          const onLoaded = () => {
+            setCanShoot((videoRef.current?.videoWidth || 0) > 0);
+            resolve(true);
+          };
+          if ((videoRef.current?.readyState || 0) >= 1) onLoaded();
+          else
+            videoRef.current?.addEventListener('loadedmetadata', onLoaded, {
+              once: true,
+            });
+        });
       }
     } catch (err) {
       console.error('Error accessing camera:', err);
@@ -65,7 +77,20 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvasRef.current.getContext('2d');
-      if (context && video.videoWidth > 0 && video.videoHeight > 0) {
+      // If video dimensions aren't ready yet, wait a few frames
+      let tries = 0;
+      while (
+        (video.videoWidth === 0 || video.videoHeight === 0) &&
+        tries < 10
+      ) {
+        await new Promise((r) => requestAnimationFrame(r));
+        tries++;
+      }
+      if (!context) {
+        setError('Unable to access drawing context.');
+        return;
+      }
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
         // Set canvas size to video size
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -74,29 +99,21 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
         const dataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(dataUrl);
 
-        // Convert to a file, upload immediately, and store URL in form
-        setUploading(true);
+        // Convert to a file and store in form; upload will happen on final submit
         try {
           const resp = await fetch(dataUrl);
           const blob = await resp.blob();
-          const file = new File([blob], 'live-capture.jpg', { type: 'image/jpeg' });
-          const formData = new FormData();
-          formData.append('liveCaptureUrl', file);
-          const res = await axiosInstance.post('/register/upload-image', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
+          const file = new File([blob], 'live-capture.jpg', {
+            type: 'image/jpeg',
           });
-          const url: string | undefined = res?.data?.data?.Location;
-          if (url) {
-            form.setValue('liveCaptureUrl', url, { shouldDirty: true, shouldValidate: true });
-            form.clearErrors('liveCaptureUrl' as any);
-          } else {
-            setError('Failed to upload captured image.');
-          }
+          form.setValue('liveCaptureUrl', file as any, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          form.clearErrors('liveCaptureUrl' as any);
         } catch (e) {
           console.error(e);
-          setError('Failed to upload captured image.');
-        } finally {
-          setUploading(false);
+          setError('Failed to process captured image.');
         }
 
         // Stop the camera stream
@@ -113,102 +130,226 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
   useEffect(() => {
     return () => {
       if (stream) stream.getTracks().forEach((t) => t.stop());
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [stream]);
+  }, [stream, objectUrl]);
+
+  // Maintain previewSrc reactively based on capturedImage and liveCaptureUrl field
+  useEffect(() => {
+    const updateFromValue = (val: any) => {
+      if (capturedImage) {
+        setPreviewSrc(capturedImage);
+        return;
+      }
+      if (typeof val === 'string') {
+        setPreviewSrc(val);
+      } else if (typeof File !== 'undefined' && val instanceof File) {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        const url = URL.createObjectURL(val);
+        setObjectUrl(url);
+        setPreviewSrc(url);
+      } else {
+        setPreviewSrc(null);
+      }
+    };
+
+    // initial
+    updateFromValue(form.getValues('liveCaptureUrl'));
+
+    // subscribe to changes
+    const subscription = form.watch((values: any, meta: any) => {
+      if (!meta || meta.name === 'liveCaptureUrl') {
+        updateFromValue(values?.liveCaptureUrl);
+      }
+    });
+    return () => {
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
+    };
+  }, [capturedImage]);
 
   return (
     <FormField
       control={form.control}
       name="liveCaptureUrl"
-      render={(
-        { field }, // Keep field even if unused for form control
-      ) => (
+      render={({ field }: any) => (
         <FormItem>
           <FormControl>
-            <div className="flex flex-col md:justify-start md:items-start sm:justify-center items-center gap-2">
-              {/* Live Capture Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 w-full">
-                {/* Captured Image Preview */}
-                {(capturedImage || field.value) && (
-                  <div className="flex flex-col items-center">
-                    <Image
-                      src={capturedImage || field.value}
-                      alt="Live Capture"
-                      width={250}
-                      height={250}
-                      className="rounded-md object-cover"
-                    />
+            <div className="w-full">
+              {/* Container */}
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="flex-1 min-w-[220px]">
+                    <p className="text-sm font-medium">Live selfie capture</p>
+                    <p className="text-xs text-muted-foreground">
+                      Allow camera, align your face within the guide, then take
+                      a photo.
+                    </p>
                   </div>
-                )}
-                {!field.value && capturedImage && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => {
-                      setCapturedImage(null);
-                      form.setValue('liveCaptureUrl', '');
-                      startLiveCapture();
-                    }}
-                  >
-                    Retake Photo
-                  </Button>
-                )}
-                {!isCapturing && isMediaSupported && (
-                  <Button type="button" onClick={startLiveCapture}>
-                    <Camera className="w-4 h-4 mr-2" />
-                    Live Capture
-                  </Button>
-                )}
-                {isCapturing && (
-                  <Button type="button" onClick={captureLiveImage}>
-                    {uploading ? 'Uploading…' : 'Take Photo'}
-                  </Button>
-                )}
+                  <div className="flex gap-2">
+                    {!isCapturing && isMediaSupported && (
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="sm"
+                        onClick={startLiveCapture}
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        Start camera
+                      </Button>
+                    )}
+                    {isCapturing && (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={captureLiveImage}
+                          disabled={!canShoot}
+                        >
+                          {canShoot ? 'Take photo' : 'Preparing…'}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            if (stream)
+                              stream.getTracks().forEach((t) => t.stop());
+                            setIsCapturing(false);
+                            setCanShoot(false);
+                          }}
+                        >
+                          Stop
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
 
-                {/* Stop camera */}
-                {isCapturing && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      if (stream) stream.getTracks().forEach((t) => t.stop());
-                      setIsCapturing(false);
-                    }}
-                  >
-                    Stop Camera
-                  </Button>
-                )}
+                {/* Capture/Preview Area */}
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Left: Live or Illustration */}
+                  <div className="relative flex items-center justify-center border rounded-md bg-background overflow-hidden h-64">
+                    {isCapturing ? (
+                      <div className="relative w-full h-full">
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          className="absolute inset-0 w-full h-full object-cover"
+                        >
+                          <track
+                            kind="captions"
+                            srcLang="en"
+                            label="English captions"
+                            src=""
+                          />
+                        </video>
+                        {/* Circular guide overlay */}
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                          <div className="h-44 w-44 rounded-full ring-2 ring-primary/70 ring-offset-2 ring-offset-background" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
+                        {/* Simple inline illustration */}
+                        <svg
+                          width="80"
+                          height="80"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          className="mb-3"
+                        >
+                          <circle
+                            cx="12"
+                            cy="7"
+                            r="3"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                          <rect
+                            x="2"
+                            y="3"
+                            width="20"
+                            height="18"
+                            rx="3"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            opacity="0.3"
+                          />
+                        </svg>
+                        <p className="text-sm">
+                          No live preview. Start the camera to capture a selfie.
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Live Video Preview */}
-                {isCapturing && (
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    className="w-64 h-48 border rounded-md"
-                    playsInline
-                  >
-                    {/* Add track element for accessibility */}
-                    <track
-                      kind="captions"
-                      srcLang="en"
-                      label="English captions"
-                      src=""
-                    />
-                  </video>
-                )}
+                  {/* Right: Captured preview only (no upload alternative) */}
+                  <div className="space-y-3">
+                    {previewSrc ? (
+                      <div className="border rounded-md p-2 flex items-center justify-center bg-background">
+                        <Image
+                          src={previewSrc}
+                          alt="Selfie preview"
+                          width={260}
+                          height={260}
+                          className="rounded-md object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <div className="border rounded-md p-3 bg-background text-center text-xs text-muted-foreground">
+                        No photo yet. Start the camera and take a live selfie.
+                      </div>
+                    )}
 
-                {/* Canvas (Hidden) */}
+                    {/* Actions under preview */}
+                    {(capturedImage || field.value) && (
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setCapturedImage(null);
+                            form.setValue('liveCaptureUrl', '');
+                            if (isMediaSupported) startLiveCapture();
+                          }}
+                        >
+                          Retake
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            // Keep as is and continue
+                          }}
+                        >
+                          Keep
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Hidden canvas used for capture */}
                 <canvas
                   ref={canvasRef}
                   className="hidden"
-                  width="640"
-                  height="480"
+                  width={640}
+                  height={480}
                 />
-              </div>
 
-              {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
+                {error && <p className="text-xs text-red-600 mt-3">{error}</p>}
+              </div>
             </div>
           </FormControl>
           <FormMessage />
