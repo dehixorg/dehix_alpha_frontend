@@ -2,20 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import * as React from 'react';
-import { Wallet, ListFilter } from 'lucide-react';
+import { Wallet, List, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
 import { ScrollArea } from '../ui/scroll-area';
 
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import {
@@ -26,14 +19,18 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface DisplayConnectsDialogProps {
   connects: number;
   userId: string;
 }
 
-const DisplayConnectsDialog = React.forwardRef<
+export const DisplayConnectsDialog = React.forwardRef<
   HTMLButtonElement,
   DisplayConnectsDialogProps
 >(({ connects, userId }, ref) => {
@@ -90,9 +87,7 @@ const DisplayConnectsDialog = React.forwardRef<
     );
   }, [data, filter]);
 
-  const handleFilterChange = (value: string) => {
-    setFilter(value);
-  };
+  // tabs will set filter via onValueChange
 
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = {
@@ -103,21 +98,15 @@ const DisplayConnectsDialog = React.forwardRef<
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
-  const filterOptions = [
-    { key: 'ALL', label: 'All' },
-    { key: 'APPROVED', label: 'Approved' },
-    { key: 'PENDING', label: 'Pending' },
-    { key: 'REJECTED', label: 'Rejected' },
-  ];
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
         <Button
           ref={ref}
           variant="outline"
           size="icon"
           className="relative rounded-full hover:scale-105 transition-transform ml-auto"
+          aria-label={`Connects${connects ? `, ${connects}` : ''}`}
         >
           <Wallet strokeWidth={1.1} className="w-5 h-5" />
           {connects > 0 && (
@@ -126,85 +115,163 @@ const DisplayConnectsDialog = React.forwardRef<
             </span>
           )}
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
-        <h2 className="text-xl font-semibold mb-4">Connects Request History</h2>
-        <div className="flex items-center gap-4 mb-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1 w-auto text-sm"
-              >
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only">Filter</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-40">
-              <DropdownMenuLabel>Status</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {filterOptions.map(({ key, label }) => (
-                <DropdownMenuCheckboxItem
-                  className="py-1"
-                  key={key}
-                  checked={filter === key}
-                  onSelect={() => handleFilterChange(key)}
+      </PopoverTrigger>
+      <PopoverContent className="p-0 overflow-hidden rounded-xl shadow-lg w-[min(92vw,420px)]">
+        <div className="h-full flex flex-col">
+          {/* Header */}
+          <div className="flex justify-between items-center p-3 border-b border-border bg-gradient-to-br from-background/70 to-muted/40">
+            <h2 className="text-sm sm:text-base font-semibold">Connects</h2>
+            <Badge className="rounded-md uppercase text-[9px] sm:text-[10px] font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-0.5 text-black dark:text-white">
+              {filteredData.length} total
+            </Badge>
+          </div>
+
+          {/* Tabs Controls */}
+          <div className="p-2">
+            <Tabs
+              value={filter}
+              onValueChange={(v) => setFilter(v)}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-4 bg-transparent h-10 p-0">
+                <TabsTrigger
+                  value="ALL"
+                  className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
                 >
-                  {label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="relative overflow-hidden">
-          <Table className="min-w-full border rounded-lg shadow-lg">
-            <TableHeader className="sticky top-0 z-10 bg-muted/40">
-              <TableRow className="text-center">
-                <TableHead className="text-center w-1/3">Connects</TableHead>
-                <TableHead className="text-center w-1/3">Status</TableHead>
-                <TableHead className="text-center w-1/3">Date</TableHead>
-              </TableRow>
-            </TableHeader>
-          </Table>
-          <ScrollArea className="max-h-[300px] no-scrollbar pb-10 overflow-y-auto">
-            <Table className="min-w-full">
-              <TableBody>
-                {filteredData.length > 0 ? (
-                  filteredData.map((item, idx) => (
-                    <TableRow key={idx} className="text-center">
-                      <TableCell className="font-semibold text-center w-1/3">
-                        {item.amount}
-                      </TableCell>
-                      <TableCell className="text-center w-1/3">
-                        <Badge className={getBadgeColor(item.status)}>
-                          {item.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center w-1/3">
-                        {formatDate(item.dateTime)}
+                  <List className="h-3.5 w-3.5" />
+                  All
+                </TabsTrigger>
+                <TabsTrigger
+                  value="APPROVED"
+                  className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-green-600 dark:text-green-500 data-[state=active]:text-green-600 dark:data-[state=active]:text-green-500 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-green-500 data-[state=active]:bg-transparent"
+                >
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  Approved
+                </TabsTrigger>
+                <TabsTrigger
+                  value="PENDING"
+                  className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-amber-600 dark:text-amber-400 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-amber-500 data-[state=active]:bg-transparent"
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  Pending
+                </TabsTrigger>
+                <TabsTrigger
+                  value="REJECTED"
+                  className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-red-600 dark:text-red-500 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-500 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-red-500 data-[state=active]:bg-transparent"
+                >
+                  <XCircle className="h-3.5 w-3.5" />
+                  Rejected
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Table */}
+          <div className="relative overflow-hidden">
+            <Table className="min-w-full border-t">
+              <TableHeader className="sticky top-0 z-10 bg-muted/40">
+                <TableRow className="text-center">
+                  <TableHead className="text-center w-1/3 h-10 text-xs">
+                    Connects
+                  </TableHead>
+                  <TableHead className="text-center w-1/3 h-10 text-xs">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-center w-1/3 h-10 text-xs">
+                    Date
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+            </Table>
+            <ScrollArea className="max-h-[240px] no-scrollbar pb-1 overflow-y-auto">
+              <Table className="min-w-full">
+                <TableBody>
+                  {filteredData.length > 0 ? (
+                    filteredData.map((item, idx) => (
+                      <TableRow
+                        key={idx}
+                        className="text-center hover:bg-muted/40"
+                      >
+                        <TableCell className="font-medium text-center w-1/3 text-xs">
+                          {item.amount}
+                        </TableCell>
+                        <TableCell className="text-center w-1/3">
+                          <Badge
+                            className={`${getBadgeColor(item.status)} text-[10px] px-2 py-0.5`}
+                          >
+                            {item.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center w-1/3 text-[11px]">
+                          {formatDate(item.dateTime)}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} className="p-5">
+                        <div className="text-center space-y-2">
+                          <div className="mx-auto w-16 h-16">
+                            <svg
+                              viewBox="0 0 200 200"
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-full h-full"
+                              aria-hidden="true"
+                            >
+                              <defs>
+                                <linearGradient
+                                  id="grad2"
+                                  x1="0"
+                                  y1="0"
+                                  x2="1"
+                                  y2="1"
+                                >
+                                  <stop
+                                    offset="0%"
+                                    stopColor="hsl(var(--primary))"
+                                    stopOpacity="0.25"
+                                  />
+                                  <stop
+                                    offset="100%"
+                                    stopColor="hsl(var(--primary))"
+                                    stopOpacity="0.05"
+                                  />
+                                </linearGradient>
+                              </defs>
+                              <circle
+                                cx="100"
+                                cy="100"
+                                r="80"
+                                fill="url(#grad2)"
+                              />
+                              <g fill="hsl(var(--primary))" opacity="0.25">
+                                <rect
+                                  x="70"
+                                  y="70"
+                                  width="60"
+                                  height="40"
+                                  rx="8"
+                                />
+                                <circle cx="140" cy="70" r="6" />
+                                <circle cx="60" cy="110" r="4" />
+                              </g>
+                            </svg>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            No transactions found
+                          </p>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={3}
-                      className="text-center font-semibold text-gray-500"
-                    >
-                      No Transactions Found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </ScrollArea>
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </PopoverContent>
+    </Popover>
   );
 });
 
 DisplayConnectsDialog.displayName = 'DisplayConnectsDialog';
-
-export default DisplayConnectsDialog;
