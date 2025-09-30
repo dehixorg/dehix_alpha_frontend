@@ -58,7 +58,7 @@ export default function Talent() {
           activeMenu="Dehix Talent"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
-            { label: 'HireTalent', link: '#' },
+            { label: 'Hire Talent', link: '/business/talent' },
             { label: 'Overview', link: '#' },
           ]}
         />

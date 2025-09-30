@@ -143,7 +143,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
           ))
         ) : (
           <tr>
-            <td colSpan={6} className="text-center py-10">
+            <td colSpan={4} className="text-center py-10">
               <PackageOpen className="mx-auto text-gray-500" size={100} />
               <p className="text-gray-500">No projects available</p>
             </td>
