@@ -1154,7 +1154,8 @@ export function ProfileSidebar({
                                       profileId,
                                     );
                                     await updateDoc(groupRef, {
-                                      [`participantDetails.${user.uid}`]: deleteField(),
+                                      [`participantDetails.${user.uid}`]:
+                                        deleteField(),
                                       participants: arrayRemove(user.uid),
                                       admins: arrayRemove(user.uid),
                                       updatedAt: serverTimestamp(),
