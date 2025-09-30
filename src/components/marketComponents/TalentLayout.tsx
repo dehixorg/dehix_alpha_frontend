@@ -273,7 +273,8 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
           activeMenu="Dehix Talent"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
-            { label: 'HireTalent', link: '#' },
+            { label: 'Hire Talent', link: '#' },
+            { label: activeTab, link: '#' },
           ]}
         />
         <div className="container px-4 py-4">
@@ -281,7 +282,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview" asChild>
                 <a href="/business/talent">
-                  <Users2 className="h-4 w-4" />
+                  <Users2 className="h-4 w-4 mr-1" />
                   Overview
                 </a>
               </TabsTrigger>
@@ -289,21 +290,21 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                 value="invited"
                 onClick={() => handleTabChange('invited')}
               >
-                <BookMarked className="h-4 w-4" />
+                <BookMarked className="h-4 w-4 mr-1" />
                 Invites
               </TabsTrigger>
               <TabsTrigger
                 value="accepted"
                 onClick={() => handleTabChange('accepted')}
               >
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle2 className="h-4 w-4 mr-1" />
                 Accepted
               </TabsTrigger>
               <TabsTrigger
                 value="rejected"
                 onClick={() => handleTabChange('rejected')}
               >
-                <XCircle className="h-4 w-4" />
+                <XCircle className="h-4 w-4 mr-1" />
                 Rejected
               </TabsTrigger>
             </TabsList>
