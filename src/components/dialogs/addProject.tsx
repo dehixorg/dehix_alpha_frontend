@@ -386,65 +386,85 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="techUsed"
-                  render={({ field }) => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Skills</FormLabel>
-                      <FormControl>
-                        <div>
-                          <div className="flex items-center mt-2">
-                            <Select
-                              onValueChange={(selectedValue) => {
-                                setTmpSkill(selectedValue);
-                              }}
-                              value={tmpSkill}
-                            >
+                  render={({ field }) => {
+                    const [open, setOpen] = useState(false);
+
+                    const toggleSkill = (skillLabel: string) => {
+                      let updatedSkills: string[] = [];
+                      if (currSkills.includes(skillLabel)) {
+                        updatedSkills = currSkills.filter(
+                          (s) => s !== skillLabel,
+                        );
+                      } else {
+                        updatedSkills = [...currSkills, skillLabel];
+                      }
+                      setCurrSkills(updatedSkills);
+                      field.onChange(updatedSkills);
+                    };
+
+                    return (
+                      <FormItem className="mb-4">
+                        <FormLabel>Skills</FormLabel>
+                        <FormControl>
+                          <div>
+                            {/* Dropdown */}
+                            <Select open={open} onOpenChange={setOpen}>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select skill" />
+                                <SelectValue>
+                                  {currSkills.length > 0
+                                    ? `${currSkills.length} selected`
+                                    : 'Select skills'}
+                                </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
                                 {skills.map((skill: any, index: number) => (
-                                  <SelectItem key={index} value={skill.label}>
-                                    {skill.label}
-                                  </SelectItem>
+                                  <div
+                                    key={index}
+                                    className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // don't close
+                                      toggleSkill(skill.label);
+                                    }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={currSkills.includes(skill.label)}
+                                      readOnly
+                                      className="w-4 h-4"
+                                    />
+                                    <span>{skill.label}</span>
+                                  </div>
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Button
-                              variant="outline"
-                              type="button"
-                              size="icon"
-                              className="ml-2"
-                              onClick={() => handleAddSkill(field)}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="flex flex-wrap mt-5">
-                            {currSkills.map((skill: any, index: number) => (
-                              <Badge
-                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center my-2"
-                                key={index}
-                              >
-                                {skill}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteSkill(skill)}
-                                  className="ml-2 text-red-500 hover:text-red-700"
+
+                            {/* Tags */}
+                            <div className="flex flex-wrap mt-5">
+                              {currSkills.map((skill: any, index: number) => (
+                                <Badge
+                                  key={index}
+                                  className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center my-2"
                                 >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </Badge>
-                            ))}
+                                  {skill}
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleSkill(skill)}
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </>
             )}

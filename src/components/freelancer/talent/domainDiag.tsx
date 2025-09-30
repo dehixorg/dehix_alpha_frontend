@@ -6,18 +6,16 @@ import { Plus } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import Link from 'next/link';
-
+import { Button } from '@/components/ui/button';
 import {
-  DialogFooter,
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogHeader,
+  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectTrigger,
@@ -29,16 +27,15 @@ import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
-
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 interface Domain {
   _id: string;
   label: string;
 }
 
-interface SkillDomainData {
-  uid: string;
-  domainId: string;
-  label: string;
+interface DomainData {
+  domainIds: string[]; // multiple selected domain IDs
+  labels: string[]; // multiple selected labels
   experience: string;
   monthlyPay: string;
   activeStatus: boolean;
@@ -48,13 +45,12 @@ interface SkillDomainData {
 
 interface DomainDialogProps {
   domains: Domain[];
-  setDomains: any;
   onSuccess: () => void;
 }
 
 const domainSchema = z.object({
-  domainId: z.string(),
-  label: z.string().nonempty('Please select a domain'),
+  domainIds: z.array(z.string()).min(1, 'Please select at least one domain'),
+  labels: z.array(z.string()),
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -65,54 +61,53 @@ const domainSchema = z.object({
     .regex(/^\d+$/, 'Monthly pay must be a number'),
   activeStatus: z.boolean(),
   status: z.string(),
+  type: z.string(),
 });
 
 const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const {
     control,
     handleSubmit,
-    formState: { errors },
     reset,
     setValue,
-  } = useForm<SkillDomainData>({
+    formState: { errors },
+  } = useForm<DomainData>({
     resolver: zodResolver(domainSchema),
     defaultValues: {
-      domainId: '',
-      label: '',
+      domainIds: [],
+      labels: [],
       experience: '',
       monthlyPay: '',
       activeStatus: false,
       status: StatusEnum.PENDING,
+      type: 'DOMAIN',
     },
   });
 
-  const onSubmit = async (data: SkillDomainData) => {
+  const onSubmit = async (data: DomainData) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
-        talentId: data.domainId,
-        talentName: data.label,
-        experience: data.experience,
-        monthlyPay: data.monthlyPay,
-        activeStatus: data.activeStatus,
-        status: data.status,
-        type: 'DOMAIN',
-      });
-      if (response.status === 200) {
-        reset();
-        setOpen(false);
-        notifySuccess(
-          'The Talent has been successfully added.',
-          'Talent Added',
-        );
-        onSuccess(); // Trigger parent to re-fetch
+      for (let i = 0; i < data.domainIds.length; i++) {
+        await axiosInstance.post('/freelancer/dehix-talent', {
+          talentId: data.domainIds[i],
+          talentName: data.labels[i],
+          experience: data.experience,
+          monthlyPay: data.monthlyPay,
+          activeStatus: data.activeStatus,
+          status: data.status,
+          type: 'DOMAIN',
+        });
       }
-    } catch (error) {
-      console.error('Error submitting domain data', error);
       reset();
-      notifyError('Failed to add talent. Please try again.', 'Error');
+      setOpen(false);
+      notifySuccess('Domains added successfully', 'Success');
+      onSuccess();
+    } catch (error) {
+      console.error(error);
+      notifyError('Failed to add domains. Please try again.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -125,70 +120,76 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
           <Plus className="h-4 w-4" /> Add Domain
         </Button>
       </DialogTrigger>
+
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Domain</DialogTitle>
           <DialogDescription>
-            Select a domain, enter your experience and monthly pay.
+            Select domains, enter your experience and monthly pay.
           </DialogDescription>
         </DialogHeader>
+
         <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Domain Select */}
           <div className="mb-3">
             <Controller
               control={control}
-              name="label"
+              name="labels"
               render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={(selectedLabel) => {
-                    const selectedDomain = domains.find(
-                      (domain) => domain.label === selectedLabel,
-                    );
-                    field.onChange(selectedLabel);
-                    setValue('domainId', selectedDomain?._id || '');
+                <SelectTagPicker
+                  label="Domains"
+                  options={domains.map((d) => ({ label: d.label, _id: d._id }))}
+                  selected={field.value.map((l) => ({ name: l }))}
+                  onAdd={(val) => {
+                    const domain = domains.find((d) => d.label === val);
+                    if (domain) {
+                      const newLabels = [...field.value, val];
+                      const newIds = [
+                        ...(control._formValues.domainIds || []),
+                        domain._id,
+                      ];
+                      field.onChange(newLabels);
+                      setValue('domainIds', newIds);
+                    }
                   }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a domain" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {domains.length > 0 ? (
-                      domains.map((domain) => (
-                        <SelectItem key={domain._id} value={domain.label}>
-                          {domain.label}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <Link href="/freelancer/settings/personal-info">
-                        <p className="p-4 flex justify-center items-center">
-                          No domains to add -{' '}
-                          <span className="text-blue-500 ml-2">Add some</span>{' '}
-                        </p>
-                      </Link>
-                    )}
-                  </SelectContent>
-                </Select>
+                  onRemove={(val) => {
+                    const index = field.value.indexOf(val);
+                    const newLabels = field.value.filter((l) => l !== val);
+                    const newIds = (control._formValues.domainIds || []).filter(
+                      (_, i) => i !== index,
+                    );
+                    field.onChange(newLabels);
+                    setValue('domainIds', newIds);
+                  }}
+                  className="w-full"
+                  optionLabelKey="label"
+                  selectedNameKey="name"
+                  selectPlaceholder="Select domains"
+                  searchPlaceholder="Search domains..."
+                />
               )}
             />
+            {errors.domainIds && (
+              <p className="text-red-600 text-sm mt-1">
+                {errors.domainIds.message}
+              </p>
+            )}
           </div>
-          {errors.label && (
-            <p className="text-red-600">{errors.label.message}</p>
-          )}
 
+          {/* Experience Input */}
           <div className="mb-3">
             <Controller
               control={control}
               name="experience"
               render={({ field }) => (
-                <div className="col-span-3 relative">
+                <div className="relative">
                   <Input
                     type="number"
                     placeholder="Experience (years)"
                     min={0}
-                    max={50}
                     step={0.1}
                     {...field}
-                    className="w-full mt-2"
+                    className="mt-2 w-full"
                   />
                   <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
                     YEARS
@@ -196,23 +197,24 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
                 </div>
               )}
             />
+            {errors.experience && (
+              <p className="text-red-600">{errors.experience.message}</p>
+            )}
           </div>
-          {errors.experience && (
-            <p className="text-red-600">{errors.experience.message}</p>
-          )}
 
+          {/* Monthly Pay Input */}
           <div className="mb-3">
             <Controller
               control={control}
               name="monthlyPay"
               render={({ field }) => (
-                <div className="col-span-3 relative">
+                <div className="relative">
                   <Input
                     type="number"
                     placeholder="$ Monthly Pay"
                     min={0}
                     {...field}
-                    className="w-full mt-2"
+                    className="mt-2 w-full"
                   />
                   <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
                     $
@@ -220,14 +222,14 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
                 </div>
               )}
             />
+            {errors.monthlyPay && (
+              <p className="text-red-600">{errors.monthlyPay.message}</p>
+            )}
           </div>
-          {errors.monthlyPay && (
-            <p className="text-red-600">{errors.monthlyPay.message}</p>
-          )}
 
           <DialogFooter className="mt-3">
             <Button type="submit" disabled={loading}>
-              {loading ? 'Loading...' : 'Save'}
+              {loading ? 'Loading...' : 'Submit'}
             </Button>
           </DialogFooter>
         </form>

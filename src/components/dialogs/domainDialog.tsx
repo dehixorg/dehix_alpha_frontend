@@ -21,7 +21,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 interface DomainFormData {
   name: string;
   experience: string;
@@ -89,37 +89,83 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         <form onSubmit={handleSubmit(handleFormSubmit)}>
           <div className="space-y-4">
             {/* Name Field */}
+
             <Controller
               control={control}
               name="name"
-              render={({ field }) => (
-                <>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a domain" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {domainOptions.length > 0 ? (
-                        domainOptions.map((domain, idx) => (
-                          <SelectItem key={idx} value={domain.talentName}>
-                            {domain.talentName}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <p className="p-2">
-                          No verified Domain.{' '}
-                          <span className="text-blue-500">Get verified !</span>
-                        </p>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  {errors.name && (
-                    <p className="text-red-500 text-sm">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </>
-              )}
+              render={({ field }) => {
+                const selectedDomain = field.value ? [field.value] : [];
+
+                const handleSelect = (domainName: string) => {
+                  if (field.value === domainName) {
+                    field.onChange(''); // remove if already selected
+                  } else {
+                    field.onChange(domainName); // select new
+                  }
+                };
+
+                return (
+                  <>
+                    <Select value="" onValueChange={handleSelect}>
+                      <SelectTrigger className="bg-white dark:bg-black border border-gray-300 dark:border-gray-700 w-full">
+                        <SelectValue
+                          placeholder="Select a domain"
+                          className="text-black dark:text-white"
+                        >
+                          {selectedDomain.length > 0 ? selectedDomain[0] : ''}
+                        </SelectValue>
+                      </SelectTrigger>
+
+                      <SelectContent className="bg-white dark:bg-black">
+                        {domainOptions.length > 0 ? (
+                          domainOptions.map((domain) => (
+                            <SelectItem
+                              key={domain.talentName}
+                              value={domain.talentName}
+                              className="text-black dark:text-white data-[highlighted]:bg-gray-200 dark:data-[highlighted]:bg-gray-700"
+                            >
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={field.value === domain.talentName}
+                                  readOnly
+                                  className="w-4 h-4 border border-gray-400 dark:border-gray-600 rounded-none bg-white dark:bg-black"
+                                />
+                                <span className="text-black dark:text-white">
+                                  {domain.talentName}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <p className="p-2 text-black dark:text-white">
+                            No verified Domain.{' '}
+                            <span className="text-blue-500">Get verified!</span>
+                          </p>
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Selected Domain Tag */}
+                    {field.value && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="flex items-center gap-1 rounded px-2 py-1 bg-gray-400 dark:bg-gray-700">
+                          <span className="text-black dark:text-white">
+                            {field.value}
+                          </span>
+                          <button
+                            type="button"
+                            className="text-red-600 font-bold"
+                            onClick={() => field.onChange('')}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              }}
             />
 
             {/* Experience Field */}
