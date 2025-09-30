@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import * as React from 'react';
-import { Wallet, List, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -138,28 +138,24 @@ export const DisplayConnectsDialog = React.forwardRef<
                   value="ALL"
                   className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
                 >
-                  <List className="h-3.5 w-3.5" />
                   All
                 </TabsTrigger>
                 <TabsTrigger
                   value="APPROVED"
                   className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-green-600 dark:text-green-500 data-[state=active]:text-green-600 dark:data-[state=active]:text-green-500 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-green-500 data-[state=active]:bg-transparent"
                 >
-                  <CheckCircle className="h-3.5 w-3.5" />
                   Approved
                 </TabsTrigger>
                 <TabsTrigger
                   value="PENDING"
                   className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-amber-600 dark:text-amber-400 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-amber-500 data-[state=active]:bg-transparent"
                 >
-                  <Clock className="h-3.5 w-3.5" />
                   Pending
                 </TabsTrigger>
                 <TabsTrigger
                   value="REJECTED"
                   className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-red-600 dark:text-red-500 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-500 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-red-500 data-[state=active]:bg-transparent"
                 >
-                  <XCircle className="h-3.5 w-3.5" />
                   Rejected
                 </TabsTrigger>
               </TabsList>
