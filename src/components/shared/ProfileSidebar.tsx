@@ -25,6 +25,8 @@ import {
   orderBy,
   getDocs,
   getFirestore,
+  serverTimestamp,
+  FieldValue,
 } from 'firebase/firestore';
 
 import { AddMembersDialog } from './AddMembersDialog';
@@ -429,8 +431,8 @@ export function ProfileSidebar({
 
     try {
       const updates: any = {
-        members: arrayUnion(...selectedUsers.map((user) => user.id)),
-        updatedAt: new Date().toISOString(),
+        participants: arrayUnion(...selectedUsers.map((user) => user.id)),
+        updatedAt: serverTimestamp(),
       };
 
       selectedUsers.forEach((user) => {
@@ -489,7 +491,7 @@ export function ProfileSidebar({
       name?: string;
       project_name?: string;
       avatar?: string;
-      updatedAt?: string;
+      updatedAt?: string | FieldValue;
     } = {};
     if (newName.trim() !== currentGroupData?.displayName) {
       updateData.groupName = newName.trim();
@@ -512,7 +514,7 @@ export function ProfileSidebar({
       toast({ title: 'Info', description: 'No changes were made.' });
       return;
     }
-    updateData.updatedAt = new Date().toISOString();
+    updateData.updatedAt = serverTimestamp();
     try {
       await updateDoc(groupDocRef, updateData);
       toast({
@@ -547,7 +549,7 @@ export function ProfileSidebar({
     try {
       await updateDoc(groupDocRef, {
         inviteLink: newInviteLink,
-        updatedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
       });
       toast({
         title: 'Success',
@@ -588,7 +590,7 @@ export function ProfileSidebar({
       await updateDoc(groupDocRef, {
         participants: arrayRemove(memberIdToRemove),
         [`participantDetails.${memberIdToRemove}`]: deleteField(),
-        updatedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
       });
       toast({ title: 'Success', description: 'Member removed successfully.' });
       setRefreshKey((prev) => prev + 1);
@@ -1152,10 +1154,10 @@ export function ProfileSidebar({
                                       profileId,
                                     );
                                     await updateDoc(groupRef, {
-                                      [`participantDetails.${user.uid}`]:
-                                        deleteField(),
-                                      members: arrayRemove(user.uid),
+                                      [`participantDetails.${user.uid}`]: deleteField(),
+                                      participants: arrayRemove(user.uid),
                                       admins: arrayRemove(user.uid),
+                                      updatedAt: serverTimestamp(),
                                     });
 
                                     onClose();
