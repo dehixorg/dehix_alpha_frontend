@@ -23,7 +23,8 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [canShoot, setCanShoot] = useState(false);
-  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  // Use a ref for the current object URL to avoid stale closures and leaks
+  const objectUrlRef = useRef<string | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const isMediaSupported =
     typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
@@ -130,9 +131,12 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
   useEffect(() => {
     return () => {
       if (stream) stream.getTracks().forEach((t) => t.stop());
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
     };
-  }, [stream, objectUrl]);
+  }, [stream]);
 
   // Maintain previewSrc reactively based on capturedImage and liveCaptureUrl field
   useEffect(() => {
@@ -144,9 +148,13 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
       if (typeof val === 'string') {
         setPreviewSrc(val);
       } else if (typeof File !== 'undefined' && val instanceof File) {
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        // Revoke the previous object URL before creating a new one
+        if (objectUrlRef.current) {
+          URL.revokeObjectURL(objectUrlRef.current);
+          objectUrlRef.current = null;
+        }
         const url = URL.createObjectURL(val);
-        setObjectUrl(url);
+        objectUrlRef.current = url;
         setPreviewSrc(url);
       } else {
         setPreviewSrc(null);
@@ -290,7 +298,7 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                           className="w-full"
                           onClick={() => {
                             setCapturedImage(null);
-                            form.setValue('liveCaptureUrl', '');
+                            form.setValue('liveCaptureUrl', null);
                             if (isMediaSupported) startLiveCapture();
                           }}
                         >

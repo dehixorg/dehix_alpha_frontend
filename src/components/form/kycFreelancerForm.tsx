@@ -62,6 +62,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const submitIntentRef = useRef(false);
   const lineWrapRef = useRef<HTMLDivElement | null>(null);
   const lineRef = useRef<HTMLDivElement | null>(null);
   const firstDotRef = useRef<HTMLDivElement | null>(null);
@@ -80,6 +81,82 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   });
 
   const { reset } = form;
+
+  // Preview URLs for review step (avoid creating object URLs during render)
+  const [frontPreview, setFrontPreview] = useState<string>('');
+  const [backPreview, setBackPreview] = useState<string>('');
+  const [selfiePreview, setSelfiePreview] = useState<string>('');
+  const frontUrlRef = useRef<string | null>(null);
+  const backUrlRef = useRef<string | null>(null);
+  const liveUrlRef = useRef<string | null>(null);
+
+  // Keep preview URLs in sync with form values and manage blob URL lifecycle
+  useEffect(() => {
+    const updatePreview = (
+      val: any,
+      set: (v: string) => void,
+      ref: React.MutableRefObject<string | null>,
+    ) => {
+      // Clear previous object URL if any
+      if (ref.current) {
+        URL.revokeObjectURL(ref.current);
+        ref.current = null;
+      }
+      if (typeof val === 'string') {
+        set(val);
+      } else if (typeof File !== 'undefined' && val instanceof File) {
+        const url = URL.createObjectURL(val);
+        ref.current = url;
+        set(url);
+      } else {
+        set('');
+      }
+    };
+
+    // Initialize from current values
+    updatePreview(
+      form.getValues('frontImageUrl'),
+      setFrontPreview,
+      frontUrlRef,
+    );
+    updatePreview(form.getValues('backImageUrl'), setBackPreview, backUrlRef);
+    updatePreview(
+      form.getValues('liveCaptureUrl'),
+      setSelfiePreview,
+      liveUrlRef,
+    );
+
+    // Subscribe to changes
+    const subscription = form.watch((values: any, meta: any) => {
+      if (!meta) return;
+      if (meta.name === 'frontImageUrl') {
+        updatePreview(values?.frontImageUrl, setFrontPreview, frontUrlRef);
+      } else if (meta.name === 'backImageUrl') {
+        updatePreview(values?.backImageUrl, setBackPreview, backUrlRef);
+      } else if (meta.name === 'liveCaptureUrl') {
+        updatePreview(values?.liveCaptureUrl, setSelfiePreview, liveUrlRef);
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
+      if (frontUrlRef.current) {
+        URL.revokeObjectURL(frontUrlRef.current);
+        frontUrlRef.current = null;
+      }
+      if (backUrlRef.current) {
+        URL.revokeObjectURL(backUrlRef.current);
+        backUrlRef.current = null;
+      }
+      if (liveUrlRef.current) {
+        URL.revokeObjectURL(liveUrlRef.current);
+        liveUrlRef.current = null;
+      }
+    };
+  }, [form]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,6 +194,12 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   };
 
   async function onSubmit(data: ProfileFormValues) {
+    // Defensive guard: only allow actual submission on the final step
+    if (currentStep !== steps.length || !submitIntentRef.current) {
+      return;
+    }
+    // Reset intent immediately so accidental re-submits are ignored
+    submitIntentRef.current = false;
     setLoading(true);
     try {
       // Helper to ensure we send a URL (upload if File or data URL)
@@ -397,7 +480,15 @@ export default function KYCForm({ user_id }: { user_id: string }) {
         {/* Main Content */}
         <section className="md:col-span-8 lg:col-span-9">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && currentStep < steps.length) {
+                  e.preventDefault();
+                }
+              }}
+              className="space-y-6"
+            >
               {/* Step Header */}
               <div>
                 <p className="text-xs text-muted-foreground">
@@ -609,80 +700,53 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
                     <div>
                       <p className="text-muted-foreground mb-2">Front Image</p>
-                      {(() => {
-                        const v = form.getValues('frontImageUrl') as any;
-                        const src =
-                          typeof v === 'string'
-                            ? v
-                            : typeof File !== 'undefined' && v instanceof File
-                              ? URL.createObjectURL(v)
-                              : '';
-                        return src ? (
-                          <Image
-                            src={src}
-                            alt="Front Document"
-                            width={280}
-                            height={180}
-                            className="rounded-lg object-contain border shadow-sm"
-                          />
-                        ) : (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            No front image
-                          </p>
-                        );
-                      })()}
+                      {frontPreview ? (
+                        <Image
+                          src={frontPreview}
+                          alt="Front Document"
+                          width={280}
+                          height={180}
+                          className="rounded-lg object-contain border shadow-sm"
+                        />
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          No front image
+                        </p>
+                      )}
                     </div>
                     <div>
                       <p className="text-muted-foreground mb-2">Back Image</p>
-                      {(() => {
-                        const v = form.getValues('backImageUrl') as any;
-                        const src =
-                          typeof v === 'string'
-                            ? v
-                            : typeof File !== 'undefined' && v instanceof File
-                              ? URL.createObjectURL(v)
-                              : '';
-                        return src ? (
-                          <Image
-                            src={src}
-                            alt="Back Document"
-                            width={280}
-                            height={180}
-                            className="rounded-lg object-contain border shadow-sm"
-                          />
-                        ) : (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            No back image
-                          </p>
-                        );
-                      })()}
+                      {backPreview ? (
+                        <Image
+                          src={backPreview}
+                          alt="Back Document"
+                          width={280}
+                          height={180}
+                          className="rounded-lg object-contain border shadow-sm"
+                        />
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          No back image
+                        </p>
+                      )}
                     </div>
                     <div>
                       <p className="text-muted-foreground">Selfie</p>
-                      {(() => {
-                        const v = form.getValues('liveCaptureUrl') as any;
-                        const src =
-                          typeof v === 'string'
-                            ? v
-                            : typeof File !== 'undefined' && v instanceof File
-                              ? URL.createObjectURL(v)
-                              : '';
-                        return src ? (
-                          <div className="mt-1 inline-block border rounded-lg">
-                            <Image
-                              src={src}
-                              alt="Selfie"
-                              width={180}
-                              height={180}
-                              className="rounded-md object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            No selfie provided
-                          </p>
-                        );
-                      })()}
+                      {selfiePreview ? (
+                        <div className="mt-1 inline-block border rounded-lg">
+                          <Image
+                            src={selfiePreview}
+                            alt="Selfie"
+                            width={180}
+                            height={180}
+                            className="rounded-md object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          No selfie provided
+                        </p>
+                      )}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -704,6 +768,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                 </Button>
                 {currentStep < steps.length ? (
                   <Button
+                    type="button"
                     className="flex-1"
                     onClick={handleNext}
                     disabled={
@@ -721,6 +786,10 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                     type="submit"
                     className="flex-1"
                     disabled={loading || !allComplete()}
+                    onClick={() => {
+                      // Mark explicit intent to submit via button click
+                      submitIntentRef.current = true;
+                    }}
                   >
                     {loading ? 'Submitting...' : 'Submit KYC'}
                   </Button>
