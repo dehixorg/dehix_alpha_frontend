@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export default function FreelancerBids() {
   const user = useSelector((state: RootState) => state.user);
-  const [bids, setBids] = useState<any>([]);
+  const [, setBids] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
