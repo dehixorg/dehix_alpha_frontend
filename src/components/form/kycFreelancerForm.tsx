@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Image from 'next/image';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -22,7 +23,12 @@ import { Input } from '@/components/ui/input';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { kycBadgeColors } from '@/utils/freelancer/enum';
+import { cn } from '@/lib/utils';
+import {
+  Dropzone,
+  DropzoneEmptyState,
+  DropzoneContent,
+} from '@/components/ui/shadcn-io/dropzone';
 
 const profileFormSchema = z.object({
   aadharOrGovtId: z.string().optional(),
@@ -55,6 +61,11 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 export default function KYCForm({ user_id }: { user_id: string }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const lineWrapRef = useRef<HTMLDivElement | null>(null);
+  const lineRef = useRef<HTMLDivElement | null>(null);
+  const firstDotRef = useRef<HTMLDivElement | null>(null);
+  const lastDotRef = useRef<HTMLDivElement | null>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -152,168 +163,524 @@ export default function KYCForm({ user_id }: { user_id: string }) {
     }
   }
 
+  const steps = [
+    { id: 1, title: 'ID Verification', subtitle: 'Browse and upload' },
+    { id: 2, title: 'Selfie', subtitle: 'Capture and upload' },
+    { id: 3, title: 'Review', subtitle: 'Confirm and submit' },
+  ];
+
+  const StepDot = ({ active, done }: { active: boolean; done: boolean }) => (
+    <span
+      className={`inline-block h-2.5 w-2.5 rounded-full border ${
+        active
+          ? 'bg-primary border-primary'
+          : done
+            ? 'bg-primary/60 border-primary/60'
+            : 'bg-muted border-muted-foreground/40'
+      }`}
+    />
+  );
+
+  const hasFileOrUrl = (v: unknown) =>
+    !!(
+      (typeof v === 'string' && v.trim() !== '') ||
+      (typeof File !== 'undefined' && v instanceof File)
+    );
+
+  const step1Complete = () => {
+    const v = form.getValues();
+    return (
+      (v.aadharOrGovtId?.trim()?.length || 0) > 0 &&
+      Number(v.salaryOrEarning) > 0 &&
+      hasFileOrUrl(v.frontImageUrl) &&
+      hasFileOrUrl(v.backImageUrl)
+    );
+  };
+
+  const step2Complete = () => {
+    const v = form.getValues();
+    return hasFileOrUrl(v.liveCaptureUrl);
+  };
+
+  const allComplete = () => step1Complete() && step2Complete();
+
+  const handleNext = () => {
+    if (currentStep === 1 && !step1Complete()) {
+      const v = form.getValues();
+      if (!v.aadharOrGovtId?.trim())
+        form.setError('aadharOrGovtId' as any, { message: 'Required' } as any);
+      if (!v.salaryOrEarning || Number(v.salaryOrEarning) <= 0)
+        form.setError('salaryOrEarning' as any, { message: 'Required' } as any);
+      if (!hasFileOrUrl(v.frontImageUrl))
+        form.setError('frontImageUrl' as any, { message: 'Required' } as any);
+      if (!hasFileOrUrl(v.backImageUrl))
+        form.setError('backImageUrl' as any, { message: 'Required' } as any);
+      return;
+    }
+    if (currentStep === 2 && !step2Complete()) {
+      form.setError('liveCaptureUrl' as any, { message: 'Required' } as any);
+      return;
+    }
+    setCurrentStep((s) => Math.min(s + 1, steps.length));
+  };
+  const handleBack = () => setCurrentStep((s) => Math.max(s - 1, 1));
+
+  // Precisely align the vertical connector between first and last dots
+  useEffect(() => {
+    const recalc = () => {
+      const wrap = lineWrapRef.current;
+      const line = lineRef.current;
+      const first = firstDotRef.current;
+      const last = lastDotRef.current;
+      if (!wrap || !line || !first || !last) return;
+      const wrapRect = wrap.getBoundingClientRect();
+      const firstRect = first.getBoundingClientRect();
+      const lastRect = last.getBoundingClientRect();
+      const dotRadius = firstRect.height / 2; // dot is square
+      const top = firstRect.top - wrapRect.top + dotRadius;
+      const bottom = wrapRect.bottom - lastRect.bottom + dotRadius;
+      line.style.top = `${top}px`;
+      line.style.bottom = `${bottom}px`;
+    };
+    recalc();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', recalc);
+      const t = setTimeout(recalc, 50); // settle layout
+      return () => {
+        window.removeEventListener('resize', recalc);
+        clearTimeout(t);
+      };
+    }
+  }, [currentStep, steps.length]);
+
+  // Badge color purely based on KYC status
+  const statusColors = (status: string) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'APPROVED' || s === 'VERIFIED' || s === 'SUCCESS')
+      return 'bg-green-500/10 text-green-600';
+    if (s === 'REJECTED' || s === 'FAILED') return 'bg-red-500/10 text-red-600';
+    // Pending-like statuses
+    if (
+      s === 'PENDING' ||
+      s === 'APPLIED' ||
+      s === 'IN_REVIEW' ||
+      s === 'UNDER_REVIEW'
+    )
+      return 'bg-yellow-500/10 text-yellow-600';
+    return 'bg-muted text-muted-foreground';
+  };
+
   return (
-    <Card className="p-8 md:p-12 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto bg-muted-foreground/20 dark:bg-muted/20">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">KYC Verification</h2>
+    <Card className="p-6 md:p-8 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-4 md:mb-6">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold">KYC Verification</h2>
+          <p className="text-sm text-muted-foreground">
+            Verify your identity and get started
+          </p>
+        </div>
         <Badge
-          className={`text-sm px-3 py-1 font-semibold capitalize ${kycBadgeColors[kycStatus] || ''}`}
+          className={cn(
+            'text-xs md:text-sm font-medium border-0 capitalize',
+            statusColors(kycStatus),
+          )}
         >
           {kycStatus.toLowerCase()}
         </Badge>
       </div>
-      <Separator className="my-6" />
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <FormField
-            control={form.control}
-            name="aadharOrGovtId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Aadhar or Govt ID</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your ID number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <Separator className="my-4 md:my-6" />
 
-          {/* New Field for Salary/Earning */}
-          <FormField
-            control={form.control}
-            name="salaryOrEarning"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Salary/Earning</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your annual salary or earning"
-                    type="number"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Mobile Horizontal Stepper */}
+        <div className="md:hidden col-span-full -mt-1">
+          <div className="flex items-center gap-2">
+            {steps.map((s, idx) => {
+              const active = currentStep === s.id;
+              const done = currentStep > s.id;
+              return (
+                <React.Fragment key={s.id}>
+                  {idx > 0 && (
+                    <div
+                      className={`flex-1 h-px ${done ? 'bg-primary/60' : 'bg-muted-foreground/20'}`}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(s.id)}
+                    aria-current={active ? 'step' : undefined}
+                    className={`h-6 w-6 shrink-0 rounded-full border flex items-center justify-center transition ${
+                      active
+                        ? 'bg-primary border-primary'
+                        : done
+                          ? 'bg-primary/60 border-primary/60'
+                          : 'bg-muted border-muted-foreground/40'
+                    }`}
+                    title={s.title}
+                  >
+                    <span className="sr-only">{s.title}</span>
+                  </button>
+                </React.Fragment>
+              );
+            })}
+          </div>
+          <div className="mt-2 grid grid-cols-3 text-[10px] text-muted-foreground">
+            {steps.map((s) => (
+              <p key={s.id} className="text-center truncate">
+                {s.title}
+              </p>
+            ))}
+          </div>
+        </div>
+
+        {/* Sidebar Stepper (right-aligned with precise line) */}
+        <aside className="hidden md:block md:col-span-4 lg:col-span-3 relative">
+          <div ref={lineWrapRef} className="relative pe-6">
+            {/* Vertical connector precisely bounded between first and last dots */}
+            <div
+              ref={lineRef}
+              className="pointer-events-none absolute right-6 w-px bg-muted-foreground/20"
+            />
+            <ol className="space-y-6">
+              {steps.map((s, idx) => {
+                const active = currentStep === s.id;
+                const done = currentStep > s.id;
+                return (
+                  <li key={s.id} className="relative group">
+                    {/* Dot */}
+                    <div
+                      className="absolute -right-[5px] top-2.5"
+                      ref={
+                        idx === 0
+                          ? firstDotRef
+                          : idx === steps.length - 1
+                            ? lastDotRef
+                            : undefined
+                      }
+                    >
+                      <StepDot active={active} done={done} />
+                    </div>
+                    {/* Clickable labels */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(s.id)}
+                      aria-current={active ? 'step' : undefined}
+                      className={`w-full rounded-md px-3 py-2 text-left transition
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50
+                      ${active ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/40'}
+                      `}
+                    >
+                      <p className="text-sm md:text-base font-semibold leading-tight">
+                        {s.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-tight">
+                        {s.subtitle}
+                      </p>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <section className="md:col-span-8 lg:col-span-9">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Step Header */}
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Step {currentStep}/{steps.length}
+                </p>
+                <h3 className="text-xl md:text-2xl font-semibold mt-1">
+                  {steps[currentStep - 1].title}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {steps[currentStep - 1].subtitle}
+                </p>
+              </div>
+
+              {/* Step 1: ID verification */}
+              {currentStep === 1 && (
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="aadharOrGovtId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Aadhar or Govt ID</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your ID number"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FormField
-              control={form.control}
-              name="frontImageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Document Front Image</FormLabel>
-                  <FormControl>
-                    <div className="flex flex-col items-center gap-4">
-                      {field.value && typeof field.value === 'string' ? (
-                        <>
-                          <Image
-                            src={field.value}
-                            alt="Front Document"
-                            width={200}
-                            height={150}
-                            className="rounded-lg object-contain border shadow-sm"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => field.onChange(null)}
-                            className="w-full"
-                          >
-                            Change Image
-                          </Button>
-                        </>
-                      ) : (
-                        <div className="w-full">
+                  <FormField
+                    control={form.control}
+                    name="salaryOrEarning"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Salary/Earning</FormLabel>
+                        <FormControl>
                           <Input
-                            type="file"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) field.onChange(file);
-                            }}
-                            onBlur={field.onBlur}
-                            className="cursor-pointer"
+                            placeholder="Enter your annual salary or earning"
+                            type="number"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
                           />
-                          <p className="text-xs text-muted-foreground mt-1">
-                            (PNG, JPG, JPEG)
-                          </p>
-                        </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="frontImageUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Front Image</FormLabel>
+                          <FormControl>
+                            <div className="flex flex-col items-center gap-4">
+                              {field.value &&
+                              typeof field.value === 'string' ? (
+                                <>
+                                  <Image
+                                    src={field.value}
+                                    alt="Front Document"
+                                    width={260}
+                                    height={160}
+                                    className="rounded-lg object-contain border shadow-sm"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => field.onChange(null)}
+                                    className="w-full"
+                                  >
+                                    Change Image
+                                  </Button>
+                                </>
+                              ) : (
+                                <Dropzone
+                                  maxSize={5 * 1024 * 1024}
+                                  minSize={4096}
+                                  maxFiles={1}
+                                  accept={{
+                                    'image/*': ['.png', '.jpg', '.jpeg'],
+                                  }}
+                                  src={undefined}
+                                  onDrop={async (accepted) => {
+                                    const file = accepted?.[0];
+                                    if (file) field.onChange(file);
+                                  }}
+                                  onError={() => {}}
+                                  className="w-full"
+                                >
+                                  <DropzoneEmptyState />
+                                  <DropzoneContent />
+                                </Dropzone>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    />
 
-            <FormField
-              control={form.control}
-              name="backImageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Document Back Image</FormLabel>
-                  <FormControl>
-                    <div className="flex flex-col items-center gap-4">
-                      {field.value && typeof field.value === 'string' ? (
-                        <>
-                          <Image
-                            src={field.value}
-                            alt="Back Document"
-                            width={200}
-                            height={150}
-                            className="rounded-lg object-contain border shadow-sm"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => field.onChange(null)}
-                            className="w-full"
-                          >
-                            Change Image
-                          </Button>
-                        </>
-                      ) : (
-                        <div className="w-full">
-                          <Input
-                            type="file"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) field.onChange(file);
-                            }}
-                            onBlur={field.onBlur}
-                            className="cursor-pointer"
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">
-                            (PNG, JPG, JPEG)
-                          </p>
-                        </div>
+                    <FormField
+                      control={form.control}
+                      name="backImageUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Back Image</FormLabel>
+                          <FormControl>
+                            <div className="flex flex-col items-center gap-4">
+                              {field.value &&
+                              typeof field.value === 'string' ? (
+                                <>
+                                  <Image
+                                    src={field.value}
+                                    alt="Back Document"
+                                    width={260}
+                                    height={160}
+                                    className="rounded-lg object-contain border shadow-sm"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => field.onChange(null)}
+                                    className="w-full"
+                                  >
+                                    Change Image
+                                  </Button>
+                                </>
+                              ) : (
+                                <Dropzone
+                                  maxSize={5 * 1024 * 1024}
+                                  minSize={4096}
+                                  maxFiles={1}
+                                  accept={{
+                                    'image/*': ['.png', '.jpg', '.jpeg'],
+                                  }}
+                                  src={undefined}
+                                  onDrop={async (accepted) => {
+                                    const file = accepted?.[0];
+                                    if (file) field.onChange(file);
+                                  }}
+                                  onError={() => {}}
+                                  className="w-full"
+                                >
+                                  <DropzoneEmptyState />
+                                  <DropzoneContent />
+                                </Dropzone>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                    />
+                  </div>
+                </div>
               )}
-            />
 
-            <LiveCaptureField form={form} />
-          </div>
+              {/* Step 2: Selfie */}
+              {currentStep === 2 && (
+                <div className="space-y-6">
+                  <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground mb-1">
+                      Selfie prerequisites
+                    </p>
+                    <ul className="list-disc ms-4 space-y-1">
+                      <li>
+                        Allow camera permission or be ready to upload a clear
+                        selfie.
+                      </li>
+                      <li>
+                        Use good lighting, remove hats/sunglasses, and face the
+                        camera.
+                      </li>
+                      <li>Ensure your face is centered and fully visible.</li>
+                    </ul>
+                  </div>
+                  <LiveCaptureField form={form} />
+                </div>
+              )}
 
-          <div className="col-span-1 md:col-span-2 mt-8">
-            <Button
-              type="submit"
-              className="w-full rounded-md px-6 py-3 text-base font-semibold"
-              disabled={loading}
-            >
-              {loading ? 'Submitting...' : 'Update KYC'}
-            </Button>
-          </div>
-        </form>
-      </Form>
+              {/* Step 3: Review */}
+              {currentStep === 3 && (
+                <div className="space-y-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-muted-foreground">Aadhar/Govt ID</p>
+                      <p className="font-medium break-words">
+                        {form.getValues('aadharOrGovtId') || '-'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Salary/Earning</p>
+                      <p className="font-medium">
+                        {form.getValues('salaryOrEarning') || '-'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                    {typeof form.getValues('frontImageUrl') === 'string' && (
+                      <div>
+                        <p className="text-muted-foreground mb-2">
+                          Front Image
+                        </p>
+                        <Image
+                          src={form.getValues('frontImageUrl') as string}
+                          alt="Front Document"
+                          width={280}
+                          height={180}
+                          className="rounded-lg object-contain border shadow-sm"
+                        />
+                      </div>
+                    )}
+                    {typeof form.getValues('backImageUrl') === 'string' && (
+                      <div>
+                        <p className="text-muted-foreground mb-2">Back Image</p>
+                        <Image
+                          src={form.getValues('backImageUrl') as string}
+                          alt="Back Document"
+                          width={280}
+                          height={180}
+                          className="rounded-lg object-contain border shadow-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Please confirm that the details and images are correct
+                    before submitting.
+                  </p>
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBack}
+                  disabled={currentStep === 1 || loading}
+                >
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                {currentStep < steps.length ? (
+                  <Button
+                    className="flex-1"
+                    onClick={handleNext}
+                    disabled={
+                      loading ||
+                      (currentStep === 1 && !step1Complete()) ||
+                      (currentStep === 2 && !step2Complete())
+                    }
+                    variant="default"
+                  >
+                    Next
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={loading || !allComplete()}
+                  >
+                    {loading ? 'Submitting...' : 'Submit KYC'}
+                  </Button>
+                )}
+              </div>
+            </form>
+          </Form>
+          {currentStep === 1 && !step1Complete() && (
+            <div className="mt-4 text-xs text-error">
+              Please complete all required fields before advancing to the next
+              step.
+            </div>
+          )}
+          {currentStep === 2 && !step2Complete() && (
+            <div className="mt-4 text-xs text-error">
+              Please complete all required fields before advancing to the next
+              step.
+            </div>
+          )}
+        </section>
+      </div>
     </Card>
   );
 }

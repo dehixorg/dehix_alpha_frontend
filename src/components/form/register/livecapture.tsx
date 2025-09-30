@@ -1,13 +1,13 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Camera } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form'; // Add this import
+import { axiosInstance } from '@/lib/axiosinstance';
 
 import { Button } from '@/components/ui/button';
 import {
   FormField,
   FormItem,
-  FormLabel,
   FormControl,
   FormMessage,
 } from '@/components/ui/form';
@@ -23,29 +23,44 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const isMediaSupported =
+    typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
 
   const startLiveCapture = async () => {
     setIsCapturing(true);
     try {
-      // Request camera access
+      setError(null);
+      if (!isMediaSupported) throw new Error('Camera API not supported');
+      // Request camera access with front camera preference
       const userMediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
       });
       setStream(userMediaStream);
 
       if (videoRef.current) {
         videoRef.current.srcObject = userMediaStream;
-        await new Promise((resolve) => {
-          videoRef.current!.onloadedmetadata = () => resolve(true);
-        });
+        // iOS/Safari requires playsInline and a play() call after a user gesture
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.muted = true;
+        await videoRef.current.play();
       }
     } catch (err) {
       console.error('Error accessing camera:', err);
+      setError(
+        'Unable to access the camera. Please allow camera permission or use the upload option below.',
+      );
       setIsCapturing(false);
     }
   };
 
-  const captureLiveImage = () => {
+  const captureLiveImage = async () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -59,15 +74,30 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
         const dataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(dataUrl);
 
-        // Convert to a file and save it in form
-        fetch(dataUrl)
-          .then((res) => res.blob())
-          .then((blob) => {
-            const file = new File([blob], 'live-capture.jpg', {
-              type: 'image/jpeg',
-            });
-            form.setValue('liveCaptureUrl', file);
+        // Convert to a file, upload immediately, and store URL in form
+        setUploading(true);
+        try {
+          const resp = await fetch(dataUrl);
+          const blob = await resp.blob();
+          const file = new File([blob], 'live-capture.jpg', { type: 'image/jpeg' });
+          const formData = new FormData();
+          formData.append('liveCaptureUrl', file);
+          const res = await axiosInstance.post('/register/upload-image', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
           });
+          const url: string | undefined = res?.data?.data?.Location;
+          if (url) {
+            form.setValue('liveCaptureUrl', url, { shouldDirty: true, shouldValidate: true });
+            form.clearErrors('liveCaptureUrl' as any);
+          } else {
+            setError('Failed to upload captured image.');
+          }
+        } catch (e) {
+          console.error(e);
+          setError('Failed to upload captured image.');
+        } finally {
+          setUploading(false);
+        }
 
         // Stop the camera stream
         if (stream) {
@@ -79,6 +109,13 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
     }
   };
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+    };
+  }, [stream]);
+
   return (
     <FormField
       control={form.control}
@@ -87,11 +124,10 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
         { field }, // Keep field even if unused for form control
       ) => (
         <FormItem>
-          <FormLabel>Live Capture</FormLabel>
           <FormControl>
             <div className="flex flex-col md:justify-start md:items-start sm:justify-center items-center gap-2">
               {/* Live Capture Buttons */}
-              <div className="flex s gap-2">
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
                 {/* Captured Image Preview */}
                 {(capturedImage || field.value) && (
                   <div className="flex flex-col items-center">
@@ -119,7 +155,7 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                     Retake Photo
                   </Button>
                 )}
-                {!isCapturing && (
+                {!isCapturing && isMediaSupported && (
                   <Button type="button" onClick={startLiveCapture}>
                     <Camera className="w-4 h-4 mr-2" />
                     Live Capture
@@ -127,7 +163,21 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                 )}
                 {isCapturing && (
                   <Button type="button" onClick={captureLiveImage}>
-                    Take Photo
+                    {uploading ? 'Uploading…' : 'Take Photo'}
+                  </Button>
+                )}
+
+                {/* Stop camera */}
+                {isCapturing && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (stream) stream.getTracks().forEach((t) => t.stop());
+                      setIsCapturing(false);
+                    }}
+                  >
+                    Stop Camera
                   </Button>
                 )}
 
@@ -137,6 +187,7 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                     ref={videoRef}
                     autoPlay
                     className="w-64 h-48 border rounded-md"
+                    playsInline
                   >
                     {/* Add track element for accessibility */}
                     <track
@@ -156,6 +207,8 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                   height="480"
                 />
               </div>
+
+              {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
             </div>
           </FormControl>
           <FormMessage />
