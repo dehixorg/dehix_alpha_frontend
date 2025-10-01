@@ -24,6 +24,7 @@ import {
   query,
   orderBy,
   getDocs,
+  where,
   getFirestore,
   serverTimestamp,
   FieldValue,
@@ -34,6 +35,7 @@ import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
+import { Conversation } from './chatList';
 
 // Simple file item type for shared files list
 export type FileItem = {
@@ -50,7 +52,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -115,6 +117,7 @@ interface ProfileSidebarProps {
   profileType: 'user' | 'group' | null;
   currentUser?: CombinedUser | null;
   initialData?: { userName?: string; email?: string; profilePic?: string };
+  onConversationUpdate?: (conv: any) => void;
 }
 
 export function ProfileSidebar({
@@ -123,6 +126,7 @@ export function ProfileSidebar({
   profileId,
   profileType,
   initialData,
+  onConversationUpdate,
 }: ProfileSidebarProps) {
   // State management
   const [profileData, setProfileData] = useState<
@@ -141,6 +145,10 @@ export function ProfileSidebar({
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [blockStatus, setBlockStatus] = useState<{
+    isBlocked: boolean;
+    blockedBy: string | null;
+  }>({ isBlocked: false, blockedBy: null });
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
@@ -150,7 +158,16 @@ export function ProfileSidebar({
     description: '',
     onConfirm: () => {},
     confirmButtonText: 'Confirm',
-    confirmButtonVariant: 'default' as 'default' | 'destructive',
+    confirmButtonVariant: 'destructive' as
+      | 'default'
+      | 'destructive'
+      | 'outline'
+      | 'secondary'
+      | 'ghost'
+      | 'link'
+      | null
+      | undefined,
+    isLoading: false,
   });
 
   const { toast } = useToast();
@@ -374,6 +391,35 @@ export function ProfileSidebar({
     }
   };
 
+  const fetchBlockStatus = async (targetUserId: string) => {
+    if (!user?.uid) return;
+
+    setBlockStatus({ isBlocked: false, blockedBy: null });
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('type', '==', 'individual'),
+      where('participants', 'array-contains', user.uid),
+    );
+
+    try {
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        if (doc.data().participants.includes(targetUserId)) {
+          const conversationData = doc.data();
+          if (conversationData.blocked?.status === true) {
+            setBlockStatus({
+              isBlocked: true,
+              blockedBy: conversationData.blocked.by,
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching block status:', error);
+    }
+  };
+
   useEffect(() => {
     const executeFetches = async () => {
       if (isOpen && profileId) {
@@ -388,6 +434,9 @@ export function ProfileSidebar({
           internalFetchProfileData(),
           fetchSharedMedia(profileId),
           fetchSharedFiles(profileId),
+          profileType === 'user'
+            ? fetchBlockStatus(profileId)
+            : Promise.resolve(),
         ]);
 
         if (loading) {
@@ -641,6 +690,104 @@ export function ProfileSidebar({
         description: 'Failed to delete group. Please try again.',
       });
     } finally {
+      setIsConfirmDialogOpen(false);
+    }
+  };
+
+  const handleToggleBlockChat = async (
+    targetUserId: string,
+    block: boolean,
+  ) => {
+    console.log('handleToggleBlockChat called', {
+      targetUserId,
+      block,
+      userUid: user?.uid,
+      hasOnConversationUpdate: !!onConversationUpdate,
+    });
+
+    if (!user?.uid || !targetUserId || !onConversationUpdate) {
+      console.log('Missing required data:', {
+        hasUser: !!user?.uid,
+        hasTargetUserId: !!targetUserId,
+        hasOnConversationUpdate: !!onConversationUpdate,
+      });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'User information is missing.',
+      });
+      return;
+    }
+
+    // Set loading state
+    setConfirmDialogProps((prev) => ({ ...prev, isLoading: true }));
+
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('type', '==', 'individual'),
+      where('participants', 'array-contains', user.uid),
+    );
+
+    let conversationDocToUpdate: any;
+    try {
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        if (doc.data().participants.includes(targetUserId)) {
+          conversationDocToUpdate = doc;
+        }
+      });
+
+      if (!conversationDocToUpdate) {
+        toast({
+          variant: 'destructive',
+          title: 'Cannot Block',
+          description: 'A direct 1-on-1 chat must exist to block this user.',
+        });
+        setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+        return;
+      }
+
+      const conversationDocRef = doc(
+        db,
+        'conversations',
+        conversationDocToUpdate.id,
+      );
+
+      if (block) {
+        await updateDoc(conversationDocRef, {
+          blocked: { status: true, by: user.uid },
+        });
+        setBlockStatus({ isBlocked: true, blockedBy: user.uid });
+        toast({
+          title: 'Chat Blocked',
+          description: 'You will no longer receive messages in this chat.',
+        });
+      } else {
+        await updateDoc(conversationDocRef, {
+          blocked: deleteField(),
+        });
+        setBlockStatus({ isBlocked: false, blockedBy: null });
+        toast({
+          title: 'Chat Unblocked',
+          description: 'You can now message in this chat.',
+        });
+      }
+
+      const currentConvData = (
+        await getDoc(conversationDocRef)
+      ).data() as Conversation;
+      onConversationUpdate({ ...currentConvData, id: conversationDocRef.id });
+    } catch (error) {
+      console.error('Error updating block status:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update block status.',
+      });
+      setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+    } finally {
+      setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
       setIsConfirmDialogOpen(false);
     }
   };
@@ -921,10 +1068,54 @@ export function ProfileSidebar({
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
-                          disabled
+                          className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))]"
+                          disabled={
+                            blockStatus.isBlocked &&
+                            blockStatus.blockedBy !== user?.uid
+                          }
+                          onClick={() => {
+                            console.log('Block button clicked', {
+                              profileId,
+                              onConversationUpdate,
+                              blockStatus,
+                            });
+                            if (profileId && onConversationUpdate) {
+                              const isCurrentlyBlocked =
+                                blockStatus.isBlocked &&
+                                blockStatus.blockedBy === user?.uid;
+                              console.log('Setting up confirmation dialog', {
+                                isCurrentlyBlocked,
+                              });
+
+                              setConfirmDialogProps({
+                                title: isCurrentlyBlocked
+                                  ? 'Unblock this Chat?'
+                                  : 'Block this Chat?',
+                                description: isCurrentlyBlocked
+                                  ? 'Unblocking will allow both of you to send messages in this chat again. Are you sure?'
+                                  : 'Blocking will prevent both of you from sending messages in this 1-on-1 chat. Do you want to block it?',
+                                onConfirm: () =>
+                                  handleToggleBlockChat(
+                                    profileId,
+                                    !isCurrentlyBlocked,
+                                  ),
+                                confirmButtonText: isCurrentlyBlocked
+                                  ? 'Unblock Chat'
+                                  : 'Block Chat',
+                                confirmButtonVariant: 'destructive',
+                                isLoading: false,
+                              });
+                              setIsConfirmDialogOpen(true);
+                            }
+                          }}
                         >
-                          <ShieldX className="h-4 w-4 mr-2" /> Block User
+                          <ShieldX className="h-4 w-4 mr-2" />
+                          {blockStatus.isBlocked &&
+                          blockStatus.blockedBy === user?.uid
+                            ? 'Unblock User'
+                            : blockStatus.isBlocked
+                              ? 'Blocked by User'
+                              : 'Block User'}
                         </Button>
                         <Button
                           variant="outline"
@@ -971,93 +1162,103 @@ export function ProfileSidebar({
                       <CardHeader>
                         <CardTitle className="text-base">
                           Members (
-                          {(profileData as ProfileGroup).members.length})
+                          {(profileData as ProfileGroup).members?.length || 0})
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <ScrollArea className="max-h-80 px-2 overflow-y-auto">
-                          <ul className="divide-y divide-gray-200 bg-white dark:bg-gray-900 rounded-lg shadow-sm py-2">
-                            {(profileData as ProfileGroup).members.map(
-                              (member) => {
-                                const group = profileData as ProfileGroup;
-                                const isCurrentUserAdmin =
-                                  user && group.admins?.includes(user.uid);
-                                const isMemberAdmin = group.admins?.includes(
-                                  member.id,
-                                );
-                                const canPerformAction =
-                                  isCurrentUserAdmin && user.uid !== member.id;
+                          {(profileData as ProfileGroup).members?.length ? (
+                            <ul className="divide-y divide-gray-200 bg-white dark:bg-gray-900 rounded-lg shadow-sm py-2">
+                              {(profileData as ProfileGroup).members.map(
+                                (member) => {
+                                  const group = profileData as ProfileGroup;
+                                  const isCurrentUserAdmin =
+                                    user && group.admins?.includes(user.uid);
+                                  const isMemberAdmin = group.admins?.includes(
+                                    member.id,
+                                  );
+                                  const canPerformAction =
+                                    isCurrentUserAdmin &&
+                                    user.uid !== member.id;
 
-                                return (
-                                  <li
-                                    key={member.id}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group"
-                                  >
-                                    <Avatar className="w-8 h-8">
-                                      <AvatarImage
-                                        src={member.profilePic}
-                                        alt={member.userName}
-                                      />
-                                      <AvatarFallback>
-                                        {member.userName
-                                          ?.charAt(0)
-                                          .toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <span
-                                      className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${
-                                        member.status === 'online'
-                                          ? 'bg-green-500'
-                                          : 'bg-gray-400'
-                                      }`}
-                                    ></span>
-                                    <div className="flex-1 min-w-0">
-                                      <span className="text-sm font-medium truncate">
-                                        {member.userName}
+                                  return (
+                                    <li
+                                      key={member.id}
+                                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group"
+                                    >
+                                      <Avatar className="w-8 h-8">
+                                        <AvatarImage
+                                          src={member.profilePic}
+                                          alt={member.userName}
+                                        />
+                                        <AvatarFallback>
+                                          {member.userName
+                                            ?.charAt(0)
+                                            .toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <span
+                                        className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${
+                                          member.status === 'online'
+                                            ? 'bg-green-500'
+                                            : 'bg-gray-400'
+                                        }`}
+                                      ></span>
+                                      <div className="flex-1 min-w-0">
+                                        <span className="text-sm font-medium truncate">
+                                          {member.userName}
+                                        </span>
+                                        {isMemberAdmin && (
+                                          <Badge
+                                            variant="outline"
+                                            className="ml-2 text-[10px] border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300 border"
+                                          >
+                                            Admin
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
+                                        {member.status === 'online'
+                                          ? 'Online'
+                                          : 'Offline'}
                                       </span>
-                                      {isMemberAdmin && (
-                                        <Badge
-                                          variant="outline"
-                                          className="ml-2 text-[10px] border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300 border"
+                                      {canPerformAction && !isMemberAdmin && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setConfirmDialogProps({
+                                              title: 'Confirm Removal',
+                                              description: `Are you sure you want to remove ${member.userName} from the group?`,
+                                              onConfirm: () =>
+                                                handleConfirmRemoveMember(
+                                                  member.id,
+                                                ),
+                                              confirmButtonText:
+                                                'Remove Member',
+                                              confirmButtonVariant:
+                                                'destructive',
+                                              isLoading: false,
+                                            });
+                                            setIsConfirmDialogOpen(true);
+                                          }}
+                                          aria-label={`Remove ${member.userName} from group`}
                                         >
-                                          Admin
-                                        </Badge>
+                                          <MinusCircle className="h-4 w-4" />
+                                        </Button>
                                       )}
-                                    </div>
-                                    <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
-                                      {member.status === 'online'
-                                        ? 'Online'
-                                        : 'Offline'}
-                                    </span>
-                                    {canPerformAction && !isMemberAdmin && (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setConfirmDialogProps({
-                                            title: 'Confirm Removal',
-                                            description: `Are you sure you want to remove ${member.userName} from the group?`,
-                                            onConfirm: () =>
-                                              handleConfirmRemoveMember(
-                                                member.id,
-                                              ),
-                                            confirmButtonText: 'Remove Member',
-                                            confirmButtonVariant: 'destructive',
-                                          });
-                                          setIsConfirmDialogOpen(true);
-                                        }}
-                                        aria-label={`Remove ${member.userName} from group`}
-                                      >
-                                        <MinusCircle className="h-4 w-4" />
-                                      </Button>
-                                    )}
-                                  </li>
-                                );
-                              },
-                            )}
-                          </ul>
+                                    </li>
+                                  );
+                                },
+                              )}
+                            </ul>
+                          ) : (
+                            <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4">
+                              No members found
+                            </div>
+                          )}
                         </ScrollArea>
                       </CardContent>
                     </Card>
@@ -1181,6 +1382,7 @@ export function ProfileSidebar({
                               },
                               confirmButtonText: 'Leave',
                               confirmButtonVariant: 'destructive',
+                              isLoading: false,
                             });
                             setIsConfirmDialogOpen(true);
                           }}
@@ -1206,6 +1408,7 @@ export function ProfileSidebar({
                                       ),
                                     confirmButtonText: 'Yes, Delete This Group',
                                     confirmButtonVariant: 'destructive',
+                                    isLoading: false,
                                   });
                                   setIsConfirmDialogOpen(true);
                                 }
@@ -1272,13 +1475,13 @@ export function ProfileSidebar({
             currentInviteLink={(profileData as ProfileGroup).inviteLink}
             groupName={(profileData as ProfileGroup).displayName || 'the group'}
           />
-          <ConfirmActionDialog
-            isOpen={isConfirmDialogOpen}
-            onClose={() => setIsConfirmDialogOpen(false)}
-            {...confirmDialogProps}
-          />
         </>
       )}
+      <ConfirmActionDialog
+        isOpen={isConfirmDialogOpen}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        {...confirmDialogProps}
+      />
     </Sheet>
   );
 }
