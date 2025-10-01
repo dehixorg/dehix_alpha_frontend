@@ -1,3 +1,5 @@
+'use client';
+
 /* eslint-disable prettier/prettier */
 import React, { RefObject, useMemo, memo } from 'react';
 import Image from 'next/image';
@@ -135,7 +137,9 @@ function ChatMessageItem({
     () =>
       DOMPurify.sanitize(message.content, {
         ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'br', 'div', 'span', 'a'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class'],
+        ALLOWED_ATTR: ['href', 'rel', 'class'],
+        FORBID_ATTR: ['style', 'target'],
+        ALLOWED_URI_REGEXP: /^(https?:|mailto:)/i,
       }),
     [message.content]
   );
@@ -230,7 +234,7 @@ function ChatMessageItem({
                           )}
                         >
                           <span className="font-medium">
-                            {messages.find((msg) => msg.id === message.replyTo)?.content.substring(0, 100) || 'Original message'}
+                            {messages.find((msg) => msg.id === message.replyTo)?.content?.substring(0, 100) || 'Original message'}
                             {(messages.find((msg) => msg.id === message.replyTo)?.content?.length || 0) > 100 && '...'}
                           </span>
                         </div>
