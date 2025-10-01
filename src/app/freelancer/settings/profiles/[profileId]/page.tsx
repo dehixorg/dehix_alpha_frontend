@@ -1488,10 +1488,20 @@ export default function ProfileDetailPage() {
               freelancerId={user.uid}
               currentProfileId={profileId}
               onSuccess={(newExperiences) => {
-                setEditingProfileData((prev: any) => ({
-                  ...prev,
-                  experiences: [...(prev.experiences || []), ...newExperiences],
-                }));
+                setEditingProfileData((prev: any) => {
+                  const existing = Array.isArray(prev.experiences)
+                    ? prev.experiences
+                    : [];
+                  const byId = new Map<string, any>();
+
+                  // Keep existing ones
+                  for (const e of existing) byId.set(String(e._id), e);
+
+                  // Add/overwrite with new ones
+                  for (const e of newExperiences) byId.set(String(e._id), e);
+
+                  return { ...prev, experiences: Array.from(byId.values()) };
+                });
               }}
             />
           </div>

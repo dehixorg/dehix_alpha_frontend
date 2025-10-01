@@ -130,6 +130,14 @@ export default function ExperienceSelectionDialog({
         ),
       ];
 
+      // Derive actually added items for accurate UX/callback
+      const existingIds = new Set<string>(
+        currentExperiences.map((e: any) => String(e._id)),
+      );
+      const actuallyAdded = experiencesToAdd.filter(
+        (e) => !existingIds.has(String(e._id)),
+      );
+
       // PUT combined array to backend
       await axiosInstance.put(`/freelancer/profile/${currentProfileId}`, {
         experiences: updatedExperiences.map((e) => ({
@@ -143,14 +151,14 @@ export default function ExperienceSelectionDialog({
         })),
       });
 
-      // ✅ Only one toast for success
+      // ✅ Single success toast with accurate count
       notifySuccess(
-        `${experiencesToAdd.length} experience(s) added to profile.`,
+        `${actuallyAdded.length} experience(s) added to profile.`,
         'Success',
       );
 
-      // Call onSuccess callback with added experiences
-      onSuccess?.(experiencesToAdd);
+      // Call onSuccess with only the actually added items
+      onSuccess?.(actuallyAdded);
 
       // Clear selection and close dialog
       setSelectedExperiences([]);
