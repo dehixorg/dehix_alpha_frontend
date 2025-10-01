@@ -21,9 +21,11 @@ import {
   StopCircle,
   Trash2,
   X,
+  Archive,
+  ArchiveRestore,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { DocumentData } from 'firebase/firestore';
+import { doc, DocumentData, updateDoc } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
 import { formatDistanceToNow, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
@@ -70,7 +72,9 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { toast } from '@/hooks/use-toast';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { db } from '@/config/firebaseConfig';
 import {
   Dialog,
   DialogContent,
@@ -160,6 +164,7 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
+  onConversationUpdate?: (conv: Conversation | null) => void;
 }
 
 export function CardsChat({
@@ -167,6 +172,7 @@ export function CardsChat({
   isChatExpanded,
   onToggleExpand,
   onOpenProfileSidebar,
+  onConversationUpdate,
 }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
@@ -392,6 +398,15 @@ export function CardsChat({
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
+    if (conversation.blocked?.status === true) {
+      toast({
+        variant: 'destructive',
+        title: 'Action Denied',
+        description: 'You cannot send messages to a blocked conversation.',
+      });
+      return;
+    }
+
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
@@ -851,6 +866,58 @@ export function CardsChat({
     );
   }
 
+  const isBlocked = conversation?.blocked?.status === true;
+  const isArchived =
+    conversation?.participantDetails?.[user.uid]?.viewState === 'archived';
+
+  let blockMessage = '';
+  if (isBlocked) {
+    if (conversation.blocked?.by === user.uid) {
+      blockMessage =
+        'You have blocked this conversation. Unblock them to send a message.';
+    } else {
+      blockMessage = 'This conversation is blocked. You cannot send a message.';
+    }
+  }
+
+  async function handleToggleArchive() {
+    if (!user?.uid || !conversation?.id) return;
+
+    const currentState = conversation.participantDetails?.[user.uid]?.viewState;
+    const newState = currentState === 'archived' ? 'inbox' : 'archived';
+
+    const conversationDocRef = doc(db, 'conversations', conversation.id);
+    const fieldToUpdate = `participantDetails.${user.uid}.viewState`;
+
+    try {
+      await updateDoc(conversationDocRef, { [fieldToUpdate]: newState });
+
+      const updatedConversation = {
+        ...conversation,
+        participantDetails: {
+          ...conversation.participantDetails,
+          [user.uid]: {
+            ...conversation.participantDetails?.[user.uid],
+            viewState: newState,
+          },
+        },
+      };
+
+      onConversationUpdate?.(updatedConversation as Conversation);
+
+      toast({
+        title: `Conversation ${newState === 'archived' ? 'Archived' : 'Unarchived'}`,
+      });
+    } catch (error) {
+      console.error('Error toggling archive state:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not update archive status.',
+      });
+    }
+  }
+
   return (
     <>
       {/* Image Modal */}
@@ -1007,6 +1074,21 @@ export function CardsChat({
                   <Search className="h-5 w-5" />
                 </Button>
               )}
+
+              {/* Archive/Unarchive button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
+                onClick={handleToggleArchive}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                {isArchived ? (
+                  <ArchiveRestore className="h-5 w-5" />
+                ) : (
+                  <Archive className="h-5 w-5" />
+                )}
+              </Button>
 
               {/* Video call */}
               <Button
@@ -1452,8 +1534,13 @@ export function CardsChat({
               </ScrollArea>
             </CardContent>
             <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-b-xl">
-              <form
-                onSubmit={(event) => {
+              {isBlocked ? (
+                <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                  <p>{blockMessage}</p>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(event) => {
                   event.preventDefault();
                   if (input.trim().length === 0) return;
                   const newMessage = {
@@ -1828,6 +1915,7 @@ export function CardsChat({
                   </div>
                 )}
               </form>
+              )}
             </CardFooter>
           </Card>
           <Dialog open={openReport} onOpenChange={setOpenReport}>

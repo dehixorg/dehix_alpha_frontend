@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
-import { MessageSquare, Search, SquarePen, Loader2 } from 'lucide-react';
+import {
+  MessageSquare,
+  Search,
+  SquarePen,
+  Loader2,
+  Archive,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -32,6 +38,7 @@ export interface Conversation extends DocumentData {
       profilePic?: string;
       email?: string;
       userType?: 'freelancer' | 'business';
+      viewState?: 'archived' | 'inbox';
     };
   };
   groupName?: string;
@@ -87,6 +94,7 @@ export function ChatList({
 
   const selectedUsers: SelectedUser[] = [];
   const [isSearching, setIsSearching] = useState(false);
+  const [activeView, setActiveView] = useState<'inbox' | 'archived'>('inbox');
 
   const stripHtml = (html: string): string =>
     html
@@ -165,16 +173,38 @@ export function ChatList({
     return () => clearInterval(intervalId);
   }, [updateLastUpdated]);
 
-  const filteredConversations = conversations.filter(
-    (conversation: Conversation) => {
-      const name = conversation.project_name || 'Unnamed Project';
+  const handleOpenArchivedChats = () => {
+    setActiveView('archived');
+  };
+
+  const handleOpenInbox = () => {
+    setActiveView('inbox');
+  };
+
+  const displayedConversations = conversations
+    .filter((conversation) => {
+      const userDetails = conversation.participantDetails?.[currentUser.uid];
+      if (activeView === 'archived') {
+        return userDetails?.viewState === 'archived';
+      } else {
+        return userDetails?.viewState !== 'archived';
+      }
+    })
+    .filter((conversation) => {
+      const name =
+        conversation.groupName ||
+        conversation.participantDetails?.[
+          conversation.participants.find((p) => p !== currentUser.uid) || ''
+        ]?.userName ||
+        '';
       const lastMessageContent = conversation.lastMessage?.content || '';
       return (
         name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
+        stripHtml(lastMessageContent)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
       );
-    },
-  );
+    });
 
   return (
     <div className="flex flex-col h-full bg-[hsl(var(--card))]">
@@ -186,6 +216,14 @@ export function ChatList({
             onClick={onOpenNewChatDialog}
           >
             <SquarePen className="h-4 w-4 mr-2" /> New Chat
+          </Button>
+          <Button
+            variant="outline"
+            className="flex items-center justify-center text-sm px-3 py-2 rounded-full shadow-lg"
+            onClick={handleOpenArchivedChats}
+            aria-label="View archived chats"
+          >
+            <Archive className="h-4 w-4" />
           </Button>
         </div>
         <div className="relative">
@@ -202,6 +240,18 @@ export function ChatList({
           />
         </div>
       </div>
+
+      {activeView === 'archived' && (
+        <div className="p-3 text-center border-b border-[hsl(var(--border))]">
+          <div className="flex items-center justify-between">
+            <Button variant="link" onClick={handleOpenInbox}>
+              &larr; Back to Inbox
+            </Button>
+            <h3 className="font-semibold text-lg">Archived Chats</h3>
+            <div style={{ width: '95px' }}></div>
+          </div>
+        </div>
+      )}
 
       <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="p-2 space-y-2">
@@ -273,8 +323,8 @@ export function ChatList({
             </div>
           ) : (
             <>
-              {filteredConversations.length > 0 ? (
-                filteredConversations.map((conversation) => {
+              {displayedConversations.length > 0 ? (
+                displayedConversations.map((conversation) => {
                   const lastUpdated =
                     lastUpdatedTimes[conversation.id] || 'N/A';
                   const isActive = active?.id === conversation.id;
