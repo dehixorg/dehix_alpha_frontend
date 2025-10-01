@@ -1,6 +1,19 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, BarChart3, Sparkles } from 'lucide-react';
+import {
+  Plus,
+  BarChart3,
+  Sparkles,
+  Award,
+  Layers,
+  Github,
+  Linkedin,
+  Globe,
+  DollarSign,
+  UserCog,
+  Briefcase,
+  User,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import {
@@ -41,7 +54,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Award, Layers, Github, Linkedin, Globe, DollarSign, UserCog, Briefcase, User } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -65,8 +77,10 @@ export default function ProfilesPage() {
   const [newProfileHourlyRate, setNewProfileHourlyRate] = useState<number>(0);
   const [newProfileGithubLink, setNewProfileGithubLink] = useState('');
   const [newProfileLinkedinLink, setNewProfileLinkedinLink] = useState('');
-  const [newProfilePersonalWebsite, setNewProfilePersonalWebsite] = useState('');
-  const [newProfileAvailability, setNewProfileAvailability] = useState('FREELANCE');
+  const [newProfilePersonalWebsite, setNewProfilePersonalWebsite] =
+    useState('');
+  const [newProfileAvailability, setNewProfileAvailability] =
+    useState('FREELANCE');
   const [newProfileSkills, setNewProfileSkills] = useState<string[]>([]);
   const [newProfileDomains, setNewProfileDomains] = useState<string[]>([]);
   const [newProfileProjects, setNewProfileProjects] = useState<any[]>([]);
@@ -77,8 +91,6 @@ export default function ProfilesPage() {
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showExperienceDialog, setShowExperienceDialog] = useState(false);
-  const [freelancerProjects, setFreelancerProjects] = useState<any[]>([]);
-  const [freelancerExperiences, setFreelancerExperiences] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<
     'overview' | 'freelancer' | 'consultant'
   >('overview');
@@ -93,14 +105,14 @@ export default function ProfilesPage() {
     try {
       const response = await axiosInstance.get(`/freelancer/profiles`);
       const profilesData = response.data.data || [];
-      
+
       // Sort profiles by creation date (newest first)
       const sortedProfiles = profilesData.sort((a: any, b: any) => {
         const dateA = new Date(a.createdAt || 0).getTime();
         const dateB = new Date(b.createdAt || 0).getTime();
         return dateB - dateA; // Descending order (newest first)
       });
-      
+
       setProfiles(sortedProfiles);
     } catch (error) {
       console.error('Error fetching profiles:', error);
@@ -153,26 +165,9 @@ export default function ProfilesPage() {
   };
 
   const fetchFreelancerProjectsAndExperiences = async () => {
-    try {
-      const freelancerResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}`,
-      );
-      const freelancerData = freelancerResponse.data.data || {};
-      const projectsData = freelancerData.projects || [];
-      const experiencesData = freelancerData.experiences || [];
-      
-      const allProjects = Array.isArray(projectsData)
-        ? projectsData
-        : Object.values(projectsData);
-      const allExperiences = Array.isArray(experiencesData)
-        ? experiencesData
-        : Object.values(experiencesData);
-      
-      setFreelancerProjects(allProjects);
-      setFreelancerExperiences(allExperiences);
-    } catch (error) {
-      console.error('Error fetching freelancer projects and experiences:', error);
-    }
+    // This function is called but the data is not currently used
+    // The projects and experiences are fetched directly in the dialogs
+    // Keeping this for potential future use
   };
 
   const handleCreateProfile = async () => {
@@ -181,7 +176,10 @@ export default function ProfilesPage() {
       return;
     }
 
-    if (!newProfileDescription.trim() || newProfileDescription.trim().length < 10) {
+    if (
+      !newProfileDescription.trim() ||
+      newProfileDescription.trim().length < 10
+    ) {
       notifyError('Description must be at least 10 characters long');
       return;
     }
@@ -209,19 +207,21 @@ export default function ProfilesPage() {
       );
 
       const newProfile = response.data.data;
-      
+
       // Use the skills/domains we sent in the request since backend might not return them
       // Enrich with full objects from our options for immediate display
       const enrichedSkills = newProfileSkills.map((skillId: string) => {
         const foundSkill = skillsOptions.find((s: any) => s._id === skillId);
         return foundSkill || { _id: skillId, label: skillId, name: skillId };
       });
-      
+
       const enrichedDomains = newProfileDomains.map((domainId: string) => {
         const foundDomain = domainsOptions.find((d: any) => d._id === domainId);
-        return foundDomain || { _id: domainId, label: domainId, name: domainId };
+        return (
+          foundDomain || { _id: domainId, label: domainId, name: domainId }
+        );
       });
-      
+
       const localProfile = {
         ...newProfile,
         profileType: newProfileType,
@@ -233,7 +233,7 @@ export default function ProfilesPage() {
 
       // Add new profile at the beginning (newest first)
       setProfiles((prev) => [localProfile, ...prev]);
-      
+
       // Reset all form fields
       setNewProfileName('');
       setNewProfileDescription('');
@@ -736,7 +736,9 @@ export default function ProfilesPage() {
                 step="1"
                 placeholder="50"
                 value={newProfileHourlyRate || ''}
-                onChange={(e) => setNewProfileHourlyRate(parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  setNewProfileHourlyRate(parseFloat(e.target.value) || 0)
+                }
               />
             </div>
 
@@ -752,14 +754,21 @@ export default function ProfilesPage() {
                   label=""
                   options={skillsOptions}
                   selected={newProfileSkills.map((id: string) => ({
-                    name: skillsOptions.find((s: any) => s._id === id)?.label || id,
+                    name:
+                      skillsOptions.find((s: any) => s._id === id)?.label || id,
                   }))}
                   onAdd={(value: string) => {
                     const selectedSkill = skillsOptions.find(
                       (s: any) => (s.label || s.name) === value,
                     );
-                    if (selectedSkill && !newProfileSkills.includes(selectedSkill._id)) {
-                      setNewProfileSkills([...newProfileSkills, selectedSkill._id]);
+                    if (
+                      selectedSkill &&
+                      !newProfileSkills.includes(selectedSkill._id)
+                    ) {
+                      setNewProfileSkills([
+                        ...newProfileSkills,
+                        selectedSkill._id,
+                      ]);
                     }
                   }}
                   onRemove={(name: string) => {
@@ -767,7 +776,9 @@ export default function ProfilesPage() {
                       (s: any) => (s.label || s.name) === name,
                     );
                     if (skill) {
-                      setNewProfileSkills(newProfileSkills.filter((id) => id !== skill._id));
+                      setNewProfileSkills(
+                        newProfileSkills.filter((id) => id !== skill._id),
+                      );
                     }
                   }}
                   optionLabelKey="label"
@@ -784,14 +795,22 @@ export default function ProfilesPage() {
                   label=""
                   options={domainsOptions}
                   selected={newProfileDomains.map((id: string) => ({
-                    name: domainsOptions.find((d: any) => d._id === id)?.label || id,
+                    name:
+                      domainsOptions.find((d: any) => d._id === id)?.label ||
+                      id,
                   }))}
                   onAdd={(value: string) => {
                     const selectedDomain = domainsOptions.find(
                       (d: any) => (d.label || d.name) === value,
                     );
-                    if (selectedDomain && !newProfileDomains.includes(selectedDomain._id)) {
-                      setNewProfileDomains([...newProfileDomains, selectedDomain._id]);
+                    if (
+                      selectedDomain &&
+                      !newProfileDomains.includes(selectedDomain._id)
+                    ) {
+                      setNewProfileDomains([
+                        ...newProfileDomains,
+                        selectedDomain._id,
+                      ]);
                     }
                   }}
                   onRemove={(name: string) => {
@@ -799,7 +818,9 @@ export default function ProfilesPage() {
                       (d: any) => (d.label || d.name) === name,
                     );
                     if (domain) {
-                      setNewProfileDomains(newProfileDomains.filter((id) => id !== domain._id));
+                      setNewProfileDomains(
+                        newProfileDomains.filter((id) => id !== domain._id),
+                      );
                     }
                   }}
                   optionLabelKey="label"
@@ -853,7 +874,10 @@ export default function ProfilesPage() {
             {/* Links */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="github-link" className="flex items-center gap-2">
+                <Label
+                  htmlFor="github-link"
+                  className="flex items-center gap-2"
+                >
                   <Github className="h-4 w-4" /> GitHub
                 </Label>
                 <Input
@@ -864,7 +888,10 @@ export default function ProfilesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="linkedin-link" className="flex items-center gap-2">
+                <Label
+                  htmlFor="linkedin-link"
+                  className="flex items-center gap-2"
+                >
                   <Linkedin className="h-4 w-4" /> LinkedIn
                 </Label>
                 <Input
@@ -875,7 +902,10 @@ export default function ProfilesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="personal-website" className="flex items-center gap-2">
+                <Label
+                  htmlFor="personal-website"
+                  className="flex items-center gap-2"
+                >
                   <Globe className="h-4 w-4" /> Website
                 </Label>
                 <Input
@@ -886,7 +916,10 @@ export default function ProfilesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="availability" className="flex items-center gap-2">
+                <Label
+                  htmlFor="availability"
+                  className="flex items-center gap-2"
+                >
                   <UserCog className="h-4 w-4" /> Availability
                 </Label>
                 <Select

@@ -51,7 +51,7 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
     if (!item) return '';
     if (typeof item === 'string') return item;
     if (typeof item === 'object' && item !== null) {
-      const label = 
+      const label =
         item.label ||
         item.name ||
         item.skillName ||
@@ -197,8 +197,12 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
 
         <CardContent className="px-6 py-4 flex flex-col h-[320px]">
           <div className="space-y-3 flex-1">
-            <div className="h-[70px] overflow-hidden">{renderSkillBadges(skills)}</div>
-            <div className="h-[70px] overflow-hidden">{renderDomainBadges(domains)}</div>
+            <div className="h-[70px] overflow-hidden">
+              {renderSkillBadges(skills)}
+            </div>
+            <div className="h-[70px] overflow-hidden">
+              {renderDomainBadges(domains)}
+            </div>
 
             <div className="grid grid-cols-2 gap-3 text-sm h-[60px]">
               <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50 flex items-center gap-2">
