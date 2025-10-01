@@ -312,7 +312,13 @@ export default function ProfileDetailPage() {
 
       fetchData();
     }
-  }, [profileId, user.uid, fetchSkillsAndDomains, fetchProfile, fetchFreelancerProjects]);
+  }, [
+    profileId,
+    user.uid,
+    fetchSkillsAndDomains,
+    fetchProfile,
+    fetchFreelancerProjects,
+  ]);
 
   const getSkillNameById = (skillId: string) => {
     if (!skillId || !skillsOptions || skillsOptions.length === 0) {
