@@ -14,7 +14,20 @@ import {
 import { useSelector } from 'react-redux';
 
 import TalentContent from './TalentContent';
+import Header from '../header/header';
 
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
+
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -98,6 +111,12 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
 
   // NEW: State for skills/domains list, search query, and 'show more' functionality
   const [allSkillsAndDomains, setAllSkillsAndDomains] = useState<string[]>([]);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [domains, setDomains] = useState<string[]>([]);
+
+  const [skillsSearch, setSkillsSearch] = useState('');
+  const [domainsSearch, setDomainsSearch] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllSkills, setShowAllSkills] = useState(false);
 
@@ -205,6 +224,35 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   );
 
   // MERGE SKILLS AND DOMAINS FETCHING INTO A SINGLE EFFECT
+  // useEffect(() => {
+  //   const fetchFilterData = async () => {
+  //     try {
+  //       const [skillsResponse, domainsResponse] = await Promise.all([
+  //         axiosInstance.get('/skills'),
+  //         axiosInstance.get('/domain'),
+  //       ]);
+
+  //       const skillLabels = skillsResponse.data.data.map(
+  //         (skill: any) => skill.label,
+  //       );
+  //       const domainLabels = domainsResponse.data.data.map(
+  //         (domain: any) => domain.label,
+  //       );
+
+  //       const combinedLabels = [...skillLabels, ...domainLabels];
+  //       setAllSkillsAndDomains(combinedLabels);
+  //     } catch (error) {
+  //       toast({
+  //         variant: 'destructive',
+  //         title: 'Error',
+  //         description: 'Failed to load filter options.',
+  //       });
+  //       console.error('Error fetching filter data:', error);
+  //     }
+  //   };
+  //   fetchFilterData();
+  //   fetchData(filters);
+  // }, [activeTab, filters, fetchData]);
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
@@ -213,15 +261,10 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
           axiosInstance.get('/domain'),
         ]);
 
-        const skillLabels = skillsResponse.data.data.map(
-          (skill: any) => skill.label,
+        setSkills(skillsResponse.data.data.map((skill: any) => skill.label));
+        setDomains(
+          domainsResponse.data.data.map((domain: any) => domain.label),
         );
-        const domainLabels = domainsResponse.data.data.map(
-          (domain: any) => domain.label,
-        );
-
-        const combinedLabels = [...skillLabels, ...domainLabels];
-        setAllSkillsAndDomains(combinedLabels);
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -252,65 +295,51 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     };
     setFilters(emptyFilters);
   };
+  console.log('these are all skills and domain', allSkillsAndDomains);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <SidebarMenu
-        menuItemsTop={[]}
-        menuItemsBottom={[]}
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
         active={activePage}
         setActive={setActivePage}
       />
-      <div className="ml-14 flex flex-col min-h-screen">
+      <div className="sm:ml-14 flex flex-col min-h-screen">
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Market"
+          breadcrumbItems={[
+            { label: 'Business', link: '/dashboard/business' },
+            { label: 'Talent Management', link: '#' },
+          ]}
+        />
         <header className="border-b">
           <div className="container flex h-16 items-center justify-between px-4">
             <h1 className="text-xl font-bold">Talent Management</h1>
-          </div>
-        </header>
-        <div className="container px-4 py-4">
-          <Tabs value={activeTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview" asChild>
-                <a href="/business/talent">
-                  <Users2 className="h-4 w-4" />
-                  Overview
-                </a>
-              </TabsTrigger>
-              <TabsTrigger
-                value="invited"
-                onClick={() => handleTabChange('invited')}
+
+            {/* Filter Sheet Trigger */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-80 sm:w-96 overflow-y-auto"
               >
-                <BookMarked className="h-4 w-4" />
-                Invites
-              </TabsTrigger>
-              <TabsTrigger
-                value="accepted"
-                onClick={() => handleTabChange('accepted')}
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                Accepted
-              </TabsTrigger>
-              <TabsTrigger
-                value="rejected"
-                onClick={() => handleTabChange('rejected')}
-              >
-                <XCircle className="h-4 w-4" />
-                Rejected
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        <div className="container flex-1 items-start px-4 py-6">
-          <div className="grid grid-cols-12 gap-6">
-            <aside className="col-span-3">
-              <Card className="sticky top-20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
                     Filters
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                  </SheetTitle>
+                </SheetHeader>
+
+                <div className="space-y-4 mt-4">
+                  {/* Search */}
                   <div className="space-y-2">
                     <Label htmlFor="search">Search</Label>
                     <div className="relative">
@@ -325,30 +354,27 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                     </div>
                   </div>
                   <Separator />
+
+                  {/* Skills */}
                   <div className="space-y-2">
                     <Label>Skills</Label>
-                    {/* NEW: Search input for skills */}
                     <div className="relative">
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Search Skills"
                         className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        value={skillsSearch}
+                        onChange={(e) => setSkillsSearch(e.target.value)}
                       />
                     </div>
-                    {/* NEW: Checkbox list with conditional rendering for 'show more' */}
                     <div className="space-y-1">
-                      {allSkillsAndDomains
+                      {skills
                         .filter((skill) =>
                           skill
                             .toLowerCase()
-                            .includes(searchQuery.toLowerCase()),
+                            .includes(skillsSearch.toLowerCase()),
                         )
-                        .slice(
-                          0,
-                          showAllSkills ? allSkillsAndDomains.length : 10,
-                        )
+                        .slice(0, showAllSkills ? skills.length : 10)
                         .map((skill) => (
                           <div
                             key={skill}
@@ -370,23 +396,54 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                           </div>
                         ))}
                     </div>
-                    {/* NEW: 'More' button logic */}
-                    {allSkillsAndDomains.length > 10 && !searchQuery && (
-                      <Button
-                        variant="link"
-                        onClick={() => setShowAllSkills(!showAllSkills)}
-                        className="p-0 text-sm font-normal"
-                      >
-                        <ChevronDown
-                          className={`h-4 w-4 mr-2 transition-transform ${
-                            showAllSkills ? 'rotate-180' : ''
-                          }`}
-                        />
-                        {showAllSkills ? 'Less' : 'More'}
-                      </Button>
-                    )}
                   </div>
                   <Separator />
+
+                  {/* Domains */}
+                  <div className="space-y-2">
+                    <Label>Domains</Label>
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search Domains"
+                        className="pl-8"
+                        value={domainsSearch}
+                        onChange={(e) => setDomainsSearch(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      {domains
+                        .filter((domain) =>
+                          domain
+                            .toLowerCase()
+                            .includes(domainsSearch.toLowerCase()),
+                        )
+                        .slice(0, showAllSkills ? domains.length : 10)
+                        .map((domain) => (
+                          <div
+                            key={domain}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`domain-${domain}`}
+                              checked={filters.skills.includes(domain)}
+                              onCheckedChange={(Checked) =>
+                                handleToggleFilter('skills', domain, !!Checked)
+                              }
+                            />
+                            <Label
+                              htmlFor={`domain-${domain}`}
+                              className="font-normal"
+                            >
+                              {domain}
+                            </Label>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                  <Separator />
+
+                  {/* Experience */}
                   <div className="space-y-2">
                     <Label>Experience</Label>
                     <div className="space-y-1">
@@ -418,15 +475,55 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                       )}
                     </div>
                   </div>
+
+                  {/* Buttons */}
                   <div className="flex justify-between pt-4">
                     <Button variant="outline" onClick={handleResetFilters}>
                       Reset
                     </Button>
                     <Button onClick={handleApplyFilters}>Apply Filters</Button>
                   </div>
-                </CardContent>
-              </Card>
-            </aside>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </header>
+
+        <div className="container px-4 py-4 ">
+          <Tabs value={activeTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4 ">
+              <TabsTrigger value="overview" asChild>
+                <a href="/business/talent">
+                  <Users2 className="h-4 w-4 mr-2" />
+                  Overview
+                </a>
+              </TabsTrigger>
+              <TabsTrigger
+                value="invited"
+                onClick={() => handleTabChange('invited')}
+              >
+                <BookMarked className="h-4 w-4 mr-2" />
+                Invites
+              </TabsTrigger>
+              <TabsTrigger
+                value="accepted"
+                onClick={() => handleTabChange('accepted')}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Accepted
+              </TabsTrigger>
+              <TabsTrigger
+                value="rejected"
+                onClick={() => handleTabChange('rejected')}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Rejected
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        <div className="container flex-1 items-start px-4 py-6">
+          <div className="grid grid-cols-6 gap-6">
             <div className="col-span-9">
               <TalentContent
                 activeTab={activeTab}
