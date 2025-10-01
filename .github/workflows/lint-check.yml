@@ -33,7 +33,7 @@ jobs:
 
           # Run lint and save output to file
           # Use --no-error-on-unmatched-pattern to prevent errors when no files match
-          npx eslint "src/**/*.{ts,tsx}" --format=json > "$LINT_OUTPUT_FILE" 2>/dev/null || true
+          npx eslint . --ext .ts,.tsx --format=json > "$LINT_OUTPUT_FILE" 2>/dev/null || true
 
           # Initialize counters
           TOTAL_ERRORS=0
