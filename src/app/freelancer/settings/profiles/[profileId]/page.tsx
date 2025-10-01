@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import {
@@ -182,67 +182,51 @@ export default function ProfileDetailPage() {
     </div>
   );
 
-  useEffect(() => {
-    if (profileId) {
-      const fetchData = async () => {
-        setIsLoading(true);
-        try {
-          await fetchSkillsAndDomains();
-          await fetchProfile();
-          await fetchFreelancerProjects();
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
+  const fetchSkillsAndDomains = useCallback(async () => {
+    if (!user.uid) return;
 
-      fetchData();
+    try {
+      const [skillsResponse, domainsResponse, freelancerResponse] =
+        await Promise.all([
+          axiosInstance.get('/skills'),
+          axiosInstance.get('/domain'), // Corrected endpoint
+          axiosInstance.get(`/freelancer/${user.uid}`),
+        ]);
+
+      const allSkills = skillsResponse.data.data || [];
+      const allDomains = domainsResponse.data.data || [];
+      const freelancerData = freelancerResponse.data.data || {};
+
+      const freelancerSkillNames = (freelancerData.skills || [])
+        .map((s: any) => s.name || s.label)
+        .filter(Boolean);
+
+      const freelancerDomainNames = (freelancerData.domain || [])
+        .map((d: any) => d.name || d.label)
+        .filter(Boolean);
+
+      const skillsForOptions = allSkills.filter((s: any) =>
+        freelancerSkillNames.includes(s.label || s.name),
+      );
+      const domainsForOptions = allDomains.filter((d: any) =>
+        freelancerDomainNames.includes(d.label || d.name),
+      );
+
+      setSkillsOptions(skillsForOptions);
+      setDomainsOptions(domainsForOptions);
+
+      setSkillsAndDomainsLoaded(true);
+    } catch (error) {
+      console.error('Error fetching skills and domains:', error);
+      notifyError(
+        'Could not load skills and domains. Please ensure you have added skills to your main profile.',
+        'Error',
+      );
     }
-  }, [profileId]);
+  }, [user.uid]);
 
-  const getSkillNameById = (skillId: string) => {
-    if (!skillId || !skillsOptions || skillsOptions.length === 0) {
-      return skillId || '';
-    }
-    const skill = skillsOptions.find((s: any) => s._id === skillId);
-    return skill ? skill.label || skill.name : skillId;
-  };
-
-  const getDomainNameById = (domainId: string) => {
-    if (!domainId || !domainsOptions || domainsOptions.length === 0) {
-      return domainId || '';
-    }
-    const domain = domainsOptions.find((d: any) => d._id === domainId);
-    return domain ? domain.label || domain.name : domainId;
-  };
-
-  const transformProfileForAPI = (profileData: any) => {
-    const transformedSkills =
-      profileData.skills?.map((skill: any) => {
-        if (typeof skill === 'string') {
-          return skill;
-        }
-        return skill._id;
-      }) || [];
-
-    const transformedDomains =
-      profileData.domains?.map((domain: any) => {
-        if (typeof domain === 'string') {
-          return domain;
-        }
-        return domain._id;
-      }) || [];
-
-    return {
-      ...profileData,
-      skills: transformedSkills,
-      domains: transformedDomains,
-    };
-  };
-
-  const fetchProfile = async () => {
-    if (!profileId) return;
+  const fetchProfile = useCallback(async () => {
+    if (!profileId || !user.uid) return;
 
     try {
       const response = await axiosInstance.get(
@@ -294,50 +278,11 @@ export default function ProfileDetailPage() {
       notifyError('Failed to load profile', 'Error');
       router.push('/freelancer/settings/profiles');
     }
-  };
+  }, [profileId, user.uid, router]);
 
-  const fetchSkillsAndDomains = async () => {
-    try {
-      const [skillsResponse, domainsResponse, freelancerResponse] =
-        await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'), // Corrected endpoint
-          axiosInstance.get(`/freelancer/${user.uid}`),
-        ]);
+  const fetchFreelancerProjects = useCallback(async () => {
+    if (!user.uid) return;
 
-      const allSkills = skillsResponse.data.data || [];
-      const allDomains = domainsResponse.data.data || [];
-      const freelancerData = freelancerResponse.data.data || {};
-
-      const freelancerSkillNames = (freelancerData.skills || [])
-        .map((s: any) => s.name || s.label)
-        .filter(Boolean);
-
-      const freelancerDomainNames = (freelancerData.domain || [])
-        .map((d: any) => d.name || d.label)
-        .filter(Boolean);
-
-      const skillsForOptions = allSkills.filter((s: any) =>
-        freelancerSkillNames.includes(s.label || s.name),
-      );
-      const domainsForOptions = allDomains.filter((d: any) =>
-        freelancerDomainNames.includes(d.label || d.name),
-      );
-
-      setSkillsOptions(skillsForOptions);
-      setDomainsOptions(domainsForOptions);
-
-      setSkillsAndDomainsLoaded(true);
-    } catch (error) {
-      console.error('Error fetching skills and domains:', error);
-      notifyError(
-        'Could not load skills and domains. Please ensure you have added skills to your main profile.',
-        'Error',
-      );
-    }
-  };
-
-  const fetchFreelancerProjects = async () => {
     try {
       const freelancerResponse = await axiosInstance.get(
         `/freelancer/${user.uid}`,
@@ -348,6 +293,65 @@ export default function ProfileDetailPage() {
     } catch (error) {
       console.error('Error fetching freelancer projects:', error);
     }
+  }, [user.uid]);
+
+  useEffect(() => {
+    if (profileId && user.uid) {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          await fetchSkillsAndDomains();
+          await fetchProfile();
+          await fetchFreelancerProjects();
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchData();
+    }
+  }, [profileId, user.uid, fetchSkillsAndDomains, fetchProfile, fetchFreelancerProjects]);
+
+  const getSkillNameById = (skillId: string) => {
+    if (!skillId || !skillsOptions || skillsOptions.length === 0) {
+      return skillId || '';
+    }
+    const skill = skillsOptions.find((s: any) => s._id === skillId);
+    return skill ? skill.label || skill.name : skillId;
+  };
+
+  const getDomainNameById = (domainId: string) => {
+    if (!domainId || !domainsOptions || domainsOptions.length === 0) {
+      return domainId || '';
+    }
+    const domain = domainsOptions.find((d: any) => d._id === domainId);
+    return domain ? domain.label || domain.name : domainId;
+  };
+
+  const transformProfileForAPI = (profileData: any) => {
+    const transformedSkills =
+      profileData.skills?.map((skill: any) => {
+        if (typeof skill === 'string') {
+          return skill;
+        }
+        return skill._id;
+      }) || [];
+
+    const transformedDomains =
+      profileData.domains?.map((domain: any) => {
+        if (typeof domain === 'string') {
+          return domain;
+        }
+        return domain._id;
+      }) || [];
+
+    return {
+      ...profileData,
+      skills: transformedSkills,
+      domains: transformedDomains,
+    };
   };
 
   const handleUpdateProfile = async () => {

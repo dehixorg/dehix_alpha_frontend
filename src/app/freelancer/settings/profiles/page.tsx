@@ -123,13 +123,9 @@ export default function ProfilesPage() {
     }
   }, [user.uid]);
 
-  useEffect(() => {
-    fetchProfiles();
-    fetchSkillsAndDomains();
-    fetchFreelancerProjectsAndExperiences();
-  }, [fetchProfiles]);
+  const fetchSkillsAndDomains = useCallback(async () => {
+    if (!user.uid) return;
 
-  const fetchSkillsAndDomains = async () => {
     try {
       const [skillsResponse, domainsResponse, freelancerResponse] =
         await Promise.all([
@@ -162,13 +158,19 @@ export default function ProfilesPage() {
     } catch (error) {
       console.error('Error fetching skills and domains:', error);
     }
-  };
+  }, [user.uid]);
 
   const fetchFreelancerProjectsAndExperiences = async () => {
     // This function is called but the data is not currently used
     // The projects and experiences are fetched directly in the dialogs
     // Keeping this for potential future use
   };
+
+  useEffect(() => {
+    fetchProfiles();
+    fetchSkillsAndDomains();
+    fetchFreelancerProjectsAndExperiences();
+  }, [fetchProfiles, fetchSkillsAndDomains]);
 
   const handleCreateProfile = async () => {
     if (!newProfileName.trim()) {
