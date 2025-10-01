@@ -342,29 +342,49 @@ function ChatMessageItem({
 
         <div
           className={cn(
-            'flex items-start pt-2 opacity-0 group-hover:opacity-100 transition-opacity',
+            'flex items-center gap-1.5 pt-2 opacity-0 group-hover:opacity-100 transition-all duration-200',
             isSender ? 'ml-2' : 'mr-2',
           )}
         >
-          {!isSender && (
-            <EmojiPicker
-              aria-label="Add reaction"
-              onSelect={(emoji: string) => toggleReaction(message.id, emoji)}
-              className="mr-1"
-            />
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
+          <div
             className={cn(
-              'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20',
-              isSender ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300' : 'text-[hsl(var(--muted-foreground))]',
+              'flex items-center rounded-full border shadow-sm backdrop-blur-sm',
+              'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))]',
+              'dark:bg-[hsl(var(--accent)_/_0.15)] dark:text-[hsl(var(--accent-foreground))]',
+              isSender?'ml-[-40px] mt-[-20px]':'ml-[-60px]'
             )}
-            onClick={() => setReplyToMessageId(message.id)}
-            aria-label="Reply to message"
           >
-            <Reply className="h-4 w-4" />
-          </Button>
+            {!isSender && (
+              <EmojiPicker
+                aria-label="Add reaction"
+                onSelect={(emoji: string) => toggleReaction(message.id, emoji)}
+                className="mr-0"
+              />
+            )}
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20 focus-visible:ring-2 focus-visible:ring-offset-2',
+                      isSender
+                        ? 'text-[hsl(var(--foreground)_/_0.85)] dark:text-purple-300'
+                        : 'text-[hsl(var(--muted-foreground))]'
+                    )}
+                    onClick={() => setReplyToMessageId(message.id)}
+                    aria-label="Reply to message"
+                  >
+                    <Reply className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={6}>
+                  Reply
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
       </div>
 
