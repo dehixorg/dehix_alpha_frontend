@@ -96,6 +96,7 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
                 variant="ghost"
                 size="icon"
                 className="text-green-400 hover:text-green-600 hover:bg-green-600/20 rounded-full"
+                aria-label="Request verification"
               >
                 <BadgeCheck className="h-4 w-4" />
               </Button>

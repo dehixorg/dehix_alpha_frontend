@@ -96,7 +96,7 @@ const ProjectVerification = () => {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
+      <div className="mb-8 flex justify-between items-center">
         <div className="mb-8 ">
           <h1 className="text-3xl font-bold">Project Verification</h1>
           <p className="text-gray-400 mt-2">
