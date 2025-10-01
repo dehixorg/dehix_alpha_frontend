@@ -51,7 +51,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { axiosInstance } from '@/lib/axiosinstance';
 import type { CombinedUser } from '@/hooks/useAllUsers';
 
 import { AddMembersDialog } from './AddMembersDialog';
@@ -80,15 +79,12 @@ export interface ProfileUser {
   displayName: string;
   status?: string;
   lastSeen?: string;
-  mutedUsers?: string[];
 };
 
 export type ProfileGroupMember = {
   id: string;
-  id: string;
   userName: string;
   profilePic?: string;
-  status?: 'online' | 'offline';
   status?: 'online' | 'offline';
 };
 
@@ -103,8 +99,6 @@ export type ProfileGroup = {
   admins: string[];
   participantDetails?: {
     [uid: string]: { userName: string; profilePic?: string; email?: string };
-  };
-  inviteLink?: string;
   };
   inviteLink?: string;
   displayName: string;
@@ -141,11 +135,9 @@ export function ProfileSidebar({
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
-  const [isLoadingMedia, setIsLoadingMedia] = useState(true);
+  const [, setSharedFiles] = useState<FileItem[]>([]);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
-  const [showAllMedia, setShowAllMedia] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] = useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
@@ -353,18 +345,14 @@ export function ProfileSidebar({
     setLoading(true);
     setError(null);
 
-
     if (profileType === 'user' && initialData && profileId) {
       setProfileData({
-        _id: profileId,
         _id: profileId,
         id: profileId,
         userName: initialData.userName || '',
         name: initialData.userName || '',
-        name: initialData.userName || '',
         email: initialData.email || '',
         profilePic: initialData.profilePic,
-        displayName: initialData.userName || '',
         displayName: initialData.userName || '',
         bio: undefined,
         status: undefined,
@@ -447,7 +435,7 @@ export function ProfileSidebar({
       }
     } catch (error: any) {
       console.error('Error fetching profile data:', error);
-      setError('Failed to load profile data.');
+      setError(error.message || 'Failed to load profile data');
     } finally {
       setLoading(false);
     }
@@ -465,8 +453,6 @@ export function ProfileSidebar({
 
       const messagesSnapshot = await getDocs(messagesQuery);
       const extractedMedia: MediaItem[] = [];
-
-      const s3BucketUrl = process.env.NEXT_PUBLIC_S3_BUCKET_URL ?? '';
 
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
@@ -638,7 +624,6 @@ export function ProfileSidebar({
 
       selectedUsers.forEach((user) => {
         if (!user.id) return;
-        if (!user.id) return;
 
         updates[`participantDetails.${user.id}`] = {
           userName: user.displayName || 'User',
@@ -701,7 +686,7 @@ export function ProfileSidebar({
       name?: string;
       project_name?: string;
       avatar?: string;
-      updatedAt?: string | FieldValue;
+      updatedAt?: string;
     } = {};
     if (newName.trim() !== currentGroupData?.displayName) {
       updateData.groupName = newName.trim();
@@ -717,14 +702,14 @@ export function ProfileSidebar({
       toast({ title: 'Info', description: 'No changes were made.' });
       return;
     }
-    updateData.updatedAt = serverTimestamp();
+    updateData.updatedAt = new Date().toISOString();
     try {
       await updateDoc(groupDocRef, updateData);
       toast({
         title: 'Success',
         description: 'Group information updated successfully.',
       });
-      setRefreshKey((prev) => prev + 1);
+      setRefreshDataKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error updating group info:', error);
       toast({
@@ -755,13 +740,13 @@ export function ProfileSidebar({
       
       await updateDoc(groupDocRef, {
         inviteLink: newInviteLink,
-        updatedAt: serverTimestamp(),
+        updatedAt: new Date().toISOString(),
       });
       toast({
         title: 'Success',
         description: 'New invite link generated and saved.',
       });
-      setRefreshKey((prev) => prev + 1);
+      setRefreshDataKey((prev) => prev + 1);
       return newInviteLink;
     } catch (error) {
       console.error('Error generating and saving invite link:', error);
@@ -801,10 +786,10 @@ export function ProfileSidebar({
       await updateDoc(groupDocRef, {
         participants: arrayRemove(memberIdToRemove),
         [`participantDetails.${memberIdToRemove}`]: deleteField(),
-        updatedAt: serverTimestamp(),
+        updatedAt: new Date().toISOString(),
       });
       toast({ title: 'Success', description: 'Member removed successfully.' });
-      setRefreshKey((prev) => prev + 1);
+      setRefreshDataKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing member:', error);
       toast({
@@ -855,6 +840,8 @@ export function ProfileSidebar({
       setIsConfirmDialogOpen(false);
     }
   };
+
+  if (!isOpen) return null;
 
   const getFallbackName = (data: ProfileUser | ProfileGroup | null): string => {
     if (!data || !data.displayName || !data.displayName.trim()) return 'P';
@@ -1138,7 +1125,6 @@ export function ProfileSidebar({
                 </CardContent>
               </Card>
             )}
-
             {!loading && !profileData && (
               <div className="flex justify-center items-center h-32">
                 <p className="text-[hsl(var(--muted-foreground))]">
@@ -1342,85 +1328,25 @@ export function ProfileSidebar({
                             </p>
                           </div>
                         </div>
-                        <div>
-                          <div className="flex justify-between items-center mt-4 mb-2">
-                            <h3 className="text-sm font-medium text-[hsl(var(--foreground))]">
-                              Shared Media
-                            </h3>
-                            {sharedMedia.length > 4 && (
-                              <Button
-                                variant="link"
-                                className="h-auto p-0"
-                                onClick={() => setShowAllMedia(true)}
-                              >
-                                View All
-                              </Button>
-                            )}
-                          </div>
-                          {isLoadingMedia ? (
-                            <div className="flex justify-center items-center h-20">
-                              <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
-                            </div>
-                          ) : sharedMedia.length > 0 ? (
-                            <SharedMediaDisplay mediaItems={sharedMedia} />
-                          ) : (
-                            <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                              <p>No media has been shared yet.</p>
-                            </div>
-                          )}
-                        </div>
                       </CardContent>
                     </Card>
 
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-base">
-                          Shared Files
+                          Shared Media
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {isLoadingFiles ? (
+                        {isLoadingMedia ? (
                           <div className="flex justify-center items-center h-20">
                             <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
                           </div>
-                        ) : sharedFiles.length > 0 ? (
-                          <ul className="space-y-2">
-                            {sharedFiles.map((file) => (
-                              <li
-                                key={file.id}
-                                className="flex items-center justify-between border rounded-md p-2"
-                              >
-                                <div className="min-w-0 mr-2">
-                                  <p className="text-sm font-medium truncate">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {file.type}
-                                    {file.size ? ` • ${file.size}` : ''}
-                                  </p>
-                                </div>
-                                <div className="shrink-0 flex items-center gap-2">
-                                  <Button asChild size="sm" variant="outline">
-                                    <a
-                                      href={file.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      Open
-                                    </a>
-                                  </Button>
-                                  <Button asChild size="sm">
-                                    <a href={file.url} download>
-                                      Download
-                                    </a>
-                                  </Button>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
+                        ) : sharedMedia.length > 0 ? (
+                          <SharedMediaDisplay mediaItems={sharedMedia} />
                         ) : (
                           <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                            <p>No files have been shared yet.</p>
+                            <p>No media has been shared yet.</p>
                           </div>
                         )}
                       </CardContent>
@@ -1497,58 +1423,48 @@ export function ProfileSidebar({
                         <ScrollArea className="max-h-80 px-4 overflow-y-auto">
                           <ul className="space-y-1 py-2">
                             {(profileData as ProfileGroup).members.map(
-                              (member) => {
-                                const group = profileData as ProfileGroup;
-                                const isCurrentUserAdmin =
-                                  user && group.admins?.includes(user.uid);
-                                const isMemberAdmin = group.admins?.includes(
-                                  member.id,
-                                );
-                                const canPerformAction =
-                                  isCurrentUserAdmin && user.uid !== member.id;
-
-                                return (
-                                  <li
-                                    key={member.id}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group"
-                                  >
-                                    <Avatar className="w-8 h-8">
-                                      <AvatarImage
-                                        src={member.profilePic}
-                                        alt={member.userName}
-                                      />
-                                      <AvatarFallback>
-                                        {member.userName
-                                          ?.charAt(0)
-                                          .toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <span
-                                      className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${
-                                        member.status === 'online'
-                                          ? 'bg-green-500'
-                                          : 'bg-gray-400'
-                                      }`}
-                                    ></span>
-                                    <div className="flex-1 min-w-0">
-                                      <span className="text-sm font-medium truncate">
-                                        {member.userName}
-                                      </span>
-                                      {isMemberAdmin && (
-                                        <Badge
-                                          variant="outline"
-                                          className="ml-2 text-[10px] border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300 border"
-                                        >
-                                          Admin
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
-                                      {member.status === 'online'
-                                        ? 'Online'
-                                        : 'Offline'}
+                              (member) => (
+                                <li
+                                  key={member.id}
+                                  className="flex items-center gap-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)] group"
+                                >
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarImage
+                                      src={member.profilePic}
+                                      alt={member.userName}
+                                    />
+                                    <AvatarFallback>
+                                      {member.userName?.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-sm font-medium truncate">
+                                      {member.userName}
                                     </span>
-                                    {canPerformAction && !isMemberAdmin && (
+                                    {(
+                                      profileData as ProfileGroup
+                                    ).admins?.includes(member.id) && (
+                                      <Badge
+                                        variant="outline"
+                                        className="ml-2 text-[10px]"
+                                      >
+                                        Admin
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
+                                    {member.status === 'online'
+                                      ? 'Online'
+                                      : 'Offline'}
+                                  </span>
+                                  {user &&
+                                    (
+                                      profileData as ProfileGroup
+                                    ).admins?.includes(user.uid) &&
+                                    member.id !== user.uid &&
+                                    !(
+                                      profileData as ProfileGroup
+                                    ).admins?.includes(member.id) && (
                                       <Button
                                         variant="ghost"
                                         size="icon"
@@ -1573,9 +1489,8 @@ export function ProfileSidebar({
                                         <MinusCircle className="h-4 w-4" />
                                       </Button>
                                     )}
-                                  </li>
-                                );
-                              },
+                                </li>
+                              ),
                             )}
                           </ul>
                         </ScrollArea>
@@ -1583,18 +1498,10 @@ export function ProfileSidebar({
                     </Card>
 
                     <Card>
-                      <CardHeader className="flex flex-row items-center justify-between">
+                      <CardHeader>
                         <CardTitle className="text-base">
                           Shared Media
                         </CardTitle>
-                        {sharedMedia.length > 4 && (
-                          <Button
-                            variant="link"
-                            onClick={() => setShowAllMedia(true)}
-                          >
-                            View All
-                          </Button>
-                        )}
                       </CardHeader>
                       <CardContent>
                         {isLoadingMedia ? (
@@ -1680,7 +1587,7 @@ export function ProfileSidebar({
                                     await updateDoc(groupRef, {
                                       [`participantDetails.${user.uid}`]:
                                         deleteField(),
-                                      participants: arrayRemove(user.uid),
+                                      members: arrayRemove(user.uid),
                                       admins: arrayRemove(user.uid),
                                       updatedAt: new Date().toISOString(),
                                     });
