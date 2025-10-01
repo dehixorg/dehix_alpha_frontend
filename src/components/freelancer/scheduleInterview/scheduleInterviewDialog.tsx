@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, PackageOpen } from 'lucide-react';
 
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import {
   Dialog,
   DialogTrigger,
@@ -113,11 +113,7 @@ const ScheduleInterviewDialog: React.FC = () => {
           errorMessage = `Failed to add project. Error: ${error.message}`;
         }
 
-        toast({
-          variant: 'destructive',
-          title: 'Submission Error',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Submission Error');
       }
     }
     fetchData();

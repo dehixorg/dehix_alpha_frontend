@@ -26,7 +26,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import useDraft from '@/hooks/useDraft';
 
@@ -121,11 +121,10 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
 
     // Check if required fields are filled
     if (!company || !jobTitle || !workDescription || !workFrom || !workTo) {
-      toast({
-        variant: 'destructive',
-        title: 'Missing fields',
-        description: 'Please fill all required fields in Step 1.',
-      });
+      notifyError(
+        'Please fill all required fields in Step 1.',
+        'Missing fields',
+      );
       return false;
     }
 
@@ -227,17 +226,13 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
       });
       onFormSubmit();
       setIsDialogOpen(false);
-      toast({
-        title: 'Experience Added',
-        description: 'The experience has been successfully added.',
-      });
+      notifySuccess(
+        'The experience has been successfully added.',
+        'Experience Added',
+      );
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add experience. Please try again later.',
-      });
+      notifyError('Failed to add experience. Please try again later.', 'Error');
     } finally {
       setIsSubmitting(false);
     }

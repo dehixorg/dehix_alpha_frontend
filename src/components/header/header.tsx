@@ -8,7 +8,7 @@ import DropdownProfile from '../shared/DropdownProfile';
 import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
 import { Button } from '../ui/button';
-import DisplayConnectsDialog from '../shared/DisplayConnectsDialog';
+import { DisplayConnectsDialog } from '../shared/DisplayConnectsDialog';
 
 import { RootState } from '@/lib/store';
 
@@ -65,7 +65,11 @@ const Header: React.FC<HeaderProps> = ({
   }, [user?.uid]);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 border-b">
+    <header
+      role="banner"
+      aria-label="Site header"
+      className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-muted-foreground/20 dark:bg-muted/20 px-4 sm:px-6 backdrop-blur-md"
+    >
       {/* Sidebar Menu */}
       <CollapsibleSidebarMenu
         menuItemsTop={menuItemsTop}

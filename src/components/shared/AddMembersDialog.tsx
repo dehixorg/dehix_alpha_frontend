@@ -54,7 +54,6 @@ export function AddMembersDialog({
       // refetchUsers();
     }
   }, [isOpen]);
-  // console.log(selectedUsersState, "selectedUsersState")
   // Perform search based on allFetchedUsers, userSearchTerm, and currentMemberIds
   useEffect(() => {
     if (!isOpen || isLoadingUsers || !allFetchedUsers) {

@@ -13,10 +13,11 @@ import {
   DollarSign,
   FileText,
   Linkedin,
-  Globe2,
-  Tags,
+  Globe,
   Layers,
   Github,
+  Award,
+  UserCog,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -29,7 +30,7 @@ import {
 import Header from '@/components/header/header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -69,6 +70,7 @@ import {
 import { FreelancerProfile } from '@/types/freelancer';
 import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
 import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 
 export default function ProfileDetailPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -89,9 +91,96 @@ export default function ProfileDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isProjectDetailsOpen, setIsProjectDetailsOpen] = useState(false);
-  const [tmpSkill, setTmpSkill] = useState<string>('');
-  const [tmpDomain, setTmpDomain] = useState<string>('');
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [pendingProjects, setPendingProjects] = useState<any[] | null>(null);
+  const [pendingExperiences, setPendingExperiences] = useState<any[] | null>(
+    null,
+  );
+
+  // Reusable section for Skills/Domains
+  const TagSection = ({
+    title,
+    Icon,
+    options,
+    selectedIds,
+    getNameById,
+    onAdd,
+    onRemove,
+  }: {
+    title: string;
+    Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    options: any[];
+    selectedIds: string[];
+    getNameById: (id: string) => string;
+    onAdd: (value: string) => void;
+    onRemove: (name: string) => void;
+  }) => (
+    <div className="space-y-2">
+      <Label className="flex items-center gap-2">
+        <Icon className="h-4 w-4 text-muted-foreground" /> {title}
+      </Label>
+      {isEditMode ? (
+        <SelectTagPicker
+          className="mt-2"
+          label=""
+          options={options}
+          selected={(selectedIds || []).map((id: string) => ({
+            name: getNameById(id),
+          }))}
+          onAdd={onAdd}
+          onRemove={onRemove}
+          optionLabelKey="label"
+          selectedNameKey="name"
+          selectPlaceholder={`Select ${title.toLowerCase().slice(0, -1)}`}
+          searchPlaceholder={`Search ${title.toLowerCase()}...`}
+        />
+      ) : null}
+      <div className="flex flex-wrap gap-2 mt-5">
+        {selectedIds?.length > 0 &&
+          !isEditMode &&
+          selectedIds.map((id: string, index: number) => (
+            <Badge
+              key={index}
+              className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white"
+            >
+              {getNameById(id)}
+            </Badge>
+          ))}
+        {selectedIds?.length === 0 && !isEditMode && (
+          <Card className="w-full bg-muted/30">
+            <CardContent className="py-6 flex items-center gap-3">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="opacity-60"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="8"
+                  stroke="#9CA3AF"
+                  strokeWidth="1.5"
+                />
+                <path d="M8 12H16" stroke="#9CA3AF" strokeWidth="1.5" />
+                <path d="M12 8V16" stroke="#9CA3AF" strokeWidth="1.5" />
+              </svg>
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  No {title.toLowerCase()} added yet.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Use Edit to add relevant {title.toLowerCase()}.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
 
   useEffect(() => {
     if (profileId) {
@@ -202,11 +291,7 @@ export default function ProfileDetailPage() {
       setEditingProfileData(processedProfileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to load profile', 'Error');
       router.push('/freelancer/settings/profiles');
     }
   };
@@ -245,12 +330,10 @@ export default function ProfileDetailPage() {
       setSkillsAndDomainsLoaded(true);
     } catch (error) {
       console.error('Error fetching skills and domains:', error);
-      toast({
-        title: 'Error',
-        description:
-          'Could not load skills and domains. Please ensure you have added skills to your main profile.',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Could not load skills and domains. Please ensure you have added skills to your main profile.',
+        'Error',
+      );
     }
   };
 
@@ -274,11 +357,7 @@ export default function ProfileDetailPage() {
       !editingProfileData.profileName ||
       editingProfileData.profileName.trim().length === 0
     ) {
-      toast({
-        title: 'Validation Error',
-        description: 'Profile name is required',
-        variant: 'destructive',
-      });
+      notifyError('Profile name is required', 'Validation Error');
       return;
     }
 
@@ -286,36 +365,39 @@ export default function ProfileDetailPage() {
       !editingProfileData.description ||
       editingProfileData.description.trim().length < 10
     ) {
-      toast({
-        title: 'Validation Error',
-        description: 'Description must be at least 10 characters long',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Description must be at least 10 characters long',
+        'Validation Error',
+      );
       return;
     }
 
     setIsUpdating(true);
     try {
-      const updatePayload = transformProfileForAPI(editingProfileData);
+      const updatePayload: any = {
+        ...transformProfileForAPI(editingProfileData),
+      };
+      if (pendingProjects && Array.isArray(pendingProjects)) {
+        updatePayload.projects = pendingProjects;
+      }
+      if (pendingExperiences && Array.isArray(pendingExperiences)) {
+        updatePayload.experiences = pendingExperiences;
+      }
 
       await axiosInstance.put(
         `/freelancer/profile/${profile._id}`,
         updatePayload,
       );
 
-      toast({
-        title: 'Success',
-        description: 'Profile updated successfully',
-      });
+      notifySuccess('Profile updated successfully', 'Success');
+      // Clear any pending project selections after successful save
+      setPendingProjects(null);
+      setPendingExperiences(null);
       await fetchProfile();
       setIsEditMode(false);
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to update profile', 'Error');
     } finally {
       setIsUpdating(false);
     }
@@ -333,83 +415,6 @@ export default function ProfileDetailPage() {
     setEditingProfileData((prev: any) => ({
       ...prev,
       [field]: value,
-    }));
-  };
-
-  const handleAddSkill = () => {
-    if (!tmpSkill || !editingProfileData) return;
-
-    const selectedSkill = skillsOptions.find(
-      (skill: any) => (skill.label || skill.name) === tmpSkill,
-    );
-
-    if (selectedSkill) {
-      const skillIdToAdd = selectedSkill._id;
-
-      const isAlreadyAdded = (editingProfileData.skills || []).includes(
-        skillIdToAdd,
-      );
-
-      if (!isAlreadyAdded) {
-        const updatedSkills = [
-          ...(editingProfileData.skills || []),
-          skillIdToAdd,
-        ];
-        setEditingProfileData((prev: any) => ({
-          ...prev,
-          skills: updatedSkills,
-        }));
-      }
-      setTmpSkill('');
-    }
-  };
-
-  const handleAddDomain = () => {
-    if (!tmpDomain || !editingProfileData) return;
-
-    const selectedDomain = domainsOptions.find(
-      (domain: any) => (domain.label || domain.name) === tmpDomain,
-    );
-
-    if (selectedDomain) {
-      const domainIdToAdd = selectedDomain._id;
-
-      const isAlreadyAdded = (editingProfileData.domains || []).includes(
-        domainIdToAdd,
-      );
-
-      if (!isAlreadyAdded) {
-        const updatedDomains = [
-          ...(editingProfileData.domains || []),
-          domainIdToAdd,
-        ];
-        setEditingProfileData((prev: any) => ({
-          ...prev,
-          domains: updatedDomains,
-        }));
-      }
-      setTmpDomain('');
-    }
-  };
-
-  const handleDeleteSkill = (skillIdToDelete: string) => {
-    if (!editingProfileData || !editingProfileData.skills) return;
-
-    const updatedSkills = editingProfileData.skills.filter(
-      (id: string) => id !== skillIdToDelete,
-    );
-    setEditingProfileData((prev: any) => ({ ...prev, skills: updatedSkills }));
-  };
-
-  const handleDeleteDomain = (domainIdToDelete: string) => {
-    if (!editingProfileData || !editingProfileData.domains) return;
-
-    const updatedDomains = editingProfileData.domains.filter(
-      (id: string) => id !== domainIdToDelete,
-    );
-    setEditingProfileData((prev: any) => ({
-      ...prev,
-      domains: updatedDomains,
     }));
   };
 
@@ -436,18 +441,11 @@ export default function ProfileDetailPage() {
         updatePayload,
       );
 
-      toast({
-        title: 'Success',
-        description: 'Project removed from profile successfully',
-      });
+      notifySuccess('Project removed from profile successfully', 'Success');
       await fetchProfile();
     } catch (error: any) {
       console.error('Error removing project:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to remove project from profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to remove project from profile', 'Error');
     }
   };
 
@@ -474,18 +472,11 @@ export default function ProfileDetailPage() {
         updatePayload,
       );
 
-      toast({
-        title: 'Success',
-        description: 'Experience removed from profile successfully',
-      });
+      notifySuccess('Experience removed from profile successfully', 'Success');
       await fetchProfile();
     } catch (error: any) {
       console.error('Error removing experience:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to remove experience from profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to remove experience from profile', 'Error');
     }
   };
 
@@ -504,18 +495,14 @@ export default function ProfileDetailPage() {
 
     try {
       await axiosInstance.delete(`/freelancer/profile/${profile._id}`);
-      toast({
-        title: 'Profile Deleted',
-        description: 'Profile has been successfully deleted.',
-      });
+      notifySuccess(
+        'Profile has been successfully deleted.',
+        'Profile Deleted',
+      );
       router.push('/freelancer/settings/profiles');
     } catch (error) {
       console.error('Error deleting profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete profile',
-        variant: 'destructive',
-      });
+      notifyError('Failed to delete profile', 'Error');
     } finally {
       setDeleteDialogOpen(false);
     }
@@ -643,17 +630,15 @@ export default function ProfileDetailPage() {
           ]}
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
-          <div className="space-y-6">
-            <div>
-              <Button
-                variant="outline"
-                onClick={() => router.push('/freelancer/settings/profiles')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Profiles
-              </Button>
-            </div>
+          <div className="space-y-6 w-full">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/freelancer/settings/profiles')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Profiles
+            </Button>
 
             {!isEditMode && (
               <Alert className="bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-300">
@@ -759,7 +744,7 @@ export default function ProfileDetailPage() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
-                                    <Globe2 className="h-4 w-4" />
+                                    <Globe className="h-4 w-4" />
                                     <span className="hidden md:inline">
                                       {' '}
                                       Website
@@ -1017,216 +1002,77 @@ export default function ProfileDetailPage() {
                 <Separator />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Tags className="h-4 w-4 text-muted-foreground" /> Skills
-                    </Label>
-                    {isEditMode ? (
-                      <div className="flex items-center mt-2">
-                        <Select
-                          onValueChange={(value) => setTmpSkill(value)}
-                          value={tmpSkill || ''}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select skill" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {skillsOptions
-                              .filter(
-                                (skill: any) =>
-                                  !editingProfileData.skills?.includes(
-                                    skill._id,
-                                  ),
-                              )
-                              .map((skill: any) => (
-                                <SelectItem
-                                  key={skill._id}
-                                  value={skill.label || skill.name}
-                                >
-                                  {skill.label || skill.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          size="icon"
-                          className="ml-2"
-                          disabled={!tmpSkill}
-                          onClick={handleAddSkill}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : null}
-                    <div className="flex flex-wrap gap-2 mt-5">
-                      {editingProfileData.skills?.length > 0 ? (
-                        editingProfileData.skills.map(
-                          (skillId: string, index: number) => (
-                            <Badge
-                              key={index}
-                              className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                            >
-                              {getSkillNameById(skillId)}
-                              {isEditMode ? (
-                                <X
-                                  className="ml-2 h-3 w-3 cursor-pointer"
-                                  onClick={() => handleDeleteSkill(skillId)}
-                                />
-                              ) : null}
-                            </Badge>
-                          ),
-                        )
-                      ) : (
-                        <Card className="w-full bg-muted/30">
-                          <CardContent className="py-6 flex items-center gap-3">
-                            <svg
-                              width="28"
-                              height="28"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="opacity-60"
-                            >
-                              <circle
-                                cx="12"
-                                cy="12"
-                                r="8"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                              <path
-                                d="M8 12H16"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                              <path
-                                d="M12 8V16"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-sm text-muted-foreground">
-                                No skills added yet.
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Use Edit to add relevant skills you actively
-                                use.
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-muted-foreground" />{' '}
-                      Domains
-                    </Label>
-                    {isEditMode ? (
-                      <div className="flex items-center mt-2">
-                        <Select
-                          onValueChange={(value) => setTmpDomain(value)}
-                          value={tmpDomain || ''}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select domain" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {domainsOptions
-                              .filter(
-                                (domain: any) =>
-                                  !editingProfileData.domains?.includes(
-                                    domain._id,
-                                  ),
-                              )
-                              .map((domain: any) => (
-                                <SelectItem
-                                  key={domain._id}
-                                  value={domain.label || domain.name}
-                                >
-                                  {domain.label || domain.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          size="icon"
-                          className="ml-2"
-                          disabled={!tmpDomain}
-                          onClick={handleAddDomain}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : null}
-                    <div className="flex flex-wrap gap-2 mt-5">
-                      {editingProfileData.domains?.length > 0 ? (
-                        editingProfileData.domains.map(
-                          (domainId: string, index: number) => (
-                            <Badge
-                              key={index}
-                              className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                            >
-                              {getDomainNameById(domainId)}
-                              {isEditMode ? (
-                                <X
-                                  className="ml-2 h-3 w-3 cursor-pointer"
-                                  onClick={() => handleDeleteDomain(domainId)}
-                                />
-                              ) : null}
-                            </Badge>
-                          ),
-                        )
-                      ) : (
-                        <Card className="w-full bg-muted/30">
-                          <CardContent className="py-6 flex items-center gap-3">
-                            <svg
-                              width="28"
-                              height="28"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="opacity-60"
-                            >
-                              <rect
-                                x="5"
-                                y="5"
-                                width="14"
-                                height="14"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                              <path
-                                d="M5 12H19"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-sm text-muted-foreground">
-                                No domains added yet.
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Use Edit to add the industries or areas you
-                                focus on.
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  </div>
+                  <TagSection
+                    title="Skills"
+                    Icon={Award}
+                    options={skillsOptions}
+                    selectedIds={editingProfileData.skills || []}
+                    getNameById={getSkillNameById}
+                    onAdd={(value: string) => {
+                      const selectedSkill = skillsOptions.find(
+                        (s: any) => (s.label || s.name) === value,
+                      );
+                      if (!selectedSkill) return;
+                      const id = selectedSkill._id;
+                      if ((editingProfileData.skills || []).includes(id))
+                        return;
+                      setEditingProfileData((prev: any) => ({
+                        ...prev,
+                        skills: [...(prev.skills || []), id],
+                      }));
+                    }}
+                    onRemove={(name: string) => {
+                      const skill = skillsOptions.find(
+                        (s: any) => (s.label || s.name) === name,
+                      );
+                      const id = skill?._id;
+                      if (!id) return;
+                      setEditingProfileData((prev: any) => ({
+                        ...prev,
+                        skills: (prev.skills || []).filter(
+                          (sid: string) => sid !== id,
+                        ),
+                      }));
+                    }}
+                  />
+                  <TagSection
+                    title="Domains"
+                    Icon={Layers}
+                    options={domainsOptions}
+                    selectedIds={editingProfileData.domains || []}
+                    getNameById={getDomainNameById}
+                    onAdd={(value: string) => {
+                      const selectedDomain = domainsOptions.find(
+                        (d: any) => (d.label || d.name) === value,
+                      );
+                      if (!selectedDomain) return;
+                      const id = selectedDomain._id;
+                      if ((editingProfileData.domains || []).includes(id))
+                        return;
+                      setEditingProfileData((prev: any) => ({
+                        ...prev,
+                        domains: [...(prev.domains || []), id],
+                      }));
+                    }}
+                    onRemove={(name: string) => {
+                      const domain = domainsOptions.find(
+                        (d: any) => (d.label || d.name) === name,
+                      );
+                      const id = domain?._id;
+                      if (!id) return;
+                      setEditingProfileData((prev: any) => ({
+                        ...prev,
+                        domains: (prev.domains || []).filter(
+                          (did: string) => did !== id,
+                        ),
+                      }));
+                    }}
+                  />
                 </div>
 
                 {isEditMode && <Separator />}
 
-                <div className="flex flex-1 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     {isEditMode ? (
                       <>
@@ -1350,7 +1196,7 @@ export default function ProfileDetailPage() {
                           htmlFor="personalWebsite"
                           className="flex items-center gap-2"
                         >
-                          <Globe2 className="h-4 w-4 text-muted-foreground" />{' '}
+                          <Globe className="h-4 w-4 text-muted-foreground" />{' '}
                           Website
                         </Label>
 
@@ -1373,30 +1219,7 @@ export default function ProfileDetailPage() {
                     ) : (
                       <Card className="bg-muted/30">
                         <CardContent className="py-4 flex items-center gap-3">
-                          <svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="opacity-60"
-                          >
-                            <path
-                              d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2Z"
-                              stroke="#9CA3AF"
-                              strokeWidth="1.2"
-                            />
-                            <path
-                              d="M2 12H22"
-                              stroke="#9CA3AF"
-                              strokeWidth="1.2"
-                            />
-                            <path
-                              d="M12 2C9 5.5 9 18.5 12 22C15 18.5 15 5.5 12 2Z"
-                              stroke="#9CA3AF"
-                              strokeWidth="1.2"
-                            />
-                          </svg>
+                          <Globe className="h-4 w-4 text-muted-foreground" />
                           <div>
                             <p className="text-sm text-muted-foreground">
                               No website
@@ -1409,10 +1232,13 @@ export default function ProfileDetailPage() {
                       </Card>
                     )}
                   </div>
-                  <div className="space-y-2">
+                  <div>
                     {isEditMode && (
                       <>
-                        <Label htmlFor="availability">Availability</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <UserCog className="h-4 w-4 text-muted-foreground" />
+                          <Label htmlFor="availability">Availability</Label>
+                        </div>
                         <Select
                           value={editingProfileData.availability || 'FREELANCE'}
                           onValueChange={(value) =>
@@ -1653,8 +1479,19 @@ export default function ProfileDetailPage() {
         onOpenChange={setShowProjectDialog}
         freelancerId={user.uid}
         currentProfileId={profileId}
-        onSuccess={() => {
-          fetchProfile();
+        onSuccess={(selectedProjects: any[]) => {
+          // Merge with existing full objects to reflect in UI. Defer API to Save.
+          const existing = Array.isArray(editingProfileData.projects)
+            ? editingProfileData.projects
+            : [];
+          const byId = new Map<string, any>();
+          for (const p of existing) byId.set(String(p._id), p);
+          for (const p of selectedProjects) byId.set(String(p._id), p);
+          const merged = Array.from(byId.values());
+
+          setPendingProjects(merged);
+          // Update UI immediately so user can see the selection reflected
+          setEditingProfileData((prev: any) => ({ ...prev, projects: merged }));
         }}
       />
 
@@ -1663,8 +1500,21 @@ export default function ProfileDetailPage() {
         onOpenChange={setShowExperienceDialog}
         freelancerId={user.uid}
         currentProfileId={profileId}
-        onSuccess={() => {
-          fetchProfile();
+        onSuccess={(selectedExperiences: any[]) => {
+          // Merge with existing full objects and stage until Save
+          const existing = Array.isArray(editingProfileData.experiences)
+            ? editingProfileData.experiences
+            : [];
+          const byId = new Map<string, any>();
+          for (const e of existing) byId.set(String(e._id), e);
+          for (const e of selectedExperiences) byId.set(String(e._id), e);
+          const merged = Array.from(byId.values());
+
+          setPendingExperiences(merged);
+          setEditingProfileData((prev: any) => ({
+            ...prev,
+            experiences: merged,
+          }));
         }}
       />
 

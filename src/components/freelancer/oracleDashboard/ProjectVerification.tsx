@@ -15,7 +15,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface ProjectData {
@@ -74,11 +74,7 @@ const ProjectVerification = () => {
 
       setProjectData(flattenedData);
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   }, []);
 

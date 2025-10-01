@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Domain {
@@ -103,20 +103,16 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
       if (response.status === 200) {
         reset();
         setOpen(false);
-        toast({
-          title: 'Talent Added',
-          description: 'The Talent has been successfully added.',
-        });
+        notifySuccess(
+          'The Talent has been successfully added.',
+          'Talent Added',
+        );
         onSuccess(); // Trigger parent to re-fetch
       }
     } catch (error) {
       console.error('Error submitting domain data', error);
       reset();
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add talent. Please try again.',
-      });
+      notifyError('Failed to add talent. Please try again.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -125,8 +121,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Domain
+        <Button size="sm">
+          <Plus className="h-4 w-4" /> Add Domain
         </Button>
       </DialogTrigger>
       <DialogContent>

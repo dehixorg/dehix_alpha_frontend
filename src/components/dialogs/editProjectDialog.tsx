@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Select,
@@ -171,11 +171,7 @@ const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
         setSkills(transformedSkills);
       } catch (error) {
         console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
       }
     };
     fetchData();
@@ -195,17 +191,13 @@ const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
 
       onSuccess();
       onClose();
-      toast({
-        title: 'Project Updated',
-        description: 'The project has been successfully updated.',
-      });
+      notifySuccess(
+        'The project has been successfully updated.',
+        'Project Updated',
+      );
     } catch (error) {
       console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update project. Please try again later.',
-      });
+      notifyError('Failed to update project. Please try again later.', 'Error');
     } finally {
       setLoading(false);
     }

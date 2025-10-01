@@ -9,7 +9,7 @@ import { ThemeToggle } from '@/components/shared/themeToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { resetPassword } from '@/lib/utils';
 
 export default function ForgotPassword() {
@@ -23,17 +23,13 @@ export default function ForgotPassword() {
 
     try {
       await resetPassword(email);
-      toast({
-        title: 'Success',
-        description: 'Password reset email sent! Please check your inbox.',
-      });
+      notifySuccess(
+        'Password reset email sent! Please check your inbox.',
+        'Success',
+      );
       router.push('/auth/login');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Invalid Email or Password. Please try again.',
-      }); // Error toast
+      notifyError('Invalid Email or Password. Please try again.', 'Error');
       console.error(error.message);
     } finally {
       setIsLoading(false);

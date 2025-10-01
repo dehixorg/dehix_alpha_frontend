@@ -12,7 +12,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import { RootState } from '@/lib/store';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ResumeInfoCard from '@/components/cards/resumeInfoCard';
 import { Button } from '@/components/ui/button';
@@ -23,22 +23,24 @@ export default function Resume() {
   const [resumeData, setResumeData] = useState<any[]>([]);
   const [selectedResume, setSelectedResume] = useState<any>(null);
 
-  const fetchResumeData = async () => {
+  const fetchResumeData = async (isMounted?: boolean) => {
     try {
       const res = await axiosInstance.get(`/resume?userId=${user.uid}`);
-      setResumeData(res.data.resumes || []);
+      if (isMounted === undefined || isMounted) {
+        setResumeData(res.data.resumes || []);
+      }
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch resume data. Please try again.',
-      });
+      notifyError('Failed to fetch resume data. Please try again.');
       console.error('API Error:', error);
     }
   };
 
   useEffect(() => {
-    fetchResumeData();
+    let isMounted = true;
+    fetchResumeData(isMounted);
+    return () => {
+      isMounted = false;
+    };
   }, [user.uid]);
 
   const handleNewResume = () => {
@@ -54,7 +56,7 @@ export default function Resume() {
   if (showResumeEditor) {
     return (
       <>
-        <div className="flex min-h-screen w-full flex-col bg-muted/40">
+        <div className="flex min-h-screen w-full flex-col">
           <SidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -74,7 +76,7 @@ export default function Resume() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}

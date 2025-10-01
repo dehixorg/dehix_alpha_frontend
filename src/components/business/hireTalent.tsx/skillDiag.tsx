@@ -22,7 +22,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 
@@ -118,10 +118,10 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
           });
           reset();
           setOpen(false); // Close the dialog after successful submission
-          toast({
-            title: 'Talent Added',
-            description: 'The Hire Talent has been successfully added.',
-          });
+          notifySuccess(
+            'The Hire Talent has been successfully added.',
+            'Talent Added',
+          );
 
           const connectsCost = parseInt(
             process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
@@ -141,11 +141,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
     } catch (error) {
       console.error('Error submitting skill data', error);
       reset();
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add hire talent. Please try again.',
-      });
+      notifyError('Failed to add hire talent. Please try again.', 'Error');
     } finally {
       setLoading(false);
     }

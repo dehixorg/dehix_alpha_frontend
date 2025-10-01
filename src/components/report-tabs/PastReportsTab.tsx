@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { apiHelperService } from '@/services/report';
 import { MessagesTab } from '@/components/report-tabs/Messagestab';
 import { RootState } from '@/lib/store';
@@ -76,11 +76,7 @@ export default function PastReportsTab() {
       setPastReports(transformed);
       setTotalCount(res.data?.total || transformed.length);
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch past reports.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to fetch past reports.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -99,11 +95,7 @@ export default function PastReportsTab() {
       const res = await apiHelperService.getSingleReport(report.id);
       setMessages(res.data?.data?.messages || []);
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch messages.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to fetch messages.', 'Error');
     } finally {
       setMessagesLoading(false);
     }

@@ -1,7 +1,8 @@
 'use client';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { IconLeft, IconRight } from 'react-day-picker';
+// Use lucide-react icons instead of react-day-picker
+import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
 
 import MilestoneCards from './MilestoneCards';
 
@@ -12,6 +13,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
   Carousel,
   CarouselContent,
@@ -132,18 +143,28 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
       : milestones;
 
   return (
-    <div className="w-full max-w-full">
-      <div className="w-full max-w-full mx-auto px-2 py-4 relative">
+    <Card className="bg-muted-foreground/20 dark:bg-muted/20">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between gap-4">
+          <CardTitle className="text-base md:text-lg">
+            Milestone timeline
+          </CardTitle>
+          <Badge variant="secondary" className="rounded-full">
+            {milestones.length} total
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
         {/* Timeline for larger screens */}
-        <ScrollArea className="w-full max-w-full whitespace-nowrap rounded-md border overflow-hidden">
+        <ScrollArea className="w-full max-w-full whitespace-nowrap rounded-md border overflow-hidden relative">
+          {/* Timeline line */}
+          <Separator className="absolute left-0 right-0 top-1/2 -translate-y-1/2 bg-black dark:bg-white" />
+
           {milestones && (
             <div
               ref={scrollRef}
               className="hidden md:block w-full max-w-full overflow-x-auto overflow-y-hidden"
             >
-              {/* Timeline Line */}
-              <div className="absolute left-0 right-0 top-1/2 h-1 line-bg bg-gray-500 transform -translate-y-1/2 max-w-full"></div>
-
               {/* Scrolling Timeline */}
               <div className="relative cursor-pointer flex items-center whitespace-nowrap overflow-x-auto overflow-y-hidden px-4 py-6 no-scrollbar max-w-full">
                 {displayMilestones.map((milestone, index) => (
@@ -156,9 +177,9 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                     <div
                       className={`absolute ${milestones.length === 1 && milestone.title === 'dummy' ? 'hidden' : ''} ${
                         index === selectedIndex
-                          ? 'bg-[var(--dot-hover-bg-color)] border-[var(--dot-hover-border-color)]'
-                          : 'border-[var(--dot-border-color)]'
-                      } top-1/2 transform -translate-y-1/2 w-5 h-5 bg-[var(--dot-bg-color)] rounded-full border-4 group group-hover:bg-[var(--dot-hover-bg-color)] group-hover:border-[var(--dot-hover-border-color)] `}
+                          ? 'bg-muted border-card'
+                          : 'border-card'
+                      } top-1/2 transform -translate-y-1/2 w-5 h-5 bg-muted rounded-full border-4 group group-hover:bg-muted group-hover:border-muted] `}
                       style={{
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
@@ -167,7 +188,7 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                       <div
                         className={`absolute left-1/2 transform -translate-x-1/2 ${
                           index % 2 === 0 ? '-top-6' : 'top-3'
-                        } ${index === selectedIndex ? 'bg-[#11a0ff] text-[#11a0ff]' : ''}  group-hover:text-[#11a0ff] overflow-hidden `}
+                        } ${index === selectedIndex ? 'bg-muted text-muted' : ''}  group-hover:text-[#11a0ff] overflow-hidden `}
                       >
                         |
                       </div>
@@ -192,111 +213,119 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
           )}
           <ScrollBar className="cursor-pointer" orientation="horizontal" />
         </ScrollArea>
-      </div>
 
-      {/* Carousel for mobile view */}
-      <div className="flex pb-4 justify-center items-center md:hidden w-full max-w-full">
-        <div className="w-full max-w-full px-2">
-          <Carousel className="w-full max-w-full" setApi={setApi}>
-            <CarouselContent className="flex min-h-[200px] items-center w-full max-w-full gap-4">
-              {milestones.map((milestone, index) => (
-                <CarouselItem
-                  key={index}
-                  className="flex relative justify-center top-0 h-auto items-center w-full max-w-full"
-                  onClick={() => handleStorySelect(milestone, index)}
-                >
-                  {milestone._id !== 'dummy' && (
-                    <div className="border p-6 border-line-bg rounded-lg shadow-lg w-full max-w-[85vw]">
-                      {/* Card Content */}
-                      <div className="text-center">
-                        <p className="text-xs">
-                          {milestone.createdAt &&
-                            new Date(milestone.createdAt).toLocaleDateString(
-                              'en-US',
-                              {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              },
-                            )}
-                        </p>
-                        <h3 className="font-medium text-lg mt-2">
-                          {truncateDescription(milestone.title, 16)}
-                        </h3>
-                        {milestone.description && (
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              className="p-0.5 h-auto bg-transparent border-none cursor-pointer hover:bg-gray-100 rounded"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDescContent(milestone.description || '');
-                                setIsDescOpen(true);
-                              }}
-                            >
-                              <svg
-                                className="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <CarouselPrevious className="absolute top-[117%] left-12 transform -translate-y-1/2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStorySelect(milestone, index - 1);
-                          }}
-                          className="bg-white/20 rounded-full p-3 text-white hover:bg-white/30"
-                          disabled={index === 0}
-                        >
-                          <IconLeft />
-                        </button>
-                      </CarouselPrevious>
-                      <CarouselNext className="absolute top-[117%] right-8 transform -translate-y-1/2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStorySelect(milestone, index + 1);
-                          }}
-                          className={`bg-white/20 rounded-full p-3 text-white ${index === milestones.length - 1 ? 'cursor-not-allowed' : 'hover:bg-white/30'}`}
-                          disabled={index === milestones.length - 1}
-                        >
-                          <IconRight />
-                        </button>
-                      </CarouselNext>
-                    </div>
-                  )}
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+        {/* Carousel for mobile view */}
+        <div className="flex pb-4 justify-center items-center md:hidden w-full max-w-full">
+          <div className="w-full max-w-full px-2">
+            <Carousel className="w-full max-w-full" setApi={setApi}>
+              <CarouselContent className="flex min-h-[200px] items-center w-full max-w-full gap-4">
+                {milestones.map((milestone, index) => (
+                  <CarouselItem
+                    key={index}
+                    className="flex relative justify-center top-0 h-auto items-center w-full max-w-full"
+                    onClick={() => handleStorySelect(milestone, index)}
+                  >
+                    {milestone._id !== 'dummy' && (
+                      <Card className="p-6 w-full max-w-[85vw]">
+                        {/* Card Content */}
+                        <div className="text-center">
+                          <p className="text-xs">
+                            {milestone.createdAt &&
+                              new Date(milestone.createdAt).toLocaleDateString(
+                                'en-US',
+                                {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                },
+                              )}
+                          </p>
+                          <h3 className="font-medium text-lg mt-2">
+                            {truncateDescription(milestone.title, 16)}
+                          </h3>
+                          {milestone.description && (
+                            <div className="flex items-center justify-center gap-1 mt-1">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDescContent(
+                                          milestone.description || '',
+                                        );
+                                        setIsDescOpen(true);
+                                      }}
+                                      aria-label="View description"
+                                    >
+                                      <Info className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>View description</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          )}
+                        </div>
+                        <CarouselPrevious className="absolute top-[117%] left-12 transform -translate-y-1/2">
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStorySelect(milestone, index - 1);
+                            }}
+                            className="rounded-full bg-white/20 hover:bg-white/30 text-white"
+                            disabled={index === 0}
+                            aria-label="Previous milestone"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                        </CarouselPrevious>
+                        <CarouselNext className="absolute top-[117%] right-8 transform -translate-y-1/2">
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStorySelect(milestone, index + 1);
+                            }}
+                            className={`rounded-full bg-white/20 text-white ${index === milestones.length - 1 ? '' : 'hover:bg-white/30'}`}
+                            disabled={index === milestones.length - 1}
+                            aria-label="Next milestone"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </CarouselNext>
+                      </Card>
+                    )}
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          </div>
         </div>
-      </div>
 
-      {/* Shared dialog for mobile milestone description */}
-      <Dialog open={isDescOpen} onOpenChange={setIsDescOpen}>
-        <DialogContent className="w-[90vw] max-w-full md:w-auto">
-          <DialogHeader>
-            <DialogTitle>Description</DialogTitle>
-            <DialogDescription asChild>
-              <div className="text-sm whitespace-pre-wrap leading-relaxed mt-2 max-w-full break-words">
-                {descContent}
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    </div>
+        {/* Shared dialog for mobile milestone description */}
+        <Dialog open={isDescOpen} onOpenChange={setIsDescOpen}>
+          <DialogContent className="w-[90vw] max-w-full md:w-auto">
+            <DialogHeader>
+              <DialogTitle>Description</DialogTitle>
+              <DialogDescription asChild>
+                <div className="text-sm whitespace-pre-wrap leading-relaxed mt-2 max-w-full break-words">
+                  {descContent}
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
   );
 };
 

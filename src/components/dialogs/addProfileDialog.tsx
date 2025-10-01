@@ -31,9 +31,9 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Badge } from '../ui/badge';
-import { toast } from '../ui/use-toast';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 // Profile form schema
@@ -116,11 +116,7 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
           error.response?.data?.message ||
           error.message ||
           'Failed to load domains and skills.';
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Error');
       } finally {
         setLoadingData(false);
       }
@@ -209,10 +205,10 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
 
       await axiosInstance.put(`/project/${projectId}/update`, updatePayload);
 
-      toast({
-        title: 'Profile Added',
-        description: 'The profile has been successfully added.',
-      });
+      notifySuccess(
+        'The profile has been successfully added.',
+        'Profile Added',
+      );
 
       form.reset();
       setSelectedSkills([]);
@@ -220,14 +216,12 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
       setDialogOpen(false);
       onProfileAdded();
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          error.response?.data?.message ||
+      notifyError(
+        error.response?.data?.message ||
           error.message ||
           'Failed to add profile.',
-      });
+        'Error',
+      );
     } finally {
       setLoading(false);
     }

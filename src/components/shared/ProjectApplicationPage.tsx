@@ -1,23 +1,23 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import {
-  Loader2,
-  UserCircle,
-  ChevronDown,
-  X,
-  Award,
   CheckCircle2,
-  AlertCircle,
+  ChevronDown,
   Lightbulb,
-  SendHorizonal,
-  PlusCircle,
+  Loader2,
+  UserX,
+  AlertCircle,
+  SendHorizontal,
+  X,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
+import { axiosInstance } from '@/lib/axiosinstance';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,16 +29,8 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/components/ui/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import {
   Dialog,
@@ -73,6 +65,7 @@ interface FreelancerProfile {
   portfolioLinks?: string[];
   githubLink?: string;
   linkedinLink?: string;
+  profileType: 'FREELANCER' | 'CONSULTANT';
   personalWebsite?: string;
   hourlyRate?: number;
   availability?: string;
@@ -139,170 +132,161 @@ const ProjectApplicationForm = ({
   const [selectedFreelancerProfile, setSelectedFreelancerProfile] =
     useState<FreelancerProfile | null>(null);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [appliedProfileIds, setAppliedProfileIds] = useState<string[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-
   const user = useSelector((state: RootState) => state.user);
-  const [, setUserConnects] = useState<number>(0);
-
-  useEffect(() => {
-    const connects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
-    setUserConnects(connects);
-
-    const handleConnectsUpdated = () => {
-      const updatedConnects = parseInt(
-        localStorage.getItem('DHX_CONNECTS') || '0',
-        10,
-      );
-      setUserConnects(updatedConnects);
-    };
-
-    window.addEventListener('connectsUpdated', handleConnectsUpdated);
-    return () => {
-      window.removeEventListener('connectsUpdated', handleConnectsUpdated);
-    };
-  }, [user.uid]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (
-        showProfileDropdown &&
-        !target.closest('.profile-dropdown-container')
-      ) {
-        setShowProfileDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showProfileDropdown]);
-
   const fetchFreelancerProfiles = useCallback(async () => {
-    if (!user.uid) return;
-
     setIsLoadingProfiles(true);
     try {
-      let apiEndpoint = '/freelancer/profiles';
-      if (selectedProfile?.profileType === 'CONSULTANT') {
-        apiEndpoint = '/freelancer/consultant';
+      const response = await axiosInstance.get('/freelancer/profiles');
+      const profilesData = response.data.data || [];
+      const validProfiles = Array.isArray(profilesData)
+        ? profilesData.filter((p: any) => p.profileType) // Ensure profileType exists
+        : [];
+
+      setFreelancerProfiles(validProfiles);
+
+      // If there's only one profile, select it by default
+      if (validProfiles.length === 1) {
+        setSelectedFreelancerProfile(validProfiles[0]);
       }
 
-      const response = await axiosInstance.get(apiEndpoint);
-      let profilesData = response.data.data;
-
-      if (profilesData && profilesData.consultant) {
-        const consultantData = profilesData.consultant;
-        profilesData = Object.values(consultantData);
-      }
-
-      const finalProfiles = Array.isArray(profilesData) ? profilesData : [];
-      setFreelancerProfiles(finalProfiles);
-    } catch (error) {
+      return validProfiles;
+    } catch (error: any) {
       console.error('Error fetching freelancer profiles:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load your profiles. Please try again.',
-      });
-      setFreelancerProfiles([]);
+      notifyError(
+        'Failed to load freelancer profiles. Please try again later.',
+      );
+      return [];
     } finally {
       setIsLoadingProfiles(false);
     }
-  }, [user.uid, selectedProfile?.profileType]);
+  }, []);
+
+  // Filter freelancer profiles based on selected project profile
+  const filteredFreelancerProfiles = useMemo(() => {
+    if (!selectedProfile || !freelancerProfiles.length) return [];
+
+    const selectedType = selectedProfile.profileType?.toLowerCase();
+    if (!selectedType) {
+      // If project profile lacks a type, don't filter by type
+      return freelancerProfiles;
+    }
+
+    return freelancerProfiles.filter((profile) => {
+      const profileType = profile.profileType?.toLowerCase();
+      return profileType === selectedType;
+    });
+  }, [selectedProfile, freelancerProfiles]);
+
+  // Handle project profile selection
+  const handleProfileSelect = (profile: Profile) => {
+    setSelectedProfile(profile);
+    setBidAmount(profile.minConnect || 0);
+    setSelectedFreelancerProfile(null);
+    setIsPopoverOpen(false);
+  };
+
+  // Handle freelancer profile selection
+  const handleFreelancerSelect = (profile: FreelancerProfile) => {
+    setSelectedFreelancerProfile(profile);
+  };
 
   const fetchAppliedData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
-      const profilesUserAppliedFor = response.data.data
-        .filter(
-          (bid: any) =>
-            bid.project_id === project._id && bid.bidder_id === user.uid,
-        )
-        .map((bid: any) => bid.profile_id);
+      const profilesUserAppliedFor =
+        response.data?.data
+          ?.filter(
+            (bid: any) =>
+              bid.project_id === project._id && bid.bidder_id === user.uid,
+          )
+          ?.map((bid: any) => bid.profile_id) || [];
       setAppliedProfileIds(profilesUserAppliedFor);
-    } catch (error) {
+      return profilesUserAppliedFor;
+    } catch (error: any) {
       console.error('API Error fetching applied data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to retrieve application status. Please try again.',
-      });
+      notifyError('Failed to retrieve application status. Please try again.');
+      return [];
     }
-  }, [user.uid, project._id, project.profiles]);
-
+  }, [user.uid, project._id]);
+  // Initial data load
   useEffect(() => {
     const loadData = async () => {
-      await fetchAppliedData();
-      if (selectedProfile) {
+      try {
+        await fetchAppliedData();
         await fetchFreelancerProfiles();
+      } catch (error) {
+        console.error('Error loading data:', error);
       }
     };
+
     loadData();
-  }, [fetchAppliedData, fetchFreelancerProfiles, selectedProfile]);
+
+    return () => {};
+  }, [fetchAppliedData, fetchFreelancerProfiles]);
 
   const handleApplyClick = () => {
     if (!selectedProfile) {
-      toast({
-        title: 'Action Required',
-        description: 'Please select a profile to apply with before proceeding.',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Please select a profile to apply with before proceeding.',
+        'Action Required',
+      );
       return;
     }
     setDialogOpen(true);
   };
-
   const handleBidSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate profile selection
     if (!selectedProfile?._id) {
-      toast({
-        title: 'Error',
-        description: 'No profile selected for bidding',
-        variant: 'destructive',
-      });
+      notifyError('No profile selected for bidding');
       return;
     }
 
+    // Validate bid amount
     const currentConnects = parseInt(
       localStorage.getItem('DHX_CONNECTS') || '0',
       10,
     );
 
-    if (
-      isNaN(bidAmount) ||
-      isNaN(currentConnects) ||
-      bidAmount > currentConnects
-    ) {
-      toast({
-        title: 'Insufficient Connects',
-        description: 'You do not have enough connects to place this bid.',
-        variant: 'destructive',
-      });
+    // Check minimum bid amount (minConnect from profile)
+    const minBid = selectedProfile?.minConnect ?? 0;
+    if (isNaN(bidAmount) || bidAmount < minBid) {
+      notifyError(`Minimum bid amount is ${minBid} connects.`, 'Bid Too Low');
       return;
     }
 
+    // Check available connects
+    if (isNaN(currentConnects) || bidAmount > currentConnects) {
+      notifyError(
+        'You do not have enough connects to place this bid.',
+        'Insufficient Connects',
+      );
+      return;
+    }
+
+    // Validate cover letter length
     if (coverLetter.length < minChars) {
-      toast({
-        title: 'Cover Letter Too Short',
-        description: `Please write at least ${minChars} characters.`,
-        variant: 'destructive',
-      });
+      notifyError(
+        `Please write at least ${minChars} characters.`,
+        'Cover Letter Too Short',
+      );
       return;
     }
 
     if (coverLetter.length > maxChars) {
-      toast({
-        title: 'Cover Letter Too Long',
-        description: `Maximum allowed is ${maxChars} characters.`,
-        variant: 'destructive',
-      });
+      notifyError(
+        `Maximum allowed is ${maxChars} characters.`,
+        'Cover Letter Too Long',
+      );
       return;
     }
+
+    // All validations passed, proceed with submission
+    setIsSubmitting(true);
     try {
       const bidData = {
         current_price: bidAmount,
@@ -323,6 +307,9 @@ const ProjectApplicationForm = ({
       localStorage.setItem('DHX_CONNECTS', updatedConnects);
       window.dispatchEvent(new Event('connectsUpdated'));
 
+      // Update applied profile IDs to prevent duplicate submissions
+      setAppliedProfileIds((prev) => [...prev, selectedProfile._id]);
+
       // Reset form state
       setBidAmount(0);
       setDialogOpen(false);
@@ -330,13 +317,14 @@ const ProjectApplicationForm = ({
       setSelectedFreelancerProfile(null);
 
       // Show success message
-      toast({
-        title: 'Application Submitted',
-        description: 'Your application has been successfully submitted.',
-      });
+      notifySuccess(
+        'Your application has been successfully submitted.',
+        'Application Submitted',
+      );
 
       // Refresh data
       await fetchAppliedData();
+      setDialogOpen(false);
     } catch (error: unknown) {
       console.error('Error submitting bid:', error);
 
@@ -348,14 +336,31 @@ const ProjectApplicationForm = ({
         }
       }
 
-      toast({
-        title: 'Submission Failed',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      notifyError(errorMessage, 'Submission Failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  const handleBidAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow empty string for better UX when clearing the input
+    if (value === '') {
+      setBidAmount(0);
+      return;
+    }
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue)) {
+      setBidAmount(numValue);
     }
   };
 
+  const handleBidAmountBlur = () => {
+    // When input loses focus, ensure the value meets the minimum requirement
+    const minBid = selectedProfile?.minConnect || 0;
+    if (bidAmount < minBid) {
+      setBidAmount(minBid);
+    }
+  };
   const handleCoverLetterChange = (
     e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
@@ -386,199 +391,283 @@ const ProjectApplicationForm = ({
               Your Application
             </CardTitle>
             <CardDescription className="mt-1">
-              {selectedProfile
-                ? `Applying as a ${selectedProfile.domain} ${selectedProfile.profileType?.toLowerCase() || 'freelancer'}`
-                : 'Select a profile to continue'}
+              Apply to this project with your profile
             </CardDescription>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {selectedProfile && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'py-1.5 px-3 rounded-full border-2 transition-all',
-                        'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/50 dark:border-green-800 dark:text-green-300',
-                        'hover:bg-green-100 dark:hover:bg-green-900/70',
-                      )}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Award className="h-3.5 w-3.5" />
-                        <span>{selectedProfile.domain || 'N/A'}</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedProfile(null);
-                          }}
-                          className="ml-1 -mr-1 p-0.5 rounded-full hover:bg-green-200/50 dark:hover:bg-green-800/50 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="bg-background">
-                    <p>Selected profile type</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-              <PopoverTrigger asChild>
+          <div className="w-full sm:w-auto">
+            {selectedProfile ? (
+              <div className="flex items-center gap-2">
+                <Badge className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white">
+                  {selectedProfile.domain} ({selectedProfile.profileType})
+                </Badge>
                 <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={isPopoverOpen}
-                  className="w-full justify-between"
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full bg-red-700/20 hover:bg-red-700/40"
+                  onClick={() => {
+                    setSelectedProfile(null);
+                    setSelectedFreelancerProfile(null);
+                  }}
                 >
-                  {selectedFreelancerProfile?.profileName || 'Select a profile'}
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <X className="h-4 w-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72 p-0" align="end">
-                <ScrollArea className="h-[280px]">
-                  {isLoadingProfiles ? (
-                    <div className="flex flex-col items-center justify-center p-6 text-center">
-                      <Loader2 className="animate-spin w-6 h-6 text-primary mb-3" />
-                      <p className="text-sm font-medium">Loading profiles</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Finding your professional profiles...
-                      </p>
-                    </div>
-                  ) : freelancerProfiles.length === 0 ? (
-                    <div className="p-6 text-center">
-                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
-                        <UserCircle className="h-8 w-8 text-muted-foreground" />
+              </div>
+            ) : (
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    Select profile
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="end">
+                  <ScrollArea className="h-[280px]">
+                    {project.profiles && project.profiles.length > 0 ? (
+                      <div className="p-2">
+                        <div className="px-3 py-2">
+                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                            Select Project Profile
+                          </h4>
+                          <div className="space-y-1">
+                            {project.profiles.map((profile) => (
+                              <div
+                                key={profile._id}
+                                className="flex items-center justify-between p-2 rounded-md hover:bg-accent cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleProfileSelect(profile);
+                                }}
+                              >
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium">
+                                    {profile.domain}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {profile.profileType?.toLowerCase() ===
+                                    'freelancer'
+                                      ? 'Freelancer'
+                                      : 'Consultant'}
+                                  </p>
+                                </div>
+                                {profile.rate !== undefined && (
+                                  <Badge variant="outline" className="ml-2">
+                                    ${profile.rate}/hr
+                                  </Badge>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                      <h4 className="text-sm font-medium mb-1">
-                        No profiles found
-                      </h4>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        You haven&quot;t created any freelancer profiles yet.
-                      </p>
-                      <Button size="sm" variant="outline" className="gap-2">
-                        <PlusCircle className="h-4 w-4" />
-                        Create Profile
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="p-2">
-                      <div className="px-3 py-2">
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                          Select a Profile
-                        </h4>
+                    ) : (
+                      <div className="p-6 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          No project profiles available
+                        </p>
                       </div>
-                    </div>
-                  )}
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
+                    )}
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="pt-6">
-        <div className="space-y-6">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <h3 className="font-medium">Cover Letter</h3>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {coverLetter.length}/{maxChars} characters
-              </div>
-            </div>
-
-            <div className="relative">
-              <Textarea
-                value={coverLetter}
-                onChange={handleCoverLetterChange}
-                placeholder="Tell us why you`re the perfect fit for this project. Include relevant experience, skills, and any other details that make you stand out..."
-                rows={8}
-                className={cn(
-                  'w-full p-4 border rounded-lg resize-none transition-all duration-200',
-                  'focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1',
-                  hasAppliedToSelectedProfile ? 'bg-muted/50' : 'bg-background',
-                  coverLetter.length > maxChars ? 'border-destructive/50' : '',
-                )}
-                disabled={hasAppliedToSelectedProfile}
-              />
-
-              {coverLetter.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center p-4 max-w-xs mx-auto">
-                    <Lightbulb className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground">
-                      Tip: A personalized cover letter increases your chances of
-                      getting hired by 2x!
-                    </p>
-                  </div>
+        {selectedProfile ? (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium mb-4">
+                Available Freelancer Profiles
+              </h3>
+              {isLoadingProfiles ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardContent className="p-4">
+                        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-muted rounded w-1/2 mb-4"></div>
+                        <div className="space-y-2">
+                          <div className="h-3 bg-muted rounded"></div>
+                          <div className="h-3 bg-muted rounded w-5/6"></div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : filteredFreelancerProfiles.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredFreelancerProfiles.map((profile) => (
+                    <Card
+                      key={profile._id}
+                      className={`cursor-pointer transition-all ${
+                        selectedFreelancerProfile?._id === profile._id
+                          ? 'ring-2 ring-primary'
+                          : 'hover:border-primary/50'
+                      }`}
+                      onClick={() => handleFreelancerSelect(profile)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">{profile.profileName}</h4>
+                          {profile.hourlyRate && (
+                            <Badge variant="outline">
+                              ${profile.hourlyRate}/hr
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {profile.description}
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {profile.skills?.slice(0, 3).map((skill) => (
+                            <Badge
+                              key={skill._id}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {skill.label}
+                            </Badge>
+                          ))}
+                          {(profile.skills?.length || 0) > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{(profile.skills?.length || 0) - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 border rounded-lg">
+                  <UserX className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                  <h4 className="text-sm font-medium">
+                    No matching profiles found
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    We couldn&apos;t find any freelancer profiles that match
+                    this project&apos;s requirements.
+                  </p>
                 </div>
               )}
             </div>
 
-            <div className="mt-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                <span>Minimum {minChars} characters</span>
-                <span>
-                  {coverLetter.length < minChars
-                    ? `${minChars - coverLetter.length} more required`
-                    : 'Minimum reached'}
-                </span>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium">Cover Letter</h3>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {coverLetter.length}/{maxChars} characters
+                </div>
               </div>
-              <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                <motion.div
+
+              <div className="relative">
+                <Textarea
+                  value={coverLetter}
+                  onChange={handleCoverLetterChange}
+                  placeholder="Tell us why you're the perfect fit for this project. Include relevant experience, skills, and any other details that make you stand out..."
+                  rows={8}
                   className={cn(
-                    'h-full',
-                    coverLetter.length < minChars
-                      ? 'bg-yellow-500'
-                      : coverLetter.length > maxChars
-                        ? 'bg-destructive'
-                        : 'bg-primary',
+                    'w-full p-4 border rounded-lg resize-none transition-all duration-200',
+                    'focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1',
+                    hasAppliedToSelectedProfile
+                      ? 'bg-muted/50'
+                      : 'bg-background',
+                    coverLetter.length > maxChars
+                      ? 'border-destructive/50'
+                      : '',
                   )}
-                  initial={{ width: '0%' }}
-                  animate={{
-                    width: `${Math.min((coverLetter.length / maxChars) * 100, 100)}%`,
-                    transition: { duration: 0.3, ease: 'easeOut' },
-                  }}
+                  disabled={hasAppliedToSelectedProfile}
                 />
+
+                {coverLetter.length === 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="text-center p-4 max-w-xs mx-auto">
+                      <Lightbulb className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">
+                        Tip: A personalized cover letter increases your chances
+                        of getting hired by 2x!
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="mt-1 text-right">
-                <span
-                  className={cn(
-                    'text-xs',
-                    coverLetter.length < minChars
-                      ? 'text-yellow-600'
-                      : coverLetter.length > maxChars
-                        ? 'text-destructive'
-                        : 'text-success',
-                  )}
-                >
-                  {coverLetter.length < minChars ? (
-                    <span className="flex items-center justify-end gap-1">
-                      <AlertCircle className="h-3 w-3 inline" />
-                      {minChars - coverLetter.length} more characters needed
-                    </span>
-                  ) : coverLetter.length > maxChars ? (
-                    <span className="flex items-center justify-end gap-1">
-                      <AlertCircle className="h-3 w-3 inline" />
-                      {coverLetter.length - maxChars} characters over limit
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-end gap-1">
-                      <CheckCircle2 className="h-3 w-3 inline" />
-                      Your cover letter is ready to submit
-                    </span>
-                  )}
-                </span>
+
+              <div className="mt-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span>Minimum {minChars} characters</span>
+                  <span>
+                    {coverLetter.length < minChars
+                      ? `${minChars - coverLetter.length} more required`
+                      : 'Minimum reached'}
+                  </span>
+                </div>
+                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <motion.div
+                    className={cn(
+                      'h-full',
+                      coverLetter.length > maxChars
+                        ? 'bg-destructive'
+                        : coverLetter.length >= minChars
+                          ? 'bg-green-500'
+                          : 'bg-yellow-500',
+                    )}
+                    initial={{ width: '0%' }}
+                    animate={{
+                      width: `${Math.min((coverLetter.length / maxChars) * 100, 100)}%`,
+                      transition: { duration: 0.3, ease: 'easeOut' },
+                    }}
+                  />
+                </div>
+                <div className="mt-1 text-right">
+                  <span
+                    className={cn(
+                      'text-xs',
+                      coverLetter.length < minChars
+                        ? 'text-yellow-600'
+                        : coverLetter.length > maxChars
+                          ? 'text-destructive'
+                          : 'text-success',
+                    )}
+                  >
+                    {coverLetter.length < minChars ? (
+                      <span className="flex items-center justify-end gap-1">
+                        <AlertCircle className="h-3 w-3 inline" />
+                        {minChars - coverLetter.length} more characters needed
+                      </span>
+                    ) : coverLetter.length > maxChars ? (
+                      <span className="flex items-center justify-end gap-1">
+                        <AlertCircle className="h-3 w-3 inline" />
+                        {coverLetter.length - maxChars} characters over limit
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-end gap-1">
+                        <CheckCircle2 className="h-3 w-3 inline" />
+                        Your cover letter is ready to submit
+                      </span>
+                    )}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-center py-10 text-muted-foreground dark:text-muted-foreground/40">
+            <Lightbulb className="h-6 w-6 mx-auto mb-2" />
+            <p>
+              Select a project profile above to see matching freelancer
+              profiles.
+            </p>
+            <p className="text-xs mt-1">
+              Tip: Click “Select profile” and choose the role you want to apply
+              with.
+            </p>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="pt-4 border-t">
@@ -586,17 +675,13 @@ const ProjectApplicationForm = ({
           <Button
             variant="outline"
             onClick={onCancel}
-            className="w-full md:w-auto ml-auto"
+            className="w-full sm:w-auto ml-auto"
             disabled={isLoading}
           >
             {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              'Cancel'
-            )}
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            Cancel
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -609,16 +694,42 @@ const ProjectApplicationForm = ({
                   coverLetter.length > maxChars
                 }
               >
-                <SendHorizonal className="mr-2 h-4 w-4" />
+                <SendHorizontal className="mr-2 h-4 w-4" />
                 Submit Application
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Confirm Application</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to submit your application? This will
-                  use {selectedProfile?.minConnect || 0} connects.
+                <DialogDescription className="space-y-4">
+                  <div>
+                    <p>You are about to submit your application.</p>
+                    <p>
+                      Minimum required connects:{' '}
+                      {selectedProfile?.minConnect || 0}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="bidAmount"
+                      className="block text-sm font-medium text-foreground"
+                    >
+                      Number of Connects to Bid
+                    </label>
+                    <input
+                      type="number"
+                      id="bidAmount"
+                      min={selectedProfile?.minConnect || 0}
+                      value={bidAmount || ''}
+                      onChange={handleBidAmountChange}
+                      onBlur={handleBidAmountBlur}
+                      className="w-full p-2 border rounded"
+                      placeholder={`Min ${selectedProfile?.minConnect || 0} connects`}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      You can bid more connects to increase visibility
+                    </p>
+                  </div>
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -626,12 +737,17 @@ const ProjectApplicationForm = ({
                   Cancel
                 </Button>
                 <Button
-                  onClick={(e) => {
-                    handleBidSubmit(e);
-                    setDialogOpen(false);
-                  }}
+                  onClick={handleBidSubmit}
+                  disabled={isSubmitting || hasAppliedToSelectedProfile}
                 >
-                  Confirm
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Confirm'
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>

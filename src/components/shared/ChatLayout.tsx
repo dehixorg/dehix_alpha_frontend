@@ -44,9 +44,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
   }, [isChatAreaExpanded]);
 
   return (
-    <PanelGroup direction="horizontal" className="flex-1 h-full">
-      {' '}
-      {/* Removed purple border */}
+    <PanelGroup direction="horizontal" className="flex-1 h-full bg-background">
       <Panel
         ref={sidebarPanelRef}
         defaultSize={defaultSidebarSize}
@@ -60,7 +58,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
       >
         <aside
           className={cn(
-            'h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-xl dark:shadow-lg', // Removed lime border
+            'h-full bg-card border-r border-border p-4 overflow-y-auto shadow-sm',
           )}
           aria-label="Chat List Sidebar"
         >
@@ -73,7 +71,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
         </aside>
       </Panel>
       <PanelResizeHandle
-        className="w-1 bg-[hsl(var(--border))] hover:bg-[hsl(var(--primary))] dark:hover:bg-[hsl(var(--primary))] transition-colors duration-200 data-[resize-handle-active]:bg-[hsl(var(--primary))] dark:data-[resize-handle-active]:bg-[hsl(var(--primary))]"
+        className="w-1 bg-border hover:bg-primary transition-colors duration-200 data-[resize-handle-active]:bg-primary"
         aria-label="Resize chat sidebar"
       />
       <Panel
@@ -84,11 +82,9 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
         order={2}
       >
         <main
-          className="h-full bg-[hsl(var(--background))] p-4"
+          className="h-full bg-background text-foreground p-4"
           aria-label="Main Chat Area"
         >
-          {' '}
-          {/* Removed yellow border */}
           {/* Pass onOpenProfileSidebar to chatWindowComponent if it's a React element that can accept it */}
           {React.isValidElement(chatWindowComponent)
             ? React.cloneElement(
