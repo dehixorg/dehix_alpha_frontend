@@ -57,9 +57,9 @@ export default function NewReportPage() {
   const reportType = getReportTypeFromPath(pathname);
   const type = searchParams.get('type');
   const reportInfo: ReportInfo = {
-    report_role: user.type || 'STUDENT',
+    report_role: user.type || 'freelancer',
     report_type: 'GENERAL',
-    reportedbyId: user?.uid || 'user123',
+    reportedbyId: user?.uid,
   };
 
   const reportData = {

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
 
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { apiHelperService } from '@/services/report';
 import { apiHelperService as profileService } from '@/services/profilepic';
+import { RootState } from '@/lib/store';
 
 const reportSchema = z.object({
   subject: z.string().min(3, { message: 'Subject is required' }),
@@ -70,6 +72,8 @@ export function ReportForm({
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const user = useSelector((state: RootState) => state.user);
+
   const onSubmit = async (data: ReportFormValues) => {
     try {
       setIsSubmitting(true);
@@ -83,7 +87,7 @@ export function ReportForm({
 
       const finalPayload = {
         ...data,
-        reportedById: initialData.reportedId,
+        reportedById: user?.uid,
         status: 'OPEN',
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };

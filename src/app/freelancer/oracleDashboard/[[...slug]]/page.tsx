@@ -23,7 +23,7 @@ export default function OracleDashboardPage() {
   const slugParam = (params as any)?.slug;
   const lastSegment = Array.isArray(slugParam)
     ? slugParam[slugParam.length - 1] || ''
-    : slugParam ?? '';
+    : (slugParam ?? '');
   const validTabs = ['business', 'experience', 'project', 'education'];
   const currentTabFromURL = validTabs.includes(lastSegment)
     ? lastSegment
