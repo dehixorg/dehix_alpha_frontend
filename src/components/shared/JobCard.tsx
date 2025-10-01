@@ -136,10 +136,10 @@ const JobCard: React.FC<JobCardProps> = ({
   const reportData = {
     subject: '',
     description: '',
-    report_role: user?.type || 'STUDENT',
+    report_role: user?.type || 'freelancer',
     report_type: reportType,
     status: 'OPEN',
-    reportedbyId: user?.uid || 'user123',
+    reportedById: user?.uid,
     reportedId: job._id,
   };
   const handleLike = async (e: React.MouseEvent) => {

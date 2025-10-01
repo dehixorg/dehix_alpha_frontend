@@ -44,7 +44,6 @@ export default function FreelancerBids() {
         }
 
         setBids(bidData);
-        console.log('Fetched Bids:', bidData); // Log the fetched data here
       } catch (error) {
         toast({
           variant: 'destructive',

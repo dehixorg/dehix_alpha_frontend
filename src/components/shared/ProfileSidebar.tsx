@@ -742,10 +742,6 @@ export function ProfileSidebar({
                           alt={profileData.displayName}
                           onError={(e) => {
                             console.error('Error loading group avatar:', e);
-                            console.log(
-                              'Failed to load group avatar with src:',
-                              e.currentTarget.src,
-                            );
                           }}
                         />
                       ) : (
@@ -754,10 +750,6 @@ export function ProfileSidebar({
                           alt={profileData.displayName}
                           onError={(e) => {
                             console.error('Error loading user avatar:', e);
-                            console.log(
-                              'Failed to load user avatar with src:',
-                              e.currentTarget.src,
-                            );
                           }}
                         />
                       )}
