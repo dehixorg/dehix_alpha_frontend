@@ -1,6 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react'; // Added useRef
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { 
+import {
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
+  deleteDoc,
+  writeBatch,
+} from 'firebase/firestore';
+import {
   VolumeX,
   ShieldX,
   Trash2,
@@ -10,27 +25,19 @@ import {
   LogOut,
   MinusCircle,
   LoaderCircle,
-  Pencil
+  Pencil,
 } from 'lucide-react';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-  deleteField,
-  deleteDoc,
-  collection,
-  query,
-  orderBy,
-  getDocs,
-  writeBatch,
-  onSnapshot,
-} from 'firebase/firestore';
+
+import { AddMembersDialog } from './AddMembersDialog';
+import { InviteLinkDialog } from './InviteLinkDialog';
+import { ConfirmActionDialog } from './ConfirmActionDialog';
+import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
+import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
+
+import { db } from '@/config/firebaseConfig';
 import { useToast } from '@/components/ui/use-toast';
-import { Badge } from "@/components/ui/badge";
-import { 
+import { Badge } from '@/components/ui/badge';
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -48,16 +55,9 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { CombinedUser } from '@/hooks/useAllUsers';
-
-import { AddMembersDialog } from './AddMembersDialog';
-import { InviteLinkDialog } from './InviteLinkDialog';
-import { ConfirmActionDialog } from './ConfirmActionDialog';
-import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
-import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
 export type FileItem = {
   id: string;
@@ -79,7 +79,7 @@ export interface ProfileUser {
   displayName: string;
   status?: string;
   lastSeen?: string;
-};
+}
 
 export type ProfileGroupMember = {
   id: string;
@@ -112,52 +112,91 @@ interface ProfileSidebarProps {
   profileId: string | null;
   profileType: 'user' | 'group' | null;
   currentUser?: CombinedUser | null;
-  initialData?: { userName?: string; email?: string; profilePic?: string };
+  profileData?: (ProfileUser | ProfileGroup) & {
+    members?: ProfileGroupMember[];
+    admins?: string[];
+    inviteLink?: string;
+    createdAtFormatted?: string;
+    lastSeen?: string;
+    status?: string;
+    avatar?: string;
+    displayName?: string;
+    email?: string;
+    description?: string;
+    id?: string;
+    groupName?: string;
+    participantDetails?: Record<
+      string,
+      {
+        userName: string;
+        profilePic?: string;
+        email?: string;
+      }
+    >;
+  };
+  initialData?: Partial<ProfileUser & ProfileGroup> & {
+    members?: ProfileGroupMember[];
+    admins?: string[];
+    inviteLink?: string;
+    createdAtFormatted?: string;
+  };
 }
 
-export function ProfileSidebar({
+const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   isOpen,
   onClose,
   profileId,
   profileType,
+  profileData: initialProfileData,
   initialData,
-}: ProfileSidebarProps) {
-  const [profileData, setProfileData] = useState<ProfileUser | ProfileGroup | null>(null);
-  const getProfilePicture = (data: ProfileUser | ProfileGroup | null, type: 'user' | 'group' | null): string => {
-    if (!data) return '';
-    if (type === 'user' && 'profilePic' in data) {
-      return (data as ProfileUser).profilePic || '';
-    } else if (type === 'group' && 'avatar' in data) {
-      return (data as ProfileGroup).avatar || '';
-    }
-    return '';
-  };
-  const [loading, setLoading] = useState(true);
+}) => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isLoadingMedia, setIsLoadingMedia] = useState<boolean>(false);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
   const [, setSharedFiles] = useState<FileItem[]>([]);
-  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
-  const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] = useState(false);
+  const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
+    useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [refreshDataKey, setRefreshDataKey] = useState(0);
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [editingDescription, setEditingDescription] = useState('');
-  const [isEditingBio, setIsEditingBio] = useState(false);
-  const [editingBio, setEditingBio] = useState('');
-  const [isEditingGroupDescription, setIsEditingGroupDescription] = useState(false);
+  const [profileData, setProfileData] = useState<
+    ProfileUser | ProfileGroup | null
+  >(initialProfileData || null);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] =
+    useState<boolean>(false);
+  const [isEditingDescription, setIsEditingDescription] =
+    useState<boolean>(false);
+  const [editingDescription, setEditingDescription] = useState<string>('');
+  const [isEditingBio, setIsEditingBio] = useState<boolean>(false);
+  const [editingBio, setEditingBio] = useState<string>('');
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+  const [, setConfirmAction] = useState<{
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    confirmButtonText?: string;
+    confirmButtonVariant?:
+      | 'default'
+      | 'destructive'
+      | 'outline'
+      | 'secondary'
+      | 'ghost'
+      | 'link';
+    onCancel?: () => void;
+    cancelButtonText?: string;
+  } | null>(null);
 
   const { toast } = useToast();
-  
+
   useEffect(() => {
     if (profileData) {
       if (profileType === 'user') {
         const bio = 'bio' in profileData ? profileData.bio : '';
         setEditingBio(bio || '');
       } else if (profileType === 'group') {
-        const description = 'description' in profileData ? profileData.description : '';
+        const description =
+          'description' in profileData ? profileData.description : '';
         setEditingDescription(description || '');
       }
     } else {
@@ -167,7 +206,7 @@ export function ProfileSidebar({
   }, [profileData, profileType]);
 
   const user = useSelector((state: RootState) => state.user);
-  
+
   const handleEditBio = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     if (profileType === 'user') {
@@ -196,17 +235,17 @@ export function ProfileSidebar({
     } else if (profileType === 'group' && 'description' in profileData) {
       setEditingDescription(profileData.description || '');
     }
-    
+
     setIsEditingBio(false);
   };
 
   const handleUpdateDescription = async () => {
     if (!profileId || !profileData || profileType !== 'group') {
-      console.error('Missing required data for updating group description:', { 
-        profileId, 
-        hasProfileData: !!profileData, 
+      console.error('Missing required data for updating group description:', {
+        profileId,
+        hasProfileData: !!profileData,
         profileType,
-        isGroup: profileType === 'group'
+        isGroup: profileType === 'group',
       });
       toast({
         variant: 'destructive',
@@ -220,27 +259,27 @@ export function ProfileSidebar({
       const conversationRef = doc(db, 'conversations', profileId);
       const conversationDoc = await getDoc(conversationRef);
       const trimmedDescription = editingDescription.trim();
-      
+
       if (conversationDoc.exists()) {
         // Update Firestore
         await updateDoc(conversationRef, {
           description: trimmedDescription,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         });
 
         // Update local state immediately
-        setProfileData(prev => {
+        setProfileData((prev) => {
           if (!prev || !('groupName' in prev)) return prev;
           return {
             ...prev,
             description: trimmedDescription,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
           } as ProfileGroup;
         });
 
         // Close the edit mode
         setIsEditingDescription(false);
-        
+
         toast({
           title: 'Description updated',
           description: 'The group description has been updated successfully.',
@@ -261,11 +300,11 @@ export function ProfileSidebar({
 
   const handleUpdateBio = async () => {
     if (!profileId || !profileData || profileType !== 'user') {
-      console.error('Missing required data for updating bio:', { 
-        profileId, 
-        hasProfileData: !!profileData, 
+      console.error('Missing required data for updating bio:', {
+        profileId,
+        hasProfileData: !!profileData,
         profileType,
-        isUser: profileType === 'user'
+        isUser: profileType === 'user',
       });
       toast({
         variant: 'destructive',
@@ -274,11 +313,11 @@ export function ProfileSidebar({
       });
       return;
     }
-    
+
     try {
       const conversationRef = doc(db, 'conversations', profileId);
       const conversationDoc = await getDoc(conversationRef);
-      
+
       if (conversationDoc.exists()) {
         await updateDoc(conversationRef, {
           bio: editingBio.trim(),
@@ -288,20 +327,20 @@ export function ProfileSidebar({
         if (!profileId || !user?.uid) {
           throw new Error('Missing required user or profile ID');
         }
-        
+
         const participantDetails = {
           [user.uid]: {
             userName: user?.displayName || '',
             profilePic: user?.photoURL || '',
-            email: user?.email || ''
+            email: user?.email || '',
           },
           [profileId]: {
             userName: (profileData as ProfileUser)?.userName || '',
             profilePic: (profileData as ProfileUser)?.profilePic || '',
-            email: (profileData as ProfileUser)?.email || ''
-          }
+            email: (profileData as ProfileUser)?.email || '',
+          },
         };
-        
+
         await setDoc(conversationRef, {
           id: profileId,
           type: 'private',
@@ -313,10 +352,12 @@ export function ProfileSidebar({
         });
       }
 
-      setProfileData(prev => prev ? { ...prev, bio: editingBio.trim() } : null);
-      setRefreshDataKey((prev) => prev + 1);
+      setProfileData((prev) =>
+        prev ? { ...prev, bio: editingBio.trim() } : null,
+      );
+      setRefreshKey((prev) => prev + 1);
       setIsEditingBio(false);
-      
+
       toast({
         title: 'Success',
         description: 'Bio updated successfully',
@@ -326,7 +367,8 @@ export function ProfileSidebar({
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to update bio',
+        description:
+          error instanceof Error ? error.message : 'Failed to update bio',
       });
     }
   };
@@ -398,24 +440,29 @@ export function ProfileSidebar({
           userName: initialData?.userName || userData.userName,
           email: initialData?.email || userData.email,
           profilePic: initialData?.profilePic || userData.profilePic,
-          displayName: initialData?.userName || userData.userName || userData.displayName,
+          displayName:
+            initialData?.userName || userData.userName || userData.displayName,
           id: profileId,
           _id: userData._id || profileId,
           name: initialData?.userName || userData.name || userData.userName,
           bio,
         });
       } else if (profileType === 'group' && profileId) {
-        const conversationDoc = await getDoc(doc(db, 'conversations', profileId));
+        const conversationDoc = await getDoc(
+          doc(db, 'conversations', profileId),
+        );
         if (conversationDoc.exists()) {
           const groupData = conversationDoc.data();
-          const members = Object.entries(groupData.participantDetails || {}).map(
-            ([id, details]: [string, any]) => ({
-              id,
-              userName: details.userName || 'Unknown Member',
-              profilePic: details.profilePic,
-              status: (Math.random() > 0.5 ? 'online' : 'offline') as 'online' | 'offline',
-            })
-          );
+          const members = Object.entries(
+            groupData.participantDetails || {},
+          ).map(([id, details]: [string, any]) => ({
+            id,
+            userName: details.userName || 'Unknown Member',
+            profilePic: details.profilePic,
+            status: (Math.random() > 0.5 ? 'online' : 'offline') as
+              | 'online'
+              | 'offline',
+          }));
 
           setProfileData({
             _id: conversationDoc.id,
@@ -446,26 +493,71 @@ export function ProfileSidebar({
     setSharedMedia([]);
 
     try {
-      const messagesQuery = query(
-        collection(db, `conversations/${conversationId}/messages`),
-        orderBy('timestamp', 'desc'),
+      const messagesRef = collection(
+        db,
+        `conversations/${conversationId}/messages`,
       );
-
+      const messagesQuery = query(messagesRef, orderBy('timestamp', 'desc'));
       const messagesSnapshot = await getDocs(messagesQuery);
       const extractedMedia: MediaItem[] = [];
 
+      const s3BucketUrl = process.env.NEXT_PUBLIC_S3_BUCKET_URL ?? '';
+
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
-        if (Array.isArray(message.attachments) && message.attachments.length > 0) {
-          for (const attachment of message.attachments) {
-            if (attachment.url && attachment.type && attachment.fileName) {
-              extractedMedia.push({
-                id: `${doc.id}-${attachment.fileName}`,
-                url: attachment.url,
-                type: attachment.type,
-                fileName: attachment.fileName,
-              });
+        let mediaUrl = '';
+
+        if (
+          message.voiceMessage &&
+          typeof message.content === 'string' &&
+          message.content.startsWith(s3BucketUrl)
+        ) {
+          mediaUrl = message.content;
+        } else if (
+          typeof message.content === 'string' &&
+          s3BucketUrl &&
+          message.content.startsWith(s3BucketUrl)
+        ) {
+          mediaUrl = message.content;
+        }
+
+        if (mediaUrl) {
+          try {
+            const url = new URL(mediaUrl);
+            const fileName = decodeURIComponent(url.pathname.substring(1));
+            const fileExtension =
+              fileName.split('.').pop()?.toLowerCase() || '';
+            let type = 'application/octet-stream';
+
+            if (message.voiceMessage) {
+              type = 'audio/webm';
+            } else {
+              const mimeTypes: { [key: string]: string } = {
+                png: 'image/png',
+                jpg: 'image/jpeg',
+                jpeg: 'image/jpeg',
+                gif: 'image/gif',
+                mp4: 'video/mp4',
+                webm: 'video/webm',
+                mp3: 'audio/mpeg',
+                wav: 'audio/wav',
+                pdf: 'application/pdf',
+                pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                ppt: 'application/vnd.ms-powerpoint',
+                docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                doc: 'application/msword',
+              };
+              type = mimeTypes[fileExtension] || 'application/octet-stream';
             }
+
+            extractedMedia.push({
+              id: `${doc.id}-${fileName}`,
+              url: mediaUrl,
+              type: type,
+              fileName: fileName,
+            });
+          } catch (e) {
+            console.error('Could not parse media URL:', e);
           }
         }
       });
@@ -498,7 +590,10 @@ export function ProfileSidebar({
 
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
-        if (Array.isArray(message.attachments) && message.attachments.length > 0) {
+        if (
+          Array.isArray(message.attachments) &&
+          message.attachments.length > 0
+        ) {
           for (const attachment of message.attachments) {
             if (attachment.url && attachment.type && attachment.fileName) {
               extractedFiles.push({
@@ -527,76 +622,40 @@ export function ProfileSidebar({
   };
 
   useEffect(() => {
-    let isMounted = true;
-
     const executeFetches = async () => {
-      if (isOpen && profileId && profileType) {
-        if (isMounted) {
-          setProfileData(null);
-          setSharedMedia([]);
-          setLoading(true);
-          setIsLoadingMedia(true);
-          setIsLoadingFiles(true);
-        }
+      if (isOpen && profileId) {
+        setProfileData(null);
+        setSharedMedia([]);
+        setSharedFiles([]);
+        setLoading(true);
+        setIsLoadingMedia(true);
+        setIsLoadingFiles(true);
 
-        try {
-          await Promise.allSettled([
-            internalFetchProfileData(),
-            fetchSharedMedia(profileId),
-            fetchSharedFiles(profileId),
-          ]);
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        } finally {
-          if (isMounted) {
-            setLoading(false);
-            setIsLoadingMedia(false);
-            setIsLoadingFiles(false);
-          }
-        }
-      } else {
-        if (isMounted) {
-          setProfileData(null);
-          setSharedMedia([]);
+        await Promise.allSettled([
+          internalFetchProfileData(),
+          fetchSharedMedia(profileId),
+          fetchSharedFiles(profileId),
+        ]);
+
+        if (loading) {
           setLoading(false);
+        }
+        if (isLoadingMedia) {
           setIsLoadingMedia(false);
+        }
+        if (isLoadingFiles) {
           setIsLoadingFiles(false);
         }
       }
     };
 
     executeFetches();
+  }, [isOpen, profileId, profileType, refreshKey]);
 
-    // Set up real-time listener for group updates
-    let unsubscribe = () => {};
-    if (isOpen && profileId && profileType === 'group') {
-      const groupRef = doc(db, 'conversations', profileId);
-      unsubscribe = onSnapshot(groupRef, (doc) => {
-        if (doc.exists() && isMounted) {
-          const groupData = doc.data() as Partial<ProfileGroup>;
-          setProfileData(prev => {
-            if (!prev || !('groupName' in prev)) return prev;
-            
-            return {
-              ...prev,
-              description: groupData.description || prev.description || '',
-              groupName: groupData.groupName || (prev as ProfileGroup).groupName,
-              updatedAt: groupData.updatedAt || (prev as ProfileGroup).updatedAt
-            };
-          });
-        }
-      }, (error) => {
-        console.error('Error listening to group updates:', error);
-      });
-    }
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-  }, [isOpen, profileId, profileType, refreshDataKey, initialData]);
-
-  const handleAddMembersToGroup = async (selectedUsers: CombinedUser[], groupId: string) => {
+  const handleAddMembersToGroup = async (
+    selectedUsers: CombinedUser[],
+    groupId: string,
+  ) => {
     if (!selectedUsers || selectedUsers.length === 0) {
       toast({
         variant: 'destructive',
@@ -645,7 +704,7 @@ export function ProfileSidebar({
       batch.update(groupDocRef, updates);
       await batch.commit();
 
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
 
       toast({
         title: 'Success',
@@ -662,7 +721,11 @@ export function ProfileSidebar({
     }
   };
 
-  const handleSaveGroupInfo = async (newName: string, newAvatarUrl: string, groupId: string) => {
+  const handleSaveGroupInfo = async (
+    newName: string,
+    newAvatarUrl: string,
+    groupId: string,
+  ) => {
     if (!newName.trim()) {
       toast({
         variant: 'destructive',
@@ -693,9 +756,16 @@ export function ProfileSidebar({
       updateData.name = newName.trim();
       updateData.project_name = newName.trim();
     }
-    if (newAvatarUrl !== undefined && newAvatarUrl.trim() !== (currentGroupData?.avatar || '')) {
+    if (
+      newAvatarUrl !== undefined &&
+      newAvatarUrl.trim() !== (currentGroupData?.avatar || '')
+    ) {
       updateData.avatar = newAvatarUrl.trim();
-    } else if (newAvatarUrl !== undefined && newAvatarUrl.trim() === '' && currentGroupData?.avatar) {
+    } else if (
+      newAvatarUrl !== undefined &&
+      newAvatarUrl.trim() === '' &&
+      currentGroupData?.avatar
+    ) {
       updateData.avatar = '';
     }
     if (Object.keys(updateData).length === 0) {
@@ -709,7 +779,7 @@ export function ProfileSidebar({
         title: 'Success',
         description: 'Group information updated successfully.',
       });
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error updating group info:', error);
       toast({
@@ -720,7 +790,9 @@ export function ProfileSidebar({
     }
   };
 
-  const handleGenerateInviteLink = async (groupId: string): Promise<string | null> => {
+  const handleGenerateInviteLink = async (
+    groupId: string,
+  ): Promise<string | null> => {
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -737,7 +809,7 @@ export function ProfileSidebar({
       if (!groupDoc.exists()) {
         throw new Error('Group not found');
       }
-      
+
       await updateDoc(groupDocRef, {
         inviteLink: newInviteLink,
         updatedAt: new Date().toISOString(),
@@ -746,7 +818,7 @@ export function ProfileSidebar({
         title: 'Success',
         description: 'New invite link generated and saved.',
       });
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
       return newInviteLink;
     } catch (error) {
       console.error('Error generating and saving invite link:', error);
@@ -782,14 +854,14 @@ export function ProfileSidebar({
       if (!groupDoc.exists()) {
         throw new Error('Group not found');
       }
-      
+
       await updateDoc(groupDocRef, {
         participants: arrayRemove(memberIdToRemove),
         [`participantDetails.${memberIdToRemove}`]: deleteField(),
         updatedAt: new Date().toISOString(),
       });
       toast({ title: 'Success', description: 'Member removed successfully.' });
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing member:', error);
       toast({
@@ -865,225 +937,231 @@ export function ProfileSidebar({
     }
   }
 
-  const GroupDescription = React.memo(({ 
-    profileData, 
-    isEditing, 
-    description, 
-    onEdit, 
-    onSave, 
-    onCancel,
-    onStartEditing
-  }: {
-    profileData: ProfileGroup | null;
-    isEditing: boolean;
-    description: string;
-    onEdit: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-    onSave: () => void;
-    onCancel: () => void;
-    onStartEditing: () => void;
-  }) => {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const [localDescription, setLocalDescription] = React.useState(description);
+  const GroupDescription = React.memo(
+    ({
+      profileData,
+      isEditing,
+      description,
+      onEdit,
+      onSave,
+      onCancel,
+      onStartEditing,
+    }: {
+      profileData: ProfileGroup | null;
+      isEditing: boolean;
+      description: string;
+      onEdit: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+      onSave: () => void;
+      onCancel: () => void;
+      onStartEditing: () => void;
+    }) => {
+      const textareaRef = useRef<HTMLTextAreaElement>(null);
+      const [localDescription, setLocalDescription] =
+        React.useState(description);
 
-    // Sync local state with prop when it changes
-    React.useEffect(() => {
-      setLocalDescription(description);
-    }, [description]);
+      // Sync local state with prop when it changes
+      React.useEffect(() => {
+        setLocalDescription(description);
+      }, [description]);
 
-    // Focus and select text when entering edit mode
-    React.useEffect(() => {
-      if (isEditing && textareaRef.current) {
-        textareaRef.current.focus();
-        const length = localDescription.length;
-        textareaRef.current.setSelectionRange(length, length);
-      }
-    }, [isEditing, localDescription.length]);
+      // Focus and select text when entering edit mode
+      React.useEffect(() => {
+        if (isEditing && textareaRef.current) {
+          textareaRef.current.focus();
+          const length = localDescription.length;
+          textareaRef.current.setSelectionRange(length, length);
+        }
+      }, [isEditing, localDescription.length]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setLocalDescription(e.target.value);
-      onEdit(e);
-    };
+      const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setLocalDescription(e.target.value);
+        onEdit(e);
+      };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        onSave();
-      }
-    };
+      const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          onSave();
+        }
+      };
 
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Description</span>
-          {!isEditing && (
-            <button
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Description</span>
+            {!isEditing && (
+              <button
+                onClick={onStartEditing}
+                className="p-1 hover:bg-gray-100 rounded-full"
+                aria-label="Edit description"
+              >
+                <Pencil className="w-3 h-3 text-gray-500" />
+              </button>
+            )}
+          </div>
+
+          {isEditing ? (
+            <div className="space-y-2">
+              <textarea
+                ref={textareaRef}
+                className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y focus:outline-none focus:border-blue-500"
+                value={localDescription}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Tell others about this group..."
+                rows={3}
+                onFocus={(e) => e.stopPropagation()}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onCancel}
+                  type="button"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={onSave}
+                  disabled={!localDescription.trim()}
+                  type="button"
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="relative flex items-start justify-between cursor-text"
               onClick={onStartEditing}
-              className="p-1 hover:bg-gray-100 rounded-full"
-              aria-label="Edit description"
             >
-              <Pencil className="w-3 h-3 text-gray-500" />
-            </button>
+              <p className="text-sm whitespace-pre-wrap mt-1 flex-1">
+                {profileData?.description ||
+                  'No description available. Click to add a description.'}
+              </p>
+            </div>
           )}
         </div>
-
-        {isEditing ? (
-          <div className="space-y-2">
-            <textarea
-              ref={textareaRef}
-              className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y focus:outline-none focus:border-blue-500"
-              value={localDescription}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Tell others about this group..."
-              rows={3}
-              onFocus={(e) => e.stopPropagation()}
-            />
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onCancel}
-                type="button"
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={onSave}
-                disabled={!localDescription.trim()}
-                type="button"
-              >
-                Save
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div 
-            className="relative flex items-start justify-between cursor-text"
-            onClick={onStartEditing}
-          >
-            <p className="text-sm whitespace-pre-wrap mt-1 flex-1">
-              {profileData?.description || "No description available. Click to add a description."}
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  });
+      );
+    },
+  );
   GroupDescription.displayName = 'GroupDescription';
 
-  const UserBio = React.memo(({ 
-    profileData, 
-    isEditingBio, 
-    editingBio, 
-    onEditBio, 
-    onSaveBio, 
-    onCancelEdit,
-    onStartEditing
-  }: {
-    profileData: ProfileUser | null;
-    isEditingBio: boolean;
-    editingBio: string;
-    onEditBio: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-    onSaveBio: () => void;
-    onCancelEdit: () => void;
-    onStartEditing: () => void;
-  }) => {
-    const bioText = profileData?.bio || '';
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const [localBio, setLocalBio] = React.useState(editingBio);
+  const UserBio = React.memo(
+    ({
+      profileData,
+      isEditingBio,
+      editingBio,
+      onEditBio,
+      onSaveBio,
+      onCancelEdit,
+      onStartEditing,
+    }: {
+      profileData: ProfileUser | null;
+      isEditingBio: boolean;
+      editingBio: string;
+      onEditBio: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+      onSaveBio: () => void;
+      onCancelEdit: () => void;
+      onStartEditing: () => void;
+    }) => {
+      const bioText = profileData?.bio || '';
+      const textareaRef = useRef<HTMLTextAreaElement>(null);
+      const [localBio, setLocalBio] = React.useState(editingBio);
 
-    // Sync local state with prop when it changes
-    React.useEffect(() => {
-      setLocalBio(editingBio);
-    }, [editingBio]);
+      // Sync local state with prop when it changes
+      React.useEffect(() => {
+        setLocalBio(editingBio);
+      }, [editingBio]);
 
-    // Focus and select text when entering edit mode
-    React.useEffect(() => {
-      if (isEditingBio && textareaRef.current) {
-        textareaRef.current.focus();
-        // Set cursor to end of text
-        const length = localBio.length;
-        textareaRef.current.setSelectionRange(length, length);
-      }
-    }, [isEditingBio, localBio.length]);
+      // Focus and select text when entering edit mode
+      React.useEffect(() => {
+        if (isEditingBio && textareaRef.current) {
+          textareaRef.current.focus();
+          // Set cursor to end of text
+          const length = localBio.length;
+          textareaRef.current.setSelectionRange(length, length);
+        }
+      }, [isEditingBio, localBio.length]);
 
-    const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setLocalBio(e.target.value);
-      onEditBio(e);
-    };
+      const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setLocalBio(e.target.value);
+        onEditBio(e);
+      };
 
-    const handleSave = () => {
-      onSaveBio();
-    };
+      const handleSave = () => {
+        onSaveBio();
+      };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleSave();
-      }
-    };
+      const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          handleSave();
+        }
+      };
 
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Bio</span>
-          {!isEditingBio && (
-            <button
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Bio</span>
+            {!isEditingBio && (
+              <button
+                onClick={onStartEditing}
+                className="p-1 hover:bg-gray-100 rounded-full"
+                aria-label="Edit bio"
+              >
+                <Pencil className="w-3 h-3 text-gray-500" />
+              </button>
+            )}
+          </div>
+
+          {isEditingBio ? (
+            <div className="space-y-2">
+              <textarea
+                ref={textareaRef}
+                className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y focus:outline-none focus:border-blue-500"
+                value={localBio}
+                onChange={handleBioChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Tell others about yourself..."
+                rows={3}
+                onFocus={(e) => e.stopPropagation()}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onCancelEdit}
+                  type="button"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={!localBio.trim()}
+                  type="button"
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="relative flex items-start justify-between cursor-text"
               onClick={onStartEditing}
-              className="p-1 hover:bg-gray-100 rounded-full"
-              aria-label="Edit bio"
             >
-              <Pencil className="w-3 h-3 text-gray-500" />
-            </button>
+              <p className="text-sm whitespace-pre-wrap mt-1 flex-1">
+                {bioText || 'No bio available. Click to add a bio.'}
+              </p>
+            </div>
           )}
         </div>
+      );
+    },
+  );
 
-        {isEditingBio ? (
-          <div className="space-y-2">
-            <textarea
-              ref={textareaRef}
-              className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y focus:outline-none focus:border-blue-500"
-              value={localBio}
-              onChange={handleBioChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Tell others about yourself..."
-              rows={3}
-              onFocus={(e) => e.stopPropagation()}
-            />
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onCancelEdit}
-                type="button"
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={!localBio.trim()}
-                type="button"
-              >
-                Save
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div 
-            className="relative flex items-start justify-between cursor-text"
-            onClick={onStartEditing}
-          >
-            <p className="text-sm whitespace-pre-wrap mt-1 flex-1">
-              {bioText || "No bio available. Click to add a bio."}
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  });
-  
   // Add display name for better debugging
   UserBio.displayName = 'UserBio';
 
@@ -1182,7 +1260,9 @@ export function ProfileSidebar({
                           <div className="flex flex-col space-y-2">
                             <textarea
                               value={editingDescription}
-                              onChange={(e) => setEditingDescription(e.target.value)}
+                              onChange={(e) =>
+                                setEditingDescription(e.target.value)
+                              }
                               className="w-full p-2 border rounded-md text-sm"
                               rows={3}
                               placeholder="Enter group description"
@@ -1200,7 +1280,10 @@ export function ProfileSidebar({
                                 size="sm"
                                 onClick={() => {
                                   setIsEditingDescription(false);
-                                  setEditingDescription((profileData as ProfileGroup).description || '');
+                                  setEditingDescription(
+                                    (profileData as ProfileGroup).description ||
+                                      '',
+                                  );
                                 }}
                               >
                                 Cancel
@@ -1208,18 +1291,23 @@ export function ProfileSidebar({
                             </div>
                           </div>
                         ) : (
-                          <div 
+                          <div
                             className="relative cursor-pointer hover:bg-accent/50 rounded p-1 -m-1 transition-colors duration-150"
                             onClick={() => {
-                              setEditingDescription((profileData as ProfileGroup).description || '');
+                              setEditingDescription(
+                                (profileData as ProfileGroup).description || '',
+                              );
                               setIsEditingDescription(true);
                             }}
                           >
                             <CardDescription>
                               <div className="flex items-center justify-between">
                                 <span className="flex-1">
-                                  {(profileData as ProfileGroup).description || (
-                                    <span className="italic">No group description. Click to add one.</span>
+                                  {(profileData as ProfileGroup)
+                                    .description || (
+                                    <span className="italic">
+                                      No group description. Click to add one.
+                                    </span>
                                   )}
                                 </span>
                                 <Pencil className="w-3 h-3 text-muted-foreground opacity-70 hover:opacity-100 transition-opacity ml-2" />
@@ -1257,11 +1345,16 @@ export function ProfileSidebar({
                         ) : profileType === 'group' ? (
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-muted-foreground">Description</span>
+                              <span className="text-xs text-muted-foreground">
+                                Description
+                              </span>
                               {!isEditingDescription && (
                                 <button
                                   onClick={() => {
-                                    setEditingDescription((profileData as ProfileGroup).description || '');
+                                    setEditingDescription(
+                                      (profileData as ProfileGroup)
+                                        .description || '',
+                                    );
                                     setIsEditingDescription(true);
                                   }}
                                   className="p-1 hover:bg-gray-100 rounded-full"
@@ -1276,7 +1369,9 @@ export function ProfileSidebar({
                                 <textarea
                                   className="w-full p-2 border rounded text-sm min-h-[80px]"
                                   value={editingDescription}
-                                  onChange={(e) => setEditingDescription(e.target.value)}
+                                  onChange={(e) =>
+                                    setEditingDescription(e.target.value)
+                                  }
                                   placeholder="Enter group description..."
                                 />
                                 <div className="flex justify-end space-x-2">
@@ -1294,7 +1389,10 @@ export function ProfileSidebar({
                                     size="sm"
                                     onClick={() => {
                                       setIsEditingDescription(false);
-                                      setEditingDescription((profileData as ProfileGroup).description || '');
+                                      setEditingDescription(
+                                        (profileData as ProfileGroup)
+                                          .description || '',
+                                      );
                                     }}
                                   >
                                     Cancel
@@ -1303,7 +1401,8 @@ export function ProfileSidebar({
                               </div>
                             ) : (
                               <p className="text-sm">
-                                {(profileData as ProfileGroup).description || 'No description provided'}
+                                {(profileData as ProfileGroup).description ||
+                                  'No description provided'}
                               </p>
                             )}
                           </div>
@@ -1324,7 +1423,8 @@ export function ProfileSidebar({
                               Last Seen
                             </span>
                             <p className="text-sm">
-                              {(profileData as ProfileUser).lastSeen || 'Unknown'}
+                              {(profileData as ProfileUser).lastSeen ||
+                                'Unknown'}
                             </p>
                           </div>
                         </div>
@@ -1416,13 +1516,13 @@ export function ProfileSidebar({
                       <CardHeader>
                         <CardTitle className="text-base">
                           Members (
-                          {(profileData as ProfileGroup).members.length})
+                          {(profileData as ProfileGroup)?.members?.length || 0})
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <ScrollArea className="max-h-80 px-4 overflow-y-auto">
                           <ul className="space-y-1 py-2">
-                            {(profileData as ProfileGroup).members.map(
+                            {((profileData as ProfileGroup)?.members || []).map(
                               (member) => (
                                 <li
                                   key={member.id}
@@ -1475,12 +1575,15 @@ export function ProfileSidebar({
                                             title: 'Confirm Removal',
                                             description: `Are you sure you want to remove ${member.userName} from the group?`,
                                             onConfirm: async () => {
-                                              await handleConfirmRemoveMember(member.id);
+                                              await handleConfirmRemoveMember(
+                                                member.id,
+                                              );
                                             },
                                             confirmButtonText: 'Remove Member',
-                                            confirmButtonVariant: 'destructive' as const,
+                                            confirmButtonVariant:
+                                              'destructive' as const,
                                             onCancel: () => {},
-                                            cancelButtonText: 'Cancel'
+                                            cancelButtonText: 'Cancel',
                                           });
                                           setIsConfirmDialogOpen(true);
                                         }}
@@ -1566,7 +1669,8 @@ export function ProfileSidebar({
                           onClick={() => {
                             setConfirmDialogProps({
                               title: 'Leave Group',
-                              description: 'Are you sure you want to leave this group?',
+                              description:
+                                'Are you sure you want to leave this group?',
                               onConfirm: async () => {
                                 try {
                                   if (
@@ -1583,7 +1687,7 @@ export function ProfileSidebar({
                                     if (!groupDoc.exists()) {
                                       throw new Error('Group not found');
                                     }
-                                    
+
                                     await updateDoc(groupRef, {
                                       [`participantDetails.${user.uid}`]:
                                         deleteField(),
@@ -1613,7 +1717,7 @@ export function ProfileSidebar({
                               confirmButtonText: 'Leave',
                               confirmButtonVariant: 'destructive' as const,
                               onCancel: () => {},
-                              cancelButtonText: 'Cancel'
+                              cancelButtonText: 'Cancel',
                             });
                             setIsConfirmDialogOpen(true);
                           }}
@@ -1638,9 +1742,10 @@ export function ProfileSidebar({
                                         (profileData as ProfileGroup).id,
                                       ),
                                     confirmButtonText: 'Yes, Delete This Group',
-                                    confirmButtonVariant: 'destructive' as const,
+                                    confirmButtonVariant:
+                                      'destructive' as const,
                                     onCancel: () => {},
-                                    cancelButtonText: 'Cancel'
+                                    cancelButtonText: 'Cancel',
                                   });
                                   setIsConfirmDialogOpen(true);
                                 }
@@ -1728,6 +1833,6 @@ export function ProfileSidebar({
       )}
     </Sheet>
   );
-}
+};
 
 export default ProfileSidebar;
