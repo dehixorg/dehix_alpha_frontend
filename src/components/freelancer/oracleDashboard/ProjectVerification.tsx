@@ -1,17 +1,9 @@
 'use client';
-import { Filter, PackageOpen } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-// import dummyData from '@/dummydata.json';
+import { CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -38,25 +30,25 @@ interface ProjectData {
 const ProjectVerification = () => {
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleFilterChange = (newFilter: FilterOption) => {
-    setFilter(newFilter);
-    setIsDialogOpen(false);
-  };
+  const handleFilterChange = useCallback(
+    (newFilter: FilterOption) => setFilter(newFilter),
+    [],
+  );
 
-  const filteredData = projectData.filter((data) => {
-    if (filter === 'all') {
-      return true;
-    }
-    return (
-      data.verificationStatus === filter ||
-      (filter === 'current' && data.verificationStatus === StatusEnum.PENDING)
-    );
-  });
+  const filteredData = useMemo(() => {
+    return projectData.filter((data) => {
+      if (filter === 'all') return true;
+      if (filter === 'current')
+        return data.verificationStatus === StatusEnum.PENDING;
+      return data.verificationStatus === filter;
+    });
+  }, [projectData, filter]);
 
   const fetchData = useCallback(async () => {
     try {
+      setLoading(true);
       const response = await axiosInstance.get(
         `/verification/oracle?doc_type=project`,
       );
@@ -75,6 +67,8 @@ const ProjectVerification = () => {
       setProjectData(flattenedData);
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -82,106 +76,128 @@ const ProjectVerification = () => {
     fetchData();
   }, [fetchData]);
 
-  const updateProjectStatus = (index: number, newStatus: string) => {
-    const updatedData = [...projectData];
-    updatedData[index].verificationStatus = newStatus;
-    setProjectData(updatedData); // Assuming you set this in state
-  };
+  const updateProjectStatus = useCallback(
+    (index: number, newStatus: string) => {
+      setProjectData((prev) => {
+        const next = [...prev];
+        if (next[index]) next[index].verificationStatus = newStatus;
+        return next;
+      });
+    },
+    [],
+  );
 
-  const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...projectData];
-    updatedData[index].comments = newComment;
-    setProjectData(updatedData);
-  };
+  const updateCommentStatus = useCallback(
+    (index: number, newComment: string) => {
+      setProjectData((prev) => {
+        const next = [...prev];
+        if (next[index]) next[index].comments = newComment;
+        return next;
+      });
+    },
+    [],
+  );
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <div className="mb-8 flex justify-between items-center">
-        <div className="mb-8 ">
-          <h1 className="text-3xl font-bold">Project Verification</h1>
-          <p className="text-gray-400 mt-2">
-            Monitor the status of your project verifications.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          className="mr-8 mb-12"
-          onClick={() => setIsDialogOpen(true)}
-        >
-          <Filter className="h-4 w-4" />
-        </Button>
+    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+      <div className="flex flex-col gap-2 p-6 pb-4">
+        <h1 className="text-2xl font-bold tracking-tight">
+          Project Verification
+        </h1>
+        <p className="text-muted-foreground">
+          Monitor the status of your project verifications.
+        </p>
       </div>
+      <Tabs
+        value={filter}
+        onValueChange={(v) => handleFilterChange(v as FilterOption)}
+      >
+        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap">
+          <TabsList className="bg-transparent h-12 p-0">
+            <TabsTrigger
+              value="all"
+              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            >
+              All
+            </TabsTrigger>
+            <TabsTrigger
+              value="current"
+              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            >
+              Pending
+            </TabsTrigger>
+            <TabsTrigger
+              value="verified"
+              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            >
+              Verified
+            </TabsTrigger>
+            <TabsTrigger
+              value="rejected"
+              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            >
+              Rejected
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Filter Project Status</DialogTitle>
-          </DialogHeader>
-          <RadioGroup
-            defaultValue="all"
-            value={filter}
-            onValueChange={(value: FilterOption) => handleFilterChange(value)}
-            className="space-y-2"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="all" id="filter-all" />
-              <label htmlFor="filter-all">All</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="current" id="filter-current" />
-              <label htmlFor="filter-current">Pending</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="verified" id="filter-verified" />
-              <label htmlFor="filter-verified">Verified</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="rejected" id="filter-rejected" />
-              <label htmlFor="filter-rejected">Rejected</label>
-            </div>
-          </RadioGroup>
-          <DialogFooter>
-            <Button type="button" onClick={() => setIsDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-        {filteredData.map((data, index) => (
-          <ProjectVerificationCard
-            key={index}
-            _id={data._id}
-            projectName={data.projectName}
-            description={data.description}
-            githubLink={data.githubLink}
-            startFrom={data.start}
-            endTo={data.end}
-            role={data.role}
-            projectType={data.projectType}
-            reference={data.refer}
-            techUsed={data.techUsed}
-            comments={data.comments}
-            status={data.verificationStatus}
-            onStatusUpdate={(newStatus) =>
-              updateProjectStatus(index, newStatus)
-            }
-            onCommentUpdate={(newComment) =>
-              updateCommentStatus(index, newComment)
-            }
-          />
-        ))}
-        {projectData.length === 0 ? (
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Project verification for you now.
-            </p>
-          </div>
-        ) : null}
-      </main>
+        {(['all', 'current', 'verified', 'rejected'] as FilterOption[]).map(
+          (t) => (
+            <TabsContent key={t} value={t}>
+              <CardContent>
+                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                  {loading ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="rounded-lg border bg-card p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <Skeleton className="h-10 w-10 rounded-full" />
+                          <div className="space-y-2 w-full">
+                            <Skeleton className="h-4 w-2/3" />
+                            <Skeleton className="h-3 w-1/2" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-5/6 mb-2" />
+                        <Skeleton className="h-8 w-24" />
+                      </div>
+                    ))
+                  ) : filteredData.length > 0 ? (
+                    filteredData.map((data, index) => (
+                      <ProjectVerificationCard
+                        key={index}
+                        _id={data._id}
+                        projectName={data.projectName}
+                        description={data.description}
+                        githubLink={data.githubLink}
+                        startFrom={data.start}
+                        endTo={data.end}
+                        role={data.role}
+                        projectType={data.projectType}
+                        reference={data.refer}
+                        techUsed={data.techUsed}
+                        comments={data.comments}
+                        status={data.verificationStatus}
+                        onStatusUpdate={(newStatus) =>
+                          updateProjectStatus(index, newStatus)
+                        }
+                        onCommentUpdate={(newComment) =>
+                          updateCommentStatus(index, newComment)
+                        }
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center w-full col-span-full mt-10 py-10">
+                      <p className="text-sm text-muted-foreground">
+                        No Project verification found.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </TabsContent>
+          ),
+        )}
+      </Tabs>
     </div>
   );
 };
