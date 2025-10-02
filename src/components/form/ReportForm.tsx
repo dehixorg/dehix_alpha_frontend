@@ -107,6 +107,7 @@ export function ReportForm({
       }
     } catch (error) {
       console.error('Failed to submit report:', error);
+
       // Show error toast
       toast({
         title: 'Failed to Submit Report',
