@@ -9,9 +9,10 @@ import {
   Search,
   Users2,
   XCircle,
-  ChevronDown,
+  Sliders
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
+
 
 import TalentContent from './TalentContent';
 import Header from '../header/header';
@@ -29,7 +30,6 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ import { toast } from '@/components/ui/use-toast';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
+
 
 interface ProfessionalExperience {
   workFrom?: string;
@@ -99,7 +100,6 @@ export const calculateExperience = (
 
 const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   const router = useRouter();
-  const [activePage, setActivePage] = useState('Talent');
   const user = useSelector((state: RootState) => state.user);
   const businessId = user?.uid;
   const [talentData, setTalentData] = useState<TalentData>({
@@ -223,36 +223,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     [businessId, activeTab, constructQueryString],
   );
 
-  // MERGE SKILLS AND DOMAINS FETCHING INTO A SINGLE EFFECT
-  // useEffect(() => {
-  //   const fetchFilterData = async () => {
-  //     try {
-  //       const [skillsResponse, domainsResponse] = await Promise.all([
-  //         axiosInstance.get('/skills'),
-  //         axiosInstance.get('/domain'),
-  //       ]);
-
-  //       const skillLabels = skillsResponse.data.data.map(
-  //         (skill: any) => skill.label,
-  //       );
-  //       const domainLabels = domainsResponse.data.data.map(
-  //         (domain: any) => domain.label,
-  //       );
-
-  //       const combinedLabels = [...skillLabels, ...domainLabels];
-  //       setAllSkillsAndDomains(combinedLabels);
-  //     } catch (error) {
-  //       toast({
-  //         variant: 'destructive',
-  //         title: 'Error',
-  //         description: 'Failed to load filter options.',
-  //       });
-  //       console.error('Error fetching filter data:', error);
-  //     }
-  //   };
-  //   fetchFilterData();
-  //   fetchData(filters);
-  // }, [activeTab, filters, fetchData]);
+ 
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
@@ -279,7 +250,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   }, [activeTab, filters, fetchData]);
 
   const handleTabChange = (value: string) => {
-    router.push(`/business/market/${value}`);
+    router.push(`/business/talent/${value}`);
   };
 
   const handleApplyFilters = () => {
@@ -298,12 +269,11 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   console.log('these are all skills and domain', allSkillsAndDomains);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex min-h-screen w-full flex-col overflow-auto">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active={activePage}
-        setActive={setActivePage}
+        active=''
       />
       <div className="sm:ml-14 flex flex-col min-h-screen">
         <Header
@@ -312,7 +282,8 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
           activeMenu="Market"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
-            { label: 'Talent Management', link: '#' },
+            { label: 'Hire Talent', link: '#' },
+            { label: activeTab, link: '#' },
           ]}
         />
         <header className="border-b">
@@ -323,7 +294,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
+                  <Sliders className="h-4 w-4" />
                   Filters
                 </Button>
               </SheetTrigger>

@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
 
-import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { apiHelperService } from '@/services/report';
 import { apiHelperService as profileService } from '@/services/profilepic';
+import { RootState } from '@/lib/store';
 
 const reportSchema = z.object({
   subject: z.string().min(3, { message: 'Subject is required' }),
@@ -70,6 +71,8 @@ export function ReportForm({
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const user = useSelector((state: RootState) => state.user);
+
   const onSubmit = async (data: ReportFormValues) => {
     try {
       setIsSubmitting(true);
@@ -83,7 +86,7 @@ export function ReportForm({
 
       const finalPayload = {
         ...data,
-        reportedById: initialData.reportedId,
+        reportedById: user?.uid,
         status: 'OPEN',
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
@@ -98,7 +101,7 @@ export function ReportForm({
   };
 
   return (
-    <Card className="rounded-lg border-none shadow-none bg-transparent p-1">
+    <div className="rounded-lg border-none shadow-none p-1">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* 🧾 Subject, Report Type & Role in One Row */}
@@ -300,6 +303,6 @@ export function ReportForm({
           </Button>
         </form>
       </Form>
-    </Card>
+    </div>
   );
 }
