@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -25,11 +25,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import {
-  Dropzone,
-  DropzoneEmptyState,
-  DropzoneContent,
-} from '@/components/ui/shadcn-io/dropzone';
+import ImageUploader from '@/components/fileUpload/ImageUploader';
 
 const profileFormSchema = z.object({
   aadharOrGovtId: z.string().optional(),
@@ -87,48 +83,10 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   const [frontPreview, setFrontPreview] = useState<string>('');
   const [backPreview, setBackPreview] = useState<string>('');
   const [selfiePreview, setSelfiePreview] = useState<string>('');
-  // Instant local previews for Step 1 Dropzones
-  const [frontLocalPreview, setFrontLocalPreview] = useState<string>('');
-  const [backLocalPreview, setBackLocalPreview] = useState<string>('');
-  // Files arrays for Dropzone src (to mirror example behavior)
-  const [frontFiles, setFrontFiles] = useState<File[] | undefined>(undefined);
-  const [backFiles, setBackFiles] = useState<File[] | undefined>(undefined);
   const frontUrlRef = useRef<string | null>(null);
   const backUrlRef = useRef<string | null>(null);
   const liveUrlRef = useRef<string | null>(null);
 
-  // Keep Step 1 local previews in sync if the form already has a File value
-  useEffect(() => {
-    const seedLocalPreview = (val: any, set: (v: string) => void) => {
-      if (typeof File !== 'undefined' && val instanceof File) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (typeof e.target?.result === 'string') set(e.target.result);
-        };
-        reader.readAsDataURL(val);
-      } else if (typeof val === 'string') {
-        // When switching from string URL mode to Dropzone mode, keep local preview empty
-        set('');
-      } else if (!val) {
-        set('');
-      }
-    };
-
-    seedLocalPreview(form.getValues('frontImageUrl'), setFrontLocalPreview);
-    seedLocalPreview(form.getValues('backImageUrl'), setBackLocalPreview);
-
-    const sub = form.watch((values: any, meta: any) => {
-      if (!meta) return;
-      if (meta.name === 'frontImageUrl') {
-        seedLocalPreview(values?.frontImageUrl, setFrontLocalPreview);
-      } else if (meta.name === 'backImageUrl') {
-        seedLocalPreview(values?.backImageUrl, setBackLocalPreview);
-      }
-    });
-    return () => {
-      if (sub && typeof sub.unsubscribe === 'function') sub.unsubscribe();
-    };
-  }, [form]);
 
   // Keep preview URLs in sync with form values and manage blob URL lifecycle
   useEffect(() => {
@@ -609,82 +567,17 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                       name="frontImageUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Front Image</FormLabel>
                           <FormControl>
-                            <div className="flex flex-col items-center gap-4">
-                              {field.value &&
-                              typeof field.value === 'string' ? (
-                                <div className="relative">
-                                  <Image
-                                    src={field.value}
-                                    alt="Front Document"
-                                    width={260}
-                                    height={160}
-                                    className="rounded-lg object-contain border shadow-sm"
-                                  />
-                                  <Button
-                                    type="button"
-                                    size="icon"
-                                    variant="secondary"
-                                    className="absolute top-2 right-2 rounded-full shadow"
-                                    onClick={() => {
-                                      field.onChange(null);
-                                      setFrontLocalPreview('');
-                                      setFrontFiles(undefined);
-                                    }}
-                                    aria-label="Change front image"
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ) : (
-                                <Dropzone
-                                  maxSize={5 * 1024 * 1024}
-                                  minSize={1}
-                                  maxFiles={1}
-                                  accept={{
-                                    'image/*': ['.png', '.jpg', '.jpeg'],
-                                  }}
-                                  src={frontFiles}
-                                  onDrop={async (accepted) => {
-                                    const file = accepted?.[0];
-                                    if (file) {
-                                      field.onChange(file);
-                                      setFrontFiles(accepted);
-                                      const reader = new FileReader();
-                                      reader.onload = (e) => {
-                                        if (
-                                          typeof e.target?.result === 'string'
-                                        ) {
-                                          setFrontLocalPreview(e.target.result);
-                                        }
-                                      };
-                                      reader.readAsDataURL(file);
-                                    } else {
-                                      setFrontFiles(undefined);
-                                      setFrontLocalPreview('');
-                                    }
-                                  }}
-                                  onError={() => {}}
-                                  className="w-full"
-                                >
-                                  <DropzoneEmptyState />
-                                  <DropzoneContent>
-                                    {frontLocalPreview && (
-                                      <div className="h-[102px] w-full relative">
-                                        <Image
-                                          alt="Preview"
-                                          className="absolute top-0 left-0 h-full w-full object-cover"
-                                          src={frontLocalPreview}
-                                          width={260}
-                                          height={260}
-                                        />
-                                      </div>
-                                    )}
-                                  </DropzoneContent>
-                                </Dropzone>
-                              )}
-                            </div>
+                            <ImageUploader
+                              label="Front Image"
+                              value={field.value}
+                              onChange={field.onChange}
+                              accept={{
+                                'image/*': ['.png', '.jpg', '.jpeg'],
+                              }}
+                              maxSize={5 * 1024 * 1024}
+                              previewHeight={160}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -696,82 +589,17 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                       name="backImageUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Back Image</FormLabel>
                           <FormControl>
-                            <div className="flex flex-col items-center gap-4">
-                              {field.value &&
-                              typeof field.value === 'string' ? (
-                                <div className="relative">
-                                  <Image
-                                    src={field.value}
-                                    alt="Back Document"
-                                    width={260}
-                                    height={160}
-                                    className="rounded-lg object-contain border shadow-sm"
-                                  />
-                                  <Button
-                                    type="button"
-                                    size="icon"
-                                    variant="secondary"
-                                    className="absolute top-2 right-2 rounded-full shadow"
-                                    onClick={() => {
-                                      field.onChange(null);
-                                      setBackLocalPreview('');
-                                      setBackFiles(undefined);
-                                    }}
-                                    aria-label="Change back image"
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ) : (
-                                <Dropzone
-                                  maxSize={5 * 1024 * 1024}
-                                  minSize={1}
-                                  maxFiles={1}
-                                  accept={{
-                                    'image/*': ['.png', '.jpg', '.jpeg'],
-                                  }}
-                                  src={backFiles}
-                                  onDrop={async (accepted) => {
-                                    const file = accepted?.[0];
-                                    if (file) {
-                                      field.onChange(file);
-                                      setBackFiles(accepted);
-                                      const reader = new FileReader();
-                                      reader.onload = (e) => {
-                                        if (
-                                          typeof e.target?.result === 'string'
-                                        ) {
-                                          setBackLocalPreview(e.target.result);
-                                        }
-                                      };
-                                      reader.readAsDataURL(file);
-                                    } else {
-                                      setBackFiles(undefined);
-                                      setBackLocalPreview('');
-                                    }
-                                  }}
-                                  onError={() => {}}
-                                  className="w-full"
-                                >
-                                  <DropzoneEmptyState />
-                                  <DropzoneContent>
-                                    {backLocalPreview && (
-                                      <div className="h-[102px] w-full relative">
-                                        <Image
-                                          alt="Preview"
-                                          className="absolute top-0 left-0 h-full w-full object-cover"
-                                          src={backLocalPreview}
-                                          width={260}
-                                          height={260}
-                                        />
-                                      </div>
-                                    )}
-                                  </DropzoneContent>
-                                </Dropzone>
-                              )}
-                            </div>
+                            <ImageUploader
+                              label="Back Image"
+                              value={field.value}
+                              onChange={field.onChange}
+                              accept={{
+                                'image/*': ['.png', '.jpg', '.jpeg'],
+                              }}
+                              maxSize={5 * 1024 * 1024}
+                              previewHeight={160}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

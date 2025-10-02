@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { FileText, History as HistoryIcon } from 'lucide-react';
@@ -26,11 +27,14 @@ import {
   menuItemsBottom as businessMenuItemsBottom,
 } from '@/config/menuItems/business/settingsMenuItems';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { notifySuccess } from '@/utils/toastMessage';
 
 export default function NewReportPage() {
   const user = useSelector((state: RootState) => state.user);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState('new');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // NEW: Determine role-specific configurations
   const isBusinessRole = user.type === 'business';
@@ -71,6 +75,17 @@ export default function NewReportPage() {
     reportedId: reportInfo.reportedbyId,
   };
 
+  const handleReportSubmitted = async () => {
+    notifySuccess('Report submitted successfully!', 'Success');
+    
+    // Small delay to ensure backend has processed the report
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    
+    setActiveTab('history');
+    setRefreshKey((prev) => prev + 1);
+    return true;
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
@@ -102,7 +117,7 @@ export default function NewReportPage() {
 
             {/* Main Content */}
             <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-              <Tabs defaultValue="new" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <div className="border-b px-6">
                   <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
                     <TabsTrigger
@@ -130,7 +145,7 @@ export default function NewReportPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <NewReportTab reportData={reportData} />
+                    <NewReportTab reportData={reportData} onSubmitted={handleReportSubmitted} />
                   </CardContent>
                 </TabsContent>
 
@@ -142,7 +157,7 @@ export default function NewReportPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <PastReportsTab />
+                    <PastReportsTab key={refreshKey} />
                   </CardContent>
                 </TabsContent>
               </Tabs>

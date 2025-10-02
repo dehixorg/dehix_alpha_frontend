@@ -2,7 +2,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import Image from 'next/image';
 import { useSelector } from 'react-redux';
 
 import { Label } from '@/components/ui/label';
@@ -27,6 +26,7 @@ import {
 import { apiHelperService } from '@/services/report';
 import { apiHelperService as profileService } from '@/services/profilepic';
 import { RootState } from '@/lib/store';
+import ImageUploader from '@/components/fileUpload/ImageUploader';
 
 const reportSchema = z.object({
   subject: z.string().min(3, { message: 'Subject is required' }),
@@ -56,19 +56,15 @@ export function ReportForm({
   onSubmitted,
 }: {
   initialData: ReportFormValues;
-  onSubmitted?: () => boolean;
+  onSubmitted?: () => boolean | Promise<boolean>;
 }) {
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
     defaultValues: initialData,
   });
-  const removeImage = (index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const [fileError, setFileError] = useState<string | null>(null);
-
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [image1, setImage1] = useState<File | string | null>(null);
+  const [image2, setImage2] = useState<File | string | null>(null);
+  const [image3, setImage3] = useState<File | string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const user = useSelector((state: RootState) => state.user);
@@ -78,10 +74,50 @@ export function ReportForm({
       setIsSubmitting(true);
 
       const imageMetaArray = [];
+      const images = [image1, image2, image3].filter(
+        (img) => img && img instanceof File,
+      ) as File[];
 
-      for (const file of imageFiles.slice(0, 3)) {
-        const response = await profileService.uploadProfilePicture(file);
-        imageMetaArray.push(response.data.data);
+      // Upload images if any are selected
+      if (images.length > 0) {
+        console.log(`Uploading ${images.length} images...`);
+        
+        for (let i = 0; i < images.length; i++) {
+          const file = images[i];
+          try {
+            console.log(`Uploading image ${i + 1}/${images.length}:`, file.name);
+            
+            // Try using the report service upload
+            const response = await apiHelperService.uploadReportImage(file);
+            console.log(`Image ${i + 1} upload response:`, response);
+            
+            // Check if response has the correct structure
+            if (response?.data?.data) {
+              const imageData = response.data.data;
+              console.log('Image data received:', imageData);
+              
+              // Validate required fields
+              if (imageData.Location && imageData.Key && imageData.Bucket) {
+                imageMetaArray.push({
+                  Location: imageData.Location,
+                  Key: imageData.Key,
+                  Bucket: imageData.Bucket,
+                });
+                console.log(`Image ${i + 1} uploaded successfully`);
+              } else {
+                console.warn(`Image ${i + 1} missing required fields:`, imageData);
+              }
+            } else {
+              console.warn(`Image ${i + 1} invalid response structure:`, response);
+            }
+          } catch (uploadError: any) {
+            console.error(`Failed to upload image ${i + 1}:`, uploadError);
+            console.error('Upload error details:', uploadError?.response?.data || uploadError);
+            // Continue with other images instead of failing completely
+          }
+        }
+        
+        console.log('Final imageMeta array:', imageMetaArray);
       }
 
       const finalPayload = {
@@ -91,10 +127,20 @@ export function ReportForm({
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
 
-      await apiHelperService.createReport(finalPayload);
-      onSubmitted?.();
-    } catch (error) {
+      console.log('Submitting report with payload:', finalPayload);
+      const response = await apiHelperService.createReport(finalPayload);
+      console.log('Report created successfully:', response);
+      
+      // Reset form after successful submission
+      form.reset();
+      setImage1(null);
+      setImage2(null);
+      setImage3(null);
+      
+      await onSubmitted?.();
+    } catch (error: any) {
       console.error('Failed to submit report:', error);
+      console.error('Error details:', error?.response?.data || error);
     } finally {
       setIsSubmitting(false);
     }
@@ -225,73 +271,32 @@ export function ReportForm({
           {/* 🖼 Image Upload */}
           <FormItem>
             <Label>Upload Screenshots (up to 3)</Label>
-            <FormControl>
-              <Input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => {
-                  const files = e.target.files
-                    ? Array.from(e.target.files)
-                    : [];
-                  if (files.length > 3) {
-                    setFileError('You can only upload up to 3 images.');
-                    setImageFiles([]);
-                  } else {
-                    setFileError(null);
-                    setImageFiles(files);
-                  }
-                }}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+              <ImageUploader
+                label="Screenshot 1"
+                value={image1}
+                onChange={setImage1}
+                accept={{ 'image/*': ['.png', '.jpg', '.jpeg'] }}
+                maxSize={5 * 1024 * 1024}
+                previewHeight={160}
               />
-            </FormControl>
-
-            {/* 🔴 File error message */}
-            {fileError && (
-              // CHANGE 2: Used `text-destructive` for error messages.
-              <p className="text-sm text-destructive mt-1">{fileError}</p>
-            )}
-
-            {/* 🖼 Image Preview with Delete and View */}
-            {/* 🖼 Image Preview with Delete and View */}
-            {imageFiles.length > 0 && (
-              <div className="mt-3 flex gap-4 flex-wrap">
-                {imageFiles.map((file, idx) => {
-                  const imageUrl = URL.createObjectURL(file);
-                  return (
-                    <div
-                      key={idx}
-                      className="relative w-24 h-24 border rounded-md overflow-hidden group"
-                    >
-                      <a
-                        href={imageUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {/* ✅ FIX: Added the `fill` prop and removed `className` */}
-                        <Image
-                          src={imageUrl}
-                          alt={`screenshot-${idx}`}
-                          fill
-                          sizes="96px" // Tells browser the image is 96px wide
-                          className="object-cover" // Keep object-cover for correct scaling
-                        />
-                      </a>
-
-                      {/* ❌ Cancel Button (no changes here) */}
-                      <button
-                        type="button"
-                        onClick={() => removeImage(idx)}
-                        className="absolute top-1 right-1 bg-background rounded-full p-1 text-destructive hover:bg-accent transition"
-                        title="Remove"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
+              <ImageUploader
+                label="Screenshot 2"
+                value={image2}
+                onChange={setImage2}
+                accept={{ 'image/*': ['.png', '.jpg', '.jpeg'] }}
+                maxSize={5 * 1024 * 1024}
+                previewHeight={160}
+              />
+              <ImageUploader
+                label="Screenshot 3"
+                value={image3}
+                onChange={setImage3}
+                accept={{ 'image/*': ['.png', '.jpg', '.jpeg'] }}
+                maxSize={5 * 1024 * 1024}
+                previewHeight={160}
+              />
+            </div>
             <FormDescription>
               Attach up to 3 optional screenshots of the issue.
             </FormDescription>
