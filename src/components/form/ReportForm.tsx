@@ -94,7 +94,6 @@ export function ReportForm({
       };
 
       await apiHelperService.createReport(finalPayload);
-      
       // Show success toast
       toast({
         title: 'Report Submitted Successfully',
@@ -102,14 +101,12 @@ export function ReportForm({
           'Thank you for your report. We will review it and take appropriate action.',
         variant: 'default',
       });
-      
       // Call the onSubmitted callback to close dialog
       if (onSubmitted) {
         onSubmitted();
       }
     } catch (error) {
       console.error('Failed to submit report:', error);
-      
       // Show error toast
       toast({
         title: 'Failed to Submit Report',
