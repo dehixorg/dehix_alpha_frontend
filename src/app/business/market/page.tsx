@@ -44,7 +44,12 @@ const Market: React.FC = () => {
     minRate: '',
     maxRate: '',
   });
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return false;
+  });
 
   const handleFilterChange = (updates: Partial<FilterState>) => {
     setFilters((prev) => ({

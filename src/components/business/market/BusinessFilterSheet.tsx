@@ -9,6 +9,7 @@ import type { BusinessFilterState } from './BusinessFilterComponent';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface BusinessFilterSheetProps {
   filters: BusinessFilterState;
@@ -53,21 +54,20 @@ export function BusinessFilterSheet({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent
-        side="right"
-        className="w-[350px] sm:w-[400px] p-0 flex flex-col"
-      >
-        <BusinessFilterComponent
-          filters={filters}
-          onFilterChange={onFilterChange}
-          activeFilterCount={activeFilterCount}
-          skills={skills}
-          domains={domains}
-          experiences={experiences}
-          jobTypes={jobTypes}
-          locations={locations}
-          onReset={handleReset}
-        />
+      <SheetContent side="right" className="w-full sm:max-w-md p-0">
+        <ScrollArea className="h-full">
+          <BusinessFilterComponent
+            filters={filters}
+            onFilterChange={onFilterChange}
+            activeFilterCount={activeFilterCount}
+            skills={skills}
+            domains={domains}
+            experiences={experiences}
+            jobTypes={jobTypes}
+            locations={locations}
+            onReset={handleReset}
+          />
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );

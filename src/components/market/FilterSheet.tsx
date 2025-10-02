@@ -1,6 +1,6 @@
 'use client';
+import React, { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
-import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -38,8 +38,14 @@ export function FilterSheet({
   projectDomainSearchQuery,
   setProjectDomainSearchQuery,
 }: FilterSheetProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const handleResetAndClose = () => {
+    handleReset();
+    setIsOpen(false);
+  };
+
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" className="relative">
           <SlidersHorizontal className="h-4 w-4 mr-2" />
@@ -56,7 +62,7 @@ export function FilterSheet({
           <FilterComponent
             filters={filters}
             setFilters={setFilters}
-            handleReset={handleReset}
+            handleReset={handleResetAndClose}
             activeFilterCount={activeFilterCount}
             skills={skills}
             domains={domains}

@@ -141,11 +141,12 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Profiles
             </CardTitle>
-            {project?.profiles?.map((profile: any, index: number) => (
+            {(project?.profiles ?? []).map((profile: any, index: number) => (
               <ProjectProfileDetailCard
-                key={index}
+                key={profile?._id ?? profile?.domain_id ?? index}
                 className="w-full min-w-full p-4 shadow-md rounded-lg"
                 {...profile}
+                skills={profile?.skills ?? []}
               />
             ))}
           </div>

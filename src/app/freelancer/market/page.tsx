@@ -94,7 +94,14 @@ const Market: React.FC = () => {
     (state: RootState) => state.projectDraft.draftedProjects,
   );
   const dispatch = useDispatch();
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
+
+  const [isLargeScreen, setIsLargeScreen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return false;
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [domainSearchQuery, setDomainSearchQuery] = useState('');
   const [projectDomainSearchQuery, setProjectDomainSearchQuery] = useState('');
