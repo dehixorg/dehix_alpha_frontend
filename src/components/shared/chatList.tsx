@@ -108,7 +108,7 @@ export function ChatList({
   const formatLastMessage = (
     lastMessage: Conversation['lastMessage'],
   ): string => {
-    if (!lastMessage?.content) return 'No messages yet';
+    if (!lastMessage) return 'No messages yet';
     const content = lastMessage.content;
     const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
     // Check if content is an S3 URL
