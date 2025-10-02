@@ -6,7 +6,6 @@ import { Edit2, Save, Clock, X } from 'lucide-react';
 import { Note } from '@/utils/types/note';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
