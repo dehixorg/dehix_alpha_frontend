@@ -102,6 +102,87 @@ export function ChatList({
       .replace(/&nbsp;/g, ' ')
       .trim();
 
+  // Utility function to detect and format media messages
+  const formatLastMessage = (lastMessage: any): string => {
+    if (!lastMessage?.content) return 'No messages yet';
+    
+    const content = lastMessage.content;
+    const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
+    
+    // Check if content is an S3 URL
+    if (
+      typeof content === 'string' &&
+      s3BucketUrl &&
+      content.startsWith(s3BucketUrl)
+    ) {
+      try {
+        const url = new URL(content);
+        const fileName = decodeURIComponent(url.pathname.substring(1));
+        const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+        
+        // Check if it's a voice message based on the message type
+        if (lastMessage.voiceMessage) {
+          return '🎤 Voice message';
+        }
+        
+        // Check file extension for different media types
+        const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
+        const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
+        const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac'];
+        const documentExtensions = [
+          'pdf',
+          'doc',
+          'docx',
+          'ppt',
+          'pptx',
+          'xls',
+          'xlsx',
+          'txt',
+        ];
+        
+        if (imageExtensions.includes(fileExtension)) {
+          return '📷 Photo';
+        } else if (videoExtensions.includes(fileExtension)) {
+          return '🎥 Video';
+        } else if (audioExtensions.includes(fileExtension)) {
+          return '🎵 Audio';
+        } else if (documentExtensions.includes(fileExtension)) {
+          return '📄 Document';
+        } else {
+          return '📎 File';
+        }
+      } catch (error) {
+        console.error('Error parsing S3 URL:', error);
+        return '📎 Attachment';
+      }
+    }
+    
+    // Check if there are attachments
+    if (
+      lastMessage.attachments &&
+      Array.isArray(lastMessage.attachments) &&
+      lastMessage.attachments.length > 0
+    ) {
+      const attachment = lastMessage.attachments[0];
+      if (attachment.type) {
+        if (attachment.type.startsWith('image/')) {
+          return '📷 Photo';
+        } else if (attachment.type.startsWith('video/')) {
+          return '🎥 Video';
+        } else if (attachment.type.startsWith('audio/')) {
+          return '🎵 Audio';
+        } else {
+          return '📄 Document';
+        }
+      }
+      return '📎 File';
+    }
+    
+    // Return stripped HTML content for regular text messages
+    const textContent = stripHtml(content);
+    return textContent || 'Message';
+  };
+
   const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
     e.stopPropagation();
     if (!onOpenProfileSidebar) return;
@@ -197,12 +278,10 @@ export function ChatList({
           conversation.participants.find((p) => p !== currentUser.uid) || ''
         ]?.userName ||
         '';
-      const lastMessageContent = conversation.lastMessage?.content || '';
+      const lastMessageContent = formatLastMessage(conversation.lastMessage);
       return (
         name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stripHtml(lastMessageContent)
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
+        lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
       );
     });
 
@@ -328,10 +407,9 @@ export function ChatList({
                   const lastUpdated =
                     lastUpdatedTimes[conversation.id] || 'N/A';
                   const isActive = active?.id === conversation.id;
-                  const lastMessageText = stripHtml(
-                    conversation.lastMessage?.content || '',
+                  const displayText = formatLastMessage(
+                    conversation.lastMessage,
                   );
-                  const displayText = lastMessageText || 'No messages yet';
 
                   return (
                     <div
