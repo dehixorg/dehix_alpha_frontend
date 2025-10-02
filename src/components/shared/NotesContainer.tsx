@@ -51,7 +51,7 @@ const NotesContainer = ({
   const navItems = [
     {
       label: 'Edit',
-      icon: <EditIcon size={15} className="text-white-500" />,
+      icon: <EditIcon size={15} className='text-white' />,
       onClick: (noteId: string | undefined, notes: Note[]) => {
         setSelectedNote(notes.find((note) => note._id === noteId) || null);
       },

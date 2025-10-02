@@ -1,4 +1,3 @@
-// components/NoteCard.tsx
 import React from 'react';
 import { ArchiveRestoreIcon, RotateCwIcon, Trash2Icon } from 'lucide-react';
 
@@ -104,31 +103,35 @@ const NoteCard = ({
         </div>
       </CardContent>
 
-      {/* This is the new, corrected button menu section */}
-      <div className="absolute bottom-2 right-2 hidden group-hover:flex items-center gap-2 p-2 rounded-lg bg-white/50 backdrop-blur-sm shadow-md">
+      {/* Updated button menu section */}
+      <div className="absolute bottom-2 right-2 hidden group-hover:flex items-center gap-2 p-2 rounded-lg bg-white/50 backdrop-blur-sm shadow-md text-white">
         {isTrash ? (
           <>
             <RotateCwIcon
               size={18}
-              className="text-gray-700 cursor-pointer hover:text-blue-500 transition-colors"
+              className="text-white cursor-pointer hover:text-blue-500 transition-colors"
+              stroke="#ffffff"
               onClick={() => onUpdateNoteType(note._id, NoteType.NOTE)}
             />
             <Trash2Icon
               size={18}
-              className="text-gray-700 cursor-pointer hover:text-red-500 transition-colors"
+              className="text-white cursor-pointer hover:text-red-500 transition-colors"
+              stroke="#ffffff"
               onClick={() => onDeleteClick(note._id)}
             />
           </>
         ) : !isArchive ? (
           <ArchiveRestoreIcon
             size={18}
-            className="text-gray-700 cursor-pointer hover:text-blue-500 transition-colors"
+            className="text-white cursor-pointer hover:text-blue-500 transition-colors"
+            stroke="#ffffff"
             onClick={() => onUpdateNoteType(note._id, NoteType.ARCHIVE)}
           />
         ) : (
           <ArchiveRestoreIcon
             size={18}
-            className="text-gray-700 cursor-pointer hover:text-blue-500 transition-colors"
+            className="text-white cursor-pointer hover:text-blue-500 transition-colors"
+            stroke="#ffffff"
             onClick={() => onUpdateNoteType(note._id, NoteType.NOTE)}
           />
         )}

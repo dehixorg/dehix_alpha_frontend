@@ -53,18 +53,16 @@ const NotesHeader = ({
   };
 
   return (
-    <div>
-      <div className="mb-8 ml-6 mt-8 flex justify-between items-center">
+    <div className="px-6 pt-4 pb-6">
+      <div className="flex items-center justify-between pt-2">
         <div>
-          <h1 className="text-3xl font-bold">Notes</h1>
-          <p className="text-gray-400 mt-2 hidden md:block ">
-            Organize your thoughts and ideas. Add, view, and manage your
-            personal notes with ease.
+          <h1 className="text-2xl sm:text-3xl font-bold">Notes</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:hidden">
+            Organize your thoughts and ideas
           </p>
         </div>
         {!isTrash && (
-          <div className="mt-4 mr-5">
-            <div className="flex justify-center gap-5 items-center flex-wrap mt-4 sm:mt-0">
+          <div className="flex items-center gap-3">
               {/* Dropdown Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -104,13 +102,13 @@ const NotesHeader = ({
                   </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Create Dialog */}
-              {!isTrash && <CreateNoteDialog onNoteCreate={onNoteCreate} />}
+              <CreateNoteDialog onNoteCreate={onNoteCreate} />
             </div>
-          </div>
-        )}
+          )}
       </div>
+      <p className="text-gray-400 mt-2 hidden sm:block">
+        Organize your thoughts and ideas. Add, view, and manage your personal notes with ease.
+      </p>
     </div>
   );
 };
