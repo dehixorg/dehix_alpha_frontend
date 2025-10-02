@@ -1,20 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import {
-  collection,
-  query,
-  orderBy,
-  getDocs,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-  deleteField,
-  deleteDoc,
-  writeBatch,
-} from 'firebase/firestore';
 import {
   VolumeX,
   ShieldX,
@@ -25,7 +10,7 @@ import {
   LogOut,
   MinusCircle,
   LoaderCircle,
-  Pencil,
+  ChevronLeft,
 } from 'lucide-react';
 import {
   doc,
@@ -50,6 +35,7 @@ import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
+import { Conversation } from './chatList';
 
 // Simple file item type for shared files list
 export type FileItem = {
@@ -79,19 +65,12 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { CombinedUser } from '@/hooks/useAllUsers';
 
-export type FileItem = {
-  id: string;
-  name: string;
-  type: string;
-  size?: number | string;
-  url: string;
-};
-
-export interface ProfileUser {
+export type ProfileUser = {
   _id: string;
   id: string;
   userName: string;
@@ -99,11 +78,11 @@ export interface ProfileUser {
   email: string;
   profilePic?: string;
   bio?: string;
-  description?: string;
   displayName: string;
   status?: string;
   lastSeen?: string;
-}
+  mutedUsers?: string[];
+};
 
 export type ProfileGroupMember = {
   id: string;
@@ -113,12 +92,12 @@ export type ProfileGroupMember = {
 };
 
 export type ProfileGroup = {
+  _id: string;
   id: string;
   groupName: string;
   avatar?: string;
   description?: string;
   createdAt: string;
-  updatedAt?: string;
   members: ProfileGroupMember[];
   admins: string[];
   participantDetails?: {
@@ -128,6 +107,7 @@ export type ProfileGroup = {
   displayName: string;
   createdAtFormatted?: string;
   adminDetails?: ProfileUser[];
+  mutedUsers?: string[];
 };
 
 interface ProfileSidebarProps {
@@ -145,7 +125,6 @@ export function ProfileSidebar({
   onClose,
   profileId,
   profileType,
-  profileData: initialProfileData,
   initialData,
   onConversationUpdate,
 }: ProfileSidebarProps) {
@@ -156,8 +135,11 @@ export function ProfileSidebar({
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [, setSharedFiles] = useState<FileItem[]>([]);
+  const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(true);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [showAllMedia, setShowAllMedia] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
@@ -170,172 +152,6 @@ export function ProfileSidebar({
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
-
-  const handleEditBio = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    if (profileType === 'user') {
-      setEditingBio(value);
-    } else if (profileType === 'group') {
-      setEditingDescription(value);
-    }
-  };
-
-  const handleSaveBio = async () => {
-    if (profileType === 'user') {
-      await handleUpdateBio();
-    } else if (profileType === 'group') {
-      await handleUpdateDescription();
-    }
-  };
-
-  const handleCancelEditBio = () => {
-    if (!profileData) {
-      setIsEditingBio(false);
-      return;
-    }
-
-    if (profileType === 'user' && 'bio' in profileData) {
-      setEditingBio(profileData.bio || '');
-    } else if (profileType === 'group' && 'description' in profileData) {
-      setEditingDescription(profileData.description || '');
-    }
-
-    setIsEditingBio(false);
-  };
-
-  const handleUpdateDescription = async () => {
-    if (!profileId || !profileData || profileType !== 'group') {
-      console.error('Missing required data for updating group description:', {
-        profileId,
-        hasProfileData: !!profileData,
-        profileType,
-        isGroup: profileType === 'group',
-      });
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Missing required data to update group description.',
-      });
-      return;
-    }
-
-    try {
-      const conversationRef = doc(db, 'conversations', profileId);
-      const conversationDoc = await getDoc(conversationRef);
-      const trimmedDescription = editingDescription.trim();
-
-      if (conversationDoc.exists()) {
-        // Update Firestore
-        await updateDoc(conversationRef, {
-          description: trimmedDescription,
-          updatedAt: new Date().toISOString(),
-        });
-
-        // Update local state immediately
-        setProfileData((prev) => {
-          if (!prev || !('groupName' in prev)) return prev;
-          return {
-            ...prev,
-            description: trimmedDescription,
-            updatedAt: new Date().toISOString(),
-          } as ProfileGroup;
-        });
-
-        // Close the edit mode
-        setIsEditingDescription(false);
-
-        toast({
-          title: 'Description updated',
-          description: 'The group description has been updated successfully.',
-        });
-      } else {
-        // If conversation doesn't exist, this is an error since we expect it to exist
-        throw new Error('Group conversation not found');
-      }
-    } catch (error) {
-      console.error('Error updating group description:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update group description. Please try again.',
-      });
-    }
-  };
-
-  const handleUpdateBio = async () => {
-    if (!profileId || !profileData || profileType !== 'user') {
-      console.error('Missing required data for updating bio:', {
-        profileId,
-        hasProfileData: !!profileData,
-        profileType,
-        isUser: profileType === 'user',
-      });
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Missing required data to update bio.',
-      });
-      return;
-    }
-
-    try {
-      const conversationRef = doc(db, 'conversations', profileId);
-      const conversationDoc = await getDoc(conversationRef);
-
-      if (conversationDoc.exists()) {
-        await updateDoc(conversationRef, {
-          bio: editingBio.trim(),
-          updatedAt: new Date().toISOString(),
-        });
-      } else {
-        if (!profileId || !user?.uid) {
-          throw new Error('Missing required user or profile ID');
-        }
-
-        const participantDetails = {
-          [user.uid]: {
-            userName: user?.displayName || '',
-            profilePic: user?.photoURL || '',
-            email: user?.email || '',
-          },
-          [profileId]: {
-            userName: (profileData as ProfileUser)?.userName || '',
-            profilePic: (profileData as ProfileUser)?.profilePic || '',
-            email: (profileData as ProfileUser)?.email || '',
-          },
-        };
-
-        await setDoc(conversationRef, {
-          id: profileId,
-          type: 'private',
-          participants: [user.uid, profileId],
-          participantDetails,
-          bio: editingBio.trim(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-      }
-
-      setProfileData((prev) =>
-        prev ? { ...prev, bio: editingBio.trim() } : null,
-      );
-      setRefreshKey((prev) => prev + 1);
-      setIsEditingBio(false);
-
-      toast({
-        title: 'Success',
-        description: 'Bio updated successfully',
-      });
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to update bio',
-      });
-    }
-  };
 
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
@@ -353,6 +169,9 @@ export function ProfileSidebar({
       | undefined,
     isLoading: false,
   });
+
+  const { toast } = useToast();
+  const db = getFirestore();
 
   const internalFetchProfileData = async () => {
     setLoading(true);
@@ -378,46 +197,24 @@ export function ProfileSidebar({
     try {
       if (profileType === 'user' && profileId) {
         const response = await axiosInstance.get(`/freelancer/${profileId}`);
-        let userData: ProfileUser;
         if (response.data && response.data.data) {
-          userData = response.data.data as ProfileUser;
-        } else if (initialData) {
-          userData = {
-            _id: profileId,
+          const apiData = response.data.data as ProfileUser;
+          setProfileData({
+            ...apiData,
+            userName: initialData?.userName || apiData.userName,
+            email: initialData?.email || apiData.email,
+            profilePic: initialData?.profilePic || apiData.profilePic,
+            displayName:
+              initialData?.userName || apiData.userName || apiData.displayName,
             id: profileId,
-            userName: initialData.userName || '',
-            name: initialData.userName || '',
-            email: initialData.email || '',
-            profilePic: initialData.profilePic,
-            displayName: initialData.userName || '',
-            bio: undefined,
-            status: undefined,
-            lastSeen: undefined,
-          };
+            _id: apiData._id || profileId,
+            name: initialData?.userName || apiData.name || apiData.userName,
+          });
         } else {
-          throw new Error('User not found and no initial data provided');
+          if (!initialData) {
+            throw new Error('User not found and no initial data provided');
+          }
         }
-
-        const conversationRef = doc(db, 'conversations', profileId);
-        const conversationDoc = await getDoc(conversationRef);
-        let bio = userData.bio || '';
-        if (conversationDoc.exists()) {
-          const conversationData = conversationDoc.data();
-          bio = conversationData.bio || '';
-        }
-
-        setProfileData({
-          ...userData,
-          userName: initialData?.userName || userData.userName,
-          email: initialData?.email || userData.email,
-          profilePic: initialData?.profilePic || userData.profilePic,
-          displayName:
-            initialData?.userName || userData.userName || userData.displayName,
-          id: profileId,
-          _id: userData._id || profileId,
-          name: initialData?.userName || userData.name || userData.userName,
-          bio,
-        });
       } else if (profileType === 'group' && profileId) {
         const conversationDoc = await getDoc(
           doc(db, 'conversations', profileId),
@@ -435,13 +232,15 @@ export function ProfileSidebar({
               | 'offline',
           }));
 
+          const avatarUrl = initialData?.profilePic || groupData.avatar;
+
           setProfileData({
             _id: conversationDoc.id,
             id: conversationDoc.id,
             groupName: groupData.groupName || 'Unnamed Group',
             displayName: groupData.groupName || 'Unnamed Group',
             description: groupData.description || '',
-            avatar: initialData?.profilePic || groupData.avatar,
+            avatar: avatarUrl,
             createdAt: groupData.createdAt || new Date().toISOString(),
             members,
             admins: groupData.admins || [],
@@ -453,7 +252,7 @@ export function ProfileSidebar({
       }
     } catch (error: any) {
       console.error('Error fetching profile data:', error);
-      setError(error.message || 'Failed to load profile data');
+      setError('Failed to load profile data.');
     } finally {
       setLoading(false);
     }
@@ -680,9 +479,10 @@ export function ProfileSidebar({
     const groupDocRef = doc(db, 'conversations', groupId);
 
     try {
-      const batch = writeBatch(db);
-      const updates: any = {};
-      const memberUpdates: string[] = [];
+      const updates: any = {
+        participants: arrayUnion(...selectedUsers.map((user) => user.id)),
+        updatedAt: serverTimestamp(),
+      };
 
       selectedUsers.forEach((user) => {
         if (!user.id) return;
@@ -693,20 +493,9 @@ export function ProfileSidebar({
           profilePic: user.profilePic || null,
           userType: user.userType || 'user',
         };
-
-        memberUpdates.push(user.id);
       });
 
-      if (Object.keys(updates).length === 0) {
-        throw new Error('No valid users to add');
-      }
-
-      updates.members = arrayUnion(...memberUpdates);
-      updates.updatedAt = new Date().toISOString();
-
-      batch.update(groupDocRef, updates);
-      await batch.commit();
-
+      await updateDoc(groupDocRef, updates);
       setRefreshKey((prev) => prev + 1);
 
       toast({
@@ -720,7 +509,6 @@ export function ProfileSidebar({
         title: 'Error',
         description: 'Failed to add members. Please try again.',
       });
-      throw error;
     }
   };
 
@@ -752,7 +540,7 @@ export function ProfileSidebar({
       name?: string;
       project_name?: string;
       avatar?: string;
-      updatedAt?: string;
+      updatedAt?: string | FieldValue;
     } = {};
     if (newName.trim() !== currentGroupData?.displayName) {
       updateData.groupName = newName.trim();
@@ -775,7 +563,7 @@ export function ProfileSidebar({
       toast({ title: 'Info', description: 'No changes were made.' });
       return;
     }
-    updateData.updatedAt = new Date().toISOString();
+    updateData.updatedAt = serverTimestamp();
     try {
       await updateDoc(groupDocRef, updateData);
       toast({
@@ -808,14 +596,9 @@ export function ProfileSidebar({
     const newInviteLink = `https://your-app.com/join/${groupId}?inviteCode=${randomComponent}`;
     const groupDocRef = doc(db, 'conversations', groupId);
     try {
-      const groupDoc = await getDoc(groupDocRef);
-      if (!groupDoc.exists()) {
-        throw new Error('Group not found');
-      }
-
       await updateDoc(groupDocRef, {
         inviteLink: newInviteLink,
-        updatedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
       });
       toast({
         title: 'Success',
@@ -853,15 +636,10 @@ export function ProfileSidebar({
     }
     const groupDocRef = doc(db, 'conversations', profileId);
     try {
-      const groupDoc = await getDoc(groupDocRef);
-      if (!groupDoc.exists()) {
-        throw new Error('Group not found');
-      }
-
       await updateDoc(groupDocRef, {
         participants: arrayRemove(memberIdToRemove),
         [`participantDetails.${memberIdToRemove}`]: deleteField(),
-        updatedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
       });
       toast({ title: 'Success', description: 'Member removed successfully.' });
       setRefreshKey((prev) => prev + 1);
@@ -1019,250 +797,39 @@ export function ProfileSidebar({
     return data.displayName.charAt(0).toUpperCase();
   };
 
-  const isCurrentlyMuted =
-    profileType === 'group' &&
-    profileData &&
-    user?.mutedGroups?.includes((profileData as ProfileGroup).id);
-
-  let avatarSrc = '';
-  if (profileData) {
-    if (profileType === 'user') {
-      avatarSrc = (profileData as ProfileUser).profilePic || '';
-    } else if (profileType === 'group') {
-      const groupData = profileData as ProfileGroup;
-      avatarSrc =
-        groupData.participantDetails?.[groupData.id]?.profilePic ||
-        `https://api.adorable.io/avatars/285/group-${groupData.id}.png`;
-    }
+  if (showAllMedia) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent
+          className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
+          aria-labelledby="profile-sidebar-title"
+          aria-describedby="profile-sidebar-description"
+        >
+          <SheetHeader className="p-4 border-b border-[hsl(var(--border))] flex-row items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
+              onClick={() => setShowAllMedia(false)}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <SheetTitle
+              id="profile-sidebar-title"
+              className="text-[hsl(var(--card-foreground))]"
+            >
+              Shared Media
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="flex-1">
+            <div className="p-4">
+              <SharedMediaDisplay mediaItems={sharedMedia} isExpanded />
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+    );
   }
-
-  const GroupDescription = React.memo(
-    ({
-      profileData,
-      isEditing,
-      description,
-      onEdit,
-      onSave,
-      onCancel,
-      onStartEditing,
-    }: {
-      profileData: ProfileGroup | null;
-      isEditing: boolean;
-      description: string;
-      onEdit: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-      onSave: () => void;
-      onCancel: () => void;
-      onStartEditing: () => void;
-    }) => {
-      const textareaRef = useRef<HTMLTextAreaElement>(null);
-      const [localDescription, setLocalDescription] =
-        React.useState(description);
-
-      // Sync local state with prop when it changes
-      React.useEffect(() => {
-        setLocalDescription(description);
-      }, [description]);
-
-      // Focus and select text when entering edit mode
-      React.useEffect(() => {
-        if (isEditing && textareaRef.current) {
-          textareaRef.current.focus();
-          const length = localDescription.length;
-          textareaRef.current.setSelectionRange(length, length);
-        }
-      }, [isEditing, localDescription.length]);
-
-      const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setLocalDescription(e.target.value);
-        onEdit(e);
-      };
-
-      const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-          e.preventDefault();
-          onSave();
-        }
-      };
-
-      return (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Description</span>
-            {!isEditing && (
-              <button
-                onClick={onStartEditing}
-                className="p-1 hover:bg-gray-100 rounded-full"
-                aria-label="Edit description"
-              >
-                <Pencil className="w-3 h-3 text-gray-500" />
-              </button>
-            )}
-          </div>
-
-          {isEditing ? (
-            <div className="space-y-2">
-              <textarea
-                ref={textareaRef}
-                className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y focus:outline-none focus:border-blue-500"
-                value={localDescription}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                placeholder="Tell others about this group..."
-                rows={3}
-                onFocus={(e) => e.stopPropagation()}
-              />
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onCancel}
-                  type="button"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={onSave}
-                  disabled={!localDescription.trim()}
-                  type="button"
-                >
-                  Save
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div
-              className="relative flex items-start justify-between cursor-text"
-              onClick={onStartEditing}
-            >
-              <p className="text-sm whitespace-pre-wrap mt-1 flex-1">
-                {profileData?.description ||
-                  'No description available. Click to add a description.'}
-              </p>
-            </div>
-          )}
-        </div>
-      );
-    },
-  );
-  GroupDescription.displayName = 'GroupDescription';
-
-  const UserBio = React.memo(
-    ({
-      profileData,
-      isEditingBio,
-      editingBio,
-      onEditBio,
-      onSaveBio,
-      onCancelEdit,
-      onStartEditing,
-    }: {
-      profileData: ProfileUser | null;
-      isEditingBio: boolean;
-      editingBio: string;
-      onEditBio: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-      onSaveBio: () => void;
-      onCancelEdit: () => void;
-      onStartEditing: () => void;
-    }) => {
-      const bioText = profileData?.bio || '';
-      const textareaRef = useRef<HTMLTextAreaElement>(null);
-      const [localBio, setLocalBio] = React.useState(editingBio);
-
-      // Sync local state with prop when it changes
-      React.useEffect(() => {
-        setLocalBio(editingBio);
-      }, [editingBio]);
-
-      // Focus and select text when entering edit mode
-      React.useEffect(() => {
-        if (isEditingBio && textareaRef.current) {
-          textareaRef.current.focus();
-          // Set cursor to end of text
-          const length = localBio.length;
-          textareaRef.current.setSelectionRange(length, length);
-        }
-      }, [isEditingBio, localBio.length]);
-
-      const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setLocalBio(e.target.value);
-        onEditBio(e);
-      };
-
-      const handleSave = () => {
-        onSaveBio();
-      };
-
-      const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-          e.preventDefault();
-          handleSave();
-        }
-      };
-
-      return (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Bio</span>
-            {!isEditingBio && (
-              <button
-                onClick={onStartEditing}
-                className="p-1 hover:bg-gray-100 rounded-full"
-                aria-label="Edit bio"
-              >
-                <Pencil className="w-3 h-3 text-gray-500" />
-              </button>
-            )}
-          </div>
-
-          {isEditingBio ? (
-            <div className="space-y-2">
-              <textarea
-                ref={textareaRef}
-                className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y focus:outline-none focus:border-blue-500"
-                value={localBio}
-                onChange={handleBioChange}
-                onKeyDown={handleKeyDown}
-                placeholder="Tell others about yourself..."
-                rows={3}
-                onFocus={(e) => e.stopPropagation()}
-              />
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onCancelEdit}
-                  type="button"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={!localBio.trim()}
-                  type="button"
-                >
-                  Save
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div
-              className="relative flex items-start justify-between cursor-text"
-              onClick={onStartEditing}
-            >
-              <p className="text-sm whitespace-pre-wrap mt-1 flex-1">
-                {bioText || 'No bio available. Click to add a bio.'}
-              </p>
-            </div>
-          )}
-        </div>
-      );
-    },
-  );
-
-  // Add display name for better debugging
-  UserBio.displayName = 'UserBio';
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -1302,6 +869,7 @@ export function ProfileSidebar({
                 </CardContent>
               </Card>
             )}
+
             {!loading && !profileData && (
               <div className="flex justify-center items-center h-32">
                 <p className="text-[hsl(var(--muted-foreground))]">
@@ -1346,67 +914,11 @@ export function ProfileSidebar({
                         </CardDescription>
                       )}
                     {profileType === 'group' && (
-                      <div className="relative group">
-                        {isEditingDescription ? (
-                          <div className="flex flex-col space-y-2">
-                            <textarea
-                              value={editingDescription}
-                              onChange={(e) =>
-                                setEditingDescription(e.target.value)
-                              }
-                              className="w-full p-2 border rounded-md text-sm"
-                              rows={3}
-                              placeholder="Enter group description"
-                            />
-                            <div className="flex space-x-2">
-                              <Button
-                                size="sm"
-                                onClick={handleSaveBio}
-                                disabled={!editingDescription.trim()}
-                              >
-                                Save
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setIsEditingDescription(false);
-                                  setEditingDescription(
-                                    (profileData as ProfileGroup).description ||
-                                      '',
-                                  );
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div
-                            className="relative cursor-pointer hover:bg-accent/50 rounded p-1 -m-1 transition-colors duration-150"
-                            onClick={() => {
-                              setEditingDescription(
-                                (profileData as ProfileGroup).description || '',
-                              );
-                              setIsEditingDescription(true);
-                            }}
-                          >
-                            <CardDescription>
-                              <div className="flex items-center justify-between">
-                                <span className="flex-1">
-                                  {(profileData as ProfileGroup)
-                                    .description || (
-                                    <span className="italic">
-                                      No group description. Click to add one.
-                                    </span>
-                                  )}
-                                </span>
-                                <Pencil className="w-3 h-3 text-muted-foreground opacity-70 hover:opacity-100 transition-opacity ml-2" />
-                              </div>
-                            </CardDescription>
-                          </div>
+                      <CardDescription>
+                        {(profileData as ProfileGroup).description || (
+                          <span className="italic">No group description.</span>
                         )}
-                      </div>
+                      </CardDescription>
                     )}
                   </CardHeader>
                 </Card>
@@ -1422,102 +934,60 @@ export function ProfileSidebar({
                           Presence and profile info
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-4">
-                        {profileType === 'user' ? (
-                          <UserBio
-                            profileData={profileData as ProfileUser}
-                            isEditingBio={isEditingBio}
-                            editingBio={editingBio}
-                            onEditBio={handleEditBio}
-                            onSaveBio={handleSaveBio}
-                            onCancelEdit={handleCancelEditBio}
-                            onStartEditing={() => setIsEditingBio(true)}
-                          />
-                        ) : profileType === 'group' ? (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-muted-foreground">
-                                Description
-                              </span>
-                              {!isEditingDescription && (
-                                <button
-                                  onClick={() => {
-                                    setEditingDescription(
-                                      (profileData as ProfileGroup)
-                                        .description || '',
-                                    );
-                                    setIsEditingDescription(true);
-                                  }}
-                                  className="p-1 hover:bg-gray-100 rounded-full"
-                                  aria-label="Edit description"
-                                >
-                                  <Pencil className="w-3 h-3 text-gray-500" />
-                                </button>
-                              )}
-                            </div>
-                            {isEditingDescription ? (
-                              <div className="space-y-2">
-                                <textarea
-                                  className="w-full p-2 border rounded text-sm min-h-[80px]"
-                                  value={editingDescription}
-                                  onChange={(e) =>
-                                    setEditingDescription(e.target.value)
-                                  }
-                                  placeholder="Enter group description..."
-                                />
-                                <div className="flex justify-end space-x-2">
-                                  <Button
-                                    size="sm"
-                                    onClick={async (e) => {
-                                      e.preventDefault();
-                                      await handleUpdateDescription();
-                                    }}
-                                  >
-                                    Save
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setIsEditingDescription(false);
-                                      setEditingDescription(
-                                        (profileData as ProfileGroup)
-                                          .description || '',
-                                      );
-                                    }}
-                                  >
-                                    Cancel
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <p className="text-sm">
-                                {(profileData as ProfileGroup).description ||
-                                  'No description provided'}
-                              </p>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">
+                            Status
+                          </span>
+                          <Badge variant="secondary" className="text-xs">
+                            {(profileData as ProfileUser).status || 'Unknown'}
+                          </Badge>
+                        </div>
+                        <Separator />
+                        <div>
+                          <span className="text-xs text-muted-foreground">
+                            Last Seen
+                          </span>
+                          <p className="text-sm">
+                            {(profileData as ProfileUser).lastSeen || 'Unknown'}
+                          </p>
+                        </div>
+                        <Separator />
+                        <div>
+                          <span className="text-xs text-muted-foreground">
+                            Bio
+                          </span>
+                          <p className="text-sm text-[hsl(var(--foreground))] whitespace-pre-wrap">
+                            {(profileData as ProfileUser).bio ||
+                              'No bio available.'}
+                          </p>
+                        </div>
+                        <div>
+                          <div className="flex justify-between items-center mt-4 mb-2">
+                            <h3 className="text-sm font-medium text-[hsl(var(--foreground))]">
+                              Shared Media
+                            </h3>
+                            {sharedMedia.length > 4 && (
+                              <Button
+                                variant="link"
+                                className="h-auto p-0"
+                                onClick={() => setShowAllMedia(true)}
+                              >
+                                View All
+                              </Button>
                             )}
                           </div>
-                        ) : null}
-                        <Separator />
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">
-                              Status
-                            </span>
-                            <Badge variant="secondary" className="text-xs">
-                              {(profileData as ProfileUser).status || 'Unknown'}
-                            </Badge>
-                          </div>
-                          <Separator />
-                          <div>
-                            <span className="text-xs text-muted-foreground">
-                              Last Seen
-                            </span>
-                            <p className="text-sm">
-                              {(profileData as ProfileUser).lastSeen ||
-                                'Unknown'}
-                            </p>
-                          </div>
+                          {isLoadingMedia ? (
+                            <div className="flex justify-center items-center h-20">
+                              <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                            </div>
+                          ) : sharedMedia.length > 0 ? (
+                            <SharedMediaDisplay mediaItems={sharedMedia} />
+                          ) : (
+                            <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                              <p>No media has been shared yet.</p>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -1525,11 +995,11 @@ export function ProfileSidebar({
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-base">
-                          Shared Media
+                          Shared Files
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {isLoadingMedia ? (
+                        {isLoadingFiles ? (
                           <div className="flex justify-center items-center h-20">
                             <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
                           </div>
@@ -1575,7 +1045,7 @@ export function ProfileSidebar({
                           </ul>
                         ) : (
                           <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                            <p>No media has been shared yet.</p>
+                            <p>No files have been shared yet.</p>
                           </div>
                         )}
                       </CardContent>
@@ -1791,10 +1261,18 @@ export function ProfileSidebar({
                     </Card>
 
                     <Card>
-                      <CardHeader>
+                      <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-base">
                           Shared Media
                         </CardTitle>
+                        {sharedMedia.length > 4 && (
+                          <Button
+                            variant="link"
+                            onClick={() => setShowAllMedia(true)}
+                          >
+                            View All
+                          </Button>
+                        )}
                       </CardHeader>
                       <CardContent>
                         {isLoadingMedia ? (
@@ -1873,17 +1351,12 @@ export function ProfileSidebar({
                                       'conversations',
                                       profileId,
                                     );
-                                    const groupDoc = await getDoc(groupRef);
-                                    if (!groupDoc.exists()) {
-                                      throw new Error('Group not found');
-                                    }
-
                                     await updateDoc(groupRef, {
                                       [`participantDetails.${user.uid}`]:
                                         deleteField(),
-                                      members: arrayRemove(user.uid),
+                                      participants: arrayRemove(user.uid),
                                       admins: arrayRemove(user.uid),
-                                      updatedAt: new Date().toISOString(),
+                                      updatedAt: serverTimestamp(),
                                     });
 
                                     onClose();
@@ -2008,6 +1481,6 @@ export function ProfileSidebar({
       />
     </Sheet>
   );
-};
+}
 
 export default ProfileSidebar;
