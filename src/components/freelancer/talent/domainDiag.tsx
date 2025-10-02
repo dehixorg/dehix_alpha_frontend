@@ -163,7 +163,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
                         <p className="p-4 flex justify-center items-center">
                           No domains to add -{' '}
                           <span className="text-blue-500 ml-2">
-                            Add some
+                            {' '}
+                            Add some technologies...
                           </span>{' '}
                         </p>
                       </Link>
