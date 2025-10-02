@@ -27,6 +27,23 @@ import {
   LoaderCircle,
   Pencil,
 } from 'lucide-react';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
+  deleteDoc,
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  where,
+  getFirestore,
+  serverTimestamp,
+  FieldValue,
+} from 'firebase/firestore';
 
 import { AddMembersDialog } from './AddMembersDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
@@ -43,6 +60,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -621,6 +639,35 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     }
   };
 
+  const fetchBlockStatus = async (targetUserId: string) => {
+    if (!user?.uid) return;
+
+    setBlockStatus({ isBlocked: false, blockedBy: null });
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('type', '==', 'individual'),
+      where('participants', 'array-contains', user.uid),
+    );
+
+    try {
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        if (doc.data().participants.includes(targetUserId)) {
+          const conversationData = doc.data();
+          if (conversationData.blocked?.status === true) {
+            setBlockStatus({
+              isBlocked: true,
+              blockedBy: conversationData.blocked.by,
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching block status:', error);
+    }
+  };
+
   useEffect(() => {
     const executeFetches = async () => {
       if (isOpen && profileId) {
@@ -635,6 +682,9 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
           internalFetchProfileData(),
           fetchSharedMedia(profileId),
           fetchSharedFiles(profileId),
+          profileType === 'user'
+            ? fetchBlockStatus(profileId)
+            : Promise.resolve(),
         ]);
 
         if (loading) {
@@ -1222,10 +1272,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           alt={profileData.displayName}
                           onError={(e) => {
                             console.error('Error loading group avatar:', e);
-                            console.log(
-                              'Failed to load group avatar with src:',
-                              e.currentTarget.src,
-                            );
                           }}
                         />
                       ) : (
@@ -1234,10 +1280,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           alt={profileData.displayName}
                           onError={(e) => {
                             console.error('Error loading user avatar:', e);
-                            console.log(
-                              'Failed to load user avatar with src:',
-                              e.currentTarget.src,
-                            );
                           }}
                         />
                       )}
@@ -1459,21 +1501,65 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                       <CardContent className="space-y-2">
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
+                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                           disabled
                         >
                           <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
-                          disabled
+                          className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))]"
+                          disabled={
+                            blockStatus.isBlocked &&
+                            blockStatus.blockedBy !== user?.uid
+                          }
+                          onClick={() => {
+                            console.log('Block button clicked', {
+                              profileId,
+                              onConversationUpdate,
+                              blockStatus,
+                            });
+                            if (profileId && onConversationUpdate) {
+                              const isCurrentlyBlocked =
+                                blockStatus.isBlocked &&
+                                blockStatus.blockedBy === user?.uid;
+                              console.log('Setting up confirmation dialog', {
+                                isCurrentlyBlocked,
+                              });
+
+                              setConfirmDialogProps({
+                                title: isCurrentlyBlocked
+                                  ? 'Unblock this Chat?'
+                                  : 'Block this Chat?',
+                                description: isCurrentlyBlocked
+                                  ? 'Unblocking will allow both of you to send messages in this chat again. Are you sure?'
+                                  : 'Blocking will prevent both of you from sending messages in this 1-on-1 chat. Do you want to block it?',
+                                onConfirm: () =>
+                                  handleToggleBlockChat(
+                                    profileId,
+                                    !isCurrentlyBlocked,
+                                  ),
+                                confirmButtonText: isCurrentlyBlocked
+                                  ? 'Unblock Chat'
+                                  : 'Block Chat',
+                                confirmButtonVariant: 'destructive',
+                                isLoading: false,
+                              });
+                              setIsConfirmDialogOpen(true);
+                            }
+                          }}
                         >
-                          <ShieldX className="h-4 w-4 mr-2" /> Block User
+                          <ShieldX className="h-4 w-4 mr-2" />
+                          {blockStatus.isBlocked &&
+                          blockStatus.blockedBy === user?.uid
+                            ? 'Unblock User'
+                            : blockStatus.isBlocked
+                              ? 'Blocked by User'
+                              : 'Block User'}
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
+                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                           disabled
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
@@ -1633,7 +1719,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                             <>
                               <Button
                                 variant="outline"
-                                className="w-full justify-start"
+                                className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                 onClick={() => setIsAddMembersDialogOpen(true)}
                               >
                                 <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
@@ -1641,7 +1727,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                               </Button>
                               <Button
                                 variant="outline"
-                                className="w-full justify-start"
+                                className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                 onClick={() =>
                                   setIsChangeGroupInfoDialogOpen(true)
                                 }
@@ -1653,7 +1739,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                 undefined && (
                                 <Button
                                   variant="outline"
-                                  className="w-full justify-start"
+                                  className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                   onClick={() =>
                                     setIsInviteLinkDialogOpen(true)
                                   }

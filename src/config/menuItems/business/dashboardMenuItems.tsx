@@ -51,17 +51,17 @@ export const menuItemsTop: MenuItem[] = [
       },
       {
         label: 'Invites',
-        href: '/business/market/invited',
+        href: '/business/talent/invited',
         icon: <BookMarked className="h-4 w-4" />,
       },
       {
         label: 'Accepted',
-        href: '/business/market/accepted',
+        href: '/business/talent/accepted',
         icon: <CheckCircle2 className="h-4 w-4" />,
       },
       {
         label: 'Rejected',
-        href: '/business/market/rejected',
+        href: '/business/talent/rejected',
         icon: <XCircle className="h-4 w-4" />,
       },
     ],
