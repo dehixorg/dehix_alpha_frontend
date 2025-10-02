@@ -1929,7 +1929,13 @@ export function CardsChat({
              transition-transform duration-300 animate-in fade-in zoom-in-95"
               >
                 <DialogHeader></DialogHeader>
-                <NewReportTab reportData={reportData} />
+                <NewReportTab 
+                  reportData={reportData} 
+                  onSubmitted={() => {
+                    setOpenReport(false);
+                    return true;
+                  }}
+                />
               </DialogContent>
             </DialogPortal>
           </Dialog>

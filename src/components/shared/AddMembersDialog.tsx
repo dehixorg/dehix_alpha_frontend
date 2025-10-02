@@ -230,7 +230,7 @@ export function AddMembersDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </Dialog> 
   );
 }
 
