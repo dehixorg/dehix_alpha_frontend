@@ -31,6 +31,8 @@ export interface Conversation extends DocumentData {
     content?: string;
     senderId?: string;
     timestamp?: string;
+    voiceMessage?: boolean;
+    attachments?: Array<{ type?: string }>;
   } | null;
   participantDetails?: {
     [uid: string]: {
@@ -103,7 +105,9 @@ export function ChatList({
       .trim();
 
   // Utility function to detect and format media messages
-  const formatLastMessage = (lastMessage: any): string => {
+  const formatLastMessage = (
+    lastMessage: Conversation['lastMessage'],
+  ): string => {
     if (!lastMessage?.content) return 'No messages yet';
     const content = lastMessage.content;
     const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
