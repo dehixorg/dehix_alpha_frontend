@@ -161,10 +161,11 @@ export function BusinessFilterComponent({
                         className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
                       >
                         <Checkbox
-                          id={`${filterKey}-${item}`}
+                          id={toDomId(String(filterKey), item)}
                           checked={filterValues.includes(item)}
                           onCheckedChange={(checked) => {
-                            const newValues = checked
+                            const isChecked = checked === true;
+                            const newValues = isChecked
                               ? [...filterValues, item]
                               : filterValues.filter((v) => v !== item);
 
@@ -173,7 +174,7 @@ export function BusinessFilterComponent({
                           className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                         <label
-                          htmlFor={`${filterKey}-${item}`}
+                          htmlFor={toDomId(String(filterKey), item)}
                           className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
                         >
                           {item}
