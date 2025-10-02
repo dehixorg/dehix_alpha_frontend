@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Link from 'next/link';
 import {
   MoreVertical,
   ShieldCheck,
@@ -10,7 +9,7 @@ import {
   Flag,
   Eye,
 } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 
 import { cn } from '@/lib/utils';
@@ -76,6 +75,7 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const [openReport, setOpenReport] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
 
   const reportType = getReportTypeFromPath(pathname);
@@ -142,14 +142,18 @@ export function ProjectCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem className="cursor-pointer">
-              <Link
-                className="flex items-center"
-                href={`${user?.type === 'business' ? '/business' : ''}/project/${project._id}`}
-              >
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() =>
+                router.push(
+                  `${user?.type === 'business' ? '/business' : ''}/project/${project._id}`,
+                )
+              }
+            >
+              <div className="flex items-center">
                 <Eye className="mr-2 h-4 w-4" />
                 <span>View</span>
-              </Link>
+              </div>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
