@@ -58,7 +58,14 @@ export default function PastReportsTab() {
   const fetchReports = useCallback(async () => {
     if (!user?.uid) return;
 
-    console.log('Fetching reports for user:', user.uid, 'page:', page, 'limit:', limit);
+    console.log(
+      'Fetching reports for user:',
+      user.uid,
+      'page:',
+      page,
+      'limit:',
+      limit,
+    );
     setLoading(true);
     try {
       const res = await apiHelperService.getReportsByUser(user.uid, {

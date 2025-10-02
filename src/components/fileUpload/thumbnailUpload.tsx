@@ -84,25 +84,27 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
         previewHeight={200}
       />
 
-      {selectedThumbnail && selectedThumbnail instanceof File && !isUploading && (
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            onClick={handleUploadClick}
-            className="flex-1"
-            disabled={isUploading}
-          >
-            Upload Thumbnail
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleRemoveThumbnail}
-          >
-            Cancel
-          </Button>
-        </div>
-      )}
+      {selectedThumbnail &&
+        selectedThumbnail instanceof File &&
+        !isUploading && (
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              onClick={handleUploadClick}
+              className="flex-1"
+              disabled={isUploading}
+            >
+              Upload Thumbnail
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleRemoveThumbnail}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
 
       {isUploading && (
         <div className="flex items-center justify-center gap-2">

@@ -512,7 +512,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
                           <FormControl>
                             <ImageUploader
                               label="Document Front Image"
-                              value={field.value}
+                              value={field.value as File | string | null}
                               onChange={field.onChange}
                               accept={{
                                 'image/*': ['.png', '.jpg', '.jpeg'],
@@ -534,7 +534,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
                           <FormControl>
                             <ImageUploader
                               label="Document Back Image"
-                              value={field.value}
+                              value={field.value as File | string | null}
                               onChange={field.onChange}
                               accept={{
                                 'image/*': ['.png', '.jpg', '.jpeg'],

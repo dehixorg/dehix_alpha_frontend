@@ -87,7 +87,6 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   const backUrlRef = useRef<string | null>(null);
   const liveUrlRef = useRef<string | null>(null);
 
-
   // Keep preview URLs in sync with form values and manage blob URL lifecycle
   useEffect(() => {
     const updatePreview = (
@@ -570,7 +569,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                           <FormControl>
                             <ImageUploader
                               label="Front Image"
-                              value={field.value}
+                              value={field.value as File | string | null}
                               onChange={field.onChange}
                               accept={{
                                 'image/*': ['.png', '.jpg', '.jpeg'],
@@ -592,7 +591,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                           <FormControl>
                             <ImageUploader
                               label="Back Image"
-                              value={field.value}
+                              value={field.value as File | string | null}
                               onChange={field.onChange}
                               accept={{
                                 'image/*': ['.png', '.jpg', '.jpeg'],

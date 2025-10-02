@@ -24,7 +24,6 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { apiHelperService } from '@/services/report';
-import { apiHelperService as profileService } from '@/services/profilepic';
 import { RootState } from '@/lib/store';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
 
@@ -81,21 +80,24 @@ export function ReportForm({
       // Upload images if any are selected
       if (images.length > 0) {
         console.log(`Uploading ${images.length} images...`);
-        
+
         for (let i = 0; i < images.length; i++) {
           const file = images[i];
           try {
-            console.log(`Uploading image ${i + 1}/${images.length}:`, file.name);
-            
+            console.log(
+              `Uploading image ${i + 1}/${images.length}:`,
+              file.name,
+            );
+
             // Try using the report service upload
             const response = await apiHelperService.uploadReportImage(file);
             console.log(`Image ${i + 1} upload response:`, response);
-            
+
             // Check if response has the correct structure
             if (response?.data?.data) {
               const imageData = response.data.data;
               console.log('Image data received:', imageData);
-              
+
               // Validate required fields
               if (imageData.Location && imageData.Key && imageData.Bucket) {
                 imageMetaArray.push({
@@ -105,18 +107,27 @@ export function ReportForm({
                 });
                 console.log(`Image ${i + 1} uploaded successfully`);
               } else {
-                console.warn(`Image ${i + 1} missing required fields:`, imageData);
+                console.warn(
+                  `Image ${i + 1} missing required fields:`,
+                  imageData,
+                );
               }
             } else {
-              console.warn(`Image ${i + 1} invalid response structure:`, response);
+              console.warn(
+                `Image ${i + 1} invalid response structure:`,
+                response,
+              );
             }
           } catch (uploadError: any) {
             console.error(`Failed to upload image ${i + 1}:`, uploadError);
-            console.error('Upload error details:', uploadError?.response?.data || uploadError);
+            console.error(
+              'Upload error details:',
+              uploadError?.response?.data || uploadError,
+            );
             // Continue with other images instead of failing completely
           }
         }
-        
+
         console.log('Final imageMeta array:', imageMetaArray);
       }
 
@@ -130,13 +141,13 @@ export function ReportForm({
       console.log('Submitting report with payload:', finalPayload);
       const response = await apiHelperService.createReport(finalPayload);
       console.log('Report created successfully:', response);
-      
+
       // Reset form after successful submission
       form.reset();
       setImage1(null);
       setImage2(null);
       setImage3(null);
-      
+
       await onSubmitted?.();
     } catch (error: any) {
       console.error('Failed to submit report:', error);

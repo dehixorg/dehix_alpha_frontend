@@ -77,10 +77,10 @@ export default function NewReportPage() {
 
   const handleReportSubmitted = async () => {
     notifySuccess('Report submitted successfully!', 'Success');
-    
+
     // Small delay to ensure backend has processed the report
     await new Promise((resolve) => setTimeout(resolve, 500));
-    
+
     setActiveTab('history');
     setRefreshKey((prev) => prev + 1);
     return true;
@@ -117,7 +117,11 @@ export default function NewReportPage() {
 
             {/* Main Content */}
             <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
                 <div className="border-b px-6">
                   <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
                     <TabsTrigger
@@ -145,7 +149,10 @@ export default function NewReportPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <NewReportTab reportData={reportData} onSubmitted={handleReportSubmitted} />
+                    <NewReportTab
+                      reportData={reportData}
+                      onSubmitted={handleReportSubmitted}
+                    />
                   </CardContent>
                 </TabsContent>
 
