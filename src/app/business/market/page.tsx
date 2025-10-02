@@ -14,6 +14,7 @@ import { notifyError } from '@/utils/toastMessage';
 import FreelancerList from '@/components/business/market/FreelancerList';
 import { BusinessFilterSheet } from '@/components/business/market/BusinessFilterSheet';
 import Header from '@/components/header/header';
+import BusinessFilterComponent from '@/components/business/market/BusinessFilterComponent';
 
 export interface FilterState {
   location: string[];
@@ -43,6 +44,7 @@ const Market: React.FC = () => {
     minRate: '',
     maxRate: '',
   });
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
 
   const handleFilterChange = (updates: Partial<FilterState>) => {
     setFilters((prev) => ({
@@ -92,10 +94,8 @@ const Market: React.FC = () => {
     }
 
     Object.entries(filters).forEach(([key, value]) => {
-      // Skip experience as it's already handled above
       if (key === 'experience') return;
 
-      // Skip minRate and maxRate if they are empty strings
       if ((key === 'minRate' || key === 'maxRate') && value === '') return;
 
       if (Array.isArray(value) && value.length > 0) {
@@ -157,8 +157,18 @@ const Market: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchData(filters); // Fetch all data initially
+    fetchData(filters);
   }, [user.uid, filters, fetchData]);
+
+  const handleResize = () => {
+    setIsLargeScreen(window.innerWidth >= 1024);
+  };
+
+  useEffect(() => {
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <section className="flex min-h-screen w-full flex-col">
@@ -178,7 +188,6 @@ const Market: React.FC = () => {
           ]}
         />
         <div className="flex flex-col sm:gap-4">
-          {/* Page Hero */}
           <div className="px-4 sm:px-6">
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-col space-y-2">
@@ -193,28 +202,45 @@ const Market: React.FC = () => {
                 </p>
               </div>
               <div className="ml-auto flex items-center gap-2">
-                <BusinessFilterSheet
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  activeFilterCount={activeFilterCount}
-                  skills={skills}
-                  domains={domains}
-                  experiences={experiences}
-                  jobTypes={jobTypes}
-                  locations={locations}
-                  onReset={handleReset}
-                />
+                {!isLargeScreen && (
+                  <BusinessFilterSheet
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    activeFilterCount={activeFilterCount}
+                    skills={skills}
+                    domains={domains}
+                    experiences={experiences}
+                    jobTypes={jobTypes}
+                    locations={locations}
+                    onReset={handleReset}
+                  />
+                )}
               </div>
-            </div>
-          </div>
-          <div className="mx-auto w-full p-4 md:p-6">
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center justify-between px-1">
+              <div className="flex items-center justify-between px-1 mb-4">
                 <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
                   {freelancers.length}{' '}
                   {freelancers.length === 1 ? 'result' : 'results'}
                 </span>
               </div>
+            </div>
+          </div>
+          <div className="flex flex-1 overflow-hidden px-4 sm:px-8 pb-8">
+            {isLargeScreen && (
+              <aside className="w-80 flex-shrink-0 pr-6">
+                <BusinessFilterComponent
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onReset={handleReset}
+                  activeFilterCount={activeFilterCount}
+                  skills={skills}
+                  domains={domains}
+                  locations={locations}
+                  jobTypes={jobTypes}
+                  experiences={experiences}
+                />
+              </aside>
+            )}
+            <div className="flex-1 overflow-y-auto">
               <FreelancerList
                 freelancers={freelancers}
                 isLoading={isDataLoading}

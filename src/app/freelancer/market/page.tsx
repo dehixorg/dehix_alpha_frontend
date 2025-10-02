@@ -6,18 +6,19 @@ import { Search } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
+import FilterComponent from '@/components/marketComponents/FilterComponent';
 import { FilterSheet } from '@/components/market/FilterSheet';
 
 interface FilterState {
@@ -86,13 +87,17 @@ const getActiveFilterCount = (filters: FilterState) => {
     return count;
   }, 0);
 };
+
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
   const draftedProjects = useSelector(
     (state: RootState) => state.projectDraft.draftedProjects,
   );
   const dispatch = useDispatch();
-  const [, setShowFilters] = useState(true);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [domainSearchQuery, setDomainSearchQuery] = useState('');
+  const [projectDomainSearchQuery, setProjectDomainSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>({
     jobType: [],
     domain: [],
@@ -357,9 +362,10 @@ const Market: React.FC = () => {
     return queryString;
   };
   const handleResize = () => {
-    if (window.innerWidth >= 1024) setShowFilters(false);
+    setIsLargeScreen(window.innerWidth >= 1024);
   };
   useEffect(() => {
+    handleResize(); // Initial check
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -408,225 +414,56 @@ const Market: React.FC = () => {
                   Browse through available projects and find your next gig
                 </p>
               </div>
-              <FilterSheet
-                filters={{
-                  jobType: filters.jobType,
-                  domain: filters.domain,
-                  skills: filters.skills,
-                  projectDomain: filters.projectDomain,
-                  minRate: filters.minRate,
-                  maxRate: filters.maxRate,
-                  favourites: filters.favourites,
-                  consultant: filters.consultant,
-                }}
-                onFilterChange={(updatedFilters) => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    ...updatedFilters,
-                  }));
-                }}
-                activeFilterCount={activeFilterCount}
-                skills={skills}
-                domains={domains}
-                projectDomains={projectDomains}
-                onReset={handleReset}
-              />
-            </div>
-            {/* Results count */}
-            <div className="flex items-center justify-between px-1">
-              <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
-                {jobs.length} {jobs.length === 1 ? 'result' : 'results'}
-              </span>
+              <div className="ml-auto flex items-center gap-2">
+                {!isLargeScreen && (
+                  <FilterSheet
+                    filters={filters}
+                    setFilters={setFilters}
+                    handleReset={handleReset}
+                    activeFilterCount={activeFilterCount}
+                    skills={skills}
+                    domains={domains}
+                    projectDomains={projectDomains}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    domainSearchQuery={domainSearchQuery}
+                    setDomainSearchQuery={setDomainSearchQuery}
+                    projectDomainSearchQuery={projectDomainSearchQuery}
+                    setProjectDomainSearchQuery={setProjectDomainSearchQuery}
+                  />
+                )}
+              </div>
+              <div className="flex items-center justify-between px-1">
+                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+                  {jobs.length} {jobs.length === 1 ? 'result' : 'results'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="flex flex-1 overflow-hidden px-4 sm:px-8 pb-8">
           {/* Desktop Filters */}
-          {/* <aside className="hidden lg:block w-80 flex-shrink-0 pr-6">
-            <div className="sticky top-24 h-[calc(100vh-8rem)] overflow-y-auto pb-6">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Filters</h2>
-                  <Button variant="ghost" size="sm" onClick={handleReset}>
-                    Reset all
-                  </Button>
-                </div>
-
-                <FilterSection title="Project Type" icon={Layers}>
-                  <div className="space-y-2">
-                    {['Fixed Price', 'Hourly', 'Milestone'].map((type) => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`desktop-type-${type}`}
-                          checked={filters.jobType.includes(type)}
-                          onCheckedChange={(checked) => {
-                            setFilters((prev) => ({
-                              ...prev,
-                              jobType: checked
-                                ? [...prev.jobType, type]
-                                : prev.jobType.filter((t) => t !== type),
-                            }));
-                          }}
-                        />
-                        <label
-                          htmlFor={`desktop-type-${type}`}
-                          className="text-sm font-medium leading-none cursor-pointer"
-                        >
-                          {type}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </FilterSection>
-
-                <FilterSection title="Skills" icon={Tag}>
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search skills..."
-                        className="pl-8 h-9 text-sm"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2 max-h-60 overflow-y-auto py-1 -mx-1 px-1">
-                      {skills
-                        .filter((skill) =>
-                          skill
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase()),
-                        )
-                        .slice(0, 10)
-                        .map((skill) => (
-                          <div
-                            key={skill}
-                            className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1"
-                          >
-                            <Checkbox
-                              id={`desktop-skill-${skill}`}
-                              checked={filters.skills.includes(skill)}
-                              onCheckedChange={(checked) => {
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  skills: checked
-                                    ? [...prev.skills, skill]
-                                    : prev.skills.filter((s) => s !== skill),
-                                }));
-                              }}
-                            />
-                            <label
-                              htmlFor={`desktop-skill-${skill}`}
-                              className="text-sm font-medium leading-none cursor-pointer flex-1"
-                            >
-                              {skill}
-                            </label>
-                            <Badge variant="outline" className="h-5 text-xs">
-                              {Math.floor(Math.random() * 100) + 1}
-                            </Badge>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                </FilterSection>
-
-                <FilterSection title="Budget Range" icon={DollarSign}>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label
-                          htmlFor="desktop-min-rate"
-                          className="text-xs text-muted-foreground"
-                        >
-                          Min ($)
-                        </Label>
-                        <Input
-                          id="desktop-min-rate"
-                          placeholder="Min"
-                          type="number"
-                          value={filters.minRate}
-                          onChange={(e) =>
-                            setFilters((prev) => ({
-                              ...prev,
-                              minRate: e.target.value,
-                            }))
-                          }
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label
-                          htmlFor="desktop-max-rate"
-                          className="text-xs text-muted-foreground"
-                        >
-                          Max ($)
-                        </Label>
-                        <Input
-                          id="desktop-max-rate"
-                          placeholder="Max"
-                          type="number"
-                          value={filters.maxRate}
-                          onChange={(e) =>
-                            setFilters((prev) => ({
-                              ...prev,
-                              maxRate: e.target.value,
-                            }))
-                          }
-                          className="h-9"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </FilterSection>
-
-                <FilterSection title="Other Options" icon={Sliders}>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="desktop-favourites"
-                        checked={filters.favourites}
-                        onCheckedChange={(checked) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            favourites: !!checked,
-                          }))
-                        }
-                      />
-                      <label
-                        htmlFor="desktop-favourites"
-                        className="text-sm font-medium leading-none cursor-pointer flex items-center"
-                      >
-                        <Bookmark className="h-4 w-4 mr-2 text-red-500 fill-red-500/20" />
-                        Saved Projects
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="desktop-consultant"
-                        checked={filters.consultant}
-                        onCheckedChange={(checked) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            consultant: !!checked,
-                          }))
-                        }
-                      />
-                      <label
-                        htmlFor="desktop-consultant"
-                        className="text-sm font-medium leading-none cursor-pointer flex items-center"
-                      >
-                        <Briefcase className="h-4 w-4 mr-2 text-blue-500" />
-                        Consultant Roles
-                      </label>
-                    </div>
-                  </div>
-                </FilterSection>
-              </div>
-            </div>
-          </aside> */}
-
-          {/* Job Cards */}
+          {isLargeScreen && (
+            <aside className="w-80 flex-shrink-0 pr-6">
+              <FilterComponent
+                filters={filters}
+                setFilters={setFilters}
+                handleReset={handleReset}
+                activeFilterCount={activeFilterCount}
+                skills={skills}
+                domains={domains}
+                projectDomains={projectDomains}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                domainSearchQuery={domainSearchQuery}
+                setDomainSearchQuery={setDomainSearchQuery}
+                projectDomainSearchQuery={projectDomainSearchQuery}
+                setProjectDomainSearchQuery={setProjectDomainSearchQuery}
+              />
+            </aside>
+          )}
+          {/* Job Cards */}{' '}
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               <div className="space-y-4">
