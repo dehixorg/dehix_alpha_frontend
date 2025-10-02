@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -51,9 +50,13 @@ export default function ExperienceSelectionDialog({
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    if (open && freelancerId && currentProfileId) {
+    if (open && freelancerId) {
       fetchExperiences();
-      fetchCurrentProfileExperiences();
+      if (currentProfileId && currentProfileId !== 'new') {
+        fetchCurrentProfileExperiences();
+      } else {
+        setExistingExperienceIds([]);
+      }
     }
   }, [open, freelancerId, currentProfileId]);
 

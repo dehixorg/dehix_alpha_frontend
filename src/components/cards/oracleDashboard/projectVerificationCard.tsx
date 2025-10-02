@@ -1,6 +1,13 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { MessageSquareIcon, Github, Mail, MoreVertical } from 'lucide-react';
+import {
+  MessageSquareIcon,
+  Github,
+  Mail,
+  MoreVertical,
+  CircleAlert,
+  X,
+} from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -30,8 +37,16 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
+  TooltipProvider,
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
@@ -64,7 +79,6 @@ const FormSchema = z.object({
 const ProjectVerificationCard: React.FC<ProjectProps> = ({
   _id,
   projectName,
-  description,
   githubLink,
   startFrom,
   endTo,
@@ -82,7 +96,6 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
     resolver: zodResolver(FormSchema),
   });
   const selectedType = form.watch('type');
-  const [menuOpen, setMenuOpen] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
   const user = useSelector((state: RootState) => state.user);
@@ -117,193 +130,250 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
   }
 
   return (
-    <Card className="min-w-[90vw] mx-auto md:min-w-[30vw] md:min-h-[65vh]">
-      <CardHeader className="relative">
-        {/* 3-dot vertical menu */}
-        <div className="absolute top-3 right-3 z-50">
-          <div className="relative">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <MoreVertical className="w-5 h-5 text-gray-500" />
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow-md z-50">
-                <button
-                  onClick={() => {
-                    setOpenReport(true);
-                    setMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+    <TooltipProvider>
+      <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20">
+        <CardHeader className="pb-3 px-6 pt-6 relative">
+          <div className="absolute top-4 right-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  aria-label="More options"
                 >
-                  Report
-                </button>
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-44" align="end">
+                <DropdownMenuItem
+                  onClick={() => setOpenReport(true)}
+                  className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+                >
+                  <CircleAlert className="mr-2 h-4 w-4" />
+                  <span>Report</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Avatar className="h-14 w-14 rounded-xl border border-gray-200 dark:border-gray-700">
+              <AvatarImage
+                src="/placeholder-avatar.svg"
+                alt={projectName || 'Project'}
+              />
+              <AvatarFallback className="bg-primary/10 text-primary rounded-xl text-xl font-bold">
+                {projectName?.charAt(0) || 'P'}
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-center w-full gap-2">
+                <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors max-w-[calc(100%-80px)]">
+                  {projectName}
+                </CardTitle>
               </div>
-            )}
-          </div>
-        </div>
 
-        <CardTitle className="flex justify-between">
-          <span>{projectName}</span>
-          {githubLink && (
-            <div className="ml-auto">
-              <a href={githubLink} className="text-sm text-white underline">
-                <Github />
-              </a>
-            </div>
-          )}
-        </CardTitle>
+              <div className="mt-1 flex items-center gap-2 flex-wrap">
+                {verificationStatus === 'Pending' ||
+                verificationStatus === 'added' ||
+                verificationStatus === 'reapplied' ? (
+                  <Badge className="bg-warning-foreground text-white">
+                    {verificationStatus}
+                  </Badge>
+                ) : verificationStatus === 'Approved' ||
+                  verificationStatus === 'Verified' ||
+                  verificationStatus === 'verified' ? (
+                  <Badge className="bg-success text-white">
+                    {verificationStatus}
+                  </Badge>
+                ) : (
+                  <Badge className="bg-red-500 text-white">Denied</Badge>
+                )}
+              </div>
 
-        <CardDescription className="mt-1 text-justify text-gray-600">
-          {verificationStatus === 'Pending' ||
-          verificationStatus === 'added' ||
-          verificationStatus === 'reapplied' ? (
-            <Badge className="bg-warning-foreground text-white my-2">
-              {verificationStatus}
-            </Badge>
-          ) : verificationStatus === 'Approved' ||
-            verificationStatus === 'Verified' ||
-            verificationStatus === 'verified' ? (
-            <Badge className="bg-success text-white my-2">
-              {verificationStatus}
-            </Badge>
-          ) : (
-            <Badge className="bg-red-500 text-white my-2">Denied</Badge>
-          )}
-          <br />
-          {description}
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        <div className="mt-4">
-          <div className="mt-2">
-            <span className="font-semibold">Tech Used:</span>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {(techUsed || []).map((tech, index) => (
-                <Badge key={index} className="uppercase" variant="secondary">
-                  {tech}
-                </Badge>
-              ))}
+              <CardDescription className="mt-2 text-gray-700 dark:text-gray-300 line-clamp-2">
+                {githubLink && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        aria-label="Open GitHub repo"
+                      >
+                        <a href={githubLink} target="_blank" rel="noreferrer">
+                          <Github className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">View GitHub</TooltipContent>
+                  </Tooltip>
+                )}
+              </CardDescription>
             </div>
           </div>
-          <div className="mt-3">
-            <p className="text-m text-gray-600 flex items-center">
-              Role: {role}
-            </p>
+        </CardHeader>
+
+        <CardContent className="px-6 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Role</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {role}
+              </p>
+            </div>
+            <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Project Type
+              </p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {projectType}
+              </p>
+            </div>
+            <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Start</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {new Date(startFrom).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+              <p className="text-xs text-gray-500 dark:text-gray-400">End</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {endTo !== 'current'
+                  ? new Date(endTo).toLocaleDateString()
+                  : 'Current'}
+              </p>
+            </div>
           </div>
-          <div className="mt-3">
-            <p className="text-m text-gray-600 flex items-center">
-              Project Type: {projectType}
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 mt-4">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                Tech Used
+              </h3>
+              <div className="flex flex-wrap gap-2.5">
+                {(techUsed || []).map((tech, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="rounded-full text-xs font-medium px-3 py-1 bg-primary/5 hover:bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300 border border-primary/10 dark:border-primary/30 transition-all duration-200"
+                  >
+                    {tech}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </div>
+
           <div className="mt-4">
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className="text-sm text-gray-600 flex items-center">
-                  <Mail className="mr-2" />
-                  {reference}
+                <p className="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-2">
+                  <Mail className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{reference}</span>
                 </p>
               </TooltipTrigger>
               <TooltipContent side="bottom">{reference}</TooltipContent>
             </Tooltip>
           </div>
+
           {comments && (
-            <p className="mt-2 flex items-center text-gray-500 border p-3 rounded">
-              <MessageSquareIcon className="mr-2" />
-              {comments}
-            </p>
+            <div className="mt-4 flex items-start text-gray-600 dark:text-gray-300 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 p-3 rounded-lg">
+              <MessageSquareIcon className="mr-2 h-4 w-4 mt-0.5" />
+              <p className="text-sm">{comments}</p>
+            </div>
           )}
-        </div>
-      </CardContent>
+        </CardContent>
 
-      <CardFooter className="flex flex-col items-center">
-        <div className="flex gap-4 text-gray-500">
-          {new Date(startFrom).toLocaleDateString()} -{' '}
-          {endTo !== 'current'
-            ? new Date(endTo).toLocaleDateString()
-            : 'Current'}
-        </div>
-
-        {(verificationStatus === 'Pending' ||
-          verificationStatus === 'added' ||
-          verificationStatus === 'reapplied') && (
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="w-full space-y-6 mt-6"
-            >
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Choose Verification Status:</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <FormItem className="flex items-center space-x-3">
-                          <FormControl>
-                            <RadioGroupItem value="Approved" />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            Approved
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3">
-                          <FormControl>
-                            <RadioGroupItem value="Denied" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Denied</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="comment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Comments:</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter comments:" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={!selectedType || form.formState.isSubmitting}
+        <CardFooter className="px-6 py-5 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex-col items-stretch gap-4">
+          {(verificationStatus === 'Pending' ||
+            verificationStatus === 'added' ||
+            verificationStatus === 'reapplied') && (
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="w-full space-y-6"
               >
-                Submit
-              </Button>
-            </form>
-          </Form>
-        )}
-      </CardFooter>
-      {openReport && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
-            <button
-              onClick={() => setOpenReport(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-            >
-              ✕
-            </button>
-            <NewReportTab reportData={reportData} />
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Choose Verification Status</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col sm:flex-row gap-4"
+                        >
+                          <FormItem className="flex items-center space-x-3">
+                            <FormControl>
+                              <RadioGroupItem value="Approved" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Approved
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3">
+                            <FormControl>
+                              <RadioGroupItem value="Denied" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Denied
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="comment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Comments</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Enter comments" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+                  disabled={!selectedType || form.formState.isSubmitting}
+                >
+                  Submit
+                </Button>
+              </form>
+            </Form>
+          )}
+        </CardFooter>
+
+        {/* Hover effect border */}
+        <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>
+
+        {openReport && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-background rounded-lg p-6 w-full max-w-md relative">
+              <button
+                onClick={() => setOpenReport(false)}
+                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+              <NewReportTab reportData={reportData} />
+            </div>
           </div>
-        </div>
-      )}
-    </Card>
+        )}
+      </Card>
+    </TooltipProvider>
   );
 };
 
