@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
@@ -78,67 +78,74 @@ const Market: React.FC = () => {
   const activeFilterCount = getActiveFilterCount(filters);
 
   const constructQueryString = (filters: FilterState) => {
-  const queryParts: string[] = [];
+    const queryParts: string[] = [];
 
-  if (Array.isArray(filters.experience) && filters.experience.length > 0) {
-    const sortedExperience = filters.experience.map(Number).sort((a, b) => a - b);
-    const from = sortedExperience[0];
-    const to = sortedExperience[sortedExperience.length - 1];
+    if (Array.isArray(filters.experience) && filters.experience.length > 0) {
+      const sortedExperience = filters.experience
+        .map(Number)
+        .sort((a, b) => a - b);
+      const from = sortedExperience[0];
+      const to = sortedExperience[sortedExperience.length - 1];
 
-    if (from !== undefined) queryParts.push(`workExperienceFrom=${from}`);
-    if (to !== undefined) queryParts.push(`workExperienceTo=${to}`);
-  }
-
-  //   Object.entries(filters).forEach(([key, value]) => {
-  //     // Skip experience as it's already handled above
-  //     if (key === 'experience') return;
-
-  //     // Skip minRate and maxRate if they are empty strings
-  //     if ((key === 'minRate' || key === 'maxRate') && value === '') return;
-
-  //   if (Array.isArray(value) && value.length > 0) {
-  //     const cleanedValues = value.filter((v) => v !== undefined && v !== null && v !== "");
-  //     if (cleanedValues.length > 0) {
-  //       queryParts.push(`${key}=${cleanedValues.join(",")}`);
-  //     }
-  //   } else if (typeof value === "string" && value.trim() !== "") {
-  //     queryParts.push(
-  //       `${key}=${value
-  //         .split(",")
-  //         .map((v) => v.trim())
-  //         .join(",")}`,
-  //     );
-  //   }
-  // });
-  
-  Object.entries(filters).forEach(([key, value]) => {
-  if (key === 'experience') return; // already handled
-
-  // Skip empty minRate/maxRate
-  if ((key === 'minRate' || key === 'maxRate') && (value === '' || value === null || value === undefined)) return;
-
-  if (Array.isArray(value) && value.length > 0) {
-    const cleanedValues = value.filter((v) => v !== undefined && v !== null && v !== "");
-    if (cleanedValues.length > 0) {
-      queryParts.push(`${key}=${cleanedValues.join(",")}`);
+      if (from !== undefined) queryParts.push(`workExperienceFrom=${from}`);
+      if (to !== undefined) queryParts.push(`workExperienceTo=${to}`);
     }
-  } else if (typeof value === "string" && value.trim() !== "") {
-  if (key === "minRate" || key === "maxRate") {
-    queryParts.push(`${key}=${Number(value)}`);
-  } else {
-    queryParts.push(
-      `${key}=${value
-        .split(",")
-        .map((v) => v.trim())
-        .join(",")}`
-    );
-  }
-}
 
-});
+    //   Object.entries(filters).forEach(([key, value]) => {
+    //     // Skip experience as it's already handled above
+    //     if (key === 'experience') return;
 
-  return queryParts.join("&");
-};
+    //     // Skip minRate and maxRate if they are empty strings
+    //     if ((key === 'minRate' || key === 'maxRate') && value === '') return;
+
+    //   if (Array.isArray(value) && value.length > 0) {
+    //     const cleanedValues = value.filter((v) => v !== undefined && v !== null && v !== "");
+    //     if (cleanedValues.length > 0) {
+    //       queryParts.push(`${key}=${cleanedValues.join(",")}`);
+    //     }
+    //   } else if (typeof value === "string" && value.trim() !== "") {
+    //     queryParts.push(
+    //       `${key}=${value
+    //         .split(",")
+    //         .map((v) => v.trim())
+    //         .join(",")}`,
+    //     );
+    //   }
+    // });
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (key === 'experience') return; // already handled
+
+      // Skip empty minRate/maxRate
+      if (
+        (key === 'minRate' || key === 'maxRate') &&
+        (value === '' || value === null || value === undefined)
+      )
+        return;
+
+      if (Array.isArray(value) && value.length > 0) {
+        const cleanedValues = value.filter(
+          (v) => v !== undefined && v !== null && v !== '',
+        );
+        if (cleanedValues.length > 0) {
+          queryParts.push(`${key}=${cleanedValues.join(',')}`);
+        }
+      } else if (typeof value === 'string' && value.trim() !== '') {
+        if (key === 'minRate' || key === 'maxRate') {
+          queryParts.push(`${key}=${Number(value)}`);
+        } else {
+          queryParts.push(
+            `${key}=${value
+              .split(',')
+              .map((v) => v.trim())
+              .join(',')}`,
+          );
+        }
+      }
+    });
+
+    return queryParts.join('&');
+  };
 
   const fetchData = useCallback(async (appliedFilters: FilterState) => {
     try {
@@ -154,8 +161,8 @@ const Market: React.FC = () => {
       setIsDataLoading(false);
     }
   }, []);
-  
-//Working fine
+
+  //Working fine
   useEffect(() => {
     async function fetchInitialData() {
       try {
@@ -185,7 +192,6 @@ const Market: React.FC = () => {
   // const handleModalToggle = () => {
   //   setShowFilters(!showFilters);
   // };
-
 
   return (
     <section className="flex min-h-screen w-full flex-col">

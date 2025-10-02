@@ -18,8 +18,8 @@ import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
-import { FilterSheet } from '@/components/market/FilterSheet';  
- 
+import { FilterSheet } from '@/components/market/FilterSheet';
+
 interface FilterState {
   projects: string[];
   jobType: string[];

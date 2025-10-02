@@ -9,19 +9,18 @@ import {
   Search,
   Users2,
   XCircle,
-  Sliders
+  Sliders,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
+import Header from '../header/header';
 
 import TalentContent from './TalentContent';
-import Header from '../header/header';
 
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
-
 import {
   Sheet,
   SheetContent,
@@ -39,7 +38,6 @@ import { toast } from '@/components/ui/use-toast';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-
 
 interface ProfessionalExperience {
   workFrom?: string;
@@ -110,15 +108,13 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   const [loading, setLoading] = useState(false);
 
   // NEW: State for skills/domains list, search query, and 'show more' functionality
-  const [allSkillsAndDomains, setAllSkillsAndDomains] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
 
   const [skillsSearch, setSkillsSearch] = useState('');
   const [domainsSearch, setDomainsSearch] = useState('');
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAllSkills, setShowAllSkills] = useState(false);
+  const [showAllSkills] = useState(false);
 
   // REMOVED 'location: []' from the initial state
   const [filters, setFilters] = useState<FilterState>({
@@ -223,7 +219,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     [businessId, activeTab, constructQueryString],
   );
 
- 
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
@@ -272,7 +267,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active=''
+        active=""
       />
       <div className="sm:ml-14 flex flex-col min-h-screen">
         <Header

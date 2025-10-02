@@ -19,4 +19,3 @@ export const getStatusBadge = (status: string | undefined) => {
       return { text: 'UNKNOWN', className: 'bg-gray-500 hover:bg-gray-600' };
   }
 };
- 

@@ -11,8 +11,8 @@ interface FreelancerListProps {
 
 const FreelancerList: React.FC<FreelancerListProps> = ({
   freelancers,
-  isLoading = false, 
-})  => {
+  isLoading = false,
+}) => {
   return (
     <div className="mx-auto space-y-4 w-full">
       {isLoading ? (
