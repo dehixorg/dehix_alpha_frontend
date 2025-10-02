@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Check, X } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
-import { z } from 'zod';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  Check,
+  X,
   ArrowLeft,
   ArrowRight,
   Briefcase,
@@ -17,6 +14,10 @@ import {
   Shield,
   User,
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { z } from 'zod';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 
 import countries from '../../../country-codes.json';
@@ -45,18 +46,41 @@ function getPasswordStrength(password: string) {
   const rules = [
     { label: 'At least 8 characters', test: (pw: string) => pw.length >= 8 },
     { label: 'Contains a number', test: (pw: string) => /[0-9]/.test(pw) },
-    { label: 'Contains a special character', test: (pw: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pw) },
-    { label: 'Contains an uppercase letter', test: (pw: string) => /[A-Z]/.test(pw) },
-    { label: 'Contains a lowercase letter', test: (pw: string) => /[a-z]/.test(pw) },
+    {
+      label: 'Contains a special character',
+      test: (pw: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pw),
+    },
+    {
+      label: 'Contains an uppercase letter',
+      test: (pw: string) => /[A-Z]/.test(pw),
+    },
+    {
+      label: 'Contains a lowercase letter',
+      test: (pw: string) => /[a-z]/.test(pw),
+    },
   ];
-  const passed = rules.map(rule => rule.test(password));
+  const passed = rules.map((rule) => rule.test(password));
   const level = passed.filter(Boolean).length;
   let color = 'bg-red-500';
   let label = 'Weak';
-  if (level >= 2) { color = 'bg-yellow-400'; label = 'Medium'; }
-  if (level >= 3) { color = 'bg-blue-400'; label = 'Good'; }
-  if (level >= 4) { color = 'bg-green-500'; label = 'Strong'; }
-  return { label, color, level, rules: rules.map((r, i) => ({ label: r.label, passed: passed[i] })) };
+  if (level >= 2) {
+    color = 'bg-yellow-400';
+    label = 'Medium';
+  }
+  if (level >= 3) {
+    color = 'bg-blue-400';
+    label = 'Good';
+  }
+  if (level >= 4) {
+    color = 'bg-green-500';
+    label = 'Strong';
+  }
+  return {
+    label,
+    color,
+    level,
+    rules: rules.map((r, i) => ({ label: r.label, passed: passed[i] })),
+  };
 }
 
 interface Step {
@@ -206,9 +230,7 @@ const profileFormSchema = z
             'Invalid website URL. Must start with "www." or "https://" and contain letters',
         },
       ), // Allow empty string or valid URL
-    password: z
-  .string()
-  .min(6, { message: '' }),
+    password: z.string().min(6, { message: '' }),
     perHourPrice: z
       .number()
       .max(300, 'Per hour price must not excedd 300')
@@ -313,7 +335,12 @@ function FreelancerRegisterForm({
 }: FreelancerRegisterFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<{ label: string; color: string; level: number; rules: { label: string; passed: boolean }[] }>({ label: '', color: '', level: 0, rules: [] });
+  const [passwordStrength, setPasswordStrength] = useState<{
+    label: string;
+    color: string;
+    level: number;
+    rules: { label: string; passed: boolean }[];
+  }>({ label: '', color: '', level: 0, rules: [] });
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -550,9 +577,11 @@ function FreelancerRegisterForm({
                               type={showPassword ? 'text' : 'password'}
                               className="pr-10"
                               {...field}
-                              onChange={e => {
+                              onChange={(e) => {
                                 field.onChange(e);
-                                setPasswordStrength(getPasswordStrength(e.target.value));
+                                setPasswordStrength(
+                                  getPasswordStrength(e.target.value),
+                                );
                               }}
                             />
                             <button
@@ -571,20 +600,53 @@ function FreelancerRegisterForm({
                           <div className="flex flex-col gap-2 mt-2">
                             {/* Progress Bar */}
                             <div className="flex w-40 h-2 rounded overflow-hidden">
-                              <div className={`flex-1 ${passwordStrength.level >= 1 ? passwordStrength.color : 'bg-gray-200'} transition-all`}></div>
-                              <div className={`flex-1 ${passwordStrength.level >= 2 ? passwordStrength.color : 'bg-gray-200'} transition-all`}></div>
-                              <div className={`flex-1 ${passwordStrength.level >= 3 ? passwordStrength.color : 'bg-gray-200'} transition-all`}></div>
-                              <div className={`flex-1 ${passwordStrength.level >= 4 ? passwordStrength.color : 'bg-gray-200'} transition-all`}></div>
+                              <div
+                                className={`flex-1 ${passwordStrength.level >= 1 ? passwordStrength.color : 'bg-gray-200'} transition-all`}
+                              ></div>
+                              <div
+                                className={`flex-1 ${passwordStrength.level >= 2 ? passwordStrength.color : 'bg-gray-200'} transition-all`}
+                              ></div>
+                              <div
+                                className={`flex-1 ${passwordStrength.level >= 3 ? passwordStrength.color : 'bg-gray-200'} transition-all`}
+                              ></div>
+                              <div
+                                className={`flex-1 ${passwordStrength.level >= 4 ? passwordStrength.color : 'bg-gray-200'} transition-all`}
+                              ></div>
                             </div>
-                            <span className={`text-xs font-semibold ${
-                              passwordStrength.label === 'Weak' ? 'text-red-500' : passwordStrength.label === 'Medium' ? 'text-yellow-500' : passwordStrength.label === 'Good' ? 'text-blue-500' : 'text-green-600'
-                            }`}>{passwordStrength.label}</span>
+                            <span
+                              className={`text-xs font-semibold ${
+                                passwordStrength.label === 'Weak'
+                                  ? 'text-red-500'
+                                  : passwordStrength.label === 'Medium'
+                                    ? 'text-yellow-500'
+                                    : passwordStrength.label === 'Good'
+                                      ? 'text-blue-500'
+                                      : 'text-green-600'
+                              }`}
+                            >
+                              {passwordStrength.label}
+                            </span>
                             {/* Checklist */}
                             <ul className="mt-1 space-y-1">
                               {passwordStrength.rules.map((rule, idx) => (
-                                <li key={idx} className="flex items-center gap-2 text-xs">
-                                  {rule.passed ? <Check className="text-green-500 w-4 h-4" /> : <X className="text-red-500 w-4 h-4" />}
-                                  <span className={rule.passed ? 'text-green-600' : 'text-red-500'}>{rule.label}</span>
+                                <li
+                                  key={idx}
+                                  className="flex items-center gap-2 text-xs"
+                                >
+                                  {rule.passed ? (
+                                    <Check className="text-green-500 w-4 h-4" />
+                                  ) : (
+                                    <X className="text-red-500 w-4 h-4" />
+                                  )}
+                                  <span
+                                    className={
+                                      rule.passed
+                                        ? 'text-green-600'
+                                        : 'text-red-500'
+                                    }
+                                  >
+                                    {rule.label}
+                                  </span>
                                 </li>
                               ))}
                             </ul>
