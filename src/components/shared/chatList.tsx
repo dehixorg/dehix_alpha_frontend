@@ -105,10 +105,8 @@ export function ChatList({
   // Utility function to detect and format media messages
   const formatLastMessage = (lastMessage: any): string => {
     if (!lastMessage?.content) return 'No messages yet';
-    
     const content = lastMessage.content;
     const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
-    
     // Check if content is an S3 URL
     if (
       typeof content === 'string' &&
@@ -119,12 +117,10 @@ export function ChatList({
         const url = new URL(content);
         const fileName = decodeURIComponent(url.pathname.substring(1));
         const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-        
         // Check if it's a voice message based on the message type
         if (lastMessage.voiceMessage) {
           return '🎤 Voice message';
         }
-        
         // Check file extension for different media types
         const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
         const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
@@ -139,7 +135,6 @@ export function ChatList({
           'xlsx',
           'txt',
         ];
-        
         if (imageExtensions.includes(fileExtension)) {
           return '📷 Photo';
         } else if (videoExtensions.includes(fileExtension)) {
@@ -156,7 +151,6 @@ export function ChatList({
         return '📎 Attachment';
       }
     }
-    
     // Check if there are attachments
     if (
       lastMessage.attachments &&
@@ -177,7 +171,6 @@ export function ChatList({
       }
       return '📎 File';
     }
-    
     // Return stripped HTML content for regular text messages
     const textContent = stripHtml(content);
     return textContent || 'Message';
