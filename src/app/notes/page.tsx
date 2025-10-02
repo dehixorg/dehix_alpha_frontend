@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { notesMenu } from '@/config/menuItems/business/dashboardMenuItems';
-import NotesHeader from '@/components/business/market/NotesHeader';
+
 import NotesRender from '@/components/shared/NotesRender';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { LabelType, Note, NoteType } from '@/utils/types/note';
@@ -14,6 +14,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import Header from '@/components/header/header';
 import { menuItemsBottom } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import NotesHeader from '@/components/business/market/NotesHeader';
 
 const Notes = () => {
   // Get userId from Redux
