@@ -213,9 +213,9 @@ export function BusinessFilterComponent({
           type="multiple"
           defaultValue={[
             'skills',
-            'domains',
+            'domain',
             'experience',
-            'job-type',
+            'jobType',
             'location',
           ]}
           className="space-y-4 pb-2"
