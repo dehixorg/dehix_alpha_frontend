@@ -1020,7 +1020,12 @@ export function ProfileSidebar({
                                   </p>
                                 </div>
                                 <div className="shrink-0 flex items-center gap-2">
-                                  <Button asChild size="sm" variant="outline">
+                                  <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="hover:bg-accent hover:text-accent-foreground"
+                                  >
                                     <a
                                       href={file.url}
                                       target="_blank"
@@ -1053,7 +1058,7 @@ export function ProfileSidebar({
                       <CardContent className="space-y-2">
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
+                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                           disabled
                         >
                           <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
@@ -1111,7 +1116,7 @@ export function ProfileSidebar({
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
+                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                           disabled
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
@@ -1296,7 +1301,7 @@ export function ProfileSidebar({
                             <>
                               <Button
                                 variant="outline"
-                                className="w-full justify-start"
+                                className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                 onClick={() => setIsAddMembersDialogOpen(true)}
                               >
                                 <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
@@ -1304,7 +1309,7 @@ export function ProfileSidebar({
                               </Button>
                               <Button
                                 variant="outline"
-                                className="w-full justify-start"
+                                className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                 onClick={() =>
                                   setIsChangeGroupInfoDialogOpen(true)
                                 }
@@ -1316,7 +1321,7 @@ export function ProfileSidebar({
                                 undefined && (
                                 <Button
                                   variant="outline"
-                                  className="w-full justify-start"
+                                  className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                   onClick={() =>
                                     setIsInviteLinkDialogOpen(true)
                                   }
