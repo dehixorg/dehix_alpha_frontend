@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect, useState } from 'react';
-// import { Check, X } from 'lucide-react';
 function getPasswordStrength(password: string) {
   const rules = [
     { label: 'At least 8 characters', test: (pw: string) => pw.length >= 8 },
@@ -41,18 +40,6 @@ function getPasswordStrength(password: string) {
     rules: rules.map((r, i) => ({ label: r.label, passed: passed[i] })),
   };
 }
-// // Password strength helper
-// function getPasswordStrength(password: string): { label: string; color: string; level: number } {
-//   let level = 0;
-//   if (password.length >= 8) level++;
-//   if (/[A-Z]/.test(password)) level++;
-//   if (/[a-z]/.test(password)) level++;
-//   if (/[0-9]/.test(password)) level++;
-//   if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) level++;
-//   if (level <= 2) return { label: 'Weak', color: 'bg-red-500', level: 1 };
-//   if (level === 3 || level === 4) return { label: 'Medium', color: 'bg-yellow-500', level: 2 };
-//   return { label: 'Strong', color: 'bg-green-500', level: 3 };
-// }
 import {
   ArrowLeft,
   ArrowRight,
@@ -66,7 +53,7 @@ import {
   Shield,
   User,
   Check,
-   X,
+  X,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
