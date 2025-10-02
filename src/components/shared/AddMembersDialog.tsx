@@ -223,7 +223,7 @@ export function AddMembersDialog({
             type="button"
             onClick={handleAddClick}
             disabled={selectedUsersState.length === 0} // Check length of selectedUsersState
-            className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-hover))]"
+            className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))] hover:text-[hsl(var(--primary-foreground))] disabled:bg-[hsl(var(--muted))] disabled:text-[hsl(var(--muted-foreground))] disabled:cursor-not-allowed"
           >
             Add Selected ({selectedUsersState.length}){' '}
             {/* Show length of selectedUsersState */}
