@@ -143,11 +143,8 @@ const Market: React.FC = () => {
   const fetchData = useCallback(async (appliedFilters: FilterState) => {
     try {
       setIsDataLoading(true);
-      console.log("fetchData called with filters:", appliedFilters)
       const queryString = constructQueryString(appliedFilters);
-      console.log("Frontend: Query string sent to /freelancer:", queryString)
       const response = await axiosInstance.get(`/freelancer?${queryString}`);
-      console.log("Frontend : API response:", response.data)
 
       setFreelancers(response.data.data);
     } catch (error) {
@@ -189,9 +186,7 @@ const Market: React.FC = () => {
   //   setShowFilters(!showFilters);
   // };
 
-  console.log("these are skills",skills)
-  console.log("these are domains",domains)
-  console.log("these are freelancers",freelancers)
+
   return (
     <section className="flex min-h-screen w-full flex-col">
       <SidebarMenu

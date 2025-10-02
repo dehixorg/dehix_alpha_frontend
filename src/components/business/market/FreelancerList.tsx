@@ -13,7 +13,6 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
   freelancers,
   isLoading = false, 
 })  => {
-  console.log("freelancer from Api", freelancers)
   return (
     <div className="mx-auto space-y-4 w-full">
       {isLoading ? (

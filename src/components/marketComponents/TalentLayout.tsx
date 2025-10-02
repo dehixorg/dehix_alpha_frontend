@@ -266,7 +266,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     };
     setFilters(emptyFilters);
   };
-  console.log('these are all skills and domain', allSkillsAndDomains);
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-auto">
