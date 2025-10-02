@@ -63,51 +63,52 @@ const NotesHeader = ({
         </div>
         {!isTrash && (
           <div className="flex items-center gap-3">
-              {/* Dropdown Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="sm:text-sm md:text-base">
-                    Sort
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56  shadow-md rounded-md border">
-                  <DropdownMenuLabel className="">Sort Notes</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuCheckboxItem
-                    checked={selectedSortOption === 'color'}
-                    onCheckedChange={() => {
-                      setSelectedSortOption('color');
-                      sortByColor();
-                    }}
-                  >
-                    Sort by color
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={selectedSortOption === 'latest'}
-                    onCheckedChange={() => {
-                      setSelectedSortOption('latest');
-                      sortByLatest();
-                    }}
-                  >
-                    Sort by latest
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={selectedSortOption === 'oldest'}
-                    onCheckedChange={() => {
-                      setSelectedSortOption('oldest');
-                      sortByOldest();
-                    }}
-                  >
-                    Sort by oldest
-                  </DropdownMenuCheckboxItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <CreateNoteDialog onNoteCreate={onNoteCreate} />
-            </div>
-          )}
+            {/* Dropdown Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="sm:text-sm md:text-base">
+                  Sort
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56  shadow-md rounded-md border">
+                <DropdownMenuLabel className="">Sort Notes</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={selectedSortOption === 'color'}
+                  onCheckedChange={() => {
+                    setSelectedSortOption('color');
+                    sortByColor();
+                  }}
+                >
+                  Sort by color
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={selectedSortOption === 'latest'}
+                  onCheckedChange={() => {
+                    setSelectedSortOption('latest');
+                    sortByLatest();
+                  }}
+                >
+                  Sort by latest
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={selectedSortOption === 'oldest'}
+                  onCheckedChange={() => {
+                    setSelectedSortOption('oldest');
+                    sortByOldest();
+                  }}
+                >
+                  Sort by oldest
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <CreateNoteDialog onNoteCreate={onNoteCreate} />
+          </div>
+        )}
       </div>
       <p className="text-gray-400 mt-2 hidden sm:block">
-        Organize your thoughts and ideas. Add, view, and manage your personal notes with ease.
+        Organize your thoughts and ideas. Add, view, and manage your personal
+        notes with ease.
       </p>
     </div>
   );

@@ -6,7 +6,6 @@ import { Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { notesMenu } from '@/config/menuItems/business/dashboardMenuItems';
-
 import NotesRender from '@/components/shared/NotesRender';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { LabelType, Note, NoteType } from '@/utils/types/note';
