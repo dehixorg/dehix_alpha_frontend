@@ -115,12 +115,14 @@ const HomePage = () => {
           profilePic: user.photoURL || null,
           email: user.email || null,
           userType: user.type,
+          viewState: 'inbox',
         },
         [selectedUser.id]: {
           userName: selectedUser.displayName,
           profilePic: selectedUser.profilePic || null,
           email: selectedUser.email || null,
           userType: selectedUser.userType,
+          viewState: 'inbox',
         },
       },
     };
@@ -147,12 +149,14 @@ const HomePage = () => {
             profilePic: user.photoURL || undefined,
             email: user.email || undefined,
             userType: getUserType(user.type),
+            viewState: 'inbox',
           },
           [selectedUser.id]: {
             userName: selectedUser.displayName,
             profilePic: selectedUser.profilePic || undefined,
             email: selectedUser.email || undefined,
             userType: getUserType(selectedUser.userType),
+            viewState: 'inbox',
           },
         } as const,
         createdAt: new Date().toISOString(),
@@ -193,6 +197,7 @@ const HomePage = () => {
         profilePic: user.photoURL || null,
         email: user.email || null,
         userType: user.type,
+        viewState: 'inbox',
       },
     };
     selectedUsers.forEach((selected: any) => {
@@ -201,6 +206,7 @@ const HomePage = () => {
         profilePic: selected.profilePic || null,
         email: selected.email || null,
         userType: selected.userType,
+        viewState: 'inbox',
       };
     });
 
@@ -235,6 +241,7 @@ const HomePage = () => {
               profilePic: v.profilePic || undefined,
               email: v.email || undefined,
               userType: v.userType,
+              viewState: v.viewState,
             },
           ],
         ),
@@ -392,6 +399,7 @@ const HomePage = () => {
         isChatExpanded={isChatExpanded}
         onToggleExpand={toggleChatExpanded}
         onOpenProfileSidebar={handleOpenProfileSidebar}
+        onConversationUpdate={setActiveConversation}
       />
     );
   } else if (!loading && conversations.length > 0) {
@@ -463,6 +471,7 @@ const HomePage = () => {
           profileId={profileSidebarId}
           profileType={profileSidebarType}
           initialData={profileSidebarInitialData}
+          onConversationUpdate={setActiveConversation}
         />
         {user && (
           <NewChatDialog

@@ -50,9 +50,13 @@ export default function ExperienceSelectionDialog({
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    if (open && freelancerId && currentProfileId) {
+    if (open && freelancerId) {
       fetchExperiences();
-      fetchCurrentProfileExperiences();
+      if (currentProfileId && currentProfileId !== 'new') {
+        fetchCurrentProfileExperiences();
+      } else {
+        setExistingExperienceIds([]);
+      }
     }
   }, [open, freelancerId, currentProfileId]);
 
