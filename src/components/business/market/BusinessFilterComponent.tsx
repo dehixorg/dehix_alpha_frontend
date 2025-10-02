@@ -118,6 +118,7 @@ export function BusinessFilterComponent({
     onSearchChange: (value: string) => void,
     onClear: () => void,
     icon: React.ReactNode,
+    showSearch = true,
   ) => {
     const filterValues = getFilterValues(filterKey);
 
@@ -139,12 +140,14 @@ export function BusinessFilterComponent({
         </AccordionTrigger>
         <AccordionContent className="py-2">
           <div className="space-y-3">
-            <SearchInput
-              placeholder={`Search ${title.toLowerCase()}...`}
-              value={searchQuery}
-              onChange={onSearchChange}
-              onClear={onClear}
-            />
+            {showSearch && (
+              <SearchInput
+                placeholder={`Search ${title.toLowerCase()}...`}
+                value={searchQuery}
+                onChange={onSearchChange}
+                onClear={onClear}
+              />
+            )}
             <div className="h-60">
               <ScrollArea className="h-full w-full pr-2">
                 <div className="space-y-1 py-1">
@@ -244,6 +247,7 @@ export function BusinessFilterComponent({
             () => {},
             () => {},
             <UserCheck className="h-4 w-4 text-muted-foreground" />,
+            false,
           )}
 
           {renderFilterSection(
@@ -254,6 +258,7 @@ export function BusinessFilterComponent({
             () => {},
             () => {},
             <Briefcase className="h-4 w-4 text-muted-foreground" />,
+            false,
           )}
 
           {renderFilterSection(
@@ -264,6 +269,7 @@ export function BusinessFilterComponent({
             () => {},
             () => {},
             <MapPin className="h-4 w-4 text-muted-foreground" />,
+            false,
           )}
 
           <AccordionItem
