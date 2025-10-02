@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect, useState } from 'react';
-import { Check, X } from 'lucide-react';
+// import { Check, X } from 'lucide-react';
 function getPasswordStrength(password: string) {
   const rules = [
     { label: 'At least 8 characters', test: (pw: string) => pw.length >= 8 },
@@ -65,6 +65,8 @@ import {
   Rocket,
   Shield,
   User,
+  Check,
+   X,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
