@@ -121,7 +121,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" variant="secondary">
           <Plus className="h-4 w-4" /> Add Domain
         </Button>
       </DialogTrigger>
@@ -162,7 +162,10 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
                       <Link href="/freelancer/settings/personal-info">
                         <p className="p-4 flex justify-center items-center">
                           No domains to add -{' '}
-                          <span className="text-blue-500 ml-2">Add some</span>{' '}
+                          <span className="text-blue-500 ml-2">
+                            {' '}
+                            Add some technologies...
+                          </span>{' '}
                         </p>
                       </Link>
                     )}

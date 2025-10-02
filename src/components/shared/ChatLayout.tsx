@@ -58,7 +58,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
       >
         <aside
           className={cn(
-            'h-full bg-card border-r border-border p-4 overflow-y-auto shadow-sm',
+            'h-full bg-card border-r border-border overflow-y-auto shadow-sm',
           )}
           aria-label="Chat List Sidebar"
         >

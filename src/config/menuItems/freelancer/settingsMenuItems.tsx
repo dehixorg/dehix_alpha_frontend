@@ -1,7 +1,7 @@
 import {
   BookOpen,
   Briefcase,
-  Files,
+  FileWarning,
   HomeIcon,
   ImagePlus,
   Package,
@@ -69,7 +69,7 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/reports', // Link to your new Reports page
-    icon: <Files className="h-5 w-5" />, // You can change icon
+    icon: <FileWarning className="h-5 w-5" />, // You can change icon
     label: 'Reports',
   },
 ];

@@ -27,6 +27,23 @@ import {
   LoaderCircle,
   Pencil,
 } from 'lucide-react';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
+  deleteDoc,
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  where,
+  getFirestore,
+  serverTimestamp,
+  FieldValue,
+} from 'firebase/firestore';
 
 import { AddMembersDialog } from './AddMembersDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
@@ -34,15 +51,22 @@ import { ConfirmActionDialog } from './ConfirmActionDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
-import { db } from '@/config/firebaseConfig';
-import { useToast } from '@/components/ui/use-toast';
-import { Badge } from '@/components/ui/badge';
+// Simple file item type for shared files list
+export type FileItem = {
+  id: string;
+  name: string;
+  type: string;
+  size?: number | string;
+  url: string;
+};
+
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -112,46 +136,24 @@ interface ProfileSidebarProps {
   profileId: string | null;
   profileType: 'user' | 'group' | null;
   currentUser?: CombinedUser | null;
-  profileData?: (ProfileUser | ProfileGroup) & {
-    members?: ProfileGroupMember[];
-    admins?: string[];
-    inviteLink?: string;
-    createdAtFormatted?: string;
-    lastSeen?: string;
-    status?: string;
-    avatar?: string;
-    displayName?: string;
-    email?: string;
-    description?: string;
-    id?: string;
-    groupName?: string;
-    participantDetails?: Record<
-      string,
-      {
-        userName: string;
-        profilePic?: string;
-        email?: string;
-      }
-    >;
-  };
-  initialData?: Partial<ProfileUser & ProfileGroup> & {
-    members?: ProfileGroupMember[];
-    admins?: string[];
-    inviteLink?: string;
-    createdAtFormatted?: string;
-  };
+  initialData?: { userName?: string; email?: string; profilePic?: string };
+  onConversationUpdate?: (conv: any) => void;
 }
 
-const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
+export function ProfileSidebar({
   isOpen,
   onClose,
   profileId,
   profileType,
   profileData: initialProfileData,
   initialData,
-}) => {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [isLoadingMedia, setIsLoadingMedia] = useState<boolean>(false);
+  onConversationUpdate,
+}: ProfileSidebarProps) {
+  // State management
+  const [profileData, setProfileData] = useState<
+    ProfileUser | ProfileGroup | null
+  >(null);
+  const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
   const [, setSharedFiles] = useState<FileItem[]>([]);
@@ -160,51 +162,13 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
-  const [profileData, setProfileData] = useState<
-    ProfileUser | ProfileGroup | null
-  >(initialProfileData || null);
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] =
-    useState<boolean>(false);
-  const [isEditingDescription, setIsEditingDescription] =
-    useState<boolean>(false);
-  const [editingDescription, setEditingDescription] = useState<string>('');
-  const [isEditingBio, setIsEditingBio] = useState<boolean>(false);
-  const [editingBio, setEditingBio] = useState<string>('');
-  const [refreshKey, setRefreshKey] = useState<number>(0);
-  const [, setConfirmAction] = useState<{
-    title: string;
-    description: string;
-    onConfirm: () => void;
-    confirmButtonText?: string;
-    confirmButtonVariant?:
-      | 'default'
-      | 'destructive'
-      | 'outline'
-      | 'secondary'
-      | 'ghost'
-      | 'link';
-    onCancel?: () => void;
-    cancelButtonText?: string;
-  } | null>(null);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [blockStatus, setBlockStatus] = useState<{
+    isBlocked: boolean;
+    blockedBy: string | null;
+  }>({ isBlocked: false, blockedBy: null });
 
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (profileData) {
-      if (profileType === 'user') {
-        const bio = 'bio' in profileData ? profileData.bio : '';
-        setEditingBio(bio || '');
-      } else if (profileType === 'group') {
-        const description =
-          'description' in profileData ? profileData.description : '';
-        setEditingDescription(description || '');
-      }
-    } else {
-      setEditingBio('');
-      setEditingDescription('');
-    }
-  }, [profileData, profileType]);
-
+  // Hooks
   const user = useSelector((state: RootState) => state.user);
 
   const handleEditBio = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -378,9 +342,16 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     description: '',
     onConfirm: () => {},
     confirmButtonText: 'Confirm',
-    confirmButtonVariant: 'destructive' as const,
-    onCancel: () => {},
-    cancelButtonText: 'Cancel',
+    confirmButtonVariant: 'destructive' as
+      | 'default'
+      | 'destructive'
+      | 'outline'
+      | 'secondary'
+      | 'ghost'
+      | 'link'
+      | null
+      | undefined,
+    isLoading: false,
   });
 
   const internalFetchProfileData = async () => {
@@ -621,6 +592,35 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     }
   };
 
+  const fetchBlockStatus = async (targetUserId: string) => {
+    if (!user?.uid) return;
+
+    setBlockStatus({ isBlocked: false, blockedBy: null });
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('type', '==', 'individual'),
+      where('participants', 'array-contains', user.uid),
+    );
+
+    try {
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        if (doc.data().participants.includes(targetUserId)) {
+          const conversationData = doc.data();
+          if (conversationData.blocked?.status === true) {
+            setBlockStatus({
+              isBlocked: true,
+              blockedBy: conversationData.blocked.by,
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching block status:', error);
+    }
+  };
+
   useEffect(() => {
     const executeFetches = async () => {
       if (isOpen && profileId) {
@@ -635,6 +635,9 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
           internalFetchProfileData(),
           fetchSharedMedia(profileId),
           fetchSharedFiles(profileId),
+          profileType === 'user'
+            ? fetchBlockStatus(profileId)
+            : Promise.resolve(),
         ]);
 
         if (loading) {
@@ -913,7 +916,103 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  const handleToggleBlockChat = async (
+    targetUserId: string,
+    block: boolean,
+  ) => {
+    console.log('handleToggleBlockChat called', {
+      targetUserId,
+      block,
+      userUid: user?.uid,
+      hasOnConversationUpdate: !!onConversationUpdate,
+    });
+
+    if (!user?.uid || !targetUserId || !onConversationUpdate) {
+      console.log('Missing required data:', {
+        hasUser: !!user?.uid,
+        hasTargetUserId: !!targetUserId,
+        hasOnConversationUpdate: !!onConversationUpdate,
+      });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'User information is missing.',
+      });
+      return;
+    }
+
+    // Set loading state
+    setConfirmDialogProps((prev) => ({ ...prev, isLoading: true }));
+
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('type', '==', 'individual'),
+      where('participants', 'array-contains', user.uid),
+    );
+
+    let conversationDocToUpdate: any;
+    try {
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        if (doc.data().participants.includes(targetUserId)) {
+          conversationDocToUpdate = doc;
+        }
+      });
+
+      if (!conversationDocToUpdate) {
+        toast({
+          variant: 'destructive',
+          title: 'Cannot Block',
+          description: 'A direct 1-on-1 chat must exist to block this user.',
+        });
+        setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+        return;
+      }
+
+      const conversationDocRef = doc(
+        db,
+        'conversations',
+        conversationDocToUpdate.id,
+      );
+
+      if (block) {
+        await updateDoc(conversationDocRef, {
+          blocked: { status: true, by: user.uid },
+        });
+        setBlockStatus({ isBlocked: true, blockedBy: user.uid });
+        toast({
+          title: 'Chat Blocked',
+          description: 'You will no longer receive messages in this chat.',
+        });
+      } else {
+        await updateDoc(conversationDocRef, {
+          blocked: deleteField(),
+        });
+        setBlockStatus({ isBlocked: false, blockedBy: null });
+        toast({
+          title: 'Chat Unblocked',
+          description: 'You can now message in this chat.',
+        });
+      }
+
+      const currentConvData = (
+        await getDoc(conversationDocRef)
+      ).data() as Conversation;
+      onConversationUpdate({ ...currentConvData, id: conversationDocRef.id });
+    } catch (error) {
+      console.error('Error updating block status:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update block status.',
+      });
+      setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+    } finally {
+      setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+      setIsConfirmDialogOpen(false);
+    }
+  };
 
   const getFallbackName = (data: ProfileUser | ProfileGroup | null): string => {
     if (!data || !data.displayName || !data.displayName.trim()) return 'P';
@@ -1222,10 +1321,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           alt={profileData.displayName}
                           onError={(e) => {
                             console.error('Error loading group avatar:', e);
-                            console.log(
-                              'Failed to load group avatar with src:',
-                              e.currentTarget.src,
-                            );
                           }}
                         />
                       ) : (
@@ -1234,10 +1329,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           alt={profileData.displayName}
                           onError={(e) => {
                             console.error('Error loading user avatar:', e);
-                            console.log(
-                              'Failed to load user avatar with src:',
-                              e.currentTarget.src,
-                            );
                           }}
                         />
                       )}
@@ -1442,8 +1533,46 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           <div className="flex justify-center items-center h-20">
                             <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
                           </div>
-                        ) : sharedMedia.length > 0 ? (
-                          <SharedMediaDisplay mediaItems={sharedMedia} />
+                        ) : sharedFiles.length > 0 ? (
+                          <ul className="space-y-2">
+                            {sharedFiles.map((file) => (
+                              <li
+                                key={file.id}
+                                className="flex items-center justify-between border rounded-md p-2"
+                              >
+                                <div className="min-w-0 mr-2">
+                                  <p className="text-sm font-medium truncate">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {file.type}
+                                    {file.size ? ` • ${file.size}` : ''}
+                                  </p>
+                                </div>
+                                <div className="shrink-0 flex items-center gap-2">
+                                  <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="hover:bg-accent hover:text-accent-foreground"
+                                  >
+                                    <a
+                                      href={file.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      Open
+                                    </a>
+                                  </Button>
+                                  <Button asChild size="sm">
+                                    <a href={file.url} download>
+                                      Download
+                                    </a>
+                                  </Button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
                         ) : (
                           <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
                             <p>No media has been shared yet.</p>
@@ -1459,21 +1588,65 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                       <CardContent className="space-y-2">
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
+                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                           disabled
                         >
                           <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
-                          disabled
+                          className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))]"
+                          disabled={
+                            blockStatus.isBlocked &&
+                            blockStatus.blockedBy !== user?.uid
+                          }
+                          onClick={() => {
+                            console.log('Block button clicked', {
+                              profileId,
+                              onConversationUpdate,
+                              blockStatus,
+                            });
+                            if (profileId && onConversationUpdate) {
+                              const isCurrentlyBlocked =
+                                blockStatus.isBlocked &&
+                                blockStatus.blockedBy === user?.uid;
+                              console.log('Setting up confirmation dialog', {
+                                isCurrentlyBlocked,
+                              });
+
+                              setConfirmDialogProps({
+                                title: isCurrentlyBlocked
+                                  ? 'Unblock this Chat?'
+                                  : 'Block this Chat?',
+                                description: isCurrentlyBlocked
+                                  ? 'Unblocking will allow both of you to send messages in this chat again. Are you sure?'
+                                  : 'Blocking will prevent both of you from sending messages in this 1-on-1 chat. Do you want to block it?',
+                                onConfirm: () =>
+                                  handleToggleBlockChat(
+                                    profileId,
+                                    !isCurrentlyBlocked,
+                                  ),
+                                confirmButtonText: isCurrentlyBlocked
+                                  ? 'Unblock Chat'
+                                  : 'Block Chat',
+                                confirmButtonVariant: 'destructive',
+                                isLoading: false,
+                              });
+                              setIsConfirmDialogOpen(true);
+                            }
+                          }}
                         >
-                          <ShieldX className="h-4 w-4 mr-2" /> Block User
+                          <ShieldX className="h-4 w-4 mr-2" />
+                          {blockStatus.isBlocked &&
+                          blockStatus.blockedBy === user?.uid
+                            ? 'Unblock User'
+                            : blockStatus.isBlocked
+                              ? 'Blocked by User'
+                              : 'Block User'}
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
+                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                           disabled
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
@@ -1516,86 +1689,103 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                       <CardHeader>
                         <CardTitle className="text-base">
                           Members (
-                          {(profileData as ProfileGroup)?.members?.length || 0})
+                          {(profileData as ProfileGroup).members?.length || 0})
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
-                        <ScrollArea className="max-h-80 px-4 overflow-y-auto">
-                          <ul className="space-y-1 py-2">
-                            {((profileData as ProfileGroup)?.members || []).map(
-                              (member) => (
-                                <li
-                                  key={member.id}
-                                  className="flex items-center gap-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)] group"
-                                >
-                                  <Avatar className="w-8 h-8">
-                                    <AvatarImage
-                                      src={member.profilePic}
-                                      alt={member.userName}
-                                    />
-                                    <AvatarFallback>
-                                      {member.userName?.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1 min-w-0">
-                                    <span className="text-sm font-medium truncate">
-                                      {member.userName}
-                                    </span>
-                                    {(
-                                      profileData as ProfileGroup
-                                    ).admins?.includes(member.id) && (
-                                      <Badge
-                                        variant="outline"
-                                        className="ml-2 text-[10px]"
-                                      >
-                                        Admin
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
-                                    {member.status === 'online'
-                                      ? 'Online'
-                                      : 'Offline'}
-                                  </span>
-                                  {user &&
-                                    (
-                                      profileData as ProfileGroup
-                                    ).admins?.includes(user.uid) &&
-                                    member.id !== user.uid &&
-                                    !(
-                                      profileData as ProfileGroup
-                                    ).admins?.includes(member.id) && (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setConfirmDialogProps({
-                                            title: 'Confirm Removal',
-                                            description: `Are you sure you want to remove ${member.userName} from the group?`,
-                                            onConfirm: async () => {
-                                              await handleConfirmRemoveMember(
-                                                member.id,
-                                              );
-                                            },
-                                            confirmButtonText: 'Remove Member',
-                                            confirmButtonVariant:
-                                              'destructive' as const,
-                                            onCancel: () => {},
-                                            cancelButtonText: 'Cancel',
-                                          });
-                                          setIsConfirmDialogOpen(true);
-                                        }}
-                                        aria-label={`Remove ${member.userName} from group`}
-                                      >
-                                        <MinusCircle className="h-4 w-4" />
-                                      </Button>
-                                    )}
-                                </li>
-                              ),
-                            )}
-                          </ul>
+                        <ScrollArea className="max-h-80 px-2 overflow-y-auto">
+                          {(profileData as ProfileGroup).members?.length ? (
+                            <ul className="divide-y divide-gray-200 bg-white dark:bg-gray-900 rounded-lg shadow-sm py-2">
+                              {(profileData as ProfileGroup).members.map(
+                                (member) => {
+                                  const group = profileData as ProfileGroup;
+                                  const isCurrentUserAdmin =
+                                    user && group.admins?.includes(user.uid);
+                                  const isMemberAdmin = group.admins?.includes(
+                                    member.id,
+                                  );
+                                  const canPerformAction =
+                                    isCurrentUserAdmin &&
+                                    user.uid !== member.id;
+
+                                  return (
+                                    <li
+                                      key={member.id}
+                                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group"
+                                    >
+                                      <Avatar className="w-8 h-8">
+                                        <AvatarImage
+                                          src={member.profilePic}
+                                          alt={member.userName}
+                                        />
+                                        <AvatarFallback>
+                                          {member.userName
+                                            ?.charAt(0)
+                                            .toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <span
+                                        className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${
+                                          member.status === 'online'
+                                            ? 'bg-green-500'
+                                            : 'bg-gray-400'
+                                        }`}
+                                      ></span>
+                                      <div className="flex-1 min-w-0">
+                                        <span className="text-sm font-medium truncate">
+                                          {member.userName}
+                                        </span>
+                                        {isMemberAdmin && (
+                                          <Badge
+                                            variant="outline"
+                                            className="ml-2 text-[10px] border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300 border"
+                                          >
+                                            Admin
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
+                                        {member.status === 'online'
+                                          ? 'Online'
+                                          : 'Offline'}
+                                      </span>
+                                      {canPerformAction && !isMemberAdmin && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setConfirmDialogProps({
+                                              title: 'Confirm Removal',
+                                              description: `Are you sure you want to remove ${member.userName} from the group?`,
+                                              onConfirm: () =>
+                                                handleConfirmRemoveMember(
+                                                  member.id,
+                                                ),
+                                              confirmButtonText:
+                                                'Remove Member',
+                                              confirmButtonVariant:
+                                                'destructive',
+                                              isLoading: false,
+                                            });
+                                            setIsConfirmDialogOpen(true);
+                                          }}
+                                          aria-label={`Remove ${member.userName} from group`}
+                                        >
+                                          <MinusCircle className="h-4 w-4" />
+                                        </Button>
+                                      )}
+                                    </li>
+                                  );
+                                },
+                              )}
+                            </ul>
+                          ) : (
+                            <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4">
+                              No members found
+                            </div>
+                          )}
                         </ScrollArea>
                       </CardContent>
                     </Card>
@@ -1633,7 +1823,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                             <>
                               <Button
                                 variant="outline"
-                                className="w-full justify-start"
+                                className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                 onClick={() => setIsAddMembersDialogOpen(true)}
                               >
                                 <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
@@ -1641,7 +1831,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                               </Button>
                               <Button
                                 variant="outline"
-                                className="w-full justify-start"
+                                className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                 onClick={() =>
                                   setIsChangeGroupInfoDialogOpen(true)
                                 }
@@ -1653,7 +1843,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                 undefined && (
                                 <Button
                                   variant="outline"
-                                  className="w-full justify-start"
+                                  className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                   onClick={() =>
                                     setIsInviteLinkDialogOpen(true)
                                   }
@@ -1715,9 +1905,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                 }
                               },
                               confirmButtonText: 'Leave',
-                              confirmButtonVariant: 'destructive' as const,
-                              onCancel: () => {},
-                              cancelButtonText: 'Cancel',
+                              confirmButtonVariant: 'destructive',
+                              isLoading: false,
                             });
                             setIsConfirmDialogOpen(true);
                           }}
@@ -1742,10 +1931,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                         (profileData as ProfileGroup).id,
                                       ),
                                     confirmButtonText: 'Yes, Delete This Group',
-                                    confirmButtonVariant:
-                                      'destructive' as const,
-                                    onCancel: () => {},
-                                    cancelButtonText: 'Cancel',
+                                    confirmButtonVariant: 'destructive',
+                                    isLoading: false,
                                   });
                                   setIsConfirmDialogOpen(true);
                                 }
@@ -1812,25 +1999,13 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             currentInviteLink={(profileData as ProfileGroup).inviteLink}
             groupName={(profileData as ProfileGroup).displayName || 'the group'}
           />
-          <ConfirmActionDialog
-            isOpen={isConfirmDialogOpen}
-            onClose={() => {
-              setIsConfirmDialogOpen(false);
-              if (confirmDialogProps.onCancel) {
-                confirmDialogProps.onCancel();
-              }
-            }}
-            onConfirm={() => {
-              confirmDialogProps.onConfirm();
-              setIsConfirmDialogOpen(false);
-            }}
-            title={confirmDialogProps.title}
-            description={confirmDialogProps.description}
-            confirmButtonText={confirmDialogProps.confirmButtonText}
-            confirmButtonVariant={confirmDialogProps.confirmButtonVariant}
-          />
         </>
       )}
+      <ConfirmActionDialog
+        isOpen={isConfirmDialogOpen}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        {...confirmDialogProps}
+      />
     </Sheet>
   );
 };

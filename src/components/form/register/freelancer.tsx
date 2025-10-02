@@ -437,8 +437,6 @@ function FreelancerRegisterForm({
     const url = referralCode
       ? `/register/freelancer?referralCode=${referralCode}`
       : '/register/freelancer';
-
-    console.log(url);
     try {
       await axiosInstance.post(url, formData);
       notifySuccess(

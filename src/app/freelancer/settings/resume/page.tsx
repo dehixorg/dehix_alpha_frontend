@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Plus } from 'lucide-react';
 
@@ -23,17 +23,22 @@ export default function Resume() {
   const [resumeData, setResumeData] = useState<any[]>([]);
   const [selectedResume, setSelectedResume] = useState<any>(null);
 
-  const fetchResumeData = async (isMounted?: boolean) => {
-    try {
-      const res = await axiosInstance.get(`/resume?userId=${user.uid}`);
-      if (isMounted === undefined || isMounted) {
-        setResumeData(res.data.resumes || []);
+  const fetchResumeData = useCallback(
+    async (isMounted?: boolean) => {
+      if (!user.uid) return;
+
+      try {
+        const res = await axiosInstance.get(`/resume?userId=${user.uid}`);
+        if (isMounted === undefined || isMounted) {
+          setResumeData(res.data.resumes || []);
+        }
+      } catch (error) {
+        notifyError('Failed to fetch resume data. Please try again.');
+        console.error('API Error:', error);
       }
-    } catch (error) {
-      notifyError('Failed to fetch resume data. Please try again.');
-      console.error('API Error:', error);
-    }
-  };
+    },
+    [user.uid],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -41,7 +46,7 @@ export default function Resume() {
     return () => {
       isMounted = false;
     };
-  }, [user.uid]);
+  }, [fetchResumeData]);
 
   const handleNewResume = () => {
     setSelectedResume(null);
