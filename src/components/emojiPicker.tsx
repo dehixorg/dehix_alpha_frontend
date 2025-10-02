@@ -32,12 +32,12 @@ export const EmojiPicker = ({
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
         <Button
-          className={`my-auto ${className}`}
-          variant="link"
-          size="sm"
+          className={`h-7 w-7 text-muted-foreground hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20 focus-visible:ring-2 focus-visible:ring-offset-2 ${className}`}
+          variant="ghost"
+          size="icon"
           aria-label={ariaLabel}
         >
-          <Smile className="h-4 w-4 " />
+          <Smile className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent

@@ -1,6 +1,19 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, BarChart3, Sparkles } from 'lucide-react';
+import {
+  Plus,
+  BarChart3,
+  Sparkles,
+  Award,
+  Layers,
+  Github,
+  Linkedin,
+  Globe,
+  DollarSign,
+  UserCog,
+  Briefcase,
+  User,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import {
@@ -32,6 +45,15 @@ import { Separator } from '@/components/ui/separator';
 import ProfileSummaryCard from '@/components/cards/ProfileSummaryCard';
 import { FreelancerProfile } from '@/types/freelancer';
 import StatItem from '@/components/shared/StatItem';
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +63,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
+import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
 
 export default function ProfilesPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -50,8 +74,23 @@ export default function ProfilesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfileDescription, setNewProfileDescription] = useState('');
+  const [newProfileHourlyRate, setNewProfileHourlyRate] = useState<number>(0);
+  const [newProfileGithubLink, setNewProfileGithubLink] = useState('');
+  const [newProfileLinkedinLink, setNewProfileLinkedinLink] = useState('');
+  const [newProfilePersonalWebsite, setNewProfilePersonalWebsite] =
+    useState('');
+  const [newProfileAvailability, setNewProfileAvailability] =
+    useState('FREELANCE');
+  const [newProfileSkills, setNewProfileSkills] = useState<string[]>([]);
+  const [newProfileDomains, setNewProfileDomains] = useState<string[]>([]);
+  const [newProfileProjects, setNewProfileProjects] = useState<any[]>([]);
+  const [newProfileExperiences, setNewProfileExperiences] = useState<any[]>([]);
+  const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
+  const [domainsOptions, setDomainsOptions] = useState<any[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
+  const [showProjectDialog, setShowProjectDialog] = useState(false);
+  const [showExperienceDialog, setShowExperienceDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<
     'overview' | 'freelancer' | 'consultant'
   >('overview');
@@ -66,7 +105,15 @@ export default function ProfilesPage() {
     try {
       const response = await axiosInstance.get(`/freelancer/profiles`);
       const profilesData = response.data.data || [];
-      setProfiles(profilesData);
+
+      // Sort profiles by creation date (newest first)
+      const sortedProfiles = profilesData.sort((a: any, b: any) => {
+        const dateA = new Date(a.createdAt || 0).getTime();
+        const dateB = new Date(b.createdAt || 0).getTime();
+        return dateB - dateA; // Descending order (newest first)
+      });
+
+      setProfiles(sortedProfiles);
     } catch (error) {
       console.error('Error fetching profiles:', error);
       notifyError('Failed to load profiles');
@@ -76,9 +123,54 @@ export default function ProfilesPage() {
     }
   }, [user.uid]);
 
+  const fetchSkillsAndDomains = useCallback(async () => {
+    if (!user.uid) return;
+
+    try {
+      const [skillsResponse, domainsResponse, freelancerResponse] =
+        await Promise.all([
+          axiosInstance.get('/skills'),
+          axiosInstance.get('/domain'),
+          axiosInstance.get(`/freelancer/${user.uid}`),
+        ]);
+
+      const allSkills = skillsResponse.data.data || [];
+      const allDomains = domainsResponse.data.data || [];
+      const freelancerData = freelancerResponse.data.data || {};
+
+      const freelancerSkillNames = (freelancerData.skills || [])
+        .map((s: any) => s.name || s.label)
+        .filter(Boolean);
+
+      const freelancerDomainNames = (freelancerData.domain || [])
+        .map((d: any) => d.name || d.label)
+        .filter(Boolean);
+
+      const skillsForOptions = allSkills.filter((s: any) =>
+        freelancerSkillNames.includes(s.label || s.name),
+      );
+      const domainsForOptions = allDomains.filter((d: any) =>
+        freelancerDomainNames.includes(d.label || d.name),
+      );
+
+      setSkillsOptions(skillsForOptions);
+      setDomainsOptions(domainsForOptions);
+    } catch (error) {
+      console.error('Error fetching skills and domains:', error);
+    }
+  }, [user.uid]);
+
+  const fetchFreelancerProjectsAndExperiences = async () => {
+    // This function is called but the data is not currently used
+    // The projects and experiences are fetched directly in the dialogs
+    // Keeping this for potential future use
+  };
+
   useEffect(() => {
     fetchProfiles();
-  }, [fetchProfiles]);
+    fetchSkillsAndDomains();
+    fetchFreelancerProjectsAndExperiences();
+  }, [fetchProfiles, fetchSkillsAndDomains]);
 
   const handleCreateProfile = async () => {
     if (!newProfileName.trim()) {
@@ -86,43 +178,29 @@ export default function ProfilesPage() {
       return;
     }
 
-    const description =
-      newProfileDescription.trim() ||
-      `Professional profile for ${newProfileName.trim()}. This profile showcases my skills and experience in this domain.`;
-
-    if (description.length < 10) {
+    if (
+      !newProfileDescription.trim() ||
+      newProfileDescription.trim().length < 10
+    ) {
       notifyError('Description must be at least 10 characters long');
       return;
     }
 
     try {
-      // Fetch freelancer's personal links for auto-population
-      let freelancerData = {};
-      try {
-        const freelancerResponse = await axiosInstance.get(
-          `/freelancer/${user.uid}`,
-        );
-        freelancerData = freelancerResponse.data.data || {};
-      } catch (error) {
-        console.warn(
-          'Could not fetch freelancer data for personal links:',
-          error,
-        );
-      }
-
       const profilePayload = {
         profileName: newProfileName.trim(),
-        description: description,
+        description: newProfileDescription.trim(),
         profileType: newProfileType,
-        skills: [],
-        domains: [],
-        projects: [],
-        experiences: [],
+        hourlyRate: newProfileHourlyRate || 0,
+        skills: newProfileSkills,
+        domains: newProfileDomains,
+        projects: newProfileProjects,
+        experiences: newProfileExperiences,
         portfolioLinks: [],
-        // Auto-populate personal links from freelancer data
-        githubLink: (freelancerData as any).githubLink || '',
-        linkedinLink: (freelancerData as any).linkedin || '',
-        personalWebsite: (freelancerData as any).personalWebsite || '',
+        githubLink: newProfileGithubLink.trim(),
+        linkedinLink: newProfileLinkedinLink.trim(),
+        personalWebsite: newProfilePersonalWebsite.trim(),
+        availability: newProfileAvailability,
       };
 
       const response = await axiosInstance.post(
@@ -131,15 +209,45 @@ export default function ProfilesPage() {
       );
 
       const newProfile = response.data.data;
-      // Ensure correct local type so it appears in the right tab immediately
+
+      // Use the skills/domains we sent in the request since backend might not return them
+      // Enrich with full objects from our options for immediate display
+      const enrichedSkills = newProfileSkills.map((skillId: string) => {
+        const foundSkill = skillsOptions.find((s: any) => s._id === skillId);
+        return foundSkill || { _id: skillId, label: skillId, name: skillId };
+      });
+
+      const enrichedDomains = newProfileDomains.map((domainId: string) => {
+        const foundDomain = domainsOptions.find((d: any) => d._id === domainId);
+        return (
+          foundDomain || { _id: domainId, label: domainId, name: domainId }
+        );
+      });
+
       const localProfile = {
         ...newProfile,
         profileType: newProfileType,
+        skills: enrichedSkills,
+        domains: enrichedDomains,
+        projects: newProfileProjects,
+        experiences: newProfileExperiences,
       } as FreelancerProfile;
 
-      setProfiles((prev) => [...prev, localProfile]);
+      // Add new profile at the beginning (newest first)
+      setProfiles((prev) => [localProfile, ...prev]);
+
+      // Reset all form fields
       setNewProfileName('');
       setNewProfileDescription('');
+      setNewProfileHourlyRate(0);
+      setNewProfileGithubLink('');
+      setNewProfileLinkedinLink('');
+      setNewProfilePersonalWebsite('');
+      setNewProfileAvailability('FREELANCE');
+      setNewProfileSkills([]);
+      setNewProfileDomains([]);
+      setNewProfileProjects([]);
+      setNewProfileExperiences([]);
       setIsCreateDialogOpen(false);
 
       // Switch to the relevant tab so the newly created profile is visible immediately
@@ -584,53 +692,271 @@ export default function ProfilesPage() {
 
       {/* Create Profile Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Profile</DialogTitle>
+            <DialogTitle>Create New {newProfileType} Profile</DialogTitle>
             <DialogDescription>
-              Enter a name and description for your new professional profile.
+              Fill in all the details for your new professional profile.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="profile-name" className="text-sm font-medium">
-                Profile Name
-              </label>
+          <div className="space-y-6">
+            {/* Profile Name */}
+            <div className="space-y-2">
+              <Label htmlFor="profile-name">Profile Name *</Label>
               <Input
                 id="profile-name"
                 placeholder="e.g., Frontend Developer, Backend Engineer"
                 value={newProfileName}
                 onChange={(e) => setNewProfileName(e.target.value)}
-                className="mt-1"
               />
             </div>
-            <div>
-              <label
-                htmlFor="profile-description"
-                className="text-sm font-medium"
-              >
-                Description (optional)
-              </label>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="profile-description">Description *</Label>
               <Textarea
                 id="profile-description"
-                placeholder="Describe your expertise and experience in this area... (minimum 10 characters if provided)"
+                placeholder="Describe your expertise and experience in this area... (minimum 10 characters)"
                 value={newProfileDescription}
                 onChange={(e) => setNewProfileDescription(e.target.value)}
-                className="mt-1"
-                rows={3}
+                rows={4}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                If left empty, a default description will be generated.
+              <p className="text-xs text-muted-foreground">
+                {newProfileDescription.length}/500 characters
               </p>
             </div>
+
+            {/* Hourly Rate */}
+            <div className="space-y-2">
+              <Label htmlFor="hourly-rate" className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" /> Hourly Rate ($)
+              </Label>
+              <Input
+                id="hourly-rate"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="50"
+                value={newProfileHourlyRate || ''}
+                onChange={(e) =>
+                  setNewProfileHourlyRate(parseFloat(e.target.value) || 0)
+                }
+              />
+            </div>
+
+            <Separator />
+
+            {/* Skills and Domains */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Award className="h-4 w-4" /> Skills
+                </Label>
+                <SelectTagPicker
+                  label=""
+                  options={skillsOptions}
+                  selected={newProfileSkills.map((id: string) => ({
+                    name:
+                      skillsOptions.find((s: any) => s._id === id)?.label || id,
+                  }))}
+                  onAdd={(value: string) => {
+                    const selectedSkill = skillsOptions.find(
+                      (s: any) => (s.label || s.name) === value,
+                    );
+                    if (
+                      selectedSkill &&
+                      !newProfileSkills.includes(selectedSkill._id)
+                    ) {
+                      setNewProfileSkills([
+                        ...newProfileSkills,
+                        selectedSkill._id,
+                      ]);
+                    }
+                  }}
+                  onRemove={(name: string) => {
+                    const skill = skillsOptions.find(
+                      (s: any) => (s.label || s.name) === name,
+                    );
+                    if (skill) {
+                      setNewProfileSkills(
+                        newProfileSkills.filter((id) => id !== skill._id),
+                      );
+                    }
+                  }}
+                  optionLabelKey="label"
+                  selectedNameKey="name"
+                  selectPlaceholder="Select skill"
+                  searchPlaceholder="Search skills..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Layers className="h-4 w-4" /> Domains
+                </Label>
+                <SelectTagPicker
+                  label=""
+                  options={domainsOptions}
+                  selected={newProfileDomains.map((id: string) => ({
+                    name:
+                      domainsOptions.find((d: any) => d._id === id)?.label ||
+                      id,
+                  }))}
+                  onAdd={(value: string) => {
+                    const selectedDomain = domainsOptions.find(
+                      (d: any) => (d.label || d.name) === value,
+                    );
+                    if (
+                      selectedDomain &&
+                      !newProfileDomains.includes(selectedDomain._id)
+                    ) {
+                      setNewProfileDomains([
+                        ...newProfileDomains,
+                        selectedDomain._id,
+                      ]);
+                    }
+                  }}
+                  onRemove={(name: string) => {
+                    const domain = domainsOptions.find(
+                      (d: any) => (d.label || d.name) === name,
+                    );
+                    if (domain) {
+                      setNewProfileDomains(
+                        newProfileDomains.filter((id) => id !== domain._id),
+                      );
+                    }
+                  }}
+                  optionLabelKey="label"
+                  selectedNameKey="name"
+                  selectPlaceholder="Select domain"
+                  searchPlaceholder="Search domains..."
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Projects and Experiences */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" /> Projects
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowProjectDialog(true)}
+                  className="w-full justify-start"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {newProfileProjects.length > 0
+                    ? `${newProfileProjects.length} project(s) selected`
+                    : 'Add Projects'}
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <User className="h-4 w-4" /> Experiences
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowExperienceDialog(true)}
+                  className="w-full justify-start"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {newProfileExperiences.length > 0
+                    ? `${newProfileExperiences.length} experience(s) selected`
+                    : 'Add Experiences'}
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Links */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="github-link"
+                  className="flex items-center gap-2"
+                >
+                  <Github className="h-4 w-4" /> GitHub
+                </Label>
+                <Input
+                  id="github-link"
+                  placeholder="https://github.com/username"
+                  value={newProfileGithubLink}
+                  onChange={(e) => setNewProfileGithubLink(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="linkedin-link"
+                  className="flex items-center gap-2"
+                >
+                  <Linkedin className="h-4 w-4" /> LinkedIn
+                </Label>
+                <Input
+                  id="linkedin-link"
+                  placeholder="https://linkedin.com/in/username"
+                  value={newProfileLinkedinLink}
+                  onChange={(e) => setNewProfileLinkedinLink(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="personal-website"
+                  className="flex items-center gap-2"
+                >
+                  <Globe className="h-4 w-4" /> Website
+                </Label>
+                <Input
+                  id="personal-website"
+                  placeholder="https://yourwebsite.com"
+                  value={newProfilePersonalWebsite}
+                  onChange={(e) => setNewProfilePersonalWebsite(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="availability"
+                  className="flex items-center gap-2"
+                >
+                  <UserCog className="h-4 w-4" /> Availability
+                </Label>
+                <Select
+                  value={newProfileAvailability}
+                  onValueChange={setNewProfileAvailability}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select availability" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FULL_TIME">Full Time</SelectItem>
+                    <SelectItem value="PART_TIME">Part Time</SelectItem>
+                    <SelectItem value="CONTRACT">Contract</SelectItem>
+                    <SelectItem value="FREELANCE">Freelance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button
               variant="outline"
               onClick={() => {
                 setIsCreateDialogOpen(false);
                 setNewProfileName('');
                 setNewProfileDescription('');
+                setNewProfileHourlyRate(0);
+                setNewProfileGithubLink('');
+                setNewProfileLinkedinLink('');
+                setNewProfilePersonalWebsite('');
+                setNewProfileAvailability('FREELANCE');
+                setNewProfileSkills([]);
+                setNewProfileDomains([]);
+                setNewProfileProjects([]);
+                setNewProfileExperiences([]);
               }}
             >
               Cancel
@@ -639,8 +965,6 @@ export default function ProfilesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -650,6 +974,34 @@ export default function ProfilesPage() {
         cancelText="Cancel"
         onConfirm={confirmDeleteProfile}
       />
+
+      {/* Project Selection Dialog - Only show when creating from existing profile */}
+      {showProjectDialog && user.uid && (
+        <ProjectSelectionDialog
+          open={showProjectDialog}
+          onOpenChange={setShowProjectDialog}
+          freelancerId={user.uid}
+          currentProfileId="new"
+          onSuccess={(selected) => {
+            setNewProfileProjects(selected);
+            setShowProjectDialog(false);
+          }}
+        />
+      )}
+
+      {/* Experience Selection Dialog - Only show when creating from existing profile */}
+      {showExperienceDialog && user.uid && (
+        <ExperienceSelectionDialog
+          open={showExperienceDialog}
+          onOpenChange={setShowExperienceDialog}
+          freelancerId={user.uid}
+          currentProfileId="new"
+          onSuccess={(selected) => {
+            setNewProfileExperiences(selected);
+            setShowExperienceDialog(false);
+          }}
+        />
+      )}
     </div>
   );
 }

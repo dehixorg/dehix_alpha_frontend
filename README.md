@@ -22,7 +22,6 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
     - **utils.ts** - General utility functions
   - **services** - API service functions and external service integrations
     - **apiService.tsx** - Main API service functions
-    - **example.tsx** - Example service implementation
   - **utils** - Additional utility functions and helpers
 - **types** - TypeScript type definitions and interfaces
 

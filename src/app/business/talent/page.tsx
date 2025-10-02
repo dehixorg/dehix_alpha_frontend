@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Users2, BookMarked, CheckCircle2, XCircle } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -17,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import Header from '@/components/header/header';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface Skill {
   _id: string;
   label: string;
@@ -28,6 +31,7 @@ interface Domain {
 }
 
 export default function Talent() {
+  const router = useRouter();
   const [skillFilter, setSkillFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
   const [skillDomainFormProps] = useState<any>();
@@ -35,24 +39,64 @@ export default function Talent() {
   const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
 
+  const handleTabChange = (value: string) => {
+    router.push(`/business/talent/${value}`);
+  };
+
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40 overflow-auto">
+    <div className="flex min-h-screen w-full flex-col overflow-auto">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Dehix Talent"
       />
 
-      <div className="flex flex-col sm:gap-4  sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Dehix Talent"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
-            { label: 'HireTalent', link: '#' },
+            { label: 'Hire Talent', link: '/business/talent' },
+            { label: 'Overview', link: '#' },
           ]}
         />
+
+        {/* Tabs Header */}
+        <div className="container px-4 py-4">
+          <Tabs value="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview" asChild>
+                <a href="/business/talent">
+                  <Users2 className="h-4 w-4 mr-1" />
+                  Overview
+                </a>
+              </TabsTrigger>
+              <TabsTrigger
+                value="invited"
+                onClick={() => handleTabChange('invited')}
+              >
+                <BookMarked className="h-4 w-4 mr-1" />
+                Invites
+              </TabsTrigger>
+              <TabsTrigger
+                value="accepted"
+                onClick={() => handleTabChange('accepted')}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                Accepted
+              </TabsTrigger>
+              <TabsTrigger
+                value="rejected"
+                onClick={() => handleTabChange('rejected')}
+              >
+                <XCircle className="h-4 w-4 mr-1" />
+                Rejected
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
 
         <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3 lg:items-start xl:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
