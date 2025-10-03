@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { ProfileForm } from '@/components/form/profileForm';
+import { UpdatePasswordForm } from '@/components/form/updatePasswordForm';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -34,6 +35,7 @@ export default function PersonalInfo() {
         />
         <main className="grid flex-1 items-start gap-4 sm:px-6 sm:py-2 md:gap-8">
           <ProfileForm user_id={user.uid} />
+          <UpdatePasswordForm user_id={user.uid} />
         </main>
       </div>
     </div>
