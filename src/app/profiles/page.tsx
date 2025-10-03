@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export default function FreelancerBids() {
   const user = useSelector((state: RootState) => state.user);
-  const [bids, setBids] = useState<any>([]);
+  const [, setBids] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -44,7 +44,6 @@ export default function FreelancerBids() {
         }
 
         setBids(bidData);
-        console.log('Fetched Bids:', bidData); // Log the fetched data here
       } catch (error) {
         toast({
           variant: 'destructive',

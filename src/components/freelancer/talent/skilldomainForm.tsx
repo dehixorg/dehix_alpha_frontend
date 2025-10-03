@@ -3,12 +3,19 @@ import type React from 'react';
 import { useState, useEffect } from 'react';
 //
 import { useSelector } from 'react-redux';
+import { Eye, EyeOff } from 'lucide-react';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 import VerifyDialog from './verifyDialog';
 
-import { Card } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Table,
   TableHeader,
@@ -18,14 +25,21 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
-import { Switch } from '@/components/ui/switch';
 import type { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Skill {
   _id: string;
@@ -169,12 +183,10 @@ const SkillDomainForm: React.FC = () => {
 
   return (
     <div className="p-4 sm:px-8">
-      <div className="flex flex-col space-y-4">
-        <div className="flex flex-col space-y-2">
-          <h2 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
-            Dehix Talent
-          </h2>
-          <p className="hidden md:block text-muted-foreground">
+      <Card className="shadow-sm">
+        <CardHeader className="px-4 sm:px-7">
+          <CardTitle>Dehix Talent</CardTitle>
+          <CardDescription>
             Here you can add relevant skills and domains to get directly hired
             from dehix talent.
           </p>
@@ -193,7 +205,6 @@ const SkillDomainForm: React.FC = () => {
                 onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
               />
             </div>
-          </div>
 
           <Card>
             <div className="w-full overflow-x-auto">

@@ -8,7 +8,7 @@ import DropdownProfile from '../shared/DropdownProfile';
 import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
 import { Button } from '../ui/button';
-import DisplayConnectsDialog from '../shared/DisplayConnectsDialog';
+import { DisplayConnectsDialog } from '../shared/DisplayConnectsDialog';
 
 import { RootState } from '@/lib/store';
 
