@@ -1044,7 +1044,6 @@ export function CardsChat({
                   <Video className="h-5 w-5" />
                 </Button>
 
-<<<<<<< HEAD
                 {/* Expand/collapse */}
                 <Button
                   variant="ghost"
@@ -1058,15 +1057,6 @@ export function CardsChat({
                     }
                   }}
                   className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-=======
-              {/* Archive/Unarchive button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
-                onClick={handleToggleArchive}
-                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
                 {isArchived ? (
                   <ArchiveRestore className="h-5 w-5" />
                 ) : (

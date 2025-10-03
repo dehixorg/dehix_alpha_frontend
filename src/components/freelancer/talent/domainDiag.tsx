@@ -1,22 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import type React from 'react';
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 
-import { Button } from '@/components/ui/button';
 import {
+  DialogFooter,
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogHeader,
-  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectTrigger,
+  SelectItem,
+  SelectValue,
+  SelectContent,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -26,7 +35,8 @@ interface Domain {
   label: string;
 }
 
-interface DomainData {
+interface SkillDomainData {
+  uid: string;
   domainId: string;
   label: string;
   experience: string;
@@ -38,12 +48,13 @@ interface DomainData {
 
 interface DomainDialogProps {
   domains: Domain[];
+  setDomains: any;
   onSuccess: () => void;
 }
 
 const domainSchema = z.object({
   domainId: z.string(),
-  label: z.string().nonempty('Please select at least one domain'),
+  label: z.string().nonempty('Please select a domain'),
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -59,15 +70,13 @@ const domainSchema = z.object({
 const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedDomains, setSelectedDomains] = useState<Domain[]>([]);
-
   const {
     control,
     handleSubmit,
+    formState: { errors },
     reset,
     setValue,
-    formState: { errors },
-  } = useForm<DomainData>({
+  } = useForm<SkillDomainData>({
     resolver: zodResolver(domainSchema),
     defaultValues: {
       domainId: '',
@@ -80,33 +89,31 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
     },
   });
 
-  const onSubmit = async (data: DomainData) => {
-    if (selectedDomains.length === 0) {
-      notifyError('Please select at least one domain', 'Error');
-      return;
-    }
-
+  const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
     try {
-      for (const domain of selectedDomains) {
-        await axiosInstance.post(`/freelancer/dehix-talent`, {
-          talentId: domain._id,
-          talentName: domain.label,
-          experience: data.experience,
-          monthlyPay: data.monthlyPay,
-          activeStatus: data.activeStatus,
-          status: data.status,
-          type: 'DOMAIN',
-        });
+      const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
+        talentId: data.domainId,
+        talentName: data.label,
+        experience: data.experience,
+        monthlyPay: data.monthlyPay,
+        activeStatus: data.activeStatus,
+        status: data.status,
+        type: 'DOMAIN',
+      });
+      if (response.status === 200) {
+        reset();
+        setOpen(false);
+        notifySuccess(
+          'The Talent has been successfully added.',
+          'Talent Added',
+        );
+        onSuccess(); // Trigger parent to re-fetch
       }
-      reset();
-      setSelectedDomains([]);
-      setOpen(false);
-      notifySuccess('Domains added successfully', 'Success');
-      onSuccess();
     } catch (error) {
-      console.error(error);
-      notifyError('Failed to add domains. Please try again.', 'Error');
+      console.error('Error submitting domain data', error);
+      reset();
+      notifyError('Failed to add talent. Please try again.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -115,38 +122,32 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">Add Domain</Button>
+        <Button size="sm">
+          <Plus className="h-4 w-4" /> Add Domain
+        </Button>
       </DialogTrigger>
-
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Domain</DialogTitle>
           <DialogDescription>
-            Select domains, enter your experience and monthly pay.
+            Select a domain, enter your experience and monthly pay.
           </DialogDescription>
         </DialogHeader>
-
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-3">
             <Controller
               control={control}
               name="label"
-              render={() => (
-                <SelectTagPicker
-                  label="Domains"
-                  options={domains.map((d) => ({ label: d.label, _id: d._id }))}
-                  selected={selectedDomains.map((d) => ({ name: d.label }))}
-                  onAdd={(val) => {
-                    const domain = domains.find((d) => d.label === val);
-                    if (
-                      domain &&
-                      !selectedDomains.find((d) => d._id === domain._id)
-                    ) {
-                      setSelectedDomains((prev) => [...prev, domain]);
-                      setValue('label', val);
-                    }
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(selectedLabel) => {
+                    const selectedDomain = domains.find(
+                      (domain) => domain.label === selectedLabel,
+                    );
+                    field.onChange(selectedLabel);
+                    setValue('domainId', selectedDomain?._id || '');
                   }}
-<<<<<<< HEAD
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a domain" />
@@ -168,23 +169,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
                     )}
                   </SelectContent>
                 </Select>
-=======
-                  onRemove={(val) => {
-                    const domain = domains.find((d) => d.label === val);
-                    if (domain) {
-                      setSelectedDomains((prev) =>
-                        prev.filter((d) => d._id !== domain._id),
-                      );
-                      if (selectedDomains.length === 1) setValue('label', '');
-                    }
-                  }}
-                  className="w-full"
-                  optionLabelKey="label"
-                  selectedNameKey="name"
-                  selectPlaceholder="Select domains"
-                  searchPlaceholder="Search domains..."
-                />
->>>>>>> develop
               )}
             />
             {errors.label && (
