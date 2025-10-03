@@ -85,7 +85,7 @@ const toDomId = (prefix: string, value: string): string => {
   return `${prefix}-${value.replace(/\s+/g, '-').toLowerCase()}`;
 };
 
-export function BusinessFilterComponent({
+export default function BusinessFilterComponent({
   filters,
   onFilterChange,
   activeFilterCount,
@@ -335,5 +335,3 @@ export function BusinessFilterComponent({
     </div>
   );
 }
-
-export default BusinessFilterComponent;
