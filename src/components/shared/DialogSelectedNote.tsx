@@ -5,7 +5,6 @@ import {
   Edit2,
   Save,
   Clock,
-  X,
   ArchiveRestoreIcon,
   Trash2Icon,
 } from 'lucide-react';
@@ -19,7 +18,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -86,13 +84,6 @@ const DialogSelectedNote = ({
         minute: '2-digit',
       })
     : '';
-
-  // Check if background is white
-  const isWhiteBackground =
-    note.bgColor &&
-    (note.bgColor.toLowerCase() === '#ffffff' ||
-      note.bgColor.toLowerCase() === '#fff' ||
-      note.bgColor.toLowerCase() === 'white');
 
   return (
     <Dialog
