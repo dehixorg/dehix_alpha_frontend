@@ -2,10 +2,26 @@ import React, { useState, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react';
+import {
+  Plus,
+  X,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  ChevronsUpDown,
+} from 'lucide-react';
 
 import DraftDialog from '../shared/DraftDialog';
 
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command';
 import {
   Dialog,
   DialogTrigger,
@@ -15,7 +31,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -26,18 +41,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { axiosInstance } from '@/lib/axiosinstance';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import useDraft from '@/hooks/useDraft';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import ThumbnailUpload from '@/components/fileUpload/thumbnailUpload';
+import useDraft from '@/hooks/useDraft';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 // Schema for form validation using zod
 const projectFormSchema = z
   .object({
@@ -97,11 +109,11 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [step, setStep] = useState<number>(1);
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<string[]>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
+  const [open, setOpen] = useState(false);
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -169,18 +181,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     }
   };
 
-  const handleAddSkill = (field: { onChange: (value: any) => void }) => {
-    if (tmpSkill.trim() && !currSkills.includes(tmpSkill)) {
-      setCurrSkills([...currSkills, tmpSkill]);
-      field.onChange([...currSkills, tmpSkill]);
-      setTmpSkill('');
-    }
-  };
-
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -246,7 +246,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       comments: '',
     });
     setCurrSkills([]);
-    setTmpSkill('');
     setStep(1);
   };
 
@@ -386,65 +385,97 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="techUsed"
-                  render={({ field }) => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Skills</FormLabel>
-                      <FormControl>
-                        <div>
-                          <div className="flex items-center mt-2">
-                            <Select
-                              onValueChange={(selectedValue) => {
-                                setTmpSkill(selectedValue);
-                              }}
-                              value={tmpSkill}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select skill" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {skills.map((skill: any, index: number) => (
-                                  <SelectItem key={index} value={skill.label}>
-                                    {skill.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="outline"
-                              type="button"
-                              size="icon"
-                              className="ml-2"
-                              onClick={() => handleAddSkill(field)}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="flex flex-wrap mt-5">
-                            {currSkills.map((skill: any, index: number) => (
-                              <Badge
-                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center my-2"
-                                key={index}
-                              >
-                                {skill}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteSkill(skill)}
-                                  className="ml-2 text-red-500 hover:text-red-700"
+                  render={({ field }) => {
+                    const toggleSkill = (skillLabel: string) => {
+                      let updatedSkills: string[] = [];
+                      if (currSkills.includes(skillLabel)) {
+                        updatedSkills = currSkills.filter(
+                          (s) => s !== skillLabel,
+                        );
+                      } else {
+                        updatedSkills = [...currSkills, skillLabel];
+                      }
+                      setCurrSkills(updatedSkills);
+                      field.onChange(updatedSkills);
+                    };
+
+                    return (
+                      <FormItem className="mb-4">
+                        <FormLabel>Skills</FormLabel>
+                        <FormControl>
+                          <div>
+                            {/* Multi-select Dropdown with proper accessibility */}
+                            <Popover open={open} onOpenChange={setOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={open}
+                                  className="w-full justify-between"
                                 >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </Badge>
-                            ))}
+                                  {currSkills.length > 0
+                                    ? `${currSkills.length} selected`
+                                    : 'Select skills'}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0">
+                                <Command>
+                                  <CommandInput placeholder="Search skills..." />
+                                  <CommandEmpty>No skills found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {skills.map((skill: any) => (
+                                      <CommandItem
+                                        key={skill.label}
+                                        value={skill.label}
+                                        onSelect={() =>
+                                          toggleSkill(skill.label)
+                                        }
+                                      >
+                                        <Check
+                                          className={`mr-2 h-4 w-4 ${
+                                            currSkills.includes(skill.label)
+                                              ? 'opacity-100'
+                                              : 'opacity-0'
+                                          }`}
+                                        />
+                                        {skill.label}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+
+                            {/* Selected Skills Tags */}
+                            <div className="flex flex-wrap mt-3 gap-2">
+                              {currSkills.map((skill: any, index: number) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="text-xs flex items-center gap-1"
+                                >
+                                  {skill}
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleSkill(skill)}
+                                    className="ml-1 text-red-500 hover:text-red-700"
+                                    aria-label={`Remove ${skill}`}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </>
             )}

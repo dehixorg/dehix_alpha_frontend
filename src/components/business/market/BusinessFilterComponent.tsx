@@ -80,7 +80,12 @@ const SearchInput = ({
   );
 };
 
-export function BusinessFilterComponent({
+// Helper function to create unique DOM IDs
+const toDomId = (prefix: string, value: string): string => {
+  return `${prefix}-${value.replace(/\s+/g, '-').toLowerCase()}`;
+};
+
+export default function BusinessFilterComponent({
   filters,
   onFilterChange,
   activeFilterCount,
@@ -330,5 +335,3 @@ export function BusinessFilterComponent({
     </div>
   );
 }
-
-export default BusinessFilterComponent;
