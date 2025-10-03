@@ -128,10 +128,7 @@ export default function BusinessFilterComponent({
     const filterValues = getFilterValues(filterKey);
 
     return (
-      <AccordionItem
-        value={filterKey}
-        className="border p-4 rounded-lg card"
-      >
+      <AccordionItem value={filterKey} className="border p-4 rounded-lg card">
         <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
           <div className="flex items-center space-x-2">
             {icon}
