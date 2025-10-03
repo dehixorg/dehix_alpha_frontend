@@ -214,3 +214,7 @@
   .card {
     @apply bg-muted-foreground/20 dark:bg-muted/20;
   }
+
+  .bg-gradient{
+    @apply bg-gradient-to-r from-primary/5 to-background;
+  }
