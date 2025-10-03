@@ -1,8 +1,14 @@
 import React from 'react';
-import { Plus, Calendar } from 'lucide-react';
+import { Plus, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 
-import { Card } from '../ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
 import {
   HoverCard,
   HoverCardContent,
@@ -10,12 +16,20 @@ import {
 } from '../ui/hover-card';
 
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  statusOutlineClasses,
+  profileTypeOutlineClasses,
+} from '@/utils/common/getBadgeStatus';
+import DateHistory from '@/components/shared/DateHistory';
 
 export interface ProjectSkillCardProps {
   domainName?: string | undefined;
   description?: string | undefined;
   email?: string;
   status?: string | undefined;
+  profileType?: string | undefined;
   startDate?: Date | null | undefined;
   endDate?: Date | null | undefined;
   domains?: string[];
@@ -29,6 +43,7 @@ function ProjectSkillCard({
   domainName,
   description,
   status,
+  profileType,
   startDate,
   endDate,
   isLastCard,
@@ -38,7 +53,7 @@ function ProjectSkillCard({
   if (isLastCard) {
     return (
       <Card
-        className="flex w-full items-center justify-center h-[350px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
+        className="flex bg-muted-foreground/20 dark:bg-muted/20 w-full items-center justify-center h-[400px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
         onClick={onAddProfile}
       >
         <Plus className="w-12 h-12 text-gray-400" />
@@ -52,15 +67,6 @@ function ProjectSkillCard({
       return `${fileName.substring(0, maxLength)}...`;
     }
     return fileName;
-  };
-
-  const formatDate = (date: Date | null | undefined) => {
-    if (!date) return '';
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }).format(new Date(date));
   };
 
   const getInitials = (name: string | undefined) => {
@@ -102,91 +108,100 @@ function ProjectSkillCard({
         ];
 
   return (
-    <div className="w-full h-[350px] bg-card relative border rounded-lg shadow-sm p-6 flex flex-col">
-      {/* Header with domain name and status */}
-      <div className="flex justify-between items-start mb-4">
-        <HoverCard>
-          <HoverCardTrigger>
-            <h2 className="text-lg cursor-pointer font-semibold ">
-              {truncateFileName(domainName)}
-            </h2>
-          </HoverCardTrigger>
-          <HoverCardContent className="py-2 w-auto">
-            {domainName}
-          </HoverCardContent>
-        </HoverCard>
+    <Card className="w-full h-[400px] bg-muted-foreground/20 dark:bg-muted/20 border rounded-lg shadow-sm flex flex-col">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <HoverCard>
+            <HoverCardTrigger>
+              <CardTitle className="text-lg cursor-pointer font-semibold tracking-tight">
+                {truncateFileName(domainName)}
+              </CardTitle>
+            </HoverCardTrigger>
+            <HoverCardContent className="py-2 w-auto">
+              {domainName}
+            </HoverCardContent>
+          </HoverCard>
+          <div className="flex gap-2">
+            <Badge
+              variant="outline"
+              className={`capitalize text-xs px-2 py-0.5 rounded-md ${profileTypeOutlineClasses(profileType)}`}
+            >
+              {profileType || 'FREELANCER'}
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`capitalize text-xs px-2 py-0.5 rounded-md ${statusOutlineClasses(status)}`}
+            >
+              {status || 'ACTIVE'}
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
 
-        <Badge className="bg-green-100 text-green-800 capitalize text-xs px-2 py-1 rounded-md">
-          {status?.toLocaleLowerCase() || 'Active'}
-        </Badge>
-      </div>
-
-      {/* Team members section with fixed height and scroll if needed */}
-      <div className="mb-4 space-y-3 flex-1 overflow-y-auto">
-        {displayTeam.slice(0, 5).map((member, index) => (
-          <div key={index} className="flex items-center">
-            <div className="flex-shrink-0 mr-3">
-              {member.profilePic ? (
-                <Image
-                  src={member.profilePic}
-                  alt={member.name}
-                  className="h-8 w-8 rounded-full object-cover"
-                />
-              ) : (
-                <div
-                  className={`h-8 w-8 rounded-full flex items-center justify-center ${member.color} ${member.textColor}`}
-                >
-                  <span className="text-xs font-medium">
-                    {getInitials(member.name)}
+      <CardContent className="flex-1 flex flex-col gap-3 pt-0">
+        {/* Date history/status */}
+        <DateHistory startDate={startDate} endDate={endDate} />
+        {/* Team members */}
+        <ScrollArea className="flex-1 rounded-md border bg-muted/20 p-3">
+          <div className="space-y-3">
+            {displayTeam.slice(0, 5).map((member, index) => (
+              <div key={index} className="flex items-center">
+                <div className="flex-shrink-0 mr-3">
+                  {member.profilePic ? (
+                    <Image
+                      src={member.profilePic}
+                      alt={member.name}
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className={`h-8 w-8 rounded-full flex items-center justify-center ${member.color} ${member.textColor}`}
+                    >
+                      <span className="text-xs font-medium">
+                        {getInitials(member.name)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 flex justify-between items-center min-w-0">
+                  <span className="text-sm font-medium truncate mr-2">
+                    {member.name}
+                  </span>
+                  <span className="text-xs text-gray-500 truncate">
+                    {member.email}
                   </span>
                 </div>
-              )}
-            </div>
-            <div className="flex-1 flex justify-between items-center min-w-0">
-              <span className="text-sm font-medium truncate mr-2">
-                {member.name}
-              </span>
-              <span className="text-xs text-gray-500 truncate">
-                {member.email}
-              </span>
-            </div>
+              </div>
+            ))}
+            {displayTeam.length > 5 && (
+              <div className="text-sm text-gray-500 pl-11">
+                +{displayTeam.length - 5} more members
+              </div>
+            )}
           </div>
-        ))}
-        {displayTeam.length > 5 && (
-          <div className="text-sm text-gray-500 pl-11">
-            +{displayTeam.length - 5} more members
-          </div>
-        )}
-      </div>
+        </ScrollArea>
 
-      {/* Date range */}
-      <div className="flex items-center text-sm mb-3">
-        <Calendar className="w-4 h-4 mr-2" />
-        {startDate ? (
-          <>
-            Start {formatDate(startDate)}
-            {endDate && ` - ${formatDate(endDate)}`}
-            {!endDate && ' - Present'}
-          </>
-        ) : (
-          'No dates specified'
-        )}
-      </div>
+        {/* Description */}
+        <div className="flex-1 overflow-hidden">
+          <p className="text-sm text-muted-foreground line-clamp-3">
+            {description || 'No description available.'}
+          </p>
+        </div>
+      </CardContent>
 
-      {/* Description with fixed height and truncation */}
-      <div className="mb-3 flex-1 overflow-hidden">
-        <p className="text-sm text-gray-100 line-clamp-3">
-          {description || 'No description available.'}
-        </p>
-      </div>
-
-      {/* View Details button */}
-      <div className="pt-3">
-        <button className="w-auto bg-blue-600 text-white px-5 py-1 rounded-md hover:bg-blue-700">
+      <CardFooter className="pt-0">
+        <Button
+          size="sm"
+          variant="outline"
+          className="ml-auto gap-2 border-green-700/40 text-green-600 hover:text-green-600 bg-green-100 hover:bg-green-300 dark:bg-green-900/20 dark:hover:bg-green-900/60"
+        >
+          <CheckCircle className="w-4 h-4" />
           Mark as completed
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
 

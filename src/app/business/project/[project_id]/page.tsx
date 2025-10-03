@@ -24,7 +24,7 @@ import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BidsDetails from '@/components/freelancer/project/bidsDetail';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import Header from '@/components/header/header';
 import AddProfileDialog from '@/components/dialogs/addProfileDialog';
 
@@ -33,6 +33,7 @@ interface ProjectProfile {
   selectedFreelancer?: string[];
   totalBid?: number[];
   domain?: string;
+  profileType?: string;
   freelancersRequired?: string;
   skills?: string[];
   experience?: number;
@@ -86,7 +87,6 @@ export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -97,11 +97,7 @@ export default function Dashboard() {
           setProject(projectData);
         }
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('API Error:', error);
       }
     };
@@ -110,11 +106,7 @@ export default function Dashboard() {
 
   const handleCompleteProject = (): void => {
     if (!project_id) {
-      toast({
-        title: 'Error',
-        description: 'Project ID is missing.',
-        variant: 'destructive',
-      });
+      notifyError('Project ID is missing.', 'Error');
       return;
     }
 
@@ -125,37 +117,25 @@ export default function Dashboard() {
           setProject((prev) =>
             prev ? { ...prev, status: StatusEnum.COMPLETED } : prev,
           );
-          toast({
-            title: 'Success',
-            description: 'Project marked as completed!',
-          });
+          notifySuccess('Project marked as completed!', 'Success');
         } else {
           console.error('Unexpected response:', response);
-          toast({
-            title: 'Failed',
-            description: 'Failed to mark project as completed.',
-            variant: 'destructive',
-          });
+          notifyError('Failed to mark project as completed.', 'Failed');
         }
       })
       .catch((error) => {
         console.error('Error updating project status:', error);
-        toast({
-          title: 'Error',
-          description: 'An error occurred while updating the project status.',
-          variant: 'destructive',
-        });
+        notifyError(
+          'An error occurred while updating the project status.',
+          'Error',
+        );
       });
   };
 
   // Handle project start
   const handleStartProject = (): void => {
     if (!project_id) {
-      toast({
-        title: 'Error',
-        description: 'Project ID is missing.',
-        variant: 'destructive',
-      });
+      notifyError('Project ID is missing.', 'Error');
       return;
     }
 
@@ -166,26 +146,15 @@ export default function Dashboard() {
           setProject((prev) =>
             prev ? { ...prev, status: StatusEnum.ACTIVE } : prev,
           );
-          toast({
-            title: 'Success',
-            description: 'Project started successfully!',
-          });
+          notifySuccess('Project started successfully!', 'Success');
         } else {
           console.error('Unexpected response:', response);
-          toast({
-            title: 'Failed',
-            description: 'Failed to start the project.',
-            variant: 'destructive',
-          });
+          notifyError('Failed to start the project.', 'Failed');
         }
       })
       .catch((error) => {
         console.error('Error updating project status:', error);
-        toast({
-          title: 'Error',
-          description: 'An error occurred while starting the project.',
-          variant: 'destructive',
-        });
+        notifyError('An error occurred while starting the project.', 'Error');
       });
   };
 
@@ -200,25 +169,19 @@ export default function Dashboard() {
     try {
       const response = await axiosInstance.get(`/project/${project_id}`);
       const projectData = response?.data?.data?.data || response?.data?.data;
-      console.log('hi');
-      console.log(response);
 
       if (projectData) {
         setProject(projectData);
       }
     } catch (error) {
       console.error('Error refetching project:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to refresh project data.',
-      });
+      notifyError('Failed to refresh project data.', 'Error');
     }
   };
 
   if (!project) {
     return (
-      <div className="flex min-h-screen w-full flex-col bg-muted/40 p-6 space-y-6">
+      <div className="flex min-h-screen w-full flex-col p-6 space-y-6">
         {/* Header Skeleton */}
         <div className="flex justify-between items-center">
           <Skeleton className="h-8 w-48" />
@@ -277,7 +240,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -289,16 +252,15 @@ export default function Dashboard() {
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/business' },
             { label: 'Project', link: '/dashboard/business' },
             { label: project.projectName, link: '#' },
           ]}
         />
-        <main className="flex flex-col lg:grid lg:grid-cols-4 xl:grid-cols-4 flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <main className="flex flex-col lg:grid lg:grid-cols-4 xl:grid-cols-4 flex-1 items-start gap-4 p-4 sm:px-6 sm:py-3 md:gap-8">
           <div className="w-full lg:col-span-3 space-y-4 md:space-y-8">
             <Tabs defaultValue="Project-Info">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="Project-Info">Project-Info</TabsTrigger>
+                <TabsTrigger value="Project-Info">Project Info</TabsTrigger>
                 <TabsTrigger value="Profiles">Profile Bids</TabsTrigger>
               </TabsList>
               <TabsContent value="Project-Info">
@@ -335,6 +297,7 @@ export default function Dashboard() {
                               description={profile.description}
                               email={project.email}
                               status={project.status}
+                              profileType={profile.profileType}
                               startDate={project.createdAt}
                               endDate={project.end}
                               domains={[]}
@@ -357,10 +320,10 @@ export default function Dashboard() {
                       {project.profiles && project.profiles.length > 0 && (
                         <>
                           <div className="flex">
-                            <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                            <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors bg-muted-foreground/20 dark:bg-muted/20">
                               Previous
                             </CarouselPrevious>
-                            <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                            <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors bg-muted-foreground/20 dark:bg-muted/20">
                               Next
                             </CarouselNext>
                           </div>

@@ -1,14 +1,19 @@
 'use client';
 import type React from 'react';
 import { useState, useEffect } from 'react';
-import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 import VerifyDialog from './verifyDialog';
 
-import { Card } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Table,
   TableHeader,
@@ -17,14 +22,15 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { Switch } from '@/components/ui/switch';
+import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
+import { formatCurrency } from '@/utils/format';
+import { Switch } from '@/components/ui/switch';
 
 interface Skill {
   _id: string;
@@ -54,7 +60,8 @@ const SkillDomainForm: React.FC = () => {
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
-  const [, setRefreshTrigger] = useState(0);
+
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Function to remove duplicate entries
   const removeDuplicates = (data: SkillDomainData[]) => {
@@ -75,14 +82,16 @@ const SkillDomainForm: React.FC = () => {
     async function fetchData() {
       setLoading(true);
       try {
+        // fetch skills
         const skillsResponse = await axiosInstance.get('/skills');
         const skillsArray = skillsResponse.data?.data || [];
 
+        // fetch domains
         const domainsResponse = await axiosInstance.get('/domain');
         const domainsArray = domainsResponse.data?.data || [];
 
+        // fetch talent data
         let talentResponse = { data: { data: {} } };
-
         if (user?.uid) {
           talentResponse = await axiosInstance.get(
             `/freelancer/${user.uid}/dehix-talent`,
@@ -90,11 +99,10 @@ const SkillDomainForm: React.FC = () => {
         }
 
         const talentData = Array.isArray(talentResponse.data?.data)
-          ? talentResponse.data?.data
+          ? talentResponse.data.data
           : Object.values(talentResponse.data?.data || {});
-
-        // Get all existing talent data for comprehensive filtering
         const flattenedTalentData = talentData.flat();
+
         const formattedTalentData = flattenedTalentData.map((item: any) => ({
           uid: item._id,
           label: item.talentName || 'N/A',
@@ -103,110 +111,44 @@ const SkillDomainForm: React.FC = () => {
           status: item.status,
           activeStatus: item.activeStatus,
           type: item.type,
-          originalTalentId: item.talentId, // Keep track of original talent ID
+          originalTalentId: item.talentId,
         }));
 
-        // Create sets of already added talent names by type
-        const addedSkillNames = new Set(
-          formattedTalentData
-            .filter((item) => item.type === 'SKILL')
-            .map((item) =>
-              item.label?.toLowerCase().trim().replace(/\s+/g, ' '),
-            )
-            .filter(Boolean),
-        );
+        // deduplicate and filter
+        const deduplicatedData = removeDuplicates(formattedTalentData);
+        setSkillDomainData(deduplicatedData);
+        setStatusVisibility(deduplicatedData.map((item) => item.activeStatus));
 
-        const addedDomainNames = new Set(
-          formattedTalentData
-            .filter((item) => item.type === 'DOMAIN')
-            .map((item) =>
-              item.label?.toLowerCase().trim().replace(/\s+/g, ' '),
-            )
-            .filter(Boolean),
-        );
-
-        // Also get talent IDs that are already used
+        // filter global skills/domains
         const usedTalentIds = new Set(
           formattedTalentData
             .map((item) => item.originalTalentId)
             .filter(Boolean),
         );
 
-        // Filter skills - exclude if name matches added skills OR if ID is already used
-        const filteredSkills = Array.isArray(skillsArray)
-          ? skillsArray.filter((skill: any) => {
-              const normalizedSkillName = skill.label
-                ?.toLowerCase()
-                .trim()
-                .replace(/\s+/g, ' ');
-              const isNameAlreadyAdded =
-                addedSkillNames.has(normalizedSkillName);
-              const isIdAlreadyUsed = usedTalentIds.has(skill._id);
-
-              return !isNameAlreadyAdded && !isIdAlreadyUsed;
-            })
-          : [];
-
-        // Filter domains - exclude if name matches added domains OR if ID is already used
-        const filteredDomains = Array.isArray(domainsArray)
-          ? domainsArray.filter((domain: any) => {
-              const normalizedDomainName = domain.label
-                ?.toLowerCase()
-                .trim()
-                .replace(/\s+/g, ' ');
-              const isNameAlreadyAdded =
-                addedDomainNames.has(normalizedDomainName);
-              const isIdAlreadyUsed = usedTalentIds.has(domain._id);
-
-              return !isNameAlreadyAdded && !isIdAlreadyUsed;
-            })
-          : [];
-
-        const deduplicatedData = removeDuplicates(formattedTalentData);
-        setSkillDomainData(deduplicatedData);
-        setStatusVisibility(deduplicatedData.map((item) => item.activeStatus));
-
-        // Map global skills to use _id and label for compatibility
         setSkills(
-          filteredSkills.map((skill: any) => ({
-            _id: skill._id,
-            label: skill.label,
-          })),
+          skillsArray
+            .filter((s: any) => !usedTalentIds.has(s._id))
+            .map((s: any) => ({ _id: s._id, label: s.label })),
         );
+
         setDomains(
-          filteredDomains.map((domain: any) => ({
-            _id: domain._id,
-            label: domain.label,
-          })),
+          domainsArray
+            .filter((d: any) => !usedTalentIds.has(d._id))
+            .map((d: any) => ({ _id: d._id, label: d.label })),
         );
-
-        // Initialize skill and domain counters (by label) - improved logic
-        const skillCounter: { [label: string]: number } = {};
-        const domainCounter: { [label: string]: number } = {};
-
-        deduplicatedData.forEach((item) => {
-          const label = item.label.trim().toLowerCase();
-          if (item.type === 'SKILL') {
-            skillCounter[label] = (skillCounter[label] || 0) + 1;
-          }
-          if (item.type === 'DOMAIN') {
-            domainCounter[label] = (domainCounter[label] || 0) + 1;
-          }
-        });
-      } catch (error) {
+      } catch (error: any) {
+        if (error?.code === 'ERR_CANCELED') return;
         console.error('Error fetching data:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, [user?.uid]);
+    return () => cancelAllRequests();
+  }, [user?.uid, refreshTrigger]);
 
   const handleToggleVisibility = async (
     index: number,
@@ -226,129 +168,221 @@ const SkillDomainForm: React.FC = () => {
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   };
 
   return (
-    <div className="p-6 mt-2">
-      <div className="mb-8 mt-1 ml-2">
-        <h1 className="text-3xl font-bold">Dehix Talent</h1>
-        <p className="text-gray-400 mt-2">
-          Here you can add relevant skills and domains to get directly hired
-          from dehix talent.
-        </p>
-      </div>
-      <div className="px-4">
-        <div className="mb-8 mt-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex space-x-4">
+    <div className="p-4 sm:px-8">
+      <Card className="shadow-sm">
+        <CardHeader className="px-4 sm:px-7">
+          <CardTitle>Dehix Talent</CardTitle>
+          <CardDescription>
+            Here you can add relevant skills and domains to get directly hired
+            from dehix talent.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
               <SkillDialog
-                setSkills={setSkills}
                 skills={skills}
                 onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
               />
+
               <DomainDialog
-                setDomains={setDomains}
                 domains={domains}
                 onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
               />
             </div>
           </div>
+
           <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Label</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead className="text-center">Monthly Pay</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  Array.from({ length: 9 }).map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Skeleton className="h-6 w-24" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-16" />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Skeleton className="mx-auto h-6 w-12" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-20" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-12 rounded-xl" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : skillDomainData.length > 0 ? (
-                  skillDomainData.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{item.label}</TableCell>
-                      <TableCell>{item.experience} Years</TableCell>
-                      <TableCell className="text-center">
-                        ${item.monthlyPay}
-                      </TableCell>
-                      <TableCell>
-                        {item.status.toUpperCase() === StatusEnum.PENDING &&
-                        item.uid ? (
-                          <VerifyDialog
-                            talentType={item.type}
-                            _id={item.uid}
-                            userId={user.uid}
-                            originalTalentId={item.originalTalentId}
-                          />
-                        ) : (
-                          <Badge className={getBadgeColor(item.status)}>
-                            {item?.status?.toUpperCase()}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={statusVisibility[index]}
-                          onCheckedChange={(value) =>
-                            item.uid
-                              ? handleToggleVisibility(index, value, item.uid)
-                              : console.error('UID missing for item', item)
-                          }
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
+            <div className="w-full overflow-x-auto">
+              <Table className="table-auto">
+                <TableHeader className="sticky top-0 z-10 bg-background">
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center">
-                      <div className="text-center py-10 w-[90vw] h-[30vw] mt-10">
-                        <PackageOpen
-                          className="mx-auto text-gray-500"
-                          size="100"
-                        />
-                        <p className="text-gray-500">
-                          No data available.
-                          <br /> This feature will be available soon.
-                          <br />
-                          Here you can get directly hired for different roles.
-                        </p>
-                      </div>
-                    </TableCell>
+                    <TableHead scope="col">Type</TableHead>
+                    <TableHead scope="col">Label</TableHead>
+                    <TableHead scope="col">Experience</TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Monthly Pay
+                    </TableHead>
+                    <TableHead scope="col">Status</TableHead>
+                    <TableHead scope="col" className="text-right">
+                      Visibility
+                    </TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    Array.from({ length: 9 }).map((_, index) => (
+                      <TableRow
+                        key={index}
+                        className="odd:bg-background even:bg-muted/10 hover:bg-muted/30"
+                      >
+                        <TableCell>
+                          <Skeleton className="h-6 w-16" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-16" />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Skeleton className="mx-auto h-6 w-12" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-20" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Skeleton className="h-6 w-12 rounded-xl" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : skillDomainData.length > 0 ? (
+                    skillDomainData.map((item, index) => (
+                      <TableRow
+                        key={index}
+                        className="odd:bg-background even:bg-muted/10 hover:bg-muted/30"
+                      >
+                        <TableCell>
+                          <Badge variant="secondary" className="text-xs">
+                            {item.type === 'SKILL' ? 'SKILL' : 'DOMAIN'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {item.label}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {item.experience} yrs
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {formatCurrency(item.monthlyPay)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {item.status.toUpperCase() === StatusEnum.PENDING &&
+                          item.uid ? (
+                            <VerifyDialog
+                              talentType={item.type}
+                              _id={item.uid}
+                              userId={user.uid}
+                              originalTalentId={item.originalTalentId}
+                            />
+                          ) : (
+                            <Badge className={getBadgeColor(item.status)}>
+                              {item?.status?.toUpperCase()}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Switch
+                            checked={statusVisibility[index]}
+                            onCheckedChange={(value) =>
+                              item.uid
+                                ? handleToggleVisibility(index, value, item.uid)
+                                : console.error('UID missing for item', item)
+                            }
+                            aria-label={`Toggle visibility for ${item.label}`}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">
+                        <div className="py-10">
+                          <svg
+                            width="140"
+                            height="90"
+                            viewBox="0 0 140 90"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="mx-auto mb-3 opacity-80"
+                          >
+                            <defs>
+                              <linearGradient
+                                id="talentEmpty"
+                                x1="0"
+                                x2="1"
+                                y1="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="0%"
+                                  stopColor="#cbd5e1"
+                                  stopOpacity="0.6"
+                                />
+                                <stop
+                                  offset="100%"
+                                  stopColor="#a3a3a3"
+                                  stopOpacity="0.3"
+                                />
+                              </linearGradient>
+                            </defs>
+                            <rect
+                              x="12"
+                              y="28"
+                              width="20"
+                              height="40"
+                              rx="4"
+                              fill="url(#talentEmpty)"
+                            />
+                            <rect
+                              x="40"
+                              y="20"
+                              width="20"
+                              height="48"
+                              rx="4"
+                              fill="url(#talentEmpty)"
+                            />
+                            <rect
+                              x="68"
+                              y="34"
+                              width="20"
+                              height="34"
+                              rx="4"
+                              fill="url(#talentEmpty)"
+                            />
+                            <rect
+                              x="96"
+                              y="26"
+                              width="20"
+                              height="42"
+                              rx="4"
+                              fill="url(#talentEmpty)"
+                            />
+                          </svg>
+                          <p className="text-sm text-muted-foreground">
+                            No entries yet. Add your first skill or domain to
+                            appear here.
+                          </p>
+                          <div className="mt-4 flex items-center justify-center gap-2">
+                            <SkillDialog
+                              skills={skills}
+                              onSuccess={() =>
+                                setRefreshTrigger((prev) => prev + 1)
+                              }
+                            />
+
+                            <DomainDialog
+                              domains={domains}
+                              onSuccess={() =>
+                                setRefreshTrigger((prev) => prev + 1)
+                              }
+                            />
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </Card>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

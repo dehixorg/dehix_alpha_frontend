@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar } from 'lucide-react';
+import { BadgeCheck, Calendar } from 'lucide-react';
 import { format, endOfDay } from 'date-fns';
 
 import {
@@ -18,9 +18,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { useToast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
 interface VerifyDialogProps {
   talentType: string;
@@ -37,18 +43,13 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
   const [date, setDate] = React.useState<Date>();
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
 
     if (!date) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please select an interview date',
-      });
+      notifyError('Please select an interview date', 'Error');
       setLoading(false);
       return;
     }
@@ -72,19 +73,14 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
       );
 
       if (response.status === 200 || response.status === 201) {
-        toast({
-          title: 'Success',
-          description: 'Interview scheduled successfully',
-        });
+        notifySuccess('Interview scheduled successfully', 'Success');
         setOpen(false);
       }
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          error.response?.data?.message || 'Failed to schedule interview',
-      });
+      notifyError(
+        error.response?.data?.message || 'Failed to schedule interview',
+        'Error',
+      );
     } finally {
       setLoading(false);
     }
@@ -92,14 +88,25 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-black"
-        >
-          Verify
-        </Button>
-      </DialogTrigger>
+      <TooltipProvider delayDuration={150}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-green-400 hover:text-green-600 hover:bg-green-600/20 rounded-full"
+                aria-label="Request verification"
+              >
+                <BadgeCheck className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={6}>
+            Request verification
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">

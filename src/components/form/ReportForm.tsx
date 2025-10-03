@@ -3,12 +3,13 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
 
-import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 import {
   Form,
   FormControl,
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { apiHelperService } from '@/services/report';
 import { apiHelperService as profileService } from '@/services/profilepic';
+import { RootState } from '@/lib/store';
 
 const reportSchema = z.object({
   subject: z.string().min(3, { message: 'Subject is required' }),
@@ -70,6 +72,9 @@ export function ReportForm({
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const user = useSelector((state: RootState) => state.user);
+  const { toast } = useToast();
+
   const onSubmit = async (data: ReportFormValues) => {
     try {
       setIsSubmitting(true);
@@ -83,22 +88,40 @@ export function ReportForm({
 
       const finalPayload = {
         ...data,
-        reportedById: initialData.reportedId,
+        reportedById: user?.uid,
         status: 'OPEN',
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
 
       await apiHelperService.createReport(finalPayload);
-      onSubmitted?.();
+      // Show success toast
+      toast({
+        title: 'Report Submitted Successfully',
+        description:
+          'Thank you for your report. We will review it and take appropriate action.',
+        variant: 'default',
+      });
+      // Call the onSubmitted callback to close dialog
+      if (onSubmitted) {
+        onSubmitted();
+      }
     } catch (error) {
       console.error('Failed to submit report:', error);
+
+      // Show error toast
+      toast({
+        title: 'Failed to Submit Report',
+        description:
+          'There was an error submitting your report. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="p-6 rounded-lg border-none shadow-none">
+    <div className="rounded-lg border-none shadow-none p-1">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* 🧾 Subject, Report Type & Role in One Row */}
@@ -295,11 +318,11 @@ export function ReportForm({
           </FormItem>
 
           {/* 🚀 Submit Button */}
-          <Button type="submit" className="h-9 px-4" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting...' : 'Submit Report'}
           </Button>
         </form>
       </Form>
-    </Card>
+    </div>
   );
 }

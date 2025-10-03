@@ -3,28 +3,53 @@
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
+import {
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  FileX,
+  Loader2,
+  MessageSquareText,
+  Calendar,
+  AlertCircle,
+} from 'lucide-react';
+import { format } from 'date-fns';
 
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { apiHelperService } from '@/services/report';
 import { MessagesTab } from '@/components/report-tabs/Messagestab';
 import { RootState } from '@/lib/store';
-
-// NOTE: It's good practice to import and use shadcn/ui components
-// like Button, Table, Select etc. directly for better consistency and accessibility.
-// For this example, we'll stick to updating class names.
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 interface PastReport {
   id: string;
   subject: string;
-  status: 'OPEN' | 'CLOSED' | 'IN_PROGRESS';
+  type: string;
+  status: 'OPEN' | 'CLOSED' | 'IN_PROGRESS' | 'RESOLVED';
   date: string;
 }
 
 export default function PastReportsTab() {
   const [pastReports, setPastReports] = useState<PastReport[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewingReport, setViewingReport] = useState<null | PastReport>(null);
-  const [, setMessages] = useState<any[]>([]);
+  const [viewingReport, setViewingReport] = useState<PastReport | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -43,17 +68,15 @@ export default function PastReportsTab() {
       const transformed = (res.data?.data || []).map((r: any) => ({
         id: r._id,
         subject: r.subject,
+        type: r.report_type || 'GENERAL',
         status: r.status || 'OPEN',
         date: r.createdAt,
       }));
 
       setPastReports(transformed);
+      setTotalCount(res.data?.total || transformed.length);
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch past reports.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to fetch past reports.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -66,77 +89,119 @@ export default function PastReportsTab() {
   }, [fetchReports, viewingReport, user?.uid]);
 
   const handleViewMessages = async (report: PastReport) => {
+    setViewingReport(report);
     setMessagesLoading(true);
     try {
       const res = await apiHelperService.getSingleReport(report.id);
       setMessages(res.data?.data?.messages || []);
-      setViewingReport(report);
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch messages.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to fetch messages.', 'Error');
     } finally {
       setMessagesLoading(false);
     }
   };
 
-  const handleBack = () => {
+  const handleCloseDialog = () => {
     setViewingReport(null);
     setMessages([]);
   };
 
+  const [totalCount, setTotalCount] = useState(0);
   const hasNextPage = pastReports.length === limit;
 
+  // Status badge component
+  const StatusBadge = ({
+    status,
+  }: {
+    status: 'OPEN' | 'CLOSED' | 'IN_PROGRESS' | 'RESOLVED' | string;
+  }) => {
+    const statusMap: Record<
+      string,
+      {
+        variant: 'default' | 'secondary' | 'destructive' | 'outline';
+        label: string;
+      }
+    > = {
+      OPEN: { variant: 'default', label: 'Open' },
+      IN_PROGRESS: { variant: 'secondary', label: 'In Progress' },
+      RESOLVED: { variant: 'outline', label: 'Resolved' },
+      CLOSED: { variant: 'outline', label: 'Closed' },
+    };
+
+    const statusInfo = statusMap[status] || {
+      variant: 'outline' as const,
+      label: status,
+    };
+
+    return (
+      <Badge variant={statusInfo.variant} className="text-xs">
+        {statusInfo.label}
+      </Badge>
+    );
+  };
+
   return (
-    // The parent already correctly uses bg-background and text-foreground. Good!
-    <main className="min-h-screen bg-background text-foreground px-4">
+    <div className="bg-transparent text-foreground px-4">
       <div className="w-full">
-        {/* CHANGE 1: Swapped `bg-white` for `bg-card` and added `text-card-foreground` for card-specific text. */}
-        <div className="w-full flex flex-col rounded-md p-6 bg-card text-card-foreground shadow-sm">
-          <AnimatePresence mode="wait">
-            {viewingReport ? (
-              <motion.div
-                key="messages"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="flex-1 flex flex-col"
+        <Card className="w-full">
+          <CardContent className="p-0">
+            <AnimatePresence mode="wait">
+              <Dialog
+                open={!!viewingReport}
+                onOpenChange={(open) => !open && handleCloseDialog()}
               >
-                <div className="relative mb-6">
-                  {/* CHANGE 2: Replaced hardcoded blue button with primary theme colors. */}
-                  <button
-                    onClick={handleBack}
-                    className="absolute left-0 px-4 py-1.5 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold shadow"
-                    aria-label="Back to reports"
-                  >
-                    ← Back
-                  </button>
+                <DialogContent className="max-w-5xl w-[90vw] p-0 overflow-hidden">
+                  <DialogHeader className="px-6 pt-6 pb-2 border-b">
+                    <div className="flex justify-between items-center">
+                      <DialogTitle className="text-2xl font-bold">
+                        {viewingReport?.subject}
+                      </DialogTitle>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                      <div className="flex items-center gap-1">
+                        <MessageSquareText className="h-4 w-4" />
+                        <span>{messages.length} messages</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {viewingReport &&
+                            format(new Date(viewingReport.date), 'MMM d, yyyy')}
+                        </span>
+                      </div>
+                      <StatusBadge status={viewingReport?.status || 'OPEN'} />
+                    </div>
+                  </DialogHeader>
 
-                  {/* CHANGE 3: Replaced `text-gray-800` and `text-blue-600` with theme-aware colors. */}
-                  <h2 className="text-center text-lg sm:text-2xl font-bold text-foreground">
-                    <span className="text-primary">
-                      {viewingReport.subject}
-                    </span>
-                  </h2>
-                </div>
-
-                {messagesLoading ? (
-                  <p className="text-sm text-muted-foreground">
-                    Loading messages...
-                  </p>
-                ) : (
-                  <div className="h-[59vh] flex flex-col">
-                    <MessagesTab
-                      id={viewingReport.id}
-                      reportStatus={viewingReport.status}
-                    />
-                  </div>
-                )}
-              </motion.div>
-            ) : (
+                  <ScrollArea className="flex-1 p-6">
+                    {messagesLoading ? (
+                      <div className="flex flex-col items-center justify-center h-64">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                        <p className="text-muted-foreground">
+                          Loading conversation...
+                        </p>
+                      </div>
+                    ) : messages.length > 0 ? (
+                      <MessagesTab
+                        id={viewingReport?.id || ''}
+                        reportStatus={viewingReport?.status || 'OPEN'}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-64 text-center space-y-4">
+                        <AlertCircle className="h-12 w-12 text-muted-foreground/40" />
+                        <div>
+                          <h3 className="text-lg font-medium">
+                            No messages yet
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Start the conversation by sending a message
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </ScrollArea>
+                </DialogContent>
+              </Dialog>
               <motion.div
                 key="reports"
                 initial={{ opacity: 0, x: -20 }}
@@ -145,111 +210,171 @@ export default function PastReportsTab() {
                 transition={{ duration: 0.2 }}
                 className="flex-1 flex flex-col"
               >
-                <h2 className="text-xl font-semibold mb-4">Past Reports</h2>
-
-                <div className="flex-1 overflow-x-auto">
+                <div className="overflow-x-auto">
                   {loading ? (
-                    <p className="text-sm text-muted-foreground">Loading...</p>
+                    <div className="flex flex-col items-center justify-center p-12 space-y-4">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-muted-foreground">
+                        Loading reports...
+                      </p>
+                    </div>
                   ) : pastReports.length > 0 ? (
                     <>
-                      <table className="w-full text-sm">
-                        {/* CHANGE 4: Themed table header. */}
-                        <thead className="text-left text-muted-foreground">
-                          <tr>
-                            <th className="py-3 px-4 font-medium">Subject</th>
-                            <th className="py-3 px-4 font-medium">Status</th>
-                            <th className="py-3 px-4 font-medium">Date</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pastReports.map((report) => (
-                            // CHANGE 5: Replaced striped background with a simple bottom border.
-                            // This is a common, clean pattern that works perfectly in both themes.
-                            <tr
-                              key={report.id}
-                              className="border-b border-border"
-                            >
-                              <td className="py-3 px-4">{report.subject}</td>
-
-                              <td className="py-3 px-4">
-                                {report.status === 'IN_PROGRESS' ? (
-                                  // CHANGE 6: Used `text-primary` for the clickable link.
-                                  <button
-                                    onClick={() => handleViewMessages(report)}
-                                    className="text-primary underline-offset-4 hover:underline font-medium"
-                                  >
-                                    OPEN
-                                  </button>
-                                ) : (
-                                  <span
-                                    className={`font-medium ${
-                                      report.status === 'OPEN'
-                                        ? 'text-yellow-500' // These specific colors can be kept for status indicators
-                                        : 'text-green-600' // but ensure they have enough contrast in dark mode.
-                                    }`}
-                                  >
-                                    {report.status}
-                                  </span>
-                                )}
-                              </td>
-
-                              <td className="py-3 px-4 text-muted-foreground">
-                                {new Date(report.date).toLocaleDateString()}
-                              </td>
+                      <div className="overflow-hidden border-none rounded-lg">
+                        <table className="min-w-full divide-y divide-border">
+                          <thead className="bg-muted/30">
+                            <tr>
+                              <th
+                                scope="col"
+                                className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                              >
+                                Subject
+                              </th>
+                              <th
+                                scope="col"
+                                className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                              >
+                                Type
+                              </th>
+                              <th
+                                scope="col"
+                                className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                              >
+                                Status
+                              </th>
+                              <th
+                                scope="col"
+                                className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                              >
+                                Date
+                              </th>
+                              <th
+                                scope="col"
+                                className="relative px-4 py-3 w-32"
+                              >
+                                <span className="sr-only">Actions</span>
+                              </th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-
-                      <div className="flex items-center justify-between mt-4 text-sm">
-                        <span className="text-muted-foreground">
-                          Page {page}
-                        </span>
+                          </thead>
+                          <tbody className="bg-card divide-y divide-border">
+                            {pastReports.map((report) => (
+                              <tr
+                                key={report.id}
+                                className="hover:bg-muted/10 transition-colors cursor-pointer"
+                                onClick={() => handleViewMessages(report)}
+                              >
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <div className="flex items-center space-x-3">
+                                    <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                    <div className="text-sm font-medium text-foreground line-clamp-1">
+                                      {report.subject}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <div className="text-sm text-muted-foreground">
+                                    {report.type.replace(/_/g, ' ')}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <StatusBadge status={report.status} />
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
+                                  {new Date(report.date).toLocaleDateString(
+                                    'en-US',
+                                    {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                    },
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-right">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewMessages(report);
+                                    }}
+                                  >
+                                    View Details
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 bg-muted/10 border-t">
+                        <div className="text-sm text-muted-foreground mb-2 sm:mb-0">
+                          Showing {pastReports.length} of {totalCount} reports
+                        </div>
                         <div className="flex items-center space-x-2">
-                          {/* CHANGE 7: Themed pagination buttons. */}
-                          <button
-                            onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            disabled={page === 1}
-                            className="px-3 py-1.5 text-sm rounded-md disabled:opacity-50 border border-input hover:bg-accent hover:text-accent-foreground"
-                          >
-                            Prev
-                          </button>
-                          <button
-                            onClick={() => setPage((p) => p + 1)}
-                            disabled={!hasNextPage}
-                            className="px-3 py-1.5 text-sm rounded-md disabled:opacity-50 border border-input hover:bg-accent hover:text-accent-foreground"
-                          >
-                            Next
-                          </button>
-                          {/* CHANGE 8: Themed select input. */}
-                          <select
-                            value={limit}
-                            onChange={(e) => {
-                              setLimit(parseInt(e.target.value));
+                          <div className="flex items-center space-x-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setPage((p) => Math.max(1, p - 1))}
+                              disabled={page === 1}
+                              className="h-8 w-8 p-0"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <div className="flex items-center justify-center w-8 h-8 text-sm font-medium">
+                              {page}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setPage((p) => p + 1)}
+                              disabled={!hasNextPage}
+                              className="h-8 w-8 p-0"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <Select
+                            value={limit.toString()}
+                            onValueChange={(value) => {
+                              setLimit(parseInt(value));
                               setPage(1);
                             }}
-                            className="border border-input bg-background rounded-md px-2 py-1 text-sm"
                           >
-                            {[5, 10, 20, 50].map((size) => (
-                              <option key={size} value={size}>
-                                {size} / page
-                              </option>
-                            ))}
-                          </select>
+                            <SelectTrigger className="h-8 w-[100px]">
+                              <SelectValue placeholder="Rows" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[5, 10, 20, 50].map((size) => (
+                                <SelectItem key={size} value={size.toString()}>
+                                  {size} / page
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </>
                   ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No past reports available.
-                    </p>
+                    <div className="flex flex-col items-center justify-center p-12 space-y-4 text-center">
+                      <FileX className="h-12 w-12 text-muted-foreground/40" />
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-medium">
+                          No reports found
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          You haven&lsquo;t created any reports yet.
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </div>
               </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+            </AnimatePresence>
+          </CardContent>
+        </Card>
       </div>
-    </main>
+    </div>
   );
 }

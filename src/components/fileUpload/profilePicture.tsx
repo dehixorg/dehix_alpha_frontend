@@ -3,7 +3,7 @@ import { Plus, Loader2, Minus } from 'lucide-react'; // Import Loader2
 import Image from 'next/image';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { setUser } from '@/lib/userSlice';
@@ -17,7 +17,7 @@ const allowedImageFormats = [
   'image/gif',
   'image/svg+xml',
 ];
-const maxImageSize = 1 * 1024 * 1024; // 1MB
+const maxImageSize = 5 * 1024 * 1024; // 5MB
 
 const ProfilePictureUpload = ({
   profile,
@@ -41,18 +41,13 @@ const ProfilePictureUpload = ({
         setSelectedProfilePicture(file);
         setPreviewUrl(URL.createObjectURL(file));
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'File too large',
-          description: 'Image size should not exceed 1MB.',
-        });
+        notifyError('Image size should not exceed 5MB.', 'File too large');
       }
     } else {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid file type',
-        description: `Please upload a valid image file. Allowed formats: ${allowedImageFormats.join(', ')}`,
-      });
+      notifyError(
+        `Please upload a valid image file. Allowed formats: ${allowedImageFormats.join(', ')}`,
+        'Invalid file type',
+      );
     }
   };
 
@@ -60,11 +55,10 @@ const ProfilePictureUpload = ({
     e.preventDefault();
 
     if (!selectedProfilePicture) {
-      toast({
-        variant: 'destructive',
-        title: 'No Image Selected',
-        description: 'Please select an image before submitting.',
-      });
+      notifyError(
+        'Please select an image before submitting.',
+        'No Image Selected',
+      );
       return;
     }
 
@@ -96,27 +90,20 @@ const ProfilePictureUpload = ({
       });
 
       if (putResponse.status === 200) {
-        toast({
-          title: 'Success',
-          description: 'Profile picture uploaded successfully!',
-        });
+        notifySuccess('Profile picture uploaded successfully!', 'Success');
       } else {
         throw new Error('Failed to update profile picture');
       }
     } catch (error) {
       console.error('Error during upload:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Upload failed',
-        description: 'Image upload failed. Please try again.',
-      });
+      notifyError('Image upload failed. Please try again.', 'Upload failed');
     } finally {
       setIsUploading(false); // Re-enable the upload button
     }
   };
 
   return (
-    <div className="upload-form max-w-md mx-auto rounded shadow-md">
+    <div className="upload-form max-w-md mx-auto rounded">
       <form onSubmit={handleSubmit} className="space-y-6">
         <input
           type="file"

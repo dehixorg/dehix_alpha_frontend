@@ -22,7 +22,6 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
     - **utils.ts** - General utility functions
   - **services** - API service functions and external service integrations
     - **apiService.tsx** - Main API service functions
-    - **example.tsx** - Example service implementation
   - **utils** - Additional utility functions and helpers
 - **types** - TypeScript type definitions and interfaces
 
@@ -49,7 +48,7 @@ First, run the development server:
 
 ### ✅ Setup Husky (optional for Git hooks)
 
-```bash
+````bash
 npm install --save-dev husky
 # OR
 yarn add --dev husky
@@ -66,7 +65,7 @@ yarn dev
 pnpm dev
 # or
 bun dev
-```
+````
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

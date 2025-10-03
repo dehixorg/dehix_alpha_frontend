@@ -1,112 +1,320 @@
+// src/components/marketComponents/TalentLayout.tsx
 'use client';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   BookMarked,
   CheckCircle2,
-  ChevronDown,
   Filter,
   Search,
   Users2,
   XCircle,
+  ChevronDown,
 } from 'lucide-react';
-import React, { ReactNode, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import { Button } from '@/components/ui/button';
+import Header from '../header/header';
+
+import TalentContent from './TalentContent';
+
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import SidebarMenu from '@/components/menu/sidebarMenu'; // Adjust the import path as needed
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from '@/components/ui/use-toast';
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 
-interface TalentLayoutProps {
-  children: ReactNode;
-  activeTab: string;
+interface ProfessionalExperience {
+  workFrom?: string;
+  workTo?: string;
+  jobTitle?: string;
 }
 
-const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
-  const [activePage, setActivePage] = useState('Talent');
+interface TalentData {
+  invited: any[];
+  accepted: any[];
+  rejected: any[];
+}
+
+// REMOVED 'location: string[]' from the interface
+interface FilterState {
+  search: string;
+  skills: string[];
+  experience: string[];
+}
+
+interface TalentLayoutProps {
+  activeTab: 'invited' | 'accepted' | 'rejected' | 'overview';
+}
+
+export const calculateExperience = (
+  professionalInfo: ProfessionalExperience[],
+): string => {
+  if (!professionalInfo || professionalInfo.length === 0) {
+    return 'Not specified';
+  }
+  let totalExperienceInMonths = 0;
+  professionalInfo.forEach((job) => {
+    if (job.workFrom && job.workTo) {
+      const start = new Date(job.workFrom);
+      const end = new Date(job.workTo);
+      if (start < end) {
+        const diffInMonths =
+          (end.getFullYear() - start.getFullYear()) * 12 +
+          (end.getMonth() - start.getMonth());
+        if (diffInMonths > 0) {
+          totalExperienceInMonths += diffInMonths;
+        }
+      }
+    }
+  });
+
+  const years = Math.floor(totalExperienceInMonths / 12);
+  const months = totalExperienceInMonths % 12;
+
+  if (years === 0 && months === 0) return 'Less than a month';
+  const yearString = years > 0 ? `${years} year${years > 1 ? 's' : ''}` : '';
+  const monthString =
+    months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
+
+  if (yearString && monthString) return `${yearString} and ${monthString}`;
+  return yearString || monthString;
+};
+
+const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
+  const router = useRouter();
+  const user = useSelector((state: RootState) => state.user);
+  const businessId = user?.uid;
+  const [talentData, setTalentData] = useState<TalentData>({
+    invited: [],
+    accepted: [],
+    rejected: [],
+  });
+  const [loading, setLoading] = useState(false);
+
+  // NEW: State for skills/domains list, search query, and 'show more' functionality
+  const [allSkillsAndDomains, setAllSkillsAndDomains] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAllSkills, setShowAllSkills] = useState(false);
+
+  // REMOVED 'location: []' from the initial state
+  const [filters, setFilters] = useState<FilterState>({
+    search: '',
+    skills: [],
+    experience: [],
+  });
+
+  const experienceMapping = {
+    Junior: '1',
+    'Mid-level': '2',
+    Senior: '3',
+    Lead: '4',
+  };
+
+  // REMOVED 'location' from the filterType parameter
+  const handleToggleFilter = useCallback(
+    (
+      filterType: 'skills' | 'experience',
+      value: string,
+      isChecked: boolean,
+    ) => {
+      setFilters((prevFilters) => {
+        const currentValues = prevFilters[filterType] as string[];
+        const updatedValues = isChecked
+          ? [...currentValues, value]
+          : currentValues.filter((item) => item !== value);
+        return {
+          ...prevFilters,
+          [filterType]: updatedValues,
+        };
+      });
+    },
+    [],
+  );
+
+  const handleSearchChange = useCallback((value: string) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      search: value,
+    }));
+  }, []);
+
+  // REMOVED the 'location' part of the query string logic
+  const constructQueryString = useCallback((currentFilters: FilterState) => {
+    const queryParts: string[] = [];
+    if (currentFilters.search) {
+      queryParts.push(`search=${encodeURIComponent(currentFilters.search)}`);
+    }
+    if (currentFilters.skills.length > 0) {
+      queryParts.push(
+        `skillName=${currentFilters.skills.map(encodeURIComponent).join(',')}`,
+      );
+    }
+    if (currentFilters.experience.length > 0) {
+      queryParts.push(
+        `experience=${currentFilters.experience.map(encodeURIComponent).join(',')}`,
+      );
+    }
+
+    return queryParts.join('&');
+  }, []);
+
+  const fetchData = useCallback(
+    async (currentFilters: FilterState) => {
+      if (!businessId || activeTab === 'overview') {
+        return;
+      }
+      setLoading(true);
+
+      try {
+        let endpoint = '';
+        if (activeTab === 'invited') {
+          endpoint = `/business/hire-dehixtalent/free/invited`;
+        } else if (activeTab === 'accepted') {
+          endpoint = `/business/hire-dehixtalent/free/selected`;
+        } else if (activeTab === 'rejected') {
+          endpoint = `/business/hire-dehixtalent/free/rejected`;
+        }
+
+        const queryString = constructQueryString(currentFilters);
+        const response = await axiosInstance.get(`${endpoint}?${queryString}`);
+
+        setTalentData((prevData) => {
+          const newState = {
+            ...prevData,
+            [activeTab]: response.data.data,
+          };
+          return newState;
+        });
+      } catch (err) {
+        console.error('Error fetching talents:', err);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [businessId, activeTab, constructQueryString],
+  );
+
+  // MERGE SKILLS AND DOMAINS FETCHING INTO A SINGLE EFFECT
+  useEffect(() => {
+    const fetchFilterData = async () => {
+      try {
+        const [skillsResponse, domainsResponse] = await Promise.all([
+          axiosInstance.get('/skills'),
+          axiosInstance.get('/domain'),
+        ]);
+
+        const skillLabels = skillsResponse.data.data.map(
+          (skill: any) => skill.label,
+        );
+        const domainLabels = domainsResponse.data.data.map(
+          (domain: any) => domain.label,
+        );
+
+        const combinedLabels = [...skillLabels, ...domainLabels];
+        setAllSkillsAndDomains(combinedLabels);
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to load filter options.',
+        });
+        console.error('Error fetching filter data:', error);
+      }
+    };
+    fetchFilterData();
+    fetchData(filters);
+  }, [activeTab, filters, fetchData]);
+
+  const handleTabChange = (value: string) => {
+    router.push(`/business/talent/${value}`);
+  };
+
+  const handleApplyFilters = () => {
+    fetchData(filters);
+  };
+
+  // REMOVED 'location: []' from the reset object
+  const handleResetFilters = () => {
+    const emptyFilters = {
+      search: '',
+      skills: [],
+      experience: [],
+    };
+    setFilters(emptyFilters);
+  };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Include the SidebarMenu component */}
+    <div className="flex min-h-screen w-full flex-col overflow-auto">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active={activePage}
-        setActive={setActivePage}
+        active="Dehix Talent"
       />
 
-      {/* Adjust main content to account for sidebar */}
-      <div className="ml-14 flex flex-col min-h-screen">
-        {/* Header */}
-        <header className="border-b">
-          <div className="container flex h-16 items-center justify-between px-4">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold">Talent Management</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Header actions can go here */}
-            </div>
-          </div>
-        </header>
-
-        {/* Main Navigation Tabs */}
+      <div className="flex flex-col sm:py-0 sm:pl-14">
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dehix Talent"
+          breadcrumbItems={[
+            { label: 'Business', link: '/dashboard/business' },
+            { label: 'Hire Talent', link: '#' },
+            {
+              label: activeTab.charAt(0).toUpperCase() + activeTab.slice(1),
+              link: '#',
+            },
+          ]}
+        />
         <div className="container px-4 py-4">
-          <Tabs defaultValue={activeTab} className="w-full">
+          <Tabs value={activeTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger
-                value="overview"
-                className="flex items-center gap-2"
-                asChild
-              >
+              <TabsTrigger value="overview" asChild>
                 <a href="/business/talent">
-                  <Users2 className="h-4 w-4" />
-                  <span>Overview</span>
+                  <Users2 className="h-4 w-4 mr-1" />
+                  Overview
                 </a>
               </TabsTrigger>
               <TabsTrigger
                 value="invited"
-                className="flex items-center gap-2"
-                asChild
+                onClick={() => handleTabChange('invited')}
               >
-                <a href="/business/market/invited">
-                  <BookMarked className="h-4 w-4" />
-                  <span>Invites</span>
-                </a>
+                <BookMarked className="h-4 w-4 mr-1" />
+                Invites
               </TabsTrigger>
               <TabsTrigger
                 value="accepted"
-                className="flex items-center gap-2"
-                asChild
+                onClick={() => handleTabChange('accepted')}
               >
-                <a href="/business/market/accepted">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>Accepted</span>
-                </a>
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                Accepted
               </TabsTrigger>
               <TabsTrigger
                 value="rejected"
-                className="flex items-center gap-2"
-                asChild
+                onClick={() => handleTabChange('rejected')}
               >
-                <a href="/business/market/rejected">
-                  <XCircle className="h-4 w-4" />
-                  <span>Rejected</span>
-                </a>
+                <XCircle className="h-4 w-4 mr-1" />
+                Rejected
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
-
-        {/* Main Content */}
         <div className="container flex-1 items-start px-4 py-6">
           <div className="grid grid-cols-12 gap-6">
-            {/* Filters Sidebar */}
             <aside className="col-span-3">
               <Card className="sticky top-20">
                 <CardHeader>
@@ -124,22 +332,48 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
                         id="search"
                         placeholder="Search by name, skills..."
                         className="pl-8"
+                        value={filters.search}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                       />
                     </div>
                   </div>
-
                   <Separator />
-
                   <div className="space-y-2">
                     <Label>Skills</Label>
+                    {/* NEW: Search input for skills */}
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search Skills"
+                        className="pl-8"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    {/* NEW: Checkbox list with conditional rendering for 'show more' */}
                     <div className="space-y-1">
-                      {['React', 'TypeScript', 'NextJS', 'UI/UX'].map(
-                        (skill) => (
+                      {allSkillsAndDomains
+                        .filter((skill) =>
+                          skill
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()),
+                        )
+                        .slice(
+                          0,
+                          showAllSkills ? allSkillsAndDomains.length : 10,
+                        )
+                        .map((skill) => (
                           <div
                             key={skill}
                             className="flex items-center space-x-2"
                           >
-                            <Switch id={`skill-${skill}`} />
+                            <Checkbox
+                              id={`skill-${skill}`}
+                              checked={filters.skills.includes(skill)}
+                              onCheckedChange={(Checked) =>
+                                handleToggleFilter('skills', skill, !!Checked)
+                              }
+                            />
                             <Label
                               htmlFor={`skill-${skill}`}
                               className="font-normal"
@@ -147,47 +381,72 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
                               {skill}
                             </Label>
                           </div>
+                        ))}
+                    </div>
+                    {/* NEW: 'More' button logic */}
+                    {allSkillsAndDomains.length > 10 && !searchQuery && (
+                      <Button
+                        variant="link"
+                        onClick={() => setShowAllSkills(!showAllSkills)}
+                        className="p-0 text-sm font-normal"
+                      >
+                        <ChevronDown
+                          className={`h-4 w-4 mr-2 transition-transform ${
+                            showAllSkills ? 'rotate-180' : ''
+                          }`}
+                        />
+                        {showAllSkills ? 'Less' : 'More'}
+                      </Button>
+                    )}
+                  </div>
+                  <Separator />
+                  <div className="space-y-2">
+                    <Label>Experience</Label>
+                    <div className="space-y-1">
+                      {Object.entries(experienceMapping).map(
+                        ([label, value]) => (
+                          <div
+                            key={label}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`exp-${label}`}
+                              checked={filters.experience.includes(value)}
+                              onCheckedChange={(Checked) =>
+                                handleToggleFilter(
+                                  'experience',
+                                  value,
+                                  !!Checked,
+                                )
+                              }
+                            />
+                            <Label
+                              htmlFor={`exp-${label}`}
+                              className="font-normal"
+                            >
+                              {label}
+                            </Label>
+                          </div>
                         ),
                       )}
                     </div>
                   </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label>Experience</Label>
-                    <div className="space-y-1">
-                      {['Junior', 'Mid-level', 'Senior', 'Lead'].map((exp) => (
-                        <div key={exp} className="flex items-center space-x-2">
-                          <Switch id={`exp-${exp}`} />
-                          <Label htmlFor={`exp-${exp}`} className="font-normal">
-                            {exp}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label>Location</Label>
-                    <div className="relative">
-                      <Input placeholder="Select location" />
-                      <ChevronDown className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-
                   <div className="flex justify-between pt-4">
-                    <Button variant="outline">Reset</Button>
-                    <Button>Apply Filters</Button>
+                    <Button variant="outline" onClick={handleResetFilters}>
+                      Reset
+                    </Button>
+                    <Button onClick={handleApplyFilters}>Apply Filters</Button>
                   </div>
                 </CardContent>
               </Card>
             </aside>
-
-            {/* Profile Cards */}
-            <div className="col-span-9">{children}</div>
+            <div className="col-span-9">
+              <TalentContent
+                activeTab={activeTab}
+                talents={activeTab === 'overview' ? [] : talentData[activeTab]}
+                loading={loading}
+              />
+            </div>
           </div>
         </div>
       </div>

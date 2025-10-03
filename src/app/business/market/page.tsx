@@ -10,13 +10,13 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import MarketHeader from '@/components/business/market/MarketHeader';
-import FilterSidebar from '@/components/business/market/FilterSideBar';
+import { notifyError } from '@/utils/toastMessage';
 import FreelancerList from '@/components/business/market/FreelancerList';
-import MobileFilterModal from '@/components/business/market/MobileFilterModal';
-import { toast } from '@/components/ui/use-toast';
+import { BusinessFilterSheet } from '@/components/business/market/BusinessFilterSheet';
+import Header from '@/components/header/header';
+import BusinessFilterComponent from '@/components/business/market/BusinessFilterComponent';
 
-interface FilterState {
+export interface FilterState {
   location: string[];
   jobType: string[];
   domain: string[];
@@ -28,12 +28,13 @@ interface FilterState {
 
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
-  const [showFilters, setShowFilters] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
+  const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance'];
+  const locations = ['Remote', 'On-site', 'Hybrid'];
+  const experiences = ['Entry', 'Intermediate', 'Senior', 'Lead'];
   const [freelancers, setFreelancers] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
-
   const [filters, setFilters] = useState<FilterState>({
     location: [],
     jobType: [],
@@ -43,34 +44,17 @@ const Market: React.FC = () => {
     minRate: '',
     maxRate: '',
   });
+  const [isLargeScreen, setIsLargeScreen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return false;
+  });
 
-  const handleFilterChange = (
-    filterType: string,
-    selectedValues: string | string[],
-  ) => {
-    let transformedValues: string | string[] = selectedValues;
-
-    const values = Array.isArray(selectedValues)
-      ? selectedValues
-      : [selectedValues];
-
-    transformedValues = values.flatMap((value) => {
-      // Check for experience ranges like "0-2", "3-6", "7+" and split them
-      if (value.includes('-')) {
-        const [start, end] = value.split('-').map(Number);
-        return Array.from({ length: end - start + 1 }, (_, i) =>
-          (start + i).toString(),
-        );
-      }
-      if (value === '7+') {
-        return ['7', '8', '9', '10']; // Return as strings
-      }
-      return [value];
-    });
-
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [filterType]: transformedValues,
+  const handleFilterChange = (updates: Partial<FilterState>) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...updates,
     }));
   };
 
@@ -78,13 +62,27 @@ const Market: React.FC = () => {
     setFilters({
       location: [],
       jobType: [],
+      experience: [],
       domain: [],
       skills: [],
-      experience: [],
       minRate: '',
       maxRate: '',
     });
   };
+
+  const getActiveFilterCount = (filters: FilterState) => {
+    return (
+      filters.skills.length +
+      filters.domain.length +
+      filters.experience.length +
+      filters.jobType.length +
+      filters.location.length +
+      (filters.minRate ? 1 : 0) +
+      (filters.maxRate ? 1 : 0)
+    );
+  };
+
+  const activeFilterCount = getActiveFilterCount(filters);
 
   const constructQueryString = (filters: FilterState) => {
     const queryParts: string[] = [];
@@ -103,6 +101,8 @@ const Market: React.FC = () => {
     Object.entries(filters).forEach(([key, value]) => {
       if (key === 'experience') return;
 
+      if ((key === 'minRate' || key === 'maxRate') && value === '') return;
+
       if (Array.isArray(value) && value.length > 0) {
         const cleanedValues = value.filter(
           (v) => v !== undefined && v !== null && v !== '',
@@ -110,11 +110,12 @@ const Market: React.FC = () => {
         if (cleanedValues.length > 0) {
           queryParts.push(`${key}=${cleanedValues.join(',')}`);
         }
-      } else if (typeof value === 'string') {
+      } else if (typeof value === 'string' && value !== '') {
         queryParts.push(
           `${key}=${value
             .split(',')
             .map((v) => v.trim())
+            .filter((v) => v !== '')
             .join(',')}`,
         );
       }
@@ -131,11 +132,7 @@ const Market: React.FC = () => {
 
       setFreelancers(response.data.data);
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      notifyError('Something went wrong. Please try again.', 'Error');
       console.error('API Error:', error);
     } finally {
       setIsDataLoading(false);
@@ -157,11 +154,7 @@ const Market: React.FC = () => {
         );
         setDomains(domainLabels);
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.', 'Error');
         console.error('Error fetching data:', error);
       }
     }
@@ -169,47 +162,98 @@ const Market: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchData(filters); // Fetch all data initially
+    fetchData(filters);
   }, [user.uid, filters, fetchData]);
 
-  const handleApply = () => {
-    fetchData(filters);
+  const handleResize = () => {
+    setIsLargeScreen(window.innerWidth >= 1024);
   };
 
-  const handleModalToggle = () => {
-    setShowFilters(!showFilters);
-  };
+  useEffect(() => {
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
-    <section className="flex min-h-screen w-full flex-col bg-muted/40">
+    <section className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col sm:gap-4  sm:pl-14 mb-8">
-        <MarketHeader />
-        <div className="flex flex-col lg:flex-row lg:space-x-5 md:-space-x-3 ml:20 sm:-space-x-4 md:ml-6 lg:ml-6">
-          <FilterSidebar
-            filters={filters}
-            domains={domains}
-            skills={skills}
-            handleFilterChange={handleFilterChange}
-            handleApply={handleApply}
-            handleReset={handleReset}
-          />
-          <FreelancerList freelancers={freelancers} isLoading={isDataLoading} />
+      <div className="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14">
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Market"
+          breadcrumbItems={[
+            { label: 'Dashboard', link: '/business/dashboard' },
+            { label: 'Market', link: '/business/market' },
+          ]}
+        />
+        <div className="flex flex-col sm:gap-4">
+          <div className="px-4 sm:px-6">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col space-y-2">
+                <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
+                  Business Marketplace
+                </h1>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight block md:hidden">
+                  Business Marketplace
+                </h1>
+                <p className="hidden md:block text-muted-foreground">
+                  Discover and hire vetted freelancers for your projects.
+                </p>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                {!isLargeScreen && (
+                  <BusinessFilterSheet
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    activeFilterCount={activeFilterCount}
+                    skills={skills}
+                    domains={domains}
+                    experiences={experiences}
+                    jobTypes={jobTypes}
+                    locations={locations}
+                    onReset={handleReset}
+                  />
+                )}
+              </div>
+              <div className="flex items-center justify-between px-1 mb-4">
+                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+                  {freelancers.length}{' '}
+                  {freelancers.length === 1 ? 'result' : 'results'}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-1 overflow-hidden px-4 sm:px-8 pb-8">
+            {isLargeScreen && (
+              <aside className="w-80 flex-shrink-0 pr-6">
+                <BusinessFilterComponent
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onReset={handleReset}
+                  activeFilterCount={activeFilterCount}
+                  skills={skills}
+                  domains={domains}
+                  locations={locations}
+                  jobTypes={jobTypes}
+                  experiences={experiences}
+                />
+              </aside>
+            )}
+            <div className="flex-1 overflow-y-auto">
+              <FreelancerList
+                freelancers={freelancers}
+                isLoading={isDataLoading}
+              />
+            </div>
+          </div>
         </div>
       </div>
-      <MobileFilterModal
-        showFilters={showFilters}
-        filters={filters}
-        domains={domains}
-        skills={skills}
-        handleFilterChange={handleFilterChange}
-        handleApply={handleApply}
-        handleModalToggle={handleModalToggle}
-      />
     </section>
   );
 };

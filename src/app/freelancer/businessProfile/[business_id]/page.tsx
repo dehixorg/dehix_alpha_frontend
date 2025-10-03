@@ -8,7 +8,7 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,11 +42,7 @@ export default function BusinessProfile() {
           }
         } catch (error) {
           console.error('Error fetching business details', error);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Failed to fetch business details.',
-          });
+          notifyError('Failed to fetch business details.', 'Error');
         } finally {
           setLoading(false);
         }
@@ -67,11 +63,7 @@ export default function BusinessProfile() {
         .share(shareData)
         .catch((err) => console.error('Error sharing:', err));
     } else {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Sharing is not supported on this browser.',
-      });
+      notifyError('Sharing is not supported on this browser.', 'Error');
     }
   };
   return (
@@ -97,7 +89,7 @@ export default function BusinessProfile() {
           ]}
         />
 
-        <main className="flex flex-col items-center p-4 sm:px-6 gap-6 mt-7">
+        <main className="flex flex-col items-center p-4 sm:px-6 sm:py-4 gap-6">
           <h1>Business Profile Overview</h1>
           <Card className="w-full max-w-4xl bg-black text-white p-4 shadow-md">
             <Card className="p-14 flex items-center rounded-lg">

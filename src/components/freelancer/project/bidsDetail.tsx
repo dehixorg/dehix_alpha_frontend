@@ -32,11 +32,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomTable } from '@/components/custom-table/CustomTable';
 import { FieldType } from '@/components/custom-table/FieldTypes';
+import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
+import StatItem from '@/components/shared/StatItem';
+import { formatCurrency } from '@/utils/format';
 // Constants - Backend expects uppercase values
 const BID_STATUSES = [
   'PENDING',
@@ -742,11 +745,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         const errorMessage =
           error.response?.data?.message || 'Failed to fetch project data';
         setError(errorMessage);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Error');
       } finally {
         setLoading(false);
       }
@@ -846,11 +845,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         const errorMessage =
           error.response?.data?.message || 'Failed to fetch bid details';
         setError(errorMessage);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Error');
       } finally {
         setLoadingFreelancerDetails(false);
       }
@@ -1017,11 +1012,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           }
         }
 
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to fetch profile details.',
-        });
+        notifyError('Failed to fetch profile details.', 'Error');
       } finally {
         setLoadingProfile(false);
       }
@@ -1083,19 +1074,15 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           ),
         );
 
-        toast({
-          title: 'Success',
-          description: `Bid status updated to ${status.toLowerCase()}.`,
-        });
+        notifySuccess(
+          `Bid status updated to ${status.toLowerCase()}.`,
+          'Success',
+        );
       } catch (error: any) {
         const errorMessage =
           error.response?.data?.message || 'Failed to update bid status';
         setError(errorMessage);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Error');
       } finally {
         setLoadingBids((prev) => ({ ...prev, [bidId]: false }));
       }
@@ -1327,11 +1314,39 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     ],
   );
 
+  // Format rate nicely in USD
+  const formatUSD = (value?: number | string | null) => {
+    if (value === null || value === undefined || isNaN(Number(value)))
+      return 'N/A';
+    const fractionDigits = 2; // USD typically uses 2 decimal places
+    return formatCurrency(value, 'USD', fractionDigits, fractionDigits);
+  };
+
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto p-4">
-        <div className="text-center py-10">
-          <p>Loading...</p>
+      <div className="max-w-5xl mx-auto p-4 animate-in fade-in-50">
+        <div className="space-y-6">
+          <div className="h-8 w-64">
+            <Skeleton className="h-8 w-64" />
+          </div>
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-3/4" />
+          </div>
+          <div className="mt-4">
+            <Skeleton className="h-6 w-40 mb-2" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+              <div className="space-y-3">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1347,52 +1362,70 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     );
   }
 
-  if (!userData?.data?.profiles?.length) {
-    return (
-      <div className="max-w-5xl mx-auto p-4">
-        <div className="text-center py-10 w-full mt-10">
-          <PackageOpen className="mx-auto text-muted-foreground" size="100" />
-          <p className="text-muted-foreground text-lg">No bid profiles found</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="max-w-5xl mx-auto p-4">
-        <div className="mb-8 mt-4">
-          <Accordion type="single" collapsible>
-            {userData.data.profiles.map((profile: any) => (
-              <AccordionItem
-                key={profile._id}
-                value={profile._id || ''}
-                onClick={() => setProfileId(profile._id)}
-              >
-                <AccordionTrigger>
-                  <div className="flex justify-between items-center w-full">
-                    <h3 className="text-lg font-semibold">
-                      {profile.domain ?? 'N/A'}
-                    </h3>
-                    <span className="text-muted-foreground">
-                      Rate: {profile.rate ?? 'N/A'}
-                    </span>
+        <Accordion type="single" collapsible>
+          {userData!.data.profiles.map((profile: any) => (
+            <AccordionItem
+              key={profile._id}
+              value={profile._id || ''}
+              onClick={() => setProfileId(profile._id)}
+              className="border rounded-lg mb-2 bg-muted-foreground/20 dark:bg-muted/20"
+            >
+              <AccordionTrigger className="px-4 hover:no-underline">
+                <div className="flex justify-between items-center w-full">
+                  <h4 className="text-lg font-semibold tracking-tight">
+                    {profile.domain ?? 'N/A'}
+                  </h4>
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs px-2 py-0.5 rounded ${profileTypeOutlineClasses(profile.profileType)}`}
+                    >
+                      {profile?.profileType || 'FREELANCER'}
+                    </Badge>
+                    <Badge
+                      variant="secondary"
+                      className="text-xs px-2 mr-2 py-0.5 rounded-md"
+                    >
+                      {formatUSD(profile.rate)}
+                      {formatUSD(profile.rate) !== 'N/A' ? '/hr' : ''}
+                    </Badge>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-0">
-                  <div className="px-6 py-4 flex flex-col gap-2">
-                    <div className="flex gap-2 items-center">
-                      <p>Experience: {profile.experience ?? 'N/A'}</p>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      <p>Min Connect: {profile.minConnect ?? 'N/A'}</p>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      <p>Total Bids: {profile.totalBid?.length || 0}</p>
-                    </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="p-0">
+                <div className="px-6 py-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-4">
+                    <StatItem
+                      color="green"
+                      icon={
+                        <Briefcase className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      }
+                      label="Experience"
+                      value={profile.experience ?? 'N/A'}
+                    />
+                    <StatItem
+                      color="amber"
+                      icon={
+                        <Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      }
+                      label="Min Connect"
+                      value={profile.minConnect ?? 'N/A'}
+                    />
+                    <StatItem
+                      color="blue"
+                      icon={
+                        <PackageOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      }
+                      label="Total Bids"
+                      value={profile.totalBid?.length || 0}
+                    />
                   </div>
+
                   <Tabs defaultValue="PENDING" className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 mb-4">
+                    <TabsList className="grid w-full grid-cols-5 mb-4 sticky top-0 z-10">
                       {BID_STATUSES.map((status) => (
                         <TabsTrigger key={status} value={status}>
                           {`${status.charAt(0) + status.slice(1).toLowerCase()} (${bidCounts[status] || 0})`}
@@ -1403,13 +1436,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                       <TabsContent key={status} value={status} className="mt-4">
                         {loadingFreelancerDetails ? (
                           <div className="space-y-4 py-4">
-                            {/* Table Header Skeleton */}
                             <div className="flex justify-between items-center">
                               <Skeleton className="h-8 w-48" />
                               <Skeleton className="h-9 w-32" />
                             </div>
-
-                            {/* Table Rows Skeleton */}
                             <div className="space-y-2">
                               {[...Array(5)].map((_, i) => (
                                 <div
@@ -1431,8 +1461,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                 </div>
                               ))}
                             </div>
-
-                            {/* Pagination Skeleton */}
                             <div className="flex justify-between items-center pt-2">
                               <Skeleton className="h-8 w-24" />
                               <div className="flex space-x-2">
@@ -1450,24 +1478,22 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                       </TabsContent>
                     ))}
                   </Tabs>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
 
-      {/* Profile Dialog */}
       <ProfileDialog
         isOpen={isProfileDialogOpen}
         onClose={handleCloseProfileDialog}
         profileData={profileData}
         loading={loadingProfile}
-        isFreelancerProfile={!selectedProfileId} // true if no profile selected, false if specific profile
+        isFreelancerProfile={!selectedProfileId}
         bidData={selectedBidData}
       />
 
-      {/* Interview Dialog */}
       <Dialog
         open={isInterviewDialogOpen}
         onOpenChange={setIsInterviewDialogOpen}

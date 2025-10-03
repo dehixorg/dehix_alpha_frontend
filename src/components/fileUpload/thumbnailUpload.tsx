@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -13,7 +13,7 @@ const allowedImageFormats = [
   'image/gif',
   'image/webp',
 ];
-const maxImageSize = 2 * 1024 * 1024; // 2MB
+const maxImageSize = 5 * 1024 * 1024; // 5MB
 
 interface ThumbnailUploadProps {
   onThumbnailUpdate?: (thumbnailUrl: string) => void;
@@ -41,22 +41,16 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
 
     // Validate file type
     if (!allowedImageFormats.includes(file.type)) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid file type',
-        description:
-          'Please select a valid image file (PNG, JPG, JPEG, GIF, WebP).',
-      });
+      notifyError(
+        'Please select a valid image file (PNG, JPG, JPEG, GIF, WebP).',
+        'Invalid file type',
+      );
       return;
     }
 
     // Validate file size
     if (file.size > maxImageSize) {
-      toast({
-        variant: 'destructive',
-        title: 'File too large',
-        description: 'Please select an image smaller than 2MB.',
-      });
+      notifyError('Please select an image smaller than 5MB.', 'File too large');
       return;
     }
 
@@ -94,17 +88,13 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
         onThumbnailUpdate(Location);
       }
 
-      toast({
-        title: 'Success',
-        description: 'Thumbnail uploaded successfully!',
-      });
+      notifySuccess('Thumbnail uploaded successfully!', 'Success');
     } catch (error) {
       console.error('Upload error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Upload failed',
-        description: 'Failed to upload thumbnail. Please try again.',
-      });
+      notifyError(
+        'Failed to upload thumbnail. Please try again.',
+        'Upload failed',
+      );
     } finally {
       setIsUploading(false);
     }

@@ -1,9 +1,11 @@
 import {
   BookOpen,
   Briefcase,
+  FileWarning,
   HomeIcon,
   ImagePlus,
   Package,
+  ShieldCheck,
   User,
   UserCheck,
 } from 'lucide-react';
@@ -37,7 +39,7 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/freelancer/settings/kyc',
-    icon: <User className="h-5 w-5" />,
+    icon: <ShieldCheck className="h-5 w-5" />,
     label: 'KYC',
   },
   {
@@ -67,7 +69,7 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/reports', // Link to your new Reports page
-    icon: <Package className="h-5 w-5" />, // You can change icon
+    icon: <FileWarning className="h-5 w-5" />, // You can change icon
     label: 'Reports',
   },
 ];

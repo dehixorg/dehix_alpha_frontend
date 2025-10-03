@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
@@ -65,9 +65,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
       isNaN(currentConnects) ||
       amount > currentConnects
     ) {
-      toast({
-        description: 'Connects are insufficient',
-      });
+      notifyError('Connects are insufficient');
       return; // Prevent API call if validation fails
     }
 
@@ -90,16 +88,10 @@ const ProfileCard: React.FC<ProfileProps> = ({
       setDescription('');
       setDialogOpen(false);
       setIsBidSubmitted(true);
-      toast({
-        title: 'Bid Added',
-        description: 'The Bid has been successfully added.',
-      });
+      notifySuccess('The Bid has been successfully added.', 'Bid Added');
     } catch (error) {
       console.error('Error submitting bid:', error);
-      toast({
-        title: 'Something went wrong',
-        description: 'Please try again later.',
-      });
+      notifyError('Please try again later.', 'Something went wrong');
     } finally {
       SetIsloading(false);
     }
@@ -112,10 +104,10 @@ const ProfileCard: React.FC<ProfileProps> = ({
       await axiosInstance.patch(
         `/public/connect?userId=${user.uid}&isFreelancer=${true}`,
       );
-      toast({
-        title: 'Connects Requested',
-        description: 'Your request for more connects has been submitted.',
-      });
+      notifySuccess(
+        'Your request for more connects has been submitted.',
+        'Connects Requested',
+      );
       const currentConnects = parseInt(
         localStorage.getItem('DHX_CONNECTS') || '0',
         10,
@@ -126,10 +118,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
       window.dispatchEvent(new Event('connectsUpdated'));
     } catch (error) {
       console.error('Error requesting connects:', error);
-      toast({
-        title: 'Something went wrong',
-        description: 'Please try again later.',
-      });
+      notifyError('Please try again later.', 'Something went wrong');
     }
   };
 

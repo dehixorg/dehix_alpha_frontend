@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 
 import ProjectCard from '@/components/cards/freelancerProjectCard';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
   menuItemsBottom,
@@ -141,11 +141,7 @@ const FreelancerProfile = () => {
           }
         } catch (error) {
           console.error('Error fetching freelancer details', error);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Failed to fetch freelancer details.',
-          });
+          notifyError('Failed to fetch freelancer details.', 'Error');
         } finally {
           setLoading(false);
         }
@@ -279,7 +275,7 @@ const FreelancerProfile = () => {
           ]}
         />
 
-        <div className="flex p-3 px-3 md:px-14 relative flex-col sm:gap-8 sm:py-0">
+        <div className="flex p-3 md:px-14 relative flex-col sm:gap-8 sm:py-4">
           <main className="mt-8 max-w-4xl mx-auto">
             {/* Profile Info */}
             <Card className="mb-8 shadow-md">
@@ -411,8 +407,9 @@ const FreelancerProfile = () => {
                           key={project._id}
                           _id={project._id}
                           projectName={project.projectName}
-                          description={project.description || ''}
-                          verified={project.verified || false}
+                          verificationStatus={
+                            project.verified ? 'verified' : 'pending'
+                          }
                           githubLink={project.githubLink || ''}
                           liveDemoLink={project.liveDemoLink || ''}
                           thumbnail={project.thumbnail || ''}
@@ -426,7 +423,6 @@ const FreelancerProfile = () => {
                           verificationUpdateTime={
                             project.verificationUpdateTime || ''
                           }
-                          comments={project.comments || ''}
                           isViewOnly={true}
                           onClick={() => setSelectedProject(project)}
                         />

@@ -11,8 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 interface Experience {
@@ -32,7 +31,7 @@ interface ExperienceSelectionDialogProps {
   onOpenChange: (open: boolean) => void;
   freelancerId: string;
   currentProfileId: string;
-  onSuccess?: () => void;
+  onSuccess?: (newExperiences: Experience[]) => void;
 }
 
 export default function ExperienceSelectionDialog({
@@ -48,71 +47,58 @@ export default function ExperienceSelectionDialog({
     [],
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [isAddingExperiences, setIsAddingExperiences] = useState(false);
-  const { toast } = useToast();
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    if (open && freelancerId && currentProfileId) {
+    if (open && freelancerId) {
       fetchExperiences();
-      fetchCurrentProfileExperiences();
+      if (currentProfileId && currentProfileId !== 'new') {
+        fetchCurrentProfileExperiences();
+      } else {
+        setExistingExperienceIds([]);
+      }
     }
-  });
+  }, [open, freelancerId, currentProfileId]);
 
+  // Fetch all freelancer experiences
   const fetchExperiences = async () => {
     setIsLoading(true);
     try {
       const response = await axiosInstance.get(`/freelancer/${freelancerId}`);
-      const freelancerData = response.data?.data;
-      const professionalInfo = freelancerData?.professionalInfo;
-
-      if (professionalInfo && typeof professionalInfo === 'object') {
-        // Check if it's already an array (from backend conversion)
-        const experiencesArray = Array.isArray(professionalInfo)
-          ? (professionalInfo as Experience[])
-          : (Object.values(professionalInfo) as Experience[]);
-
-        setExperiences(experiencesArray);
-      } else {
-        setExperiences([]);
-      }
+      const professionalInfo = response.data?.data?.professionalInfo;
+      const expArray = Array.isArray(professionalInfo)
+        ? professionalInfo
+        : Object.values(professionalInfo || {});
+      setExperiences(expArray);
     } catch (error) {
       console.error('Error fetching experiences:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load experiences',
-        variant: 'destructive',
-      });
+      notifyError('Failed to load experiences', 'Error');
       setExperiences([]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Fetch experiences already in current profile
   const fetchCurrentProfileExperiences = async () => {
     try {
       const response = await axiosInstance.get(
         `/freelancer/profile/${currentProfileId}`,
       );
-      const currentProfile = response.data.data;
-      // Extract experience IDs from the profile
-      const experienceIds = (currentProfile.experiences || []).map(
-        (exp: any) => exp._id,
-      );
-      setExistingExperienceIds(experienceIds);
+      const profileExps = response.data?.data?.experiences || [];
+      setExistingExperienceIds(profileExps.map((e: any) => e._id));
     } catch (error) {
-      console.error('Error fetching current profile experiences:', error);
+      console.error('Error fetching profile experiences:', error);
       setExistingExperienceIds([]);
     }
   };
 
-  const handleExperienceToggle = (experienceId: string) => {
+  // Toggle selection
+  const handleToggle = (id: string) => {
     setSelectedExperiences((prev) =>
-      prev.includes(experienceId)
-        ? prev.filter((id) => id !== experienceId)
-        : [...prev, experienceId],
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
-
   const handleAddExperiences = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -120,46 +106,80 @@ export default function ExperienceSelectionDialog({
     }
 
     if (selectedExperiences.length === 0) {
-      toast({
-        title: 'No Selection',
-        description: 'Please select at least one experience to add',
-        variant: 'destructive',
-      });
+      notifyError(
+        'Please select at least one experience to add',
+        'No Selection',
+      );
       return;
     }
 
-    setIsAddingExperiences(true);
+    const experiencesToAdd = experiences.filter((exp) =>
+      selectedExperiences.includes(exp._id),
+    );
+
+    setIsAdding(true);
     try {
-      toast({
-        title: 'Success',
-        description: `${selectedExperiences.length} experience(s) added to profile successfully!`,
+      // Fetch current profile experiences
+      const profileRes = await axiosInstance.get(
+        `/freelancer/profile/${currentProfileId}`,
+      );
+      const currentExperiences = profileRes.data?.data?.experiences || [];
+
+      // Combine current + new selected experiences without duplicates
+      const updatedExperiences = [
+        ...currentExperiences,
+        ...experiencesToAdd.filter(
+          (exp) => !currentExperiences.some((ce: any) => ce._id === exp._id),
+        ),
+      ];
+
+      // Derive actually added items for accurate UX/callback
+      const existingIds = new Set<string>(
+        currentExperiences.map((e: any) => String(e._id)),
+      );
+      const actuallyAdded = experiencesToAdd.filter(
+        (e) => !existingIds.has(String(e._id)),
+      );
+
+      // PUT combined array to backend
+      await axiosInstance.put(`/freelancer/profile/${currentProfileId}`, {
+        experiences: updatedExperiences.map((e) => ({
+          _id: e._id,
+          jobTitle: e.jobTitle,
+          company: e.company,
+          workDescription: e.workDescription,
+          workFrom: e.workFrom,
+          workTo: e.workTo,
+          referencePersonName: e.referencePersonName,
+        })),
       });
 
+      // ✅ Single success toast with accurate count
+      notifySuccess(
+        `${actuallyAdded.length} experience(s) added to profile.`,
+        'Success',
+      );
+
+      // Call onSuccess with only the actually added items
+      onSuccess?.(actuallyAdded);
+
+      // Clear selection and close dialog
       setSelectedExperiences([]);
       onOpenChange(false);
-
-      // Call onSuccess to refresh the parent component
-      if (onSuccess) {
-        onSuccess();
-      }
     } catch (error: any) {
       console.error('Error adding experiences:', error);
-      toast({
-        title: 'Error',
-        description:
-          error.response?.data?.message ||
-          'Failed to add experiences to profile',
-        variant: 'destructive',
-      });
+      notifyError('Could not process selected experiences', 'Error');
     } finally {
-      setIsAddingExperiences(false);
+      setIsAdding(false);
     }
   };
 
-  const formatDate = (date: Date | string) => {
-    if (!date) return 'N/A';
-    const dateObj = date instanceof Date ? date : new Date(date);
-    return dateObj.toLocaleDateString();
+  const formatDate = (date: string | Date) => {
+    if (!date) return 'Present';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+    });
   };
 
   return (
@@ -168,126 +188,89 @@ export default function ExperienceSelectionDialog({
         <DialogHeader>
           <DialogTitle>Select Experiences for Profile</DialogTitle>
           <DialogDescription>
-            Choose from your existing professional experiences to add to this
-            profile. You can select multiple experiences.
+            Choose from your existing experiences to add. You can select
+            multiple.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Loading experiences...</p>
-            </div>
-          ) : experiences.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">
-                No experiences found.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Add professional experiences from the Professional Info page
-                first to select them for your profile.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 gap-4">
-                {experiences.map((experience) => {
-                  const isAlreadyInProfile = existingExperienceIds.includes(
-                    experience._id,
-                  );
-                  const isSelected = selectedExperiences.includes(
-                    experience._id,
-                  );
-
-                  return (
-                    <Card
-                      key={experience._id}
-                      className={`transition-all duration-200 ${
-                        isAlreadyInProfile
-                          ? 'bg-green-50 border-green-200 opacity-60 dark:bg-green-900/30 dark:border-green-600'
-                          : isSelected
-                            ? 'bg-primary/10 border-primary cursor-pointer'
-                            : 'hover:bg-accent cursor-pointer'
-                      }`}
-                      onClick={() =>
-                        !isAlreadyInProfile &&
-                        handleExperienceToggle(experience._id)
-                      }
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Briefcase className="h-5 w-5" />
-                            {experience.jobTitle}
-                            {isAlreadyInProfile ? (
-                              <Badge className="bg-green-600 hover:bg-green-600 text-xs">
-                                Already Added
-                              </Badge>
-                            ) : isSelected ? (
-                              <CheckCircle className="h-5 w-5 text-primary" />
-                            ) : null}
-                          </CardTitle>
-                        </div>
-                        <p className="text-muted-foreground font-medium">
-                          {experience.company}
-                        </p>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-muted-foreground text-sm line-clamp-3">
-                          {experience.workDescription}
-                        </p>
-
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          <span>
-                            {formatDate(experience.workFrom)} -{' '}
-                            {formatDate(experience.workTo)}
-                          </span>
-                        </div>
-
-                        {experience.referencePersonName && (
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium">Reference:</span>{' '}
-                            {experience.referencePersonName}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              <div className="flex justify-between items-center pt-4 border-t border-border">
-                <div className="text-sm text-muted-foreground">
-                  <p>{selectedExperiences.length} experience(s) selected</p>
-                  {existingExperienceIds.length > 0 && (
-                    <p className="text-xs text-green-600">
-                      {existingExperienceIds.length} experience(s) already in
-                      profile
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => onOpenChange(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={(e) => handleAddExperiences(e)}
-                    disabled={
-                      selectedExperiences.length === 0 || isAddingExperiences
-                    }
-                    className="flex items-center gap-2"
+        {isLoading ? (
+          <p className="text-center py-8 text-muted-foreground">
+            Loading experiences...
+          </p>
+        ) : experiences.length === 0 ? (
+          <p className="text-center py-8 text-muted-foreground">
+            No experiences found. Add professional experiences from your profile
+            first.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2">
+              {experiences.map((exp) => {
+                const isSelected = selectedExperiences.includes(exp._id);
+                return (
+                  <Card
+                    key={exp._id}
+                    onClick={() => handleToggle(exp._id)}
+                    className={`cursor-pointer p-3 border rounded-lg shadow-md transition-all
+          ${
+            isSelected
+              ? 'border-primary bg-primary/10 dark:bg-primary/20'
+              : 'border-gray-300 bg-white dark:bg-black dark:border-gray-700'
+          }`}
                   >
-                    {isAddingExperiences
-                      ? 'Adding...'
-                      : `Add ${selectedExperiences.length} Experience(s)`}
-                  </Button>
-                </div>
+                    <CardHeader className="pb-1">
+                      <CardTitle className="text-md flex items-center gap-2 text-gray-900 dark:text-white">
+                        <Briefcase className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                        {exp.jobTitle}
+                        {isSelected && (
+                          <CheckCircle className="text-primary h-4 w-4" />
+                        )}
+                      </CardTitle>
+                      <p className="text-gray-700 dark:text-gray-300 font-medium text-sm">
+                        {exp.company}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
+                        {exp.workDescription}
+                      </p>
+                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                        <Calendar className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                        {formatDate(exp.workFrom)} - {formatDate(exp.workTo)}
+                      </div>
+                      {exp.referencePersonName && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Reference: {exp.referencePersonName}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700 mt-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {selectedExperiences.length} selected,{' '}
+                {existingExperienceIds.length} already in profile
+              </p>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddExperiences}
+                  disabled={selectedExperiences.length === 0 || isAdding}
+                  className="flex items-center gap-2"
+                >
+                  {isAdding
+                    ? 'Adding...'
+                    : `Add ${selectedExperiences.length} Experience(s)`}
+                </Button>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

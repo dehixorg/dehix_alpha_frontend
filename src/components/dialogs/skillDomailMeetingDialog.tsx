@@ -16,9 +16,16 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { toast } from '@/hooks/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 interface Interviewer {
   _id: string;
@@ -50,10 +57,7 @@ export function SkillDomainMeetingDialog({
   const [endDateTime, setEndDateTime] = useState<string>(
     dayjs().add(1, 'day').add(1, 'hour').format('YYYY-MM-DD'),
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // Original const [attendees,setAttendees] = useState<string[]>(['']);
-  const attendees = useState<string[]>(['']);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [attendees, setAttendees] = useState<string[]>(['']);
   const [interviewer, setInterviewer] = useState<Interviewer[]>([]);
 
   const handleRequest = async (meetingData: object) => {
@@ -105,28 +109,22 @@ export function SkillDomainMeetingDialog({
       }
     } catch (error) {
       console.error('Error fetching Google Auth URL:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
     }
   };
 
   useEffect(() => {
     async function fetchData() {
-      try {
-        const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/doc_id/${doc_id}?doc_type=${doc_type}`,
-        );
-        setInterviewer(response?.data?.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+      if (doc_id && doc_type) {
+        try {
+          const response = await axiosInstance.get(
+            `/freelancer/${user.uid}/doc_id/${doc_id}?doc_type=${doc_type}`,
+          );
+          setInterviewer(response?.data?.data);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          notifyError('Something went wrong. Please try again.', 'Error');
+        }
       }
     }
     fetchData();
@@ -171,13 +169,15 @@ export function SkillDomainMeetingDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-          {/* <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="interviewer" className="text-right">
               Interviewer
             </Label>
             <Select
               onValueChange={(value) => {
-                const updatedAttendees = [user.email, value];
+                const updatedAttendees = [user.email, value].filter(
+                  Boolean,
+                ) as string[];
                 setAttendees(updatedAttendees);
               }}
               value={attendees[0] || ''}
@@ -193,7 +193,7 @@ export function SkillDomainMeetingDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div> */}
+          </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="summary" className="text-right">

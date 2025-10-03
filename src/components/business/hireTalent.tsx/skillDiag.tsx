@@ -14,17 +14,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectTrigger,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-} from '@/components/ui/select';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import SelectTagPicker from '@/components/shared/SelectTagPicker'; // Import your picker
 
 interface Skill {
   _id: string;
@@ -41,15 +35,14 @@ interface SkillDomainData {
   status: string;
 }
 
-// Define the props for the SkillDialog component
 interface SkillDialogProps {
   skills: Skill[];
-  onSubmitSkill: (data: SkillDomainData) => void; // Use SkillDomainData type
+  onSubmitSkill: (data: SkillDomainData) => void;
 }
 
 const skillSchema = z.object({
-  label: z.string().nonempty('Please select a domain'),
-  skillId: z.string().nonempty('Domain ID is required'), // Validation for skillId
+  label: z.string().nonempty('Please select a skill'),
+  skillId: z.string().nonempty('Skill ID is required'),
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -63,6 +56,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const form = useForm<SkillDomainData>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
@@ -89,7 +83,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
     setLoading(true);
     try {
       const response = await axiosInstance.post(`/business/hire-dehixtalent`, {
-        skillId: data.skillId, // This should now be set
+        skillId: data.skillId,
         skillName: data.label,
         businessId: user.uid,
         experience: data.experience,
@@ -98,44 +92,32 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
         visible: data.visible,
       });
 
-      if (response.status === 200) {
-        // Assuming the response contains the newly created talent data including UID
-        if (response?.data?.data) {
-          const newTalent = response.data.data; // Adjust based on your response structure
-          onSubmitSkill({
-            ...data,
-            uid: newTalent._id, // Update this line to use the UID from the response
-          });
-          reset();
-          setOpen(false); // Close the dialog after successful submission
-          toast({
-            title: 'Talent Added',
-            description: 'The Hire Talent has been successfully added.',
-          });
+      if (response.status === 200 && response.data?.data) {
+        const newTalent = response.data.data;
+        onSubmitSkill({ ...data, uid: newTalent._id });
+        reset();
+        setOpen(false);
+        notifySuccess(
+          'The Hire Talent has been successfully added.',
+          'Talent Added',
+        );
 
-          const connectsCost = parseInt(
-            process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-            10,
-          );
-
-          const currentConnects =
-            Number(localStorage.getItem('DHX_CONNECTS')) || 0;
-          const updatedConnects = Math.max(0, currentConnects - connectsCost);
-
-          localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
-          window.dispatchEvent(new Event('connectsUpdated'));
-        } else {
-          throw new Error('Failed to add hire talen');
-        }
+        const connectsCost = parseInt(
+          process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+          10,
+        );
+        const currentConnects =
+          Number(localStorage.getItem('DHX_CONNECTS')) || 0;
+        const updatedConnects = Math.max(0, currentConnects - connectsCost);
+        localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
+        window.dispatchEvent(new Event('connectsUpdated'));
+      } else {
+        throw new Error('Failed to add hire talent');
       }
     } catch (error) {
       console.error('Error submitting skill data', error);
       reset();
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add hire talent. Please try again.',
-      });
+      notifyError('Failed to add hire talent. Please try again.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -153,56 +135,52 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
         <DialogHeader>
           <DialogTitle>Add Skill</DialogTitle>
           <DialogDescription>
-            Select a skill, enter your experience and monthly pay.
+            Select a skill, enter your experience and description.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Skill Selector */}
           <div className="mb-3">
             <Controller
               control={control}
               name="label"
               render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={(selectedLabel) => {
-                    // Find the selected skill by label
-                    const selectedDomain = skills.find(
-                      (skill) => skill.label === selectedLabel,
-                    );
-                    // Set label and domainId in form
-                    field.onChange(selectedLabel); // Set label
-                    setValue('skillId', selectedDomain?._id || ''); // Set domainId
+                <SelectTagPicker
+                  label="Skills"
+                  options={skills}
+                  selected={field.value ? [{ name: field.value }] : []}
+                  onAdd={(val) => {
+                    field.onChange(val);
+                    const selectedSkill = skills.find((s) => s.label === val);
+                    setValue('skillId', selectedSkill?._id || '');
                   }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a skill" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {skills.map((skill: Skill) => (
-                      <SelectItem key={skill.label} value={skill.label}>
-                        {skill.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onRemove={() => {
+                    field.onChange('');
+                    setValue('skillId', '');
+                  }}
+                  selectPlaceholder="Select skill"
+                  searchPlaceholder="Search skill"
+                />
               )}
             />
+            {errors.label && (
+              <p className="text-red-600">{errors.label.message}</p>
+            )}
           </div>
-          {errors.label && (
-            <p className="text-red-600">{errors.label.message}</p>
-          )}
+
+          {/* Experience Input */}
           <div className="mb-3">
             <Controller
               control={control}
               name="experience"
               render={({ field }) => (
-                <div className="col-span-3 relative">
+                <div className="relative">
                   <input
                     type="number"
                     placeholder="Experience (years)"
                     min={0}
                     max={50}
-                    step={0.1} //Allow decimals
+                    step={0.1}
                     {...field}
                     className="border p-2 rounded mt-0 w-full"
                   />
@@ -212,10 +190,12 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                 </div>
               )}
             />
+            {errors.experience && (
+              <p className="text-red-600">{errors.experience.message}</p>
+            )}
           </div>
-          {errors.experience && (
-            <p className="text-red-600">{errors.experience.message}</p>
-          )}
+
+          {/* Description Input */}
           <Controller
             control={control}
             name="description"
@@ -231,6 +211,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
           {errors.description && (
             <p className="text-red-600">{errors.description.message}</p>
           )}
+
+          {/* ConnectsDialog */}
           <ConnectsDialog
             form={form}
             loading={loading}
@@ -238,8 +220,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             onSubmit={onSubmit}
             isValidCheck={trigger}
             userId={user.uid}
-            buttonText={'Submit'}
-            userType={'BUSINESS'}
+            buttonText="Submit"
+            userType="BUSINESS"
             requiredConnects={parseInt(
               process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
               10,

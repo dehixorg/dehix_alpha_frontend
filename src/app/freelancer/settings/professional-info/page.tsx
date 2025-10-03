@@ -12,7 +12,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -20,11 +20,13 @@ export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
   const [refresh, setRefresh] = useState(false);
   const [experiences, setExperiences] = useState<any>([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const handleFormSubmit = () => {
     setRefresh((prev) => !prev);
   };
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         setIsLoading(true);
@@ -37,36 +39,35 @@ export default function ProfessionalInfo() {
           console.warn(
             'No professional experience data found, setting empty array.',
           );
-          setExperiences([]); // Empty array set kar diya taaki error na aaye
+          if (isMounted) setExperiences([]);
           return;
         }
 
-        setExperiences(Object.values(professionalInfo));
+        if (isMounted) setExperiences(Object.values(professionalInfo));
       } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        notifyError('Something went wrong. Please try again.');
         console.error('API Error:', error);
-        setExperiences([]); // UI break hone se bachega
+        if (isMounted) setExperiences([]);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, [user.uid, refresh]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Professional Info"
         isKycCheck={true}
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -78,7 +79,7 @@ export default function ProfessionalInfo() {
           ]}
         />
         <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {isLoading ? (

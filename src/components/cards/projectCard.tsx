@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { MoreVertical, ShieldCheck } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import {
+  MoreVertical,
+  ShieldCheck,
+  Briefcase,
+  Clock,
+  CheckCircle2,
+  Activity,
+  Flag,
+  Eye,
+} from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getStatusBadge } from '@/utils/statusBadge';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
 interface ProjectType {
@@ -72,9 +73,9 @@ export function ProjectCard({
   project,
   ...props
 }: ProjectCardProps) {
-  const { text, className } = getStatusBadge(project.status);
   const [openReport, setOpenReport] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
 
   const reportType = getReportTypeFromPath(pathname);
@@ -88,102 +89,146 @@ export function ProjectCard({
     reportedId: user?.uid || 'user123',
   };
 
+  // Status configuration
+  const statusConfig = {
+    [StatusEnum.ACTIVE]: {
+      color: 'bg-blue-500',
+      icon: Activity,
+      text: 'Active',
+    },
+    [StatusEnum.COMPLETED]: {
+      color: 'bg-green-500',
+      icon: CheckCircle2,
+      text: 'Completed',
+    },
+    [StatusEnum.PENDING]: {
+      color: 'bg-amber-500',
+      icon: Clock,
+      text: 'In Progress',
+    },
+    [StatusEnum.REJECTED]: {
+      color: 'bg-red-500',
+      icon: CheckCircle2,
+      text: 'Rejected',
+    },
+    default: {
+      color: 'bg-gray-400',
+      icon: Briefcase,
+      text: 'Draft',
+    },
+  };
+
+  const { color: statusColor } =
+    statusConfig[project.status || 'default'] || statusConfig.default;
+
   return (
     <Card
-      className={cn('flex flex-col h-[400px] relative', cardClassName)}
+      className={cn(
+        'flex flex-col h-[250px] relative group overflow-hidden transition-all hover:shadow-lg',
+        cardClassName,
+      )}
       {...props}
     >
+      {/* Status indicator */}
+      <div className={`absolute top-0 left-0 w-full h-1 ${statusColor}`} />
+
       {/* 3-dot menu */}
-      <div className="absolute top-3 right-3 z-20">
+      <div className="absolute top-4 right-4 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none">
-              <MoreVertical className="w-5 h-5 text-gray-500" />
-            </button>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">More options</span>
+            </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() =>
+                router.push(
+                  `${user?.type === 'business' ? '/business' : ''}/project/${project._id}`,
+                )
+              }
+            >
+              <div className="flex items-center">
+                <Eye className="mr-2 h-4 w-4" />
+                <span>View</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => setOpenReport(true)}
-              className="text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="text-red-600 focus:text-red-600 focus:bg-destructive/50 cursor-pointer"
             >
-              Report
+              <Flag className="mr-2 h-4 w-4" />
+              <span>Report</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      <CardHeader>
-        <CardTitle className="flex">
-          {project.projectName}&nbsp;
-          {project.verified && <ShieldCheck className="text-success" />}
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between"></div>
+        <CardTitle className="text-xl font-semibold mt-3 line-clamp-1 flex items-center">
+          {project.projectName}
+          {project.verified && (
+            <ShieldCheck className="h-5 w-5 ml-1.5 text-green-300" />
+          )}
         </CardTitle>
-        <CardDescription className="text-gray-600">
-          <p className="my-auto">
-            {project.createdAt
-              ? new Date(project.createdAt).toLocaleDateString()
-              : 'N/A'}
-          </p>
-          <br />
-          <Badge className={className}>{text}</Badge>
-        </CardDescription>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Briefcase className="h-3.5 w-3.5" />
+          <span className="line-clamp-1">{project.companyName}</span>
+        </div>
       </CardHeader>
 
-      <CardContent className="grid gap-4 mb-auto flex-grow">
-        <div className="mb-4 items-start pb-4 last:mb-0 last:pb-0 w-full">
-          <p className="text-sm text-muted-foreground">
-            {project.description?.length > 40
-              ? `${project.description.slice(0, 40)}...`
-              : project.description || 'No description available'}
+      <CardContent className="flex-1 space-y-4">
+        <div className="bg-muted/30 dark:bg-muted/10 p-4 rounded-lg">
+          <p className="text-sm text-muted-foreground line-clamp-3">
+            {project.description ||
+              'No description available for this project.'}
           </p>
         </div>
-        <div>
-          <p>
-            <strong>Company:</strong> {project.companyName}
-          </p>
-          <p>
-            <strong>Role:</strong> {project.role}
-          </p>
-          <p>
-            <strong>Experience:</strong> {project.experience}
-          </p>
-          <div className="flex flex-wrap gap-1 mt-2">
-            {project?.skillsRequired?.map((skill, index) => (
-              <Badge key={index} className="text-xs text-white bg-muted">
-                {skill}
-              </Badge>
-            ))}
+
+        {project.skillsRequired?.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              Skills Required
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {project.skillsRequired.slice(0, 4).map((skill, index) => (
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="text-xs font-normal hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  {skill}
+                </Badge>
+              ))}
+              {project.skillsRequired.length > 4 && (
+                <Badge variant="outline" className="text-xs">
+                  +{project.skillsRequired.length - 4}
+                </Badge>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Report Dialog */}
+        <Dialog open={openReport} onOpenChange={setOpenReport}>
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle>Create New Report</DialogTitle>
+            </DialogHeader>
+            <NewReportTab
+              reportData={reportData}
+              onSubmitted={() => {
+                setOpenReport(false);
+                return true;
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </CardContent>
-
-      <CardFooter>
-        <Link
-          href={`${user?.type === 'business' ? '/business' : ''}/project/${project._id}`}
-          className="w-full"
-        >
-          <Button
-            className={`w-full ${project.status === StatusEnum.COMPLETED && 'bg-green-900 hover:bg-green-700'}`}
-          >
-            View full Details
-          </Button>
-        </Link>
-      </CardFooter>
-
-      {/* Report Dialog */}
-      <Dialog open={openReport} onOpenChange={setOpenReport}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Create New Report</DialogTitle>
-          </DialogHeader>
-          <NewReportTab
-            reportData={reportData}
-            onSubmitted={() => {
-              setOpenReport(false);
-              return true;
-            }}
-          />
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }

@@ -15,7 +15,7 @@ export interface InterviewBid {
   talentType: string;
   talentId: string;
   fee: number;
-   interviewBids?: InterviewBid[] | { [key: string]: InterviewBid };
+  interviewBids?: InterviewBid[] | { [key: string]: InterviewBid };
   // other props omitted for brevity
 }
 
@@ -43,12 +43,10 @@ export async function fetchBids(interviewId: string) {
 
 export async function fetchInterviewBids(interviewId: string, bidId: string) {
   const { data } = await axios.get<PopulatedBid>(
-    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`
+    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
   );
   return data; // backend already wraps result in { data }
 }
-
-
 
 // Fetch all PENDING interview bids addressed to the given interviewee
 // Fetch all PENDING interview bids addressed to the given interviewee
@@ -116,13 +114,13 @@ export async function fetchScheduledInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: "SCHEDULED,CANCELLED",
+      InterviewStatus: 'SCHEDULED,CANCELLED',
     },
   });
 
   // The backend returns { data: [...] }, so unwrap once and return the array.
   // FIX: Remove unnecessary Array.isArray check.
-  
+
   return response.data.data;
 }
 
@@ -138,24 +136,24 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: "COMPLETED,CANCELLED,REJECTED",
+      InterviewStatus: 'COMPLETED,CANCELLED,REJECTED',
     },
   });
-  console.log(response.data.data);
+  
   return response.data.data;
 }
-
 
 export async function completeBid(
   interviewId: string,
   intervieweeRating: number,
   intervieweeFeedback: string,
-  InterviewStatus: string
+  InterviewStatus: string,
 ) {
-  const { data } = await axios.put(
-    `${BASE_URL}/interview/${interviewId}`,
-    { intervieweeRating, intervieweeFeedback, InterviewStatus },
-  );
+  const { data } = await axios.put(`${BASE_URL}/interview/${interviewId}`, {
+    intervieweeRating,
+    intervieweeFeedback,
+    InterviewStatus,
+  });
   return data;
 }
 
@@ -163,12 +161,12 @@ export async function completeInterviewerBid(
   interviewId: string,
   interviewerRating: number,
   interviewerFeedback: string,
-  InterviewStatus: string
+  InterviewStatus: string,
 ) {
-  const { data } = await axios.put(
-    `${BASE_URL}/interview/${interviewId}`,
-    { interviewerRating, interviewerFeedback, InterviewStatus },
-  );
+  const { data } = await axios.put(`${BASE_URL}/interview/${interviewId}`, {
+    interviewerRating,
+    interviewerFeedback,
+    InterviewStatus,
+  });
   return data;
 }
-

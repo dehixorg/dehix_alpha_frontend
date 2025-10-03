@@ -1,15 +1,14 @@
-/* eslint-disable import/order */
-/* eslint-disable prettier/prettier */
 'use client';
 
 import { useEffect, useState } from 'react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { MessageSquare } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSelector } from 'react-redux';
+
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { db } from '@/config/firebaseConfig';
-import { toast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CardsChat } from '@/components/shared/chat';
@@ -25,10 +24,16 @@ import {
 import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems'
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 
+type UserType = 'freelancer' | 'business' | undefined;
+
+// Helper function to safely get user type
+const getUserType = (type: string | undefined): UserType => {
+  return type === 'freelancer' || type === 'business' ? type : undefined;
+};
 // Helper function to check if two arrays contain the same elements, regardless of order
 const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {
   if (arr1.length !== arr2.length) return false;
@@ -40,15 +45,20 @@ const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [activeConversation, setActiveConversation] =
+    useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
 
   // State for ProfileSidebar
   const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
   const [profileSidebarId, setProfileSidebarId] = useState<string | null>(null);
-  const [profileSidebarType, setProfileSidebarType] = useState<'user' | 'group' | null>(null);
-  const [profileSidebarInitialData, setProfileSidebarInitialData] = useState<object | undefined>(undefined);
+  const [profileSidebarType, setProfileSidebarType] = useState<
+    'user' | 'group' | null
+  >(null);
+  const [profileSidebarInitialData, setProfileSidebarInitialData] = useState<
+    object | undefined
+  >(undefined);
 
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
@@ -56,7 +66,7 @@ const HomePage = () => {
   const handleOpenProfileSidebar = (
     id: string,
     type: 'user' | 'group',
-    initialDetails?: object
+    initialDetails?: object,
   ) => {
     setProfileSidebarId(id);
     setProfileSidebarType(type);
@@ -70,24 +80,25 @@ const HomePage = () => {
   };
 
   const toggleChatExpanded = () => {
-    setIsChatExpanded(prev => !prev);
+    setIsChatExpanded((prev) => !prev);
   };
 
   const handleStartNewChat = async (selectedUser: NewChatUser) => {
     if (!user || !user.uid) {
-      toast({ variant: "destructive", title: "Error", description: "You must be logged in to start a new chat." });
+      notifyError('You must be logged in to start a new chat.', 'Error');
       return;
     }
 
-    const existingConversation = conversations.find(conv =>
-      conv.type === 'individual' &&
-      arraysHaveSameElements(conv.participants, [user.uid, selectedUser.id])
+    const existingConversation = conversations.find(
+      (conv) =>
+        conv.type === 'individual' &&
+        arraysHaveSameElements(conv.participants, [user.uid, selectedUser.id]),
     );
 
     if (existingConversation) {
       setActiveConversation(existingConversation);
       setIsNewChatDialogOpen(false);
-      toast({ title: "Info", description: "Conversation already exists, switching to it." });
+      notifySuccess('Conversation already exists, switching to it.', 'Info');
       return;
     }
 
@@ -104,19 +115,27 @@ const HomePage = () => {
           profilePic: user.photoURL || null,
           email: user.email || null,
           userType: user.type,
+          viewState: 'inbox',
         },
         [selectedUser.id]: {
           userName: selectedUser.displayName,
           profilePic: selectedUser.profilePic || null,
           email: selectedUser.email || null,
           userType: selectedUser.userType,
+          viewState: 'inbox',
         },
       },
     };
 
     try {
-      const docRef = await addDoc(collection(db, 'conversations'), newConversationData);
-      toast({ title: "Success", description: `New chat started with ${selectedUser.displayName}.` });
+      const docRef = await addDoc(
+        collection(db, 'conversations'),
+        newConversationData,
+      );
+      notifySuccess(
+        `New chat started with ${selectedUser.displayName}.`,
+        'Success',
+      );
 
       const conversationDataForState: Conversation = {
         id: docRef.id,
@@ -129,15 +148,17 @@ const HomePage = () => {
             userName: user.displayName || user.email || 'Current User',
             profilePic: user.photoURL || undefined,
             email: user.email || undefined,
-            userType: user.type,
+            userType: getUserType(user.type),
+            viewState: 'inbox',
           },
           [selectedUser.id]: {
             userName: selectedUser.displayName,
             profilePic: selectedUser.profilePic || undefined,
             email: selectedUser.email || undefined,
-            userType: selectedUser.userType,
+            userType: getUserType(selectedUser.userType),
+            viewState: 'inbox',
           },
-        },
+        } as const,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -145,8 +166,8 @@ const HomePage = () => {
       setActiveConversation(conversationDataForState);
       setIsNewChatDialogOpen(false);
     } catch (error) {
-      console.error("Error starting new chat: ", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to start new chat." });
+      console.error('Error starting new chat: ', error);
+      notifyError('Failed to start new chat.', 'Error');
       setIsNewChatDialogOpen(false);
     }
   };
@@ -157,25 +178,26 @@ const HomePage = () => {
     description: string,
   ) {
     if (!user || !user.uid) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+      notifyError('You must be logged in.', 'Error');
       return;
     }
     if (!groupName.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Group name cannot be empty.' });
+      notifyError('Group name cannot be empty.', 'Error');
       return;
     }
     if (selectedUsers.length < 1) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You must select at least one other member.' });
+      notifyError('You must select at least one other member.', 'Error');
       return;
     }
 
-    const allParticipantIds = [user.uid, ...selectedUsers.map(u => u.id)];
+    const allParticipantIds = [user.uid, ...selectedUsers.map((u) => u.id)];
     const participantDetails = {
       [user.uid]: {
         userName: user.displayName || user.email,
         profilePic: user.photoURL || null,
         email: user.email || null,
         userType: user.type,
+        viewState: 'inbox',
       },
     };
     selectedUsers.forEach((selected: any) => {
@@ -184,6 +206,7 @@ const HomePage = () => {
         profilePic: selected.profilePic || null,
         email: selected.email || null,
         userType: selected.userType,
+        viewState: 'inbox',
       };
     });
 
@@ -201,19 +224,27 @@ const HomePage = () => {
     };
 
     try {
-      const docRef = await addDoc(collection(db, 'conversations'), newGroupData);
-      toast({ title: 'Success', description: `Group "${groupName}" created.` });
+      const docRef = await addDoc(
+        collection(db, 'conversations'),
+        newGroupData,
+      );
+      notifySuccess(`Group "${groupName}" created.`, 'Success');
 
-      const participantDetailsForState: NonNullable<Conversation['participantDetails']> = Object.fromEntries(
-        Object.entries(participantDetails as Record<string, any>).map(([k, v]) => [
-          k,
-          {
-            userName: v.userName,
-            profilePic: v.profilePic || undefined,
-            email: v.email || undefined,
-            userType: v.userType,
-          },
-        ]),
+      const participantDetailsForState: NonNullable<
+        Conversation['participantDetails']
+      > = Object.fromEntries(
+        Object.entries(participantDetails as Record<string, any>).map(
+          ([k, v]) => [
+            k,
+            {
+              userName: v.userName,
+              profilePic: v.profilePic || undefined,
+              email: v.email || undefined,
+              userType: v.userType,
+              viewState: v.viewState,
+            },
+          ],
+        ),
       );
 
       const groupDataForState: Conversation = {
@@ -231,21 +262,22 @@ const HomePage = () => {
 
       setActiveConversation(groupDataForState);
       setIsNewChatDialogOpen(false);
-
     } catch (error) {
-      console.error("Error creating group chat: ", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to create group." });
+      console.error('Error creating group chat: ', error);
+      notifyError('Failed to create group.', 'Error');
     }
   }
 
   useEffect(() => {
     if (!user.uid) return;
 
+    let isMounted = true;
     setLoading(true);
     const unsubscribe = subscribeToUserConversations(
-       'conversations',
-       user.uid,
+      'conversations',
+      user.uid,
       (data) => {
+        if (!isMounted) return;
         const typedData = data as Conversation[];
         setConversations(typedData);
         setLoading(false);
@@ -253,6 +285,7 @@ const HomePage = () => {
     );
 
     return () => {
+      isMounted = false;
       if (unsubscribe) unsubscribe();
     };
   }, [user.uid]);
@@ -263,20 +296,28 @@ const HomePage = () => {
     }
   }, [loading, conversations, activeConversation]);
 
-  // --- JSX Rendering Logic ---
   let chatListComponentContent;
   if (loading) {
     chatListComponentContent = (
-      <div className="space-y-4 p-4">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex items-center space-x-3 p-2 rounded-lg">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
+      <div className="space-y-3 p-3">
+        <Skeleton className="h-12 w-full rounded-full" />
+
+        <Skeleton className="h-10 w-full rounded-full" />
+
+        <div className="mt-4 space-y-3">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center space-x-3 p-3 rounded-lg bg-[hsl(var(--card))]"
+            >
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-20" />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   } else if (conversations.length > 0) {
@@ -295,7 +336,9 @@ const HomePage = () => {
         <MessageSquare className="w-10 h-10 mb-2" />
         <p className="text-lg font-medium">No conversations</p>
         <p className="text-sm">New chats will appear here.</p>
-        <Button onClick={() => setIsNewChatDialogOpen(true)} className="mt-4">Start a Chat</Button>
+        <Button onClick={() => setIsNewChatDialogOpen(true)} className="mt-4">
+          Start a Chat
+        </Button>
       </div>
     );
   }
@@ -303,32 +346,46 @@ const HomePage = () => {
   let chatWindowComponentContent;
   if (loading && !activeConversation) {
     chatWindowComponentContent = (
-      <div className="h-full bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none p-4">
-        {/* Chat header skeleton */}
-        <div className="flex items-center space-x-3 pb-4 border-b">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-24" />
+      <div className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
+          <div className="flex items-center space-x-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-8 rounded-full" />
           </div>
         </div>
-        
-        {/* Chat messages skeleton */}
-        <div className="space-y-4 py-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-xs ${i % 2 === 0 ? 'bg-primary/10' : 'bg-muted'} rounded-lg p-3`}>
-                <Skeleton className="h-4 w-48 mb-1" />
-                <Skeleton className="h-3 w-32" />
-              </div>
+
+        {/* Messages Skeleton */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-6">
+          {/* Incoming message skeleton */}
+          <div className="flex items-start space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-16 w-64 rounded-lg" />
             </div>
-          ))}
+          </div>
+
+          {/* Outgoing message skeleton */}
+          <div className="flex justify-end">
+            <div className="space-y-2 max-w-[80%]">
+              <Skeleton className="h-4 w-16 ml-auto" />
+              <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
+            </div>
+          </div>
         </div>
-        
-        {/* Message input skeleton */}
-        <div className="border-t pt-4 mt-auto">
+
+        {/* Input area skeleton */}
+        <div className="p-3 border-t border-[hsl(var(--border))]">
           <div className="flex items-center space-x-2">
-            <Skeleton className="h-10 flex-1 rounded-full" />
+            <Skeleton className="flex-1 h-10 rounded-full" />
             <Skeleton className="h-10 w-10 rounded-full" />
           </div>
         </div>
@@ -342,6 +399,7 @@ const HomePage = () => {
         isChatExpanded={isChatExpanded}
         onToggleExpand={toggleChatExpanded}
         onOpenProfileSidebar={handleOpenProfileSidebar}
+        onConversationUpdate={setActiveConversation}
       />
     );
   } else if (!loading && conversations.length > 0) {
@@ -363,24 +421,43 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#09090b]">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
-        menuItemsTop={user.type === 'business' ? businessMenuItemsTop : freelancerMenuItemsTop}
-        menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : freelancerMenuItemsBottom}
+        menuItemsTop={
+          user.type === 'business'
+            ? businessMenuItemsTop
+            : freelancerMenuItemsTop
+        }
+        menuItemsBottom={
+          user.type === 'business'
+            ? businessMenuItemsBottom
+            : freelancerMenuItemsBottom
+        }
         active="Chats"
       />
-      <div className="flex flex-col flex-1 sm:pl-14 overflow-hidden">
+      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14 overflow-hidden">
         <Header
-          menuItemsTop={user.type === 'business' ? businessMenuItemsTop : freelancerMenuItemsTop}
-          menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : freelancerMenuItemsBottom}
+          menuItemsTop={
+            user.type === 'business'
+              ? businessMenuItemsTop
+              : freelancerMenuItemsTop
+          }
+          menuItemsBottom={
+            user.type === 'business'
+              ? businessMenuItemsBottom
+              : freelancerMenuItemsBottom
+          }
           activeMenu="Chats"
           breadcrumbItems={[
-            { label: user.type === 'business' ? 'Business' : 'Freelancer', link: '/dashboard' },
+            {
+              label: user.type === 'business' ? 'Business' : 'Freelancer',
+              link: '/dashboard',
+            },
             { label: 'Chats', link: '/chat' },
           ]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[93vh] p-1 sm:p-2 md:p-0">
+        <main className="h-[93vh]">
           <ChatLayout
             chatListComponent={chatListComponentContent}
             chatWindowComponent={chatWindowComponentContent}
@@ -394,6 +471,7 @@ const HomePage = () => {
           profileId={profileSidebarId}
           profileType={profileSidebarType}
           initialData={profileSidebarInitialData}
+          onConversationUpdate={setActiveConversation}
         />
         {user && (
           <NewChatDialog
@@ -407,6 +485,6 @@ const HomePage = () => {
       </div>
     </div>
   );
-}
+};
 
 export default HomePage;

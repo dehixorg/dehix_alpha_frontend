@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { toast } from './use-toast';
+import { notifySuccess } from '@/utils/toastMessage';
 
 interface UseDraftProps<T extends Record<string, any>> {
   form?: ReturnType<typeof useForm<T>>;
@@ -46,11 +46,7 @@ const useDraft = <T extends Record<string, any>>({
       existingDraft[formSection] = values;
       localStorage.setItem('DEHIX_DRAFT', JSON.stringify(existingDraft));
 
-      toast({
-        title: 'Draft Saved',
-        description: `Your ${formSection} draft has been saved.`,
-        duration: 1500,
-      });
+      notifySuccess(`Your ${formSection} draft has been saved.`, 'Draft Saved');
     }
   };
 
@@ -95,11 +91,10 @@ const useDraft = <T extends Record<string, any>>({
         form.reset(draft[formSection]);
         restoredDraft.current = draft[formSection];
 
-        toast({
-          title: 'Draft Loaded',
-          description: `Your ${formSection} draft has been restored.`,
-          duration: 1500,
-        });
+        notifySuccess(
+          `Your ${formSection} draft has been restored.`,
+          'Draft Loaded',
+        );
       }
 
       setShowDraftDialog(false);
@@ -119,11 +114,10 @@ const useDraft = <T extends Record<string, any>>({
       }
     }
     form?.reset();
-    toast({
-      title: 'Draft Discarded',
-      description: `Your ${formSection} draft has been discarded.`,
-      duration: 1500,
-    });
+    notifySuccess(
+      `Your ${formSection} draft has been discarded.`,
+      'Draft Discarded',
+    );
     setShowDraftDialog(false);
     if (onDiscard) {
       onDiscard();
@@ -135,11 +129,7 @@ const useDraft = <T extends Record<string, any>>({
 
     const formValues = form?.getValues();
     saveDraft(formValues);
-    toast({
-      title: 'Draft Saved',
-      description: 'Your draft has been saved.',
-      duration: 1500,
-    });
+    notifySuccess('Your draft has been saved.', 'Draft Saved');
 
     restoredDraft.current = formValues;
 
@@ -167,11 +157,10 @@ const useDraft = <T extends Record<string, any>>({
       localStorage.setItem('DEHIX_DRAFT', JSON.stringify(existingDraft));
     }
 
-    toast({
-      title: 'Draft Discarded',
-      description: `Your ${formSection} draft has been discarded.`,
-      duration: 1500,
-    });
+    notifySuccess(
+      `Your ${formSection} draft has been discarded.`,
+      'Draft Discarded',
+    );
     setConfirmExitDialog(false);
     if (setIsDialogOpen) {
       setIsDialogOpen(false);

@@ -25,13 +25,14 @@ import { EducationInfo } from '../form/resumeform/EducationInfo';
 import { SkillInfo } from '../form/resumeform/SkillInfo';
 import { WorkExperienceInfo } from '../form/resumeform/WorkExperienceInfo';
 import { SummaryInfo } from '../form/resumeform/SummaryInfo';
-import { AchievementInfo } from '../form/resumeform/Achievement.';
-import { toast } from '../ui/use-toast';
+import { AchievementInfo } from '../form/resumeform/Achievement';
+import { ProjectInfo } from '../form/resumeform/ProjectInfo';
 
 import { ResumePreview1 } from './ResumePreview1';
 import { ResumePreview2 } from './ResumePreview2';
 import { AtsScore } from './atsScore';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -40,7 +41,6 @@ import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { axiosInstance } from '@/lib/axiosinstance';
-
 interface ResumeData {
   _id?: string;
   personalInfo?: {
@@ -78,131 +78,87 @@ interface ResumeData {
   selectedTemplate?: string;
   selectedColor?: string;
 }
+
 interface ResumeEditorProps {
   initialResume?: ResumeData;
-  onCancel: () => void; // Only keep the close handler
+  onCancel: () => void;
 }
 
 export default function ResumeEditor({
   initialResume,
   onCancel,
 }: ResumeEditorProps) {
-  // State initialization with default values or from initialResume
-  const [educationData, setEducationData] = useState(
-    initialResume?.education || [
-      {
-        degree: 'Bachelor of Science in Computer Science',
-        school: 'ABC University',
-        startDate: '2023-12-31',
-        endDate: '2023-12-31',
-      },
-      {
-        degree: 'Master of Science in Software Engineering',
-        school: 'XYZ University',
-        startDate: '2023-12-31',
-        endDate: '2023-12-31',
-      },
-    ],
-  );
+  const user = useSelector((state: RootState) => state.user);
+  const resumeRef = useRef<HTMLDivElement>(null);
 
-  const [workExperienceData, setWorkExperienceData] = useState(
-    initialResume?.workExperience || [
-      {
-        jobTitle: 'Software Developer',
-        company: 'TechCorp Solutions',
-        startDate: '2023-12-31',
-        endDate: '2023-12-31',
-        description:
-          'Engineered scalable web solutions, optimized system efficiency, and enhanced software reliability.',
-      },
-      {
-        jobTitle: 'Senior Developer',
-        company: 'Innovatech',
-        startDate: '2023-12-31',
-        endDate: '2023-12-31',
-        description:
-          'Spearheaded the development of cloud-based enterprise platforms, driving innovation and operational excellence.',
-      },
-    ],
-  );
+  // Saved resume from backend
+  const [savedResume, setSavedResume] = useState<ResumeData | null>(null);
 
-  const [personalData, setPersonalData] = useState([
+  useEffect(() => {
+    const fetchResume = async () => {
+      if (!user.uid) return;
+      try {
+        const response = await axiosInstance.get(`/resume/user/${user.uid}`);
+        if (response.data && response.data.resume) {
+          setSavedResume(response.data.resume);
+        }
+      } catch (error) {
+        console.error('Error fetching saved resume:', error);
+      }
+    };
+    fetchResume();
+  }, [user.uid]);
+
+  // Initialize all states with default values for a new resume
+  const [personalData, setPersonalData] = useState<any[]>([
     {
-      firstName: initialResume?.personalInfo?.firstName || 'John',
-      lastName: initialResume?.personalInfo?.lastName || 'Doe',
-      city: initialResume?.personalInfo?.city || 'New York',
-      country: initialResume?.personalInfo?.country || 'USA',
-      phoneNumber: initialResume?.personalInfo?.phone || '123-456-7890',
-      email: initialResume?.personalInfo?.email || '123.doe@example.com',
-      github: initialResume?.personalInfo?.github || 'github.com/john',
-      linkedin: initialResume?.personalInfo?.linkedin || 'linkedin.com/in/john',
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      city: 'New York',
+      country: 'USA',
+      github: 'github.com/john',
+      linkedin: 'linkedin.com/in/john',
     },
   ]);
 
-  const [projectData] = useState(
-    initialResume?.projects || [
-      {
-        title: 'AI-Powered Resume Builder',
-        description:
-          "Developed a full-stack platform integrating OpenAI's GPT-4 to dynamically generate personalized resume content. Implemented secure authentication and cloud data management using Firebase.",
-      },
-      {
-        title: 'E-Commerce Platform with Real-Time Analytics',
-        description:
-          'Built a scalable e-commerce platform using Next.js and PostgreSQL. Implemented real-time analytics dashboards with Socket.IO and Chart.js to track user behavior and sales trends. Deployed the application on AWS.',
-      },
-      {
-        title: 'IoT-Based Smart Home Automation System',
-        description:
-          'Designed and implemented an IoT solution for smart home automation using Raspberry Pi, Python, and MQTT protocol. Developed a mobile app with Flutter for remote control and monitoring of home devices.',
-      },
-    ],
-  );
+  const [workExperienceData, setWorkExperienceData] = useState<any[]>([
+    {
+      jobTitle: 'Software Engineer',
+      company: 'ABC Corp',
+      startDate: '2020-01-01',
+      endDate: '2023-01-01',
+      description: 'Worked on web applications.',
+    },
+  ]);
 
-  const [skillData, setSkillData] = useState(
-    initialResume?.skills?.map((skill) => ({ skillName: skill })) || [
-      {
-        skillName:
-          'Database Engineering (SQL Server, T-SQL), Data Visualization (Kibana, Eclipse Birt), ETL Pipelines',
-      },
-      {
-        skillName:
-          'Strategic Communication & Cross-Functional Team Collaboration',
-      },
-      { skillName: 'Advanced SQL Query Optimization & Performance Tuning' },
-      { skillName: 'Full-Stack Web Development' },
-      { skillName: 'Agile Software Development & DevOps Integration' },
-    ],
-  );
+  const [educationData, setEducationData] = useState<any[]>([
+    {
+      degree: 'B.Sc. Computer Science',
+      school: 'XYZ University',
+      startDate: '2016-01-01',
+      endDate: '2020-01-01',
+    },
+  ]);
 
-  const [achievementData, setAchievementData] = useState(
-    initialResume?.achievements?.map((ach) => ({
-      achievementName: ach.achievementDescription,
-    })) || [
-      {
-        achievementName:
-          'Published Research on AI-Powered Automation in a Peer-Reviewed Journal',
-      },
-      {
-        achievementName:
-          'Delivered Keynote Speech on Emerging Tech Trends at a Global Conference',
-      },
-    ],
-  );
-
-  const [summaryData, setSummaryData] = useState(
-    initialResume?.professionalSummary
-      ? [initialResume.professionalSummary]
-      : [
-          'Results-driven software engineer with a passion for building scalable, high-performance applications while ensuring security, efficiency, and a seamless user experience.',
-        ],
-  );
-
-  const [selectedTemplate, setSelectedTemplate] = useState(
-    initialResume?.selectedTemplate || 'ResumePreview2',
-  );
-
-  const [selectedColor] = useState(initialResume?.selectedColor || '#000000');
+  const [skillData, setSkillData] = useState<any[]>([
+    { skillName: 'JavaScript' },
+  ]);
+  const [achievementData, setAchievementData] = useState<any[]>([
+    { achievementName: 'Won Hackathon 2022' },
+  ]);
+  const [projectData, setProjectData] = useState<any[]>([
+    {
+      title: 'Portfolio Website',
+      description: 'Built a personal portfolio website.',
+    },
+  ]);
+  const [summaryData, setSummaryData] = useState<string[]>([
+    'Motivated software engineer with experience in web development.',
+  ]);
+  const [selectedTemplate, setSelectedTemplate] = useState('ResumePreview2');
+  const [selectedColor] = useState('#000000');
 
   const [currentStep, setCurrentStep] = useState(0);
   const [showAtsScore, setShowAtsScore] = useState(false);
@@ -210,23 +166,51 @@ export default function ResumeEditor({
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const user = useSelector((state: RootState) => state.user);
-  const resumeRef = useRef<HTMLDivElement>(null);
 
-  // Add optimization for PDF content
+  // Populate data from savedResume or initialResume
+  useEffect(() => {
+    const resume = savedResume || initialResume;
+    if (resume) {
+      setPersonalData([
+        {
+          firstName: resume.personalInfo?.firstName || 'John',
+          lastName: resume.personalInfo?.lastName || 'Doe',
+          email: resume.personalInfo?.email || '123.doe@example.com',
+          phoneNumber: resume.personalInfo?.phone || '123-456-7890',
+          city: resume.personalInfo?.city || 'New York',
+          country: resume.personalInfo?.country || 'USA',
+          github: resume.personalInfo?.github || 'github.com/john',
+          linkedin: resume.personalInfo?.linkedin || 'linkedin.com/in/john',
+        },
+      ]);
+
+      setWorkExperienceData(resume.workExperience || []);
+      setEducationData(resume.education || []);
+      setSkillData(resume.skills?.map((skill) => ({ skillName: skill })) || []);
+      setAchievementData(
+        resume.achievements?.map((ach) => ({
+          achievementName: ach.achievementDescription,
+        })) || [],
+      );
+      setProjectData(resume.projects || []);
+      setSummaryData(
+        resume.professionalSummary ? [resume.professionalSummary] : [],
+      );
+      setSelectedTemplate(resume.selectedTemplate || 'ResumePreview2');
+    }
+  }, [savedResume, initialResume]);
+
+  // PDF Optimization
   const optimizePdfContent = () => {
     if (resumeRef.current) {
       const content = resumeRef.current.querySelector('.resumeContent');
       if (content) {
-        // Apply print-specific styles
         content.classList.add('pdf-optimized');
       }
     }
   };
 
-  // Ensure optimizations are applied before PDF generation
   useEffect(() => {
-    // Add a global print stylesheet for PDF generation
     const style = document.createElement('style');
     style.innerHTML = `
       @media print {
@@ -248,12 +232,12 @@ export default function ResumeEditor({
       }
     `;
     document.head.appendChild(style);
-
     return () => {
       document.head.removeChild(style);
     };
   }, []);
 
+  // Steps array
   const steps = [
     <PersonalInfo
       key="personal"
@@ -296,21 +280,23 @@ export default function ResumeEditor({
       key="summary"
       summaryData={summaryData}
       setSummaryData={setSummaryData}
-      workExperienceData={[]}
+      workExperienceData={workExperienceData}
+    />,
+    <ProjectInfo
+      key="projects"
+      projectData={projectData}
+      setProjectData={setProjectData}
     />,
   ];
 
+  // Handle Submit
   const handleSubmitResume = async () => {
     setIsSubmitting(true);
     try {
       const formatDateForBackend = (dateString: string) => {
         if (!dateString) return '';
-        // Convert from "YYYY-MM-DD" to ISO format if needed
-        return new Date(dateString).toISOString().split('T')[0]; // Returns "YYYY-MM-DD"
-        // OR if backend expects full ISO string:
-        // return new Date(dateString).toISOString();
+        return new Date(dateString).toISOString().split('T')[0];
       };
-
       const resumeData = {
         userId: user.uid,
         personalInfo: {
@@ -352,45 +338,30 @@ export default function ResumeEditor({
 
       if (initialResume?._id) {
         await axiosInstance.put(`/resume/${initialResume._id}`, resumeData);
-        toast({
-          title: 'Success',
-          description: 'Resume updated successfully!',
-        });
+        notifySuccess('Resume updated successfully!', 'Success');
       } else {
         await axiosInstance.post('/resume', resumeData);
-        toast({
-          title: 'Success',
-          description: 'Resume created successfully!',
-        });
+        notifySuccess('Resume created successfully!', 'Success');
       }
     } catch (error) {
       console.error('Error saving resume:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save resume',
-        variant: 'destructive',
-      });
+      notifyError('Failed to save resume', 'Error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Download PDF
   const downloadPDF = async () => {
     if (!resumeRef.current) return;
     setIsGeneratingPDF(true);
-
-    // Apply optimization before PDF generation
     optimizePdfContent();
-
     try {
-      // Get the resume content element
       const element = resumeRef.current.querySelector(
         '.resumeContent',
       ) as HTMLElement;
-
-      // Apply better PDF generation settings
       const canvas = await html2canvas(element, {
-        scale: 3, // Higher scale for better quality
+        scale: 3,
         backgroundColor: '#FFFFFF',
         logging: false,
         useCORS: true,
@@ -401,10 +372,8 @@ export default function ResumeEditor({
         scrollY: 0,
         windowWidth: document.documentElement.offsetWidth,
         onclone: (clonedDoc) => {
-          // Ensure styles are properly applied in the cloned document
           const clonedElement = clonedDoc.querySelector('.resumeContent');
           if (clonedElement) {
-            // Force all elements to render with correct styles and layout
             Array.from(clonedElement.querySelectorAll('*')).forEach((el) => {
               if (el instanceof HTMLElement) {
                 el.style.margin = window.getComputedStyle(el).margin;
@@ -422,7 +391,6 @@ export default function ResumeEditor({
         },
       });
 
-      // Create PDF with better quality settings
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -431,23 +399,17 @@ export default function ResumeEditor({
         precision: 16,
       });
 
-      const imgData = canvas.toDataURL('image/png', 1.0); // Use maximum quality
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      // Calculate the aspect ratio to maintain proportions
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-
       const imgPdfWidth = imgWidth * ratio;
       const imgPdfHeight = imgHeight * ratio;
-
-      // Center the image on the page
       const xOffset = (pdfWidth - imgPdfWidth) / 2;
       const yOffset = 0;
 
-      // Add image to the PDF with better positioning
       pdf.addImage(
         imgData,
         'PNG',
@@ -459,15 +421,12 @@ export default function ResumeEditor({
         'FAST',
       );
 
-      // Handle multiple pages if content is too long
       if (imgPdfHeight > pdfHeight) {
         let heightLeft = imgPdfHeight;
-        let position = -pdfHeight; // Start position for the second page
-
+        let position = -pdfHeight;
         while (heightLeft > pdfHeight) {
           position = position - pdfHeight;
           heightLeft = heightLeft - pdfHeight;
-
           pdf.addPage();
           pdf.addImage(
             imgData,
@@ -485,62 +444,39 @@ export default function ResumeEditor({
       pdf.save(
         `Resume-${personalData[0]?.firstName || ''}-${personalData[0]?.lastName || ''}-${new Date().toISOString().slice(0, 10)}.pdf`,
       );
-
-      toast({
-        title: 'Success',
-        description: 'Resume PDF generated successfully!',
-      });
+      notifySuccess('Resume PDF generated successfully!', 'Success');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to generate PDF. Please try again.',
-        variant: 'destructive',
-      });
+      notifyError('Failed to generate PDF. Please try again.', 'Error');
     } finally {
       setIsGeneratingPDF(false);
     }
   };
 
+  // Delete resume
   const handleDeleteResume = async () => {
     if (!initialResume?._id) {
-      toast({
-        title: 'Error',
-        description: 'No resume to delete',
-        variant: 'destructive',
-      });
+      notifyError('No resume to delete', 'Error');
       return;
     }
-
     setIsDeleting(true);
     try {
-      // Instead of deleting, update the status to 'inactive'
       await axiosInstance.put(`/resume/${initialResume._id}`, {
         status: 'inactive',
       });
-      toast({
-        title: 'Success',
-        description: 'Resume deleted successfully!',
-      });
+      notifySuccess('Resume deleted successfully!', 'Success');
       setShowDeleteDialog(false);
-      // Navigate back to resumes list
       onCancel();
     } catch (error) {
       console.error('Error deleting resume:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete resume',
-        variant: 'destructive',
-      });
+      notifyError('Failed to delete resume', 'Error');
       setShowDeleteDialog(false);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const openDeleteDialog = () => {
-    setShowDeleteDialog(true);
-  };
+  const openDeleteDialog = () => setShowDeleteDialog(true);
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
@@ -549,8 +485,7 @@ export default function ResumeEditor({
         menuItemsBottom={menuItemsBottom}
         active="Resume Editor"
       />
-
-      <div className="flex flex-1 flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-1 flex-col sm:gap-4 sm:py-0 sm:pl-14">
         <Header
           activeMenu="Resume Editor"
           breadcrumbItems={[
@@ -563,18 +498,12 @@ export default function ResumeEditor({
         />
 
         <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-6 lg:grid lg:grid-cols-2">
-          {/* Form Section */}
           <div className="p-6 relative">
             <div className="flex justify-between items-center mb-6">
-              <div>
-                <Button onClick={onCancel}>← Back to Resumes</Button>
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={() => setShowAtsScore(!showAtsScore)}>
-                  {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
-                </Button>
-              </div>
+              <Button onClick={onCancel}>← Back to Resumes</Button>
+              <Button onClick={() => setShowAtsScore(!showAtsScore)}>
+                {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
+              </Button>
             </div>
 
             {showAtsScore ? (
@@ -595,7 +524,6 @@ export default function ResumeEditor({
                 <div className="flex justify-between mb-4">
                   <Button
                     variant="outline"
-                    className="mt-2"
                     onClick={() =>
                       setCurrentStep((prev) => Math.max(prev - 1, 0))
                     }
@@ -603,10 +531,8 @@ export default function ResumeEditor({
                   >
                     <ChevronLeft className="mr-2" />
                   </Button>
-
                   <Button
                     variant="outline"
-                    className="mt-2"
                     onClick={() =>
                       setCurrentStep((prev) =>
                         Math.min(prev + 1, steps.length - 1),
@@ -644,7 +570,6 @@ export default function ResumeEditor({
             )}
           </div>
 
-          {/* Preview Section */}
           <div className="relative p-6">
             <div
               ref={resumeRef}
@@ -691,7 +616,7 @@ export default function ResumeEditor({
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                   overflow: 'hidden',
                   width: '100%',
-                  maxWidth: '794px', // A4 width in pixels at 96 DPI
+                  maxWidth: '794px',
                   margin: '0 auto',
                 }}
               >
@@ -724,17 +649,15 @@ export default function ResumeEditor({
         </main>
       </div>
 
-      {/* Delete Confirmation Dialog - Inline Implementation */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 py-4">
-              <AlertTriangle className="h-5 w-5" />
-              Delete Resume
+              <AlertTriangle className="h-5 w-5" /> Delete Resume
             </DialogTitle>
             <DialogDescription className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete the resume for `
-              {personalData[0]?.firstName} {personalData[0]?.lastName}`?
+              Are you sure you want to delete the resume for{' '}
+              {personalData[0]?.firstName} {personalData[0]?.lastName}?
             </DialogDescription>
           </DialogHeader>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { fetchInterviewBids } from '@/lib/api/interviews';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 type InterviewBid = {
   _id?: string;
@@ -48,12 +48,11 @@ const BidList = ({
           setHasBidAlready(true);
 
           // fetch from backend using interviewId + bidId
-          const data = await fetchInterviewBids(interview._id, myBid._id);
-          console.log('Fetched Bid Data:', data);
+          await fetchInterviewBids(interview._id, myBid._id);
         }
       } catch (error) {
         console.error(error);
-        toast({ description: 'Failed to fetch interview bids' });
+        notifyError('Failed to fetch interview bids', 'Error');
       }
     };
 

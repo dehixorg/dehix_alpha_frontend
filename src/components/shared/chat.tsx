@@ -10,31 +10,24 @@ import {
   Search,
   MoreVertical,
   Minimize2,
-  Reply,
   Text,
   Bold,
   Italic,
   Underline,
-  CheckCheck,
   Flag,
-  Mic, 
-  StopCircle, 
-  Trash2, 
+  Mic,
+  StopCircle,
+  Trash2,
   X,
+  Archive,
+  ArchiveRestore,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { DocumentData } from 'firebase/firestore';
+import { doc, DocumentData, updateDoc } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
-import {
-  formatDistanceToNow,
-  format,
-  isToday,
-  isYesterday,
-  isThisYear,
-} from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import DOMPurify from 'dompurify'; // <-- add import later
+import DOMPurify from 'dompurify';
 
 import { EmojiPicker } from '../emojiPicker';
 import {
@@ -44,19 +37,17 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip';
 import {
-  DropdownMenu,
+  DropdownMenu, 
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '../ui/dropdown-menu';
+import { Input } from '../ui/input';
+import { ScrollArea } from '../ui/scroll-area';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
-import Reactions from './reactions';
-import { FileAttachment } from './fileAttachment';
-// Added
-// ProfileSidebar is no longer imported or rendered here
+import ChatMessageItem from './ChatMessageItem';
 
-import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -65,6 +56,7 @@ import {
   CardFooter,
   CardHeader,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   subscribeToFirestoreCollection,
   updateConversationWithMessageTransaction,
@@ -72,8 +64,10 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { toast } from '@/hooks/use-toast';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { db } from '@/config/firebaseConfig';
 import {
   Dialog,
   DialogContent,
@@ -83,28 +77,22 @@ import {
 } from '@/components/ui/dialog';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 
-// Format only the time (e.g., 10:30 AM) for in-bubble timestamps
-function formatChatTimestamp(timestamp: string) {
-  return format(new Date(timestamp), 'hh:mm a');
-}
 
-// Helper for date header (Today, Yesterday, Oct 12 2023 …)
-function formatDateHeader(timestamp: string) {
-  const date = new Date(timestamp);
-  if (isToday(date)) return 'Today';
-  if (isYesterday(date)) return 'Yesterday';
-  return isThisYear(date)
-    ? format(date, 'MMM dd')
-    : format(date, 'yyyy MMM dd');
-}
 
-function isSameDay(d1: Date, d2: Date) {
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
-}
+  function useDebounce<T> (value: T, delay: number = 500): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      return () => {
+        clearTimeout(handler); // cleanup on value change or unmount
+      };
+    }, [value, delay]) // Add [value, delay] as dependencies
+
+    return debouncedValue;
+  }
 
 type User = {
   userName: string;
@@ -138,6 +126,7 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
+  onConversationUpdate?: (conv: Conversation | null) => void;
 }
 
 export function CardsChat({
@@ -145,6 +134,7 @@ export function CardsChat({
   isChatExpanded,
   onToggleExpand,
   onOpenProfileSidebar,
+  onConversationUpdate,
 }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
@@ -152,6 +142,9 @@ export function CardsChat({
     profilePic: '',
   });
 
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const debouncedSearch = useDebounce(searchValue, 500) /* wait for .5 sec */
   const [messages, setMessages] = useState<DocumentData[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -159,7 +152,7 @@ export function CardsChat({
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [, setHoveredMessageId] = useState(null);
+  const [, setHoveredMessageId] = useState<string | null>(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
@@ -167,6 +160,7 @@ export function CardsChat({
   const prevMessagesLength = useRef(messages.length);
   const [, setOpenDrawer] = useState(false);
 
+  
   // States for voice recording
   type RecordingStatus =
     | 'idle'
@@ -277,6 +271,33 @@ export function CardsChat({
   };
 
   useEffect(() => {
+    if(debouncedSearch.trim() && messages){
+      /* logic to filter out the conversation/message of the chat */
+      const searchTerm = debouncedSearch.toLowerCase();
+
+      const filteredConversations = messages.filter((message) =>
+        (message.content ?? "").toLowerCase().includes(searchTerm)
+      );
+
+      if(filteredConversations.length > 0) {
+        const firstMatchId = `message-${filteredConversations[0].id}`;
+        const element = document.getElementById(firstMatchId);
+        if(element){
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        
+          /* add temporary style here to highlight the message */
+          element.classList.add('message-highlight');
+
+          /* remove the added style from the matched message element */
+          setTimeout(() => {
+            element.classList.remove('message-highlight');
+          }, 2000);
+        }
+      }
+    }
+  }, [debouncedSearch])
+
+  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
         setOpenDrawer(false);
@@ -326,7 +347,7 @@ export function CardsChat({
       profilePic: participantDetails?.profilePic || '',
     });
   }, [conversation, user.uid]);
-
+ 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -339,6 +360,15 @@ export function CardsChat({
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
+    if (conversation.blocked?.status === true) {
+      toast({
+        variant: 'destructive',
+        title: 'Action Denied',
+        description: 'You cannot send messages to a blocked conversation.',
+      });
+      return;
+    }
+
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
@@ -390,11 +420,7 @@ export function CardsChat({
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        toast({
-          variant: 'destructive',
-          title: 'File too large',
-          description: 'File size should not exceed 10MB',
-        });
+        notifyError('File size should not exceed 10MB', 'File too large');
         return;
       }
 
@@ -411,11 +437,10 @@ export function CardsChat({
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid file type',
-          description: 'Please upload an image, PDF, Word, or PowerPoint file',
-        });
+        notifyError(
+          'Please upload an image, PDF, Word, or PowerPoint file',
+          'Invalid file type',
+        );
         return;
       }
 
@@ -465,10 +490,7 @@ export function CardsChat({
 
         await sendMessage(conversation, message, setInput);
 
-        toast({
-          title: 'Success',
-          description: 'File uploaded successfully',
-        });
+        notifySuccess('File uploaded successfully', 'Success');
       } catch (error: any) {
         console.error('Error uploading file:', {
           error: error.message,
@@ -487,11 +509,7 @@ export function CardsChat({
           errorMessage = error.response.data.message;
         }
 
-        toast({
-          variant: 'destructive',
-          title: 'Upload failed',
-          description: errorMessage,
-        });
+        notifyError(errorMessage, 'Upload failed');
       } finally {
         setIsSending(false);
       }
@@ -596,17 +614,13 @@ export function CardsChat({
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
       setRecordingStatus('recording');
-      toast({
-        title: 'Recording started',
-        description: 'Speak into your microphone.',
-      });
+      notifySuccess('Speak into your microphone.', 'Recording started');
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Microphone Error',
-        description: 'Could not access microphone. Please check permissions.',
-      });
+      notifyError(
+        'Could not access microphone. Please check permissions.',
+        'Microphone Error',
+      );
       setRecordingStatus('idle');
     }
   };
@@ -650,16 +664,15 @@ export function CardsChat({
     if (recordingDurationIntervalRef.current) {
       clearInterval(recordingDurationIntervalRef.current);
     }
-    toast({ title: 'Recording discarded' });
+    notifySuccess('Recording discarded');
   };
 
   const handleSendVoiceMessage = async () => {
     if (!audioBlob || !user || !conversation) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No audio recorded or user/conversation not found.',
-      });
+      notifyError(
+        'No audio recorded or user/conversation not found.',
+        'Error',
+      );
       return;
     }
 
@@ -725,7 +738,7 @@ export function CardsChat({
       // Step 6: Send message using the same working sendMessage function
       await sendMessage(conversation, message, setInput);
 
-      toast({ title: 'Success', description: 'Voice message sent!' });
+      notifySuccess('Voice message sent!', 'Success');
     } catch (error: any) {
       console.error('Error sending voice message:', error);
       console.error('Error details:', {
@@ -762,11 +775,7 @@ export function CardsChat({
         errorMessage = `Error: ${error.message}`;
       }
 
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: errorMessage,
-      });
+      notifyError(errorMessage, 'Upload Failed');
     } finally {
       discardRecording(); // Clean up states regardless of success/failure
       setRecordingStatus('idle');
@@ -819,6 +828,58 @@ export function CardsChat({
     );
   }
 
+  const isBlocked = conversation?.blocked?.status === true;
+  const isArchived =
+    conversation?.participantDetails?.[user.uid]?.viewState === 'archived';
+
+  let blockMessage = '';
+  if (isBlocked) {
+    if (conversation.blocked?.by === user.uid) {
+      blockMessage =
+        'You have blocked this conversation. Unblock them to send a message.';
+    } else {
+      blockMessage = 'This conversation is blocked. You cannot send a message.';
+    }
+  }
+
+  async function handleToggleArchive() {
+    if (!user?.uid || !conversation?.id) return;
+
+    const currentState = conversation.participantDetails?.[user.uid]?.viewState;
+    const newState = currentState === 'archived' ? 'inbox' : 'archived';
+
+    const conversationDocRef = doc(db, 'conversations', conversation.id);
+    const fieldToUpdate = `participantDetails.${user.uid}.viewState`;
+
+    try {
+      await updateDoc(conversationDocRef, { [fieldToUpdate]: newState });
+
+      const updatedConversation = {
+        ...conversation,
+        participantDetails: {
+          ...conversation.participantDetails,
+          [user.uid]: {
+            ...conversation.participantDetails?.[user.uid],
+            viewState: newState,
+          },
+        },
+      };
+
+      onConversationUpdate?.(updatedConversation as Conversation);
+
+      toast({
+        title: `Conversation ${newState === 'archived' ? 'Archived' : 'Unarchived'}`,
+      });
+    } catch (error) {
+      console.error('Error toggling archive state:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not update archive status.',
+      });
+    }
+  }
+
   return (
     <>
       {/* Image Modal */}
@@ -848,26 +909,65 @@ export function CardsChat({
         </div>
       )}
       {loading ? (
-        <div className="flex justify-center items-center p-5 col-span-3">
-          <LoaderCircle className="h-6 w-6 text-white animate-spin" />
-        </div>
+        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
+            <div className="flex items-center space-x-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+          </div>
+
+          {/* Messages Skeleton */}
+          <div className="flex-1 p-4 overflow-y-auto space-y-6">
+            {/* Incoming message skeleton */}
+            <div className="flex items-start space-x-2">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-16 w-64 rounded-lg" />
+              </div>
+            </div>
+
+            {/* Outgoing message skeleton */}
+            <div className="flex justify-end">
+              <div className="space-y-2 max-w-[80%]">
+                <Skeleton className="h-4 w-16 ml-auto" />
+                <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
+              </div>
+            </div>
+          </div>
+
+          {/* Input area skeleton */}
+          <div className="p-3 border-t border-[hsl(var(--border))]">
+            <div className="flex items-center space-x-2">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <Skeleton className="flex-1 h-10 rounded-full" />
+              <Skeleton className="h-10 w-10 rounded-full" />
+            </div>
+          </div>
+        </Card>
       ) : (
         <>
-          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm">
+          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-xl">
+            <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-background text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
               <button
                 onClick={handleHeaderClick}
-                className="flex items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
+                className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
                 aria-label="View profile information"
               >
                 <Avatar className="w-10 h-10">
                   <AvatarImage
                     src={
                       conversation.type === 'group'
-                        ? (conversation.participantDetails &&
-                            conversation.participantDetails[conversation.id]
-                              ?.profilePic) ||
-                          `https://api.adorable.io/avatars/285/group-${conversation.id}.png`
+                        ? conversation.avatar || ''
                         : primaryUser.profilePic
                     }
                     alt={
@@ -889,456 +989,159 @@ export function CardsChat({
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-base font-semibold leading-none text-[hsl(var(--card-foreground))]">
+                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))]">
                     {conversation.type === 'group'
                       ? conversation.groupName
                       : primaryUser.userName || 'Chat'}
                   </p>
                   <p className="text-xs text-[hsl(var(--muted-foreground))]">
                     {conversation.type === 'group'
-                      ? `${conversation.participants.length} members`
+                      ? `${Object.keys(conversation.participantDetails || {}).length} members`
                       : primaryUser.email || 'Click to view profile'}
                   </p>
                 </div>
               </button>
+              {/* create a search bar input here to take input from user to search conversation */}
               <div className="flex items-center space-x-0.5 sm:space-x-1">
+              {/* Search Toggle */}
+              {isSearchVisible ? (
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder="Search in conversation..."
+                    className="w-40 sm:w-56 rounded-full text-sm"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Close search"
+                    onClick={() => {
+                      setIsSearchVisible(false);
+                      setSearchValue("");
+                    }}
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   variant="ghost"
                   size="icon"
                   aria-label="Search in chat"
+                  onClick={() => setIsSearchVisible(true)}
                   className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                 >
                   <Search className="h-5 w-5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Video call"
-                  onClick={handleCreateMeet}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                >
-                  <Video className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
-                  onClick={() => {
-                    if (onToggleExpand) {
-                      onToggleExpand();
-                    } else {
-                      console.error('[CardsChat] onToggleExpand is undefined!');
-                    }
-                  }}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                >
-                  {isChatExpanded ? (
-                    <Minimize2 className="h-5 w-5" />
-                  ) : (
-                    <Maximize2 className="h-5 w-5" />
-                  )}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="More options"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      <MoreVertical className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={5}
-                    className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+              )}
+
+              {/* Archive/Unarchive button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
+                onClick={handleToggleArchive}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                {isArchived ? (
+                  <ArchiveRestore className="h-5 w-5" />
+                ) : (
+                  <Archive className="h-5 w-5" />
+                )}
+              </Button>
+
+              {/* Video call */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Video call"
+                onClick={handleCreateMeet}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                <Video className="h-5 w-5" />
+              </Button>
+
+              {/* Expand/collapse */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"}
+                onClick={() => {
+                  if (onToggleExpand) {
+                    onToggleExpand();
+                  } else {
+                    console.error("[CardsChat] onToggleExpand is undefined!");
+                  }
+                }}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                {isChatExpanded ? (
+                  <Minimize2 className="h-5 w-5" />
+                ) : (
+                  <Maximize2 className="h-5 w-5" />
+                )}
+              </Button>
+
+              {/* More options */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="More options"
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                   >
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setOpenReport(true);
-                      }}
-                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span className="text-sm font-medium">Report</span>
-                    </DropdownMenuItem>
-                    {/* <DropdownMenuItem
-                      className="text-black dark:text-[hsl(var(--popover-foreground))] cursor-pointer"
-                      onSelect={() => router.push('/report')} // Use onSelect for dropdowns
-                    >
-                      <HelpCircle className="mr-2 h-4 w-4" />
-                      <span>Help</span>
-                    </DropdownMenuItem> */}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={5}
+                  className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+                >
+                  <DropdownMenuItem
+                    onClick={() => setOpenReport(true)}
+                    className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                  >
+                    <Flag className="h-4 w-4" />
+                    <span className="text-sm font-medium">Report</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
-              <div className="flex flex-col-reverse space-y-3 space-y-reverse">
-                <div ref={messagesEndRef} />
-                {messages.map((message, index) => {
-                  const formattedTimestamp = formatChatTimestamp(
-                    message.timestamp,
-                  );
-
-                  // Helper: detect if the content contains ONLY emojis that were inserted via <span class="chat-emoji">…</span>
-                  const { isEmojiOnly, isSingleEmoji } = (() => {
-                    if (
-                      message.voiceMessage ||
-                      message.content.match(
-                        /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i,
-                      )
-                    ) {
-                      return { isEmojiOnly: false, isSingleEmoji: false };
-                    }
-
-                    const emojiSpanRegex =
-                      /<span[^>]*class="chat-emoji"[^>]*>[^<]*<\/span>/g;
-                    const emojiMatches =
-                      message.content.match(emojiSpanRegex) || [];
-
-                    // Remove emoji spans and markup to see if any non-emoji text remains
-                    const stripped = message.content
-                      .replace(emojiSpanRegex, '')
-                      .replace(/&nbsp;|<br\s*\/?>/gi, '')
-                      .replace(/\s+/g, '')
-                      .trim();
-
-                    const onlyEmojis =
-                      stripped.length === 0 && emojiMatches.length > 0;
-                    return {
-                      isEmojiOnly: onlyEmojis,
-                      isSingleEmoji: onlyEmojis && emojiMatches.length === 1,
-                    };
-                  })();
-                  // Determine if we need to show date header (because array is reverse-ordered, compare with next element)
-                  const nextMsg = messages[index + 1];
-                  const showDateHeader =
-                    !nextMsg ||
-                    !isSameDay(
-                      new Date(message.timestamp),
-                      new Date(nextMsg.timestamp),
-                    );
-                  const readableTimestamp =
-                    formatDistanceToNow(new Date(message.timestamp)) + ' ago';
-                  const isSender = message.senderId === user.uid;
-
-                  return (
-                    <>
-                      <div
-                        id={message.id}
-                        key={index}
-                        className={cn(
-                          'flex flex-row items-start relative group',
-                          isSender ? 'justify-end' : 'justify-start',
-                        )}
-                        onMouseEnter={() => setHoveredMessageId(message.id)}
-                        onMouseLeave={() => setHoveredMessageId(null)}
-                      >
-                        {!isSender && (
-                          <Avatar
-                            key={index}
-                            className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0"
-                          >
-                            <AvatarImage
-                              src={primaryUser.profilePic}
-                              alt={message.senderId}
-                            />
-                            <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
-                              {primaryUser.userName
-                                ? primaryUser.userName.charAt(0).toUpperCase()
-                                : 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                        <div
-                          className={cn(
-                            'flex w-max max-w-[98%] md:max-w-[90%] flex-col gap-1 rounded-2xl px-4 py-2 text-sm shadow-sm',
-                            message.content.match(
-                              /\.(jpeg|jpg|gif|png)(\?|$)/i,
-                            ) ||
-                              isEmojiOnly ||
-                              (message.voiceMessage &&
-                                message.voiceMessage.type === 'voice')
-                              ? isSender
-                                ? 'ml-auto bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
-                                : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none'
-                              : isSender
-                                ? 'ml-auto bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
-                                : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none relative flex justify-center items-center pr-20 min-w-[180px]',
-                          )}
-                          onClick={() => {
-                            if (message.replyTo) {
-                              const replyMessageElement =
-                                document.getElementById(message.replyTo);
-                              if (replyMessageElement) {
-                                replyMessageElement.classList.add(
-                                  'ring-2',
-                                  'ring-primary',
-                                  'ring-offset-2',
-                                  'dark:ring-offset-gray-800',
-                                  'transition-all',
-                                  'duration-300',
-                                );
-                                replyMessageElement.scrollIntoView({
-                                  behavior: 'smooth',
-                                  block: 'center',
-                                });
-                                setTimeout(() => {
-                                  replyMessageElement.classList.remove(
-                                    'ring-2',
-                                    'ring-primary',
-                                    'ring-offset-2',
-                                    'dark:ring-offset-gray-800',
-                                  );
-                                }, 2500);
-                              }
-                            }
-                          }}
-                        >
-                          <TooltipProvider delayDuration={300}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="break-words w-full">
-                                  {message.replyTo && (
-                                    <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
-                                      <div
-                                        className={cn(
-                                          'italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2',
-                                          isSender
-                                            ? 'text-primary-foreground dark:text-primary-foreground'
-                                            : 'text-primary dark:text-primary',
-                                        )}
-                                      >
-                                        <span className="font-medium">
-                                          {messages
-                                            .find(
-                                              (msg) =>
-                                                msg.id === message.replyTo,
-                                            )
-                                            ?.content.substring(0, 100) ||
-                                            'Original message'}
-                                          {(messages.find(
-                                            (msg) => msg.id === message.replyTo,
-                                          )?.content?.length || 0) > 100 &&
-                                            '...'}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {message.content.match(
-                                    /\.(jpeg|jpg|gif|png)(\?|$)/i,
-                                  ) ? (
-                                    <div
-                                      className="relative inline-block w-full cursor-pointer"
-                                      onClick={() =>
-                                        setModalImage(message.content)
-                                      }
-                                    >
-                                      <Image
-                                        src={
-                                          message.content || '/placeholder.svg'
-                                        }
-                                        alt="Message Image"
-                                        width={300}
-                                        height={300}
-                                        className="rounded-md my-1 w-full object-contain"
-                                      />
-                                      <div className="absolute bottom-2 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded flex items-center space-x-1">
-                                        <span>{formattedTimestamp}</span>
-                                        {isSender && (
-                                          <CheckCheck className="w-3.5 h-3.5 ml-1" />
-                                        )}
-                                      </div>
-                                    </div>
-                                  ) : message.content.match(
-                                      /\.(pdf|doc|docx|ppt|pptx)(\?|$)/i,
-                                    ) ? (
-                                    <FileAttachment
-                                      fileName={
-                                        message.content.split('/').pop() ||
-                                        'File'
-                                      }
-                                      fileUrl={message.content}
-                                      fileType={
-                                        message.content.split('.').pop() ||
-                                        'file'
-                                      }
-                                    />
-                                  ) : (
-                                    !message.voiceMessage &&
-                                    !message.content.match(
-                                      /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i,
-                                    ) && (
-                                      <>
-                                        <div
-                                          className={cn(
-                                            'w-full break-words',
-                                            isEmojiOnly &&
-                                              'text-4xl leading-snug text-center',
-                                          )}
-                                          dangerouslySetInnerHTML={{
-                                            __html: DOMPurify.sanitize(
-                                              message.content,
-                                              {
-                                                ALLOWED_TAGS: [
-                                                  'b',
-                                                  'strong',
-                                                  'i',
-                                                  'em',
-                                                  'u',
-                                                  'br',
-                                                  'div',
-                                                  'span',
-                                                  'a',
-                                                ],
-                                                ALLOWED_ATTR: [
-                                                  'href',
-                                                  'target',
-                                                  'rel',
-                                                  'style',
-                                                  'class',
-                                                ],
-                                              },
-                                            ),
-                                          }}
-                                        />
-                                        {/* Inline timestamp only for non-emoji messages */}
-                                        {!isEmojiOnly && (
-                                          <div
-                                            className={cn(
-                                              'absolute bottom-1 right-2 text-xs flex items-center space-x-1',
-                                              isSender
-                                                ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
-                                                : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
-                                            )}
-                                          >
-                                            <span>{formattedTimestamp}</span>
-                                            {isSender && (
-                                              <CheckCheck className="w-3.5 h-3.5" />
-                                            )}
-                                          </div>
-                                        )}
-                                      </>
-                                    )
-                                  )}
-                                  {/* Voice Message Player */}
-                                  {message.voiceMessage &&
-                                    message.voiceMessage.type === 'voice' && (
-                                      <div className="mt-2 flex items-center space-x-2 max-w-full">
-                                        <audio
-                                          ref={(el) => {
-                                            audioRefs.current[message.id] = el;
-                                            return undefined;
-                                          }}
-                                          src={message.content}
-                                          controls
-                                          preload="metadata"
-                                          className="h-10 w-40 sm:w-44 md:w-56 lg:w-64 rounded-md"
-                                          onLoadedMetadata={() =>
-                                            handleLoadedMetadata(message.id)
-                                          }
-                                          onPlay={() => handlePlay(message.id)}
-                                        />
-                                        <span className="text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap flex items-center min-w-[48px] justify-end">
-                                          {formattedTimestamp}
-                                          {isSender && (
-                                            <CheckCheck className="w-3.5 h-3.5 ml-1 align-middle text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300" />
-                                          )}
-                                        </span>
-                                      </div>
-                                    )}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="bottom"
-                                sideOffset={5}
-                                className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] text-xs p-1 rounded"
-                              >
-                                <p>{readableTimestamp}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <Reactions
-                            messageId={message.id}
-                            reactions={message.reactions || {}}
-                            toggleReaction={toggleReaction}
-                          />
-                          <div
-                            className={cn(
-                              'flex items-center text-xs mt-1',
-                              isSender
-                                ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-500'
-                                : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
-                              isSender ? 'justify-end' : 'justify-start',
-                            )}
-                          >
-                            {/* For emoji-only messages, display timestamp here */}
-                            {isEmojiOnly &&
-                              (isSingleEmoji ? (
-                                <div className="inline-flex items-center align-middle leading-none space-x-1 bg-[#c8a3ed] dark:bg-[#9966ccba] px-1.5 py-0.5 rounded text-[hsl(var(--foreground))]">
-                                  <span>{formattedTimestamp}</span>
-                                  {isSender && (
-                                    <CheckCheck className="w-3.5 h-3.5" />
-                                  )}
-                                </div>
-                              ) : (
-                                <>
-                                  <span>{formattedTimestamp}</span>
-                                  {isSender && (
-                                    <CheckCheck className="w-3.5 h-3.5 ml-1" />
-                                  )}
-                                </>
-                              ))}
-                          </div>
-                        </div>
-                        <div
-                          className={cn(
-                            'relative opacity-0 group-hover:opacity-100 transition-opacity',
-                            isSender ? 'mr-1' : 'ml-1',
-                          )}
-                        >
-                          {!isSender && (
-                            <EmojiPicker
-                              aria-label="Add reaction"
-                              onSelect={(emoji: string) =>
-                                toggleReaction(message.id, emoji)
-                              }
-                            />
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={cn(
-                              'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20',
-                              isSender
-                                ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
-                                : 'text-[hsl(var(--muted-foreground))]',
-                            )}
-                            onClick={() => setReplyToMessageId(message.id)}
-                            aria-label="Reply to message"
-                          >
-                            <Reply className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      {/* Date header (appears below current bubble due to flex-col-reverse order) */}
-                      {showDateHeader && (
-                        <div className="w-full flex justify-center my-2 sticky bottom-2 z-10">
-                          <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-0.5 rounded-full text-[hsl(var(--muted-foreground))]">
-                            {formatDateHeader(message.timestamp)}
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  );
-                })}
-              </div>
+              <ScrollArea className="flex flex-col space-y-3">
+                {messages.map((message, index) => (
+                  <ChatMessageItem
+                    key={message.id}
+                    message={message as any}
+                    index={index}
+                    messages={messages as any}
+                    userId={user.uid}
+                    conversation={conversation}
+                    onHoverChange={setHoveredMessageId}
+                    setModalImage={setModalImage}
+                    audioRefs={audioRefs}
+                    handleLoadedMetadata={handleLoadedMetadata}
+                    handlePlay={handlePlay}
+                    toggleReaction={toggleReaction}
+                    setReplyToMessageId={setReplyToMessageId}
+                    messagesEndRef={messagesEndRef}
+                  />
+                ))}
+              </ScrollArea>
             </CardContent>
-            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm">
-              <form
-                onSubmit={(event) => {
+            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-b-xl">
+              {isBlocked ? (
+                <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                  <p>{blockMessage}</p>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(event) => {
                   event.preventDefault();
                   if (input.trim().length === 0) return;
                   const newMessage = {
@@ -1545,7 +1348,7 @@ export function CardsChat({
                   </TooltipProvider>
 
                   {showFormattingOptions && (
-                    <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] p-1 rounded-md">
+                    <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] rounded-md">
                       <Button
                         type="button"
                         variant="ghost"
@@ -1713,6 +1516,7 @@ export function CardsChat({
                   </div>
                 )}
               </form>
+              )}
             </CardFooter>
           </Card>
           <Dialog open={openReport} onOpenChange={setOpenReport}>
@@ -1726,7 +1530,13 @@ export function CardsChat({
              transition-transform duration-300 animate-in fade-in zoom-in-95"
               >
                 <DialogHeader></DialogHeader>
-                <NewReportTab reportData={reportData} />
+                <NewReportTab 
+                  reportData={reportData} 
+                  onSubmitted={() => {
+                    setOpenReport(false);
+                    return true;
+                  }}
+                />
               </DialogContent>
             </DialogPortal>
           </Dialog>

@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Note } from '@/utils/types/note';
-import { toast } from '@/components/ui/use-toast';
+import { notifyError } from '@/utils/toastMessage';
 
 // this is hook to fetch notes from the server
 const useFetchNotes = (userId: string | undefined) => {
@@ -19,18 +19,14 @@ const useFetchNotes = (userId: string | undefined) => {
       const response = await axiosInstance.get('/notes', {
         params: { userId },
       });
-      if (response?.data?.notes) {
-        setNotes(response.data.notes.notes);
-        setArchive(response.data.notes.archive || []);
-        setTrash(response.data.notes.trash || []);
+      if (response?.data?.data) {
+        setNotes(response.data.data.notes);
+        setArchive(response.data.data.archive || []);
+        setTrash(response.data.data.trash || []);
       }
     } catch (error) {
       console.error('Failed to fetch notes:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      notifyError('Something went wrong. Please try again.', 'Error');
     } finally {
       setIsLoading(false);
     }

@@ -13,12 +13,23 @@ import {
 import { Switch } from '../ui/switch';
 import { ToolTip } from '../ToolTip';
 
-import {
-  Actions,
-  Currency,
-  FieldComponentProps,
-  FieldType,
-} from './FieldTypes';
+import { Actions, FieldComponentProps, FieldType } from './FieldTypes';
+
+import { formatCurrency } from '@/utils/format';
+
+// Determine fraction digits per currency (extend as needed)
+const getCurrencyFractionDigits = (currencyCode: string): number => {
+  const code = (currencyCode || '').toUpperCase();
+  const special: Record<string, number> = {
+    JPY: 0,
+    KRW: 0,
+    VND: 0,
+    BTC: 8,
+    ETH: 6,
+    USDT: 2,
+  };
+  return special[code] ?? 2;
+};
 
 const DateTimeField = ({ value }: FieldComponentProps<string>) => {
   const date = new Date(value);
@@ -167,15 +178,16 @@ const ActionField = ({
   );
 };
 
-const numberFormat = (value: string, currency: Currency = Currency.INR) =>
-  new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: currency,
-    maximumFractionDigits: 0,
-  }).format(Number(value));
-
 const CurrencyField = ({ fieldData, value }: FieldComponentProps<string>) => {
-  return <span>{numberFormat(value, fieldData.currency)}</span>;
+  const currency = String(fieldData.currency || 'USD');
+  const fractionDigits = getCurrencyFractionDigits(currency);
+  const formatted = formatCurrency(
+    value,
+    currency,
+    fractionDigits,
+    fractionDigits,
+  );
+  return <span>{formatted}</span>;
 };
 
 const StatusField = ({ value, fieldData }: FieldComponentProps<string>) => {
