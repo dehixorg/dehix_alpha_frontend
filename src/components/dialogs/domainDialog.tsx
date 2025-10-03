@@ -21,7 +21,6 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import SelectTagPicker from '@/components/shared/SelectTagPicker';
 interface DomainFormData {
   name: string;
   experience: string;

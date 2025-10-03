@@ -130,7 +130,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
             <Controller
               control={control}
               name="label"
-              render={({ field }) => (
+              render={() => (
                 <SelectTagPicker
                   label="Skills"
                   options={skills.map((s) => ({ label: s.label, _id: s._id }))}

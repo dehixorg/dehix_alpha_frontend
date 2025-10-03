@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, Save, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 
@@ -26,7 +26,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -397,6 +396,16 @@ export function CreateProjectBusinessForm() {
         );
         if (updatedDomains[profileIndex].length === 0) {
           form.setValue(`profiles.${profileIndex}.domain_id`, '');
+        } else {
+          // Recompute domain_id to match one of the remaining domains
+          const nextDomainLabel = updatedDomains[profileIndex][0];
+          const nextDomain = domains.find(
+            (d: any) => d.label === nextDomainLabel,
+          );
+          form.setValue(
+            `profiles.${profileIndex}.domain_id`,
+            nextDomain?.domain_id || '',
+          );
         }
       }
       return updatedDomains;

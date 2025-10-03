@@ -31,7 +31,6 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -97,7 +96,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [step, setStep] = useState<number>(1);
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<string[]>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
@@ -170,18 +168,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     }
   };
 
-  const handleAddSkill = (field: { onChange: (value: any) => void }) => {
-    if (tmpSkill.trim() && !currSkills.includes(tmpSkill)) {
-      setCurrSkills([...currSkills, tmpSkill]);
-      field.onChange([...currSkills, tmpSkill]);
-      setTmpSkill('');
-    }
-  };
-
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -247,7 +233,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       comments: '',
     });
     setCurrSkills([]);
-    setTmpSkill('');
     setStep(1);
   };
 

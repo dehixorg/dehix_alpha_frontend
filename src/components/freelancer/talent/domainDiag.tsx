@@ -131,7 +131,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
             <Controller
               control={control}
               name="label"
-              render={({ field }) => (
+              render={() => (
                 <SelectTagPicker
                   label="Domains"
                   options={domains.map((d) => ({ label: d.label, _id: d._id }))}
