@@ -37,7 +37,7 @@ const TrashPage = () => {
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Notes', link: '/notes' },
-            { label: 'Trash', link: '/trash' },
+            { label: 'Trash', link: '#' },
           ]}
         />
         {/* Main content area */}

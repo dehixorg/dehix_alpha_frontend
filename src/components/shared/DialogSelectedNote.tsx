@@ -1,13 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  Edit2,
-  Save,
-  Clock,
-  ArchiveRestoreIcon,
-  Trash2Icon,
-} from 'lucide-react';
+import { Edit2, Save, Clock, ArchiveRestore, Trash2 } from 'lucide-react';
 
 import { Note, NoteType } from '@/utils/types/note';
 import { cn } from '@/lib/utils';
@@ -288,7 +282,7 @@ const DialogSelectedNote = ({
                         )
                       }
                     >
-                      <ArchiveRestoreIcon className="w-3.5 h-3.5" />
+                      <ArchiveRestore className="w-3.5 h-3.5" />
                       {note.noteType === NoteType.ARCHIVE
                         ? 'Unarchive'
                         : 'Archive'}
@@ -303,7 +297,7 @@ const DialogSelectedNote = ({
                       className="gap-1.5"
                       onClick={() => onDelete(note._id)}
                     >
-                      <Trash2Icon className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5" />
                       Delete
                     </Button>
                   )}

@@ -40,7 +40,7 @@ const Page = () => {
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Notes', link: '/notes' },
-            { label: 'Archive', link: '/archive' },
+            { label: 'Archive', link: '#' },
           ]}
         />
         {/* Main content area */}
