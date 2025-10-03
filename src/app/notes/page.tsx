@@ -6,7 +6,6 @@ import { Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { notesMenu } from '@/config/menuItems/business/dashboardMenuItems';
-import NotesHeader from '@/components/business/market/NotesHeader';
 import NotesRender from '@/components/shared/NotesRender';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { LabelType, Note, NoteType } from '@/utils/types/note';
@@ -14,6 +13,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import Header from '@/components/header/header';
 import { menuItemsBottom } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import NotesHeader from '@/components/business/market/NotesHeader';
 
 const Notes = () => {
   // Get userId from Redux
@@ -74,17 +74,15 @@ const Notes = () => {
       />
 
       <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
-        <div>
-          <Header
-            menuItemsTop={notesMenu}
-            menuItemsBottom={menuItemsBottom}
-            activeMenu="Notes"
-            breadcrumbItems={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Notes', link: '/notes' },
-            ]}
-          />
-        </div>
+        <Header
+          menuItemsTop={notesMenu}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Notes"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Notes', link: '/notes' },
+          ]}
+        />
         {/* Main content area */}
         <div>
           <NotesHeader
