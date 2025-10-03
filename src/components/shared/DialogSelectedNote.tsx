@@ -1,9 +1,16 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Edit2, Save, Clock, X } from 'lucide-react';
+import {
+  Edit2,
+  Save,
+  Clock,
+  X,
+  ArchiveRestoreIcon,
+  Trash2Icon,
+} from 'lucide-react';
 
-import { Note } from '@/utils/types/note';
+import { Note, NoteType } from '@/utils/types/note';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +19,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,12 +28,16 @@ type DialogSelectedNoteProps = {
   note: Note;
   onClose: () => void;
   onSave: (updatedNote: Note) => void;
+  onArchive?: (noteId: string | undefined, toType: string) => void;
+  onDelete?: (noteId: string | undefined) => void;
 };
 
 const DialogSelectedNote = ({
   note,
   onClose,
   onSave,
+  onArchive,
+  onDelete,
 }: DialogSelectedNoteProps) => {
   const [title, setTitle] = useState(note.title || '');
   const [content, setContent] = useState(note.content || '');
@@ -83,34 +95,13 @@ const DialogSelectedNote = ({
       note.bgColor.toLowerCase() === 'white');
 
   return (
-    <Dialog open={!!note}>
+    <Dialog open={!!note} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent
         className={cn(
           'p-0 max-w-2xl max-h-[90vh] mx-4 sm:mx-0 overflow-hidden',
-          'bg-white dark:bg-gray-800',
-          note.banner
-            ? 'text-white'
-            : isWhiteBackground
-              ? 'text-black'
-              : 'text-gray-900 dark:text-gray-100',
-          'border-0 shadow-2xl',
+          'shadow-2xl card',
           'transition-all duration-200 ease-in-out',
-          '[&>button]:hidden', // This hides the default close button
-          {
-            'text-black [&_*]:text-black [&_input]:text-black [&_textarea]:text-black [&_button]:text-gray-500 [&_button:hover]:text-gray-700 [&_svg]:!text-white [&_button:hover_svg]:!text-white dark:[&_button]:text-gray-400 dark:[&_button:hover]:text-gray-200 dark:[&_svg]:!text-white dark:[&_button:hover_svg]:!text-white':
-              isWhiteBackground,
-          },
         )}
-        style={{
-          backgroundColor: note.bgColor || undefined,
-          backgroundImage: note.bgColor
-            ? undefined
-            : note.banner
-              ? `url(${note.banner})`
-              : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
         onInteractOutside={onClose}
         onEscapeKeyDown={onClose}
         onPointerDownOutside={onClose}
@@ -118,9 +109,7 @@ const DialogSelectedNote = ({
         {note.banner && !note.bgColor && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
         )}
-
-        <div className="relative z-10 flex flex-col h-full">
-          <DialogHeader className="p-4 border-b border-gray-200/30 dark:border-gray-700/50">
+          <DialogHeader className="p-4 border-b border-gray-200/30 dark:border-gray-700/50 bg-gradient">
             <div className="flex items-center justify-between w-full">
               {isEditMode ? (
                 <Input
@@ -137,22 +126,14 @@ const DialogSelectedNote = ({
                   )}
                 />
               ) : (
-                <>
+                <div className="flex items-center justify-between w-full">
                   <DialogTitle
                     className="m-0 cursor-pointer"
                     onClick={() => setIsEditMode(true)}
                   >
                     {title || 'Note'}
                   </DialogTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 p-0 rounded-full hover:bg-gray-200/50 hover:dark:bg-gray-700/50 transition-colors border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none focus:ring-0 focus:outline-none"
-                    onClick={onClose}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </>
+                </div>
               )}
             </div>
           </DialogHeader>
@@ -183,13 +164,70 @@ const DialogSelectedNote = ({
               </div>
             ) : (
               <div className="space-y-4">
-                {content && (
+                {content ? (
                   <div className="prose dark:prose-invert max-w-none">
                     {content.split('\n').map((paragraph, i) => (
                       <p key={i} className="mb-4 last:mb-0">
                         {paragraph || <br />}
                       </p>
                     ))}
+                  </div>
+                ) : (
+                  <div className="p-8 sm:p-10 flex flex-col items-center justify-center text-center rounded-md bg-background/60 border">
+                    <div className="mb-4 opacity-90">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 200 120"
+                        className="w-40 h-24 mx-auto"
+                        aria-hidden
+                      >
+                        <rect
+                          x="10"
+                          y="20"
+                          width="180"
+                          height="80"
+                          rx="12"
+                          className="fill-muted"
+                        />
+                        <rect
+                          x="26"
+                          y="36"
+                          width="60"
+                          height="10"
+                          rx="5"
+                          className="fill-muted-foreground/40"
+                        />
+                        <rect
+                          x="26"
+                          y="54"
+                          width="120"
+                          height="10"
+                          rx="5"
+                          className="fill-muted-foreground/30"
+                        />
+                        <rect
+                          x="26"
+                          y="72"
+                          width="90"
+                          height="10"
+                          rx="5"
+                          className="fill-muted-foreground/20"
+                        />
+                        <circle
+                          cx="160"
+                          cy="60"
+                          r="10"
+                          className="fill-primary/30"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-sm font-semibold mb-1">
+                      No content yet
+                    </h3>
+                    <p className="text-xs text-muted-foreground max-w-xs">
+                      Click Edit to start writing your note. You can also change
+                      the banner or color from the card actions.
+                    </p>
                   </div>
                 )}
               </div>
@@ -240,21 +278,57 @@ const DialogSelectedNote = ({
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditMode(true)}
-                    className="gap-1.5"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    Edit
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {typeof onArchive === 'function' && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() =>
+                          onArchive(
+                            note._id,
+                            note.noteType === NoteType.ARCHIVE
+                              ? NoteType.NOTE
+                              : NoteType.ARCHIVE,
+                          )
+                        }
+                      >
+                        <ArchiveRestoreIcon className="w-3.5 h-3.5" />
+                        {note.noteType === NoteType.ARCHIVE
+                          ? 'Unarchive'
+                          : 'Archive'}
+                      </Button>
+                    )}
+
+                    {typeof onDelete === 'function' && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => onDelete(note._id)}
+                      >
+                        <Trash2Icon className="w-3.5 h-3.5" />
+                        Delete
+                      </Button>
+                    )}
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditMode(true)}
+                      className="gap-1.5"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      Edit
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
           </DialogFooter>
-        </div>
       </DialogContent>
     </Dialog>
   );

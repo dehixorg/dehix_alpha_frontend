@@ -2,6 +2,8 @@ import React from 'react';
 import { Palette } from 'lucide-react';
 import Image from 'next/image';
 
+import { Button } from '../ui/button';
+
 import {
   HoverCard,
   HoverCardTrigger,
@@ -28,12 +30,9 @@ const BannerChangerPopover: React.FC<BannerChangerPopoverProps> = ({
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <button>
-          <Palette
-            size={15}
-            className="text-black transition-all duration-200"
-          />
-        </button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted">
+          <Palette className="h-4 w-4" />
+        </Button>
       </HoverCardTrigger>
 
       <HoverCardContent className="shadow-md rounded-md p-3">
