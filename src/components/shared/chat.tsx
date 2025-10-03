@@ -10,22 +10,21 @@ import {
   Search,
   MoreVertical,
   Minimize2,
-  Reply,
   Text,
   Bold,
   Italic,
   Underline,
-  CheckCheck,
   Flag,
   Mic,
   StopCircle,
   Trash2,
   X,
+  Archive,
+  ArchiveRestore,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { DocumentData } from 'firebase/firestore';
+import { doc, DocumentData, updateDoc } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
-import { formatDistanceToNow, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
@@ -47,12 +46,8 @@ import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
-import Reactions from './reactions';
-import { FileAttachment } from './fileAttachment';
-// Added
-// ProfileSidebar is no longer imported or rendered here
+import ChatMessageItem from './ChatMessageItem';
 
-import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,7 +65,9 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { toast } from '@/hooks/use-toast';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { db } from '@/config/firebaseConfig';
 import {
   Dialog,
   DialogContent,
@@ -80,38 +77,7 @@ import {
 } from '@/components/ui/dialog';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 
-// Format only the time (e.g., 10:30 AM) for in-bubble timestamps
-function formatChatTimestamp(timestamp: string) {
-  return format(new Date(timestamp), 'hh:mm a');
-}
 
-// Helper for date header (Today, Yesterday, Oct 12 2023 …)
-function formatDateHeader(timestamp: string | number) {
-  const msgDate = new Date(timestamp);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
-
-  const msgDay = msgDate.toDateString(); // gives date as string value
-
-  if (msgDay === today.toDateString()) return 'Today';
-  if (msgDay === yesterday.toDateString()) return 'Yesterday';
-
-  return msgDate.toLocaleDateString(undefined, {
-    weekday: 'long', // “Sunday”
-    month: 'short', // “Sep”
-    day: 'numeric', // 14
-    year: 'numeric', // 2025
-  });
-}
-
-function isSameDay(d1: Date, d2: Date) {
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
-}
 
 function useDebounce<T>(value: T, delay: number = 500): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -160,6 +126,7 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
+  onConversationUpdate?: (conv: Conversation | null) => void;
 }
 
 export function CardsChat({
@@ -167,6 +134,7 @@ export function CardsChat({
   isChatExpanded,
   onToggleExpand,
   onOpenProfileSidebar,
+  onConversationUpdate,
 }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
@@ -184,7 +152,7 @@ export function CardsChat({
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [, setHoveredMessageId] = useState(null);
+  const [, setHoveredMessageId] = useState<string | null>(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
@@ -391,6 +359,15 @@ export function CardsChat({
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
+    if (conversation.blocked?.status === true) {
+      toast({
+        variant: 'destructive',
+        title: 'Action Denied',
+        description: 'You cannot send messages to a blocked conversation.',
+      });
+      return;
+    }
+
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
@@ -847,6 +824,58 @@ export function CardsChat({
     );
   }
 
+  const isBlocked = conversation?.blocked?.status === true;
+  const isArchived =
+    conversation?.participantDetails?.[user.uid]?.viewState === 'archived';
+
+  let blockMessage = '';
+  if (isBlocked) {
+    if (conversation.blocked?.by === user.uid) {
+      blockMessage =
+        'You have blocked this conversation. Unblock them to send a message.';
+    } else {
+      blockMessage = 'This conversation is blocked. You cannot send a message.';
+    }
+  }
+
+  async function handleToggleArchive() {
+    if (!user?.uid || !conversation?.id) return;
+
+    const currentState = conversation.participantDetails?.[user.uid]?.viewState;
+    const newState = currentState === 'archived' ? 'inbox' : 'archived';
+
+    const conversationDocRef = doc(db, 'conversations', conversation.id);
+    const fieldToUpdate = `participantDetails.${user.uid}.viewState`;
+
+    try {
+      await updateDoc(conversationDocRef, { [fieldToUpdate]: newState });
+
+      const updatedConversation = {
+        ...conversation,
+        participantDetails: {
+          ...conversation.participantDetails,
+          [user.uid]: {
+            ...conversation.participantDetails?.[user.uid],
+            viewState: newState,
+          },
+        },
+      };
+
+      onConversationUpdate?.(updatedConversation as Conversation);
+
+      toast({
+        title: `Conversation ${newState === 'archived' ? 'Archived' : 'Unarchived'}`,
+      });
+    } catch (error) {
+      console.error('Error toggling archive state:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not update archive status.',
+      });
+    }
+  }
+
   return (
     <>
       {/* Image Modal */}
@@ -1015,6 +1044,7 @@ export function CardsChat({
                   <Video className="h-5 w-5" />
                 </Button>
 
+<<<<<<< HEAD
                 {/* Expand/collapse */}
                 <Button
                   variant="ghost"
@@ -1028,6 +1058,71 @@ export function CardsChat({
                     }
                   }}
                   className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+=======
+              {/* Archive/Unarchive button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
+                onClick={handleToggleArchive}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                {isArchived ? (
+                  <ArchiveRestore className="h-5 w-5" />
+                ) : (
+                  <Archive className="h-5 w-5" />
+                )}
+              </Button>
+
+              {/* Video call */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Video call"
+                onClick={handleCreateMeet}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                <Video className="h-5 w-5" />
+              </Button>
+
+              {/* Expand/collapse */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"}
+                onClick={() => {
+                  if (onToggleExpand) {
+                    onToggleExpand();
+                  } else {
+                    console.error("[CardsChat] onToggleExpand is undefined!");
+                  }
+                }}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                {isChatExpanded ? (
+                  <Minimize2 className="h-5 w-5" />
+                ) : (
+                  <Maximize2 className="h-5 w-5" />
+                )}
+              </Button>
+
+              {/* More options */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="More options"
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  >
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={5}
+                  className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+>>>>>>> develop
                 >
                   {isChatExpanded ? (
                     <Minimize2 className="h-5 w-5" />
@@ -1066,6 +1161,7 @@ export function CardsChat({
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
               <ScrollArea className="flex flex-col space-y-3">
+<<<<<<< HEAD
                 {messages.map((message, index) => {
                   const formattedTimestamp = formatChatTimestamp(
                     message.timestamp,
@@ -1470,11 +1566,36 @@ export function CardsChat({
                     </div>
                   );
                 })}
+=======
+                {messages.map((message, index) => (
+                  <ChatMessageItem
+                    key={message.id}
+                    message={message as any}
+                    index={index}
+                    messages={messages as any}
+                    userId={user.uid}
+                    conversation={conversation}
+                    onHoverChange={setHoveredMessageId}
+                    setModalImage={setModalImage}
+                    audioRefs={audioRefs}
+                    handleLoadedMetadata={handleLoadedMetadata}
+                    handlePlay={handlePlay}
+                    toggleReaction={toggleReaction}
+                    setReplyToMessageId={setReplyToMessageId}
+                    messagesEndRef={messagesEndRef}
+                  />
+                ))}
+>>>>>>> develop
               </ScrollArea>
             </CardContent>
             <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-b-xl">
-              <form
-                onSubmit={(event) => {
+              {isBlocked ? (
+                <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                  <p>{blockMessage}</p>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(event) => {
                   event.preventDefault();
                   if (input.trim().length === 0) return;
                   const newMessage = {
@@ -1849,6 +1970,7 @@ export function CardsChat({
                   </div>
                 )}
               </form>
+              )}
             </CardFooter>
           </Card>
           <Dialog open={openReport} onOpenChange={setOpenReport}>
@@ -1862,7 +1984,13 @@ export function CardsChat({
              transition-transform duration-300 animate-in fade-in zoom-in-95"
               >
                 <DialogHeader></DialogHeader>
-                <NewReportTab reportData={reportData} />
+                <NewReportTab 
+                  reportData={reportData} 
+                  onSubmitted={() => {
+                    setOpenReport(false);
+                    return true;
+                  }}
+                />
               </DialogContent>
             </DialogPortal>
           </Dialog>

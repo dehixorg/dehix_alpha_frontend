@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 import {
   Form,
   FormControl,
@@ -67,6 +68,7 @@ export function ReportForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const user = useSelector((state: RootState) => state.user);
+  const { toast } = useToast();
 
   const onSubmit = async (data: ReportFormValues) => {
     try {
@@ -138,6 +140,7 @@ export function ReportForm({
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
 
+<<<<<<< HEAD
       console.log('Submitting report with payload:', finalPayload);
       const response = await apiHelperService.createReport(finalPayload);
       console.log('Report created successfully:', response);
@@ -152,6 +155,30 @@ export function ReportForm({
     } catch (error: any) {
       console.error('Failed to submit report:', error);
       console.error('Error details:', error?.response?.data || error);
+=======
+      await apiHelperService.createReport(finalPayload);
+      // Show success toast
+      toast({
+        title: 'Report Submitted Successfully',
+        description:
+          'Thank you for your report. We will review it and take appropriate action.',
+        variant: 'default',
+      });
+      // Call the onSubmitted callback to close dialog
+      if (onSubmitted) {
+        onSubmitted();
+      }
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+
+      // Show error toast
+      toast({
+        title: 'Failed to Submit Report',
+        description:
+          'There was an error submitting your report. Please try again.',
+        variant: 'destructive',
+      });
+>>>>>>> develop
     } finally {
       setIsSubmitting(false);
     }

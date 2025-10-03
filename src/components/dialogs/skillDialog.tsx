@@ -21,7 +21,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 interface SkillFormData {
   name: string;
   experience: number;
@@ -89,39 +89,28 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
         <form onSubmit={handleSubmit(handleFormSubmit)}>
           <div className="space-y-4">
             {/* Name Field */}
+
             <Controller
               control={control}
               name="name"
               render={({ field }) => (
-                <>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a skill" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {skillOptions.length > 0 ? (
-                        skillOptions.map((skill, idx) => (
-                          <SelectItem key={idx} value={skill.talentName}>
-                            {skill.talentName}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <p className="p-2">
-                          No verified skills.{' '}
-                          <span className="text-blue-500">Get verified !</span>
-                        </p>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  {errors.name && (
-                    <p className="text-red-500 text-sm">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </>
+                <SelectTagPicker
+                  label="Skill"
+                  options={skillOptions.map((s) => ({
+                    label: s.talentName,
+                    _id: s.talentName,
+                  }))}
+                  selected={field.value ? [{ name: field.value }] : []}
+                  onAdd={(val) => field.onChange(val)}
+                  onRemove={() => field.onChange('')}
+                  className="w-full"
+                  optionLabelKey="label"
+                  selectedNameKey="name"
+                  selectPlaceholder="Select a skill"
+                  searchPlaceholder="Search skills..."
+                />
               )}
             />
-
             {/* Experience Field */}
             <Controller
               control={control}
@@ -149,7 +138,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                 </>
               )}
             />
-
             {/* Level Field */}
             <Controller
               control={control}

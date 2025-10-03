@@ -274,7 +274,10 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
             { label: 'Hire Talent', link: '#' },
-            { label: activeTab, link: '#' },
+            {
+              label: activeTab.charAt(0).toUpperCase() + activeTab.slice(1),
+              link: '#',
+            },
           ]}
         />
         <div className="container px-4 py-4">

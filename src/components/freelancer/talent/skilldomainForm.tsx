@@ -1,14 +1,19 @@
 'use client';
 import type React from 'react';
 import { useState, useEffect } from 'react';
-//
 import { useSelector } from 'react-redux';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 import VerifyDialog from './verifyDialog';
 
-import { Card } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Table,
   TableHeader,
@@ -18,7 +23,6 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
-import { Switch } from '@/components/ui/switch';
 import type { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,6 +30,7 @@ import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
+import { Switch } from '@/components/ui/switch';
 
 interface Skill {
   _id: string;
@@ -55,7 +60,8 @@ const SkillDomainForm: React.FC = () => {
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
-  const [, setRefreshTrigger] = useState(0);
+
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Function to remove duplicate entries
   const removeDuplicates = (data: SkillDomainData[]) => {
@@ -76,14 +82,16 @@ const SkillDomainForm: React.FC = () => {
     async function fetchData() {
       setLoading(true);
       try {
+        // fetch skills
         const skillsResponse = await axiosInstance.get('/skills');
         const skillsArray = skillsResponse.data?.data || [];
 
+        // fetch domains
         const domainsResponse = await axiosInstance.get('/domain');
         const domainsArray = domainsResponse.data?.data || [];
 
+        // fetch talent data
         let talentResponse = { data: { data: {} } };
-
         if (user?.uid) {
           talentResponse = await axiosInstance.get(
             `/freelancer/${user.uid}/dehix-talent`,
@@ -91,11 +99,10 @@ const SkillDomainForm: React.FC = () => {
         }
 
         const talentData = Array.isArray(talentResponse.data?.data)
-          ? talentResponse.data?.data
+          ? talentResponse.data.data
           : Object.values(talentResponse.data?.data || {});
-
-        // Get all existing talent data for comprehensive filtering
         const flattenedTalentData = talentData.flat();
+
         const formattedTalentData = flattenedTalentData.map((item: any) => ({
           uid: item._id,
           label: item.talentName || 'N/A',
@@ -104,84 +111,32 @@ const SkillDomainForm: React.FC = () => {
           status: item.status,
           activeStatus: item.activeStatus,
           type: item.type,
-          originalTalentId: item.talentId, // Keep track of original talent ID
+          originalTalentId: item.talentId,
         }));
 
-        // Create sets of already added talent names by type
-        const addedSkillNames = new Set(
-          formattedTalentData
-            .filter((item) => item.type === 'SKILL')
-            .map((item) =>
-              item.label?.toLowerCase().trim().replace(/\s+/g, ' '),
-            )
-            .filter(Boolean),
-        );
+        // deduplicate and filter
+        const deduplicatedData = removeDuplicates(formattedTalentData);
+        setSkillDomainData(deduplicatedData);
+        setStatusVisibility(deduplicatedData.map((item) => item.activeStatus));
 
-        const addedDomainNames = new Set(
-          formattedTalentData
-            .filter((item) => item.type === 'DOMAIN')
-            .map((item) =>
-              item.label?.toLowerCase().trim().replace(/\s+/g, ' '),
-            )
-            .filter(Boolean),
-        );
-
-        // Also get talent IDs that are already used
+        // filter global skills/domains
         const usedTalentIds = new Set(
           formattedTalentData
             .map((item) => item.originalTalentId)
             .filter(Boolean),
         );
 
-        // Filter skills - exclude if name matches added skills OR if ID is already used
-        const filteredSkills = Array.isArray(skillsArray)
-          ? skillsArray.filter((skill: any) => {
-              const normalizedSkillName = skill.label
-                ?.toLowerCase()
-                .trim()
-                .replace(/\s+/g, ' ');
-              const isNameAlreadyAdded =
-                addedSkillNames.has(normalizedSkillName);
-              const isIdAlreadyUsed = usedTalentIds.has(skill._id);
-
-              return !isNameAlreadyAdded && !isIdAlreadyUsed;
-            })
-          : [];
-
-        // Filter domains - exclude if name matches added domains OR if ID is already used
-        const filteredDomains = Array.isArray(domainsArray)
-          ? domainsArray.filter((domain: any) => {
-              const normalizedDomainName = domain.label
-                ?.toLowerCase()
-                .trim()
-                .replace(/\s+/g, ' ');
-              const isNameAlreadyAdded =
-                addedDomainNames.has(normalizedDomainName);
-              const isIdAlreadyUsed = usedTalentIds.has(domain._id);
-
-              return !isNameAlreadyAdded && !isIdAlreadyUsed;
-            })
-          : [];
-
-        const deduplicatedData = removeDuplicates(formattedTalentData);
-        setSkillDomainData(deduplicatedData);
-        setStatusVisibility(deduplicatedData.map((item) => item.activeStatus));
-
-        // Map global skills to use _id and label for compatibility
         setSkills(
-          filteredSkills.map((skill: any) => ({
-            _id: skill._id,
-            label: skill.label,
-          })),
-        );
-        setDomains(
-          filteredDomains.map((domain: any) => ({
-            _id: domain._id,
-            label: domain.label,
-          })),
+          skillsArray
+            .filter((s: any) => !usedTalentIds.has(s._id))
+            .map((s: any) => ({ _id: s._id, label: s.label })),
         );
 
-        // Note: removed unused counters for cleaner code
+        setDomains(
+          domainsArray
+            .filter((d: any) => !usedTalentIds.has(d._id))
+            .map((d: any) => ({ _id: d._id, label: d.label })),
+        );
       } catch (error: any) {
         if (error?.code === 'ERR_CANCELED') return;
         console.error('Error fetching data:', error);
@@ -190,11 +145,10 @@ const SkillDomainForm: React.FC = () => {
         setLoading(false);
       }
     }
+
     fetchData();
-    return () => {
-      cancelAllRequests();
-    };
-  }, [user?.uid]);
+    return () => cancelAllRequests();
+  }, [user?.uid, refreshTrigger]);
 
   const handleToggleVisibility = async (
     index: number,
@@ -220,27 +174,24 @@ const SkillDomainForm: React.FC = () => {
 
   return (
     <div className="p-4 sm:px-8">
-      <div className="flex flex-col space-y-4">
-        <div className="flex flex-col space-y-2">
-          <h2 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
-            Dehix Talent
-          </h2>
-          <p className="hidden md:block text-muted-foreground">
+      <Card className="shadow-sm">
+        <CardHeader className="px-4 sm:px-7">
+          <CardTitle>Dehix Talent</CardTitle>
+          <CardDescription>
             Here you can add relevant skills and domains to get directly hired
             from dehix talent.
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
 
-        <div className="space-y-4">
+        <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
               <SkillDialog
-                setSkills={setSkills}
                 skills={skills}
                 onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
               />
+
               <DomainDialog
-                setDomains={setDomains}
                 domains={domains}
                 onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
               />
@@ -409,14 +360,13 @@ const SkillDomainForm: React.FC = () => {
                           </p>
                           <div className="mt-4 flex items-center justify-center gap-2">
                             <SkillDialog
-                              setSkills={setSkills}
                               skills={skills}
                               onSuccess={() =>
                                 setRefreshTrigger((prev) => prev + 1)
                               }
                             />
+
                             <DomainDialog
-                              setDomains={setDomains}
                               domains={domains}
                               onSuccess={() =>
                                 setRefreshTrigger((prev) => prev + 1)
@@ -431,8 +381,8 @@ const SkillDomainForm: React.FC = () => {
               </Table>
             </div>
           </Card>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
