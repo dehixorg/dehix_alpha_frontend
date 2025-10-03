@@ -195,8 +195,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
 
         <DropdownMenuContent
           align="end"
-          className="w-64 p-2 rounded-xl shadow-lg border-border/50 backdrop-blur-sm bg-background/95"
-          sideOffset={8}
+          className="w-64 rounded-xl shadow-lg border-border/50 backdrop-blur-sm bg-background/95"
         >
           <div className="px-2 py-3 flex items-center space-x-3">
             <Avatar className="h-10 w-10">
