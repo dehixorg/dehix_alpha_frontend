@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Type } from '@/utils/enum';
-import { Separator } from '@/components/ui/separator';
 import { setUser } from '@/lib/userSlice';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
@@ -347,7 +346,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               />
             </div>
           </div>
-          <Separator className="col-span-2" />
           <Button className="w-full" type="submit" disabled={loading}>
             <Save className="h-4 w-4 mr-2" />
             {loading ? 'Saving...' : 'Save Changes'}

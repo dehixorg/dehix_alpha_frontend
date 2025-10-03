@@ -7,7 +7,13 @@ import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 import VerifyDialog from './verifyDialog';
 
-import { Card } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Table,
   TableHeader,
@@ -17,7 +23,6 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
-import { Switch } from '@/components/ui/switch';
 import type { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +30,7 @@ import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
+import { Switch } from '@/components/ui/switch';
 
 interface Skill {
   _id: string;
@@ -168,18 +174,16 @@ const SkillDomainForm: React.FC = () => {
 
   return (
     <div className="p-4 sm:px-8">
-      <div className="flex flex-col space-y-4">
-        <div className="flex flex-col space-y-2">
-          <h2 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
-            Dehix Talent
-          </h2>
-          <p className="hidden md:block text-muted-foreground">
+      <Card className="shadow-sm">
+        <CardHeader className="px-4 sm:px-7">
+          <CardTitle>Dehix Talent</CardTitle>
+          <CardDescription>
             Here you can add relevant skills and domains to get directly hired
             from dehix talent.
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
 
-        <div className="space-y-4">
+        <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
               <SkillDialog
@@ -377,8 +381,8 @@ const SkillDomainForm: React.FC = () => {
               </Table>
             </div>
           </Card>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

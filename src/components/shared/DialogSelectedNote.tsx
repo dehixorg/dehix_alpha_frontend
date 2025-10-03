@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Edit2, Save, Clock } from 'lucide-react';
+import { Edit2, Save, Clock, X } from 'lucide-react';
 
 import { Note } from '@/utils/types/note';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -71,73 +70,90 @@ const DialogSelectedNote = ({
   const formattedDate = note.updatedAt
     ? new Date(note.updatedAt).toLocaleString('en-US', {
         month: 'short',
-        day: 'numeric',
-        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
       })
     : '';
 
+  // Check if background is white
+  const isWhiteBackground =
+    note.bgColor &&
+    (note.bgColor.toLowerCase() === '#ffffff' ||
+      note.bgColor.toLowerCase() === '#fff' ||
+      note.bgColor.toLowerCase() === 'white');
+
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={!!note}>
       <DialogContent
         className={cn(
           'p-0 max-w-2xl max-h-[90vh] mx-4 sm:mx-0 overflow-hidden',
           'bg-white dark:bg-gray-800',
-          note.banner ? 'text-white' : 'text-gray-900 dark:text-gray-100',
+          note.banner
+            ? 'text-white'
+            : isWhiteBackground
+              ? 'text-black'
+              : 'text-gray-900 dark:text-gray-100',
           'border-0 shadow-2xl',
           'transition-all duration-200 ease-in-out',
+          '[&>button]:hidden', // This hides the default close button
+          {
+            'text-black [&_*]:text-black [&_input]:text-black [&_textarea]:text-black [&_button]:text-gray-500 [&_button:hover]:text-gray-700 [&_svg]:!text-white [&_button:hover_svg]:!text-white dark:[&_button]:text-gray-400 dark:[&_button:hover]:text-gray-200 dark:[&_svg]:!text-white dark:[&_button:hover_svg]:!text-white':
+              isWhiteBackground,
+          },
         )}
         style={{
           backgroundColor: note.bgColor || undefined,
-          backgroundImage: note.banner ? `url(${note.banner})` : undefined,
+          backgroundImage: note.bgColor
+            ? undefined
+            : note.banner
+              ? `url(${note.banner})`
+              : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
+        onInteractOutside={onClose}
+        onEscapeKeyDown={onClose}
+        onPointerDownOutside={onClose}
       >
-        {note.banner && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        {note.banner && !note.bgColor && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
         )}
 
         <div className="relative z-10 flex flex-col h-full">
           <DialogHeader className="p-4 border-b border-gray-200/30 dark:border-gray-700/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  {isEditMode ? (
-                    <Input
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Title"
-                      className={cn(
-                        'text-sm font-medium p-0 border-0 shadow-none',
-                        'focus-visible:ring-0 focus-visible:ring-offset-0',
-                        'placeholder-gray-400 dark:placeholder-gray-500',
-                        'text-inherit bg-transparent',
-                        'h-auto px-0',
-                      )}
-                    />
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <DialogTitle
-                        className="text-sm font-medium cursor-text"
-                        onClick={() => setIsEditMode(true)}
-                      >
-                        {title || 'Note'}
-                      </DialogTitle>
-                      {note.type && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs font-normal capitalize border-gray-300 dark:border-gray-600"
-                        >
-                          {note.type}
-                        </Badge>
-                      )}
-                    </div>
+            <div className="flex items-center justify-between w-full">
+              {isEditMode ? (
+                <Input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Title"
+                  className={cn(
+                    'text-sm font-medium p-0 border-0 shadow-none',
+                    'focus-visible:ring-0 focus-visible:ring-offset-0',
+                    'placeholder-gray-400 dark:placeholder-gray-500',
+                    'text-inherit bg-transparent',
+                    'h-auto px-0 flex-1',
                   )}
-                </div>
-              </div>
+                />
+              ) : (
+                <>
+                  <DialogTitle
+                    className="m-0 cursor-pointer"
+                    onClick={() => setIsEditMode(true)}
+                  >
+                    {title || 'Note'}
+                  </DialogTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 p-0 rounded-full hover:bg-gray-200/50 hover:dark:bg-gray-700/50 transition-colors border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none focus:ring-0 focus:outline-none"
+                    onClick={onClose}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </div>
           </DialogHeader>
 

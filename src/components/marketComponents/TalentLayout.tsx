@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
+import Header from '../header/header';
+
 import TalentContent from './TalentContent';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,6 +28,10 @@ import { toast } from '@/components/ui/use-toast';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
 
 interface ProfessionalExperience {
   workFrom?: string;
@@ -86,7 +92,6 @@ export const calculateExperience = (
 
 const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   const router = useRouter();
-  const [activePage, setActivePage] = useState('Talent');
   const user = useSelector((state: RootState) => state.user);
   const businessId = user?.uid;
   const [talentData, setTalentData] = useState<TalentData>({
@@ -236,7 +241,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   }, [activeTab, filters, fetchData]);
 
   const handleTabChange = (value: string) => {
-    router.push(`/business/market/${value}`);
+    router.push(`/business/talent/${value}`);
   };
 
   const handleApplyFilters = () => {
@@ -254,25 +259,33 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex min-h-screen w-full flex-col overflow-auto">
       <SidebarMenu
-        menuItemsTop={[]}
-        menuItemsBottom={[]}
-        active={activePage}
-        setActive={setActivePage}
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        active="Dehix Talent"
       />
-      <div className="ml-14 flex flex-col min-h-screen">
-        <header className="border-b">
-          <div className="container flex h-16 items-center justify-between px-4">
-            <h1 className="text-xl font-bold">Talent Management</h1>
-          </div>
-        </header>
+
+      <div className="flex flex-col sm:py-0 sm:pl-14">
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dehix Talent"
+          breadcrumbItems={[
+            { label: 'Business', link: '/dashboard/business' },
+            { label: 'Hire Talent', link: '#' },
+            {
+              label: activeTab.charAt(0).toUpperCase() + activeTab.slice(1),
+              link: '#',
+            },
+          ]}
+        />
         <div className="container px-4 py-4">
           <Tabs value={activeTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview" asChild>
                 <a href="/business/talent">
-                  <Users2 className="h-4 w-4" />
+                  <Users2 className="h-4 w-4 mr-1" />
                   Overview
                 </a>
               </TabsTrigger>
@@ -280,21 +293,21 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                 value="invited"
                 onClick={() => handleTabChange('invited')}
               >
-                <BookMarked className="h-4 w-4" />
+                <BookMarked className="h-4 w-4 mr-1" />
                 Invites
               </TabsTrigger>
               <TabsTrigger
                 value="accepted"
                 onClick={() => handleTabChange('accepted')}
               >
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle2 className="h-4 w-4 mr-1" />
                 Accepted
               </TabsTrigger>
               <TabsTrigger
                 value="rejected"
                 onClick={() => handleTabChange('rejected')}
               >
-                <XCircle className="h-4 w-4" />
+                <XCircle className="h-4 w-4 mr-1" />
                 Rejected
               </TabsTrigger>
             </TabsList>

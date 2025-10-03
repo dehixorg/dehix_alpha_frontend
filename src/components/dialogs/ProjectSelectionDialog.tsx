@@ -57,9 +57,13 @@ export default function ProjectSelectionDialog({
   const [isAddingProjects, setIsAddingProjects] = useState(false);
 
   useEffect(() => {
-    if (open && freelancerId && currentProfileId) {
+    if (open && freelancerId) {
       fetchProjects();
-      fetchCurrentProfileProjects();
+      if (currentProfileId && currentProfileId !== 'new') {
+        fetchCurrentProfileProjects();
+      } else {
+        setExistingProjectIds([]);
+      }
     }
   }, [open, freelancerId, currentProfileId]);
 

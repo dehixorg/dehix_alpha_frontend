@@ -1,4 +1,5 @@
 import React from 'react';
+import { LoaderCircle } from 'lucide-react';
 
 import {
   Dialog,
@@ -28,6 +29,7 @@ interface ConfirmActionDialogProps {
     | 'link'
     | null
     | undefined; // Optional: Default to "destructive"
+  isLoading?: boolean;
 }
 
 export function ConfirmActionDialog({
@@ -38,13 +40,16 @@ export function ConfirmActionDialog({
   description,
   confirmButtonText = 'Confirm',
   confirmButtonVariant = 'destructive',
+  isLoading = false,
 }: ConfirmActionDialogProps) {
   if (!isOpen) {
     return null;
   }
 
   const handleConfirm = () => {
+    console.log('ConfirmActionDialog handleConfirm called');
     onConfirm();
+    console.log('ConfirmActionDialog onConfirm executed');
     // onClose(); // Dialog is typically closed by the caller after onConfirm promise resolves or action completes
   };
 
@@ -87,6 +92,7 @@ export function ConfirmActionDialog({
             type="button"
             variant={confirmButtonVariant}
             onClick={handleConfirm}
+            disabled={isLoading}
             className={cn(
               confirmButtonVariant === 'destructive' &&
                 'bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:bg-[hsl(var(--destructive)_/_0.9)]',
@@ -94,7 +100,11 @@ export function ConfirmActionDialog({
                 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-hover))]',
             )}
           >
-            {confirmButtonText}
+            {isLoading ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              confirmButtonText
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

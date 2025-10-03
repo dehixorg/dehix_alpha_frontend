@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import {
@@ -182,67 +182,51 @@ export default function ProfileDetailPage() {
     </div>
   );
 
-  useEffect(() => {
-    if (profileId) {
-      const fetchData = async () => {
-        setIsLoading(true);
-        try {
-          await fetchSkillsAndDomains();
-          await fetchProfile();
-          await fetchFreelancerProjects();
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
+  const fetchSkillsAndDomains = useCallback(async () => {
+    if (!user.uid) return;
 
-      fetchData();
+    try {
+      const [skillsResponse, domainsResponse, freelancerResponse] =
+        await Promise.all([
+          axiosInstance.get('/skills'),
+          axiosInstance.get('/domain'), // Corrected endpoint
+          axiosInstance.get(`/freelancer/${user.uid}`),
+        ]);
+
+      const allSkills = skillsResponse.data.data || [];
+      const allDomains = domainsResponse.data.data || [];
+      const freelancerData = freelancerResponse.data.data || {};
+
+      const freelancerSkillNames = (freelancerData.skills || [])
+        .map((s: any) => s.name || s.label)
+        .filter(Boolean);
+
+      const freelancerDomainNames = (freelancerData.domain || [])
+        .map((d: any) => d.name || d.label)
+        .filter(Boolean);
+
+      const skillsForOptions = allSkills.filter((s: any) =>
+        freelancerSkillNames.includes(s.label || s.name),
+      );
+      const domainsForOptions = allDomains.filter((d: any) =>
+        freelancerDomainNames.includes(d.label || d.name),
+      );
+
+      setSkillsOptions(skillsForOptions);
+      setDomainsOptions(domainsForOptions);
+
+      setSkillsAndDomainsLoaded(true);
+    } catch (error) {
+      console.error('Error fetching skills and domains:', error);
+      notifyError(
+        'Could not load skills and domains. Please ensure you have added skills to your main profile.',
+        'Error',
+      );
     }
-  }, [profileId]);
+  }, [user.uid]);
 
-  const getSkillNameById = (skillId: string) => {
-    if (!skillId || !skillsOptions || skillsOptions.length === 0) {
-      return skillId || '';
-    }
-    const skill = skillsOptions.find((s: any) => s._id === skillId);
-    return skill ? skill.label || skill.name : skillId;
-  };
-
-  const getDomainNameById = (domainId: string) => {
-    if (!domainId || !domainsOptions || domainsOptions.length === 0) {
-      return domainId || '';
-    }
-    const domain = domainsOptions.find((d: any) => d._id === domainId);
-    return domain ? domain.label || domain.name : domainId;
-  };
-
-  const transformProfileForAPI = (profileData: any) => {
-    const transformedSkills =
-      profileData.skills?.map((skill: any) => {
-        if (typeof skill === 'string') {
-          return skill;
-        }
-        return skill._id;
-      }) || [];
-
-    const transformedDomains =
-      profileData.domains?.map((domain: any) => {
-        if (typeof domain === 'string') {
-          return domain;
-        }
-        return domain._id;
-      }) || [];
-
-    return {
-      ...profileData,
-      skills: transformedSkills,
-      domains: transformedDomains,
-    };
-  };
-
-  const fetchProfile = async () => {
-    if (!profileId) return;
+  const fetchProfile = useCallback(async () => {
+    if (!profileId || !user.uid) return;
 
     try {
       const response = await axiosInstance.get(
@@ -294,50 +278,11 @@ export default function ProfileDetailPage() {
       notifyError('Failed to load profile', 'Error');
       router.push('/freelancer/settings/profiles');
     }
-  };
+  }, [profileId, user.uid, router]);
 
-  const fetchSkillsAndDomains = async () => {
-    try {
-      const [skillsResponse, domainsResponse, freelancerResponse] =
-        await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'), // Corrected endpoint
-          axiosInstance.get(`/freelancer/${user.uid}`),
-        ]);
+  const fetchFreelancerProjects = useCallback(async () => {
+    if (!user.uid) return;
 
-      const allSkills = skillsResponse.data.data || [];
-      const allDomains = domainsResponse.data.data || [];
-      const freelancerData = freelancerResponse.data.data || {};
-
-      const freelancerSkillNames = (freelancerData.skills || [])
-        .map((s: any) => s.name || s.label)
-        .filter(Boolean);
-
-      const freelancerDomainNames = (freelancerData.domain || [])
-        .map((d: any) => d.name || d.label)
-        .filter(Boolean);
-
-      const skillsForOptions = allSkills.filter((s: any) =>
-        freelancerSkillNames.includes(s.label || s.name),
-      );
-      const domainsForOptions = allDomains.filter((d: any) =>
-        freelancerDomainNames.includes(d.label || d.name),
-      );
-
-      setSkillsOptions(skillsForOptions);
-      setDomainsOptions(domainsForOptions);
-
-      setSkillsAndDomainsLoaded(true);
-    } catch (error) {
-      console.error('Error fetching skills and domains:', error);
-      notifyError(
-        'Could not load skills and domains. Please ensure you have added skills to your main profile.',
-        'Error',
-      );
-    }
-  };
-
-  const fetchFreelancerProjects = async () => {
     try {
       const freelancerResponse = await axiosInstance.get(
         `/freelancer/${user.uid}`,
@@ -348,6 +293,71 @@ export default function ProfileDetailPage() {
     } catch (error) {
       console.error('Error fetching freelancer projects:', error);
     }
+  }, [user.uid]);
+
+  useEffect(() => {
+    if (profileId && user.uid) {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          await fetchSkillsAndDomains();
+          await fetchProfile();
+          await fetchFreelancerProjects();
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchData();
+    }
+  }, [
+    profileId,
+    user.uid,
+    fetchSkillsAndDomains,
+    fetchProfile,
+    fetchFreelancerProjects,
+  ]);
+
+  const getSkillNameById = (skillId: string) => {
+    if (!skillId || !skillsOptions || skillsOptions.length === 0) {
+      return skillId || '';
+    }
+    const skill = skillsOptions.find((s: any) => s._id === skillId);
+    return skill ? skill.label || skill.name : skillId;
+  };
+
+  const getDomainNameById = (domainId: string) => {
+    if (!domainId || !domainsOptions || domainsOptions.length === 0) {
+      return domainId || '';
+    }
+    const domain = domainsOptions.find((d: any) => d._id === domainId);
+    return domain ? domain.label || domain.name : domainId;
+  };
+
+  const transformProfileForAPI = (profileData: any) => {
+    const transformedSkills =
+      profileData.skills?.map((skill: any) => {
+        if (typeof skill === 'string') {
+          return skill;
+        }
+        return skill._id;
+      }) || [];
+
+    const transformedDomains =
+      profileData.domains?.map((domain: any) => {
+        if (typeof domain === 'string') {
+          return domain;
+        }
+        return domain._id;
+      }) || [];
+
+    return {
+      ...profileData,
+      skills: transformedSkills,
+      domains: transformedDomains,
+    };
   };
 
   const handleUpdateProfile = async () => {
@@ -449,23 +459,37 @@ export default function ProfileDetailPage() {
     }
   };
 
-  const handleRemoveExperience = async (experienceId: string) => {
-    if (!profile?._id) return;
-
+  const handleRemoveExperience = async (id: string) => {
     try {
-      const updatedExperiences = (editingProfileData.experiences || []).filter(
-        (experience: any) => experience._id !== experienceId,
+      const updatedExperiences = editingProfileData.experiences.filter(
+        (exp: any) => exp._id !== id,
       );
+
+      await axiosInstance.put(`/freelancer/profile/${profileId}`, {
+        experiences: updatedExperiences.map((e: any) => ({
+          _id: e._id,
+          jobTitle: e.jobTitle,
+          company: e.company,
+          workDescription: e.workDescription,
+          workFrom: e.workFrom,
+          workTo: e.workTo,
+          referencePersonName: e.referencePersonName,
+        })),
+      });
 
       setEditingProfileData((prev: any) => ({
         ...prev,
         experiences: updatedExperiences,
       }));
-
       const updatePayload = transformProfileForAPI({
         ...editingProfileData,
         experiences: updatedExperiences,
       });
+
+      if (!profile) {
+        console.error('Profile is null, cannot update profile');
+        return; // or handle gracefully (e.g., show toast, redirect, etc.)
+      }
 
       await axiosInstance.put(
         `/freelancer/profile/${profile._id}`,
@@ -1352,124 +1376,144 @@ export default function ProfileDetailPage() {
                 )}
               </CardContent>
             </Card>
-
-            <Card className="bg-muted-foreground/20 dark:bg-muted/20">
+            <Card className="bg-muted-foreground/20 dark:bg-black/20">
               <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-xl font-semibold">
-                    Experience
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground hidden md:block">
-                    Relevant roles and responsibilities you have handled.
-                  </p>
-                  {isEditMode ? (
+                <div className="flex justify-between items-center w-full">
+                  <div>
+                    <CardTitle className="text-xl font-semibold">
+                      Experience
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground hidden md:block">
+                      Relevant roles and responsibilities you have handled.
+                    </p>
+                  </div>
+                  {isEditMode && (
                     <Button
                       variant="outline"
                       onClick={() => setShowExperienceDialog(true)}
                       className="flex items-center gap-2"
                     >
-                      <Plus className="h-4 w-4" />
-                      Add Experience
+                      <Plus className="h-4 w-4" /> Add Experience
                     </Button>
-                  ) : null}
+                  )}
                 </div>
               </CardHeader>
+
               <CardContent>
                 {editingProfileData.experiences &&
                 editingProfileData.experiences.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {editingProfileData.experiences.map(
-                      (experience: any, index: number) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {editingProfileData.experiences.map((experience: any) => {
+                      // Ensure dates are Date objects
+                      const workFrom = new Date(experience.workFrom);
+                      const workTo = experience.workTo
+                        ? new Date(experience.workTo)
+                        : null;
+
+                      return (
                         <Card
-                          key={experience._id || index}
-                          className="p-4 bg-background border"
+                          key={experience._id}
+                          className="relative p-3 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm aspect-square flex flex-col justify-between transition-all"
                         >
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-lg mb-1">
+                          {/* Delete Icon */}
+                          {isEditMode && (
+                            <div className="absolute top-2 right-2">
+                              <Trash2
+                                className="h-4 w-4 text-red-500 cursor-pointer hover:text-red-700"
+                                onClick={() =>
+                                  handleRemoveExperience(experience._id)
+                                }
+                              />
+                            </div>
+                          )}
+
+                          <div className="flex flex-col gap-1 h-full justify-between">
+                            <div>
+                              {/* Job Title */}
+                              <h4 className="font-semibold text-md text-gray-900 dark:text-gray-100 line-clamp-2">
                                 {experience.jobTitle || experience.title}
                               </h4>
-                              <p className="text-sm text-muted-foreground mb-2">
+
+                              {/* Company */}
+                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
                                 {experience.company}
                               </p>
-                              <p className="text-xs text-muted-foreground mb-3">
-                                {new Date(
-                                  experience.workFrom,
-                                ).toLocaleDateString('en-US', {
+
+                              {/* Duration */}
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {workFrom.toLocaleDateString('en-US', {
                                   year: 'numeric',
                                   month: 'short',
                                 })}{' '}
                                 -{' '}
-                                {new Date(experience.workTo).toLocaleDateString(
-                                  'en-US',
-                                  {
-                                    year: 'numeric',
-                                    month: 'short',
-                                  },
-                                )}
+                                {workTo
+                                  ? workTo.toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                    })
+                                  : 'Present'}
                               </p>
+
+                              {/* Work Description */}
                               {experience.workDescription && (
-                                <p className="text-sm text-foreground">
+                                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mt-1">
                                   {experience.workDescription}
                                 </p>
                               )}
+
+                              {/* Reference */}
+                              {experience.referencePersonName && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                                  Reference: {experience.referencePersonName}
+                                </p>
+                              )}
                             </div>
-                            {isEditMode ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleRemoveExperience(experience._id)
-                                }
-                                className="text-destructive hover:text-destructive/80 ml-2"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            ) : null}
                           </div>
                         </Card>
-                      ),
-                    )}
+                      );
+                    })}
                   </div>
                 ) : (
-                  <Card className="flex flex-col items-center justify-center py-12">
-                    <div className="mb-4 opacity-70">
-                      <svg
-                        width="72"
-                        height="72"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M6 7H18V17C18 18.105 17.105 19 16 19H8C6.895 19 6 18.105 6 17V7Z"
-                          stroke="#9CA3AF"
-                          strokeWidth="1.5"
-                        />
-                        <path
-                          d="M9 7V5C9 3.895 9.895 3 11 3H13C14.105 3 15 3.895 15 5V7"
-                          stroke="#9CA3AF"
-                          strokeWidth="1.5"
-                        />
-                      </svg>
-                    </div>
-                    <p className="text-muted-foreground mb-4">
+                  <Card className="flex flex-col items-center justify-center py-12 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm">
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
                       No experience added to this profile yet
                     </p>
-                    {isEditMode ? (
+                    {isEditMode && (
                       <Button
                         variant="outline"
                         onClick={() => setShowExperienceDialog(true)}
                         className="flex items-center gap-2"
                       >
-                        <Plus className="h-4 w-4" />
-                        Add Experience
+                        <Plus className="h-4 w-4" /> Add Experience
                       </Button>
-                    ) : null}
+                    )}
                   </Card>
                 )}
               </CardContent>
             </Card>
+
+            <ExperienceSelectionDialog
+              open={showExperienceDialog}
+              onOpenChange={setShowExperienceDialog}
+              freelancerId={user.uid}
+              currentProfileId={profileId}
+              onSuccess={(newExperiences) => {
+                setEditingProfileData((prev: any) => {
+                  const existing = Array.isArray(prev.experiences)
+                    ? prev.experiences
+                    : [];
+                  const byId = new Map<string, any>();
+
+                  // Keep existing ones
+                  for (const e of existing) byId.set(String(e._id), e);
+
+                  // Add/overwrite with new ones
+                  for (const e of newExperiences) byId.set(String(e._id), e);
+
+                  return { ...prev, experiences: Array.from(byId.values()) };
+                });
+              }}
+            />
           </div>
         </main>
       </div>
@@ -1492,29 +1536,6 @@ export default function ProfileDetailPage() {
           setPendingProjects(merged);
           // Update UI immediately so user can see the selection reflected
           setEditingProfileData((prev: any) => ({ ...prev, projects: merged }));
-        }}
-      />
-
-      <ExperienceSelectionDialog
-        open={showExperienceDialog}
-        onOpenChange={setShowExperienceDialog}
-        freelancerId={user.uid}
-        currentProfileId={profileId}
-        onSuccess={(selectedExperiences: any[]) => {
-          // Merge with existing full objects and stage until Save
-          const existing = Array.isArray(editingProfileData.experiences)
-            ? editingProfileData.experiences
-            : [];
-          const byId = new Map<string, any>();
-          for (const e of existing) byId.set(String(e._id), e);
-          for (const e of selectedExperiences) byId.set(String(e._id), e);
-          const merged = Array.from(byId.values());
-
-          setPendingExperiences(merged);
-          setEditingProfileData((prev: any) => ({
-            ...prev,
-            experiences: merged,
-          }));
         }}
       />
 
