@@ -30,7 +30,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -42,7 +41,6 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { DialogOverlay } from '../ui/dialog';
 
 interface ProfessionalExperience {
   workFrom?: string;
@@ -113,14 +111,12 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
-
   // NEW: State for skills/domains list, search query, and 'show more' functionality
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
 
   const [skillsSearch, setSkillsSearch] = useState('');
   const [domainsSearch, setDomainsSearch] = useState('');
-
 
   // REMOVED 'location: []' from the initial state
   const [filters, setFilters] = useState<FilterState>({
@@ -250,24 +246,20 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     fetchData(filters);
   }, [activeTab, filters, fetchData]);
 
-useEffect(() => {
-  const handleResize = () => {
-    if (window.innerWidth >= 1024) {
-      setOpen(false); // close sheet
-    }
-  };
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setOpen(false); // close sheet
+      }
+    };
 
-  handleResize(); // run once on mount
-  window.addEventListener("resize", handleResize);
-  return () => window.removeEventListener("resize", handleResize);
-}, []);
-  
+    handleResize(); // run once on mount
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleTabChange = (value: string) => {
     router.push(`/business/talent/${value}`);
-  };
-
-  const handleApplyFilters = () => {
-    fetchData(filters);
   };
 
   // REMOVED 'location: []' from the reset object
