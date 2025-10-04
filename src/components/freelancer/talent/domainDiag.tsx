@@ -48,7 +48,6 @@ interface SkillDomainData {
 
 interface DomainDialogProps {
   domains: Domain[];
-  setDomains: any;
   onSuccess: () => void;
 }
 
