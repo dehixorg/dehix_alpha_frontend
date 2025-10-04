@@ -14,6 +14,7 @@ import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpV
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
+import { Filter, PackageOpen } from 'lucide-react';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 

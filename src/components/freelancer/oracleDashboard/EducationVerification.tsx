@@ -16,6 +16,7 @@ import { notifyError } from '@/utils/toastMessage';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
+import { Filter, PackageOpen } from 'lucide-react';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
@@ -35,14 +36,14 @@ interface VerificationEntry {
   verification_status: string;
   comments: string;
   requester_id:string;
-  requester: {
+  Requester: {
    
     username: string;
     email: string;
     firstName: string;
     lastName: string;
   };
-  verifier: {
+  Verifier: {
     username: string;
     email: string;
     firstName: string;
@@ -86,40 +87,46 @@ const OracleDashboard = () => {
       }
 
       const transformedDataPromises = verificationEntries.map(async (entry: VerificationEntry) => {
-        try {
-          const educationResponse = await axiosInstance.get(
-            `/verification/${entry.requester_id}/education`,
-          );
+  try {
+    const educationResponse = await axiosInstance.get(
+      `/verification/${entry.requester_id}/education`,
+    );
 
-          const educationData = educationResponse.data.data && educationResponse.data.data.length > 0
-            ? educationResponse.data.data[0].education
-            : null;
-          
-          if (!educationData) {
-              return null;
-          }
+    const educationData = educationResponse.data.data && educationResponse.data.data.length > 0
+      ? educationResponse.data.data[0].education
+      : null;
 
-          const educationDocsArray = Object.values(educationData) as EducationData[];
+    if (!educationData) {
+      return null;
+    }
 
-          const matchingEducationDoc = educationDocsArray.find(
-            (doc) => doc._id === entry.document_id,
-          );
+    const educationDocsArray = Object.values(educationData) as EducationData[];
 
-          if (matchingEducationDoc) {
-            return {
-              ...matchingEducationDoc,
-              ...entry,
-            };
-          }
-          return null;
-        } catch (error) {
-          console.error(
-            `Failed to fetch education data for requester ID ${entry.requester_id}:`,
-            error,
-          );
-          return null;
-        }
-      });
+    const matchingEducationDoc = educationDocsArray.find(
+      (doc) => doc._id === entry.document_id,
+    );
+
+    if (matchingEducationDoc) {
+      // Add checks to ensure requester and verifier are not undefined
+      const requesterDetails = entry.Requester || {}; // Fallback to an empty object
+      const verifierDetails = entry.Verifier || {}; // Fallback to an empty object
+
+      return {
+        ...matchingEducationDoc,
+        ...entry,
+        requester: entry.Requester,
+        verifier: entry.Verifier,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error(
+      `Failed to fetch education data for requester ID ${entry.requester_id}:`,
+      error,
+    );
+    return null;
+  }
+});
 
       const combinedData = (await Promise.all(transformedDataPromises)).filter(Boolean);
       setEducationData(combinedData);
@@ -209,8 +216,8 @@ const OracleDashboard = () => {
       </Dialog>
 
       <main
-        className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+         className="grid flex-1 items-start gap-6 p-4 md:p-6 lg:p-8 
+             grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-max"
       >
         {filteredData.length > 0 ? (
           filteredData.map((data) => (
@@ -218,8 +225,8 @@ const OracleDashboard = () => {
   key={data.document_id}
   _id={data.document_id}
   type="education"
-  requester={data.requester}
-  verifier={data.verifier}
+  requester={data.Requester}
+  verifier={data.Verifier}
   location={data.universityName}
   degree={data.degree}
   startFrom={data.startDate}
