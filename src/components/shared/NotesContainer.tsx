@@ -83,8 +83,8 @@ const NotesContainer = ({
   ];
 
   return (
-    <div className="w-full p-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {notes.map((note, index) => (
           <NoteCard
             key={note._id}
@@ -124,6 +124,13 @@ const NotesContainer = ({
           onSave={handleSaveEditNote}
           note={selectedNote}
           onClose={handleDialogClose}
+          onArchive={(noteId, toType) => handleUpdateNoteType(noteId, toType)}
+          onDelete={(noteId) => {
+            setIsDeleting(true);
+            setSelectedDeleteNote(
+              notes.find((note) => note._id === noteId) || null,
+            );
+          }}
         />
       )}
       {selectedTypeNote && (
