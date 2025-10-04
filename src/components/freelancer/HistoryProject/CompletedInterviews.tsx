@@ -67,7 +67,7 @@ export default function HistoryInterviews() {
     try {
       setLoading(true);
       const data = await fetchCompletedInterviews(user.uid);
-      
+
       setInterviews(data);
       await fetchInterviewerDetails(data);
     } catch (error) {
@@ -124,7 +124,6 @@ export default function HistoryInterviews() {
       }
 
       setInterviewerDetails(detailsMap);
-
     } catch (error) {
       console.error('Failed to fetch interviewer details:', error);
     }

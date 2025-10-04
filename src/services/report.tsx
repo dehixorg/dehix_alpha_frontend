@@ -20,6 +20,16 @@ export const apiHelperService = {
     });
   },
 
+  uploadReportImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiService({
+      method: Api_Methods.POST,
+      endpoint: '/register/upload-image',
+      body: formData,
+    });
+  },
+
   createReport: async (data: any) => {
     return apiService({
       method: Api_Methods.POST,

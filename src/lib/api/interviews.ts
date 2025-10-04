@@ -139,7 +139,7 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
       InterviewStatus: 'COMPLETED,CANCELLED,REJECTED',
     },
   });
-  
+
   return response.data.data;
 }
 

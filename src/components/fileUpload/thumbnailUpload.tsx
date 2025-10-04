@@ -1,19 +1,10 @@
-import React, { useState, useRef } from 'react';
-import { Upload, X, Loader2 } from 'lucide-react';
-import Image from 'next/image';
+import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-
-const allowedImageFormats = [
-  'image/png',
-  'image/jpeg',
-  'image/jpg',
-  'image/gif',
-  'image/webp',
-];
-const maxImageSize = 5 * 1024 * 1024; // 5MB
+import ImageUploader from '@/components/fileUpload/ImageUploader';
 
 interface ThumbnailUploadProps {
   onThumbnailUpdate?: (thumbnailUrl: string) => void;
@@ -26,43 +17,13 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
   existingThumbnailUrl,
   className = '',
 }) => {
-  const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
-  const [thumbnailPreviewURL, setThumbnailPreviewURL] = useState<string | null>(
-    existingThumbnailUrl || null,
-  );
+  const [selectedThumbnail, setSelectedThumbnail] = useState<
+    File | string | null
+  >(existingThumbnailUrl || null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleThumbnailChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!allowedImageFormats.includes(file.type)) {
-      notifyError(
-        'Please select a valid image file (PNG, JPG, JPEG, GIF, WebP).',
-        'Invalid file type',
-      );
-      return;
-    }
-
-    // Validate file size
-    if (file.size > maxImageSize) {
-      notifyError('Please select an image smaller than 5MB.', 'File too large');
-      return;
-    }
-
-    setSelectedThumbnail(file);
-
-    // Create preview URL
-    const previewURL = URL.createObjectURL(file);
-    setThumbnailPreviewURL(previewURL);
-  };
 
   const handleUploadClick = async () => {
-    if (!selectedThumbnail) return;
+    if (!selectedThumbnail || typeof selectedThumbnail === 'string') return;
 
     const formData = new FormData();
     formData.append('file', selectedThumbnail);
@@ -79,9 +40,8 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
 
       if (!Location) throw new Error('Failed to upload the thumbnail.');
 
-      // Update preview URL with the uploaded URL
-      setThumbnailPreviewURL(Location);
-      setSelectedThumbnail(null);
+      // Update to uploaded URL
+      setSelectedThumbnail(Location);
 
       // Notify parent component if callback provided
       if (onThumbnailUpdate) {
@@ -102,97 +62,49 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
 
   const handleRemoveThumbnail = () => {
     setSelectedThumbnail(null);
-    setThumbnailPreviewURL(null);
 
     if (onThumbnailUpdate) {
       onThumbnailUpdate('');
-    }
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleDivClick = () => {
-    if (!thumbnailPreviewURL && !selectedThumbnail) {
-      fileInputRef.current?.click();
     }
   };
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <div
-        className={`relative border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 transition-colors ${
-          thumbnailPreviewURL ? 'border-solid border-gray-400' : ''
-        }`}
-        onClick={handleDivClick}
-      >
-        {thumbnailPreviewURL ? (
-          <div className="relative">
-            <Image
-              src={thumbnailPreviewURL}
-              alt="Thumbnail preview"
-              width={200}
-              height={150}
-              className="mx-auto rounded-lg object-cover"
-              style={{ maxHeight: '150px', width: 'auto' }}
-            />
+      <ImageUploader
+        label="Project Thumbnail"
+        value={selectedThumbnail}
+        onChange={setSelectedThumbnail}
+        accept={{
+          'image/png': ['.png'],
+          'image/jpeg': ['.jpg', '.jpeg'],
+          'image/gif': ['.gif'],
+          'image/webp': ['.webp'],
+        }}
+        maxSize={5 * 1024 * 1024}
+        previewHeight={200}
+      />
+
+      {selectedThumbnail &&
+        selectedThumbnail instanceof File &&
+        !isUploading && (
+          <div className="flex gap-2">
             <Button
               type="button"
-              variant="destructive"
-              size="sm"
-              className="absolute top-2 right-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemoveThumbnail();
-              }}
+              onClick={handleUploadClick}
+              className="flex-1"
+              disabled={isUploading}
             >
-              <X className="w-4 h-4" />
+              Upload Thumbnail
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleRemoveThumbnail}
+            >
+              Cancel
             </Button>
           </div>
-        ) : (
-          <>
-            <Upload className="text-muted-foreground w-12 h-12 mb-2 mx-auto" />
-            <p className="text-foreground text-center">
-              Click to upload project thumbnail
-            </p>
-            <div className="flex items-center justify-center mt-2">
-              <span className="text-muted-foreground text-xs md:text-sm">
-                Supported formats: PNG, JPG, JPEG, GIF, WebP (Max 2MB)
-              </span>
-            </div>
-          </>
         )}
-
-        <input
-          type="file"
-          accept={allowedImageFormats.join(',')}
-          onChange={handleThumbnailChange}
-          className="hidden"
-          ref={fileInputRef}
-        />
-      </div>
-
-      {selectedThumbnail && !isUploading && (
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            onClick={handleUploadClick}
-            className="flex-1"
-            disabled={isUploading}
-          >
-            Upload Thumbnail
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleRemoveThumbnail}
-          >
-            Cancel
-          </Button>
-        </div>
-      )}
 
       {isUploading && (
         <div className="flex items-center justify-center gap-2">

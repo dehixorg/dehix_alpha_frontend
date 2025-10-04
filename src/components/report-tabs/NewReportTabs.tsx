@@ -2,7 +2,7 @@ import { ReportForm } from '@/components/form/ReportForm';
 
 interface NewReportTabProps {
   reportData: any;
-  onSubmitted?: () => boolean;
+  onSubmitted?: () => boolean | Promise<boolean>;
 }
 
 export const NewReportTab = ({
