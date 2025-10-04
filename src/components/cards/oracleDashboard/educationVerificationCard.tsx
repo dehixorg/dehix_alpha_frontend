@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { MessageSquareIcon, MapPin, MoreVertical, User } from 'lucide-react';
+import { MessageSquareIcon, MapPin, MoreVertical } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -72,7 +72,6 @@ const FormSchema = z.object({
 
 const EducationVerificationCard: React.FC<EducationProps> = ({
   _id,
-  type,
   degree,
   location,
   startFrom,
@@ -142,11 +141,11 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
         <CardTitle className="flex justify-between items-start">
           <div className="flex flex-col space-y-2">
             <p className="text-sm text-gray-400">
-              <span className="font-semibold text-gray-500">Requester:</span>{' '}
+              <span className="font-semibold text-gray-500">Requester: </span>
               {requester?.firstName} {requester?.lastName}
             </p>
             <p className="text-sm text-gray-400">
-              <span className="font-semibold text-gray-500">Verifier:</span>{' '}
+              <span className="font-semibold text-gray-500">Verifier: </span>
               {verifier?.firstName} {verifier?.lastName}
             </p>
           </div>
@@ -200,15 +199,18 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
       <CardContent>
         <div className="mt-2">
           <p className="text-m text-gray-600 mb-2">
-            <span className="text-gray-500 font-semibold">Degree:</span>{' '}
+            <span className="text-gray-500 font-semibold">Degree: </span>
             {degree}
           </p>
           <p className="text-m text-gray-600 mb-2">
-            <span className="text-gray-500 font-semibold">Field Of Study:</span>{' '}
+            <span className="text-gray-500 font-semibold">
+              Field Of Study:{' '}
+            </span>
             {fieldOfStudy}
           </p>
           <p className="text-m text-gray-600 mb-2">
-            <span className="text-gray-500 font-semibold">Grade:</span> {grade}
+            <span className="text-gray-500 font-semibold">Grade: </span>
+            {grade}
           </p>
 
           {comments && (
