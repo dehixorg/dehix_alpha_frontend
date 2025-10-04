@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
-import { MessageSquare, Search, SquarePen, Loader2 } from 'lucide-react';
+import {
+  MessageSquare,
+  Search,
+  SquarePen,
+  Loader2,
+  Archive,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -25,6 +31,8 @@ export interface Conversation extends DocumentData {
     content?: string;
     senderId?: string;
     timestamp?: string;
+    voiceMessage?: boolean;
+    attachments?: Array<{ type?: string }>;
   } | null;
   participantDetails?: {
     [uid: string]: {
@@ -32,6 +40,7 @@ export interface Conversation extends DocumentData {
       profilePic?: string;
       email?: string;
       userType?: 'freelancer' | 'business';
+      viewState?: 'archived' | 'inbox';
     };
   };
   groupName?: string;
@@ -87,12 +96,89 @@ export function ChatList({
 
   const selectedUsers: SelectedUser[] = [];
   const [isSearching, setIsSearching] = useState(false);
+  const [activeView, setActiveView] = useState<'inbox' | 'archived'>('inbox');
 
   const stripHtml = (html: string): string =>
     html
       .replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/g, ' ')
       .trim();
+
+  // Utility function to detect and format media messages
+  const formatLastMessage = (
+    lastMessage: Conversation['lastMessage'],
+  ): string => {
+    if (!lastMessage) return 'No messages yet';
+    const content = lastMessage.content;
+    const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
+    // Check if content is an S3 URL
+    if (
+      typeof content === 'string' &&
+      s3BucketUrl &&
+      content.startsWith(s3BucketUrl)
+    ) {
+      try {
+        const url = new URL(content);
+        const fileName = decodeURIComponent(url.pathname.substring(1));
+        const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+        // Check if it's a voice message based on the message type
+        if (lastMessage.voiceMessage) {
+          return '🎤 Voice message';
+        }
+        // Check file extension for different media types
+        const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
+        const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
+        const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac'];
+        const documentExtensions = [
+          'pdf',
+          'doc',
+          'docx',
+          'ppt',
+          'pptx',
+          'xls',
+          'xlsx',
+          'txt',
+        ];
+        if (imageExtensions.includes(fileExtension)) {
+          return '📷 Photo';
+        } else if (videoExtensions.includes(fileExtension)) {
+          return '🎥 Video';
+        } else if (audioExtensions.includes(fileExtension)) {
+          return '🎵 Audio';
+        } else if (documentExtensions.includes(fileExtension)) {
+          return '📄 Document';
+        } else {
+          return '📎 File';
+        }
+      } catch (error) {
+        console.error('Error parsing S3 URL:', error);
+        return '📎 Attachment';
+      }
+    }
+    // Check if there are attachments
+    if (
+      lastMessage.attachments &&
+      Array.isArray(lastMessage.attachments) &&
+      lastMessage.attachments.length > 0
+    ) {
+      const attachment = lastMessage.attachments[0];
+      if (attachment.type) {
+        if (attachment.type.startsWith('image/')) {
+          return '📷 Photo';
+        } else if (attachment.type.startsWith('video/')) {
+          return '🎥 Video';
+        } else if (attachment.type.startsWith('audio/')) {
+          return '🎵 Audio';
+        } else {
+          return '📄 Document';
+        }
+      }
+      return '📎 File';
+    }
+    // Return stripped HTML content for regular text messages
+    const textContent = content ? stripHtml(content) : '';
+    return textContent || 'Message';
+  };
 
   const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
     e.stopPropagation();
@@ -165,16 +251,36 @@ export function ChatList({
     return () => clearInterval(intervalId);
   }, [updateLastUpdated]);
 
-  const filteredConversations = conversations.filter(
-    (conversation: Conversation) => {
-      const name = conversation.project_name || 'Unnamed Project';
-      const lastMessageContent = conversation.lastMessage?.content || '';
+  const handleOpenArchivedChats = () => {
+    setActiveView('archived');
+  };
+
+  const handleOpenInbox = () => {
+    setActiveView('inbox');
+  };
+
+  const displayedConversations = conversations
+    .filter((conversation) => {
+      const userDetails = conversation.participantDetails?.[currentUser.uid];
+      if (activeView === 'archived') {
+        return userDetails?.viewState === 'archived';
+      } else {
+        return userDetails?.viewState !== 'archived';
+      }
+    })
+    .filter((conversation) => {
+      const name =
+        conversation.groupName ||
+        conversation.participantDetails?.[
+          conversation.participants.find((p) => p !== currentUser.uid) || ''
+        ]?.userName ||
+        '';
+      const lastMessageContent = formatLastMessage(conversation.lastMessage);
       return (
         name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    },
-  );
+    });
 
   return (
     <div className="flex flex-col h-full bg-[hsl(var(--card))]">
@@ -186,6 +292,14 @@ export function ChatList({
             onClick={onOpenNewChatDialog}
           >
             <SquarePen className="h-4 w-4 mr-2" /> New Chat
+          </Button>
+          <Button
+            variant="outline"
+            className="flex items-center justify-center text-sm px-3 py-2 rounded-full shadow-lg"
+            onClick={handleOpenArchivedChats}
+            aria-label="View archived chats"
+          >
+            <Archive className="h-4 w-4" />
           </Button>
         </div>
         <div className="relative">
@@ -202,6 +316,18 @@ export function ChatList({
           />
         </div>
       </div>
+
+      {activeView === 'archived' && (
+        <div className="p-3 text-center border-b border-[hsl(var(--border))]">
+          <div className="flex items-center justify-between">
+            <Button variant="link" onClick={handleOpenInbox}>
+              &larr; Back to Inbox
+            </Button>
+            <h3 className="font-semibold text-lg">Archived Chats</h3>
+            <div style={{ width: '95px' }}></div>
+          </div>
+        </div>
+      )}
 
       <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="p-2 space-y-2">
@@ -273,15 +399,14 @@ export function ChatList({
             </div>
           ) : (
             <>
-              {filteredConversations.length > 0 ? (
-                filteredConversations.map((conversation) => {
+              {displayedConversations.length > 0 ? (
+                displayedConversations.map((conversation) => {
                   const lastUpdated =
                     lastUpdatedTimes[conversation.id] || 'N/A';
                   const isActive = active?.id === conversation.id;
-                  const lastMessageText = stripHtml(
-                    conversation.lastMessage?.content || '',
+                  const displayText = formatLastMessage(
+                    conversation.lastMessage,
                   );
-                  const displayText = lastMessageText || 'No messages yet';
 
                   return (
                     <div

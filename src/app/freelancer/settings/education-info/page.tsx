@@ -12,7 +12,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
 import Header from '@/components/header/header';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
 export default function Education() {
   const user = useSelector((state: RootState) => state.user);
@@ -51,7 +51,16 @@ export default function Education() {
       isMounted = false;
     };
   }, [user.uid, refresh]);
-
+  const handleDelete = async (educationId: string) => {
+    try {
+      await axiosInstance.delete(`/freelancer/education/${educationId}`);
+      notifySuccess('Education record deleted successfully!');
+      // Trigger a refresh to update the UI
+      setRefresh((prev) => !prev);
+    } catch (error) {
+      notifyError('Failed to delete education. Please try again.');
+    }
+  };
   return (
     <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
@@ -80,7 +89,7 @@ export default function Education() {
             <EducationInfoCard
               key={index}
               {...education}
-              onDelete={() => education._id}
+              onDelete={handleDelete}
             />
           ))}
           <AddEducation onFormSubmit={handleFormSubmit} />

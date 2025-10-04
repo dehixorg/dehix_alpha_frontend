@@ -45,6 +45,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
   };
 
   const handleDialogClose = () => {
+    // Reset all related states when closing the dialog
     setSelectedNote(null);
     setSelectedDeleteNote(null);
     setSelectedTypeNote(null);

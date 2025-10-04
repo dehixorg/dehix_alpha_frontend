@@ -50,25 +50,26 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
   const getItemLabel = (item: any): string => {
     if (!item) return '';
     if (typeof item === 'string') return item;
-    if (typeof item === 'object') {
-      return (
+    if (typeof item === 'object' && item !== null) {
+      const label =
+        item.label ||
         item.name ||
         item.skillName ||
         item.domainName ||
-        item.label ||
         item.title ||
         item.value ||
         item.text ||
-        ''
-      );
+        '';
+      // Ensure we return a string, not an object
+      return label ? String(label) : '';
     }
     return String(item);
   };
 
   const renderSkillBadges = (items: any[]) => {
     const labels = (Array.isArray(items) ? items : [])
-      .map(getItemLabel)
-      .filter(Boolean);
+      .map((item) => getItemLabel(item))
+      .filter((label) => label && label.trim() !== '');
     if (labels.length === 0) {
       return (
         <div>
@@ -83,7 +84,7 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
         <div className="flex flex-wrap gap-1">
           {labels.slice(0, 3).map((label: string, index: number) => (
             <Badge key={index} variant="secondary" className="text-xs">
-              {label}
+              {String(label)}
             </Badge>
           ))}
           {labels.length > 3 && (
@@ -98,8 +99,8 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
 
   const renderDomainBadges = (items: any[]) => {
     const labels = (Array.isArray(items) ? items : [])
-      .map(getItemLabel)
-      .filter(Boolean);
+      .map((item) => getItemLabel(item))
+      .filter((label) => label && label.trim() !== '');
     if (labels.length === 0) {
       return (
         <div>
@@ -185,7 +186,7 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
                   </DropdownMenu>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2 min-h-[40px]">
                 {description && description.length > 140
                   ? `${description.substring(0, 140)}...`
                   : description || 'No description available'}
@@ -194,12 +195,16 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
           </div>
         </CardHeader>
 
-        <CardContent className="px-6 py-4 space-y-4 flex-1 flex flex-col">
-          <div className="flex-1 space-y-4">
-            <div className="min-h-[60px]">{renderSkillBadges(skills)}</div>
-            <div className="min-h-[60px]">{renderDomainBadges(domains)}</div>
+        <CardContent className="px-6 py-4 flex flex-col h-[320px]">
+          <div className="space-y-3 flex-1">
+            <div className="h-[70px] overflow-hidden">
+              {renderSkillBadges(skills)}
+            </div>
+            <div className="h-[70px] overflow-hidden">
+              {renderDomainBadges(domains)}
+            </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-2 gap-3 text-sm h-[60px]">
               <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50 flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30">
                   <Briefcase className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -222,7 +227,7 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
               </div>
             </div>
 
-            <div className="text-sm min-h-[20px]">
+            <div className="text-sm h-[24px] flex items-center">
               {hourlyRate ? (
                 <>
                   <span className="font-medium">Rate: </span>
@@ -235,8 +240,6 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
               )}
             </div>
           </div>
-
-          <div className="pt-2 mt-auto" />
         </CardContent>
 
         {/* Hover effect border */}

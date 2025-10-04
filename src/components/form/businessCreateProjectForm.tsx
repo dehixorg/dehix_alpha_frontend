@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, Save, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 
@@ -23,20 +23,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 
 const profileFormSchema = z.object({
   projectName: z
@@ -64,7 +57,9 @@ const profileFormSchema = z.object({
     .array(
       z.object({
         profileType: z.enum(['FREELANCER', 'CONSULTANT']),
-        domain: z.string().min(1, { message: 'Domain is required.' }),
+        domain: z
+          .array(z.string().min(1, { message: 'Domain cannot be empty.' }))
+          .min(1, { message: 'At least one domain is required.' }),
         description: z.string().optional(),
         freelancersRequired: z
           .string()
@@ -84,7 +79,7 @@ const profileFormSchema = z.object({
               parseInt(val, 10) <= 40,
             { message: 'Experience must be a number between 0 and 40.' },
           ),
-        domain_id: z.string().min(1, { message: 'Domain ID is required.' }),
+        domain_id: z.string().optional(),
         minConnect: z
           .string()
           .refine((val) => /^\d+$/.test(val) && parseInt(val, 10) > 0, {
@@ -212,7 +207,7 @@ const defaultValues: Partial<ProfileFormValues> = {
   description: '',
   profiles: [
     {
-      domain: '',
+      domain: [],
       freelancersRequired: '',
       skills: [],
       experience: '',
@@ -239,11 +234,10 @@ export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any[]>([]);
   const [currSkills, setCurrSkills] = useState<any[]>([]);
-  const [tmpSkill, setTmpSkill] = useState('');
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any[]>([]);
-  const [tmpProjectDomains, setTmpProjectDomains] = useState('');
+  const [currDomains, setCurrDomains] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [profileType, setProfileType] = useState<'Freelancer' | 'Consultant'>(
     'Freelancer',
@@ -319,48 +313,44 @@ export function CreateProjectBusinessForm() {
   }, []);
 
   // Project domain handlers
-  const handleAddProjectDomain = () => {
-    if (tmpProjectDomains && !currProjectDomains.includes(tmpProjectDomains)) {
-      const updatedDomains = [...currProjectDomains, tmpProjectDomains];
+  const handleAddProjectDomain = (val: string) => {
+    if (val && !currProjectDomains.includes(val)) {
+      const updatedDomains = [...currProjectDomains, val];
       setCurrProjectDomains(updatedDomains);
-      setTmpProjectDomains('');
       form.setValue('projectDomain', updatedDomains);
     }
   };
 
-  const handleDeleteProjectDomain = (domainToDelete: string) => {
+  const handleRemoveProjectDomain = (val: string) => {
     const updatedDomains = currProjectDomains.filter(
-      (domain) => domain !== domainToDelete,
+      (domain) => domain !== val,
     );
     setCurrProjectDomains(updatedDomains);
     form.setValue('projectDomain', updatedDomains);
   };
 
   // Skills handlers
-  const handleAddSkill = (profileIndex: number) => {
-    if (tmpSkill.trim() !== '') {
-      setCurrSkills((prevSkills) => {
-        const updatedSkills = [...prevSkills];
-        if (!updatedSkills[profileIndex]) updatedSkills[profileIndex] = [];
-        if (!updatedSkills[profileIndex].includes(tmpSkill)) {
-          updatedSkills[profileIndex].push(tmpSkill);
-        }
-        form.setValue(
-          `profiles.${profileIndex}.skills`,
-          updatedSkills[profileIndex],
-        );
-        return updatedSkills;
-      });
-      setTmpSkill('');
-    }
+  const handleAddSkill = (profileIndex: number, val: string) => {
+    setCurrSkills((prevSkills) => {
+      const updatedSkills = [...prevSkills];
+      if (!updatedSkills[profileIndex]) updatedSkills[profileIndex] = [];
+      if (!updatedSkills[profileIndex].includes(val)) {
+        updatedSkills[profileIndex].push(val);
+      }
+      form.setValue(
+        `profiles.${profileIndex}.skills`,
+        updatedSkills[profileIndex],
+      );
+      return updatedSkills;
+    });
   };
 
-  const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
+  const handleRemoveSkill = (profileIndex: number, val: string) => {
     setCurrSkills((prevSkills) => {
       const updatedSkills = [...prevSkills];
       if (updatedSkills[profileIndex]) {
         updatedSkills[profileIndex] = updatedSkills[profileIndex].filter(
-          (skill: string) => skill !== skillToDelete,
+          (skill: string) => skill !== val,
         );
         form.setValue(
           `profiles.${profileIndex}.skills`,
@@ -368,6 +358,57 @@ export function CreateProjectBusinessForm() {
         );
       }
       return updatedSkills;
+    });
+  };
+
+  // Profile domain handlers
+  const handleAddProfileDomain = (profileIndex: number, val: string) => {
+    setCurrDomains((prevDomains) => {
+      const updatedDomains = [...prevDomains];
+      if (!updatedDomains[profileIndex]) updatedDomains[profileIndex] = [];
+      if (!updatedDomains[profileIndex].includes(val)) {
+        updatedDomains[profileIndex].push(val);
+      }
+      form.setValue(
+        `profiles.${profileIndex}.domain`,
+        updatedDomains[profileIndex],
+      );
+      // Optionally set domain_id if needed
+      const selectedDomain = domains.find((d: any) => d.label === val);
+      form.setValue(
+        `profiles.${profileIndex}.domain_id`,
+        selectedDomain?.domain_id || '',
+      );
+      return updatedDomains;
+    });
+  };
+
+  const handleRemoveProfileDomain = (profileIndex: number, val: string) => {
+    setCurrDomains((prevDomains) => {
+      const updatedDomains = [...prevDomains];
+      if (updatedDomains[profileIndex]) {
+        updatedDomains[profileIndex] = updatedDomains[profileIndex].filter(
+          (domain: string) => domain !== val,
+        );
+        form.setValue(
+          `profiles.${profileIndex}.domain`,
+          updatedDomains[profileIndex],
+        );
+        if (updatedDomains[profileIndex].length === 0) {
+          form.setValue(`profiles.${profileIndex}.domain_id`, '');
+        } else {
+          // Recompute domain_id to match one of the remaining domains
+          const nextDomainLabel = updatedDomains[profileIndex][0];
+          const nextDomain = domains.find(
+            (d: any) => d.label === nextDomainLabel,
+          );
+          form.setValue(
+            `profiles.${profileIndex}.domain_id`,
+            nextDomain?.domain_id || '',
+          );
+        }
+      }
+      return updatedDomains;
     });
   };
 
@@ -384,6 +425,7 @@ export function CreateProjectBusinessForm() {
       (profile: any, index: number) => ({
         ...profile,
         skills: Array.isArray(currSkills[index]) ? currSkills[index] : [],
+        domain: Array.isArray(currDomains[index]) ? currDomains[index] : [],
       }),
     );
     const DraftData = { ...formValues, profiles: DraftProfile };
@@ -401,6 +443,11 @@ export function CreateProjectBusinessForm() {
         setCurrSkills(
           parsedDraft.profiles?.map((profile: any) =>
             Array.isArray(profile.skills) ? profile.skills : [],
+          ) || [],
+        );
+        setCurrDomains(
+          parsedDraft.profiles?.map((profile: any) =>
+            Array.isArray(profile.domain) ? profile.domain : [],
           ) || [],
         );
         notifySuccess('Your saved draft has been loaded.', 'Draft loaded');
@@ -443,9 +490,10 @@ export function CreateProjectBusinessForm() {
         new Set(currSkills.flat().filter(Boolean)),
       );
       const profilesWithFormattedBudget = (data.profiles || []).map(
-        (profile) => ({
+        (profile, idx) => ({
           ...profile,
           budget: getBudgetForAPI(profile.budget),
+          domain: currDomains[idx] || [],
         }),
       );
       const payload = {
@@ -484,6 +532,7 @@ export function CreateProjectBusinessForm() {
     form.reset(defaultValues);
     setCurrProjectDomains([]);
     setCurrSkills([]);
+    setCurrDomains([]);
   }
 
   // Step navigation
@@ -711,59 +760,21 @@ export function CreateProjectBusinessForm() {
           <FormItem className="col-span-2">
             <FormLabel>Project Domain</FormLabel>
             <FormControl>
-              <div>
-                <div className="flex items-center mt-2">
-                  <Select
-                    onValueChange={setTmpProjectDomains}
-                    value={tmpProjectDomains || ''}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          tmpProjectDomains || 'Select project domain'
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projectDomains
-                        .filter(
-                          (d: any) => !currProjectDomains.includes(d.label),
-                        )
-                        .map((d: any, idx: number) => (
-                          <SelectItem key={idx} value={d.label}>
-                            {d.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    size="icon"
-                    className="ml-2"
-                    onClick={handleAddProjectDomain}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap mt-5">
-                  {currProjectDomains.map((domain, idx) => (
-                    <Badge
-                      className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                      key={idx}
-                    >
-                      {domain}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteProjectDomain(domain)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+              <SelectTagPicker
+                label="Project Domain"
+                options={projectDomains.map((d: any) => ({
+                  label: d.label,
+                  _id: d.value,
+                }))}
+                selected={currProjectDomains.map((d: string) => ({ name: d }))}
+                onAdd={handleAddProjectDomain}
+                onRemove={handleRemoveProjectDomain}
+                className="w-full"
+                optionLabelKey="label"
+                selectedNameKey="name"
+                selectPlaceholder="Select project domain"
+                searchPlaceholder="Search domains..."
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -891,37 +902,30 @@ export function CreateProjectBusinessForm() {
               <FormField
                 control={form.control}
                 name={`profiles.${index}.domain`}
-                render={({ field }) => (
+                render={() => (
                   <FormItem className="mb-4">
-                    <FormLabel>Profile Domain</FormLabel>
                     <FormControl>
-                      <Select
-                        onValueChange={(value) => {
-                          const selectedDomain = domains.find(
-                            (d: any) => d.label === value,
-                          );
-                          form.setValue(
-                            `profiles.${index}.domain`,
-                            selectedDomain?.label || '',
-                          );
-                          form.setValue(
-                            `profiles.${index}.domain_id`,
-                            selectedDomain?.domain_id || '',
-                          );
-                        }}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select domain" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {domains.map((domain: any, i: number) => (
-                            <SelectItem key={i} value={domain.label}>
-                              {domain.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SelectTagPicker
+                        label="Profile Domain"
+                        options={domains.map((d: any) => ({
+                          label: d.label,
+                          _id: d.value,
+                        }))}
+                        selected={(currDomains[index] || []).map(
+                          (d: string) => ({
+                            name: d,
+                          }),
+                        )}
+                        onAdd={(val) => handleAddProfileDomain(index, val)}
+                        onRemove={(val) =>
+                          handleRemoveProfileDomain(index, val)
+                        }
+                        className="w-full"
+                        optionLabelKey="label"
+                        selectedNameKey="name"
+                        selectPlaceholder="Select domain"
+                        searchPlaceholder="Search domains..."
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -950,53 +954,24 @@ export function CreateProjectBusinessForm() {
                 name={`profiles.${index}.skills`}
                 render={() => (
                   <FormItem className="mb-4">
-                    <FormLabel>Skills</FormLabel>
                     <FormControl>
-                      <div>
-                        <div className="flex items-center mt-2">
-                          <Select
-                            onValueChange={setTmpSkill}
-                            value={tmpSkill || ''}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select skill" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {skills.map((skill: any, i: number) => (
-                                <SelectItem key={i} value={skill.label}>
-                                  {skill.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            type="button"
-                            size="icon"
-                            className="ml-2"
-                            onClick={() => handleAddSkill(index)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap mt-5">
-                          {currSkills[index]?.map((skill: any, i: number) => (
-                            <Badge
-                              className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                              key={i}
-                            >
-                              {skill}
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteSkill(index, skill)}
-                                className="ml-2 text-red-500 hover:text-red-700"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
+                      <SelectTagPicker
+                        label="Skills"
+                        options={skills.map((s: any) => ({
+                          label: s.label,
+                          _id: s.label,
+                        }))}
+                        selected={(currSkills[index] || []).map(
+                          (s: string) => ({ name: s }),
+                        )}
+                        onAdd={(val) => handleAddSkill(index, val)}
+                        onRemove={(val) => handleRemoveSkill(index, val)}
+                        className="w-full"
+                        optionLabelKey="label"
+                        selectedNameKey="name"
+                        selectPlaceholder="Select skills"
+                        searchPlaceholder="Search skills..."
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1069,7 +1044,7 @@ export function CreateProjectBusinessForm() {
             className="mt-2"
             onClick={() =>
               appendProfile({
-                domain: '',
+                domain: [],
                 freelancersRequired: '',
                 skills: [],
                 experience: '',
