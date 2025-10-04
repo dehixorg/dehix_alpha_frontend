@@ -58,11 +58,6 @@ export default function ReportKycUploader({
     };
   }, [frontFile, backFile]);
 
-  const hasFileOrUrl = (v: unknown) =>
-    !!(
-      (typeof v === 'string' && v.trim() !== '') ||
-      (typeof File !== 'undefined' && v instanceof File)
-    );
 
   return (
     <Card className="p-4">
@@ -71,7 +66,7 @@ export default function ReportKycUploader({
           <ImageUploader
             label={undefined}
             value={frontFile}
-            onChange={setFrontFile as any}
+            onChange={setFrontFile}
             accept={{ 'image/*': ['.png', '.jpg', '.jpeg'] }}
             maxSize={5 * 1024 * 1024}
             minSize={1}
@@ -83,7 +78,7 @@ export default function ReportKycUploader({
           <ImageUploader
             label={undefined}
             value={backFile}
-            onChange={setBackFile as any}
+            onChange={setBackFile}
             accept={{ 'image/*': ['.png', '.jpg', '.jpeg'] }}
             maxSize={5 * 1024 * 1024}
             minSize={1}

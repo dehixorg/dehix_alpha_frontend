@@ -101,7 +101,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
         status: data.status,
         type: 'DOMAIN',
       });
-      if (response.status === 200) {
+      if (response.status >= 200 && response.status < 300) {
         reset();
         setOpen(false);
         notifySuccess(
