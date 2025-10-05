@@ -14,25 +14,17 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectTrigger,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-} from '@/components/ui/select';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import SelectTagPicker from '@/components/shared/SelectTagPicker'; // Import your picker
 
-// Define the type for a domain
 interface Domain {
   _id: string;
   label: string;
 }
 
-// Define SkillDomainData based on your form data structure
 interface SkillDomainData {
   uid: string;
   domainId: string;
@@ -43,16 +35,14 @@ interface SkillDomainData {
   status: string;
 }
 
-// Define the props for the DomainDialog component
 interface DomainDialogProps {
   domains: Domain[];
-  onSubmitDomain: (data: SkillDomainData) => void; // Update this type based on your actual data structure
+  onSubmitDomain: (data: SkillDomainData) => void;
 }
 
-// Define the schema for validation
 const domainSchema = z.object({
   label: z.string().nonempty('Please select a domain'),
-  domainId: z.string().nonempty('Domain ID is required'), // Validation for domainId
+  domainId: z.string().nonempty('Domain ID is required'),
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -67,8 +57,9 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   onSubmitDomain,
 }) => {
   const user = useSelector((state: RootState) => state.user);
-  const [open, setOpen] = useState(false); // Manage dialog visibility
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const form = useForm<SkillDomainData>({
     resolver: zodResolver(domainSchema),
     defaultValues: {
@@ -95,7 +86,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     setLoading(true);
     try {
       const response = await axiosInstance.post(`/business/hire-dehixtalent`, {
-        domainId: data.domainId, // This should now be set
+        domainId: data.domainId,
         domainName: data.label,
         businessId: user.uid,
         experience: data.experience,
@@ -105,14 +96,10 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       });
 
       if (response.status === 200) {
-        // Assuming the response contains the newly created talent data including UID
-        const newTalent = response.data.data; // Adjust based on your response structure
-        onSubmitDomain({
-          ...data,
-          uid: newTalent._id, // Update this line to use the UID from the response
-        });
+        const newTalent = response.data.data;
+        onSubmitDomain({ ...data, uid: newTalent._id });
         reset();
-        setOpen(false); // Close the dialog after successful submission
+        setOpen(false);
         notifySuccess(
           'The Talent has been successfully added.',
           'Talent Added',
@@ -122,11 +109,9 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
           10,
         );
-
         const currentConnects =
           Number(localStorage.getItem('DHX_CONNECTS')) || 0;
         const updatedConnects = Math.max(0, currentConnects - connectsCost);
-
         localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
         window.dispatchEvent(new Event('connectsUpdated'));
       }
@@ -135,7 +120,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       reset();
       notifyError('Failed to add talent. Please try again.', 'Error');
     } finally {
-      setLoading(false); // Ensure this runs after all logic
+      setLoading(false);
     }
   };
 
@@ -151,7 +136,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Add Domain</DialogTitle>
           <DialogDescription>
-            Select a domain, enter your experience and monthly pay.
+            Select a domain, enter your experience and description.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -160,36 +145,29 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               control={control}
               name="label"
               render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={(selectedLabel) => {
-                    // Find the selected domain by label
-                    const selectedDomain = domains.find(
-                      (domain) => domain.label === selectedLabel,
-                    );
-
-                    // Set label and domainId in form
-                    field.onChange(selectedLabel); // Set label
-                    setValue('domainId', selectedDomain?._id || ''); // Set domainId
+                <SelectTagPicker
+                  label="Domains"
+                  options={domains}
+                  selected={field.value ? [{ name: field.value }] : []} // Convert to expected format
+                  onAdd={(val) => {
+                    field.onChange(val); // Update label
+                    const selectedDomain = domains.find((d) => d.label === val);
+                    setValue('domainId', selectedDomain?._id || '');
                   }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a domain" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {domains.map((domain) => (
-                      <SelectItem key={domain._id} value={domain.label}>
-                        {domain.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onRemove={() => {
+                    field.onChange('');
+                    setValue('domainId', '');
+                  }}
+                  selectPlaceholder="Select domain"
+                  searchPlaceholder="Search domain"
+                />
               )}
             />
+            {errors.label && (
+              <p className="text-red-600">{errors.label.message}</p>
+            )}
           </div>
-          {errors.label && (
-            <p className="text-red-600">{errors.label.message}</p>
-          )}
+
           <div className="mb-3">
             <Controller
               control={control}
@@ -201,7 +179,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                     placeholder="Experience (years)"
                     min={0}
                     max={50}
-                    step={0.1} //Allow decimals
+                    step={0.1}
                     {...field}
                     className="border p-2 rounded mt-0 w-full"
                   />
@@ -211,10 +189,11 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                 </div>
               )}
             />
+            {errors.experience && (
+              <p className="text-red-600">{errors.experience.message}</p>
+            )}
           </div>
-          {errors.experience && (
-            <p className="text-red-600">{errors.experience.message}</p>
-          )}
+
           <Controller
             control={control}
             name="description"
@@ -230,6 +209,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           {errors.description && (
             <p className="text-red-600">{errors.description.message}</p>
           )}
+
           <ConnectsDialog
             form={form}
             loading={loading}

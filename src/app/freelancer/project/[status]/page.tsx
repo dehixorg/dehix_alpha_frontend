@@ -200,6 +200,7 @@ export default function ProjectPage() {
   useEffect(() => {
     const parts = pathname.split('/');
     const tabFromUrl = parts[parts.length - 1];
+    console.log(tabFromUrl);
     if (['current', 'applied', 'completed', 'rejected'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     } else {

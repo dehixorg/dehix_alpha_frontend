@@ -176,7 +176,7 @@ export function ChatList({
       return '📎 File';
     }
     // Return stripped HTML content for regular text messages
-    const textContent = stripHtml(content);
+    const textContent = content ? stripHtml(content) : '';
     return textContent || 'Message';
   };
 

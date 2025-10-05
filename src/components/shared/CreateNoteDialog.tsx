@@ -65,9 +65,9 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className="gap-2" aria-label="Add note" size="sm">
           <Plus className="h-4 w-4" />
-          Add
+          <span className="hidden sm:inline">Add</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

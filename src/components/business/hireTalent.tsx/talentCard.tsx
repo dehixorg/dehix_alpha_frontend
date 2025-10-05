@@ -76,7 +76,9 @@ interface Projects {
 interface DehixTalent {
   freelancer_id: any;
   _id: string;
+  type: string;
   skillName?: string;
+  talentName?: string;
   domainName?: string;
   experience: string;
   monthlyPay: string;
@@ -128,7 +130,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
   domainFilter,
   skillDomainFormProps,
 }) => {
-  const [filteredTalents, setFilteredTalents] = useState<Talent[]>([]);
   const [talents, setTalents] = useState<Talent[]>([]);
   const skipRef = useRef(0);
   const [loading, setLoading] = useState(false);
@@ -165,7 +166,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
       setTmpSkill('');
     }
   };
-
+  const handleDeleteSkill = (skillToDelete: string) => {
+    setCurrSkills(
+      currSkills.filter((skill: any) => skill.name !== skillToDelete),
+    );
+  };
   useEffect(() => {
     const fetchSkillsAndDomains = async () => {
       try {
@@ -299,12 +304,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
     fetchUserData();
   }, [fetchUserData]);
 
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(
-      currSkills.filter((skill: any) => skill.name !== skillToDelete),
-    );
-  };
-
   const fetchTalentData = useCallback(
     async (newSkip = skipRef.current, reset = false) => {
       if (isRequestInProgress.current) return;
@@ -312,12 +311,24 @@ const TalentCard: React.FC<TalentCardProps> = ({
       try {
         isRequestInProgress.current = true;
         setLoading(true);
+        const params: any = {
+          limit: Dehix_Talent_Card_Pagination.BATCH,
+          skip: newSkip,
+        };
+
+        // If a skill is selected, set the type to SKILL and pass the name
+        if (skillFilter && skillFilter !== 'all') {
+          params.talentType = 'SKILL';
+          params.talentName = skillFilter;
+        }
+        // Otherwise, if a domain is selected, set the type to DOMAIN and pass the name
+        else if (domainFilter && domainFilter !== 'all') {
+          params.talentType = 'DOMAIN';
+          params.talentName = domainFilter;
+        }
 
         const response = await axiosInstance.get('freelancer/dehixtalent', {
-          params: {
-            limit: Dehix_Talent_Card_Pagination.BATCH,
-            skip: newSkip,
-          },
+          params, // Pass the dynamic params object
         });
 
         const fetchedData = response?.data?.data || [];
@@ -348,10 +359,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
         isRequestInProgress.current = false;
       }
     },
-    [],
+    [skillFilter, domainFilter], // Add filters to dependency array
   );
 
-  // Function to reset state when filters change
   const resetAndFetchData = useCallback(() => {
     setTalents([]);
     skipRef.current = 0;
@@ -359,37 +369,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
     fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
   }, [fetchTalentData]);
 
-  // Reload cards when filter changes
+  // This useEffect now triggers a new API call when filters change.
   useEffect(() => {
     resetAndFetchData();
-  }, [resetAndFetchData]);
-
-  // Apply the filters to the talents
-  useEffect(() => {
-    const filtered = talents.filter((talent) => {
-      if (skillFilter == 'all' && domainFilter == 'all') {
-        return true;
-      } else if (
-        skillFilter == 'all' &&
-        domainFilter == talent.dehixTalent.domainName
-      ) {
-        return true;
-      } else if (
-        skillFilter == talent.dehixTalent.skillName &&
-        domainFilter == 'all'
-      ) {
-        return true;
-      } else if (
-        skillFilter == talent.dehixTalent.skillName ||
-        domainFilter == talent.dehixTalent.domainName
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    });
-    setFilteredTalents(filtered);
-  }, [skillFilter, domainFilter, talents]);
+  }, [skillFilter, domainFilter]); // Trigger reset when filters change
 
   const handleAddToLobby = async (freelancerId: string) => {
     const matchedTalentIds: string[] = [];
@@ -433,15 +416,17 @@ const TalentCard: React.FC<TalentCardProps> = ({
       setIsLoading(false);
     }
   };
-
   return (
     <div className="flex flex-wrap mt-4 justify-center gap-4">
-      {filteredTalents.map((talent) => {
+      {/* Map directly over 'talents' instead of 'filteredTalents' */}
+      {talents.map((talent) => {
         const talentEntry = talent.dehixTalent;
         const education = talent.education;
         const projects = talent.projects;
-        const label = talentEntry.skillName ? 'Skill' : 'Domain';
-        const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
+        // const label = talentEntry.skillName ? 'Skill' : 'Domain';
+        const label = talentEntry.type === 'SKILL' ? 'Skill' : 'Domain';
+        // const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
+        const value = talentEntry.talentName || 'N/A';
         const isInvited = invitedTalents.has(talentEntry._id);
 
         return (
@@ -516,9 +501,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               <TooltipContent side="top">Expand</TooltipContent>
                             </Tooltip>
                           </SheetTitle>
-                          {/* <SheetDescription className="py-2">
-                            Some description about the Talents
-                          </SheetDescription> */}
                         </SheetHeader>
 
                         <div className="grid gap-4 py-2">
@@ -552,7 +534,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                     className={`w-5 h-5 ${talent.Github ? 'text-blue-500' : 'text-gray-500'}`}
                                   />
                                 </a>
-
                                 {/* LinkedIn */}
                                 <a
                                   href={talent.LinkedIn || '#'}
@@ -674,24 +655,28 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               Skills
                             </AccordionTrigger>
                             <AccordionContent className="p-4 transition-all duration-300">
-                              {talentEntry.skillName
+                              {/* {talentEntry.skillName
                                 ? talentEntry.skillName
+                                : 'N/A'} */}
+                              {talentEntry.type === 'SKILL'
+                                ? talentEntry.talentName
                                 : 'N/A'}
                             </AccordionContent>
                           </AccordionItem>
-
                           {/* Domain Accordion */}
                           <AccordionItem value="domain">
                             <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
                               Domain
                             </AccordionTrigger>
                             <AccordionContent className="p-4 transition-all duration-300">
-                              {talentEntry.domainName
+                              {/* {talentEntry.domainName
                                 ? talentEntry.domainName
+                                : 'N/A'} */}
+                              {talentEntry.type === 'DOMAIN'
+                                ? talentEntry.talentName
                                 : 'N/A'}
                             </AccordionContent>
                           </AccordionItem>
-
                           {/* Experience Accordion */}
                           <AccordionItem value="experience">
                             <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
@@ -756,6 +741,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           </Card>
         );
       })}
+      {/* ... (InfiniteScroll and loading skeleton) */}
       <InfiniteScroll
         hasMore={hasMore}
         isLoading={loading}
