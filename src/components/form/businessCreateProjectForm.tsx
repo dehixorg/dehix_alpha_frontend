@@ -37,6 +37,7 @@ import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import SelectTagPicker from '../shared/SelectTagPicker';
 
 const profileFormSchema = z.object({
   projectName: z
@@ -242,7 +243,7 @@ export function CreateProjectBusinessForm() {
   const [tmpSkills, setTmpSkills] = useState<{[key: number]: string}>({});
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
-  const [currProjectDomains, setCurrProjectDomains] = useState<any[]>([]);
+  const [currProjectDomains, setCurrProjectDomains] = useState<string[]>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState('');
   const [loading, setLoading] = useState(false);
   const [profileType, setProfileType] = useState<'Freelancer' | 'Consultant'>(
@@ -257,9 +258,13 @@ export function CreateProjectBusinessForm() {
   const mode = searchParams.get('mode') as 'single' | 'multiple';
   const { hasOtherValues, hasProfiles } = useDraft({});
 
+  // Initialize form with default values
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    defaultValues: {
+      ...defaultValues,
+      projectDomain: [],
+    },
     mode: 'onChange',
   });
   
@@ -385,16 +390,14 @@ export function CreateProjectBusinessForm() {
       const updatedDomains = [...currProjectDomains, tmpProjectDomains];
       setCurrProjectDomains(updatedDomains);
       setTmpProjectDomains('');
-      form.setValue('projectDomain', updatedDomains);
+      form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
     }
   };
 
   const handleDeleteProjectDomain = (domainToDelete: string) => {
-    const updatedDomains = currProjectDomains.filter(
-      (domain) => domain !== domainToDelete,
-    );
+    const updatedDomains = currProjectDomains.filter(domain => domain !== domainToDelete);
     setCurrProjectDomains(updatedDomains);
-    form.setValue('projectDomain', updatedDomains);
+    form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
   };
 
   // Skills handlers
@@ -770,57 +773,23 @@ export function CreateProjectBusinessForm() {
             <FormLabel className='text-foreground'>Project Domain</FormLabel>
             <FormControl>
               <div>
-                <div className="flex items-center mt-2">
-                  <Select
-                    onValueChange={setTmpProjectDomains}
-                    value={tmpProjectDomains || ''}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          tmpProjectDomains || 'Select project domain'
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projectDomains
-                        .filter(
-                          (d: any) => !currProjectDomains.includes(d.label),
-                        )
-                        .map((d: any, idx: number) => (
-                          <SelectItem key={idx} value={d.label}>
-                            {d.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    size="icon"
-                    className="ml-2"
-                    onClick={handleAddProjectDomain}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap mt-2">
-                  {currProjectDomains.map((domain, idx) => (
-                    <Badge
-                      className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                      key={idx}
-                    >
-                      {domain}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteProjectDomain(domain)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
+                <SelectTagPicker
+                  label=''
+                  options={projectDomains.map(d => ({ ...d, value: d.label }))}
+                  selected={currProjectDomains.map(domain => ({ name: domain }))}
+                  onAdd={(value: string) => {
+                    if (value && !currProjectDomains.includes(value)) {
+                      const updatedDomains = [...currProjectDomains, value];
+                      setCurrProjectDomains(updatedDomains);
+                      form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
+                    }
+                  }}
+                  onRemove={(name) => handleDeleteProjectDomain(name)}
+                  selectPlaceholder="Select project domain"
+                  searchPlaceholder="Search domains..."
+                  className="w-full"
+                  optionLabelKey="label"
+                />
               </div>
             </FormControl>
             <FormMessage />
@@ -1003,54 +972,48 @@ export function CreateProjectBusinessForm() {
                   <FormItem className="mb-4">
                     <FormLabel>Skills</FormLabel>
                     <FormControl>
-                      <div>
-                        <div className="flex items-center mt-2">
-                          <Select
-                            onValueChange={(value) => {
-                              setTmpSkills(prev => ({...prev, [index]: value}));
-                            }}
-                            value={tmpSkills[index] || ''}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select skill" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {skills.map((skill: any, i: number) => (
-                                <SelectItem key={i} value={skill.label}>
-                                  {skill.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            type="button"
-                            size="icon"
-                            className="ml-2"
-                            onClick={() => handleAddSkill(index)}
-                            disabled={!tmpSkills[index]?.trim()}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap mt-2">
-                          {(currSkills[index] || []).map((skill: string, i: number) => (
-                            <Badge
-                              className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                              key={i}
-                            >
-                              {skill}
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteSkill(index, skill)}
-                                className="ml-2 text-red-500 hover:text-red-700"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
+                      <SelectTagPicker
+                        label=''
+                        options={skills.map(skill => ({
+                          value: skill.label,
+                          label: skill.label
+                        }))}
+                        selected={(currSkills[index] || []).map(skill => ({
+                          name: skill
+                        }))}
+                        onAdd={(value: string) => {
+                          if (value && !(currSkills[index] || []).includes(value)) {
+                            const updatedSkills = [...(currSkills[index] || []), value];
+                            setCurrSkills(prev => ({
+                              ...prev,
+                              [index]: updatedSkills
+                            }));
+                            form.setValue(
+                              `profiles.${index}.skills`,
+                              updatedSkills,
+                              { shouldValidate: true }
+                            );
+                          }
+                        }}
+                        onRemove={(skillToRemove: string) => {
+                          const updatedSkills = (currSkills[index] || []).filter(
+                            skill => skill !== skillToRemove
+                          );
+                          setCurrSkills(prev => ({
+                            ...prev,
+                            [index]: updatedSkills
+                          }));
+                          form.setValue(
+                            `profiles.${index}.skills`,
+                            updatedSkills,
+                            { shouldValidate: true }
+                          );
+                        }}
+                        selectPlaceholder="Select skills"
+                        searchPlaceholder="Search skills..."
+                        className="w-full"
+                        optionLabelKey="label"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
