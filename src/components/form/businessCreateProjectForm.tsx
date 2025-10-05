@@ -10,6 +10,7 @@ import { Card } from '../ui/card';
 import ConnectsDialog from '../shared/ConnectsDialog';
 import DraftDialog from '../shared/DraftDialog';
 import { ScrollArea, ScrollBar } from '../ui/scroll-area';
+import SelectTagPicker from '../shared/SelectTagPicker';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -238,8 +239,8 @@ enum FormSteps {
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any[]>([]);
-  const [currSkills, setCurrSkills] = useState<{[key: number]: string[]}>({});
-  const [tmpSkills, setTmpSkills] = useState<{[key: number]: string}>({});
+  const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
+  const [tmpSkills, setTmpSkills] = useState<{ [key: number]: string }>({});
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any[]>([]);
@@ -262,17 +263,17 @@ export function CreateProjectBusinessForm() {
     defaultValues,
     mode: 'onChange',
   });
-  
+
   // Watch all form values to maintain state
   const formValues = form.watch();
-  
+
   // Initialize skills for all profiles on mount and when profiles change
   React.useEffect(() => {
     if (!formValues.profiles) return;
-    
+
     setCurrSkills(prev => {
       const updatedSkills = { ...prev };
-      
+
       formValues.profiles?.forEach((profile, index) => {
         const formSkills = form.getValues(`profiles.${index}.skills`);
         if (Array.isArray(formSkills) && formSkills.length > 0) {
@@ -281,7 +282,7 @@ export function CreateProjectBusinessForm() {
           updatedSkills[index] = [];
         }
       });
-      
+
       return updatedSkills;
     });
   }, [form, formValues.profiles?.length]); // Only run when number of profiles changes
@@ -290,7 +291,7 @@ export function CreateProjectBusinessForm() {
   React.useEffect(() => {
     if (formValues.profiles && formValues.profiles[activeProfile]) {
       const currentProfile = formValues.profiles[activeProfile];
-      
+
       // Update the form with current profile data
       const profileUpdates = {
         domain: currentProfile.domain,
@@ -303,14 +304,14 @@ export function CreateProjectBusinessForm() {
         profileType: currentProfile.profileType || 'FREELANCER',
         skills: Array.isArray(currentProfile.skills) ? [...currentProfile.skills] : []
       };
-      
+
       // Only update if the values have changed to prevent infinite loops
       Object.entries(profileUpdates).forEach(([key, value]) => {
         const currentValue = form.getValues(`profiles.${activeProfile}.${key as keyof typeof profileUpdates}`);
         if (JSON.stringify(currentValue) !== JSON.stringify(value)) {
           form.setValue(
-            `profiles.${activeProfile}.${key as keyof typeof profileUpdates}` as any, 
-            value, 
+            `profiles.${activeProfile}.${key as keyof typeof profileUpdates}` as any,
+            value,
             { shouldValidate: true }
           );
         }
@@ -322,13 +323,13 @@ export function CreateProjectBusinessForm() {
     name: 'urls',
     control: form.control,
   });
-  
+
   const {
     fields: profileFields,
     append: appendProfile,
     remove: removeProfile,
-  } = useFieldArray({ 
-    name: 'profiles', 
+  } = useFieldArray({
+    name: 'profiles',
     control: form.control,
     keyName: 'formId' // Add a unique key to help with re-renders
   });
@@ -398,11 +399,10 @@ export function CreateProjectBusinessForm() {
   };
 
   // Skills handlers
-  const handleAddSkill = (profileIndex: number) => {
-    const skillToAdd = tmpSkills[profileIndex]?.trim();
-    if (skillToAdd) {
+  const handleAddSkill = (skillToAdd: string, profileIndex: number) => {
+    if (skillToAdd?.trim()) {
       setCurrSkills(prev => {
-        const updated = {...prev};
+        const updated = { ...prev };
         updated[profileIndex] = [...(updated[profileIndex] || []), skillToAdd];
         form.setValue(`profiles.${profileIndex}.skills`, updated[profileIndex], {
           shouldDirty: true,
@@ -410,14 +410,12 @@ export function CreateProjectBusinessForm() {
         });
         return updated;
       });
-      // Clear just this profile's temp skill
-      setTmpSkills(prev => ({...prev, [profileIndex]: ''}));
     }
   };
 
   const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
     setCurrSkills(prev => {
-      const updated = {...prev};
+      const updated = { ...prev };
       updated[profileIndex] = (updated[profileIndex] || []).filter(skill => skill !== skillToDelete);
       form.setValue(`profiles.${profileIndex}.skills`, updated[profileIndex], {
         shouldDirty: true,
@@ -577,11 +575,10 @@ export function CreateProjectBusinessForm() {
                 type="button"
                 variant={activeProfile === index ? 'default' : 'outline'}
                 onClick={() => setActiveProfile(index)}
-                className={`px-4 py-2 flex items-center gap-2 transition-colors ${
-                  activeProfile === index
+                className={`px-4 py-2 flex items-center gap-2 transition-colors ${activeProfile === index
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'hover:bg-transparent'
-                }`}
+                  }`}
               >
                 <span>Profile {index + 1}</span>
                 <span className="text-xs opacity-80">({profileTypeLabel})</span>
@@ -1005,50 +1002,21 @@ export function CreateProjectBusinessForm() {
                     <FormControl>
                       <div>
                         <div className="flex items-center mt-2">
-                          <Select
-                            onValueChange={(value) => {
-                              setTmpSkills(prev => ({...prev, [index]: value}));
+                          <SelectTagPicker
+                            label=""
+                            options={skills}
+                            selected={currSkills[index]?.map(skill => ({ name: skill })) || []}
+                            onAdd={(value) => {
+                              if (!currSkills[index]?.includes(value)) {
+                                handleAddSkill(value, index);
+                              }
                             }}
-                            value={tmpSkills[index] || ''}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select skill" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {skills.map((skill: any, i: number) => (
-                                <SelectItem key={i} value={skill.label}>
-                                  {skill.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            type="button"
-                            size="icon"
-                            className="ml-2"
-                            onClick={() => handleAddSkill(index)}
-                            disabled={!tmpSkills[index]?.trim()}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap mt-2">
-                          {(currSkills[index] || []).map((skill: string, i: number) => (
-                            <Badge
-                              className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                              key={i}
-                            >
-                              {skill}
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteSkill(index, skill)}
-                                className="ml-2 text-red-500 hover:text-red-700"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </Badge>
-                          ))}
+                            onRemove={(name) => handleDeleteSkill(index, name)}
+                            selectPlaceholder="Select skills"
+                            searchPlaceholder="Search skills..."
+                            className="w-full"
+                            optionLabelKey="label"
+                          />
                         </div>
                       </div>
                     </FormControl>
@@ -1116,35 +1084,89 @@ export function CreateProjectBusinessForm() {
       })}
       {mode === 'multiple' && (
         <div className="flex justify-between items-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() =>
-              appendProfile({
-                domain: '',
-                freelancersRequired: '',
-                skills: [],
-                experience: '',
-                minConnect: '',
-                budget: {
-                  type: 'FIXED',
-                  fixedAmount: '',
-                  hourly: { minRate: '', maxRate: '', estimatedHours: '' },
-                },
-                description: '',
-                domain_id: '',
-                profileType: 'FREELANCER',
-              })
-            }
-          >
-            Add Profile
-          </Button>
-          <Button type="button" size="sm" variant="outline" onClick={saveDraft}>
-            <Save />
-          </Button>
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2 mr-4"
+              onClick={() =>
+                appendProfile({
+                  domain: '',
+                  freelancersRequired: '',
+                  skills: [],
+                  experience: '',
+                  minConnect: '',
+                  budget: {
+                    type: 'FIXED',
+                    fixedAmount: '',
+                    hourly: { minRate: '', maxRate: '', estimatedHours: '' },
+                  },
+                  description: '',
+                  domain_id: '',
+                  profileType: 'FREELANCER',
+                })
+              }
+            >
+              Add Profile
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => appendUrl({ value: '' })}
+            >
+              Add URL
+            </Button>
+          </div>
+          <div className='flex items-center'>
+            <Button className='mr-4' type="button" size="sm" variant="outline" onClick={saveDraft}>
+              <Save />
+            </Button>
+            {currentStep === FormSteps.ProjectInfo && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={nextStep}
+              >
+                Next
+              </Button>
+            )}
+            {currentStep === FormSteps.ProfileInfo && (
+              <Button type="button" variant="outline" onClick={prevStep}>
+                Prev
+              </Button>
+            )}
+          </div>
         </div>
+      )}
+
+    </div>
+  );
+
+  return (
+    <Card className="p-10">
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="gap-5 lg:grid lg:grid-cols-2 xl:grid-cols-2"
+        >
+          {currentStep === FormSteps.ProjectInfo && renderProjectInfoStep()}
+          {currentStep === FormSteps.ProfileInfo && renderProfileInfoStep()}
+        </form>
+      </Form>
+      {showLoadDraftDialog && (
+        <DraftDialog
+          dialogChange={showLoadDraftDialog}
+          setDialogChange={setShowLoadDraftDialog}
+          heading="Load Draft?"
+          desc="A saved draft was found. Do you want to load it?"
+          handleClose={discardDraft}
+          handleSave={loadDraft}
+          btn1Txt=" Discard"
+          btn2Txt="Load Draft"
+        />
       )}
       <div className="lg:col-span-2 xl:col-span-2 mt-4">
         <ConnectsDialog
@@ -1162,58 +1184,6 @@ export function CreateProjectBusinessForm() {
           )}
         />
       </div>
-    </div>
-  );
-
-  return (
-    <Card className="p-10">
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="gap-5 lg:grid lg:grid-cols-2 xl:grid-cols-2"
-        >
-          {currentStep === FormSteps.ProjectInfo && renderProjectInfoStep()}
-          {currentStep === FormSteps.ProfileInfo && renderProfileInfoStep()}
-          <div className="w-full flex col-span-2 justify-end gap-2 justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => appendUrl({ value: '' })}
-            >
-              Add URL
-            </Button>
-            {currentStep === FormSteps.ProjectInfo && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={nextStep}
-              >
-                Next
-              </Button>
-            )}
-            {currentStep === FormSteps.ProfileInfo && (
-              <Button type="button" variant="outline" onClick={prevStep}>
-                Prev
-              </Button>
-            )}
-            
-          </div>
-        </form>
-      </Form>
-      {showLoadDraftDialog && (
-        <DraftDialog
-          dialogChange={showLoadDraftDialog}
-          setDialogChange={setShowLoadDraftDialog}
-          heading="Load Draft?"
-          desc="A saved draft was found. Do you want to load it?"
-          handleClose={discardDraft}
-          handleSave={loadDraft}
-          btn1Txt=" Discard"
-          btn2Txt="Load Draft"
-        />
-      )}
     </Card>
   );
 }
