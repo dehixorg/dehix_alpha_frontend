@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, Save, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 
@@ -10,6 +10,7 @@ import { Card } from '../ui/card';
 import ConnectsDialog from '../shared/ConnectsDialog';
 import DraftDialog from '../shared/DraftDialog';
 import { ScrollArea, ScrollBar } from '../ui/scroll-area';
+import SelectTagPicker from '../shared/SelectTagPicker';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,11 +34,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import SelectTagPicker from '../shared/SelectTagPicker';
 
 const profileFormSchema = z.object({
   projectName: z
@@ -239,8 +238,8 @@ enum FormSteps {
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any[]>([]);
-  const [currSkills, setCurrSkills] = useState<{[key: number]: string[]}>({});
-  const [tmpSkills, setTmpSkills] = useState<{[key: number]: string}>({});
+  const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
+  const [tmpSkills, setTmpSkills] = useState<{ [key: number]: string }>({});
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<string[]>([]);
@@ -267,17 +266,17 @@ export function CreateProjectBusinessForm() {
     },
     mode: 'onChange',
   });
-  
+
   // Watch all form values to maintain state
   const formValues = form.watch();
-  
+
   // Initialize skills for all profiles on mount and when profiles change
   React.useEffect(() => {
     if (!formValues.profiles) return;
-    
-    setCurrSkills(prev => {
+
+    setCurrSkills((prev) => {
       const updatedSkills = { ...prev };
-      
+
       formValues.profiles?.forEach((profile, index) => {
         const formSkills = form.getValues(`profiles.${index}.skills`);
         if (Array.isArray(formSkills) && formSkills.length > 0) {
@@ -286,7 +285,7 @@ export function CreateProjectBusinessForm() {
           updatedSkills[index] = [];
         }
       });
-      
+
       return updatedSkills;
     });
   }, [form, formValues.profiles?.length]); // Only run when number of profiles changes
@@ -295,7 +294,7 @@ export function CreateProjectBusinessForm() {
   React.useEffect(() => {
     if (formValues.profiles && formValues.profiles[activeProfile]) {
       const currentProfile = formValues.profiles[activeProfile];
-      
+
       // Update the form with current profile data
       const profileUpdates = {
         domain: currentProfile.domain,
@@ -306,17 +305,21 @@ export function CreateProjectBusinessForm() {
         budget: currentProfile.budget,
         domain_id: currentProfile.domain_id,
         profileType: currentProfile.profileType || 'FREELANCER',
-        skills: Array.isArray(currentProfile.skills) ? [...currentProfile.skills] : []
+        skills: Array.isArray(currentProfile.skills)
+          ? [...currentProfile.skills]
+          : [],
       };
-      
+
       // Only update if the values have changed to prevent infinite loops
       Object.entries(profileUpdates).forEach(([key, value]) => {
-        const currentValue = form.getValues(`profiles.${activeProfile}.${key as keyof typeof profileUpdates}`);
+        const currentValue = form.getValues(
+          `profiles.${activeProfile}.${key as keyof typeof profileUpdates}`,
+        );
         if (JSON.stringify(currentValue) !== JSON.stringify(value)) {
           form.setValue(
-            `profiles.${activeProfile}.${key as keyof typeof profileUpdates}` as any, 
-            value, 
-            { shouldValidate: true }
+            `profiles.${activeProfile}.${key as keyof typeof profileUpdates}` as any,
+            value,
+            { shouldValidate: true },
           );
         }
       });
@@ -327,15 +330,15 @@ export function CreateProjectBusinessForm() {
     name: 'urls',
     control: form.control,
   });
-  
+
   const {
     fields: profileFields,
     append: appendProfile,
     remove: removeProfile,
-  } = useFieldArray({ 
-    name: 'profiles', 
+  } = useFieldArray({
+    name: 'profiles',
     control: form.control,
-    keyName: 'formId' // Add a unique key to help with re-renders
+    keyName: 'formId', // Add a unique key to help with re-renders
   });
 
   // Draft logic
@@ -395,7 +398,9 @@ export function CreateProjectBusinessForm() {
   };
 
   const handleDeleteProjectDomain = (domainToDelete: string) => {
-    const updatedDomains = currProjectDomains.filter(domain => domain !== domainToDelete);
+    const updatedDomains = currProjectDomains.filter(
+      (domain) => domain !== domainToDelete,
+    );
     setCurrProjectDomains(updatedDomains);
     form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
   };
@@ -404,27 +409,33 @@ export function CreateProjectBusinessForm() {
   const handleAddSkill = (profileIndex: number) => {
     const skillToAdd = tmpSkills[profileIndex]?.trim();
     if (skillToAdd) {
-      setCurrSkills(prev => {
-        const updated = {...prev};
+      setCurrSkills((prev) => {
+        const updated = { ...prev };
         updated[profileIndex] = [...(updated[profileIndex] || []), skillToAdd];
-        form.setValue(`profiles.${profileIndex}.skills`, updated[profileIndex], {
-          shouldDirty: true,
-          shouldValidate: true
-        });
+        form.setValue(
+          `profiles.${profileIndex}.skills`,
+          updated[profileIndex],
+          {
+            shouldDirty: true,
+            shouldValidate: true,
+          },
+        );
         return updated;
       });
       // Clear just this profile's temp skill
-      setTmpSkills(prev => ({...prev, [profileIndex]: ''}));
+      setTmpSkills((prev) => ({ ...prev, [profileIndex]: '' }));
     }
   };
 
   const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
-    setCurrSkills(prev => {
-      const updated = {...prev};
-      updated[profileIndex] = (updated[profileIndex] || []).filter(skill => skill !== skillToDelete);
+    setCurrSkills((prev) => {
+      const updated = { ...prev };
+      updated[profileIndex] = (updated[profileIndex] || []).filter(
+        (skill) => skill !== skillToDelete,
+      );
       form.setValue(`profiles.${profileIndex}.skills`, updated[profileIndex], {
         shouldDirty: true,
-        shouldValidate: true
+        shouldValidate: true,
       });
       return updated;
     });
@@ -573,7 +584,8 @@ export function CreateProjectBusinessForm() {
         {mode === 'multiple' &&
           profileFields.map((_, index) => {
             const profileType = form.watch(`profiles.${index}.profileType`);
-            const profileTypeLabel = profileType === 'FREELANCER' ? 'Freelancer' : 'Consultant';
+            const profileTypeLabel =
+              profileType === 'FREELANCER' ? 'Freelancer' : 'Consultant';
             return (
               <Button
                 key={index}
@@ -639,7 +651,9 @@ export function CreateProjectBusinessForm() {
             name={`profiles.${activeProfile}.budget.fixedAmount`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel className='text-foreground'>Fixed Budget Amount ($)</FormLabel>
+                <FormLabel className="text-foreground">
+                  Fixed Budget Amount ($)
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -744,7 +758,7 @@ export function CreateProjectBusinessForm() {
         name="projectName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className='text-foreground'>Project Name</FormLabel>
+            <FormLabel className="text-foreground">Project Name</FormLabel>
             <FormControl>
               <Input placeholder="Enter your Project Name" {...field} />
             </FormControl>
@@ -757,7 +771,7 @@ export function CreateProjectBusinessForm() {
         name="email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className='text-foreground'>Contact Email</FormLabel>
+            <FormLabel className="text-foreground">Contact Email</FormLabel>
             <FormControl>
               <Input placeholder="Enter your email" {...field} />
             </FormControl>
@@ -770,18 +784,25 @@ export function CreateProjectBusinessForm() {
         name="projectDomain"
         render={() => (
           <FormItem className="col-span-2">
-            <FormLabel className='text-foreground'>Project Domain</FormLabel>
+            <FormLabel className="text-foreground">Project Domain</FormLabel>
             <FormControl>
               <div>
                 <SelectTagPicker
-                  label=''
-                  options={projectDomains.map(d => ({ ...d, value: d.label }))}
-                  selected={currProjectDomains.map(domain => ({ name: domain }))}
+                  label=""
+                  options={projectDomains.map((d) => ({
+                    ...d,
+                    value: d.label,
+                  }))}
+                  selected={currProjectDomains.map((domain) => ({
+                    name: domain,
+                  }))}
                   onAdd={(value: string) => {
                     if (value && !currProjectDomains.includes(value)) {
                       const updatedDomains = [...currProjectDomains, value];
                       setCurrProjectDomains(updatedDomains);
-                      form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
+                      form.setValue('projectDomain', updatedDomains, {
+                        shouldValidate: true,
+                      });
                     }
                   }}
                   onRemove={(name) => handleDeleteProjectDomain(name)}
@@ -801,7 +822,9 @@ export function CreateProjectBusinessForm() {
         name="description"
         render={({ field }) => (
           <FormItem className="col-span-2">
-            <FormLabel className='text-foreground'>Profile Description</FormLabel>
+            <FormLabel className="text-foreground">
+              Profile Description
+            </FormLabel>
             <FormControl>
               <Textarea placeholder="Enter description" {...field} />
             </FormControl>
@@ -973,40 +996,46 @@ export function CreateProjectBusinessForm() {
                     <FormLabel>Skills</FormLabel>
                     <FormControl>
                       <SelectTagPicker
-                        label=''
-                        options={skills.map(skill => ({
+                        label=""
+                        options={skills.map((skill) => ({
                           value: skill.label,
-                          label: skill.label
+                          label: skill.label,
                         }))}
-                        selected={(currSkills[index] || []).map(skill => ({
-                          name: skill
+                        selected={(currSkills[index] || []).map((skill) => ({
+                          name: skill,
                         }))}
                         onAdd={(value: string) => {
-                          if (value && !(currSkills[index] || []).includes(value)) {
-                            const updatedSkills = [...(currSkills[index] || []), value];
-                            setCurrSkills(prev => ({
+                          if (
+                            value &&
+                            !(currSkills[index] || []).includes(value)
+                          ) {
+                            const updatedSkills = [
+                              ...(currSkills[index] || []),
+                              value,
+                            ];
+                            setCurrSkills((prev) => ({
                               ...prev,
-                              [index]: updatedSkills
+                              [index]: updatedSkills,
                             }));
                             form.setValue(
                               `profiles.${index}.skills`,
                               updatedSkills,
-                              { shouldValidate: true }
+                              { shouldValidate: true },
                             );
                           }
                         }}
                         onRemove={(skillToRemove: string) => {
-                          const updatedSkills = (currSkills[index] || []).filter(
-                            skill => skill !== skillToRemove
-                          );
-                          setCurrSkills(prev => ({
+                          const updatedSkills = (
+                            currSkills[index] || []
+                          ).filter((skill) => skill !== skillToRemove);
+                          setCurrSkills((prev) => ({
                             ...prev,
-                            [index]: updatedSkills
+                            [index]: updatedSkills,
                           }));
                           form.setValue(
                             `profiles.${index}.skills`,
                             updatedSkills,
-                            { shouldValidate: true }
+                            { shouldValidate: true },
                           );
                         }}
                         selectPlaceholder="Select skills"
@@ -1120,31 +1149,44 @@ export function CreateProjectBusinessForm() {
               'email',
               'description',
               'urls',
-              'profiles'
+              'profiles',
             ];
-            
+
             try {
-              const isValid = await form.trigger(fieldsToValidate as any, { shouldFocus: true });
+              const isValid = await form.trigger(fieldsToValidate as any, {
+                shouldFocus: true,
+              });
               if (!isValid) {
                 // If validation fails, show error for the first invalid field
                 const { errors } = form.formState;
                 const firstError = Object.keys(errors)[0];
-                
+
                 if (firstError) {
                   // Handle nested errors (like array items)
                   const getNestedError = (obj: any, path: string) => {
-                    return path.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : undefined), obj);
+                    return path
+                      .split('.')
+                      .reduce(
+                        (o, p) => (o && o[p] !== undefined ? o[p] : undefined),
+                        obj,
+                      );
                   };
-                  
+
                   const error = getNestedError(errors, firstError);
-                  const errorMessage = error?.message || 'Please fill in all required fields';
-                  
+                  const errorMessage =
+                    error?.message || 'Please fill in all required fields';
+
                   notifyError(
-                    typeof errorMessage === 'string' ? errorMessage : 'Please fill in all required fields',
-                    'Validation Error'
+                    typeof errorMessage === 'string'
+                      ? errorMessage
+                      : 'Please fill in all required fields',
+                    'Validation Error',
                   );
                 } else {
-                  notifyError('Please fill in all required fields', 'Validation Error');
+                  notifyError(
+                    'Please fill in all required fields',
+                    'Validation Error',
+                  );
                 }
               }
               return isValid;
@@ -1161,12 +1203,14 @@ export function CreateProjectBusinessForm() {
                 'email',
                 'description',
                 'urls',
-                'profiles'
+                'profiles',
               ];
-              
-              const isValid = await form.trigger(fieldsToValidate as any, { shouldFocus: true });
+
+              const isValid = await form.trigger(fieldsToValidate as any, {
+                shouldFocus: true,
+              });
               if (!isValid) return;
-              
+
               // If validation passes, submit the form
               await form.handleSubmit(onSubmit)();
             } catch (error) {
@@ -1205,9 +1249,9 @@ export function CreateProjectBusinessForm() {
               Add URL
             </Button>
             {currentStep === FormSteps.ProjectInfo && (
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 size="sm"
                 onClick={nextStep}
               >
@@ -1219,7 +1263,6 @@ export function CreateProjectBusinessForm() {
                 Prev
               </Button>
             )}
-            
           </div>
         </form>
       </Form>
