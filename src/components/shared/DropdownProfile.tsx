@@ -9,6 +9,8 @@ import {
   AlertCircle,
   Gift,
   Sparkles,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter, usePathname } from 'next/navigation';
@@ -19,6 +21,7 @@ import { motion } from 'framer-motion';
 
 import { FaqDialog } from './FaqDialog';
 import { ReferralDialog } from './ReferralDialog';
+import { UpdateContactDialog } from './UpdateContactDialog';
 
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
@@ -56,6 +59,10 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const [loading, setLoading] = useState(true);
   const [isFaqOpen, setIsFaqOpen] = useState(false); // New state for FAQ dialog
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [isPhoneDialogOpen, setIsPhoneDialogOpen] = useState(false);
+  const [currentEmail, setCurrentEmail] = useState<string>('');
+  const [currentPhone, setCurrentPhone] = useState<string>('');
 
   const pathname = usePathname();
 
@@ -86,6 +93,11 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           setConnects(connects);
         }
         setReferralCode(fetchCode);
+
+        // Set current email and phone
+        const userData = response.data?.data || response.data;
+        setCurrentEmail(userData?.email || user.email || '');
+        setCurrentPhone(userData?.phone || '');
       } catch (error) {
         console.error('API Error:', error);
         notifyError('Something went wrong. Please try again.', 'Error');
@@ -100,7 +112,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
       console.warn('User ID is not available. Skipping API call.');
       setLoading(false);
     }
-  }, [user?.uid, user.type, setConnects]);
+  }, [user?.uid, user.type, user.email, setConnects]);
 
   const handleLogout = async () => {
     // Show logging out overlay and prevent interaction
@@ -232,19 +244,63 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
             </Link>
 
             {userType === 'freelancer' ? (
-              <Link href="/freelancer/settings/personal-info">
-                <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50">
-                  <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span>Settings</span>
+              <>
+                <Link href="/freelancer/settings/personal-info">
+                  <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50">
+                    <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem
+                  className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsEmailDialogOpen(true);
+                  }}
+                >
+                  <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>Update Email</span>
                 </DropdownMenuItem>
-              </Link>
+                <DropdownMenuItem
+                  className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsPhoneDialogOpen(true);
+                  }}
+                >
+                  <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>Update Phone</span>
+                </DropdownMenuItem>
+              </>
             ) : userType === 'business' ? (
-              <Link href="/business/settings/business-info">
-                <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50">
-                  <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span>Business Settings</span>
+              <>
+                <Link href="/business/settings/business-info">
+                  <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50">
+                    <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>Business Settings</span>
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem
+                  className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsEmailDialogOpen(true);
+                  }}
+                >
+                  <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>Update Email</span>
                 </DropdownMenuItem>
-              </Link>
+                <DropdownMenuItem
+                  className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsPhoneDialogOpen(true);
+                  }}
+                >
+                  <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>Update Phone</span>
+                </DropdownMenuItem>
+              </>
             ) : (
               <div className="px-3 py-2">
                 <Skeleton className="h-4 w-3/4" />
@@ -308,6 +364,36 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Email Update Dialog */}
+      {user?.uid && userType && (
+        <UpdateContactDialog
+          isOpen={isEmailDialogOpen}
+          onOpenChange={setIsEmailDialogOpen}
+          type="email"
+          currentValue={currentEmail}
+          userId={user.uid}
+          userType={userType}
+          onSuccess={(newEmail) => {
+            setCurrentEmail(newEmail);
+          }}
+        />
+      )}
+
+      {/* Phone Update Dialog */}
+      {user?.uid && userType && (
+        <UpdateContactDialog
+          isOpen={isPhoneDialogOpen}
+          onOpenChange={setIsPhoneDialogOpen}
+          type="phone"
+          currentValue={currentPhone}
+          userId={user.uid}
+          userType={userType}
+          onSuccess={(newPhone) => {
+            setCurrentPhone(newPhone);
+          }}
+        />
+      )}
     </>
   );
 }
