@@ -35,7 +35,7 @@ export default function PersonalInfo() {
         />
         <main className="grid flex-1 items-start gap-4 sm:px-6 sm:py-2 md:gap-8">
           <ProfileForm user_id={user.uid} />
-          <UpdatePasswordForm user_id={user.uid} userType='freelancer' />
+          <UpdatePasswordForm user_id={user.uid} userType="freelancer" />
         </main>
       </div>
     </div>
