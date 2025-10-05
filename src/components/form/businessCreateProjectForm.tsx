@@ -238,8 +238,8 @@ enum FormSteps {
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any[]>([]);
-  const [currSkills, setCurrSkills] = useState<any[]>([]);
-  const [tmpSkill, setTmpSkill] = useState('');
+  const [currSkills, setCurrSkills] = useState<{[key: number]: string[]}>({});
+  const [tmpSkills, setTmpSkills] = useState<{[key: number]: string}>({});
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any[]>([]);
@@ -262,15 +262,76 @@ export function CreateProjectBusinessForm() {
     defaultValues,
     mode: 'onChange',
   });
+  
+  // Watch all form values to maintain state
+  const formValues = form.watch();
+  
+  // Initialize skills for all profiles on mount and when profiles change
+  React.useEffect(() => {
+    if (!formValues.profiles) return;
+    
+    setCurrSkills(prev => {
+      const updatedSkills = { ...prev };
+      
+      formValues.profiles?.forEach((profile, index) => {
+        const formSkills = form.getValues(`profiles.${index}.skills`);
+        if (Array.isArray(formSkills) && formSkills.length > 0) {
+          updatedSkills[index] = [...formSkills];
+        } else if (!updatedSkills[index]) {
+          updatedSkills[index] = [];
+        }
+      });
+      
+      return updatedSkills;
+    });
+  }, [form, formValues.profiles?.length]); // Only run when number of profiles changes
+
+  // Update the current profile's data when it changes
+  React.useEffect(() => {
+    if (formValues.profiles && formValues.profiles[activeProfile]) {
+      const currentProfile = formValues.profiles[activeProfile];
+      
+      // Update the form with current profile data
+      const profileUpdates = {
+        domain: currentProfile.domain,
+        description: currentProfile.description || '',
+        freelancersRequired: currentProfile.freelancersRequired,
+        experience: currentProfile.experience,
+        minConnect: currentProfile.minConnect,
+        budget: currentProfile.budget,
+        domain_id: currentProfile.domain_id,
+        profileType: currentProfile.profileType || 'FREELANCER',
+        skills: Array.isArray(currentProfile.skills) ? [...currentProfile.skills] : []
+      };
+      
+      // Only update if the values have changed to prevent infinite loops
+      Object.entries(profileUpdates).forEach(([key, value]) => {
+        const currentValue = form.getValues(`profiles.${activeProfile}.${key as keyof typeof profileUpdates}`);
+        if (JSON.stringify(currentValue) !== JSON.stringify(value)) {
+          form.setValue(
+            `profiles.${activeProfile}.${key as keyof typeof profileUpdates}` as any, 
+            value, 
+            { shouldValidate: true }
+          );
+        }
+      });
+    }
+  }, [activeProfile, form, formValues.profiles]);
+
   const { fields: urlFields, append: appendUrl } = useFieldArray({
     name: 'urls',
     control: form.control,
   });
+  
   const {
     fields: profileFields,
     append: appendProfile,
     remove: removeProfile,
-  } = useFieldArray({ name: 'profiles', control: form.control });
+  } = useFieldArray({ 
+    name: 'profiles', 
+    control: form.control,
+    keyName: 'formId' // Add a unique key to help with re-renders
+  });
 
   // Draft logic
   useEffect(() => {
@@ -338,36 +399,31 @@ export function CreateProjectBusinessForm() {
 
   // Skills handlers
   const handleAddSkill = (profileIndex: number) => {
-    if (tmpSkill.trim() !== '') {
-      setCurrSkills((prevSkills) => {
-        const updatedSkills = [...prevSkills];
-        if (!updatedSkills[profileIndex]) updatedSkills[profileIndex] = [];
-        if (!updatedSkills[profileIndex].includes(tmpSkill)) {
-          updatedSkills[profileIndex].push(tmpSkill);
-        }
-        form.setValue(
-          `profiles.${profileIndex}.skills`,
-          updatedSkills[profileIndex],
-        );
-        return updatedSkills;
+    const skillToAdd = tmpSkills[profileIndex]?.trim();
+    if (skillToAdd) {
+      setCurrSkills(prev => {
+        const updated = {...prev};
+        updated[profileIndex] = [...(updated[profileIndex] || []), skillToAdd];
+        form.setValue(`profiles.${profileIndex}.skills`, updated[profileIndex], {
+          shouldDirty: true,
+          shouldValidate: true
+        });
+        return updated;
       });
-      setTmpSkill('');
+      // Clear just this profile's temp skill
+      setTmpSkills(prev => ({...prev, [profileIndex]: ''}));
     }
   };
 
   const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
-    setCurrSkills((prevSkills) => {
-      const updatedSkills = [...prevSkills];
-      if (updatedSkills[profileIndex]) {
-        updatedSkills[profileIndex] = updatedSkills[profileIndex].filter(
-          (skill: string) => skill !== skillToDelete,
-        );
-        form.setValue(
-          `profiles.${profileIndex}.skills`,
-          updatedSkills[profileIndex],
-        );
-      }
-      return updatedSkills;
+    setCurrSkills(prev => {
+      const updated = {...prev};
+      updated[profileIndex] = (updated[profileIndex] || []).filter(skill => skill !== skillToDelete);
+      form.setValue(`profiles.${profileIndex}.skills`, updated[profileIndex], {
+        shouldDirty: true,
+        shouldValidate: true
+      });
+      return updated;
     });
   };
 
@@ -440,7 +496,7 @@ export function CreateProjectBusinessForm() {
     setLoading(true);
     try {
       const uniqueSkills = Array.from(
-        new Set(currSkills.flat().filter(Boolean)),
+        new Set(Object.values(currSkills).flat().filter(Boolean)),
       );
       const profilesWithFormattedBudget = (data.profiles || []).map(
         (profile) => ({
@@ -512,22 +568,26 @@ export function CreateProjectBusinessForm() {
         className={`flex gap-2 mb-2 ${mode === 'multiple' ? 'p-2 rounded-md' : ''}`}
       >
         {mode === 'multiple' &&
-          profileFields.map((_, index) => (
-            <Button
-              key={index}
-              type="button"
-              size="sm"
-              variant={activeProfile === index ? 'default' : 'outline'}
-              onClick={() => setActiveProfile(index)}
-              className={`px-4 py-2 ${
-                activeProfile === index
-                  ? 'bg-blue-600 text-white hover:text-black'
-                  : ''
-              }`}
-            >
-              Profile {index + 1}
-            </Button>
-          ))}
+          profileFields.map((_, index) => {
+            const profileType = form.watch(`profiles.${index}.profileType`);
+            const profileTypeLabel = profileType === 'FREELANCER' ? 'Freelancer' : 'Consultant';
+            return (
+              <Button
+                key={index}
+                type="button"
+                variant={activeProfile === index ? 'default' : 'outline'}
+                onClick={() => setActiveProfile(index)}
+                className={`px-4 py-2 flex items-center gap-2 transition-colors ${
+                  activeProfile === index
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'hover:bg-transparent'
+                }`}
+              >
+                <span>Profile {index + 1}</span>
+                <span className="text-xs opacity-80">({profileTypeLabel})</span>
+              </Button>
+            );
+          })}
       </div>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
@@ -576,7 +636,7 @@ export function CreateProjectBusinessForm() {
             name={`profiles.${activeProfile}.budget.fixedAmount`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fixed Budget Amount ($)</FormLabel>
+                <FormLabel className='text-foreground'>Fixed Budget Amount ($)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -681,11 +741,10 @@ export function CreateProjectBusinessForm() {
         name="projectName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Project Name</FormLabel>
+            <FormLabel className='text-foreground'>Project Name</FormLabel>
             <FormControl>
               <Input placeholder="Enter your Project Name" {...field} />
             </FormControl>
-            <FormDescription>Enter your Project name</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -695,11 +754,10 @@ export function CreateProjectBusinessForm() {
         name="email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Contact Email</FormLabel>
+            <FormLabel className='text-foreground'>Contact Email</FormLabel>
             <FormControl>
               <Input placeholder="Enter your email" {...field} />
             </FormControl>
-            <FormDescription>Enter your email</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -709,7 +767,7 @@ export function CreateProjectBusinessForm() {
         name="projectDomain"
         render={() => (
           <FormItem className="col-span-2">
-            <FormLabel>Project Domain</FormLabel>
+            <FormLabel className='text-foreground'>Project Domain</FormLabel>
             <FormControl>
               <div>
                 <div className="flex items-center mt-2">
@@ -746,7 +804,7 @@ export function CreateProjectBusinessForm() {
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="flex flex-wrap mt-5">
+                <div className="flex flex-wrap mt-2">
                   {currProjectDomains.map((domain, idx) => (
                     <Badge
                       className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
@@ -774,7 +832,7 @@ export function CreateProjectBusinessForm() {
         name="description"
         render={({ field }) => (
           <FormItem className="col-span-2">
-            <FormLabel>Profile Description</FormLabel>
+            <FormLabel className='text-foreground'>Profile Description</FormLabel>
             <FormControl>
               <Textarea placeholder="Enter description" {...field} />
             </FormControl>
@@ -826,15 +884,6 @@ export function CreateProjectBusinessForm() {
             )}
           />
         ))}
-        <Button
-          className="mt-2"
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => appendUrl({ value: '' })}
-        >
-          Add URL
-        </Button>
       </div>
     </>
   );
@@ -865,6 +914,7 @@ export function CreateProjectBusinessForm() {
                       'FREELANCER',
                     );
                   }}
+                  className="hover:bg-blue-600 hover:text-white"
                 >
                   Freelancer
                 </Button>
@@ -882,6 +932,7 @@ export function CreateProjectBusinessForm() {
                       'CONSULTANT',
                     );
                   }}
+                  className="hover:bg-blue-600 hover:text-white"
                 >
                   Consultant
                 </Button>
@@ -955,8 +1006,10 @@ export function CreateProjectBusinessForm() {
                       <div>
                         <div className="flex items-center mt-2">
                           <Select
-                            onValueChange={setTmpSkill}
-                            value={tmpSkill || ''}
+                            onValueChange={(value) => {
+                              setTmpSkills(prev => ({...prev, [index]: value}));
+                            }}
+                            value={tmpSkills[index] || ''}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select skill" />
@@ -975,12 +1028,13 @@ export function CreateProjectBusinessForm() {
                             size="icon"
                             className="ml-2"
                             onClick={() => handleAddSkill(index)}
+                            disabled={!tmpSkills[index]?.trim()}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
                         </div>
-                        <div className="flex flex-wrap mt-5">
-                          {currSkills[index]?.map((skill: any, i: number) => (
+                        <div className="flex flex-wrap mt-2">
+                          {(currSkills[index] || []).map((skill: string, i: number) => (
                             <Badge
                               className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
                               key={i}
@@ -1008,7 +1062,7 @@ export function CreateProjectBusinessForm() {
                 control={form.control}
                 name={`profiles.${index}.experience`}
                 render={({ field }) => (
-                  <FormItem className="mb-4">
+                  <FormItem>
                     <FormLabel>Experience</FormLabel>
                     <FormControl>
                       <Input
@@ -1027,7 +1081,7 @@ export function CreateProjectBusinessForm() {
                 control={form.control}
                 name={`profiles.${index}.minConnect`}
                 render={({ field }) => (
-                  <FormItem className="mb-4">
+                  <FormItem>
                     <div className="flex items-center justify-between mb-2">
                       <FormLabel>Min Connect</FormLabel>
                       <FormDescription>
@@ -1120,19 +1174,31 @@ export function CreateProjectBusinessForm() {
         >
           {currentStep === FormSteps.ProjectInfo && renderProjectInfoStep()}
           {currentStep === FormSteps.ProfileInfo && renderProfileInfoStep()}
-          <div className="w-full mt-4 flex col-span-2 justify-end">
+          <div className="w-full flex col-span-2 justify-end gap-2 justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => appendUrl({ value: '' })}
+            >
+              Add URL
+            </Button>
             {currentStep === FormSteps.ProjectInfo && (
-              <Button type="button" variant="outline" onClick={nextStep}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={nextStep}
+              >
                 Next
               </Button>
             )}
-          </div>
-          <div className="w-full mt-4 flex col-span-2 justify-start">
             {currentStep === FormSteps.ProfileInfo && (
               <Button type="button" variant="outline" onClick={prevStep}>
                 Prev
               </Button>
             )}
+            
           </div>
         </form>
       </Form>
