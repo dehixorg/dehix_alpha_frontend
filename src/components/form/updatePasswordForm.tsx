@@ -45,7 +45,13 @@ const updatePasswordFormSchema = z
 
 type UpdatePasswordFormValues = z.infer<typeof updatePasswordFormSchema>;
 
-export function UpdatePasswordForm({ user_id }: { user_id: string }) {
+export function UpdatePasswordForm({
+  user_id,
+  userType,
+}: {
+  user_id: string;
+  userType: 'freelancer' | 'business';
+}) {
   const [loading, setLoading] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<{
     label: string;
@@ -67,7 +73,7 @@ export function UpdatePasswordForm({ user_id }: { user_id: string }) {
   async function onSubmit(data: UpdatePasswordFormValues) {
     setLoading(true);
     try {
-      await axiosInstance.put(`/freelancer`, {
+      await axiosInstance.put(`/${userType}`, {
         id: user_id,
         password: data.newPassword,
         oldPassword: data.currentPassword,
