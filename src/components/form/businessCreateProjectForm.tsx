@@ -276,25 +276,28 @@ export function CreateProjectBusinessForm() {
   // Watch all form values to maintain state
   const formValues = form.watch();
 
-  // Initialize skills for all profiles on mount and when profiles change
+  // Rebuild in-memory skills and domains when profiles count changes
   React.useEffect(() => {
     if (!formValues.profiles) return;
 
-    setCurrSkills((prev) => {
-      const updatedSkills = { ...prev };
+    const profileCount = formValues.profiles.length;
 
-      formValues.profiles?.forEach((profile, index) => {
-        const formSkills = form.getValues(`profiles.${index}.skills`);
-        if (Array.isArray(formSkills) && formSkills.length > 0) {
-          updatedSkills[index] = [...formSkills];
-        } else if (!updatedSkills[index]) {
-          updatedSkills[index] = [];
-        }
-      });
+    // Build fresh skills map keyed by current indices
+    const rebuiltSkills: { [key: number]: string[] } = {};
+    for (let i = 0; i < profileCount; i += 1) {
+      const s = form.getValues(`profiles.${i}.skills` as const);
+      rebuiltSkills[i] = Array.isArray(s) ? [...s] : [];
+    }
+    setCurrSkills(rebuiltSkills);
 
-      return updatedSkills;
-    });
-  }, [form, formValues.profiles?.length]); // Only run when number of profiles changes
+    // Build fresh domains array aligned with current indices
+    const rebuiltDomains: string[][] = [];
+    for (let i = 0; i < profileCount; i += 1) {
+      const d = form.getValues(`profiles.${i}.domain` as const);
+      rebuiltDomains[i] = Array.isArray(d) ? [...d] : [];
+    }
+    setCurrDomains(rebuiltDomains);
+  }, [form, formValues.profiles?.length]);
 
   // Update the current profile's data when it changes
   React.useEffect(() => {
@@ -678,7 +681,7 @@ export function CreateProjectBusinessForm() {
         render={({ field }) => (
           <FormItem className="col-span-2">
             <FormLabel className="text-foreground">
-              Profile Description
+              Project Description
             </FormLabel>
             <FormControl>
               <Textarea placeholder="Enter description" {...field} />

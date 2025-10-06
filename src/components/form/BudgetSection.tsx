@@ -20,6 +20,8 @@ type Props = {
 };
 
 const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
+  // Unique id suffix so radios don't collide across instances
+  const uid = React.useId();
   const budgetType = form.watch(`profiles.${activeProfile}.budget.type`);
 
   const profileBudgetErrors = (() => {
@@ -61,32 +63,32 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
                 className="flex flex-col space-y-1"
               >
                 <div className="flex flex-row gap-3">
                   <label
-                    htmlFor="fixed"
+                    htmlFor={`fixed-${uid}`}
                     className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer text-sm transition-colors ${
                       budgetType === 'FIXED'
                         ? 'border-primary bg-primary/10'
                         : 'border-border hover:bg-muted/40'
                     }`}
                   >
-                    <RadioGroupItem value="FIXED" id="fixed" />
+                    <RadioGroupItem value="FIXED" id={`fixed-${uid}`} />
                     <span className="inline-flex items-center gap-1">
                       <DollarSign className="h-4 w-4" /> Fixed Price
                     </span>
                   </label>
                   <label
-                    htmlFor="hourly"
+                    htmlFor={`hourly-${uid}`}
                     className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer text-sm transition-colors ${
                       budgetType === 'HOURLY'
                         ? 'border-primary bg-primary/10'
                         : 'border-border hover:bg-muted/40'
                     }`}
                   >
-                    <RadioGroupItem value="HOURLY" id="hourly" />
+                    <RadioGroupItem value="HOURLY" id={`hourly-${uid}`} />
                     <span className="inline-flex items-center gap-1">
                       <Clock className="h-4 w-4" /> Hourly Rate
                     </span>
