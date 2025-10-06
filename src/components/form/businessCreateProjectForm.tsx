@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { Save, X } from 'lucide-react';
+import { Save, X, Users, Tag, Wrench, Target, DollarSign } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 
@@ -10,7 +10,10 @@ import { Card } from '../ui/card';
 import ConnectsDialog from '../shared/ConnectsDialog';
 import DraftDialog from '../shared/DraftDialog';
 import { ScrollArea, ScrollBar } from '../ui/scroll-area';
-import SelectTagPicker from '../shared/SelectTagPicker';
+
+import ProjectFormIllustration from './ProjectFormIllustration';
+import ProjectFormStepper from './ProjectFormStepper';
+import BudgetSection from './BudgetSection';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,7 +32,6 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
 
 const profileFormSchema = z.object({
@@ -235,11 +237,10 @@ export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any[]>([]);
   const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
-  const [tmpSkills, setTmpSkills] = useState<{ [key: number]: string }>({});
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<string[]>([]);
-  const [tmpProjectDomains, setTmpProjectDomains] = useState('');
+  const [currDomains, setCurrDomains] = useState<string[][]>([]);
   const [loading, setLoading] = useState(false);
   const [profileType, setProfileType] = useState<'Freelancer' | 'Consultant'>(
     'Freelancer',
@@ -383,58 +384,12 @@ export function CreateProjectBusinessForm() {
     fetchData();
   }, []);
 
-  // Project domain handlers
-  const handleAddProjectDomain = (val: string) => {
-    if (val && !currProjectDomains.includes(val)) {
-      const updatedDomains = [...currProjectDomains, val];
-      setCurrProjectDomains(updatedDomains);
-      setTmpProjectDomains('');
-      form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
-    }
-  };
-
   const handleRemoveProjectDomain = (val: string) => {
     const updatedDomains = currProjectDomains.filter(
       (domain) => domain !== val,
     );
     setCurrProjectDomains(updatedDomains);
     form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
-  };
-
-  // Skills handlers
-  const handleAddSkill = (profileIndex: number) => {
-    const skillToAdd = tmpSkills[profileIndex]?.trim();
-    if (skillToAdd) {
-      setCurrSkills((prev) => {
-        const updated = { ...prev };
-        updated[profileIndex] = [...(updated[profileIndex] || []), skillToAdd];
-        form.setValue(
-          `profiles.${profileIndex}.skills`,
-          updated[profileIndex],
-          {
-            shouldDirty: true,
-            shouldValidate: true,
-          },
-        );
-        return updated;
-      });
-      // Clear just this profile's temp skill
-      setTmpSkills((prev) => ({ ...prev, [profileIndex]: '' }));
-    }
-  };
-
-  const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
-    setCurrSkills((prev) => {
-      const updated = { ...prev };
-      updated[profileIndex] = (updated[profileIndex] || []).filter(
-        (skill) => skill !== skillToDelete,
-      );
-      form.setValue(`profiles.${profileIndex}.skills`, updated[profileIndex], {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      return updated;
-    });
   };
 
   // Profile domain handlers
@@ -663,149 +618,6 @@ export function CreateProjectBusinessForm() {
     </ScrollArea>
   );
 
-  const renderBudgetSection = () => {
-    const budgetType = form.watch(`profiles.${activeProfile}.budget.type`);
-    return (
-      <div className="lg:col-span-2 xl:col-span-2 border p-4 rounded-md mb-4">
-        <h3 className="text-lg font-medium mb-4">Project Budget</h3>
-        <FormField
-          control={form.control}
-          name={`profiles.${activeProfile}.budget.type`}
-          render={({ field }) => (
-            <FormItem className="mb-6">
-              <FormLabel>Budget Type</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex flex-col space-y-1"
-                >
-                  <div className="flex flex-row gap-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="FIXED" id="fixed" />
-                      <label htmlFor="fixed" className="cursor-pointer">
-                        Fixed Price
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="HOURLY" id="hourly" />
-                      <label htmlFor="hourly" className="cursor-pointer">
-                        Hourly Rate
-                      </label>
-                    </div>
-                  </div>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {budgetType === 'FIXED' && (
-          <FormField
-            control={form.control}
-            name={`profiles.${activeProfile}.budget.fixedAmount`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-foreground">
-                  Fixed Budget Amount ($)
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Enter fixed amount"
-                    min="1"
-                    step="0.01"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Enter the total fixed price for the project
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        {budgetType === 'HOURLY' && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name={`profiles.${activeProfile}.budget.hourly.minRate`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Minimum Rate ($/hour)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Min rate"
-                        min="1"
-                        step="0.01"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`profiles.${activeProfile}.budget.hourly.maxRate`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maximum Rate ($/hour)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Max rate"
-                        min="1"
-                        step="0.01"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`profiles.${activeProfile}.budget.hourly.estimatedHours`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estimated Hours</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Estimated number of hours"
-                        min="1"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Estimated total hours required for project completion
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </>
-        )}
-        {form.formState.errors.profiles &&
-          form.formState.errors.profiles[activeProfile]?.budget && (
-            <p className="text-sm text-red-600 mt-4">
-              {Object.values(
-                form.formState.errors.profiles[activeProfile]?.budget || {},
-              )
-                .map((err: any) => err?.message)
-                .filter(Boolean)
-                .join(', ')}
-            </p>
-          )}
-      </div>
-    );
-  };
-
   const renderProjectInfoStep = () => (
     <>
       <FormField
@@ -860,7 +672,7 @@ export function CreateProjectBusinessForm() {
                       });
                     }
                   }}
-                  onRemove={(name) => handleDeleteProjectDomain(name)}
+                  onRemove={(name) => handleRemoveProjectDomain(name)}
                   selectPlaceholder="Select project domain"
                   searchPlaceholder="Search domains..."
                   className="w-full"
@@ -944,56 +756,76 @@ export function CreateProjectBusinessForm() {
         if (mode === 'single' && index > 0) return null;
 
         return index === activeProfile || mode === 'single' ? (
-          <div key={index} className="p-4 mb-4 rounded-md relative">
-            {mode === 'multiple' && (
-              <div className="flex gap-2 mb-4">
-                <Button
-                  type="button"
-                  variant={
-                    form.watch(`profiles.${index}.profileType`) === 'FREELANCER'
-                      ? 'default'
-                      : 'outline'
-                  }
-                  onClick={() => {
-                    setProfileType('Freelancer');
-                    form.setValue(
-                      `profiles.${index}.profileType`,
-                      'FREELANCER',
-                    );
-                  }}
-                  className="hover:bg-blue-600 hover:text-white"
-                >
-                  Freelancer
-                </Button>
-                <Button
-                  type="button"
-                  variant={
-                    form.watch(`profiles.${index}.profileType`) === 'CONSULTANT'
-                      ? 'default'
-                      : 'outline'
-                  }
-                  onClick={() => {
-                    setProfileType('Consultant');
-                    form.setValue(
-                      `profiles.${index}.profileType`,
-                      'CONSULTANT',
-                    );
-                  }}
-                  className="hover:bg-blue-600 hover:text-white"
-                >
-                  Consultant
-                </Button>
+          <div
+            key={index}
+            className="rounded-xl border bg-card shadow-sm p-5 mb-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-primary/10 border border-primary flex items-center justify-center">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold">Profile {index + 1}</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Define role, skills and requirements
+                  </p>
+                </div>
               </div>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              {mode === 'multiple' && (
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={
+                      form.watch(`profiles.${index}.profileType`) ===
+                      'FREELANCER'
+                        ? 'default'
+                        : 'outline'
+                    }
+                    onClick={() => {
+                      setProfileType('Freelancer');
+                      form.setValue(
+                        `profiles.${index}.profileType`,
+                        'FREELANCER',
+                      );
+                    }}
+                  >
+                    Freelancer
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      form.watch(`profiles.${index}.profileType`) ===
+                      'CONSULTANT'
+                        ? 'default'
+                        : 'outline'
+                    }
+                    onClick={() => {
+                      setProfileType('Consultant');
+                      form.setValue(
+                        `profiles.${index}.profileType`,
+                        'CONSULTANT',
+                      );
+                    }}
+                  >
+                    Consultant
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
               <FormField
                 control={form.control}
                 name={`profiles.${index}.domain`}
                 render={() => (
                   <FormItem className="mb-4">
+                    <FormLabel className="flex items-center gap-2">
+                      <Tag className="h-4 w-4" /> Profile Domain
+                    </FormLabel>
                     <FormControl>
                       <SelectTagPicker
-                        label="Profile Domain"
+                        label=""
                         options={domains.map((d: any) => ({
                           label: d.label,
                           _id: d.value,
@@ -1014,6 +846,18 @@ export function CreateProjectBusinessForm() {
                         searchPlaceholder="Search domains..."
                       />
                     </FormControl>
+                    {(currDomains[index] || []).length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(currDomains[index] || []).map((d: string) => (
+                          <span
+                            key={d}
+                            className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
+                          >
+                            {d}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1023,7 +867,10 @@ export function CreateProjectBusinessForm() {
                 name={`profiles.${index}.freelancersRequired`}
                 render={({ field }) => (
                   <FormItem className="mb-4">
-                    <FormLabel>{`Number of ${profileType} Required`}</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      {`Number of ${profileType}`}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -1041,6 +888,9 @@ export function CreateProjectBusinessForm() {
                 name={`profiles.${index}.skills`}
                 render={() => (
                   <FormItem className="mb-4">
+                    <FormLabel className="flex items-center gap-2">
+                      <Wrench className="h-4 w-4" /> Skills
+                    </FormLabel>
                     <FormControl>
                       <SelectTagPicker
                         label=""
@@ -1091,18 +941,32 @@ export function CreateProjectBusinessForm() {
                         optionLabelKey="label"
                       />
                     </FormControl>
+                    {(currSkills[index] || []).length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(currSkills[index] || []).map((s: string) => (
+                          <span
+                            key={s}
+                            className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
               <FormField
                 control={form.control}
                 name={`profiles.${index}.experience`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Experience</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      <Target className="h-4 w-4" /> Experience
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -1122,7 +986,9 @@ export function CreateProjectBusinessForm() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between mb-2">
-                      <FormLabel>Min Connect</FormLabel>
+                      <FormLabel className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" /> Min Connect
+                      </FormLabel>
                       <FormDescription>
                         Minimum number of connects for the project
                       </FormDescription>
@@ -1138,7 +1004,7 @@ export function CreateProjectBusinessForm() {
                 )}
               />
             </div>
-            {renderBudgetSection()}
+            <BudgetSection form={form} activeProfile={activeProfile} />
             {mode === 'multiple' && profileFields.length > 1 && (
               <Button
                 type="button"
@@ -1278,53 +1144,82 @@ export function CreateProjectBusinessForm() {
   );
 
   return (
-    <Card className="p-10">
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="gap-5 lg:grid lg:grid-cols-2 xl:grid-cols-2"
-        >
-          {currentStep === FormSteps.ProjectInfo && renderProjectInfoStep()}
-          {currentStep === FormSteps.ProfileInfo && renderProfileInfoStep()}
-          <div className="w-full flex col-span-2 justify-end gap-2 justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => appendUrl({ value: '' })}
+    <Card className="p-6 md:p-8 lg:p-10">
+      <div className="grid gap-8 lg:grid-cols-3">
+        <ProjectFormIllustration />
+
+        <div className="lg:col-span-2">
+          {/* Stepper */}
+          <ProjectFormStepper
+            currentStep={currentStep === FormSteps.ProjectInfo ? 0 : 1}
+            onProjectClick={() => setCurrentStep(FormSteps.ProjectInfo)}
+            onProfileClick={() => setCurrentStep(FormSteps.ProfileInfo)}
+            className="mb-6"
+          />
+
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="gap-6 grid grid-cols-1 lg:grid-cols-2"
             >
-              Add URL
-            </Button>
-            {currentStep === FormSteps.ProjectInfo && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={nextStep}
-              >
-                Next
-              </Button>
-            )}
-            {currentStep === FormSteps.ProfileInfo && (
-              <Button type="button" variant="outline" onClick={prevStep}>
-                Prev
-              </Button>
-            )}
-          </div>
-        </form>
-      </Form>
-      {showLoadDraftDialog && (
-        <DraftDialog
-          dialogChange={showLoadDraftDialog}
-          setDialogChange={setShowLoadDraftDialog}
-          heading="Load Draft?"
-          desc="A saved draft was found. Do you want to load it?"
-          handleClose={discardDraft}
-          handleSave={loadDraft}
-          btn1Txt=" Discard"
-          btn2Txt="Load Draft"
-        />
-      )}
+              {currentStep === FormSteps.ProjectInfo && renderProjectInfoStep()}
+              {currentStep === FormSteps.ProfileInfo && renderProfileInfoStep()}
+
+              <div className="w-full flex col-span-1 lg:col-span-2 items-center justify-between gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => appendUrl({ value: '' })}
+                  disabled={currentStep === FormSteps.ProfileInfo}
+                  className={
+                    currentStep === FormSteps.ProfileInfo
+                      ? 'invisible pointer-events-none'
+                      : ''
+                  }
+                >
+                  Add URL
+                </Button>
+                <div className="flex items-center gap-2">
+                  {currentStep === FormSteps.ProjectInfo && (
+                    <Button
+                      type="button"
+                      variant="default"
+                      size="sm"
+                      onClick={nextStep}
+                    >
+                      Next
+                    </Button>
+                  )}
+                  {currentStep === FormSteps.ProfileInfo && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={prevStep}
+                    >
+                      Back
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </form>
+          </Form>
+
+          {showLoadDraftDialog && (
+            <DraftDialog
+              dialogChange={showLoadDraftDialog}
+              setDialogChange={setShowLoadDraftDialog}
+              heading="Load Draft?"
+              desc="A saved draft was found. Do you want to load it?"
+              handleClose={discardDraft}
+              handleSave={loadDraft}
+              btn1Txt=" Discard"
+              btn2Txt="Load Draft"
+            />
+          )}
+        </div>
+      </div>
     </Card>
   );
 }
