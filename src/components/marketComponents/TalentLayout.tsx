@@ -285,7 +285,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active=""
+        active="Dehix Talent"
       />
       <div className="sm:ml-14 flex flex-col min-h-screen">
         <Header
