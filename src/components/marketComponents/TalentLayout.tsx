@@ -155,13 +155,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     [],
   );
 
-  const handleSearchChange = useCallback((value: string) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      search: value,
-    }));
-  }, []);
-
   // REMOVED the 'location' part of the query string logic
   const constructQueryString = useCallback((currentFilters: FilterState) => {
     const queryParts: string[] = [];
