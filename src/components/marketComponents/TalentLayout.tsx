@@ -291,7 +291,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="Market"
+          activeMenu="Dehix Talent"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
             { label: 'Hire Talent', link: '#' },
@@ -331,7 +331,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                   </div>
 
                   {/* Make the entire sheet scrollable */}
-                  <ScrollArea className="h-[calc(100vh-5rem)] no-scrollbar pr-4">
+                  <ScrollArea className="h-[calc(100vh-5rem)] pr-4">
                     <div className="space-y-4 mt-4 px-1">
                       {/* Search */}
                       <div className="space-y-2">
