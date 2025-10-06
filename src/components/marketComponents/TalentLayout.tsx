@@ -123,7 +123,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     skills: [],
-    domains:[],
+    domains: [],
     experience: [],
   });
 
