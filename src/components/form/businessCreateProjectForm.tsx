@@ -2,7 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { Save, X, Users, Tag, Wrench, Target, DollarSign } from 'lucide-react';
+import {
+  Save,
+  X,
+  Users,
+  Tag,
+  Target,
+  DollarSign,
+  Plus,
+  Award,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 
@@ -242,7 +251,7 @@ export function CreateProjectBusinessForm() {
   const [currProjectDomains, setCurrProjectDomains] = useState<string[]>([]);
   const [currDomains, setCurrDomains] = useState<string[][]>([]);
   const [loading, setLoading] = useState(false);
-  const [profileType, setProfileType] = useState<'Freelancer' | 'Consultant'>(
+  const [, setProfileType] = useState<'Freelancer' | 'Consultant'>(
     'Freelancer',
   );
   const [showLoadDraftDialog, setShowLoadDraftDialog] = useState(false);
@@ -392,57 +401,6 @@ export function CreateProjectBusinessForm() {
     form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
   };
 
-  // Profile domain handlers
-  const handleAddProfileDomain = (profileIndex: number, val: string) => {
-    setCurrDomains((prevDomains) => {
-      const updatedDomains = [...prevDomains];
-      if (!updatedDomains[profileIndex]) updatedDomains[profileIndex] = [];
-      if (!updatedDomains[profileIndex].includes(val)) {
-        updatedDomains[profileIndex].push(val);
-      }
-      form.setValue(
-        `profiles.${profileIndex}.domain`,
-        updatedDomains[profileIndex],
-      );
-      // Optionally set domain_id if needed
-      const selectedDomain = domains.find((d: any) => d.label === val);
-      form.setValue(
-        `profiles.${profileIndex}.domain_id`,
-        selectedDomain?.domain_id || '',
-      );
-      return updatedDomains;
-    });
-  };
-
-  const handleRemoveProfileDomain = (profileIndex: number, val: string) => {
-    setCurrDomains((prevDomains) => {
-      const updatedDomains = [...prevDomains];
-      if (updatedDomains[profileIndex]) {
-        updatedDomains[profileIndex] = updatedDomains[profileIndex].filter(
-          (domain: string) => domain !== val,
-        );
-        form.setValue(
-          `profiles.${profileIndex}.domain`,
-          updatedDomains[profileIndex],
-        );
-        if (updatedDomains[profileIndex].length === 0) {
-          form.setValue(`profiles.${profileIndex}.domain_id`, '');
-        } else {
-          // Recompute domain_id to match one of the remaining domains
-          const nextDomainLabel = updatedDomains[profileIndex][0];
-          const nextDomain = domains.find(
-            (d: any) => d.label === nextDomainLabel,
-          );
-          form.setValue(
-            `profiles.${profileIndex}.domain_id`,
-            nextDomain?.domain_id || '',
-          );
-        }
-      }
-      return updatedDomains;
-    });
-  };
-
   // Draft save/load/discard
   const saveDraft = () => {
     const formValues = form.getValues();
@@ -566,20 +524,6 @@ export function CreateProjectBusinessForm() {
     setCurrDomains([]);
   }
 
-  // Step navigation
-  const nextStep = async () => {
-    const isValid = await form.trigger([
-      'urls',
-      'projectDomain',
-      'description',
-      'email',
-      'projectName',
-    ]);
-    if (!isValid) return;
-    if (currentStep === FormSteps.ProjectInfo)
-      setCurrentStep(FormSteps.ProfileInfo);
-  };
-
   const prevStep = () => {
     if (currentStep === FormSteps.ProfileInfo)
       setCurrentStep(FormSteps.ProjectInfo);
@@ -587,35 +531,79 @@ export function CreateProjectBusinessForm() {
 
   // UI render helpers
   const ProfileTabs = () => (
-    <ScrollArea>
-      <div
-        className={`flex gap-2 mb-2 ${mode === 'multiple' ? 'p-2 rounded-md' : ''}`}
-      >
-        {mode === 'multiple' &&
-          profileFields.map((_, index) => {
-            const profileType = form.watch(`profiles.${index}.profileType`);
-            const profileTypeLabel =
-              profileType === 'FREELANCER' ? 'Freelancer' : 'Consultant';
-            return (
-              <Button
-                key={index}
-                type="button"
-                variant={activeProfile === index ? 'default' : 'outline'}
-                onClick={() => setActiveProfile(index)}
-                className={`px-4 py-2 flex items-center gap-2 transition-colors ${
-                  activeProfile === index
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'hover:bg-transparent'
-                }`}
-              >
-                <span>Profile {index + 1}</span>
-                <span className="text-xs opacity-80">({profileTypeLabel})</span>
-              </Button>
-            );
-          })}
+    <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="min-w-0 flex-1">
+        <ScrollArea>
+          <div className={`flex items-center gap-2 whitespace-nowrap`}>
+            {mode === 'multiple' &&
+              profileFields.map((_, idx) => {
+                const profileType = form.watch(`profiles.${idx}.profileType`);
+                const profileTypeLabel =
+                  profileType === 'FREELANCER' ? 'Freelancer' : 'Consultant';
+                return (
+                  <div
+                    key={idx}
+                    className={`shrink-0 inline-flex items-center gap-2 rounded-md border ${activeProfile === idx ? 'bg-primary/10 border-primary' : 'border-border'} px-3 py-1.5`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActiveProfile(idx)}
+                      className="text-sm font-medium"
+                    >
+                      {profileTypeLabel} {idx + 1}
+                    </button>
+                    {profileFields.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeProfile(idx);
+                          if (activeProfile >= idx) {
+                            setActiveProfile(Math.max(idx - 1, 0));
+                          }
+                        }}
+                        className="ml-1 text-red-500 hover:text-red-600"
+                        aria-label={`Remove Profile ${idx + 1}`}
+                        title="Remove profile"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </div>
-      <ScrollBar orientation="horizontal" />
-    </ScrollArea>
+      {mode === 'multiple' && (
+        <Button
+          type="button"
+          variant="ghost"
+          className="size-8 rounded-full"
+          size="icon"
+          onClick={() =>
+            appendProfile({
+              domain: [],
+              freelancersRequired: '',
+              skills: [],
+              experience: '',
+              minConnect: '',
+              budget: {
+                type: 'FIXED',
+                fixedAmount: '',
+                hourly: { minRate: '', maxRate: '', estimatedHours: '' },
+              },
+              description: '',
+              domain_id: '',
+              profileType: 'FREELANCER',
+            })
+          }
+        >
+          <Plus />
+        </Button>
+      )}
+    </div>
   );
 
   const renderProjectInfoStep = () => (
@@ -749,9 +737,7 @@ export function CreateProjectBusinessForm() {
 
   const renderProfileInfoStep = () => (
     <div className="lg:col-span-2 xl:col-span-2">
-      <div className="my-4">
-        <ProfileTabs />
-      </div>
+      {/* Tabs moved inside card header; no standalone bar here */}
       {profileFields.map((field, index) => {
         if (mode === 'single' && index > 0) return null;
 
@@ -760,6 +746,11 @@ export function CreateProjectBusinessForm() {
             key={index}
             className="rounded-xl border bg-card shadow-sm p-5 mb-6"
           >
+            {mode === 'multiple' && (
+              <div className="mb-3">
+                <ProfileTabs />
+              </div>
+            )}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-primary/10 border border-primary flex items-center justify-center">
@@ -776,6 +767,7 @@ export function CreateProjectBusinessForm() {
                 <div className="flex gap-2">
                   <Button
                     type="button"
+                    size="sm"
                     variant={
                       form.watch(`profiles.${index}.profileType`) ===
                       'FREELANCER'
@@ -794,6 +786,7 @@ export function CreateProjectBusinessForm() {
                   </Button>
                   <Button
                     type="button"
+                    size="sm"
                     variant={
                       form.watch(`profiles.${index}.profileType`) ===
                       'CONSULTANT'
@@ -814,7 +807,7 @@ export function CreateProjectBusinessForm() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               <FormField
                 control={form.control}
                 name={`profiles.${index}.domain`}
@@ -830,15 +823,30 @@ export function CreateProjectBusinessForm() {
                           label: d.label,
                           _id: d.value,
                         }))}
-                        selected={(currDomains[index] || []).map(
-                          (d: string) => ({
-                            name: d,
-                          }),
-                        )}
-                        onAdd={(val) => handleAddProfileDomain(index, val)}
-                        onRemove={(val) =>
-                          handleRemoveProfileDomain(index, val)
-                        }
+                        selected={(currDomains[index] || [])
+                          .slice(0, 1)
+                          .map((d: string) => ({ name: d }))}
+                        onAdd={(val: string) => {
+                          if (!val) return;
+                          const updated = [val];
+                          setCurrDomains((prev) => ({
+                            ...prev,
+                            [index]: updated,
+                          }));
+                          form.setValue(`profiles.${index}.domain`, updated, {
+                            shouldValidate: true,
+                          });
+                        }}
+                        onRemove={() => {
+                          const updated: string[] = [];
+                          setCurrDomains((prev) => ({
+                            ...prev,
+                            [index]: updated,
+                          }));
+                          form.setValue(`profiles.${index}.domain`, updated, {
+                            shouldValidate: true,
+                          });
+                        }}
                         className="w-full"
                         optionLabelKey="label"
                         selectedNameKey="name"
@@ -846,18 +854,6 @@ export function CreateProjectBusinessForm() {
                         searchPlaceholder="Search domains..."
                       />
                     </FormControl>
-                    {(currDomains[index] || []).length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {(currDomains[index] || []).map((d: string) => (
-                          <span
-                            key={d}
-                            className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
-                          >
-                            {d}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -869,7 +865,7 @@ export function CreateProjectBusinessForm() {
                   <FormItem className="mb-4">
                     <FormLabel className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      {`Number of ${profileType}`}
+                      Positions
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -889,7 +885,7 @@ export function CreateProjectBusinessForm() {
                 render={() => (
                   <FormItem className="mb-4">
                     <FormLabel className="flex items-center gap-2">
-                      <Wrench className="h-4 w-4" /> Skills
+                      <Award className="h-4 w-4" /> Skills
                     </FormLabel>
                     <FormControl>
                       <SelectTagPicker
@@ -941,24 +937,12 @@ export function CreateProjectBusinessForm() {
                         optionLabelKey="label"
                       />
                     </FormControl>
-                    {(currSkills[index] || []).length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {(currSkills[index] || []).map((s: string) => (
-                          <span
-                            key={s}
-                            className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
-                          >
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <FormField
                 control={form.control}
                 name={`profiles.${index}.experience`}
@@ -985,14 +969,9 @@ export function CreateProjectBusinessForm() {
                 name={`profiles.${index}.minConnect`}
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between mb-2">
-                      <FormLabel className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" /> Min Connect
-                      </FormLabel>
-                      <FormDescription>
-                        Minimum number of connects for the project
-                      </FormDescription>
-                    </div>
+                    <FormLabel className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" /> Min Connect
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Enter Min Connects (Recommended: 10)"
@@ -1004,142 +983,16 @@ export function CreateProjectBusinessForm() {
                 )}
               />
             </div>
-            <BudgetSection form={form} activeProfile={activeProfile} />
-            {mode === 'multiple' && profileFields.length > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => removeProfile(index)}
-              >
-                Remove Profile
-              </Button>
-            )}
+            {/* Section divider before budget */}
+            <div className="border-t mt-2 mb-4" />
+            <BudgetSection
+              form={form}
+              activeProfile={activeProfile}
+              className="w-full"
+            />
           </div>
         ) : null;
       })}
-      {mode === 'multiple' && (
-        <div className="flex justify-between items-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() =>
-              appendProfile({
-                domain: [],
-                freelancersRequired: '',
-                skills: [],
-                experience: '',
-                minConnect: '',
-                budget: {
-                  type: 'FIXED',
-                  fixedAmount: '',
-                  hourly: { minRate: '', maxRate: '', estimatedHours: '' },
-                },
-                description: '',
-                domain_id: '',
-                profileType: 'FREELANCER',
-              })
-            }
-          >
-            Add Profile
-          </Button>
-          <Button type="button" size="sm" variant="outline" onClick={saveDraft}>
-            <Save />
-          </Button>
-        </div>
-      )}
-      <div className="lg:col-span-2 xl:col-span-2 mt-4">
-        <ConnectsDialog
-          form={form}
-          loading={loading}
-          isValidCheck={async () => {
-            // Validate all required fields
-            const fieldsToValidate = [
-              'projectName',
-              'email',
-              'description',
-              'urls',
-              'profiles',
-            ];
-
-            try {
-              const isValid = await form.trigger(fieldsToValidate as any, {
-                shouldFocus: true,
-              });
-              if (!isValid) {
-                // If validation fails, show error for the first invalid field
-                const { errors } = form.formState;
-                const firstError = Object.keys(errors)[0];
-
-                if (firstError) {
-                  // Handle nested errors (like array items)
-                  const getNestedError = (obj: any, path: string) => {
-                    return path
-                      .split('.')
-                      .reduce(
-                        (o, p) => (o && o[p] !== undefined ? o[p] : undefined),
-                        obj,
-                      );
-                  };
-
-                  const error = getNestedError(errors, firstError);
-                  const errorMessage =
-                    error?.message || 'Please fill in all required fields';
-
-                  notifyError(
-                    typeof errorMessage === 'string'
-                      ? errorMessage
-                      : 'Please fill in all required fields',
-                    'Validation Error',
-                  );
-                } else {
-                  notifyError(
-                    'Please fill in all required fields',
-                    'Validation Error',
-                  );
-                }
-              }
-              return isValid;
-            } catch (error) {
-              console.error('Validation error:', error);
-              return false;
-            }
-          }}
-          onSubmit={async () => {
-            try {
-              // First validate all fields
-              const fieldsToValidate = [
-                'projectName',
-                'email',
-                'description',
-                'urls',
-                'profiles',
-              ];
-
-              const isValid = await form.trigger(fieldsToValidate as any, {
-                shouldFocus: true,
-              });
-              if (!isValid) return;
-
-              // If validation passes, submit the form
-              await form.handleSubmit(onSubmit)();
-            } catch (error) {
-              console.error('Submission error:', error);
-            }
-          }}
-          setLoading={setLoading}
-          userId={user?.uid || ''}
-          buttonText={'Create Project'}
-          userType={'BUSINESS'}
-          requiredConnects={parseInt(
-            process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
-            10,
-          )}
-        />
-      </div>
     </div>
   );
 
@@ -1153,7 +1006,20 @@ export function CreateProjectBusinessForm() {
           <ProjectFormStepper
             currentStep={currentStep === FormSteps.ProjectInfo ? 0 : 1}
             onProjectClick={() => setCurrentStep(FormSteps.ProjectInfo)}
-            onProfileClick={() => setCurrentStep(FormSteps.ProfileInfo)}
+            onProfileClick={async () => {
+              const ok = await form.trigger([
+                'projectName',
+                'email',
+                'projectDomain',
+              ]);
+              if (!ok) {
+                notifyError(
+                  'Please complete required fields before continuing',
+                );
+                return;
+              }
+              setCurrentStep(FormSteps.ProfileInfo);
+            }}
             className="mb-6"
           />
 
@@ -1186,20 +1052,148 @@ export function CreateProjectBusinessForm() {
                       type="button"
                       variant="default"
                       size="sm"
-                      onClick={nextStep}
+                      onClick={async () => {
+                        const ok = await form.trigger([
+                          'projectName',
+                          'email',
+                          'projectDomain',
+                        ]);
+                        if (!ok) {
+                          notifyError(
+                            'Please complete required fields before continuing',
+                          );
+                          return;
+                        }
+                        setCurrentStep(FormSteps.ProfileInfo);
+                      }}
                     >
                       Next
                     </Button>
                   )}
                   {currentStep === FormSteps.ProfileInfo && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={prevStep}
-                    >
-                      Back
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={prevStep}
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={saveDraft}
+                        title="Save Draft"
+                      >
+                        <Save className="h-4 w-4 mr-1" /> Save Draft
+                      </Button>
+                      <ConnectsDialog
+                        form={form}
+                        loading={loading}
+                        isValidCheck={async () => {
+                          // Validate all required fields
+                          const fieldsToValidate = [
+                            'projectName',
+                            'email',
+                            'description',
+                            'urls',
+                            'profiles',
+                          ];
+
+                          try {
+                            const isValid = await form.trigger(
+                              fieldsToValidate as any,
+                              {
+                                shouldFocus: true,
+                              },
+                            );
+                            if (!isValid) {
+                              // If validation fails, show error for the first invalid field
+                              const { errors } = form.formState;
+                              const firstError = Object.keys(errors)[0];
+
+                              if (firstError) {
+                                // Handle nested errors (like array items)
+                                const getNestedError = (
+                                  obj: any,
+                                  path: string,
+                                ) => {
+                                  return path
+                                    .split('.')
+                                    .reduce(
+                                      (o, p) =>
+                                        o && o[p] !== undefined
+                                          ? o[p]
+                                          : undefined,
+                                      obj,
+                                    );
+                                };
+
+                                const error = getNestedError(
+                                  errors,
+                                  firstError,
+                                );
+                                const errorMessage =
+                                  error?.message ||
+                                  'Please fill in all required fields';
+
+                                notifyError(
+                                  typeof errorMessage === 'string'
+                                    ? errorMessage
+                                    : 'Please fill in all required fields',
+                                  'Validation Error',
+                                );
+                              } else {
+                                notifyError(
+                                  'Please fill in all required fields',
+                                  'Validation Error',
+                                );
+                              }
+                            }
+                            return isValid;
+                          } catch (error) {
+                            console.error('Validation error:', error);
+                            return false;
+                          }
+                        }}
+                        onSubmit={async () => {
+                          try {
+                            // First validate all fields
+                            const fieldsToValidate = [
+                              'projectName',
+                              'email',
+                              'description',
+                              'urls',
+                              'profiles',
+                            ];
+
+                            const isValid = await form.trigger(
+                              fieldsToValidate as any,
+                              {
+                                shouldFocus: true,
+                              },
+                            );
+                            if (!isValid) return;
+
+                            // If validation passes, submit the form
+                            await form.handleSubmit(onSubmit)();
+                          } catch (error) {
+                            console.error('Submission error:', error);
+                          }
+                        }}
+                        setLoading={setLoading}
+                        userId={user?.uid || ''}
+                        buttonText={'Create Project'}
+                        userType={'BUSINESS'}
+                        requiredConnects={parseInt(
+                          process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST ||
+                            '0',
+                          10,
+                        )}
+                      />
+                    </div>
                   )}
                 </div>
               </div>

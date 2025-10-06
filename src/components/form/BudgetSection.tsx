@@ -1,5 +1,6 @@
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
+import { DollarSign, Clock, Calculator } from 'lucide-react';
 
 import {
   FormField,
@@ -28,15 +29,28 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
     }
     return undefined;
   })();
-
   return (
     <div
       className={
         className ||
-        'lg:col-span-2 xl:col-span-2 border p-4 rounded-md mb-4 card'
+        'lg:col-span-2 xl:col-span-2 border p-5 rounded-xl mb-4 card shadow-sm'
       }
     >
-      <h3 className="text-lg font-medium mb-4">Project Budget</h3>
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-full bg-primary/10 border border-primary flex items-center justify-center">
+            <Calculator className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold leading-tight">
+              Project Budget
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Choose a budget type and specify details
+            </p>
+          </div>
+        </div>
+      </div>
 
       <FormField
         control={form.control}
@@ -50,19 +64,33 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
                 defaultValue={field.value}
                 className="flex flex-col space-y-1"
               >
-                <div className="flex flex-row gap-4">
-                  <div className="flex items-center space-x-2">
+                <div className="flex flex-row gap-3">
+                  <label
+                    htmlFor="fixed"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer text-sm transition-colors ${
+                      budgetType === 'FIXED'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:bg-muted/40'
+                    }`}
+                  >
                     <RadioGroupItem value="FIXED" id="fixed" />
-                    <label htmlFor="fixed" className="cursor-pointer">
-                      Fixed Price
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
+                    <span className="inline-flex items-center gap-1">
+                      <DollarSign className="h-4 w-4" /> Fixed Price
+                    </span>
+                  </label>
+                  <label
+                    htmlFor="hourly"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer text-sm transition-colors ${
+                      budgetType === 'HOURLY'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:bg-muted/40'
+                    }`}
+                  >
                     <RadioGroupItem value="HOURLY" id="hourly" />
-                    <label htmlFor="hourly" className="cursor-pointer">
-                      Hourly Rate
-                    </label>
-                  </div>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-4 w-4" /> Hourly Rate
+                    </span>
+                  </label>
                 </div>
               </RadioGroup>
             </FormControl>
