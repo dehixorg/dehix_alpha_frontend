@@ -333,22 +333,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                   {/* Make the entire sheet scrollable */}
                   <ScrollArea className="h-[calc(100vh-5rem)] pr-4">
                     <div className="space-y-4 mt-4 px-1">
-                      {/* Search */}
-                      <div className="space-y-2">
-                        <Label htmlFor="search">Search</Label>
-                        <div className="relative">
-                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="search"
-                            placeholder="Search by name, skills..."
-                            className="pl-8"
-                            value={filters.search}
-                            onChange={(e) => handleSearchChange(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      <Separator />
-
                       {/* Skills */}
                       <div className="space-y-2">
                         <Label>Skills</Label>
@@ -361,7 +345,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                             onChange={(e) => setSkillsSearch(e.target.value)}
                           />
                         </div>
-                        <ScrollArea className="max-h-48 overflow-y-auto no-scrollbar pr-2 rounded-md border">
+                        <ScrollArea className="h-48 pr-2 rounded-md border">
                           <div className="space-y-1 py-1">
                             {skills
                               .filter((skill) =>
@@ -410,7 +394,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                             onChange={(e) => setDomainsSearch(e.target.value)}
                           />
                         </div>
-                        <ScrollArea className="max-h-48 overflow-y-auto no-scrollbar pr-2 rounded-md border">
+                        <ScrollArea className="h-48 pr-2 rounded-md border">
                           <div className="space-y-1 py-1">
                             {domains
                               .filter((domain) =>
@@ -561,12 +545,16 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="py-2 space-y-2">
-                      <Input
-                        placeholder="Search Skills"
-                        value={skillsSearch}
-                        onChange={(e) => setSkillsSearch(e.target.value)}
-                        className="pl-8"
-                      />
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          type="text"
+                          placeholder="Search Skills"
+                          value={skillsSearch}
+                          onChange={(e) => setSkillsSearch(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
                       <ScrollArea className="h-48">
                         <div className="space-y-1 p-1">
                           {skills
@@ -616,12 +604,15 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="py-2 space-y-2">
-                      <Input
-                        placeholder="Search Domains"
-                        value={domainsSearch}
-                        onChange={(e) => setDomainsSearch(e.target.value)}
-                        className="pl-8"
-                      />
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          placeholder="Search Domains"
+                          value={domainsSearch}
+                          onChange={(e) => setDomainsSearch(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
                       <ScrollArea className="h-48">
                         <div className="space-y-1 p-1">
                           {domains
