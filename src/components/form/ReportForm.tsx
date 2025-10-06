@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
 import {
   Form,
   FormControl,
@@ -68,7 +67,6 @@ export function ReportForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const user = useSelector((state: RootState) => state.user);
-  const { toast } = useToast();
 
   const onSubmit = async (data: ReportFormValues) => {
     try {

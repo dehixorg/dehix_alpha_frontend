@@ -421,8 +421,13 @@ const Market: React.FC = () => {
                   Browse through available projects and find your next gig
                 </p>
               </div>
-              <div className="ml-auto flex items-center gap-2">
-                {!isLargeScreen && (
+              <div className="flex items-center justify-between px-1">
+                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+                  {jobs.length} {jobs.length === 1 ? 'result' : 'results'}
+                </span>
+              </div>
+              {!isLargeScreen && (
+                <div className="ml-auto flex items-center gap-2">
                   <FilterSheet
                     filters={filters}
                     setFilters={setFilters}
@@ -438,13 +443,8 @@ const Market: React.FC = () => {
                     projectDomainSearchQuery={projectDomainSearchQuery}
                     setProjectDomainSearchQuery={setProjectDomainSearchQuery}
                   />
-                )}
-              </div>
-              <div className="flex items-center justify-between px-1">
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
-                  {jobs.length} {jobs.length === 1 ? 'result' : 'results'}
-                </span>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

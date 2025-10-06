@@ -1,12 +1,9 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 
 import ImageUploader from '@/components/fileUpload/ImageUploader';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 
 type ReportKycUploaderProps = {
   onFilesChange?: (
@@ -20,8 +17,8 @@ export default function ReportKycUploader({
 }: ReportKycUploaderProps) {
   const [frontFile, setFrontFile] = useState<File | string | null>(null);
   const [backFile, setBackFile] = useState<File | string | null>(null);
-  const [frontPreview, setFrontPreview] = useState<string>('');
-  const [backPreview, setBackPreview] = useState<string>('');
+  const [, setFrontPreview] = useState<string>('');
+  const [, setBackPreview] = useState<string>('');
 
   const frontUrlRef = useRef<string | null>(null);
   const backUrlRef = useRef<string | null>(null);
@@ -57,7 +54,6 @@ export default function ReportKycUploader({
       if (backUrlRef.current) URL.revokeObjectURL(backUrlRef.current);
     };
   }, [frontFile, backFile]);
-
 
   return (
     <Card className="p-4">

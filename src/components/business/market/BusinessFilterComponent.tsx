@@ -200,6 +200,12 @@ export default function BusinessFilterComponent({
       <div className="sticky top-0 z-10 bg-background border-b p-4 rounded-t-lg">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Filters</h2>
+        </div>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground self-center">
+            {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''}{' '}
+            applied
+          </p>
           <Button
             variant="ghost"
             size="sm"
@@ -209,11 +215,8 @@ export default function BusinessFilterComponent({
             Clear all
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} applied
-        </p>
       </div>
-      <ScrollArea className="flex-1 px-4 py-2">
+      <ScrollArea className="flex-1 px-4 pb-2 pt-4">
         <Accordion
           type="multiple"
           defaultValue={[
