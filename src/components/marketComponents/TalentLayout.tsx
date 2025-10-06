@@ -294,177 +294,166 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
             },
           ]}
         />
-        <header className="border-b">
-          <div className="container flex h-16 items-center justify-between px-4 ">
-            <h1 className="text-xl font-bold">Talent Management</h1>
+        {/* Filter Sheet Trigger */}
+        <div className="lg:hidden">
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Sliders className="h-4 w-4" />
+                Filters
+              </Button>
+            </SheetTrigger>
 
-            {/* Filter Sheet Trigger */}
-            <div className="lg:hidden">
-              <Sheet open={open} onOpenChange={setOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Sliders className="h-4 w-4" />
-                    Filters
-                  </Button>
-                </SheetTrigger>
+            <SheetContent side="right" className="w-80 sm:w-96 p-4">
+              <div className="flex items-center justify-between mb-2 w-full pl-2">
+                <h2 className="flex items-center gap-2 flex-shrink-0 text-lg font-semibold">
+                  Filters
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResetFilters}
+                  className="flex items-center gap-1 text-red-500 hover:text-red-500/80 transition-colors bg-red-500/10 hover:bg-red-500/20 whitespace-nowrap"
+                >
+                  Clear all
+                </Button>
+              </div>
 
-                <SheetContent side="right" className="w-80 sm:w-96 p-4">
-                  <div className="flex items-center justify-between mb-2 w-full pl-2">
-                    <h2 className="flex items-center gap-2 flex-shrink-0 text-lg font-semibold">
-                      Filters
-                    </h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleResetFilters}
-                      className="flex items-center gap-1 text-red-500 hover:text-red-500/80 transition-colors bg-red-500/10 hover:bg-red-500/20 whitespace-nowrap"
-                    >
-                      Clear all
-                    </Button>
-                  </div>
-
-                  {/* Make the entire sheet scrollable */}
-                  <ScrollArea className="h-[calc(100vh-5rem)] pr-4">
-                    <div className="space-y-4 mt-4 px-1">
-                      {/* Skills */}
-                      <div className="space-y-2">
-                        <Label>Skills</Label>
-                        <div className="relative">
-                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Search Skills"
-                            className="pl-8"
-                            value={skillsSearch}
-                            onChange={(e) => setSkillsSearch(e.target.value)}
-                          />
-                        </div>
-                        <ScrollArea className="h-48 pr-2 rounded-md border">
-                          <div className="space-y-1 py-1">
-                            {skills
-                              .filter((skill) =>
-                                skill
-                                  .toLowerCase()
-                                  .includes(skillsSearch.toLowerCase()),
-                              )
-                              .map((skill) => (
-                                <div
-                                  key={skill}
-                                  className="flex items-center space-x-4"
-                                >
-                                  <Checkbox
-                                    id={`skill-${skill}`}
-                                    checked={filters.skills.includes(skill)}
-                                    onCheckedChange={(Checked) =>
-                                      handleToggleFilter(
-                                        'skills',
-                                        skill,
-                                        !!Checked,
-                                      )
-                                    }
-                                  />
-                                  <Label
-                                    htmlFor={`skill-${skill}`}
-                                    className="font-normal"
-                                  >
-                                    {skill}
-                                  </Label>
-                                </div>
-                              ))}
-                          </div>
-                        </ScrollArea>
-                      </div>
-                      <Separator />
-
-                      {/* Domains */}
-                      <div className="space-y-2">
-                        <Label>Domains</Label>
-                        <div className="relative">
-                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Search Domains"
-                            className="pl-8"
-                            value={domainsSearch}
-                            onChange={(e) => setDomainsSearch(e.target.value)}
-                          />
-                        </div>
-                        <ScrollArea className="h-48 pr-2 rounded-md border">
-                          <div className="space-y-1 py-1">
-                            {domains
-                              .filter((domain) =>
-                                domain
-                                  .toLowerCase()
-                                  .includes(domainsSearch.toLowerCase()),
-                              )
-                              .map((domain) => (
-                                <div
-                                  key={domain}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <Checkbox
-                                    id={`domain-${domain}`}
-                                    checked={filters.domains.includes(domain)}
-                                    onCheckedChange={(Checked) =>
-                                      handleToggleFilter(
-                                        'domains',
-                                        domain,
-                                        !!Checked,
-                                      )
-                                    }
-                                  />
-                                  <Label
-                                    htmlFor={`domain-${domain}`}
-                                    className="font-normal"
-                                  >
-                                    {domain}
-                                  </Label>
-                                </div>
-                              ))}
-                          </div>
-                        </ScrollArea>
-                      </div>
-                      <Separator />
-
-                      {/* Experience */}
-                      <div className="space-y-2">
-                        <Label>Experience</Label>
-                        <div className="space-y-1">
-                          {Object.entries(experienceMapping).map(
-                            ([label, value]) => (
-                              <div
-                                key={label}
-                                className="flex items-center space-x-2"
-                              >
-                                <Checkbox
-                                  id={`exp-${label}`}
-                                  checked={filters.experience.includes(value)}
-                                  onCheckedChange={(Checked) =>
-                                    handleToggleFilter(
-                                      'experience',
-                                      value,
-                                      !!Checked,
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor={`exp-${label}`}
-                                  className="font-normal"
-                                >
-                                  {label}
-                                </Label>
-                              </div>
-                            ),
-                          )}
-                        </div>
-                      </div>
-                      <Separator />
+              {/* Make the entire sheet scrollable */}
+              <ScrollArea className="h-[calc(100vh-5rem)] pr-4">
+                <div className="space-y-4 mt-4 px-1">
+                  {/* Skills */}
+                  <div className="space-y-2">
+                    <Label>Skills</Label>
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search Skills"
+                        className="pl-8"
+                        value={skillsSearch}
+                        onChange={(e) => setSkillsSearch(e.target.value)}
+                      />
                     </div>
-                  </ScrollArea>
-                </SheetContent>
-              </Sheet>
-            </div>
-          </div>
-        </header>
+                    <ScrollArea className="h-48 pr-2 rounded-md border">
+                      <div className="space-y-1 py-1">
+                        {skills
+                          .filter((skill) =>
+                            skill
+                              .toLowerCase()
+                              .includes(skillsSearch.toLowerCase()),
+                          )
+                          .map((skill) => (
+                            <div
+                              key={skill}
+                              className="flex items-center space-x-4"
+                            >
+                              <Checkbox
+                                id={`skill-${skill}`}
+                                checked={filters.skills.includes(skill)}
+                                onCheckedChange={(Checked) =>
+                                  handleToggleFilter('skills', skill, !!Checked)
+                                }
+                              />
+                              <Label
+                                htmlFor={`skill-${skill}`}
+                                className="font-normal"
+                              >
+                                {skill}
+                              </Label>
+                            </div>
+                          ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                  <Separator />
 
+                  {/* Domains */}
+                  <div className="space-y-2">
+                    <Label>Domains</Label>
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search Domains"
+                        className="pl-8"
+                        value={domainsSearch}
+                        onChange={(e) => setDomainsSearch(e.target.value)}
+                      />
+                    </div>
+                    <ScrollArea className="h-48 pr-2 rounded-md border">
+                      <div className="space-y-1 py-1">
+                        {domains
+                          .filter((domain) =>
+                            domain
+                              .toLowerCase()
+                              .includes(domainsSearch.toLowerCase()),
+                          )
+                          .map((domain) => (
+                            <div
+                              key={domain}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`domain-${domain}`}
+                                checked={filters.domains.includes(domain)}
+                                onCheckedChange={(Checked) =>
+                                  handleToggleFilter(
+                                    'domains',
+                                    domain,
+                                    !!Checked,
+                                  )
+                                }
+                              />
+                              <Label
+                                htmlFor={`domain-${domain}`}
+                                className="font-normal"
+                              >
+                                {domain}
+                              </Label>
+                            </div>
+                          ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                  <Separator />
+
+                  {/* Experience */}
+                  <div className="space-y-2">
+                    <Label>Experience</Label>
+                    <div className="space-y-1">
+                      {Object.entries(experienceMapping).map(
+                        ([label, value]) => (
+                          <div
+                            key={label}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`exp-${label}`}
+                              checked={filters.experience.includes(value)}
+                              onCheckedChange={(Checked) =>
+                                handleToggleFilter(
+                                  'experience',
+                                  value,
+                                  !!Checked,
+                                )
+                              }
+                            />
+                            <Label
+                              htmlFor={`exp-${label}`}
+                              className="font-normal"
+                            >
+                              {label}
+                            </Label>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                  <Separator />
+                </div>
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
+        </div>
         <div className="container px-4 py-4 ">
           <Tabs value={activeTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4 ">

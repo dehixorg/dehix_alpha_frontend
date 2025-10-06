@@ -193,21 +193,25 @@ const Market: React.FC = () => {
           ]}
         />
         <div className="flex flex-col sm:gap-4">
-          <div className="px-4 sm:px-6">
+          <div className="p-4 sm:px-6">
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-col space-y-2">
                 <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
-                  Business Marketplace
-                </h1>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight block md:hidden">
                   Business Marketplace
                 </h1>
                 <p className="hidden md:block text-muted-foreground">
                   Discover and hire vetted freelancers for your projects.
                 </p>
               </div>
-              <div className="ml-auto flex items-center gap-2">
-                {!isLargeScreen && (
+
+              <div className="flex items-center justify-between px-1">
+                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+                  {freelancers.length}{' '}
+                  {freelancers.length === 1 ? 'result' : 'results'}
+                </span>
+              </div>
+              {!isLargeScreen && (
+                <div className="ml-auto flex items-center gap-2">
                   <BusinessFilterSheet
                     filters={filters}
                     onFilterChange={handleFilterChange}
@@ -219,14 +223,8 @@ const Market: React.FC = () => {
                     locations={locations}
                     onReset={handleReset}
                   />
-                )}
-              </div>
-              <div className="flex items-center justify-between px-1 mb-4">
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
-                  {freelancers.length}{' '}
-                  {freelancers.length === 1 ? 'result' : 'results'}
-                </span>
-              </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex flex-1 overflow-hidden px-4 sm:px-8 pb-8">

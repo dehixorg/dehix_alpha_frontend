@@ -77,7 +77,7 @@ export default function CurrentInterviews() {
     try {
       setLoading(true);
       const data = await fetchScheduledInterviews(user.uid);
-      
+
       setInterviews(data);
       await fetchInterviewerDetails(data);
     } catch (error) {
@@ -132,21 +132,30 @@ export default function CurrentInterviews() {
     try {
       setSubmitting(true);
       if (!rating || rating < 1) {
-        notifyError('Please select a rating before submitting.', 'Rating required');
+        notifyError(
+          'Please select a rating before submitting.',
+          'Rating required',
+        );
         return;
       }
 
       await completeBid(interview._id, rating, feedback, 'CANCELLED');
       setIsDialogOpen(false);
 
-      notifySuccess('Your rejection and feedback have been saved.', 'Rejected submitted');
+      notifySuccess(
+        'Your rejection and feedback have been saved.',
+        'Rejected submitted',
+      );
 
       setfeedback('');
       setRating(0);
       setHover(0);
     } catch (e: any) {
       console.error('Error in handleRejected:', e);
-      notifyError(e?.response?.data?.message || e?.message || 'Something went wrong.', 'Failed to submit');
+      notifyError(
+        e?.response?.data?.message || e?.message || 'Something went wrong.',
+        'Failed to submit',
+      );
     } finally {
       setSubmitting(false);
     }
@@ -156,7 +165,10 @@ export default function CurrentInterviews() {
     try {
       setSubmitting(true);
       if (!rating || rating < 1) {
-        notifyError('Please select a rating before submitting.', 'Rating required');
+        notifyError(
+          'Please select a rating before submitting.',
+          'Rating required',
+        );
         return;
       }
       const status =
@@ -167,7 +179,10 @@ export default function CurrentInterviews() {
       await completeInterviewerBid(interview._id, rating, feedback, status);
       setIsDialogOpen(false);
 
-      notifySuccess('Your rating and feedback have been saved.', 'Feedback submitted');
+      notifySuccess(
+        'Your rating and feedback have been saved.',
+        'Feedback submitted',
+      );
 
       setfeedback('');
       setRating(0);
