@@ -26,6 +26,7 @@ import {
 import { apiHelperService } from '@/services/report';
 import { RootState } from '@/lib/store';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
+import { notifyError } from '@/utils/toastMessage';
 
 const reportSchema = z.object({
   subject: z.string().min(3, { message: 'Subject is required' }),
@@ -65,17 +66,23 @@ export function ReportForm({
   const [image2, setImage2] = useState<File | string | null>(null);
   const [image3, setImage3] = useState<File | string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [failedUploads, setFailedUploads] = useState<
+    { index: number; name: string; error: string }[]
+  >([]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const user = useSelector((state: RootState) => state.user);
 
   const onSubmit = async (data: ReportFormValues) => {
     try {
+      setSubmitError(null);
       setIsSubmitting(true);
 
       const imageMetaArray = [];
       const images = [image1, image2, image3].filter(
         (img) => img && img instanceof File,
       ) as File[];
+      const failed: { index: number; name: string; error: string }[] = [];
 
       // Upload images if any are selected
       if (images.length > 0) {
@@ -119,16 +126,22 @@ export function ReportForm({
               );
             }
           } catch (uploadError: any) {
+            const errDetail =
+              uploadError?.response?.data?.message ||
+              uploadError?.message ||
+              JSON.stringify(uploadError?.response?.data || uploadError);
             console.error(`Failed to upload image ${i + 1}:`, uploadError);
-            console.error(
-              'Upload error details:',
-              uploadError?.response?.data || uploadError,
+            failed.push({ index: i, name: file.name, error: errDetail });
+            notifyError(
+              `Failed to upload image ${i + 1}${file?.name ? ` (${file.name})` : ''}: ${errDetail}`,
+              'Image Upload Failed',
             );
             // Continue with other images instead of failing completely
           }
         }
 
         console.log('Final imageMeta array:', imageMetaArray);
+        setFailedUploads(failed);
       }
 
       const finalPayload = {
@@ -152,6 +165,17 @@ export function ReportForm({
     } catch (error: any) {
       console.error('Failed to submit report:', error);
       console.error('Error details:', error?.response?.data || error);
+      const details =
+        error?.response?.data?.message ||
+        error?.message ||
+        JSON.stringify(error?.response?.data || error);
+      setSubmitError(
+        `Could not submit the report. Please try again. Details: ${details}`,
+      );
+      notifyError(
+        'Could not submit the report. Please try again.',
+        typeof details === 'string' ? details : 'Submission failed',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -317,6 +341,30 @@ export function ReportForm({
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting...' : 'Submit Report'}
           </Button>
+          {submitError && (
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="mt-3 rounded-md border border-destructive/20 bg-destructive/5 p-3 text-destructive"
+            >
+              <p className="text-sm">{submitError}</p>
+            </div>
+          )}
+          {failedUploads.length > 0 && (
+            <div className="mt-3 rounded-md border border-destructive/20 bg-destructive/5 p-3">
+              <p className="text-sm font-medium text-destructive">
+                Some images failed to upload:
+              </p>
+              <ul className="mt-2 list-disc pl-5 text-sm text-destructive">
+                {failedUploads.map((f) => (
+                  <li key={`${f.index}-${f.name}`}>
+                    Image {f.index + 1}
+                    {f.name ? ` (${f.name})` : ''}: {f.error}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </form>
       </Form>
     </div>
