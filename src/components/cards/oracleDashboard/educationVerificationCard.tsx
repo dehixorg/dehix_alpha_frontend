@@ -1,11 +1,12 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { MessageSquareIcon, MapPin, MoreVertical } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
+import { format } from 'date-fns';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
@@ -33,10 +34,17 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+
+interface UserDetail {
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
 
 interface EducationProps {
   _id: string;
@@ -49,6 +57,8 @@ interface EducationProps {
   comments: string;
   fieldOfStudy: string;
   status: string | 'pending';
+  requester: UserDetail;
+  verifier: UserDetail;
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
 }
@@ -62,7 +72,6 @@ const FormSchema = z.object({
 
 const EducationVerificationCard: React.FC<EducationProps> = ({
   _id,
-  type,
   degree,
   location,
   startFrom,
@@ -71,10 +80,11 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   fieldOfStudy,
   comments,
   status,
+  requester,
+  verifier,
   onStatusUpdate,
   onCommentUpdate,
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState(status);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
@@ -99,10 +109,6 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
     reportedId: user?.uid || 'user123',
   };
 
-  useEffect(() => {
-    setVerificationStatus(status);
-  }, [status]);
-
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
       await axiosInstance.put(
@@ -112,32 +118,48 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
           verification_status: data.type,
         },
       );
+      onStatusUpdate(data.type);
+      onCommentUpdate(data.comment || '');
+      notifySuccess('Verification status updated successfully.');
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
     }
-    setVerificationStatus(data.type);
-    onStatusUpdate(data.type);
-    onCommentUpdate(data.comment || '');
   }
+
+  const formatDate = (dateString: string) => {
+    try {
+      if (!dateString) return 'Invalid Date';
+      return format(new Date(dateString), 'MMMM d, yyyy');
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  };
 
   return (
     <Card className="max-w-full md:max-w-2xl relative">
       <CardHeader>
         <CardTitle className="flex justify-between items-start">
-          <span>{type}</span>
+          <div className="flex flex-col space-y-2">
+            <p className="text-sm text-gray-400">
+              <span className="font-semibold text-gray-500">Requester: </span>
+              {requester?.firstName} {requester?.lastName}
+            </p>
+            <p className="text-sm text-gray-400">
+              <span className="font-semibold text-gray-500">Verifier: </span>
+              {verifier?.firstName} {verifier?.lastName}
+            </p>
+          </div>
           <div className="flex items-center space-x-2">
-            {verificationStatus === 'pending' ||
-            verificationStatus === 'added' ? (
+            {status === 'pending' || status === 'added' ? (
               <Badge className="bg-warning-foreground text-white">
                 PENDING
               </Badge>
-            ) : verificationStatus === 'Approved' ? (
+            ) : status === 'Approved' ? (
               <Badge className="bg-success text-white">Approved</Badge>
             ) : (
               <Badge className="bg-red-500 text-white">Denied</Badge>
             )}
 
-            {/* Report menu */}
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
@@ -177,15 +199,18 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
       <CardContent>
         <div className="mt-2">
           <p className="text-m text-gray-600 mb-2">
-            <span className="text-gray-500 font-semibold">Degree:</span>{' '}
+            <span className="text-gray-500 font-semibold">Degree: </span>
             {degree}
           </p>
           <p className="text-m text-gray-600 mb-2">
-            <span className="text-gray-500 font-semibold">Field Of Study:</span>{' '}
+            <span className="text-gray-500 font-semibold">
+              Field Of Study:{' '}
+            </span>
             {fieldOfStudy}
           </p>
           <p className="text-m text-gray-600 mb-2">
-            <span className="text-gray-500 font-semibold">Grade:</span> {grade}
+            <span className="text-gray-500 font-semibold">Grade: </span>
+            {grade}
           </p>
 
           {comments && (
@@ -199,14 +224,11 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
 
       <CardFooter className="flex flex-col items-center">
         <div className="flex flex-1 gap-4">
-          {new Date(startFrom).toLocaleDateString()} -{' '}
-          {endTo !== 'current'
-            ? new Date(endTo).toLocaleDateString()
-            : 'Current'}
+          {formatDate(startFrom)} -{' '}
+          {endTo !== 'current' ? formatDate(endTo) : 'Current'}
         </div>
 
-        {(verificationStatus === 'pending' ||
-          verificationStatus === 'added') && (
+        {(status === 'pending' || status === 'added') && (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
