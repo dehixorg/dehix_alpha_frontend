@@ -840,7 +840,9 @@ export function CreateProjectBusinessForm() {
                             shouldValidate: true,
                           });
                           // Also persist the selected domain's id alongside the label in the profile
-                          const selected = domains.find((d: any) => d.label === val);
+                          const selected = domains.find(
+                            (d: any) => d.label === val,
+                          );
                           form.setValue(
                             `profiles.${index}.domain_id`,
                             selected?.domain_id || '',
