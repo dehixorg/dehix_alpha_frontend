@@ -58,6 +58,7 @@ interface TalentData {
 interface FilterState {
   search: string;
   skills: string[];
+  domains: string[];
   experience: string[];
 }
 
@@ -122,6 +123,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     skills: [],
+    domains:[],
     experience: [],
   });
 
@@ -135,7 +137,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   // REMOVED 'location' from the filterType parameter
   const handleToggleFilter = useCallback(
     (
-      filterType: 'skills' | 'experience',
+      filterType: 'skills' | 'domains' | 'experience',
       value: string,
       isChecked: boolean,
     ) => {
@@ -169,6 +171,11 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     if (currentFilters.skills.length > 0) {
       queryParts.push(
         `skillName=${currentFilters.skills.map(encodeURIComponent).join(',')}`,
+      );
+    }
+    if (currentFilters.domains.length > 0) {
+      queryParts.push(
+        `domainName=${currentFilters.domains.map(encodeURIComponent).join(',')}`,
       );
     }
     if (currentFilters.experience.length > 0) {
@@ -267,6 +274,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     const emptyFilters = {
       search: '',
       skills: [],
+      domains: [],
       experience: [],
     };
     setFilters(emptyFilters);
@@ -417,10 +425,10 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                                 >
                                   <Checkbox
                                     id={`domain-${domain}`}
-                                    checked={filters.skills.includes(domain)}
+                                    checked={filters.domains.includes(domain)}
                                     onCheckedChange={(Checked) =>
                                       handleToggleFilter(
-                                        'skills',
+                                        'domains',
                                         domain,
                                         !!Checked,
                                       )
@@ -629,10 +637,10 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                               >
                                 <Checkbox
                                   id={`domain-${domain}`}
-                                  checked={filters.skills.includes(domain)}
+                                  checked={filters.domains.includes(domain)}
                                   onCheckedChange={(checked) =>
                                     handleToggleFilter(
-                                      'skills',
+                                      'domains',
                                       domain,
                                       !!checked,
                                     )
