@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import {
   BookMarked,
   CheckCircle2,
-  Filter,
   Search,
   Users2,
   XCircle,
-  ChevronDown,
+  Sliders,
+  Award,
+  Globe,
+  UserCheck,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -17,8 +19,18 @@ import Header from '../header/header';
 
 import TalentContent from './TalentContent';
 
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -26,12 +38,9 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/use-toast';
 import SidebarMenu from '@/components/menu/sidebarMenu';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/business/dashboardMenuItems';
 
 interface ProfessionalExperience {
   workFrom?: string;
@@ -49,6 +58,7 @@ interface TalentData {
 interface FilterState {
   search: string;
   skills: string[];
+  domains: string[];
   experience: string[];
 }
 
@@ -100,16 +110,20 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     rejected: [],
   });
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   // NEW: State for skills/domains list, search query, and 'show more' functionality
-  const [allSkillsAndDomains, setAllSkillsAndDomains] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAllSkills, setShowAllSkills] = useState(false);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [domains, setDomains] = useState<string[]>([]);
+
+  const [skillsSearch, setSkillsSearch] = useState('');
+  const [domainsSearch, setDomainsSearch] = useState('');
 
   // REMOVED 'location: []' from the initial state
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     skills: [],
+    domains: [],
     experience: [],
   });
 
@@ -123,7 +137,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   // REMOVED 'location' from the filterType parameter
   const handleToggleFilter = useCallback(
     (
-      filterType: 'skills' | 'experience',
+      filterType: 'skills' | 'domains' | 'experience',
       value: string,
       isChecked: boolean,
     ) => {
@@ -141,13 +155,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     [],
   );
 
-  const handleSearchChange = useCallback((value: string) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      search: value,
-    }));
-  }, []);
-
   // REMOVED the 'location' part of the query string logic
   const constructQueryString = useCallback((currentFilters: FilterState) => {
     const queryParts: string[] = [];
@@ -157,6 +164,11 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     if (currentFilters.skills.length > 0) {
       queryParts.push(
         `skillName=${currentFilters.skills.map(encodeURIComponent).join(',')}`,
+      );
+    }
+    if (currentFilters.domains.length > 0) {
+      queryParts.push(
+        `domainName=${currentFilters.domains.map(encodeURIComponent).join(',')}`,
       );
     }
     if (currentFilters.experience.length > 0) {
@@ -209,7 +221,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     [businessId, activeTab, constructQueryString],
   );
 
-  // MERGE SKILLS AND DOMAINS FETCHING INTO A SINGLE EFFECT
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
@@ -218,15 +229,10 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
           axiosInstance.get('/domain'),
         ]);
 
-        const skillLabels = skillsResponse.data.data.map(
-          (skill: any) => skill.label,
+        setSkills(skillsResponse.data.data.map((skill: any) => skill.label));
+        setDomains(
+          domainsResponse.data.data.map((domain: any) => domain.label),
         );
-        const domainLabels = domainsResponse.data.data.map(
-          (domain: any) => domain.label,
-        );
-
-        const combinedLabels = [...skillLabels, ...domainLabels];
-        setAllSkillsAndDomains(combinedLabels);
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -240,12 +246,20 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     fetchData(filters);
   }, [activeTab, filters, fetchData]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setOpen(false); // close sheet
+      }
+    };
+
+    handleResize(); // run once on mount
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleTabChange = (value: string) => {
     router.push(`/business/talent/${value}`);
-  };
-
-  const handleApplyFilters = () => {
-    fetchData(filters);
   };
 
   // REMOVED 'location: []' from the reset object
@@ -253,6 +267,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     const emptyFilters = {
       search: '',
       skills: [],
+      domains: [],
       experience: [],
     };
     setFilters(emptyFilters);
@@ -265,8 +280,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
         menuItemsBottom={menuItemsBottom}
         active="Dehix Talent"
       />
-
-      <div className="flex flex-col sm:py-0 sm:pl-14">
+      <div className="sm:ml-14 flex flex-col min-h-screen">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -280,12 +294,183 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
             },
           ]}
         />
-        <div className="container px-4 py-4">
+        <header className="border-b">
+          <div className="container flex h-16 items-center justify-between px-4 ">
+            <h1 className="text-xl font-bold">Talent Management</h1>
+
+            {/* Filter Sheet Trigger */}
+            <div className="lg:hidden">
+              <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Sliders className="h-4 w-4" />
+                    Filters
+                  </Button>
+                </SheetTrigger>
+
+                <SheetContent side="right" className="w-80 sm:w-96 p-4">
+                  <div className="flex items-center justify-between mb-2 w-full pl-2">
+                    <h2 className="flex items-center gap-2 flex-shrink-0 text-lg font-semibold">
+                      Filters
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleResetFilters}
+                      className="flex items-center gap-1 text-red-500 hover:text-red-500/80 transition-colors bg-red-500/10 hover:bg-red-500/20 whitespace-nowrap"
+                    >
+                      Clear all
+                    </Button>
+                  </div>
+
+                  {/* Make the entire sheet scrollable */}
+                  <ScrollArea className="h-[calc(100vh-5rem)] pr-4">
+                    <div className="space-y-4 mt-4 px-1">
+                      {/* Skills */}
+                      <div className="space-y-2">
+                        <Label>Skills</Label>
+                        <div className="relative">
+                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search Skills"
+                            className="pl-8"
+                            value={skillsSearch}
+                            onChange={(e) => setSkillsSearch(e.target.value)}
+                          />
+                        </div>
+                        <ScrollArea className="h-48 pr-2 rounded-md border">
+                          <div className="space-y-1 py-1">
+                            {skills
+                              .filter((skill) =>
+                                skill
+                                  .toLowerCase()
+                                  .includes(skillsSearch.toLowerCase()),
+                              )
+                              .map((skill) => (
+                                <div
+                                  key={skill}
+                                  className="flex items-center space-x-4"
+                                >
+                                  <Checkbox
+                                    id={`skill-${skill}`}
+                                    checked={filters.skills.includes(skill)}
+                                    onCheckedChange={(Checked) =>
+                                      handleToggleFilter(
+                                        'skills',
+                                        skill,
+                                        !!Checked,
+                                      )
+                                    }
+                                  />
+                                  <Label
+                                    htmlFor={`skill-${skill}`}
+                                    className="font-normal"
+                                  >
+                                    {skill}
+                                  </Label>
+                                </div>
+                              ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                      <Separator />
+
+                      {/* Domains */}
+                      <div className="space-y-2">
+                        <Label>Domains</Label>
+                        <div className="relative">
+                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search Domains"
+                            className="pl-8"
+                            value={domainsSearch}
+                            onChange={(e) => setDomainsSearch(e.target.value)}
+                          />
+                        </div>
+                        <ScrollArea className="h-48 pr-2 rounded-md border">
+                          <div className="space-y-1 py-1">
+                            {domains
+                              .filter((domain) =>
+                                domain
+                                  .toLowerCase()
+                                  .includes(domainsSearch.toLowerCase()),
+                              )
+                              .map((domain) => (
+                                <div
+                                  key={domain}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <Checkbox
+                                    id={`domain-${domain}`}
+                                    checked={filters.domains.includes(domain)}
+                                    onCheckedChange={(Checked) =>
+                                      handleToggleFilter(
+                                        'domains',
+                                        domain,
+                                        !!Checked,
+                                      )
+                                    }
+                                  />
+                                  <Label
+                                    htmlFor={`domain-${domain}`}
+                                    className="font-normal"
+                                  >
+                                    {domain}
+                                  </Label>
+                                </div>
+                              ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                      <Separator />
+
+                      {/* Experience */}
+                      <div className="space-y-2">
+                        <Label>Experience</Label>
+                        <div className="space-y-1">
+                          {Object.entries(experienceMapping).map(
+                            ([label, value]) => (
+                              <div
+                                key={label}
+                                className="flex items-center space-x-2"
+                              >
+                                <Checkbox
+                                  id={`exp-${label}`}
+                                  checked={filters.experience.includes(value)}
+                                  onCheckedChange={(Checked) =>
+                                    handleToggleFilter(
+                                      'experience',
+                                      value,
+                                      !!Checked,
+                                    )
+                                  }
+                                />
+                                <Label
+                                  htmlFor={`exp-${label}`}
+                                  className="font-normal"
+                                >
+                                  {label}
+                                </Label>
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                      <Separator />
+                    </div>
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
+        </header>
+
+        <div className="container px-4 py-4 ">
           <Tabs value={activeTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-4 ">
               <TabsTrigger value="overview" asChild>
                 <a href="/business/talent">
-                  <Users2 className="h-4 w-4 mr-1" />
+                  <Users2 className="h-4 w-4 mr-2" />
                   Overview
                 </a>
               </TabsTrigger>
@@ -293,116 +478,183 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                 value="invited"
                 onClick={() => handleTabChange('invited')}
               >
-                <BookMarked className="h-4 w-4 mr-1" />
+                <BookMarked className="h-4 w-4 mr-2" />
                 Invites
               </TabsTrigger>
               <TabsTrigger
                 value="accepted"
                 onClick={() => handleTabChange('accepted')}
               >
-                <CheckCircle2 className="h-4 w-4 mr-1" />
+                <CheckCircle2 className="h-4 w-4 mr-2" />
                 Accepted
               </TabsTrigger>
               <TabsTrigger
                 value="rejected"
                 onClick={() => handleTabChange('rejected')}
               >
-                <XCircle className="h-4 w-4 mr-1" />
+                <XCircle className="h-4 w-4 mr-2" />
                 Rejected
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
+
         <div className="container flex-1 items-start px-4 py-6">
           <div className="grid grid-cols-12 gap-6">
-            <aside className="col-span-3">
-              <Card className="sticky top-20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Filter className="h-4 w-4" />
-                    Filters
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="search">Search</Label>
-                    <div className="relative">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="search"
-                        placeholder="Search by name, skills..."
-                        className="pl-8"
-                        value={filters.search}
-                        onChange={(e) => handleSearchChange(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <Label>Skills</Label>
-                    {/* NEW: Search input for skills */}
-                    <div className="relative">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search Skills"
-                        className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    {/* NEW: Checkbox list with conditional rendering for 'show more' */}
-                    <div className="space-y-1">
-                      {allSkillsAndDomains
-                        .filter((skill) =>
-                          skill
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase()),
-                        )
-                        .slice(
-                          0,
-                          showAllSkills ? allSkillsAndDomains.length : 10,
-                        )
-                        .map((skill) => (
-                          <div
-                            key={skill}
-                            className="flex items-center space-x-2"
-                          >
-                            <Checkbox
-                              id={`skill-${skill}`}
-                              checked={filters.skills.includes(skill)}
-                              onCheckedChange={(Checked) =>
-                                handleToggleFilter('skills', skill, !!Checked)
-                              }
-                            />
-                            <Label
-                              htmlFor={`skill-${skill}`}
-                              className="font-normal"
-                            >
-                              {skill}
-                            </Label>
-                          </div>
-                        ))}
-                    </div>
-                    {/* NEW: 'More' button logic */}
-                    {allSkillsAndDomains.length > 10 && !searchQuery && (
-                      <Button
-                        variant="link"
-                        onClick={() => setShowAllSkills(!showAllSkills)}
-                        className="p-0 text-sm font-normal"
-                      >
-                        <ChevronDown
-                          className={`h-4 w-4 mr-2 transition-transform ${
-                            showAllSkills ? 'rotate-180' : ''
-                          }`}
+            <aside className="border bg-background rounded-lg hidden lg:block col-span-3">
+              {/* Header */}
+              <div className="sticky top-0 z-10 bg-background border-b p-4 rounded-t-lg">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="text-lg font-semibold">Filters</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleResetFilters}
+                    className="flex items-center gap-1 text-red-500 hover:text-red-500/80 transition-colors bg-red-500/10 hover:bg-red-500/20 whitespace-nowrap"
+                  >
+                    Clear all
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {/* {filtersCount} filter{filtersCount !== 1 ? 's' : ''} applied */}
+                </p>
+              </div>
+
+              {/* Scrollable Content */}
+              <ScrollArea>
+                <Accordion
+                  type="multiple"
+                  defaultValue={['skills', 'domains', 'experience']}
+                >
+                  {/* Skills Section */}
+                  <AccordionItem
+                    value="skills"
+                    className="border bg-muted/10 p-4 rounded-lg"
+                  >
+                    <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                      <div className="flex items-center space-x-2">
+                        <Award className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Skills</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="py-2 space-y-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          type="text"
+                          placeholder="Search Skills"
+                          value={skillsSearch}
+                          onChange={(e) => setSkillsSearch(e.target.value)}
+                          className="pl-9"
                         />
-                        {showAllSkills ? 'Less' : 'More'}
-                      </Button>
-                    )}
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <Label>Experience</Label>
-                    <div className="space-y-1">
+                      </div>
+                      <ScrollArea className="h-48">
+                        <div className="space-y-1 p-1">
+                          {skills
+                            .filter((skill) =>
+                              skill
+                                .toLowerCase()
+                                .includes(skillsSearch.toLowerCase()),
+                            )
+                            .map((skill) => (
+                              <div
+                                key={skill}
+                                className="flex items-center space-x-2"
+                              >
+                                <Checkbox
+                                  id={`skill-${skill}`}
+                                  checked={filters.skills.includes(skill)}
+                                  onCheckedChange={(checked) =>
+                                    handleToggleFilter(
+                                      'skills',
+                                      skill,
+                                      !!checked,
+                                    )
+                                  }
+                                />
+                                <Label
+                                  htmlFor={`skill-${skill}`}
+                                  className="font-normal"
+                                >
+                                  {skill}
+                                </Label>
+                              </div>
+                            ))}
+                        </div>
+                      </ScrollArea>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Domains Section */}
+                  <AccordionItem
+                    value="domains"
+                    className="border bg-muted/10 p-4 rounded-lg"
+                  >
+                    <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                      <div className="flex items-center space-x-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Domains</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="py-2 space-y-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          placeholder="Search Domains"
+                          value={domainsSearch}
+                          onChange={(e) => setDomainsSearch(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
+                      <ScrollArea className="h-48">
+                        <div className="space-y-1 p-1">
+                          {domains
+                            .filter((domain) =>
+                              domain
+                                .toLowerCase()
+                                .includes(domainsSearch.toLowerCase()),
+                            )
+                            .map((domain) => (
+                              <div
+                                key={domain}
+                                className="flex items-center space-x-2"
+                              >
+                                <Checkbox
+                                  id={`domain-${domain}`}
+                                  checked={filters.domains.includes(domain)}
+                                  onCheckedChange={(checked) =>
+                                    handleToggleFilter(
+                                      'domains',
+                                      domain,
+                                      !!checked,
+                                    )
+                                  }
+                                />
+                                <Label
+                                  htmlFor={`domain-${domain}`}
+                                  className="font-normal"
+                                >
+                                  {domain}
+                                </Label>
+                              </div>
+                            ))}
+                        </div>
+                      </ScrollArea>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Experience Section */}
+                  <AccordionItem
+                    value="experience"
+                    className="border bg-muted/10 p-4 rounded-lg"
+                  >
+                    <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                      <div className="flex items-center space-x-2">
+                        <UserCheck className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Experience</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="py-2 space-y-1">
                       {Object.entries(experienceMapping).map(
                         ([label, value]) => (
                           <div
@@ -412,11 +664,11 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                             <Checkbox
                               id={`exp-${label}`}
                               checked={filters.experience.includes(value)}
-                              onCheckedChange={(Checked) =>
+                              onCheckedChange={(checked) =>
                                 handleToggleFilter(
                                   'experience',
                                   value,
-                                  !!Checked,
+                                  !!checked,
                                 )
                               }
                             />
@@ -429,18 +681,14 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                           </div>
                         ),
                       )}
-                    </div>
-                  </div>
-                  <div className="flex justify-between pt-4">
-                    <Button variant="outline" onClick={handleResetFilters}>
-                      Reset
-                    </Button>
-                    <Button onClick={handleApplyFilters}>Apply Filters</Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </ScrollArea>
             </aside>
-            <div className="col-span-9">
+
+            {/* Talent Content */}
+            <div className="col-span-12 lg:col-span-9">
               <TalentContent
                 activeTab={activeTab}
                 talents={activeTab === 'overview' ? [] : talentData[activeTab]}
