@@ -839,6 +839,13 @@ export function CreateProjectBusinessForm() {
                           form.setValue(`profiles.${index}.domain`, updated, {
                             shouldValidate: true,
                           });
+                          // Also persist the selected domain's id alongside the label in the profile
+                          const selected = domains.find((d: any) => d.label === val);
+                          form.setValue(
+                            `profiles.${index}.domain_id`,
+                            selected?.domain_id || '',
+                            { shouldValidate: true },
+                          );
                         }}
                         onRemove={() => {
                           const updated: string[] = [];
@@ -847,6 +854,9 @@ export function CreateProjectBusinessForm() {
                             [index]: updated,
                           }));
                           form.setValue(`profiles.${index}.domain`, updated, {
+                            shouldValidate: true,
+                          });
+                          form.setValue(`profiles.${index}.domain_id`, '', {
                             shouldValidate: true,
                           });
                         }}
