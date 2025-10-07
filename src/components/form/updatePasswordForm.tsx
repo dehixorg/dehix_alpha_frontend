@@ -50,7 +50,7 @@ export function UpdatePasswordForm({
   userType,
 }: {
   user_id: string;
-  userType: 'freelancer' | 'business';
+  userType?: 'freelancer' | 'business';
 }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<{
