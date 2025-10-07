@@ -193,7 +193,7 @@ const ProjectList = ({
 export default function ProjectPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const [projectType, setProjectType] = useState('CONSULTANT');
+  const [projectType, setProjectType] = useState('FREELANCER');
   const [activeTab, setActiveTab] = useState('current');
 
   // Sync tab with URL
