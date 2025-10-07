@@ -579,7 +579,9 @@ export function CardsChat({
     // update visual state
     try {
       setBoldActive(Boolean(document.queryCommandState('bold')));
-    } catch (err) {}
+    } catch (err) {
+      console.error('Error applying bold style:');
+    }
   }
 
   /**
@@ -594,7 +596,9 @@ export function CardsChat({
     }
     try {
       setUnderlineActive(Boolean(document.queryCommandState('underline')));
-    } catch (err) {}
+    } catch (err) {
+      console.error('Error applying UnderLine style:');
+    }
   };
 
   /**
@@ -609,7 +613,9 @@ export function CardsChat({
     }
     try {
       setItalicActive(Boolean(document.queryCommandState('italic')));
-    } catch (err) {}
+    } catch (err) {
+      console.error('Error applying italic style:');
+    }
   }
 
   const toggleFormattingOptions = () => {
