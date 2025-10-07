@@ -34,7 +34,6 @@ const capitalizeFirstLetter = (str: string): string => {
 export default function BidedInterviews() {
   const user = useSelector((state: RootState) => state.user);
   const intervieweeId = user?.uid;
-  
 
   const [bids, setBids] = useState<PendingBid[]>([]);
   const [loading, setLoading] = useState(false);
@@ -158,7 +157,10 @@ export default function BidedInterviews() {
       setAcceptingId(getRowKey(bid));
       await acceptBid(bid.interviewId, bid.bidKey);
 
-      notifySuccess('Your interview has been scheduled successfully.', 'Interview Scheduled!');
+      notifySuccess(
+        'Your interview has been scheduled successfully.',
+        'Interview Scheduled!',
+      );
 
       setBids((prevBids) =>
         prevBids.filter((b) => getRowKey(b) !== getRowKey(bid)),

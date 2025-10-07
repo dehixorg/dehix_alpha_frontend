@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
+import { Coins, AlertTriangle } from 'lucide-react';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -13,7 +15,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 interface ConnectsDialogProps {
   form: UseFormReturn<any>;
   loading: boolean;
@@ -85,7 +86,7 @@ export default function ConnectsDialog({
     setLowConnects(false);
     setOpenConfirm(true);
   };
-
+  const router = useRouter();
   const handleConfirm = async () => {
     if (lowConnects) return;
     setLoading(true);
@@ -95,6 +96,7 @@ export default function ConnectsDialog({
       } else {
         await onSubmit();
       }
+      router.push('/dashboard/business');
       setOpenConfirm(false);
     } catch (error) {
       console.error('Error deducting connects:', error);
@@ -108,52 +110,81 @@ export default function ConnectsDialog({
     <div>
       <Button
         type="button"
-        className="lg:col-span-2 w-full xl:col-span-2 mt-4"
+        size="sm"
         disabled={loading}
         onClick={dialogOpen}
+        className="gap-2"
       >
+        <Coins className="h-4 w-4" />
         {loading ? 'Loading...' : buttonText}
       </Button>
       <Dialog open={openConfirm} onOpenChange={setOpenConfirm}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           {lowConnects ? (
             <>
-              <DialogTitle>Insufficient Connects</DialogTitle>
-              <DialogDescription>
-                You don&apos;t have enough connects to create a project.
-                <br />
-                Please{' '}
-                <span
-                  className="text-blue-600 font-bold cursor-pointer"
-                  onClick={fetchMoreConnects}
-                >
-                  Request Connects
-                </span>{' '}
-                to proceed.
-              </DialogDescription>
-              <DialogFooter>
+              <div className="flex items-start gap-3">
+                <div className="mt-1 rounded-full bg-amber-500/10 text-amber-600 p-2">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <DialogTitle>Insufficient connects</DialogTitle>
+                  <DialogDescription>
+                    You need more connects to create this project.
+                  </DialogDescription>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-md border p-2">
+                  <div className="text-muted-foreground">Your connects</div>
+                  <div className="font-semibold">{userConnects}</div>
+                </div>
+                <div className="rounded-md border p-2">
+                  <div className="text-muted-foreground">Required</div>
+                  <div className="font-semibold">{requiredConnects}</div>
+                </div>
+              </div>
+              <DialogFooter className="mt-4">
                 <Button variant="outline" onClick={() => setOpenConfirm(false)}>
                   Close
                 </Button>
+                <Button onClick={fetchMoreConnects}>Request connects</Button>
               </DialogFooter>
             </>
           ) : (
             <>
-              <DialogTitle>Confirm Deduction</DialogTitle>
-              <Input type="text" value={requiredConnects} disabled />
-              <DialogDescription>
-                Creating this project will deduct{' '}
-                <span className="font-extrabold">
-                  {' '}
-                  {requiredConnects} connects
-                </span>
-                . Do you want to proceed?
-              </DialogDescription>
-              <DialogFooter>
+              <div className="space-y-2">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 rounded-full bg-primary/10 text-primary p-2">
+                    <Coins className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <DialogTitle>Confirm connects deduction</DialogTitle>
+                    <DialogDescription>
+                      Creating this project will deduct the following from your
+                      balance.
+                    </DialogDescription>
+                  </div>
+                </div>
+
+                <div className="rounded-md border p-3 flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Deduction
+                  </span>
+                  <span className="font-semibold flex items-center gap-1">
+                    <Coins className="h-4 w-4" /> {requiredConnects}
+                  </span>
+                </div>
+              </div>
+
+              <DialogFooter className="mt-2">
                 <Button variant="outline" onClick={() => setOpenConfirm(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleConfirm} disabled={loading}>
+                <Button
+                  onClick={handleConfirm}
+                  disabled={loading}
+                  className="gap-2"
+                >
                   {loading ? 'Processing...' : 'Confirm'}
                 </Button>
               </DialogFooter>

@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { SendIcon, Expand, Github, Linkedin } from 'lucide-react';
+import { Expand, Github, Linkedin, Dot, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
@@ -12,14 +12,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
@@ -28,13 +30,8 @@ import {
   type HireDehixTalentStatusEnum,
 } from '@/utils/enum';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import type { RootState } from '@/lib/store';
 import AddToLobbyDialog from '@/components/shared/AddToLobbyDialog';
@@ -149,6 +146,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [tmpSkill, setTmpSkill] = useState<any>('');
   const [isDialogOpen, setIsDialogOpen] = useState<any>(false);
   const [isLoading, setIsLoading] = useState<any>(false);
+  const [openSheetId, setOpenSheetId] = useState<string | null>(null);
+  const isSheetClosingRef = useRef(false);
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
@@ -374,7 +373,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
     resetAndFetchData();
   }, [skillFilter, domainFilter]); // Trigger reset when filters change
 
-  const handleAddToLobby = async (freelancerId: string) => {
+  const handleAddToLobby = async (freelancerId: string): Promise<boolean> => {
     const matchedTalentIds: string[] = [];
     const matchedTalentUids: string[] = [];
 
@@ -393,7 +392,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         'Please add some skills before adding to lobby.',
         'No Skills Selected',
       );
-      return;
+      return false;
     }
     setIsLoading(true);
     try {
@@ -409,186 +408,230 @@ const TalentCard: React.FC<TalentCardProps> = ({
       if (response.status === 200) {
         notifySuccess('Freelancer added to lobby', 'Success');
         setCurrSkills([]);
+        return true;
       }
     } catch (error: any) {
       notifyError('Something went wrong. Please try again.', 'Error');
+      return false;
     } finally {
       setIsLoading(false);
     }
+    return false;
   };
   return (
-    <div className="flex flex-wrap mt-4 justify-center gap-4">
-      {/* Map directly over 'talents' instead of 'filteredTalents' */}
-      {talents.map((talent) => {
-        const talentEntry = talent.dehixTalent;
-        const education = talent.education;
-        const projects = talent.projects;
-        // const label = talentEntry.skillName ? 'Skill' : 'Domain';
-        const label = talentEntry.type === 'SKILL' ? 'Skill' : 'Domain';
-        // const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
-        const value = talentEntry.talentName || 'N/A';
-        const isInvited = invitedTalents.has(talentEntry._id);
+    <TooltipProvider>
+      <div className="flex flex-wrap mt-4 justify-center gap-4">
+        {/* Map directly over 'talents' instead of 'filteredTalents' */}
+        {talents.map((talent) => {
+          const talentEntry = talent.dehixTalent;
+          const education = talent.education;
+          const projects = talent.projects;
+          // const label = talentEntry.skillName ? 'Skill' : 'Domain';
+          const label = talentEntry.type === 'SKILL' ? 'Skill' : 'Domain';
+          // const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
+          const value = talentEntry.talentName || 'N/A';
+          const isInvited = invitedTalents.has(talentEntry._id);
 
-        return (
-          <Card
-            key={talentEntry._id}
-            className="w-full sm:w-[350px] lg:w-[450px]"
-          >
-            <CardHeader className="flex flex-row items-center gap-4">
-              <Avatar className="h-14 w-14">
-                <AvatarImage src={talent.profilePic || '/default-avatar.png'} />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <CardTitle>{talent.Name || 'Unknown'}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {talent.userName}
-                </p>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <div className="flex justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{label}</span>
-                    <Badge>{value}</Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">Experience</span>
-                    <Badge>{talentEntry.experience} years</Badge>
-                  </div>
-                </div>
-                <div className="flex justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">Monthly Pay</span>
-                    <Badge>${talentEntry.monthlyPay}</Badge>
-                  </div>
-                  {isInvited && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">Status</span>
-                      <Badge variant="default">Invited</Badge>
+          return (
+            <Card
+              key={talentEntry._id}
+              className="group relative w-full sm:w-[350px] lg:w-[450px] overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20"
+              onClick={() => {
+                if (isSheetClosingRef.current) return;
+                if (isDialogOpen) return; // prevent opening while dialog is active
+                setOpenSheetId(talentEntry._id);
+              }}
+            >
+              <CardHeader className="flex flex-row items-center gap-4 pb-3 pt-5 px-6">
+                <Link
+                  href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-4 max-w-full"
+                >
+                  <Avatar className="h-14 w-14 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <AvatarImage
+                      src={talent.profilePic || '/default-avatar.png'}
+                    />
+                    <AvatarFallback className="rounded-xl">
+                      {talent.Name?.charAt(0) || 'T'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <CardTitle className="text-lg font-bold truncate group-hover:text-primary transition-colors">
+                      {talent.Name || 'Unknown'}
+                    </CardTitle>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <span className="truncate">{talent.userName}</span>
+                      <Dot />
+                      <span className="truncate">{value}</span>
                     </div>
+                  </div>
+                </Link>
+              </CardHeader>
+              <CardContent className="px-6 py-3">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                        Experience
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {talentEntry.experience} years
+                      </p>
+                    </div>
+                    <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                        Monthly Pay
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        ${talentEntry.monthlyPay}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isInvited && (
+                    <Badge
+                      variant="outline"
+                      className="rounded-full text-xs font-medium px-3 py-1 border-blue-300 text-blue-700 dark:text-blue-300"
+                    >
+                      Invited
+                    </Badge>
                   )}
-                </div>
 
-                <div className="py-4">
-                  {SHEET_SIDES.map((View) => (
-                    <Sheet key={View}>
-                      <SheetTrigger asChild>
-                        <Button className="w-full text-sm  rounded-md">
-                          View
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent
-                        side={View}
-                        className="overflow-y-auto no-scrollbar max-h-[100vh]"
+                  <div className="pt-1">
+                    {SHEET_SIDES.map((View) => (
+                      <Sheet
+                        key={View}
+                        open={openSheetId === talentEntry._id}
+                        onOpenChange={(open) => {
+                          if (open) {
+                            setOpenSheetId(talentEntry._id);
+                          } else {
+                            // Suppress the immediate next card click caused by backdrop/close click
+                            isSheetClosingRef.current = true;
+                            setOpenSheetId(null);
+                            // Give a short window so the closing click doesn't reopen the card
+                            setTimeout(() => {
+                              isSheetClosingRef.current = false;
+                            }, 200);
+                          }
+                        }}
                       >
-                        <SheetHeader>
-                          <SheetTitle className="flex items-center justify-between text-lg font-bold py-4">
-                            <span className="text-center flex-1">
-                              View Talent Details
-                            </span>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Link
-                                  href={`/business/freelancerProfile/${talent.freelancer_id}`}
-                                  passHref
-                                >
-                                  <Expand className="w-6 h-6 cursor-pointer text-gray-600 " />
-                                </Link>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">Expand</TooltipContent>
-                            </Tooltip>
-                          </SheetTitle>
-                        </SheetHeader>
-
-                        <div className="grid gap-4 py-2">
-                          <div className="w-full text-center">
-                            <div className="items-center">
-                              <Avatar className="h-20 w-20 mx-auto mb-4 rounded-full border-4 border-white hover:border-white transition-all duration-300">
-                                <AvatarImage
-                                  src={
-                                    talent.profilePic || '/default-avatar.png'
-                                  }
-                                />
-                                <AvatarFallback>Unable to load</AvatarFallback>
-                              </Avatar>
-                              <div className="text-lg font-bold">
-                                {' '}
-                                {talent.Name}
+                        <SheetContent
+                          side={View}
+                          className="overflow-y-auto no-scrollbar max-h-[100vh] p-0"
+                        >
+                          {/* Header section with avatar + illustration */}
+                          <div className="px-6 pb-4 mt-5">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-4">
+                                  <Avatar className="h-16 w-16 rounded-xl border border-gray-200 dark:border-gray-700">
+                                    <AvatarImage
+                                      src={
+                                        talent.profilePic ||
+                                        '/default-avatar.png'
+                                      }
+                                    />
+                                    <AvatarFallback className="rounded-xl">
+                                      TL
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0">
+                                    <div className="text-base font-semibold truncate">
+                                      {talent.Name}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground truncate">
+                                      {talent.userName || 'N/A'}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3 mt-3">
+                                  <a
+                                    href={talent.Github || '#'}
+                                    target={talent.Github ? '_blank' : '_self'}
+                                    rel="noopener noreferrer"
+                                    className={`flex items-center gap-2 transition-all ${
+                                      talent.Github
+                                        ? 'text-primary hover:text-primary/80'
+                                        : 'text-gray-500 cursor-default'
+                                    }`}
+                                    aria-label="GitHub profile"
+                                  >
+                                    <Github className="w-4 h-4" />
+                                  </a>
+                                  <a
+                                    href={talent.LinkedIn || '#'}
+                                    target={
+                                      talent.LinkedIn ? '_blank' : '_self'
+                                    }
+                                    rel="noopener noreferrer"
+                                    className={`flex items-center gap-2 transition-all ${
+                                      talent.LinkedIn
+                                        ? 'text-primary hover:text-primary/80'
+                                        : 'text-gray-500 cursor-default'
+                                    }`}
+                                    aria-label="LinkedIn profile"
+                                  >
+                                    <Linkedin className="w-4 h-4" />
+                                  </a>
+                                </div>
                               </div>
-                              <div className="flex items-center justify-center gap-4 mt-4">
-                                {/* GitHub */}
-                                <a
-                                  href={talent.Github || '#'}
-                                  target={talent.Github ? '_blank' : '_self'}
-                                  rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 transition-all ${
-                                    talent.Github
-                                      ? 'text-blue-500 hover:text-blue-700'
-                                      : 'text-gray-500 cursor-default'
-                                  }`}
-                                >
-                                  <Github
-                                    className={`w-5 h-5 ${talent.Github ? 'text-blue-500' : 'text-gray-500'}`}
-                                  />
-                                </a>
-                                {/* LinkedIn */}
-                                <a
-                                  href={talent.LinkedIn || '#'}
-                                  target={talent.LinkedIn ? '_blank' : '_self'}
-                                  rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 transition-all ${
-                                    talent.LinkedIn
-                                      ? 'text-blue-500 hover:text-blue-700'
-                                      : 'text-gray-500 cursor-default'
-                                  }`}
-                                >
-                                  <Linkedin
-                                    className={`w-5 h-5 ${talent.LinkedIn ? 'text-blue-500' : 'text-gray-500'}`}
-                                  />
-                                </a>
+                            </div>
+
+                            {/* Meta grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+                              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                  {label}
+                                </p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                  {value}
+                                </p>
+                              </div>
+                              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                  Experience
+                                </p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {talentEntry.experience} years
+                                </p>
+                              </div>
+                              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                  Monthly Pay
+                                </p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  ${talentEntry.monthlyPay}
+                                </p>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        <table className="min-w-full table-auto border-collapse ">
-                          <tbody>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Username
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talent.userName || 'N/A'}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        <Accordion type="multiple" className="w-full">
-                          {/* Education Accordion */}
-                          <AccordionItem value="education">
-                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
-                              Education
-                            </AccordionTrigger>
-                            <AccordionContent className="p-4 transition-all duration-300">
-                              {education && Object.values(education).length > 0
-                                ? Object.values(education).map((edu: any) => (
+                          <Separator className="my-2" />
+                          <Accordion type="multiple" className="w-full">
+                            <AccordionItem value="education">
+                              <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                                Education
+                              </AccordionTrigger>
+                              <AccordionContent className="p-4 transition-all duration-300">
+                                {education &&
+                                Object.values(education).length > 0 ? (
+                                  Object.values(education).map((edu: any) => (
                                     <div
                                       key={edu._id}
-                                      className="mb-2 p-2 border border-gray-300 rounded-lg"
+                                      className="mb-3 p-3 rounded-lg border border-border/60 bg-muted/30"
                                     >
                                       <p className="text-sm font-semibold">
                                         {edu.degree}
                                       </p>
-                                      <p className="text-xs text-gray-600">
+                                      <p className="text-xs text-muted-foreground">
                                         {edu.universityName}
                                       </p>
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-xs text-muted-foreground">
                                         {edu.fieldOfStudy}
                                       </p>
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-xs text-muted-foreground">
                                         {new Date(
                                           edu.startDate,
                                         ).toLocaleDateString()}{' '}
@@ -597,185 +640,210 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                           edu.endDate,
                                         ).toLocaleDateString()}
                                       </p>
-                                      <p className="text-xs text-gray-700">
-                                        Grade: {edu.grade}
-                                      </p>
+                                      {edu.grade && (
+                                        <p className="text-xs text-muted-foreground">
+                                          Grade: {edu.grade}
+                                        </p>
+                                      )}
                                     </div>
                                   ))
-                                : 'No education details available.'}
-                            </AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem value="projects">
-                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
-                              Projects
-                            </AccordionTrigger>
-                            <AccordionContent className="p-4 transition-all duration-300">
-                              {projects &&
-                              Object.values(projects).length > 0 ? (
-                                Object.values(projects).map((project: any) => (
-                                  <div
-                                    key={project._id}
-                                    className="mb-2 p-2 border border-gray-300 rounded-lg"
-                                  >
-                                    <p className="text-sm font-semibold">
-                                      {project.projectName}
-                                    </p>
-                                    <p className="text-xs text-gray-600">
-                                      Role: {project.role}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      Tech Used:{' '}
-                                      {project.techUsed.length > 0
-                                        ? project.techUsed.join(', ')
-                                        : 'N/A'}
-                                    </p>
-                                    {project.githubLink && (
-                                      <a
-                                        href={project.githubLink}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">
+                                    No education details available.
+                                  </p>
+                                )}
+                              </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="projects">
+                              <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                                Projects
+                              </AccordionTrigger>
+                              <AccordionContent className="p-4 transition-all duration-300">
+                                {projects &&
+                                Object.values(projects).length > 0 ? (
+                                  Object.values(projects).map(
+                                    (project: any) => (
+                                      <div
+                                        key={project._id}
+                                        className="mb-3 p-3 rounded-lg border border-border/60 bg-muted/30"
                                       >
-                                        <Github className="w-4 h-4" />
-                                        View on GitHub
-                                      </a>
-                                    )}
-                                  </div>
-                                ))
-                              ) : (
-                                <p className="text-sm text-gray-500">
-                                  No projects available.
-                                </p>
-                              )}
-                            </AccordionContent>
-                          </AccordionItem>
-                          {/* Skills Accordion */}
-                          <AccordionItem value="skills">
-                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
-                              Skills
-                            </AccordionTrigger>
-                            <AccordionContent className="p-4 transition-all duration-300">
-                              {/* {talentEntry.skillName
-                                ? talentEntry.skillName
-                                : 'N/A'} */}
-                              {talentEntry.type === 'SKILL'
-                                ? talentEntry.talentName
-                                : 'N/A'}
-                            </AccordionContent>
-                          </AccordionItem>
-                          {/* Domain Accordion */}
-                          <AccordionItem value="domain">
-                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
-                              Domain
-                            </AccordionTrigger>
-                            <AccordionContent className="p-4 transition-all duration-300">
-                              {/* {talentEntry.domainName
-                                ? talentEntry.domainName
-                                : 'N/A'} */}
-                              {talentEntry.type === 'DOMAIN'
-                                ? talentEntry.talentName
-                                : 'N/A'}
-                            </AccordionContent>
-                          </AccordionItem>
-                          {/* Experience Accordion */}
-                          <AccordionItem value="experience">
-                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
-                              Experience
-                            </AccordionTrigger>
-                            <AccordionContent className="p-4 transition-all duration-300">
-                              {talentEntry.experience
-                                ? `${talentEntry.experience} years`
-                                : 'N/A'}
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
-                        <Button
-                          onClick={() => {
-                            setIsDialogOpen(true);
-                            setSelectedTalent(talent);
-                          }}
-                          className={`w-full mt-4 ${
-                            isInvited
-                              ? 'bg-blue-600 hover:bg-blue-700'
-                              : 'bg-primary hover:bg-primary/90'
-                          }`}
-                        >
-                          <SendIcon className="mr-2 h-4 w-4" />
-                          Add to Lobby
-                        </Button>
-                      </SheetContent>
-                    </Sheet>
-                  ))}
+                                        <p className="text-sm font-semibold">
+                                          {project.projectName}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          Role: {project.role}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          Tech Used:{' '}
+                                          {project.techUsed.length > 0
+                                            ? project.techUsed.join(', ')
+                                            : 'N/A'}
+                                        </p>
+                                        {project.githubLink && (
+                                          <a
+                                            href={project.githubLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1 text-xs text-primary hover:underline"
+                                          >
+                                            <Github className="w-4 h-4" />
+                                            View on GitHub
+                                          </a>
+                                        )}
+                                      </div>
+                                    ),
+                                  )
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">
+                                    No projects available.
+                                  </p>
+                                )}
+                              </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="skills">
+                              <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                                Skills
+                              </AccordionTrigger>
+                              <AccordionContent className="p-4 transition-all duration-300">
+                                <div className="p-3 rounded-lg border border-border/60 bg-muted/30 text-sm">
+                                  {talentEntry.type === 'SKILL'
+                                    ? talentEntry.talentName
+                                    : 'N/A'}
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="domain">
+                              <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                                Domain
+                              </AccordionTrigger>
+                              <AccordionContent className="p-4 transition-all duration-300">
+                                <div className="p-3 rounded-lg border border-border/60 bg-muted/30 text-sm">
+                                  {talentEntry.type === 'DOMAIN'
+                                    ? talentEntry.talentName
+                                    : 'N/A'}
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="experience">
+                              <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                                Experience
+                              </AccordionTrigger>
+                              <AccordionContent className="p-4 transition-all duration-300">
+                                <div className="p-3 rounded-lg border border-border/60 bg-muted/30 text-sm">
+                                  {talentEntry.experience
+                                    ? `${talentEntry.experience} years`
+                                    : 'N/A'}
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                          <div className="px-6 pb-6 pt-2">
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center space-between">
+                              <Button
+                                className={`w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
+                                onClick={() => {
+                                  setOpenSheetId(null);
+                                  setIsDialogOpen(true);
+                                  setSelectedTalent(talent);
+                                }}
+                              >
+                                <span>
+                                  {isInvited ? 'Invited' : 'Add to Lobby'}
+                                </span>
+                                <ChevronRight className="ml-1.5 h-4 w-4" />
+                              </Button>
+                              <Link
+                                href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                              >
+                                <Button
+                                  variant="outline"
+                                  className="w-full sm:w-auto"
+                                >
+                                  View Full Profile
+                                  <Expand />
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </SheetContent>
+                      </Sheet>
+                    ))}
+                  </div>
                 </div>
-                <Button
-                  onClick={() => {
-                    setIsDialogOpen(true);
-                    setSelectedTalent(talent);
+              </CardContent>
+              <CardFooter className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  <Button
+                    className={`w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenSheetId(null);
+                      setIsDialogOpen(true);
+                      setSelectedTalent(talent);
+                    }}
+                  >
+                    <span>{isInvited ? 'Invited' : 'Add to Lobby'}</span>
+                    <ChevronRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </div>
+              </CardFooter>
+              {selectedTalent && (
+                <AddToLobbyDialog
+                  skillDomainData={skillDomainData}
+                  currSkills={currSkills}
+                  handleAddSkill={handleAddSkill}
+                  handleDeleteSkill={handleDeleteSkill}
+                  handleAddToLobby={handleAddToLobby}
+                  talent={selectedTalent}
+                  setTmpSkill={setTmpSkill}
+                  open={isDialogOpen}
+                  setOpen={(v: boolean) => {
+                    setIsDialogOpen(v);
+                    if (v) setOpenSheetId(null);
                   }}
-                  className={`w-full ${
-                    isInvited
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : 'bg-primary hover:bg-primary/90'
-                  }`}
+                  isLoading={isLoading}
+                />
+              )}
+              <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>
+            </Card>
+          );
+        })}
+        {/* ... (InfiniteScroll and loading skeleton) */}
+        <InfiniteScroll
+          hasMore={hasMore}
+          isLoading={loading}
+          next={fetchTalentData}
+          threshold={1}
+        >
+          {loading && (
+            <div className="flex flex-wrap justify-center gap-4 w-full mt-4">
+              {[...Array(3)].map((_, index) => (
+                <div
+                  key={`skeleton-${index}`}
+                  className="w-full sm:w-[350px] lg:w-[450px]"
                 >
-                  <SendIcon className="mr-2 h-4 w-4" />
-                  Add to Lobby
-                </Button>
-              </div>
-            </CardContent>
-            {selectedTalent && (
-              <AddToLobbyDialog
-                skillDomainData={skillDomainData}
-                currSkills={currSkills}
-                handleAddSkill={handleAddSkill}
-                handleDeleteSkill={handleDeleteSkill}
-                handleAddToLobby={handleAddToLobby}
-                talent={selectedTalent}
-                tmpSkill={tmpSkill}
-                setTmpSkill={setTmpSkill}
-                open={isDialogOpen}
-                setOpen={setIsDialogOpen}
-                isLoading={isLoading}
-              />
-            )}
-          </Card>
-        );
-      })}
-      {/* ... (InfiniteScroll and loading skeleton) */}
-      <InfiniteScroll
-        hasMore={hasMore}
-        isLoading={loading}
-        next={fetchTalentData}
-        threshold={1}
-      >
-        {loading && (
-          <div className="flex flex-wrap justify-center gap-4 w-full mt-4">
-            {[...Array(3)].map((_, index) => (
-              <div
-                key={`skeleton-${index}`}
-                className="w-full sm:w-[350px] lg:w-[450px]"
-              >
-                <div className="animate-pulse space-y-4 p-6 border rounded-lg shadow">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  <div className="animate-pulse space-y-4 p-6 border rounded-lg shadow">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                      </div>
                     </div>
+                    <div className="space-y-3">
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/6"></div>
+                    </div>
+                    <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md w-full"></div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/6"></div>
-                  </div>
-                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md w-full"></div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </InfiniteScroll>
-    </div>
+              ))}
+            </div>
+          )}
+        </InfiniteScroll>
+      </div>
+    </TooltipProvider>
   );
 };
 
