@@ -157,6 +157,11 @@ export function CardsChat({
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
 
+  // Formatting active states (for visual active toggles)
+  const [boldActive, setBoldActive] = useState<boolean>(false);
+  const [italicActive, setItalicActive] = useState<boolean>(false);
+  const [underlineActive, setUnderlineActive] = useState<boolean>(false);
+
   const prevMessagesLength = useRef(messages.length);
   const [, setOpenDrawer] = useState(false);
 
@@ -308,6 +313,30 @@ export function CardsChat({
     handleResize();
 
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Keep formatting button state in sync with the caret/selection
+  useEffect(() => {
+    const updateFormattingState = () => {
+      try {
+        // queryCommandState returns true/false for the current selection
+        const b = document.queryCommandState('bold');
+        const i = document.queryCommandState('italic');
+        const u = document.queryCommandState('underline');
+        setBoldActive(Boolean(b));
+        setItalicActive(Boolean(i));
+        setUnderlineActive(Boolean(u));
+      } catch (err) {
+        // Some environments may not support queryCommandState - ignore
+      }
+    };
+
+    document.addEventListener('selectionchange', updateFormattingState);
+    // also run once to initialize when the component mounts
+    updateFormattingState();
+    return () => {
+      document.removeEventListener('selectionchange', updateFormattingState);
+    };
   }, []);
 
   // Subscribe to messages for this conversation and manage loading state
@@ -542,7 +571,17 @@ export function CardsChat({
    */
   function handleBold() {
     composerRef.current?.focus();
-    document.execCommand('bold');
+    try {
+      document.execCommand('bold');
+    } catch (err) {
+      // ignore
+    }
+    // update visual state
+    try {
+      setBoldActive(Boolean(document.queryCommandState('bold')));
+    } catch (err) {
+      console.error('Error applying bold style:');
+    }
   }
 
   /**
@@ -550,7 +589,16 @@ export function CardsChat({
    */
   const handleUnderline = () => {
     composerRef.current?.focus();
-    document.execCommand('underline');
+    try {
+      document.execCommand('underline');
+    } catch (err) {
+      // ignore
+    }
+    try {
+      setUnderlineActive(Boolean(document.queryCommandState('underline')));
+    } catch (err) {
+      console.error('Error applying UnderLine style:');
+    }
   };
 
   /**
@@ -558,7 +606,16 @@ export function CardsChat({
    */
   function handleitalics() {
     composerRef.current?.focus();
-    document.execCommand('italic');
+    try {
+      document.execCommand('italic');
+    } catch (err) {
+      // ignore
+    }
+    try {
+      setItalicActive(Boolean(document.queryCommandState('italic')));
+    } catch (err) {
+      console.error('Error applying italic style:');
+    }
   }
 
   const toggleFormattingOptions = () => {
@@ -1295,7 +1352,13 @@ export function CardsChat({
                     onClick={handleBold}
                     title="Bold"
                     aria-label="Bold"
-                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                    aria-pressed={boldActive}
+                    className={
+                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
+                      (boldActive
+                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
+                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
+                    }
                   >
                     {' '}
                     <Bold className="h-4 w-4" />{' '}
@@ -1307,7 +1370,13 @@ export function CardsChat({
                     onClick={handleitalics}
                     title="Italic"
                     aria-label="Italic"
-                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                    aria-pressed={italicActive}
+                    className={
+                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
+                      (italicActive
+                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
+                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
+                    }
                   >
                     {' '}
                     <Italic className="h-4 w-4" />{' '}
@@ -1319,7 +1388,13 @@ export function CardsChat({
                     onClick={handleUnderline}
                     title="Underline"
                     aria-label="Underline"
-                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                    aria-pressed={underlineActive}
+                    className={
+                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
+                      (underlineActive
+                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
+                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
+                    }
                   >
                     {' '}
                     <Underline className="h-4 w-4" />{' '}
@@ -1356,7 +1431,13 @@ export function CardsChat({
                         onClick={handleBold}
                         title="Bold"
                         aria-label="Bold"
-                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        aria-pressed={boldActive}
+                        className={
+                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
+                          (boldActive
+                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
+                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
+                        }
                       >
                         {' '}
                         <Bold className="h-4 w-4" />{' '}
@@ -1368,7 +1449,13 @@ export function CardsChat({
                         onClick={handleitalics}
                         title="Italic"
                         aria-label="Italic"
-                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        aria-pressed={italicActive}
+                        className={
+                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
+                          (italicActive
+                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
+                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
+                        }
                       >
                         {' '}
                         <Italic className="h-4 w-4" />{' '}
@@ -1380,7 +1467,13 @@ export function CardsChat({
                         onClick={handleUnderline}
                         title="Underline"
                         aria-label="Underline"
-                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        aria-pressed={underlineActive}
+                        className={
+                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
+                          (underlineActive
+                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
+                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
+                        }
                       >
                         {' '}
                         <Underline className="h-4 w-4" />{' '}
