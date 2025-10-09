@@ -4,6 +4,7 @@ import { useMemo, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
@@ -11,12 +12,16 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSelector } from 'react-redux';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -25,14 +30,17 @@ export default function ManageTalentPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
-  const [talents, setTalents] = useState<Array<{ id: string; label: string; type: 'SKILL' | 'DOMAIN' }>>([]);
+  const [talents, setTalents] = useState<
+    Array<{ id: string; label: string; type: 'SKILL' | 'DOMAIN' }>
+  >([]);
 
   const type = String(params?.type || '').toUpperCase();
   const talentId = String(params?.talentId || '');
   const labelFromQuery = searchParams.get('label') || '';
 
   const title = useMemo(() => {
-    const humanType = type === 'SKILL' ? 'Skill' : type === 'DOMAIN' ? 'Domain' : 'Talent';
+    const humanType =
+      type === 'SKILL' ? 'Skill' : type === 'DOMAIN' ? 'Domain' : 'Talent';
     return `${humanType}: ${labelFromQuery || talentId}`;
   }, [type, labelFromQuery, talentId]);
 
@@ -47,11 +55,15 @@ export default function ManageTalentPage() {
       {Array.from({ length: count }).map((_, i) => (
         <Card key={`${prefix}-${i}`} className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">{prefix} #{i + 1}</CardTitle>
+            <CardTitle className="text-base">
+              {prefix} #{i + 1}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>Project: Awesome {prefix} Project {i + 1}</p>
+              <p>
+                Project: Awesome {prefix} Project {i + 1}
+              </p>
               <p>Status: {prefix}</p>
               <p>Updated: Today</p>
             </div>
@@ -66,14 +78,25 @@ export default function ManageTalentPage() {
     async function fetchTalents() {
       if (!user?.uid) return;
       try {
-        const talentResponse = await axiosInstance.get(`/freelancer/${user.uid}/dehix-talent`);
+        const talentResponse = await axiosInstance.get(
+          `/freelancer/${user.uid}/dehix-talent`,
+        );
         const payload = Array.isArray(talentResponse.data?.data)
           ? talentResponse.data.data
           : Object.values(talentResponse.data?.data || {});
         const flattened = (payload as any[]).flat();
         const mapped = flattened
-          .filter((t: any) => t?.talentId && t?.talentName && (t?.type === 'SKILL' || t?.type === 'DOMAIN'))
-          .map((t: any) => ({ id: t.talentId as string, label: t.talentName as string, type: t.type as 'SKILL' | 'DOMAIN' }));
+          .filter(
+            (t: any) =>
+              t?.talentId &&
+              t?.talentName &&
+              (t?.type === 'SKILL' || t?.type === 'DOMAIN'),
+          )
+          .map((t: any) => ({
+            id: t.talentId as string,
+            label: t.talentName as string,
+            type: t.type as 'SKILL' | 'DOMAIN',
+          }));
         // Deduplicate by id+type
         const seen = new Set<string>();
         const unique = mapped.filter((t) => {
@@ -95,7 +118,9 @@ export default function ManageTalentPage() {
 
   const handleTalentChange = (value: string) => {
     const [newType, newId] = value.split(':');
-    const sel = talents.find((t) => t.id === newId && t.type === (newType as 'SKILL' | 'DOMAIN'));
+    const sel = talents.find(
+      (t) => t.id === newId && t.type === (newType as 'SKILL' | 'DOMAIN'),
+    );
     router.push(
       `/freelancer/talent/manage/${newType.toLowerCase()}/${newId}?label=${encodeURIComponent(
         sel?.label || '',
@@ -131,15 +156,23 @@ export default function ManageTalentPage() {
 
           <Card>
             <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-              <CardTitle className="w-full text-center md:text-left">Manage Job Posts</CardTitle>
+              <CardTitle className="w-full text-center md:text-left">
+                Manage Job Posts
+              </CardTitle>
               <div className="w-full sm:w-64 md:w-64 mx-auto md:mx-0">
-                <Select value={selectedValue} onValueChange={handleTalentChange}>
+                <Select
+                  value={selectedValue}
+                  onValueChange={handleTalentChange}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select talent" />
                   </SelectTrigger>
                   <SelectContent>
                     {talents.map((t) => (
-                      <SelectItem key={`${t.type}:${t.id}`} value={`${t.type}:${t.id}`}>
+                      <SelectItem
+                        key={`${t.type}:${t.id}`}
+                        value={`${t.type}:${t.id}`}
+                      >
                         {t.label} ({t.type})
                       </SelectItem>
                     ))}

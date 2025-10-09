@@ -3,6 +3,7 @@ import type React from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import { ArrowUpRight } from 'lucide-react';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -33,7 +34,6 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
 import { Switch } from '@/components/ui/switch';
-import { ArrowUpRight } from 'lucide-react';
 
 interface Skill {
   _id: string;
@@ -207,16 +207,24 @@ const SkillDomainForm: React.FC = () => {
                 <TableHeader className="sticky top-0 z-10 bg-background">
                   <TableRow>
                     <TableHead scope="col">Type</TableHead>
-                    <TableHead scope="col" className="text-center">Label</TableHead>
-                    <TableHead scope="col" className="text-center">Experience</TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Label
+                    </TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Experience
+                    </TableHead>
                     <TableHead scope="col" className="text-center">
                       Monthly Pay
                     </TableHead>
-                    <TableHead scope="col" className="text-center">Status</TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Status
+                    </TableHead>
                     <TableHead scope="col" className="text-center">
                       Visibility
                     </TableHead>
-                    <TableHead scope="col" className="text-center">Manage</TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Manage
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -299,7 +307,11 @@ const SkillDomainForm: React.FC = () => {
                               query: { label: item.label },
                             }}
                           >
-                            <Button variant="ghost" size="icon" aria-label={`Manage jobs for ${item.label}`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Manage jobs for ${item.label}`}
+                            >
                               <ArrowUpRight className="h-4 w-4" />
                             </Button>
                           </Link>

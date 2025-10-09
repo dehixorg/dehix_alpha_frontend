@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -118,7 +119,10 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm"><Plus className="h-4 w-4" />Add Skill</Button>
+        <Button size="sm">
+          <Plus className="h-4 w-4" />
+          Add Skill
+        </Button>
       </DialogTrigger>
 
       <DialogContent>
