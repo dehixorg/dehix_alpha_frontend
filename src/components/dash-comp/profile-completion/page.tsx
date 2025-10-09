@@ -143,8 +143,6 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
       fetchUserProfile();
     }
   }, [userId]);
-  
-
 
   const calculateCompletionPercentage = (profile: UserProfile) => {
     // Define the fields we want to check and their validation criteria
@@ -195,7 +193,6 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
   };
 
   const handleFieldClick = (field: string) => {
-    console.log(field)
     const lowerField = field.toLowerCase().trim();
     for (const [key, route] of Object.entries(fieldNavigationMap)) {
       if (lowerField.includes(key)) {
