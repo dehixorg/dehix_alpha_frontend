@@ -159,7 +159,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
       projectDomain:
         Array.isArray(profile.projectDomain) &&
         profile.projectDomain.length > 0,
-      kycapplied: Boolean(profile.kyc && profile.kyc.status !== 'NOT_APPLIED'),
+      kycApplied: Boolean(profile.kyc && profile.kyc.status !== 'NOT_APPLIED'),
       kycVerified: Boolean(profile.kyc && profile.kyc.status === 'VERIFIED'),
     };
 
