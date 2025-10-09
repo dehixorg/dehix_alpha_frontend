@@ -339,11 +339,14 @@ export default function PastReportsTab() {
                                   <div className="text-xs text-muted-foreground mt-1">
                                     {report.type.replace(/_/g, ' ')} •{' '}
                                     <span className="align-middle">
-                                      {new Date(report.date).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: 'numeric',
-                                      })}
+                                      {new Date(report.date).toLocaleDateString(
+                                        'en-US',
+                                        {
+                                          year: 'numeric',
+                                          month: 'short',
+                                          day: 'numeric',
+                                        },
+                                      )}
                                     </span>
                                   </div>
                                 </div>
