@@ -44,7 +44,7 @@ export type DropzoneProps = Omit<DropzoneOptions, 'onDrop'> & {
   children?: ReactNode;
 };
 
-export const Dropzone = ({
+export function Dropzone({
   accept,
   maxFiles = 1,
   maxSize,
@@ -56,7 +56,7 @@ export const Dropzone = ({
   className,
   children,
   ...props
-}: DropzoneProps) => {
+}: DropzoneProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept,
     maxFiles,
@@ -116,10 +116,10 @@ export type DropzoneContentProps = {
 
 const maxLabelItems = 3;
 
-export const DropzoneContent = ({
+export function DropzoneContent({
   children,
   className,
-}: DropzoneContentProps) => {
+}: DropzoneContentProps) {
   const { src } = useDropzoneContext();
 
   if (!src) {
@@ -154,10 +154,10 @@ export type DropzoneEmptyStateProps = {
   className?: string;
 };
 
-export const DropzoneEmptyState = ({
+export function DropzoneEmptyState({
   children,
   className,
-}: DropzoneEmptyStateProps) => {
+}: DropzoneEmptyStateProps) {
   const { src, accept, maxSize, minSize, maxFiles } = useDropzoneContext();
 
   if (src) {
