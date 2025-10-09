@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,10 +17,16 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import {
+  Select,
+  SelectTrigger,
+  SelectItem,
+  SelectValue,
+  SelectContent,
+} from '@/components/ui/select';
 
 interface Skill {
   _id: string;
@@ -59,7 +66,6 @@ const skillSchema = z.object({
 const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
 
   const {
     control,
@@ -80,32 +86,30 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   });
 
   const onSubmit = async (data: SkillDomainData) => {
-    if (selectedSkills.length === 0) {
-      notifyError('Please select at least one skill', 'Error');
+    // Ensure a skill is selected
+    if (!data.skillId || !data.label) {
+      notifyError('Please select a skill', 'Error');
       return;
     }
 
     setLoading(true);
     try {
-      for (const skill of selectedSkills) {
-        await axiosInstance.post(`/freelancer/dehix-talent`, {
-          talentId: skill._id,
-          talentName: skill.label,
-          experience: data.experience,
-          monthlyPay: data.monthlyPay,
-          activeStatus: data.activeStatus,
-          status: data.status,
-          type: 'SKILL',
-        });
-      }
+      await axiosInstance.post(`/freelancer/dehix-talent`, {
+        talentId: data.skillId,
+        talentName: data.label,
+        experience: data.experience,
+        monthlyPay: data.monthlyPay,
+        activeStatus: data.activeStatus,
+        status: data.status,
+        type: 'SKILL',
+      });
       reset();
-      setSelectedSkills([]);
       setOpen(false);
-      notifySuccess('Skills added successfully', 'Success');
+      notifySuccess('Skill added successfully', 'Success');
       onSuccess();
     } catch (error) {
       console.error(error);
-      notifyError('Failed to add skills. Please try again.', 'Error');
+      notifyError('Failed to add skill. Please try again.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -114,14 +118,14 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">Add Skill</Button>
+        <Button size="sm"><Plus className="h-4 w-4" />Add Skill</Button>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Skill</DialogTitle>
           <DialogDescription>
-            Select skills, enter your experience and monthly pay.
+            Select a skill, enter your experience and monthly pay.
           </DialogDescription>
         </DialogHeader>
 
@@ -130,36 +134,39 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
             <Controller
               control={control}
               name="label"
-              render={() => (
-                <SelectTagPicker
-                  label="Skills"
-                  options={skills.map((s) => ({ label: s.label, _id: s._id }))}
-                  selected={selectedSkills.map((s) => ({ name: s.label }))}
-                  onAdd={(val) => {
-                    const skill = skills.find((s) => s.label === val);
-                    if (
-                      skill &&
-                      !selectedSkills.find((s) => s._id === skill._id)
-                    ) {
-                      setSelectedSkills((prev) => [...prev, skill]);
-                      setValue('label', val);
-                    }
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(selectedLabel) => {
+                    const selectedSkill = skills.find(
+                      (skill) => skill.label === selectedLabel,
+                    );
+                    field.onChange(selectedLabel);
+                    setValue('skillId', selectedSkill?._id || '');
                   }}
-                  onRemove={(val) => {
-                    const skill = skills.find((s) => s.label === val);
-                    if (skill) {
-                      setSelectedSkills((prev) =>
-                        prev.filter((s) => s._id !== skill._id),
-                      );
-                      if (selectedSkills.length === 1) setValue('label', '');
-                    }
-                  }}
-                  className="w-full"
-                  optionLabelKey="label"
-                  selectedNameKey="name"
-                  selectPlaceholder="Select skills"
-                  searchPlaceholder="Search skills..."
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a skill" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {skills.length > 0 ? (
+                      skills.map((skill) => (
+                        <SelectItem key={skill._id} value={skill.label}>
+                          {skill.label}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <Link href="/freelancer/settings/personal-info">
+                        <p className="p-4 flex justify-center items-center">
+                          No skills to add -{' '}
+                          <span className="text-blue-500 ml-2">
+                            Add some
+                          </span>{' '}
+                        </p>
+                      </Link>
+                    )}
+                  </SelectContent>
+                </Select>
               )}
             />
             {errors.label && (
