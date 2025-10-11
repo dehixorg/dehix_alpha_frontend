@@ -52,7 +52,7 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
   };
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
     if (resendCountdown > 0) {
       timer = setTimeout(() => setResendCountdown((c) => c - 1), 1000);
     }
