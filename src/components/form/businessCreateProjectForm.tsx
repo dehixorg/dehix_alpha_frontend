@@ -507,7 +507,7 @@ export function CreateProjectBusinessForm() {
         'Project Added',
       );
       const connectsCost = parseInt(
-        process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
+        process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '150',
         10,
       );
       const updatedConnects = (
@@ -1204,7 +1204,7 @@ export function CreateProjectBusinessForm() {
                         userType={'BUSINESS'}
                         requiredConnects={parseInt(
                           process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST ||
-                            '0',
+                            '150',
                           10,
                         )}
                       />
