@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+
 import { Button } from '@/components/ui/button';
 import {
   InputOTP,
@@ -92,7 +93,6 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
       notifySuccess('OTP sent successfully to your email');
     } catch (err: any) {
       setResendCountdown(0);
-      const code = err?.response?.data?.code;
       const message =
         err?.response?.data?.message || err.message || 'Failed to send OTP';
       notifyError(message, 'Error');
@@ -106,7 +106,7 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
     setIsVerifying(true);
     setError(null);
     try {
-      const response = await axiosInstance.post('/public/verify-email-otp', {
+      await axiosInstance.post('/public/verify-email-otp', {
         email,
         otp,
       });
