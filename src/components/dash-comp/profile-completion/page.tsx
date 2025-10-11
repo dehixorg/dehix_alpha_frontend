@@ -84,6 +84,24 @@ const fieldIcons: Record<string, React.ReactNode> = {
   // Fallback
   default: <Circle className="h-3 w-3 text-muted-foreground/50" />,
 };
+const PERSONAL_INFO = '/freelancer/settings/personal-info';
+const KYC = '/freelancer/settings/kyc';
+
+const fieldNavigationMap: Record<string, string> = {
+  'first name': PERSONAL_INFO,
+  'last name': PERSONAL_INFO,
+  username: PERSONAL_INFO,
+  email: PERSONAL_INFO,
+  phone: PERSONAL_INFO,
+  profile: PERSONAL_INFO,
+  description: PERSONAL_INFO,
+  skills: PERSONAL_INFO,
+  domain: PERSONAL_INFO,
+  'project domain': PERSONAL_INFO,
+
+  'kyc application': KYC,
+  'kyc verification': KYC,
+};
 
 // Helper function to get the appropriate icon for a field
 const getFieldIcon = (field: string) => {
@@ -172,6 +190,17 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
         return readableField;
       });
     return incomplete;
+  };
+
+  const handleFieldClick = (field: string) => {
+    const lowerField = field.toLowerCase().trim();
+    for (const [key, route] of Object.entries(fieldNavigationMap)) {
+      if (lowerField.includes(key)) {
+        router.push(route);
+        return;
+      }
+    }
+    router.push('/freelancer/settings/personal-info'); // fallback
   };
 
   if (!userProfile) {
@@ -274,13 +303,18 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
               <ScrollArea className="h-[100px] pr-4">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {incompleteFields.map((field, index) => (
-                    <StatItem
+                    <div
                       key={index}
-                      icon={getFieldIcon(field)}
-                      value={field}
-                      label=""
-                      className="h-full"
-                    />
+                      onClick={() => handleFieldClick(field)}
+                      className="cursor-pointer"
+                    >
+                      <StatItem
+                        icon={getFieldIcon(field)}
+                        value={field}
+                        label=""
+                        className="h-full"
+                      />
+                    </div>
                   ))}
                 </div>
               </ScrollArea>
