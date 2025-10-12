@@ -70,7 +70,7 @@ const NoteCard = ({
     className="relative group w-full h-full"
   >
     <Card
-      className="font-sans border-none cursor-pointer bg-white/90 hover:bg-white/80 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 w-full h-full min-h-[250px] relative"
+      className="font-sans border-none cursor-pointer bg-white/20 hover:bg-white/80 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 w-full h-full min-h-[250px] relative"
       style={
         note.banner
           ? {
