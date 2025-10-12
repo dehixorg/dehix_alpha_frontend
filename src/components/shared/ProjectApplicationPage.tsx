@@ -240,13 +240,23 @@ const ProjectApplicationForm = ({
   const handleBidSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isSubmitting) {
+      return; // Prevent multiple submissions
+    }
+
     // Validate profile selection
     if (!selectedProfile?._id) {
       notifyError('No profile selected for bidding');
       return;
     }
 
-    // Validate bid amount
+    // Check if already applied with this profile
+    if (appliedProfileIds.includes(selectedProfile._id)) {
+      notifyError('You have already applied with this profile', 'Already Applied');
+      return;
+    }
+
+    // Get current connects
     const currentConnects = parseInt(
       localStorage.getItem('DHX_CONNECTS') || '0',
       10,
@@ -287,6 +297,7 @@ const ProjectApplicationForm = ({
 
     // All validations passed, proceed with submission
     setIsSubmitting(true);
+
     try {
       const bidData = {
         current_price: bidAmount,
@@ -301,18 +312,19 @@ const ProjectApplicationForm = ({
         }),
       } as const;
 
+      // Make the API call first
       await axiosInstance.post('/bid', bidData);
-
-      const updatedConnects = (currentConnects - bidAmount).toString();
-      localStorage.setItem('DHX_CONNECTS', updatedConnects);
+      
+      // Only update connects and state if API call is successful
+      const updatedConnects = currentConnects - bidAmount;
+      localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
       window.dispatchEvent(new Event('connectsUpdated'));
 
       // Update applied profile IDs to prevent duplicate submissions
-      setAppliedProfileIds((prev) => [...prev, selectedProfile._id]);
+      setAppliedProfileIds(prev => [...prev, selectedProfile._id]);
 
       // Reset form state
       setBidAmount(0);
-      setDialogOpen(false);
       setCoverLetter('');
       setSelectedFreelancerProfile(null);
 
@@ -322,12 +334,14 @@ const ProjectApplicationForm = ({
         'Application Submitted',
       );
 
+      // Close the dialog
+      setDialogOpen(false);
+      
       // Refresh data
       await fetchAppliedData();
-      setDialogOpen(false);
     } catch (error: unknown) {
       console.error('Error submitting bid:', error);
-
+      
       let errorMessage = 'Failed to submit application. Please try again.';
       if (error && typeof error === 'object' && 'response' in error) {
         const response = (error as { response: any }).response;
@@ -335,7 +349,7 @@ const ProjectApplicationForm = ({
           errorMessage = response.data.message;
         }
       }
-
+      
       notifyError(errorMessage, 'Submission Failed');
     } finally {
       setIsSubmitting(false);
