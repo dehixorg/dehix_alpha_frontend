@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 
 // UI Components
+import { useSelector } from 'react-redux';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,7 +34,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -74,7 +75,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
       10,
     );
     try {
-      const res = await axiosInstance.post(`/business/hire-dehixtalent/hire-now`);
+      const res = await axiosInstance.post(
+        `/business/hire-dehixtalent/hire-now`,
+      );
       const remaining = res?.data?.remainingConnects;
       if (typeof remaining === 'number') {
         localStorage.setItem('DHX_CONNECTS', String(remaining));
@@ -125,7 +128,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
     <Card className="mx-auto max-w-[1000px] group relative overflow-hidden rounded-xl transition-all duration-300 shadow-sm hover:shadow-md border border-border/60 bg-background">
       <div className="md:flex md:gap-6 border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20">
         {/* Left Side - Profile */}
-  <div className="flex flex-col items-center md:items-start md:border-r md:border-border md:pr-6 md:w-80 p-4 pr-0 md:p-6 bg-muted-foreground/20 dark:bg-muted/20">
+        <div className="flex flex-col items-center md:items-start md:border-r md:border-border md:pr-6 md:w-80 p-4 pr-0 md:p-6 bg-muted-foreground/20 dark:bg-muted/20">
           <div className="relative mb-3">
             <Avatar className="h-20 w-20 ring-2 ring-primary/10">
               <AvatarImage src={profile} alt={name} className="object-cover" />
@@ -529,7 +532,8 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                           buttonText="Hire Now"
                           userType="BUSINESS"
                           requiredConnects={parseInt(
-                            process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+                            process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST ||
+                              '0',
                             10,
                           )}
                           skipRedirect

@@ -40,6 +40,7 @@ import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
 import DateOfBirthPicker from '@/components/DateOfBirthPicker/DateOfBirthPicker';
 import TermsDialog from '@/components/shared/FreelancerTermsDialog';
+import EmailOtpDialog from '@/components/shared/emailOtpDialog';
 
 interface Step {
   id: number;
@@ -266,7 +267,7 @@ export default function FreelancerPage() {
 
 interface FreelancerRegisterFormProps {
   currentStep: number;
-  setCurrentStep: (step: number) => void;
+  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
 function FreelancerRegisterForm({
@@ -286,6 +287,11 @@ function FreelancerRegisterForm({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
   const [Isverified, setIsVerified] = useState<boolean>(false);
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+  const [isEmailOtpDialogOpen, setIsEmailOtpDialogOpen] =
+    useState<boolean>(false);
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  const [dialogEmail, setDialogEmail] = useState<string>('');
   const searchParams = useSearchParams();
   const [isTermsDialog, setIsTermsDialog] = useState(false);
   const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(
@@ -331,7 +337,19 @@ function FreelancerRegisterForm({
         'confirmPassword',
       ]);
       if (isValid) {
-        setCurrentStep(currentStep + 1);
+        // Check if email is already verified and matches the verified email
+        const currentEmail = form.getValues('email');
+        if (isEmailVerified && verifiedEmail === currentEmail) {
+          // Email already verified and matches, proceed to next step
+          setCurrentStep((s: number) => s + 1);
+        } else {
+          // Email not verified or doesn't match the verified email, open OTP dialog
+          const email = currentEmail;
+          if (email) {
+            setDialogEmail(email);
+            setIsEmailOtpDialogOpen(true);
+          }
+        }
       } else {
         notifyError(
           'Please fill in all required fields before proceeding.',
@@ -387,6 +405,16 @@ function FreelancerRegisterForm({
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
+    // Ensure email is verified and matches the verified email before submitting
+    const currentEmail = form.getValues('email');
+    if (!isEmailVerified || verifiedEmail !== currentEmail) {
+      notifyError(
+        'Please verify your email before submitting the form.',
+        'Email Not Verified',
+      );
+      return;
+    }
+
     const referralCodeFromQuery = searchParams.get('referral');
 
     const referralCodeFromForm = data.referralCode;
@@ -438,6 +466,31 @@ function FreelancerRegisterForm({
       setTimeout(() => setIsLoading(false), 100);
     }
   };
+
+  const handleEmailVerificationSuccess = () => {
+    const currentEmail = form.getValues('email');
+    setIsEmailVerified(true);
+    setVerifiedEmail(currentEmail);
+    setCurrentStep((s: number) => s + 1);
+    notifySuccess(
+      'Email verified successfully! Proceeding to next step.',
+      'Success',
+    );
+  };
+
+  // If the email field changes after verification, invalidate the verification
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'email') {
+        const current = value.email;
+        if (verifiedEmail && current !== verifiedEmail) {
+          setIsEmailVerified(false);
+          setVerifiedEmail(null);
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, verifiedEmail]);
   useEffect(() => {
     const referralCode = searchParams.get('referral');
     if (referralCode) {
@@ -483,6 +536,7 @@ function FreelancerRegisterForm({
                   label="Email"
                   placeholder="john.doe@techinnovators.com"
                   type="email"
+                  disabled={isEmailOtpDialogOpen}
                 />
                 <div className="flex flex-col gap-2 mt-1">
                   <Label className="text-sm font-medium">Date of Birth</Label>
@@ -754,6 +808,13 @@ function FreelancerRegisterForm({
               phoneNumber={phone}
               isModalOpen={isModalOpen}
               setIsModalOpen={setIsModalOpen}
+            />
+            {/* Email OTP Dialog */}
+            <EmailOtpDialog
+              email={dialogEmail}
+              isOpen={isEmailOtpDialogOpen}
+              setIsOpen={setIsEmailOtpDialogOpen}
+              onVerificationSuccess={handleEmailVerificationSuccess}
             />
           </div>
         </div>

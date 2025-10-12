@@ -1,63 +1,78 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import { Coins } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { notifyError, notifySuccess } from "@/utils/toastMessage";
-import { axiosInstance } from "@/lib/axiosinstance";
-import { RootState } from "@/lib/store";
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Coins } from 'lucide-react';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { RootState } from '@/lib/store';
 
 interface RequestConnectsDialogProps {
   userId: string;
 }
 
-export default function RequestConnectsDialog({ userId }: RequestConnectsDialogProps) {
+export default function RequestConnectsDialog({
+  userId,
+}: RequestConnectsDialogProps) {
   const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState<string>("");
+  const [amount, setAmount] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     const parsed = parseInt(amount, 10);
     if (isNaN(parsed) || parsed <= 0) {
-      notifyError("Please enter a valid number of connects.", "Invalid input");
+      notifyError('Please enter a valid number of connects.', 'Invalid input');
       return;
     }
     if (parsed > 500) {
-      notifyError("You can request up to 500 connects at a time.", "Limit exceeded");
+      notifyError(
+        'You can request up to 500 connects at a time.',
+        'Limit exceeded',
+      );
       return;
     }
 
     setLoading(true);
     try {
-      const backendUserType = (user?.type === 'freelancer') ? 'FREELANCER' : 'BUSINESS';
+      const backendUserType =
+        user?.type === 'freelancer' ? 'FREELANCER' : 'BUSINESS';
       await axiosInstance.post(`/token-request`, {
         userId,
         userType: backendUserType,
         amount: parsed.toString(),
-        status: "PENDING",
+        status: 'PENDING',
         dateTime: new Date().toISOString(),
       });
 
-      notifySuccess("Request to add connects has been sent.", "Success!");
+      notifySuccess('Request to add connects has been sent.', 'Success!');
 
       const newConnect = {
         userId: userId,
         amount: parsed,
-        status: "PENDING",
+        status: 'PENDING',
         dateTime: new Date().toISOString(),
       } as any;
 
-      window.dispatchEvent(new CustomEvent("newConnectRequest", { detail: newConnect }));
-      window.dispatchEvent(new Event("connectsUpdated"));
+      window.dispatchEvent(
+        new CustomEvent('newConnectRequest', { detail: newConnect }),
+      );
+      window.dispatchEvent(new Event('connectsUpdated'));
       setOpen(false);
-      setAmount("");
+      setAmount('');
     } catch (error: any) {
-      console.error("Error requesting connects:", error?.response || error);
-      notifyError("Failed to request connects. Try again!", "Error");
+      console.error('Error requesting connects:', error?.response || error);
+      notifyError('Failed to request connects. Try again!', 'Error');
     } finally {
       setLoading(false);
     }
@@ -76,7 +91,9 @@ export default function RequestConnectsDialog({ userId }: RequestConnectsDialogP
 
           <div className="space-y-3 p-2">
             <div>
-              <label className="text-sm text-muted-foreground">How many connects do you want?</label>
+              <label className="text-sm text-muted-foreground">
+                How many connects do you want?
+              </label>
               <Input
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}

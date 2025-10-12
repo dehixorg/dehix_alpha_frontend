@@ -6,8 +6,9 @@ import { Wallet } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import RequestConnectsDialog from './RequestConnectsDialog';
 import { ScrollArea } from '../ui/scroll-area';
+
+import RequestConnectsDialog from './RequestConnectsDialog';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';

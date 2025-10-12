@@ -511,7 +511,9 @@ export function CreateProjectBusinessForm() {
         process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '150',
         10,
       );
-      const prevConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0');
+      const prevConnects = parseInt(
+        localStorage.getItem('DHX_CONNECTS') || '0',
+      );
       const updatedConnects = prevConnects - connectsCost;
       // Update connects in DB as well
       try {
