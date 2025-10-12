@@ -120,21 +120,9 @@ const FreelancerProfile = () => {
               skills: freelancerData.skills || [],
               domain: freelancerData.domain || [],
               projectDomain: freelancerData.projectDomain || [],
-              projects: freelancerData.projects
-                ? Array.isArray(freelancerData.projects)
-                  ? freelancerData.projects
-                  : Object.values(freelancerData.projects || {})
-                : [],
-              professionalInfo: freelancerData.professionalInfo
-                ? Array.isArray(freelancerData.professionalInfo)
-                  ? freelancerData.professionalInfo
-                  : Object.values(freelancerData.professionalInfo || {})
-                : [],
-              education: freelancerData.education
-                ? Array.isArray(freelancerData.education)
-                  ? freelancerData.education
-                  : Object.values(freelancerData.education || {})
-                : [],
+              projects: freelancerData.projects || [],
+              professionalInfo: freelancerData.professionalInfo || [],
+              education: freelancerData.education || [],
             };
 
             setProfileData(transformedData);
