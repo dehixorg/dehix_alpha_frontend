@@ -241,10 +241,10 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
 
   return (
     <Card className="rounded-none rounded-b-lg w-full overflow-hidden border-0 shadow-sm bg-gradient-to-br from-card to-card/70">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
+      <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-0">
+        <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-semibold tracking-tight">
+            <CardTitle className="text-lg sm:text-2xl font-semibold tracking-tight">
               Profile Strength
             </CardTitle>
             <CardDescription className="text-sm">
@@ -263,11 +263,11 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="pb-4">
-        <div className="space-y-6">
-          <div className="space-y-3">
+      <CardContent className="pb-3 sm:pb-4 px-3 sm:px-0">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-2 sm:space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium mt-2">
+              <span className="text-sm font-medium mt-1">
                 {completionPercentage.toFixed(0)}%
               </span>
               <Badge

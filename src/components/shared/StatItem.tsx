@@ -73,12 +73,12 @@ const StatItem: React.FC<StatItemProps> = ({
     return (
       <div
         className={cn(
-          'border shadow-sm rounded-lg overflow-hidden',
+          'w-full border shadow-sm rounded-lg overflow-hidden',
           colors.bg,
           className,
         )}
       >
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           <div className="flex items-center gap-3">
             {icon && (
               <div className={cn('p-2 rounded-lg', colors.iconBg)}>

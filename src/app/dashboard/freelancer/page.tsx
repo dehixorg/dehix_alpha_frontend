@@ -134,7 +134,8 @@ export default function Dashboard() {
               )}
             </Card>
             {/* Project Status Cards */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Use negative horizontal margin to make cards appear full-width on xs while preserving page padding */}
+            <div className="-mx-4 px-4 sm:mx-0 sm:px-0 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <StatItem
                 variant="card"
                 label="Total Revenue"
