@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import {
   Github,
   Linkedin,
@@ -7,12 +8,8 @@ import {
   Globe,
   Layers,
   Eye,
-  UserPlus,
   Award,
 } from 'lucide-react';
-
-// UI Components
-import { useSelector } from 'react-redux';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';

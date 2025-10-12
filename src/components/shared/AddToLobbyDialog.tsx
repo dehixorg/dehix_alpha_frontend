@@ -1,6 +1,5 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -9,7 +8,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import { RootState } from '@/lib/store';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';

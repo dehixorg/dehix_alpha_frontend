@@ -91,10 +91,14 @@ export default function RequestConnectsDialog({
 
           <div className="space-y-3 p-2">
             <div>
-              <label className="text-sm text-muted-foreground">
+              <label
+                htmlFor="connectsAmount"
+                className="text-sm text-muted-foreground"
+              >
                 How many connects do you want?
               </label>
               <Input
+                id="connectsAmount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="e.g. 10"
