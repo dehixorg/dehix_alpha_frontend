@@ -53,9 +53,7 @@ const TextInput: FC<TextInputProps<any>> = ({
                     field.onChange(value);
                   }
                 }}
-                value={
-                  type === 'number' ? field.value ?? '' : field.value ?? ''
-                }
+                value={field.value ?? ''}
               />
             </FormControl>
             <FormDescription>{description}</FormDescription>
