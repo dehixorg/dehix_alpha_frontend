@@ -101,7 +101,9 @@ const StatItem: React.FC<StatItemProps> = ({
               </div>
             )}
             <div className={cn('min-w-0', content_class)}>
-              <p className={cn('text-sm text-muted-foreground', label_class)}>{label}</p>
+              <p className={cn('text-sm text-muted-foreground', label_class)}>
+                {label}
+              </p>
               <p className={cn(text_class, value_class)}>{value}</p>
             </div>
           </div>
@@ -121,7 +123,9 @@ const StatItem: React.FC<StatItemProps> = ({
     >
       {icon && <div className="shrink-0">{icon}</div>}
       <div className={cn(content_class)}>
-        <p className={cn('text-xs text-muted-foreground', label_class)}>{label}</p>
+        <p className={cn('text-xs text-muted-foreground', label_class)}>
+          {label}
+        </p>
         <p className={cn('text-sm font-medium', value_class)}>{value}</p>
       </div>
     </div>

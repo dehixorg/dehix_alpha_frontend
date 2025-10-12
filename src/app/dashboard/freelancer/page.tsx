@@ -78,7 +78,8 @@ export default function Dashboard() {
 
   // Total revenue display (placeholder for now, can be made dynamic later)
   const totalRevenueValue = '$45,231.89';
-  const revenueSpanClass = String(totalRevenueValue).length > 12 ? 'lg:col-span-2' : '';
+  const revenueSpanClass =
+    String(totalRevenueValue).length > 12 ? 'lg:col-span-2' : '';
 
   return (
     <div className="flex min-h-screen w-full flex-col">

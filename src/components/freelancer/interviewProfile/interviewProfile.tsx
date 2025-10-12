@@ -154,19 +154,25 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         const isVerifiedTalent = (t: any) => {
           const status = String(t?.status || '').toUpperCase();
           const active = Boolean(t?.activeStatus);
-          return active && (status === StatusEnum.ACTIVE || status === StatusEnum.COMPLETED);
+          return (
+            active &&
+            (status === StatusEnum.ACTIVE || status === StatusEnum.COMPLETED)
+          );
         };
 
         const updatedSkills = (skillsDomainResponse.data.data.skills || [])
           .filter(isVerifiedTalent)
-          .filter((skill: any) =>
-            !skillData.some(
-              (existingSkill: any) => existingSkill.name === skill.talentName,
-            ),
+          .filter(
+            (skill: any) =>
+              !skillData.some(
+                (existingSkill: any) => existingSkill.name === skill.talentName,
+              ),
           );
         setSkills(updatedSkills);
 
-        const updatedDomains = (skillsDomainResponse?.data?.data?.domains || []).filter(
+        const updatedDomains = (
+          skillsDomainResponse?.data?.data?.domains || []
+        ).filter(
           (domain: any) =>
             !domainData.some(
               (existingDomain: any) =>
