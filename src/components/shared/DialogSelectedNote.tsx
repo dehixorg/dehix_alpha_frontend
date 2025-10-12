@@ -87,7 +87,6 @@ const DialogSelectedNote = ({
         if (!open) onClose();
       }}
     >
-      <ScrollArea className="h-60">
         <DialogContent
           className={cn(
             'p-0 max-w-2xl max-h-[90vh] mx-4 sm:mx-0',
@@ -330,7 +329,6 @@ const DialogSelectedNote = ({
             </div>
           </DialogFooter>
         </DialogContent>
-      </ScrollArea>
     </Dialog>
   );
 };
