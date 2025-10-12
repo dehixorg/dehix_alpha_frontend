@@ -32,6 +32,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { notifySuccess, notifyError } from '@/utils/toastMessage';
 interface FreelancerCardProps {
   name: string;
   skills: { name: string }[];
@@ -59,6 +64,41 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const user = useSelector((state: RootState) => state.user);
+
+  const handleHireNow = async () => {
+    // Backend will deduct connects; show toast and sync remaining connects locally
+    const requiredConnects = parseInt(
+      process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+      10,
+    );
+    try {
+      const res = await axiosInstance.post(`/business/hire-dehixtalent/hire-now`);
+      const remaining = res?.data?.remainingConnects;
+      if (typeof remaining === 'number') {
+        localStorage.setItem('DHX_CONNECTS', String(remaining));
+        // Trigger a global event so header wallet rerenders
+        window.dispatchEvent(new Event('connectsUpdated'));
+      }
+      notifySuccess(
+        `Deducted ${requiredConnects} connects.${
+          typeof remaining === 'number' ? ` Remaining: ${remaining}` : ''
+        }`,
+        'Hire Now successful',
+      );
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        (error?.response?.status === 400
+          ? 'Insufficient connects to proceed.'
+          : 'Failed to complete Hire Now. Please try again.');
+      notifyError(message, 'Hire Now failed');
+      throw error; // keep ConnectsDialog loading UX consistent
+    }
+  };
+
+  const noopValidate = async () => true;
 
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
@@ -85,7 +125,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
     <Card className="mx-auto max-w-[1000px] group relative overflow-hidden rounded-xl transition-all duration-300 shadow-sm hover:shadow-md border border-border/60 bg-background">
       <div className="md:flex md:gap-6 border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20">
         {/* Left Side - Profile */}
-        <div className="flex flex-col items-center md:items-start md:border-r md:border-border md:pr-6 md:w-80 p-4 pr-0 md:p-6 md:pr-6 bg-muted-foreground/20 dark:bg-muted/20">
+  <div className="flex flex-col items-center md:items-start md:border-r md:border-border md:pr-6 md:w-80 p-4 pr-0 md:p-6 bg-muted-foreground/20 dark:bg-muted/20">
           <div className="relative mb-3">
             <Avatar className="h-20 w-20 ring-2 ring-primary/10">
               <AvatarImage src={profile} alt={name} className="object-cover" />
@@ -479,12 +519,21 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button
-                          className="shadow-sm"
-                          aria-label="Hire freelancer"
-                        >
-                          <UserPlus className="h-4 w-4 mr-2" /> Hire Now
-                        </Button>
+                        <ConnectsDialog
+                          form={{} as any}
+                          loading={loading}
+                          setLoading={setLoading}
+                          onSubmit={handleHireNow}
+                          isValidCheck={noopValidate}
+                          userId={user?.uid}
+                          buttonText="Hire Now"
+                          userType="BUSINESS"
+                          requiredConnects={parseInt(
+                            process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+                            10,
+                          )}
+                          skipRedirect
+                        />
                       </div>
                     </DialogFooter>
                   </div>
@@ -492,9 +541,21 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
               </Dialog>
             </div>
 
-            <Button size="sm" aria-label="Hire freelancer">
-              <UserPlus className="h-4 w-4 mr-2" /> Hire Now
-            </Button>
+            <ConnectsDialog
+              form={{} as any}
+              loading={loading}
+              setLoading={setLoading}
+              onSubmit={handleHireNow}
+              isValidCheck={noopValidate}
+              userId={user?.uid}
+              buttonText="Hire Now"
+              userType="BUSINESS"
+              requiredConnects={parseInt(
+                process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+                10,
+              )}
+              skipRedirect
+            />
           </div>
         </div>
       </div>

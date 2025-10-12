@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
 
 import {
@@ -9,6 +10,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import { RootState } from '@/lib/store';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
 
 const AddToLobbyDialog = ({
@@ -22,7 +25,17 @@ const AddToLobbyDialog = ({
   open,
   setOpen,
   isLoading,
+  setLoading,
 }: any) => {
+  const user = useSelector((state: RootState) => state.user);
+
+  const isValidCheck = async () => {
+    if (!currSkills || currSkills.length === 0) {
+      // reuse existing error toast in parent path if desired; keeping lightweight here
+      return false;
+    }
+    return true;
+  };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-md">
@@ -48,17 +61,24 @@ const AddToLobbyDialog = ({
         </div>
 
         <DialogFooter className="mt-4">
-          <Button
-            onClick={async () => {
+          <ConnectsDialog
+            // form is unused internally; provide a dummy to satisfy types
+            form={{} as any}
+            loading={isLoading}
+            setLoading={setLoading}
+            onSubmit={async () => {
               const success = await handleAddToLobby(talent.freelancer_id);
               if (success) setOpen(false);
             }}
-            className="w-full text-sm py-2 px-3 rounded-md bg-primary hover:bg-primary/90"
-            type="submit"
-            disabled={isLoading}
-          >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
-          </Button>
+            isValidCheck={isValidCheck}
+            userId={user?.uid}
+            buttonText="Save"
+            userType="BUSINESS"
+            requiredConnects={parseInt(
+              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+              10,
+            )}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -26,6 +26,7 @@ interface ConnectsDialogProps {
   userType: string;
   requiredConnects: number;
   data?: any;
+  skipRedirect?: boolean;
 }
 
 export default function ConnectsDialog({
@@ -38,6 +39,7 @@ export default function ConnectsDialog({
   userType,
   requiredConnects,
   data,
+  skipRedirect = false,
 }: ConnectsDialogProps) {
   const [openConfirm, setOpenConfirm] = useState(false);
   const [lowConnects, setLowConnects] = useState(false);
@@ -96,7 +98,9 @@ export default function ConnectsDialog({
       } else {
         await onSubmit();
       }
-      router.push('/dashboard/business');
+      if (!skipRedirect) {
+        router.push('/dashboard/business');
+      }
       setOpenConfirm(false);
     } catch (error) {
       console.error('Error deducting connects:', error);

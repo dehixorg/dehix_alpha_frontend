@@ -26,6 +26,10 @@ export default function RequestConnectsDialog({ userId }: RequestConnectsDialogP
       notifyError("Please enter a valid number of connects.", "Invalid input");
       return;
     }
+    if (parsed > 500) {
+      notifyError("You can request up to 500 connects at a time.", "Limit exceeded");
+      return;
+    }
 
     setLoading(true);
     try {
