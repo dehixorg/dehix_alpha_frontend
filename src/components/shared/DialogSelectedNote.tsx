@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type DialogSelectedNoteProps = {
   note: Note;
@@ -86,10 +87,12 @@ const DialogSelectedNote = ({
         if (!open) onClose();
       }}
     >
+      <ScrollArea className='h-60'>
       <DialogContent
         className={cn(
           'p-0 max-w-2xl max-h-[90vh] mx-4 sm:mx-0 overflow-hidden',
-          'shadow-2xl card',
+          'shadow-2xl rounded-xl border-2 border-border',
+          'bg-card text-card-foreground',
           'transition-all duration-200 ease-in-out',
         )}
         onInteractOutside={onClose}
@@ -99,7 +102,7 @@ const DialogSelectedNote = ({
         {note.banner && !note.bgColor && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
         )}
-        <DialogHeader className="p-4 border-b border-gray-200/30 dark:border-gray-700/50 bg-gradient">
+        <DialogHeader className="p-4 border-b border-gray-200 dark:border-gray-700/50 bg-gradient">
           <div className="flex items-center justify-between w-full">
             {isEditMode ? (
               <Input
@@ -129,7 +132,8 @@ const DialogSelectedNote = ({
         </DialogHeader>
 
         {/* Content */}
-        <div className="flex-1 p-6 overflow-y-auto max-h-[60vh] min-h-[200px]">
+        <ScrollArea className="flex-1 min-h-[200px] max-h-[60vh] px-6 py-4">
+        {/* <div className="flex-1 p-6 overflow-y-auto max-h-[60vh] min-h-[200px]"> */}
           {error && (
             <div className="mb-4 p-3 text-sm bg-red-500/10 text-red-600 dark:text-red-400 rounded-md">
               {error}
@@ -220,9 +224,9 @@ const DialogSelectedNote = ({
               )}
             </div>
           )}
-        </div>
+        </ScrollArea>
 
-        <DialogFooter className="p-4 border-t border-gray-200/30 dark:border-gray-700/50">
+        <DialogFooter className="p-4 border-t border-gray-300/60 dark:border-gray-700/50">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-white">
               {formattedDate && (
@@ -318,6 +322,7 @@ const DialogSelectedNote = ({
           </div>
         </DialogFooter>
       </DialogContent>
+      </ScrollArea>
     </Dialog>
   );
 };
