@@ -1,5 +1,13 @@
 import React from 'react';
-import { CheckCircle, Code2, FlagIcon, Mail, Play, Tag } from 'lucide-react';
+import {
+  CheckCircle,
+  Code2,
+  FlagIcon,
+  Mail,
+  Play,
+  Tag,
+  RotateCcw,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
@@ -23,6 +31,7 @@ export interface ProjectDetailCardProps {
   projectId: string; // Added project ID prop
   handleCompleteProject?: () => void;
   handleStartProject?: () => void; // Added start project handler
+  handleIncompleteProject?: () => void; // Added incomplete project handler
 }
 
 function ProjectDetailCard({
@@ -37,6 +46,7 @@ function ProjectDetailCard({
   projectId,
   handleCompleteProject,
   handleStartProject,
+  handleIncompleteProject,
 }: ProjectDetailCardProps) {
   const { text: projectStatus } = getStatusBadge(status);
 
@@ -190,9 +200,15 @@ function ProjectDetailCard({
               Mark Complete
             </Button>
           ) : projectStatus === 'COMPLETED' ? (
-            <Button size="sm" variant="secondary" className="gap-2" disabled>
-              <CheckCircle className="w-4 h-4" />
-              Completed
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2 border-orange-700/40 text-orange-600 hover:text-orange-600 bg-orange-100 hover:bg-orange-300 dark:bg-orange-900/20 dark:hover:bg-orange-900/60"
+              onClick={handleIncompleteProject}
+              disabled={!handleIncompleteProject}
+            >
+              <RotateCcw className="w-4 h-4" />
+              Mark as Incomplete
             </Button>
           ) : null}
         </div>
