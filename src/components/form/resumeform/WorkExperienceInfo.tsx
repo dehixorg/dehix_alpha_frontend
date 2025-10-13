@@ -103,6 +103,7 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
                     className="rounded-full"
                     type="button"
                     size="icon"
+                    aria-label={`Remove work experience entry ${index + 1}`}
                   >
                     <X className="h-5 w-5 text-red-500" />
                   </Button>

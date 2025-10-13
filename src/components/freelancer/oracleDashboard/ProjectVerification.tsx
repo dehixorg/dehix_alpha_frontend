@@ -58,16 +58,32 @@ const ProjectVerification = () => {
       );
       const result = response.data.data;
 
+      const isValidVerificationStatus = (
+        value: any,
+      ): value is VerificationStatus =>
+        Object.values(VerificationStatus).includes(value as VerificationStatus);
+
       const flattenedData: ProjectData[] = result.flatMap((entry: any) =>
         entry.result?.projects
           ? (Object.values(entry.result.projects) as any[]).map(
-              (project: any) => ({
-                ...project,
-                verification_status:
-                  project.verificationStatus as VerificationStatus,
-                verifier_id: entry.verifier_id,
-                verifier_username: entry.verifier_username,
-              }),
+              (project: any) => {
+                const rawStatus = project.verificationStatus;
+                const validatedStatus = isValidVerificationStatus(rawStatus)
+                  ? rawStatus
+                  : (() => {
+                      console.warn(
+                        'Invalid verificationStatus encountered, defaulting to PENDING:',
+                        rawStatus,
+                      );
+                      return VerificationStatus.PENDING;
+                    })();
+                return {
+                  ...project,
+                  verification_status: validatedStatus,
+                  verifier_id: entry.verifier_id,
+                  verifier_username: entry.verifier_username,
+                } as ProjectData;
+              },
             )
           : [],
       );

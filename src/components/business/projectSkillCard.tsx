@@ -128,23 +128,25 @@ function ProjectSkillCard({
                 {team.slice(0, 5).map((member, index) => (
                   <div key={index} className="flex items-center">
                     <div className="flex-shrink-0 mr-3">
-                      {member.profilePic ? (
-                        <Image
-                          src={member.profilePic}
-                          alt={member.name}
-                          width={32}
-                          height={32}
-                          className="h-8 w-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div
-                          className={`h-8 w-8 rounded-full flex items-center justify-center ${member.color} ${member.textColor}`}
-                        >
-                          <span className="text-xs font-medium">
-                            {getInitials(member.name)}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex-shrink-0 mr-3">
+                        {member.profilePic ? (
+                          <Image
+                            src={member.profilePic}
+                            alt={member.name || 'Team member'}
+                            width={32}
+                            height={32}
+                            className="h-8 w-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div
+                            className={`h-8 w-8 rounded-full flex items-center justify-center ${member.color || 'bg-gray-200'} ${member.textColor || 'text-gray-700'}`}
+                          >
+                            <span className="text-xs font-medium">
+                              {getInitials(member.name)}
+                            </span>
+                          </div>
+                        )}
+                      </div>{' '}
                     </div>
                     <div className="flex-1 flex justify-between items-center min-w-0">
                       <span className="text-sm font-medium truncate mr-2">

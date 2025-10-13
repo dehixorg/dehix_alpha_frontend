@@ -7,8 +7,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
+import { VerificationStatus } from '@/utils/verificationStatus';
 
 type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
+
+const STATUS = VerificationStatus;
 
 export default function BusinessVerification() {
   const [businessdata, setBusinessData] = useState<any[]>([]);
@@ -23,11 +26,10 @@ export default function BusinessVerification() {
   const filteredData = useMemo(() => {
     return businessdata.filter((data) => {
       if (filter === 'all') return true;
-      const status =
-        data.verificationStatus || data.status || data.verification_status;
-      if (filter === 'pending') return status === 'PENDING';
-      if (filter === 'approved') return status === 'APPROVED';
-      if (filter === 'denied') return status === 'DENIED';
+      const status = data.verificationStatus as VerificationStatus;
+      if (filter === 'pending') return status === STATUS.PENDING;
+      if (filter === 'approved') return status === STATUS.APPROVED;
+      if (filter === 'denied') return status === STATUS.DENIED;
       return true;
     });
   }, [businessdata, filter]);
@@ -44,6 +46,13 @@ export default function BusinessVerification() {
         entry.result?.projects
           ? Object.values(entry.result.projects).map((project: any) => ({
               ...project,
+              // canonical status on each item
+              verificationStatus: toVerificationStatus(
+                project.verificationStatus ||
+                  project.status ||
+                  project.verification_status ||
+                  STATUS.PENDING,
+              ),
               verifier_id: entry.verifier_id,
               verifier_username: entry.verifier_username,
             }))
@@ -64,7 +73,7 @@ export default function BusinessVerification() {
   }, [fetchData]);
 
   const updateBusinessStatus = useCallback(
-    (index: number, newStatus: string) => {
+    (index: number, newStatus: VerificationStatus) => {
       setBusinessData((prev: any[]) => {
         const next = [...prev];
         if (next[index]) next[index].status = newStatus;
@@ -84,6 +93,18 @@ export default function BusinessVerification() {
     },
     [],
   );
+
+  const toVerificationStatus = (s: any): VerificationStatus => {
+    switch (s) {
+      case 'APPROVED':
+        return VerificationStatus.APPROVED;
+      case 'DENIED':
+        return VerificationStatus.DENIED;
+      case 'PENDING':
+      default:
+        return VerificationStatus.PENDING;
+    }
+  };
 
   return (
     <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
@@ -165,13 +186,12 @@ export default function BusinessVerification() {
                         linkedInLink={data.linkedInLink}
                         githubLink={data.githubLink}
                         comments={data.comments}
-                        status={
-                          (data.verificationStatus ||
-                            data.status ||
-                            data.verification_status) as string
-                        }
+                        status={data.verificationStatus}
                         onStatusUpdate={(newStatus) =>
-                          updateBusinessStatus(index, newStatus)
+                          updateBusinessStatus(
+                            index,
+                            newStatus as VerificationStatus,
+                          )
                         }
                         onCommentUpdate={(newComment) =>
                           updateCommentStatus(index, newComment)

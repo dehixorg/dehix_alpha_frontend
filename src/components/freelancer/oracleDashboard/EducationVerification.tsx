@@ -55,9 +55,7 @@ const OracleDashboard = () => {
     if (filter === 'pending') return data.verification_status === 'PENDING';
     if (filter === 'approved') return data.verification_status === 'APPROVED';
     if (filter === 'denied') return data.verification_status === 'DENIED';
-    return true;
   });
-
   const fetchData = useCallback(async () => {
     try {
       const verificationResponse = await axiosInstance.get(

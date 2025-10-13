@@ -48,8 +48,8 @@ interface BusinessProps {
   linkedInLink: string;
   githubLink: string;
   comments: string;
-  status: string | VerificationStatus;
-  onStatusUpdate: (newStatus: string) => void;
+  status: VerificationStatus;
+  onStatusUpdate: (newStatus: VerificationStatus) => void;
   onCommentUpdate: (newComment: string) => void;
 }
 
@@ -70,9 +70,8 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
   onStatusUpdate,
   onCommentUpdate,
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState<string>(
-    status as string,
-  );
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus>(status);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
@@ -93,11 +92,14 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
   // Reusable decision form will handle its own form state and validation
 
   useEffect(() => {
-    setVerificationStatus(status as string);
+    setVerificationStatus(status);
   }, [status]);
 
   async function onSubmit(data: { type: string; comment?: string }) {
-    const apiStatus = data.type === 'verified' ? 'APPROVED' : 'DENIED';
+    const apiStatus: VerificationStatus =
+      data.type === 'verified'
+        ? VerificationStatus.APPROVED
+        : VerificationStatus.DENIED;
     try {
       await axiosInstance.put(`/verification/${_id}/update`, {
         comment: data.comment,
@@ -167,13 +169,13 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
         <CardDescription className="mt-1 text-justify text-gray-600">
           {companyName}
           <br />
-          {verificationStatus === 'PENDING' && (
+          {verificationStatus === VerificationStatus.PENDING && (
             <Badge className="bg-yellow-500 text-white mt-2">PENDING</Badge>
           )}
-          {verificationStatus === 'APPROVED' && (
+          {verificationStatus === VerificationStatus.APPROVED && (
             <Badge className="bg-green-500 text-white mt-2">APPROVED</Badge>
           )}
-          {verificationStatus === 'DENIED' && (
+          {verificationStatus === VerificationStatus.DENIED && (
             <Badge className="bg-red-500 text-white mt-2">DENIED</Badge>
           )}
         </CardDescription>
@@ -228,7 +230,7 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
       </CardContent>
 
       <CardFooter className="flex flex-col items-center">
-        {verificationStatus === 'PENDING' && (
+        {verificationStatus === VerificationStatus.PENDING && (
           <VerificationDecisionForm
             radioOptions={[
               { value: 'verified', label: 'Verify' },

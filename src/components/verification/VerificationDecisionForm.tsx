@@ -43,6 +43,11 @@ const VerificationDecisionForm: React.FC<VerificationDecisionFormProps> = ({
   submitText = 'Submit',
   className,
 }) => {
+  if (!radioOptions || radioOptions.length === 0) {
+    throw new Error(
+      'VerificationDecisionForm: radioOptions must contain at least one option',
+    );
+  }
   const values = radioOptions.map((o) => o.value) as [string, ...string[]];
   const Schema = z.object({
     type: z.enum(values, { required_error: 'You need to select a type.' }),
@@ -67,8 +72,14 @@ const VerificationDecisionForm: React.FC<VerificationDecisionFormProps> = ({
   };
 
   const submitHandler = form.handleSubmit(async (data) => {
-    await onSubmit(data);
-    setOpen(false);
+    try {
+      await onSubmit(data);
+      setOpen(false);
+    } catch (error) {
+      // Allow the error to be handled by the parent or show a toast notification
+      console.error('Submission failed:', error);
+      // Optionally reset submitting state or show user feedback
+    }
   });
 
   const variantFor = (label: string) => {

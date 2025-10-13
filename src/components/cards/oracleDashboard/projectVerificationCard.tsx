@@ -106,16 +106,17 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         comment: data.comment,
         verification_status: apiStatus,
       });
+      const newStatus =
+        apiStatus === 'APPROVED'
+          ? VerificationStatus.APPROVED
+          : VerificationStatus.DENIED;
+      setVerificationStatus(newStatus);
+      onStatusUpdate(newStatus);
+      onCommentUpdate(data.comment || '');
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
+      return;
     }
-    const newStatus =
-      apiStatus === 'APPROVED'
-        ? VerificationStatus.APPROVED
-        : VerificationStatus.DENIED;
-    setVerificationStatus(newStatus);
-    onStatusUpdate(newStatus);
-    onCommentUpdate(data.comment || '');
   }
 
   return (

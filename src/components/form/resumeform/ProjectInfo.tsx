@@ -77,6 +77,7 @@ export const ProjectInfo: React.FC<ProjectInfoProps> = ({
                     onClick={() => handleRemoveProject(index)}
                     className={cn('rounded-full')}
                     size="icon"
+                    aria-label="Remove project"
                   >
                     <X className={cn('h-5 w-5 text-red-500')} />
                   </Button>

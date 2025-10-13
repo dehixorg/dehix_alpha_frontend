@@ -262,18 +262,23 @@ export default function ResumeEditor({
     <SkillInfo
       key="skill"
       skillData={skillData}
-      onAddSkill={(e) => {
-        e.preventDefault();
-        setSkillData([...skillData, { skillName: '' }]);
+      onAddSkill={(name) => {
+        setSkillData((prev) => {
+          const emptyIdx = prev.findIndex((s) => !s.skillName);
+          if (emptyIdx >= 0) {
+            const next = [...prev];
+            next[emptyIdx] = { skillName: name };
+            return next;
+          }
+          return [...prev, { skillName: name }];
+        });
       }}
-      onRemoveSkill={(e, index) => {
-        e.preventDefault();
-        setSkillData(skillData.filter((_, i) => i !== index));
-      }}
-      onSkillChange={(e, index) => {
-        const newSkills = [...skillData];
-        newSkills[index].skillName = e.target.value;
-        setSkillData(newSkills);
+      onRemoveSkill={(name) => {
+        setSkillData((prev) => {
+          const idx = prev.findIndex((s) => s.skillName === name);
+          if (idx === -1) return prev;
+          return prev.filter((_, i) => i !== idx);
+        });
       }}
     />,
     <AchievementInfo

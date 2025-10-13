@@ -10,12 +10,8 @@ interface Skill {
 
 interface SkillInfoProps {
   skillData: Skill[];
-  onAddSkill: (e: React.MouseEvent) => void;
-  onRemoveSkill: (e: React.MouseEvent, index: number) => void;
-  onSkillChange: (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number,
-  ) => void;
+  onAddSkill: (skillName: string) => void;
+  onRemoveSkill: (skillName: string) => void;
   projectData?: { title: string; description: string }[];
 }
 
@@ -23,9 +19,13 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
   skillData,
   onAddSkill,
   onRemoveSkill,
-  onSkillChange,
 }) => {
-  const [options, setOptions] = useState<any[]>([]);
+  interface SkillOption {
+    name: string;
+    // Add other fields from API response
+  }
+
+  const [options, setOptions] = useState<SkillOption[]>([]);
 
   useEffect(() => {
     const fetchSkills = async () => {
@@ -49,29 +49,11 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
   );
 
   const handleAddByValue = (value: string) => {
-    const changeEvt = {
-      target: { value },
-    } as unknown as React.ChangeEvent<HTMLInputElement>;
-    const emptyIndex = (skillData || []).findIndex((s) => !s.skillName);
-    if (emptyIndex >= 0) {
-      onSkillChange(changeEvt, emptyIndex);
-      return;
-    }
-    const evt = new MouseEvent('click') as unknown as React.MouseEvent;
-    onAddSkill(evt);
-    // Defer to allow parent state to append the new row
-    setTimeout(() => {
-      const newIndex = (skillData || []).length; // new row appended at previous length index
-      onSkillChange(changeEvt, newIndex);
-    }, 0);
+    onAddSkill(value);
   };
 
   const handleRemoveByName = (name: string) => {
-    const idx = (skillData || []).findIndex((s) => s.skillName === name);
-    if (idx >= 0) {
-      const evt = new MouseEvent('click') as unknown as React.MouseEvent;
-      onRemoveSkill(evt, idx);
-    }
+    onRemoveSkill(name);
   };
 
   return (

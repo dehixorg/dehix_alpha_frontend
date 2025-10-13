@@ -158,7 +158,10 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
                   setFormData((prevState) => ({ ...prevState, status: value }))
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger
+                  className="w-full"
+                  aria-describedby={errors.status ? 'status-error' : undefined}
+                >
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -174,8 +177,10 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
                 </SelectContent>
               </Select>
               {errors.status && (
-                <p className="text-xs text-red-500 mt-1">{errors.status}</p>
-              )}
+                <p id="status-error" className="text-xs text-red-500 mt-1">
+                  {errors.status}
+                </p>
+              )}{' '}
             </div>
           </div>
 

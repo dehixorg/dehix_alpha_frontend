@@ -70,10 +70,8 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   onStatusUpdate,
   onCommentUpdate,
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState<
-    VerificationStatus | undefined
-  >(status);
-  // Form is handled by reusable component
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus>(status); // Form is handled by reusable component
   useEffect(() => {
     setVerificationStatus(status);
   }, [status]);
@@ -100,16 +98,17 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
         comment: data.comment,
         verification_status: apiStatus,
       });
+      const newStatus =
+        apiStatus === 'APPROVED'
+          ? VerificationStatus.APPROVED
+          : VerificationStatus.DENIED;
+      setVerificationStatus(newStatus);
+      onStatusUpdate(newStatus);
+      onCommentUpdate(data.comment || '');
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
+      return;
     }
-    const newStatus =
-      apiStatus === 'APPROVED'
-        ? VerificationStatus.APPROVED
-        : VerificationStatus.DENIED;
-    setVerificationStatus(newStatus);
-    onStatusUpdate(newStatus);
-    onCommentUpdate(data.comment || '');
   }
 
   return (

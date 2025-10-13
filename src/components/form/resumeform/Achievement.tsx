@@ -73,6 +73,7 @@ export const AchievementInfo: React.FC<AchievementInfoProps> = ({
                     className="rounded-full"
                     type="button"
                     size="icon"
+                    aria-label={`Delete achievement ${index + 1}`}
                   >
                     <X className="h-5 w-5 text-red-500" />
                   </Button>

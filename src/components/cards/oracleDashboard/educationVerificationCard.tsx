@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MessageSquareIcon,
   MapPin,
@@ -74,9 +74,27 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   onCommentUpdate,
 }) => {
   const [openReport, setOpenReport] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<
-    VerificationStatus | undefined
-  >(status as VerificationStatus);
+  const normalizeStatus = (
+    value: string | VerificationStatus | undefined,
+  ): VerificationStatus => {
+    const upper = String(value ?? '').toUpperCase();
+    const isValid = Object.values(VerificationStatus).includes(
+      upper as VerificationStatus,
+    );
+    if (isValid) return upper as VerificationStatus;
+    console.warn(
+      '[EducationVerificationCard] Invalid verification status; defaulting to PENDING:',
+      value,
+    );
+    return VerificationStatus.PENDING;
+  };
+
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus>(normalizeStatus(status));
+
+  useEffect(() => {
+    setVerificationStatus(normalizeStatus(status));
+  }, [status]);
 
   // Form handled via reusable component
 

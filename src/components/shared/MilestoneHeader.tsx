@@ -90,7 +90,7 @@ const MilestoneHeader = ({ milestone }: { milestone: Milestone }) => {
                       fill
                       className="object-contain"
                       sizes="(max-width: 640px) 96px, 112px"
-                      priority
+                      loading="lazy"
                     />
                   </div>
                 </div>

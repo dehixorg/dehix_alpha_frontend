@@ -118,6 +118,7 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
                     Story Title
                   </label>
                   <Input
+                    id="storyTitle"
                     placeholder="Enter story title"
                     value={storyData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
@@ -127,127 +128,125 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
                     <p className="text-red-500 text-sm mt-1">{errors.title}</p>
                   )}
                 </div>
-                <div>
-                  <label
-                    htmlFor="storyStatus"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    Story Status
-                  </label>
-                  <Select
-                    value={storyData.storyStatus}
-                    onValueChange={(value) =>
-                      handleInputChange('storyStatus', value)
+                <label
+                  htmlFor="storyStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Story Status
+                </label>
+                <Select
+                  value={storyData.storyStatus}
+                  onValueChange={(value) =>
+                    handleInputChange('storyStatus', value)
+                  }
+                >
+                  <SelectTrigger id="storyStatus" className="w-full">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NOT_STARTED">Not Started</SelectItem>
+                    <SelectItem value="ONGOING">On Going</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.storyStatus && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.storyStatus}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="storySummary"
+              className="block text-sm font-medium mb-1"
+            >
+              Summary
+            </label>
+            <Textarea
+              placeholder="Enter summary"
+              value={storyData.summary}
+              onChange={(e) => handleInputChange('summary', e.target.value)}
+              required
+            />
+            {errors.summary && (
+              <p className="text-red-500 text-sm mt-1">{errors.summary}</p>
+            )}
+          </div>
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="storyUrls"
+              className="block text-sm font-medium mb-2"
+            >
+              Important URLs
+            </label>
+            {storyData.importantUrls.map((url, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 sm:grid-cols-12 gap-3"
+              >
+                <div className="sm:col-span-5">
+                  <Input
+                    type="text"
+                    placeholder="URL Name (e.g., Design Doc)"
+                    value={url.urlName}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'importantUrls',
+                        { ...url, urlName: e.target.value },
+                        index,
+                      )
                     }
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-6">
+                  <Input
+                    type="text"
+                    placeholder="https://example.com/path"
+                    value={url.url}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'importantUrls',
+                        { ...url, url: e.target.value },
+                        index,
+                      )
+                    }
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-1 flex sm:justify-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => handleRemoveUrl(index)}
+                    className="text-red-500 hover:bg-red-500/20 hover:text-red-600 rounded-full"
+                    aria-label="Remove URL"
+                    size="icon"
                   >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NOT_STARTED">Not Started</SelectItem>
-                      <SelectItem value="ONGOING">On Going</SelectItem>
-                      <SelectItem value="COMPLETED">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.storyStatus && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.storyStatus}
-                    </p>
-                  )}
+                    <X />
+                  </Button>
                 </div>
               </div>
-            </div>
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="storySummary"
-                className="block text-sm font-medium mb-1"
+            ))}
+            {errors.importantUrls && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.importantUrls}
+              </p>
+            )}
+            <div className="mt-2 flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Tip: Use clear names and full links (including https://)
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleAddUrl}
+                size="sm"
               >
-                Summary
-              </label>
-              <Textarea
-                placeholder="Enter summary"
-                value={storyData.summary}
-                onChange={(e) => handleInputChange('summary', e.target.value)}
-                required
-              />
-              {errors.summary && (
-                <p className="text-red-500 text-sm mt-1">{errors.summary}</p>
-              )}
-            </div>
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="storyUrls"
-                className="block text-sm font-medium mb-2"
-              >
-                Important URLs
-              </label>
-              {storyData.importantUrls.map((url, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-1 sm:grid-cols-12 gap-3"
-                >
-                  <div className="sm:col-span-5">
-                    <Input
-                      type="text"
-                      placeholder="URL Name (e.g., Design Doc)"
-                      value={url.urlName}
-                      onChange={(e) =>
-                        handleInputChange(
-                          'importantUrls',
-                          { ...url, urlName: e.target.value },
-                          index,
-                        )
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="sm:col-span-6">
-                    <Input
-                      type="text"
-                      placeholder="https://example.com/path"
-                      value={url.url}
-                      onChange={(e) =>
-                        handleInputChange(
-                          'importantUrls',
-                          { ...url, url: e.target.value },
-                          index,
-                        )
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="sm:col-span-1 flex sm:justify-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => handleRemoveUrl(index)}
-                      className="text-red-500 hover:bg-red-500/20 hover:text-red-600 rounded-full"
-                      aria-label="Remove URL"
-                      size="icon"
-                    >
-                      <X />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {errors.importantUrls && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.importantUrls}
-                </p>
-              )}
-              <div className="mt-2 flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">
-                  Tip: Use clear names and full links (including https://)
-                </p>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleAddUrl}
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add another URL
-                </Button>
-              </div>
+                <Plus className="h-4 w-4 mr-1" /> Add another URL
+              </Button>
             </div>
           </div>
 

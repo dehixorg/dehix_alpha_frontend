@@ -97,6 +97,7 @@ export const PersonalInfo: React.FC<PersonalInfoProps> = ({
                     onClick={() => handleRemovePersonalInfo(index)}
                     className="rounded-full"
                     type="button"
+                    aria-label={`Remove personal info ${index + 1}${info.firstName || info.lastName ? `: ${[info.firstName, info.lastName].filter(Boolean).join(' ')}` : ''}`}
                     size="icon"
                   >
                     <X className="h-5 w-5 text-red-500" />
