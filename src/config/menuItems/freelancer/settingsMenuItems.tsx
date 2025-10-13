@@ -1,9 +1,9 @@
 import {
   BookOpen,
   Briefcase,
+  FileText,
   FileWarning,
   HomeIcon,
-  ImagePlus,
   Package,
   ShieldCheck,
   User,
@@ -64,8 +64,8 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/freelancer/settings/resume',
-    icon: <ImagePlus className="h-5 w-5" />,
-    label: 'Portfolio',
+    icon: <FileText className="h-5 w-5" />,
+    label: 'Resume',
   },
   {
     href: '/reports', // Link to your new Reports page

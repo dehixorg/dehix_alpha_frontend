@@ -6,6 +6,10 @@ import {
   Download,
   Trash2,
   AlertTriangle,
+  Gauge,
+  Pencil,
+  Loader2,
+  Save,
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -41,6 +45,7 @@ import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface ResumeData {
   _id?: string;
   personalInfo?: {
@@ -257,18 +262,23 @@ export default function ResumeEditor({
     <SkillInfo
       key="skill"
       skillData={skillData}
-      onAddSkill={(e) => {
-        e.preventDefault();
-        setSkillData([...skillData, { skillName: '' }]);
+      onAddSkill={(name) => {
+        setSkillData((prev) => {
+          const emptyIdx = prev.findIndex((s) => !s.skillName);
+          if (emptyIdx >= 0) {
+            const next = [...prev];
+            next[emptyIdx] = { skillName: name };
+            return next;
+          }
+          return [...prev, { skillName: name }];
+        });
       }}
-      onRemoveSkill={(e, index) => {
-        e.preventDefault();
-        setSkillData(skillData.filter((_, i) => i !== index));
-      }}
-      onSkillChange={(e, index) => {
-        const newSkills = [...skillData];
-        newSkills[index].skillName = e.target.value;
-        setSkillData(newSkills);
+      onRemoveSkill={(name) => {
+        setSkillData((prev) => {
+          const idx = prev.findIndex((s) => s.skillName === name);
+          if (idx === -1) return prev;
+          return prev.filter((_, i) => i !== idx);
+        });
       }}
     />,
     <AchievementInfo
@@ -287,6 +297,16 @@ export default function ResumeEditor({
       projectData={projectData}
       setProjectData={setProjectData}
     />,
+  ];
+
+  const stepLabels = [
+    'Personal',
+    'Work',
+    'Education',
+    'Skills',
+    'Achievements',
+    'Summary',
+    'Projects',
   ];
 
   // Handle Submit
@@ -479,30 +499,36 @@ export default function ResumeEditor({
   const openDeleteDialog = () => setShowDeleteDialog(true);
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/40">
+    <div className="flex min-h-screen flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Resume Editor"
+        active="Resume"
       />
       <div className="flex flex-1 flex-col sm:gap-4 sm:py-0 sm:pl-14">
         <Header
           activeMenu="Resume Editor"
           breadcrumbItems={[
             { label: 'Settings', link: '#' },
-            { label: 'Resume Building', link: '#' },
             { label: 'Resume Editor', link: '#' },
           ]}
           menuItemsTop={[]}
           menuItemsBottom={[]}
         />
 
-        <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-6 lg:grid lg:grid-cols-2">
-          <div className="p-6 relative">
+        <main className="flex-1 md:gap-6 lg:grid lg:grid-cols-2">
+          <div className="px-6 pt-2">
             <div className="flex justify-between items-center mb-6">
-              <Button onClick={onCancel}>← Back to Resumes</Button>
-              <Button onClick={() => setShowAtsScore(!showAtsScore)}>
-                {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
+              <Button onClick={onCancel} size="sm" variant="outline">
+                <ChevronLeft /> Back
+              </Button>
+              <Button
+                onClick={() => setShowAtsScore(!showAtsScore)}
+                size="sm"
+                variant="secondary"
+              >
+                {showAtsScore ? <Pencil /> : <Gauge />}
+                {showAtsScore ? 'Edit' : 'Check ATS Score'}
               </Button>
             </div>
 
@@ -521,6 +547,41 @@ export default function ResumeEditor({
               />
             ) : (
               <>
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&_*::-webkit-scrollbar]:hidden">
+                    {stepLabels.map((label, i) => {
+                      const isActive = i === currentStep;
+                      const isDone = i < currentStep;
+                      return (
+                        <div key={label} className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setCurrentStep(i)}
+                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                              isActive
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : isDone
+                                  ? 'bg-secondary text-secondary-foreground border-secondary'
+                                  : 'bg-background text-foreground/80 border-muted'
+                            }`}
+                            aria-current={isActive ? 'step' : undefined}
+                          >
+                            <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-[10px]">
+                              {i + 1}
+                            </span>
+                            {label}
+                          </button>
+                          {i !== stepLabels.length - 1 && (
+                            <span
+                              className={`h-px w-4 sm:w-8 ${isDone ? 'bg-primary' : 'bg-muted'}`}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="flex justify-between mb-4">
                   <Button
                     variant="outline"
@@ -529,7 +590,7 @@ export default function ResumeEditor({
                     }
                     disabled={currentStep === 0}
                   >
-                    <ChevronLeft className="mr-2" />
+                    <ChevronLeft /> Previous
                   </Button>
                   <Button
                     variant="outline"
@@ -540,79 +601,81 @@ export default function ResumeEditor({
                     }
                     disabled={currentStep === steps.length - 1}
                   >
-                    <ChevronRight className="ml-2" />
+                    Next <ChevronRight />
                   </Button>
                 </div>
 
                 {steps[currentStep]}
 
-                <div className="mt-6 flex justify-end gap-3">
+                <div className="mt-6 sticky bottom-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex justify-end gap-3">
                   {initialResume?._id && (
                     <Button
                       onClick={openDeleteDialog}
                       disabled={isDeleting || isSubmitting}
                       variant="destructive"
-                      className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+                      size="sm"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Resume
+                      Delete
                     </Button>
                   )}
                   <Button
                     onClick={handleSubmitResume}
                     disabled={isSubmitting || isDeleting}
-                    className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white"
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80 w-full"
                   >
-                    {isSubmitting ? 'Saving...' : 'Save Resume'}
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Save /> Save
+                      </>
+                    )}
                   </Button>
                 </div>
               </>
             )}
           </div>
 
-          <div className="relative p-6">
+          <div className="px-6 md:pl-0 pt-2">
             <div
               ref={resumeRef}
-              className="relative mt-10"
+              className="relative"
               style={{ minHeight: '1100px' }}
             >
-              <div className="absolute -top-8 right-6 z-10 flex gap-2 bg-white p-2 rounded shadow-md">
-                <Button
-                  size="sm"
-                  variant={
-                    selectedTemplate === 'ResumePreview1'
-                      ? 'default'
-                      : 'outline'
+              <div className="flex items-center gap-2 mb-4">
+                <Tabs
+                  value={selectedTemplate}
+                  onValueChange={(v) =>
+                    setSelectedTemplate(v as typeof selectedTemplate)
                   }
-                  onClick={() => setSelectedTemplate('ResumePreview1')}
                 >
-                  Template 1
-                </Button>
-                <Button
-                  size="sm"
-                  variant={
-                    selectedTemplate === 'ResumePreview2'
-                      ? 'default'
-                      : 'outline'
-                  }
-                  onClick={() => setSelectedTemplate('ResumePreview2')}
-                >
-                  Template 2
-                </Button>
+                  <TabsList>
+                    {[
+                      { value: 'ResumePreview1', label: 'Template 1' },
+                      { value: 'ResumePreview2', label: 'Template 2' },
+                    ].map((t) => (
+                      <TabsTrigger key={t.value} value={t.value}>
+                        {t.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={downloadPDF}
                   disabled={isGeneratingPDF}
+                  className="ml-auto"
                 >
                   <Download className="mr-2 h-4 w-4" /> PDF
                 </Button>
               </div>
 
               <div
-                className="resumeContent pt-4"
+                className="resumeContent pt-4 rounded-md"
                 style={{
-                  backgroundColor: 'white',
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                   overflow: 'hidden',
                   width: '100%',
@@ -620,29 +683,38 @@ export default function ResumeEditor({
                   margin: '0 auto',
                 }}
               >
-                {selectedTemplate === 'ResumePreview1' ? (
-                  <ResumePreview1
-                    personalData={personalData}
-                    workExperienceData={workExperienceData}
-                    educationData={educationData}
-                    skillData={skillData}
-                    achievementData={achievementData}
-                    projectData={projectData}
-                    summaryData={summaryData}
-                    headingColor={selectedColor}
-                  />
-                ) : (
-                  <ResumePreview2
-                    personalData={personalData}
-                    workExperienceData={workExperienceData}
-                    educationData={educationData}
-                    skillData={skillData}
-                    achievementData={achievementData}
-                    projectData={projectData}
-                    summaryData={summaryData}
-                    headingColor={selectedColor}
-                  />
-                )}
+                {[
+                  {
+                    value: 'ResumePreview1',
+                    render: (
+                      <ResumePreview1
+                        personalData={personalData}
+                        workExperienceData={workExperienceData}
+                        educationData={educationData}
+                        skillData={skillData}
+                        achievementData={achievementData}
+                        projectData={projectData}
+                        summaryData={summaryData}
+                        headingColor={selectedColor}
+                      />
+                    ),
+                  },
+                  {
+                    value: 'ResumePreview2',
+                    render: (
+                      <ResumePreview2
+                        personalData={personalData}
+                        workExperienceData={workExperienceData}
+                        educationData={educationData}
+                        skillData={skillData}
+                        achievementData={achievementData}
+                        projectData={projectData}
+                        summaryData={summaryData}
+                        headingColor={selectedColor}
+                      />
+                    ),
+                  },
+                ].find((t) => t.value === selectedTemplate)?.render || null}
               </div>
             </div>
           </div>

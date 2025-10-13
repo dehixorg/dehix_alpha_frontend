@@ -10,7 +10,7 @@ import { ScrollArea } from '../ui/scroll-area';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import {
   Table,
   TableHeader,
@@ -193,7 +193,7 @@ export const DisplayConnectsDialog = React.forwardRef<
                         </TableCell>
                         <TableCell className="text-center w-1/3">
                           <Badge
-                            className={`${getBadgeColor(item.status)} text-[10px] px-2 py-0.5`}
+                            className={`${statusOutlineClasses(item.status)}`}
                           >
                             {item.status}
                           </Badge>
