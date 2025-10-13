@@ -1114,7 +1114,6 @@ export function CreateProjectBusinessForm() {
                         <Save className="h-4 w-4 mr-1" /> Save Draft
                       </Button>
                       <ConnectsDialog
-                        form={form}
                         loading={loading}
                         isValidCheck={async () => {
                           // Validate all required fields
