@@ -9,6 +9,7 @@ import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
 import { Button } from '../ui/button';
 import { DisplayConnectsDialog } from '../shared/DisplayConnectsDialog';
+import StyledConnectButton from '../rainbowButton/StyledConnectButton';
 
 import { RootState } from '@/lib/store';
 
@@ -103,6 +104,7 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Profile Dropdown */}
       <DropdownProfile setConnects={setConnects} />
+      <StyledConnectButton />
     </header>
   );
 };

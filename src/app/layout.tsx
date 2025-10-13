@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import StoreProvider from './storeProvider';
 import { AuthProvider } from './AuthContext';
+import { Providers } from './Providers';
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -23,25 +24,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <StoreProvider>
-      <html lang="en">
-        <body className={inter.className}>
-          {' '}
-          <AuthProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <TooltipProvider>
-                <NetworkProvider>{children}</NetworkProvider>
-              </TooltipProvider>
-              <Toaster />
-            </ThemeProvider>
-          </AuthProvider>
-        </body>
-      </html>
-    </StoreProvider>
+    <html lang="en">
+      <body className={inter.className}>
+        <Providers>
+          <StoreProvider>
+            {' '}
+            <AuthProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <TooltipProvider>
+                  <NetworkProvider>{children}</NetworkProvider>
+                </TooltipProvider>
+                <Toaster />
+              </ThemeProvider>
+            </AuthProvider>
+          </StoreProvider>
+        </Providers>
+      </body>
+    </html>
   );
 }

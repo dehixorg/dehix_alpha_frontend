@@ -27,7 +27,7 @@ export default function ForgotPassword() {
         'Password reset email sent! Please check your inbox.',
         'Success',
       );
-      router.push('/auth/login');
+      // router.push('/auth/login');
     } catch (error: any) {
       notifyError('Invalid Email or Password. Please try again.', 'Error');
       console.error(error.message);
