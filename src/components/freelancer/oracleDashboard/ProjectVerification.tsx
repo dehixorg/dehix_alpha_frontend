@@ -99,105 +99,107 @@ const ProjectVerification = () => {
   );
 
   return (
-    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-      <div className="flex flex-col gap-2 p-6 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Project Verification
-        </h1>
-        <p className="text-muted-foreground">
-          Monitor the status of your project verifications.
-        </p>
-      </div>
-      <Tabs
-        value={filter}
-        onValueChange={(v) => handleFilterChange(v as FilterOption)}
-      >
-        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap">
-          <TabsList className="bg-transparent h-12 p-0">
-            <TabsTrigger
-              value="all"
-              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              All
-            </TabsTrigger>
-            <TabsTrigger
-              value="current"
-              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              Pending
-            </TabsTrigger>
-            <TabsTrigger
-              value="verified"
-              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              Verified
-            </TabsTrigger>
-            <TabsTrigger
-              value="rejected"
-              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              Rejected
-            </TabsTrigger>
-          </TabsList>
+    <div className="flex min-h-screen w-full flex-col">
+      <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm">
+        <div className="flex flex-col gap-2 p-6 pb-4">
+          <h1 className="text-2xl font-bold tracking-tight">
+            Project Verification
+          </h1>
+          <p className="text-muted-foreground">
+            Monitor the status of your project verifications.
+          </p>
         </div>
+        <Tabs
+          value={filter}
+          onValueChange={(v) => handleFilterChange(v as FilterOption)}
+        >
+          <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap">
+            <TabsList className="bg-transparent h-12 p-0">
+              <TabsTrigger
+                value="all"
+                className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                All
+              </TabsTrigger>
+              <TabsTrigger
+                value="current"
+                className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Pending
+              </TabsTrigger>
+              <TabsTrigger
+                value="verified"
+                className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Verified
+              </TabsTrigger>
+              <TabsTrigger
+                value="rejected"
+                className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Rejected
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        {(['all', 'current', 'verified', 'rejected'] as FilterOption[]).map(
-          (t) => (
-            <TabsContent key={t} value={t}>
-              <CardContent>
-                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                  {loading ? (
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="rounded-lg border bg-card p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Skeleton className="h-10 w-10 rounded-full" />
-                          <div className="space-y-2 w-full">
-                            <Skeleton className="h-4 w-2/3" />
-                            <Skeleton className="h-3 w-1/2" />
+          {(['all', 'current', 'verified', 'rejected'] as FilterOption[]).map(
+            (t) => (
+              <TabsContent key={t} value={t}>
+                <CardContent>
+                  <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                    {loading ? (
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="rounded-lg border bg-card p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Skeleton className="h-10 w-10 rounded-full" />
+                            <div className="space-y-2 w-full">
+                              <Skeleton className="h-4 w-2/3" />
+                              <Skeleton className="h-3 w-1/2" />
+                            </div>
                           </div>
+                          <Skeleton className="h-4 w-full mb-2" />
+                          <Skeleton className="h-4 w-5/6 mb-2" />
+                          <Skeleton className="h-8 w-24" />
                         </div>
-                        <Skeleton className="h-4 w-full mb-2" />
-                        <Skeleton className="h-4 w-5/6 mb-2" />
-                        <Skeleton className="h-8 w-24" />
+                      ))
+                    ) : filteredData.length > 0 ? (
+                      filteredData.map((data, index) => (
+                        <ProjectVerificationCard
+                          key={index}
+                          _id={data._id}
+                          projectName={data.projectName}
+                          description={data.description}
+                          githubLink={data.githubLink}
+                          startFrom={data.start}
+                          endTo={data.end}
+                          role={data.role}
+                          projectType={data.projectType}
+                          reference={data.refer}
+                          techUsed={data.techUsed}
+                          comments={data.comments}
+                          status={data.verificationStatus}
+                          onStatusUpdate={(newStatus) =>
+                            updateProjectStatus(index, newStatus)
+                          }
+                          onCommentUpdate={(newComment) =>
+                            updateCommentStatus(index, newComment)
+                          }
+                        />
+                      ))
+                    ) : (
+                      <div className="text-center w-full col-span-full mt-10 py-10">
+                        <p className="text-sm text-muted-foreground">
+                          No Project verification found.
+                        </p>
                       </div>
-                    ))
-                  ) : filteredData.length > 0 ? (
-                    filteredData.map((data, index) => (
-                      <ProjectVerificationCard
-                        key={index}
-                        _id={data._id}
-                        projectName={data.projectName}
-                        description={data.description}
-                        githubLink={data.githubLink}
-                        startFrom={data.start}
-                        endTo={data.end}
-                        role={data.role}
-                        projectType={data.projectType}
-                        reference={data.refer}
-                        techUsed={data.techUsed}
-                        comments={data.comments}
-                        status={data.verificationStatus}
-                        onStatusUpdate={(newStatus) =>
-                          updateProjectStatus(index, newStatus)
-                        }
-                        onCommentUpdate={(newComment) =>
-                          updateCommentStatus(index, newComment)
-                        }
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center w-full col-span-full mt-10 py-10">
-                      <p className="text-sm text-muted-foreground">
-                        No Project verification found.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </TabsContent>
-          ),
-        )}
-      </Tabs>
+                    )}
+                  </div>
+                </CardContent>
+              </TabsContent>
+            ),
+          )}
+        </Tabs>
+      </div>
     </div>
   );
 };

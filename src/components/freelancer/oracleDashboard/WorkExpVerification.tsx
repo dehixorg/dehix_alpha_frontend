@@ -46,6 +46,7 @@ const WorkExpVerification = () => {
   const [jobData, setJobData] = useState<CombinedData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const handleFilterChange = (newFilter: FilterOption) => {
     setFilter(newFilter);
@@ -62,6 +63,7 @@ const WorkExpVerification = () => {
 
   const fetchData = useCallback(async () => {
     try {
+      setLoading(true);
       const verificationResponse = await axiosInstance.get(
         `/verification/oracle?doc_type=experience`,
       );
@@ -103,6 +105,8 @@ const WorkExpVerification = () => {
       setJobData(combinedData as CombinedData[]);
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -132,24 +136,81 @@ const WorkExpVerification = () => {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Experience Verification</h1>
-          <p className="text-gray-400 mt-2">
-            Stay updated on your work experience verification status. Check back
-            regularly for any new updates or requirements.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          className="mr-8 mb-12"
-          onClick={() => setIsDialogOpen(true)}
-        >
-          <Filter className="h-4 w-4" />
-        </Button>
-      </div>
+      {/* Content container - matching business projects layout */}
+      <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
+        {/* Header section */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Experience Verification
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Stay updated on your work experience verification status. Check
+              back regularly for any new updates or requirements.
+            </p>
+          </div>
 
+          {/* Filter button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsDialogOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            Filter
+          </Button>
+        </div>
+
+        {/* View content */}
+        {loading ? (
+          /* Loading state */
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, index) => (
+              <div
+                key={index}
+                className="h-48 bg-muted animate-pulse rounded-lg"
+              />
+            ))}
+          </div>
+        ) : filteredData.length === 0 ? (
+          /* Empty state */
+          <div className="flex flex-col items-center justify-center py-12">
+            <PackageOpen className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">
+              No work experience verification found
+            </p>
+          </div>
+        ) : (
+          /* Data view - Card grid */
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {filteredData.map((data) => (
+              <WorkExpVerificationCard
+                key={data.document_id}
+                _id={data._id}
+                jobTitle={data.jobTitle}
+                workDescription={data.workDescription}
+                company={data.company}
+                startFrom={data.workFrom}
+                endTo={data.workTo}
+                referencePersonName={data.referencePersonName}
+                referencePersonContact={data.referencePersonContact}
+                githubRepoLink={data.githubRepoLink}
+                comments={data.comments}
+                status={data.verification_status}
+                onStatusUpdate={(newStatus) =>
+                  updateJobStatus(data.document_id, newStatus)
+                }
+                onCommentUpdate={(newComment) =>
+                  updateCommentStatus(data.document_id, newComment)
+                }
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Filter Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -185,42 +246,6 @@ const WorkExpVerification = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <main
-        className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-        grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-      >
-        {filteredData.map((data) => (
-          <WorkExpVerificationCard
-            key={data.document_id}
-            _id={data._id}
-            jobTitle={data.jobTitle}
-            workDescription={data.workDescription}
-            company={data.company}
-            startFrom={data.workFrom}
-            endTo={data.workTo}
-            referencePersonName={data.referencePersonName}
-            referencePersonContact={data.referencePersonContact}
-            githubRepoLink={data.githubRepoLink}
-            comments={data.comments}
-            status={data.verification_status}
-            onStatusUpdate={(newStatus) =>
-              updateJobStatus(data.document_id, newStatus)
-            }
-            onCommentUpdate={(newComment) =>
-              updateCommentStatus(data.document_id, newComment)
-            }
-          />
-        ))}
-        {jobData.length == 0 ? (
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Work Experience verification for you now.
-            </p>
-          </div>
-        ) : null}
-      </main>
     </div>
   );
 };

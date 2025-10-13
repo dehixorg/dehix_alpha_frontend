@@ -6,7 +6,6 @@ import {
   Mail,
   MoreVertical,
   CircleAlert,
-  X,
 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -47,8 +46,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
@@ -121,12 +126,20 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         comments: data.comment,
         verification_status: data.type,
       });
+
+      // Success message based on the action
+      const statusMessage =
+        data.type === 'Approved'
+          ? 'Project verification approved successfully'
+          : 'Project verification denied successfully';
+      notifySuccess(statusMessage);
+
+      setVerificationStatus(data.type);
+      onStatusUpdate(data.type);
+      onCommentUpdate(data.comment || '');
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
     }
-    setVerificationStatus(data.type);
-    onStatusUpdate(data.type);
-    onCommentUpdate(data.comment || '');
   }
 
   return (
@@ -147,7 +160,10 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-44" align="end">
                 <DropdownMenuItem
-                  onClick={() => setOpenReport(true)}
+                  onClick={() => {
+                    setOpenReport(true);
+                    notifySuccess('Report dialog opened');
+                  }}
                   className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
                 >
                   <CircleAlert className="mr-2 h-4 w-4" />
@@ -358,20 +374,24 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         {/* Hover effect border */}
         <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>
 
-        {openReport && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-background rounded-lg p-6 w-full max-w-md relative">
-              <button
-                onClick={() => setOpenReport(false)}
-                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </button>
-              <NewReportTab reportData={reportData} />
+        {/* Report Dialog */}
+        <Dialog open={openReport} onOpenChange={setOpenReport}>
+          <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Report</DialogTitle>
+            </DialogHeader>
+            <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+              <NewReportTab
+                reportData={reportData}
+                onSubmitted={() => {
+                  setOpenReport(false);
+                  notifySuccess('Report submitted successfully');
+                  return true;
+                }}
+              />
             </div>
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
       </Card>
     </TooltipProvider>
   );

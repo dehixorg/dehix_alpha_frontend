@@ -7,6 +7,11 @@ import {
   Phone,
   Building,
   MoreVertical,
+  Flag,
+  ShieldCheck,
+  Clock,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -15,14 +20,7 @@ import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
 
 import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,13 +32,21 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
-import { notifyError } from '@/utils/toastMessage';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { cn } from '@/lib/utils';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
@@ -84,15 +90,15 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   onCommentUpdate,
 }) => {
   const [verificationStatus, setVerificationStatus] = useState(status);
+  const [openReport, setOpenReport] = useState(false);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
   const selectedType = form.watch('type');
+
   useEffect(() => {
     setVerificationStatus(status);
   }, [status]);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [openReport, setOpenReport] = useState(false);
 
   const user = useSelector((state: RootState) => state.user);
   const pathname = usePathname();
@@ -117,192 +123,268 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
           verification_status: data.type,
         },
       );
+
+      // Success message based on the action
+      const statusMessage =
+        data.type === 'Approved'
+          ? 'Experience verification approved successfully'
+          : 'Experience verification denied successfully';
+      notifySuccess(statusMessage);
+
+      setVerificationStatus(data.type);
+      onStatusUpdate(data.type);
+      onCommentUpdate(data.comment || '');
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
     }
-    setVerificationStatus(data.type);
-    onStatusUpdate(data.type);
-    onCommentUpdate(data.comment || '');
   }
 
+  // Status configuration matching business cards
+  const statusConfig: Record<
+    string,
+    { color: string; icon: any; text: string }
+  > = {
+    pending: {
+      color: 'bg-amber-500',
+      icon: Clock,
+      text: 'Pending',
+    },
+    verified: {
+      color: 'bg-green-500',
+      icon: CheckCircle2,
+      text: 'Verified',
+    },
+    Approved: {
+      color: 'bg-green-500',
+      icon: CheckCircle2,
+      text: 'Approved',
+    },
+    rejected: {
+      color: 'bg-red-500',
+      icon: XCircle,
+      text: 'Rejected',
+    },
+    Denied: {
+      color: 'bg-red-500',
+      icon: XCircle,
+      text: 'Denied',
+    },
+    default: {
+      color: 'bg-gray-400',
+      icon: Clock,
+      text: 'Unknown',
+    },
+  };
+
+  const currentStatus =
+    statusConfig[verificationStatus] || statusConfig.default;
+
   return (
-    <Card className="max-w-full mx-auto md:min-w-[30vw]">
-      <CardHeader>
-        <CardTitle className="flex justify-between items-start">
-          <span>{jobTitle}</span>
-          <div className="flex items-center space-x-2 ml-auto">
-            {githubRepoLink && (
+    <Card
+      className={cn(
+        'flex flex-col h-auto relative group overflow-hidden transition-all hover:shadow-lg',
+      )}
+    >
+      {/* Status indicator */}
+      <div
+        className={`absolute top-0 left-0 w-full h-1 ${currentStatus.color}`}
+      />
+
+      {/* 3-dot menu */}
+      <div className="absolute top-4 right-4 z-20">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">More options</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => {
+                setOpenReport(true);
+                notifySuccess('Report dialog opened');
+              }}
+              className="text-red-600 focus:text-red-600 focus:bg-destructive/50 cursor-pointer"
+            >
+              <Flag className="mr-2 h-4 w-4" />
+              <span>Report</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <CardHeader className="pb-3">
+        <CardTitle className="text-xl font-semibold mt-3 line-clamp-1 flex items-center">
+          {jobTitle}
+          {verificationStatus === 'Approved' && (
+            <ShieldCheck className="h-5 w-5 ml-1.5 text-green-500" />
+          )}
+        </CardTitle>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Building className="h-3.5 w-3.5" />
+          <span className="line-clamp-1">{company}</span>
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          <Badge
+            variant="secondary"
+            className={cn(
+              'text-white',
+              verificationStatus === 'Pending' && 'bg-amber-500',
+              verificationStatus === 'Approved' && 'bg-green-500',
+              verificationStatus === 'verified' && 'bg-green-500',
+              verificationStatus === 'Denied' && 'bg-red-500',
+              verificationStatus === 'rejected' && 'bg-red-500',
+            )}
+          >
+            {currentStatus.text}
+          </Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-1 space-y-4">
+        <div className="bg-muted/30 dark:bg-muted/10 p-4 rounded-lg">
+          <p className="text-sm text-muted-foreground line-clamp-3">
+            {workDescription || 'No description available for this experience.'}
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <User2Icon className="h-4 w-4" />
+            <span>Reference: {referencePersonName}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Phone className="h-4 w-4" />
+            <span>{referencePersonContact}</span>
+          </div>
+          {githubRepoLink && (
+            <div className="flex items-center gap-2 text-sm">
+              <Github className="h-4 w-4" />
               <a
                 href={githubRepoLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-white underline"
+                className="text-primary hover:underline"
               >
-                <Github />
+                View Repository
               </a>
-            )}
-            <div className="relative">
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <MoreVertical className="w-5 h-5 text-gray-500" />
-              </button>
-              {menuOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow-md z-50">
-                  <button
-                    onClick={() => {
-                      setOpenReport(true);
-                      setMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    Report
-                  </button>
-                </div>
-              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          <span>
+            {new Date(startFrom).toLocaleDateString()} -{' '}
+            {endTo !== 'current'
+              ? new Date(endTo).toLocaleDateString()
+              : 'Current'}
+          </span>
+        </div>
+
+        {comments && (
+          <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded-lg">
+            <div className="flex items-start gap-2">
+              <MessageSquareIcon className="h-4 w-4 mt-0.5 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">{comments}</p>
             </div>
           </div>
-        </CardTitle>
-
-        <CardDescription className="text-justify text-gray-600">
-          {verificationStatus === 'Pending' ? (
-            <Badge className="bg-warning-foreground text-white my-2">
-              Pending
-            </Badge>
-          ) : verificationStatus === 'Approved' ? (
-            <Badge className="bg-success text-white my-2">Approved</Badge>
-          ) : (
-            <Badge className="bg-red-500 text-white my-2">Denied</Badge>
-          )}
-          <br />
-          {workDescription}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="mt-4">
-          <div className="mt-4">
-            <p className="mt-4 mb-3 text-m text-gray-600 flex items-center">
-              <span className="flex">
-                <Building className="mr-2" />
-                {company}
-              </span>
-            </p>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm text-gray-600 flex items-center">
-                  <User2Icon className="mr-2" />
-                  {referencePersonName}
-                </p>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {referencePersonName}
-              </TooltipContent>
-            </Tooltip>
-            {/* Adding Tooltip for Reference Person Email */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm text-gray-600 flex items-center mt-2">
-                  <Phone className="mr-2" />
-                  {referencePersonContact}
-                </p>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {referencePersonContact}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          {comments && (
-            <p className="mt-2 flex items-center text-gray-500 border p-3 rounded">
-              <MessageSquareIcon className="mr-2" />
-              {comments}
-            </p>
-          )}
-        </div>
-      </CardContent>
-      <CardFooter className="flex flex-col items-center">
-        <div className="flex gap-4 text-gray-500">
-          {new Date(startFrom).toLocaleDateString()} -{' '}
-          {endTo !== 'current'
-            ? new Date(endTo).toLocaleDateString()
-            : 'Current'}
-        </div>
+        )}
 
         {verificationStatus === 'Pending' && (
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="w-full space-y-6 mt-6"
-            >
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Choose Verification Status:</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <FormItem className="flex items-center space-x-3">
-                          <FormControl>
-                            <RadioGroupItem value="Approved" />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            Approved
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3">
-                          <FormControl>
-                            <RadioGroupItem value="Denied" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Denied</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="comment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Comments:</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter comments:" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={!selectedType || form.formState.isSubmitting}
+          <div className="mt-4 p-4 border rounded-lg bg-muted/20">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
               >
-                Submit
-              </Button>
-            </form>
-          </Form>
-        )}
-      </CardFooter>
-      {openReport && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
-            <button
-              onClick={() => setOpenReport(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-            >
-              ✕
-            </button>
-            <NewReportTab reportData={reportData} />
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel className="text-sm font-medium">
+                        Choose Verification Status:
+                      </FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-2"
+                        >
+                          <FormItem className="flex items-center space-x-3">
+                            <FormControl>
+                              <RadioGroupItem value="Approved" />
+                            </FormControl>
+                            <FormLabel className="font-normal text-sm">
+                              Approved
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3">
+                            <FormControl>
+                              <RadioGroupItem value="Denied" />
+                            </FormControl>
+                            <FormLabel className="font-normal text-sm">
+                              Denied
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="comment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">
+                        Comments:
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter comments..."
+                          className="min-h-[60px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={!selectedType || form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? 'Submitting...' : 'Submit'}
+                </Button>
+              </form>
+            </Form>
           </div>
-        </div>
-      )}
+        )}
+      </CardContent>
+
+      {/* Report Dialog */}
+      <Dialog open={openReport} onOpenChange={setOpenReport}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Report</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+            <NewReportTab
+              reportData={reportData}
+              onSubmitted={() => {
+                setOpenReport(false);
+                notifySuccess('Report submitted successfully');
+                return true;
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
