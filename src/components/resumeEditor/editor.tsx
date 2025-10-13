@@ -45,6 +45,7 @@ import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface ResumeData {
   _id?: string;
   personalInfo?: {
@@ -510,8 +511,8 @@ export default function ResumeEditor({
           menuItemsBottom={[]}
         />
 
-        <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-6 lg:grid lg:grid-cols-2">
-          <div className="p-6 relative">
+        <main className="flex-1 md:gap-6 lg:grid lg:grid-cols-2">
+          <div className="px-6 pt-2">
             <div className="flex justify-between items-center mb-6">
               <Button onClick={onCancel} size="sm" variant="outline">
                 <ChevronLeft /> Back
@@ -601,16 +602,16 @@ export default function ResumeEditor({
 
                 {steps[currentStep]}
 
-                <div className="mt-6 sticky bottom-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-3 px-2 flex justify-end gap-3">
+                <div className="mt-6 sticky bottom-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex justify-end gap-3">
                   {initialResume?._id && (
                     <Button
                       onClick={openDeleteDialog}
                       disabled={isDeleting || isSubmitting}
                       variant="destructive"
-                      className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+                      size="sm"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Resume
+                      Delete
                     </Button>
                   )}
                   <Button
@@ -623,7 +624,7 @@ export default function ResumeEditor({
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       <>
-                        <Save /> Save Resume
+                        <Save /> Save
                       </>
                     )}
                   </Button>
@@ -632,49 +633,44 @@ export default function ResumeEditor({
             )}
           </div>
 
-          <div className="relative p-6">
+          <div className="px-6 md:pl-0 pt-2">
             <div
               ref={resumeRef}
-              className="relative mt-10"
+              className="relative"
               style={{ minHeight: '1100px' }}
             >
-              <div className="absolute -top-8 right-6 z-10 flex gap-2 bg-white p-2 rounded shadow-md">
-                <Button
-                  size="sm"
-                  variant={
-                    selectedTemplate === 'ResumePreview1'
-                      ? 'default'
-                      : 'outline'
+              <div className="flex items-center gap-2 mb-4">
+                <Tabs
+                  value={selectedTemplate}
+                  onValueChange={(v) =>
+                    setSelectedTemplate(v as typeof selectedTemplate)
                   }
-                  onClick={() => setSelectedTemplate('ResumePreview1')}
                 >
-                  Template 1
-                </Button>
-                <Button
-                  size="sm"
-                  variant={
-                    selectedTemplate === 'ResumePreview2'
-                      ? 'default'
-                      : 'outline'
-                  }
-                  onClick={() => setSelectedTemplate('ResumePreview2')}
-                >
-                  Template 2
-                </Button>
+                  <TabsList>
+                    {[
+                      { value: 'ResumePreview1', label: 'Template 1' },
+                      { value: 'ResumePreview2', label: 'Template 2' },
+                    ].map((t) => (
+                      <TabsTrigger key={t.value} value={t.value}>
+                        {t.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={downloadPDF}
                   disabled={isGeneratingPDF}
+                  className="ml-auto"
                 >
                   <Download className="mr-2 h-4 w-4" /> PDF
                 </Button>
               </div>
 
               <div
-                className="resumeContent pt-4"
+                className="resumeContent pt-4 rounded-md"
                 style={{
-                  backgroundColor: 'white',
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                   overflow: 'hidden',
                   width: '100%',
@@ -682,29 +678,38 @@ export default function ResumeEditor({
                   margin: '0 auto',
                 }}
               >
-                {selectedTemplate === 'ResumePreview1' ? (
-                  <ResumePreview1
-                    personalData={personalData}
-                    workExperienceData={workExperienceData}
-                    educationData={educationData}
-                    skillData={skillData}
-                    achievementData={achievementData}
-                    projectData={projectData}
-                    summaryData={summaryData}
-                    headingColor={selectedColor}
-                  />
-                ) : (
-                  <ResumePreview2
-                    personalData={personalData}
-                    workExperienceData={workExperienceData}
-                    educationData={educationData}
-                    skillData={skillData}
-                    achievementData={achievementData}
-                    projectData={projectData}
-                    summaryData={summaryData}
-                    headingColor={selectedColor}
-                  />
-                )}
+                {[
+                  {
+                    value: 'ResumePreview1',
+                    render: (
+                      <ResumePreview1
+                        personalData={personalData}
+                        workExperienceData={workExperienceData}
+                        educationData={educationData}
+                        skillData={skillData}
+                        achievementData={achievementData}
+                        projectData={projectData}
+                        summaryData={summaryData}
+                        headingColor={selectedColor}
+                      />
+                    ),
+                  },
+                  {
+                    value: 'ResumePreview2',
+                    render: (
+                      <ResumePreview2
+                        personalData={personalData}
+                        workExperienceData={workExperienceData}
+                        educationData={educationData}
+                        skillData={skillData}
+                        achievementData={achievementData}
+                        projectData={projectData}
+                        summaryData={summaryData}
+                        headingColor={selectedColor}
+                      />
+                    ),
+                  },
+                ].find((t) => t.value === selectedTemplate)?.render || null}
               </div>
             </div>
           </div>

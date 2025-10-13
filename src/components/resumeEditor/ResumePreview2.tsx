@@ -95,14 +95,14 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="flex justify-center w-full h-full py-4">
+    <div className="flex justify-center w-full h-full rounded-md">
       <div
         ref={containerRef}
-        className="bg-white w-full max-w-[794px] p-4 flex"
+        className="bg-white w-full max-w-[794px] flex rounded-md"
         style={{ boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)' }}
       >
         {/* Left Section - Fixed width */}
-        <div className="w-1/3 bg-gray-100 p-4 flex flex-col">
+        <div className="w-1/3 bg-gray-100 p-4 flex flex-col rounded-md">
           {sectionVisibility.personal &&
             personalData.map((person, index) => (
               <div key={index} className="mb-4">
