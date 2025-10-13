@@ -7,10 +7,8 @@ import {
   Phone,
   Building,
   MoreVertical,
+  CircleAlert,
 } from 'lucide-react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
 
@@ -25,25 +23,19 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip';
-import { Textarea } from '@/components/ui/textarea';
+import VerificationDecisionForm from '@/components/verification/VerificationDecisionForm';
 import { notifyError } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { VerificationStatus } from '@/utils/verificationStatus';
 
 interface WorkExpProps {
   _id: string;
@@ -56,17 +48,12 @@ interface WorkExpProps {
   referencePersonContact: string;
   githubRepoLink: string;
   comments: string;
-  status: string | 'Pending'; // Add initial status prop
-  onStatusUpdate: (newStatus: string) => void;
+  status: VerificationStatus;
+  onStatusUpdate: (newStatus: VerificationStatus) => void;
   onCommentUpdate: (newComment: string) => void;
 }
 
-const FormSchema = z.object({
-  type: z.enum(['Approved', 'Denied'], {
-    required_error: 'You need to select a type.',
-  }),
-  comment: z.string().optional(),
-});
+// Schema handled in reusable form component
 
 const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   _id,
@@ -79,19 +66,17 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   referencePersonContact,
   githubRepoLink,
   comments,
-  status, // Get initial status from props
+  status,
   onStatusUpdate,
   onCommentUpdate,
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState(status);
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-  });
-  const selectedType = form.watch('type');
+  const [verificationStatus, setVerificationStatus] = useState<
+    VerificationStatus | undefined
+  >(status);
+  // Form is handled by reusable component
   useEffect(() => {
     setVerificationStatus(status);
   }, [status]);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
   const user = useSelector((state: RootState) => state.user);
@@ -108,7 +93,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
     reportedId: user?.uid || 'user123',
   };
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: { type: string; comment?: string }) {
     try {
       await axiosInstance.put(
         `/verification/${_id}/oracle?doc_type=experience`,
@@ -120,189 +105,142 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
     }
-    setVerificationStatus(data.type);
-    onStatusUpdate(data.type);
+    const newStatus =
+      data.type === 'Approved'
+        ? VerificationStatus.APPROVED
+        : VerificationStatus.DENIED;
+    setVerificationStatus(newStatus);
+    onStatusUpdate(newStatus);
     onCommentUpdate(data.comment || '');
   }
 
   return (
-    <Card className="max-w-full mx-auto md:min-w-[30vw]">
-      <CardHeader>
-        <CardTitle className="flex justify-between items-start">
-          <span>{jobTitle}</span>
-          <div className="flex items-center space-x-2 ml-auto">
-            {githubRepoLink && (
-              <a
-                href={githubRepoLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-white underline"
+    <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20">
+      <CardHeader className="pb-3 px-6 pt-6 relative">
+        <div className="absolute top-4 right-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="More options"
               >
-                <Github />
-              </a>
-            )}
-            <div className="relative">
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem
+                onClick={() => setOpenReport(true)}
+                className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
               >
-                <MoreVertical className="w-5 h-5 text-gray-500" />
-              </button>
-              {menuOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow-md z-50">
-                  <button
-                    onClick={() => {
-                      setOpenReport(true);
-                      setMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    Report
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+                <CircleAlert className="mr-2 h-4 w-4" />
+                <span>Report</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors max-w-[calc(100%-80px)]">
+          {jobTitle}
         </CardTitle>
 
-        <CardDescription className="text-justify text-gray-600">
-          {verificationStatus === 'Pending' ? (
+        <CardDescription className="text-gray-700 dark:text-gray-300">
+          {verificationStatus === VerificationStatus.PENDING ? (
             <Badge className="bg-warning-foreground text-white my-2">
-              Pending
+              PENDING
             </Badge>
-          ) : verificationStatus === 'Approved' ? (
-            <Badge className="bg-success text-white my-2">Approved</Badge>
+          ) : verificationStatus === VerificationStatus.APPROVED ? (
+            <Badge className="bg-success text-white my-2">APPROVED</Badge>
           ) : (
-            <Badge className="bg-red-500 text-white my-2">Denied</Badge>
+            <Badge className="bg-red-500 text-white my-2">DENIED</Badge>
           )}
           <br />
           {workDescription}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="mt-4">
-          <div className="mt-4">
-            <p className="mt-4 mb-3 text-m text-gray-600 flex items-center">
-              <span className="flex">
-                <Building className="mr-2" />
-                {company}
-              </span>
+
+      <CardContent className="px-6 py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+            <p className="text-xs text-gray-500 dark:text-gray-400">Company</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+              <Building className="h-4 w-4" /> {company}
             </p>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm text-gray-600 flex items-center">
-                  <User2Icon className="mr-2" />
-                  {referencePersonName}
-                </p>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {referencePersonName}
-              </TooltipContent>
-            </Tooltip>
-            {/* Adding Tooltip for Reference Person Email */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm text-gray-600 flex items-center mt-2">
-                  <Phone className="mr-2" />
-                  {referencePersonContact}
-                </p>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {referencePersonContact}
-              </TooltipContent>
-            </Tooltip>
           </div>
-          {comments && (
-            <p className="mt-2 flex items-center text-gray-500 border p-3 rounded">
-              <MessageSquareIcon className="mr-2" />
-              {comments}
+          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Ref. Person
             </p>
-          )}
-        </div>
-      </CardContent>
-      <CardFooter className="flex flex-col items-center">
-        <div className="flex gap-4 text-gray-500">
-          {new Date(startFrom).toLocaleDateString()} -{' '}
-          {endTo !== 'current'
-            ? new Date(endTo).toLocaleDateString()
-            : 'Current'}
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+              <User2Icon className="h-4 w-4" /> {referencePersonName}
+            </p>
+          </div>
+          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+            <p className="text-xs text-gray-500 dark:text-gray-400">Contact</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+              <Phone className="h-4 w-4" /> {referencePersonContact}
+            </p>
+          </div>
+          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Repository
+            </p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+              {githubRepoLink ? (
+                <a
+                  href={githubRepoLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 text-primary hover:underline"
+                >
+                  <Github className="h-4 w-4" /> View Repo
+                </a>
+              ) : (
+                'N/A'
+              )}
+            </p>
+          </div>
         </div>
 
-        {verificationStatus === 'Pending' && (
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="w-full space-y-6 mt-6"
-            >
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Choose Verification Status:</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <FormItem className="flex items-center space-x-3">
-                          <FormControl>
-                            <RadioGroupItem value="Approved" />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            Approved
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3">
-                          <FormControl>
-                            <RadioGroupItem value="Denied" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Denied</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="comment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Comments:</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter comments:" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={!selectedType || form.formState.isSubmitting}
-              >
-                Submit
-              </Button>
-            </form>
-          </Form>
-        )}
-      </CardFooter>
-      {openReport && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
-            <button
-              onClick={() => setOpenReport(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-            >
-              ✕
-            </button>
-            <NewReportTab reportData={reportData} />
+        {comments && (
+          <div className="mt-4 flex items-start text-gray-600 dark:text-gray-300 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 p-3 rounded-lg">
+            <MessageSquareIcon className="mr-2 h-4 w-4 mt-0.5" />
+            <p className="text-sm">{comments}</p>
           </div>
+        )}
+      </CardContent>
+
+      <CardFooter className="px-6 py-5 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex-col items-stretch gap-4">
+        <div className="flex flex-1 gap-2 text-sm text-muted-foreground">
+          <span>{new Date(startFrom).toLocaleDateString()}</span>
+          <span>-</span>
+          <span>
+            {endTo !== 'current'
+              ? new Date(endTo).toLocaleDateString()
+              : 'Current'}
+          </span>
         </div>
-      )}
+
+        {verificationStatus === VerificationStatus.PENDING && (
+          <VerificationDecisionForm
+            radioOptions={[
+              { value: 'Approved', label: 'Approve' },
+              { value: 'Denied', label: 'Deny' },
+            ]}
+            onSubmit={onSubmit}
+            className="w-full space-y-6"
+          />
+        )}
+        {/* Hover effect border */}
+        <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>
+      </CardFooter>
+
+      <Dialog open={openReport} onOpenChange={setOpenReport}>
+        <DialogContent className="p-0 overflow-hidden">
+          <NewReportTab reportData={reportData} />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

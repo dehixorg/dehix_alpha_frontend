@@ -4,12 +4,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 
 export default function BusinessVerification() {
   const [businessdata, setBusinessData] = useState<any[]>([]);
@@ -24,9 +23,12 @@ export default function BusinessVerification() {
   const filteredData = useMemo(() => {
     return businessdata.filter((data) => {
       if (filter === 'all') return true;
-      if (filter === 'current')
-        return data.verificationStatus === StatusEnum.PENDING;
-      return data.verificationStatus === filter;
+      const status =
+        data.verificationStatus || data.status || data.verification_status;
+      if (filter === 'pending') return status === 'PENDING';
+      if (filter === 'approved') return status === 'APPROVED';
+      if (filter === 'denied') return status === 'DENIED';
+      return true;
     });
   }, [businessdata, filter]);
 
@@ -107,27 +109,27 @@ export default function BusinessVerification() {
               All
             </TabsTrigger>
             <TabsTrigger
-              value="current"
+              value="pending"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Pending
             </TabsTrigger>
             <TabsTrigger
-              value="verified"
+              value="approved"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
-              Verified
+              Approved
             </TabsTrigger>
             <TabsTrigger
-              value="rejected"
+              value="denied"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
-              Rejected
+              Denied
             </TabsTrigger>
           </TabsList>
         </div>
 
-        {(['all', 'current', 'verified', 'rejected'] as FilterOption[]).map(
+        {(['all', 'pending', 'approved', 'denied'] as FilterOption[]).map(
           (t) => (
             <TabsContent key={t} value={t}>
               <CardContent>
@@ -163,7 +165,11 @@ export default function BusinessVerification() {
                         linkedInLink={data.linkedInLink}
                         githubLink={data.githubLink}
                         comments={data.comments}
-                        status={data.status}
+                        status={
+                          (data.verificationStatus ||
+                            data.status ||
+                            data.verification_status) as string
+                        }
                         onStatusUpdate={(newStatus) =>
                           updateBusinessStatus(index, newStatus)
                         }

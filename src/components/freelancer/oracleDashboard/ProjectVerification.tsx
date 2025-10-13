@@ -6,10 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
+import { VerificationStatus } from '@/utils/verificationStatus';
 
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 interface ProjectData {
   _id: string;
   projectName: string;
@@ -22,8 +22,8 @@ interface ProjectData {
   comments: string;
   role: string;
   projectType: string;
-  verificationStatus: string;
-  onStatusUpdate: (newStatus: string) => void;
+  verification_status: VerificationStatus;
+  onStatusUpdate: (newStatus: VerificationStatus) => void;
   onCommentUpdate: (newComment: string) => void;
 }
 
@@ -40,9 +40,13 @@ const ProjectVerification = () => {
   const filteredData = useMemo(() => {
     return projectData.filter((data) => {
       if (filter === 'all') return true;
-      if (filter === 'current')
-        return data.verificationStatus === StatusEnum.PENDING;
-      return data.verificationStatus === filter;
+      if (filter === 'pending')
+        return data.verification_status === VerificationStatus.PENDING;
+      if (filter === 'approved')
+        return data.verification_status === VerificationStatus.APPROVED;
+      if (filter === 'denied')
+        return data.verification_status === VerificationStatus.DENIED;
+      return true;
     });
   }, [projectData, filter]);
 
@@ -54,13 +58,17 @@ const ProjectVerification = () => {
       );
       const result = response.data.data;
 
-      const flattenedData = result.flatMap((entry: any) =>
+      const flattenedData: ProjectData[] = result.flatMap((entry: any) =>
         entry.result?.projects
-          ? Object.values(entry.result.projects).map((project: any) => ({
-              ...project,
-              verifier_id: entry.verifier_id,
-              verifier_username: entry.verifier_username,
-            }))
+          ? (Object.values(entry.result.projects) as any[]).map(
+              (project: any) => ({
+                ...project,
+                verification_status:
+                  project.verification_status as VerificationStatus,
+                verifier_id: entry.verifier_id,
+                verifier_username: entry.verifier_username,
+              }),
+            )
           : [],
       );
 
@@ -77,10 +85,10 @@ const ProjectVerification = () => {
   }, [fetchData]);
 
   const updateProjectStatus = useCallback(
-    (index: number, newStatus: string) => {
+    (index: number, newStatus: VerificationStatus) => {
       setProjectData((prev) => {
         const next = [...prev];
-        if (next[index]) next[index].verificationStatus = newStatus;
+        if (next[index]) next[index].verification_status = newStatus;
         return next;
       });
     },
@@ -110,6 +118,7 @@ const ProjectVerification = () => {
       </div>
       <Tabs
         value={filter}
+        defaultValue="all"
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
       >
         <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap">
@@ -121,27 +130,27 @@ const ProjectVerification = () => {
               All
             </TabsTrigger>
             <TabsTrigger
-              value="current"
+              value="pending"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Pending
             </TabsTrigger>
             <TabsTrigger
-              value="verified"
+              value="approved"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
-              Verified
+              Approved
             </TabsTrigger>
             <TabsTrigger
-              value="rejected"
+              value="denied"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
-              Rejected
+              Denied
             </TabsTrigger>
           </TabsList>
         </div>
 
-        {(['all', 'current', 'verified', 'rejected'] as FilterOption[]).map(
+        {(['all', 'pending', 'approved', 'denied'] as FilterOption[]).map(
           (t) => (
             <TabsContent key={t} value={t}>
               <CardContent>
@@ -176,7 +185,7 @@ const ProjectVerification = () => {
                         reference={data.refer}
                         techUsed={data.techUsed}
                         comments={data.comments}
-                        status={data.verificationStatus}
+                        status={data.verification_status}
                         onStatusUpdate={(newStatus) =>
                           updateProjectStatus(index, newStatus)
                         }
