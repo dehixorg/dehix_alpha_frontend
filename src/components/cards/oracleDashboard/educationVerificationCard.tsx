@@ -235,12 +235,6 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
         </CardContent>
 
         <CardFooter className="px-6 py-5 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex-col items-stretch gap-4">
-          <div className="flex flex-1 gap-2 text-sm text-muted-foreground">
-            <span>{formatDate(startFrom)}</span>
-            <span>-</span>
-            <span>{endTo !== 'current' ? formatDate(endTo) : 'Current'}</span>
-          </div>
-
           {verificationStatus === VerificationStatus.PENDING && (
             <VerificationDecisionForm
               radioOptions={[

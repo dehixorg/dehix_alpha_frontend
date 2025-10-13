@@ -89,14 +89,15 @@ const VerificationDecisionForm: React.FC<VerificationDecisionFormProps> = ({
             type="button"
             variant={variantFor(opt.label)}
             className="flex-1"
+            size="sm"
             onClick={() => handleChoose(opt.value)}
           >
             {variantFor(opt.label) === 'default' ? (
-              <CheckCircle2 className="mr-2 h-4 w-4" />
+              <CheckCircle2 className="h-4 w-4" />
             ) : variantFor(opt.label) === 'destructive' ? (
-              <XCircle className="mr-2 h-4 w-4" />
+              <XCircle className="h-4 w-4" />
             ) : (
-              <MessageSquare className="mr-2 h-4 w-4" />
+              <MessageSquare className="h-4 w-4" />
             )}
             {opt.label}
           </Button>

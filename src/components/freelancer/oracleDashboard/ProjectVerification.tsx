@@ -64,7 +64,7 @@ const ProjectVerification = () => {
               (project: any) => ({
                 ...project,
                 verification_status:
-                  project.verification_status as VerificationStatus,
+                  project.verificationStatus as VerificationStatus,
                 verifier_id: entry.verifier_id,
                 verifier_username: entry.verifier_username,
               }),
@@ -171,34 +171,29 @@ const ProjectVerification = () => {
                       </div>
                     ))
                   ) : filteredData.length > 0 ? (
-                    filteredData.map(
-                      (data, index) => (
-                        console.log(data),
-                        (
-                          <ProjectVerificationCard
-                            key={index}
-                            _id={data._id}
-                            projectName={data.projectName}
-                            description={data.description}
-                            githubLink={data.githubLink}
-                            startFrom={data.start}
-                            endTo={data.end}
-                            role={data.role}
-                            projectType={data.projectType}
-                            reference={data.refer}
-                            techUsed={data.techUsed}
-                            comments={data.comments}
-                            status={data.verification_status}
-                            onStatusUpdate={(newStatus) =>
-                              updateProjectStatus(index, newStatus)
-                            }
-                            onCommentUpdate={(newComment) =>
-                              updateCommentStatus(index, newComment)
-                            }
-                          />
-                        )
-                      ),
-                    )
+                    filteredData.map((data, index) => (
+                      <ProjectVerificationCard
+                        key={index}
+                        _id={data._id}
+                        projectName={data.projectName}
+                        description={data.description}
+                        githubLink={data.githubLink}
+                        startFrom={data.start}
+                        endTo={data.end}
+                        role={data.role}
+                        projectType={data.projectType}
+                        reference={data.refer}
+                        techUsed={data.techUsed}
+                        comments={data.comments}
+                        status={data.verification_status}
+                        onStatusUpdate={(newStatus) =>
+                          updateProjectStatus(index, newStatus)
+                        }
+                        onCommentUpdate={(newComment) =>
+                          updateCommentStatus(index, newComment)
+                        }
+                      />
+                    ))
                   ) : (
                     <div className="text-center w-full col-span-full mt-10 py-10">
                       <p className="text-sm text-muted-foreground">
