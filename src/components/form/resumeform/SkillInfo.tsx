@@ -1,9 +1,8 @@
-import React from 'react';
-import { PlusCircle, X } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Award } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface Skill {
   skillName: string;
@@ -26,57 +25,81 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
   onRemoveSkill,
   onSkillChange,
 }) => {
+  const [options, setOptions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const res = await axiosInstance.get('/skills');
+        setOptions(res?.data?.data || []);
+      } catch (e) {
+        // silent fail; picker will just not show options
+        setOptions([]);
+      }
+    };
+    fetchSkills();
+  }, []);
+
+  const selectedTags = useMemo(
+    () =>
+      (skillData || [])
+        .map((s) => ({ name: s.skillName }))
+        .filter((s) => s.name),
+    [skillData],
+  );
+
+  const handleAddByValue = (value: string) => {
+    const changeEvt = {
+      target: { value },
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+    const emptyIndex = (skillData || []).findIndex((s) => !s.skillName);
+    if (emptyIndex >= 0) {
+      onSkillChange(changeEvt, emptyIndex);
+      return;
+    }
+    const evt = new MouseEvent('click') as unknown as React.MouseEvent;
+    onAddSkill(evt);
+    // Defer to allow parent state to append the new row
+    setTimeout(() => {
+      const newIndex = (skillData || []).length; // new row appended at previous length index
+      onSkillChange(changeEvt, newIndex);
+    }, 0);
+  };
+
+  const handleRemoveByName = (name: string) => {
+    const idx = (skillData || []).findIndex((s) => s.skillName === name);
+    if (idx >= 0) {
+      const evt = new MouseEvent('click') as unknown as React.MouseEvent;
+      onRemoveSkill(evt, idx);
+    }
+  };
+
   return (
     <div>
-      <div className="space-y-1.5 ml-5 mb-5">
-        <h2 className="text-2xl">Skills</h2>
-        <p className="text-sm text-gray-500">What are you good at?</p>
+      <div className="mb-5">
+        <div className="rounded-xl border bg-gradient p-4 sm:p-5 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 my-auto">
+            <Award className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight">Skills</h2>
+            <p className="text-sm text-muted-foreground">
+              What are you good at?
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-5 mt-5">
-        {skillData.map((skill, index) => (
-          <div key={index} className="relative space-y-4 p-6 shadow-lg">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-semibold">Skill {index + 1}</h3>
-              {index > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={(e) => onRemoveSkill(e, index)}
-                  className="p-1 rounded-full"
-                  type="button"
-                >
-                  <X className="h-5 w-5 text-red-500" />
-                </Button>
-              )}
-            </div>
-            <div>
-              <Label
-                htmlFor={`skillName-${index}`}
-                className="block text-sm font-medium text-gray-500"
-              >
-                Skill Name
-              </Label>
-              <Input
-                id={`skillName-${index}`}
-                type="text"
-                value={skill.skillName}
-                onChange={(e) => onSkillChange(e, index)}
-                placeholder="e.g., React.js, Node.js, graphic design"
-                className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex justify-center mt-4">
-        <Button
-          onClick={onAddSkill}
-          className="text-center justify-items-center dark:text-black light:bg-black"
-          type="button"
-        >
-          <PlusCircle />
-        </Button>
+        <SelectTagPicker
+          label="Select skills"
+          options={options}
+          selected={selectedTags}
+          onAdd={handleAddByValue}
+          onRemove={handleRemoveByName}
+          selectPlaceholder="Select skill"
+          searchPlaceholder="Search skills"
+        />
       </div>
     </div>
   );

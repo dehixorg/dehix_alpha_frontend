@@ -1,10 +1,17 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { BriefcaseBusiness, X } from 'lucide-react';
 
 import { AddButton } from '@/components/ui/AddButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardDescription,
+} from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 
 interface WorkExperience {
   jobTitle: string;
@@ -65,99 +72,108 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
 
   return (
     <div>
-      <div className="space-y-1.5 ml-5 mb-5">
-        <h2 className="text-2xl font-normal">Work Experience</h2>
-        <p className="text-sm text-gray-500">
-          Add your work experience details.
-        </p>
+      <div className="mb-5">
+        <div className="rounded-xl border bg-gradient p-4 sm:p-5 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 my-auto">
+            <BriefcaseBusiness className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight">
+              Work Experience
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Add your work experience details.
+            </p>
+          </div>
+        </div>
       </div>
 
       <form className="space-y-5">
         {workExperienceData.map((work, index) => (
-          <div key={index} className="relative space-y-4 p-6 shadow-lg">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-semibold">
-                Work Experience {index + 1}
-              </h3>
-              {index > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={() => handleRemoveWorkExperience(index)}
-                  className="p-1 rounded-full"
-                >
-                  <X className="h-5 w-5 text-red-500" />
-                </Button>
-              )}
-            </div>
-            <div>
-              <Label htmlFor={`jobTitle-${index}`}>Job Title</Label>
-              <Input
-                id={`jobTitle-${index}`}
-                type="text"
-                value={work.jobTitle}
-                onChange={(e) =>
-                  handleInputChange(index, 'jobTitle', e.target.value)
-                }
-                placeholder="e.g., Software Engineer"
-                className="border border-gray-300 rounded-md p-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor={`company-${index}`}>Company</Label>
-              <Input
-                id={`company-${index}`}
-                type="text"
-                value={work.company}
-                onChange={(e) =>
-                  handleInputChange(index, 'company', e.target.value)
-                }
-                placeholder="e.g., Tech Solutions Inc."
-                className="border border-gray-300 rounded-md p-2"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+          <Card key={index} className="relative">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardDescription>
+                  Role, company and responsibilities.
+                </CardDescription>
+                {index > 0 && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleRemoveWorkExperience(index)}
+                    className="rounded-full"
+                    type="button"
+                    size="icon"
+                  >
+                    <X className="h-5 w-5 text-red-500" />
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <Label htmlFor={`startDate-${index}`}>Start Date</Label>
+                <Label htmlFor={`jobTitle-${index}`}>Job Title</Label>
                 <Input
-                  id={`startDate-${index}`}
-                  type="date"
-                  value={work.startDate}
+                  id={`jobTitle-${index}`}
+                  type="text"
+                  value={work.jobTitle}
                   onChange={(e) =>
-                    handleInputChange(index, 'startDate', e.target.value)
+                    handleInputChange(index, 'jobTitle', e.target.value)
                   }
-                  className="border border-gray-300 rounded-md p-2"
+                  placeholder="e.g., Software Engineer"
                 />
               </div>
               <div>
-                <Label htmlFor={`endDate-${index}`}>End Date</Label>
+                <Label htmlFor={`company-${index}`}>Company</Label>
                 <Input
-                  id={`endDate-${index}`}
-                  type="date"
-                  value={work.endDate}
+                  id={`company-${index}`}
+                  type="text"
+                  value={work.company}
                   onChange={(e) =>
-                    handleInputChange(index, 'endDate', e.target.value)
+                    handleInputChange(index, 'company', e.target.value)
                   }
-                  className="border border-gray-300 rounded-md p-2"
+                  placeholder="e.g., Tech Solutions Inc."
                 />
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor={`description-${index}`}>Description</Label>
-              <textarea
-                id={`description-${index}`}
-                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                rows={4}
-                value={work.description}
-                onChange={(e) =>
-                  handleInputChange(index, 'description', e.target.value)
-                }
-                placeholder="Describe your role and responsibilities"
-              />
-            </div>
-          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor={`startDate-${index}`}>Start Date</Label>
+                  <Input
+                    id={`startDate-${index}`}
+                    type="date"
+                    value={work.startDate}
+                    onChange={(e) =>
+                      handleInputChange(index, 'startDate', e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`endDate-${index}`}>End Date</Label>
+                  <Input
+                    id={`endDate-${index}`}
+                    type="date"
+                    value={work.endDate}
+                    onChange={(e) =>
+                      handleInputChange(index, 'endDate', e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor={`description-${index}`}>Description</Label>
+                <Textarea
+                  id={`description-${index}`}
+                  rows={4}
+                  value={work.description}
+                  onChange={(e) =>
+                    handleInputChange(index, 'description', e.target.value)
+                  }
+                  placeholder="Describe your role and responsibilities"
+                />
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </form>
 

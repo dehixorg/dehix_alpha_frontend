@@ -6,6 +6,10 @@ import {
   Download,
   Trash2,
   AlertTriangle,
+  Gauge,
+  Pencil,
+  Loader2,
+  Save,
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -289,6 +293,16 @@ export default function ResumeEditor({
     />,
   ];
 
+  const stepLabels = [
+    'Personal',
+    'Work',
+    'Education',
+    'Skills',
+    'Achievements',
+    'Summary',
+    'Projects',
+  ];
+
   // Handle Submit
   const handleSubmitResume = async () => {
     setIsSubmitting(true);
@@ -479,18 +493,17 @@ export default function ResumeEditor({
   const openDeleteDialog = () => setShowDeleteDialog(true);
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/40">
+    <div className="flex min-h-screen flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Resume Editor"
+        active="Resume"
       />
       <div className="flex flex-1 flex-col sm:gap-4 sm:py-0 sm:pl-14">
         <Header
           activeMenu="Resume Editor"
           breadcrumbItems={[
             { label: 'Settings', link: '#' },
-            { label: 'Resume Building', link: '#' },
             { label: 'Resume Editor', link: '#' },
           ]}
           menuItemsTop={[]}
@@ -500,9 +513,16 @@ export default function ResumeEditor({
         <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-6 lg:grid lg:grid-cols-2">
           <div className="p-6 relative">
             <div className="flex justify-between items-center mb-6">
-              <Button onClick={onCancel}>← Back to Resumes</Button>
-              <Button onClick={() => setShowAtsScore(!showAtsScore)}>
-                {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
+              <Button onClick={onCancel} size="sm" variant="outline">
+                <ChevronLeft /> Back
+              </Button>
+              <Button
+                onClick={() => setShowAtsScore(!showAtsScore)}
+                size="sm"
+                variant="secondary"
+              >
+                {showAtsScore ? <Pencil /> : <Gauge />}
+                {showAtsScore ? 'Edit' : 'Check ATS Score'}
               </Button>
             </div>
 
@@ -521,6 +541,41 @@ export default function ResumeEditor({
               />
             ) : (
               <>
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&_*::-webkit-scrollbar]:hidden">
+                    {stepLabels.map((label, i) => {
+                      const isActive = i === currentStep;
+                      const isDone = i < currentStep;
+                      return (
+                        <div key={label} className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setCurrentStep(i)}
+                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                              isActive
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : isDone
+                                  ? 'bg-secondary text-secondary-foreground border-secondary'
+                                  : 'bg-background text-foreground/80 border-muted'
+                            }`}
+                            aria-current={isActive ? 'step' : undefined}
+                          >
+                            <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-[10px]">
+                              {i + 1}
+                            </span>
+                            {label}
+                          </button>
+                          {i !== stepLabels.length - 1 && (
+                            <span
+                              className={`h-px w-4 sm:w-8 ${isDone ? 'bg-primary' : 'bg-muted'}`}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="flex justify-between mb-4">
                   <Button
                     variant="outline"
@@ -529,7 +584,7 @@ export default function ResumeEditor({
                     }
                     disabled={currentStep === 0}
                   >
-                    <ChevronLeft className="mr-2" />
+                    <ChevronLeft /> Previous
                   </Button>
                   <Button
                     variant="outline"
@@ -540,13 +595,13 @@ export default function ResumeEditor({
                     }
                     disabled={currentStep === steps.length - 1}
                   >
-                    <ChevronRight className="ml-2" />
+                    Next <ChevronRight />
                   </Button>
                 </div>
 
                 {steps[currentStep]}
 
-                <div className="mt-6 flex justify-end gap-3">
+                <div className="mt-6 sticky bottom-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-3 px-2 flex justify-end gap-3">
                   {initialResume?._id && (
                     <Button
                       onClick={openDeleteDialog}
@@ -561,9 +616,16 @@ export default function ResumeEditor({
                   <Button
                     onClick={handleSubmitResume}
                     disabled={isSubmitting || isDeleting}
-                    className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white"
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80 w-full"
                   >
-                    {isSubmitting ? 'Saving...' : 'Save Resume'}
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Save /> Save Resume
+                      </>
+                    )}
                   </Button>
                 </div>
               </>

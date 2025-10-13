@@ -1,11 +1,17 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { Code2, X } from 'lucide-react';
 
 import { AddButton } from '@/components/ui/AddButton';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from '@/components/ui/card';
 
 interface Project {
   title: string;
@@ -42,64 +48,68 @@ export const ProjectInfo: React.FC<ProjectInfoProps> = ({
 
   return (
     <div>
-      <div className={cn('space-y-1.5 mb-5 ml-5')}>
-        <h2 className={cn('text-2xl')}>Projects</h2>
-        <p className={cn('text-sm text-gray-500')}>
-          Add details about your projects (title and description).
-        </p>
+      <div className={cn('mb-5')}>
+        <div className="rounded-xl border bg-gradient p-4 sm:p-5 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 my-auto">
+            <Code2 className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight">Projects</h2>
+            <p className="text-sm text-muted-foreground">
+              Add details about your projects.
+            </p>
+          </div>
+        </div>
       </div>
 
       <form className={cn('space-y-5')}>
         {projectData.map((project, index) => (
-          <div key={index} className={cn('relative space-y-4 p-6 shadow-lg')}>
-            <div className={cn('flex justify-between items-center')}>
-              <h3 className={cn('text-sm font-semibold')}>
-                Project {index + 1}
-              </h3>
-              {index > 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleRemoveProject(index)}
-                  className={cn('p-1 rounded-full')}
-                >
-                  <X className={cn('h-5 w-5 text-red-500')} />
-                </Button>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor={`title-${index}`}>Project Title</Label>
-              <Input
-                id={`title-${index}`}
-                type="text"
-                value={project.title}
-                onChange={(e) =>
-                  handleInputChange(index, 'title', e.target.value)
-                }
-                placeholder="e.g., AI Resume Builder"
-                className={cn(
-                  'block w-full border-gray-300 rounded-md shadow-sm sm:text-sm',
+          <Card key={index} className={cn('relative')}>
+            <CardHeader className={cn('pb-2')}>
+              <div className={cn('flex justify-between items-center')}>
+                <CardDescription>
+                  Project title and short description.
+                </CardDescription>
+                {index > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => handleRemoveProject(index)}
+                    className={cn('rounded-full')}
+                    size="icon"
+                  >
+                    <X className={cn('h-5 w-5 text-red-500')} />
+                  </Button>
                 )}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor={`description-${index}`}>Description</Label>
-              <Input
-                id={`description-${index}`}
-                type="text"
-                value={project.description}
-                onChange={(e) =>
-                  handleInputChange(index, 'description', e.target.value)
-                }
-                placeholder="e.g., Built a resume generator using GPT and Next.js"
-                className={cn(
-                  'block w-full border-gray-300 rounded-md shadow-sm sm:text-sm',
-                )}
-              />
-            </div>
-          </div>
+              </div>
+            </CardHeader>
+            <CardContent className={cn('space-y-4')}>
+              <div>
+                <Label htmlFor={`title-${index}`}>Project Title</Label>
+                <Input
+                  id={`title-${index}`}
+                  type="text"
+                  value={project.title}
+                  onChange={(e) =>
+                    handleInputChange(index, 'title', e.target.value)
+                  }
+                  placeholder="e.g., AI Resume Builder"
+                />
+              </div>
+              <div>
+                <Label htmlFor={`description-${index}`}>Description</Label>
+                <Input
+                  id={`description-${index}`}
+                  type="text"
+                  value={project.description}
+                  onChange={(e) =>
+                    handleInputChange(index, 'description', e.target.value)
+                  }
+                  placeholder="e.g., Built a resume generator using GPT and Next.js"
+                />
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </form>
 

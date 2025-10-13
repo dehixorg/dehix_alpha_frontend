@@ -62,12 +62,6 @@ export default function Resume() {
     return (
       <>
         <div className="flex min-h-screen w-full flex-col">
-          <SidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Resume"
-            isKycCheck={true}
-          />
           <ResumeEditor
             initialResume={selectedResume}
             onCancel={() => {
