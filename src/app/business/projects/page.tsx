@@ -104,9 +104,20 @@ const BusinessProjectsPage: React.FC = () => {
         // Project workflow: PENDING → ACTIVE → COMPLETED
 
         if (data.status === 'COMPLETED') {
-          // No actions for completed projects
+          // Completed projects can be marked as incomplete
+          const isUpdating = updatingStatus === data._id;
           return (
-            <div className="text-center text-muted-foreground text-sm">-</div>
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleStatusUpdate(data._id, 'ACTIVE')}
+                disabled={isUpdating}
+                className="flex items-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
+              >
+                {isUpdating ? 'Updating...' : 'Mark as Incomplete'}
+              </Button>
+            </div>
           );
         }
 
@@ -186,7 +197,12 @@ const BusinessProjectsPage: React.FC = () => {
         console.error('Failed to refresh data:', refreshError);
       }
 
-      notifySuccess(`Project status updated to ${newStatus}`);
+      const statusMessage =
+        newStatus === 'ACTIVE' &&
+        projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
+          ? 'Project marked as incomplete'
+          : `Project status updated to ${newStatus}`;
+      notifySuccess(statusMessage);
     } catch (error: any) {
       console.error('Error details:', error.response?.data || error.message);
 
@@ -213,7 +229,12 @@ const BusinessProjectsPage: React.FC = () => {
           console.error('Failed to refresh data (alternative):', refreshError);
         }
 
-        notifySuccess(`Project status updated to ${newStatus}`);
+        const statusMessage =
+          newStatus === 'ACTIVE' &&
+          projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
+            ? 'Project marked as incomplete'
+            : `Project status updated to ${newStatus}`;
+        notifySuccess(statusMessage);
       } catch (alternativeError: any) {
         notifyError(
           alternativeError.response?.data?.message ||
