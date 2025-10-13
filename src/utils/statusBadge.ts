@@ -9,10 +9,10 @@ export const getStatusBadge = (status: string | undefined) => {
     case 'rejected':
       return { text: 'REJECTED', className: 'bg-red-500 hover:bg-red-600' };
     case 'ongoing':
-      return { text: 'ON-GOING', className: 'bg-warning hover:bg-warning' };
+      return { text: 'ON GOING', className: 'bg-warning hover:bg-warning' };
     case 'not_started':
       return {
-        text: 'NOT-STARTED',
+        text: 'NOT STARTED',
         className: 'bg-blue-500 hover:bg-blue-600',
       };
     default:

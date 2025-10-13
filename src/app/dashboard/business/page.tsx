@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   BarChart,
   Bar,
@@ -296,11 +297,24 @@ export default function Dashboard() {
 
               <TabsContent value="current" className="mt-4">
                 {pendingProjects.length > 0 ? (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {pendingProjects.map((project: any, index: number) => (
-                      <ProjectCard key={index} project={project} />
-                    ))}
-                  </div>
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {pendingProjects
+                        .slice(0, 6)
+                        .map((project: any, index: number) => (
+                          <ProjectCard key={index} project={project} />
+                        ))}
+                    </div>
+                    {pendingProjects.length > 6 && (
+                      <div className="mt-4 flex justify-center">
+                        <Link href="/business/projects">
+                          <Button variant="outline" size="sm">
+                            View more
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <Card className="border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-12">
@@ -327,11 +341,24 @@ export default function Dashboard() {
 
               <TabsContent value="completed" className="mt-4">
                 {completedProjects.length > 0 ? (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {completedProjects.map((project: any, index: number) => (
-                      <ProjectCard key={index} project={project} />
-                    ))}
-                  </div>
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {completedProjects
+                        .slice(0, 6)
+                        .map((project: any, index: number) => (
+                          <ProjectCard key={index} project={project} />
+                        ))}
+                    </div>
+                    {completedProjects.length > 6 && (
+                      <div className="mt-4 flex justify-center">
+                        <Link href="/business/projects">
+                          <Button variant="outline" size="sm">
+                            View more
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <Card className="border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-12">

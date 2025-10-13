@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Table, LayoutGrid, Eye, PackageOpen } from 'lucide-react';
+import {
+  Table,
+  LayoutGrid,
+  Eye,
+  PackageOpen,
+  Play,
+  CheckCircle2,
+  Undo2,
+  Loader2,
+} from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
@@ -115,7 +124,15 @@ const BusinessProjectsPage: React.FC = () => {
                 disabled={isUpdating}
                 className="flex items-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
               >
-                {isUpdating ? 'Updating...' : 'Mark as Incomplete'}
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Updating...
+                  </>
+                ) : (
+                  <>
+                    <Undo2 className="h-4 w-4" /> Mark as Incomplete
+                  </>
+                )}
               </Button>
             </div>
           );
@@ -133,7 +150,15 @@ const BusinessProjectsPage: React.FC = () => {
                 disabled={isUpdating}
                 className="flex items-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50"
               >
-                {isUpdating ? 'Starting...' : 'Start Project'}
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Starting...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" /> Start Project
+                  </>
+                )}
               </Button>
             </div>
           );
@@ -151,7 +176,15 @@ const BusinessProjectsPage: React.FC = () => {
                 disabled={isUpdating}
                 className="flex items-center gap-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
               >
-                {isUpdating ? 'Completing...' : 'Mark as Completed'}
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Completing...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" /> Mark as Completed
+                  </>
+                )}
               </Button>
             </div>
           );
@@ -292,9 +325,15 @@ const BusinessProjectsPage: React.FC = () => {
         {/* Content container */}
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
           {/* Header section */}
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col space-y-2">
+              <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
+                Projects
+              </h1>
+              <p className="hidden md:block text-muted-foreground">
+                Manage your projects.
+              </p>
+            </div>
             {/* View toggle buttons */}
             <div className="flex gap-2">
               <Button

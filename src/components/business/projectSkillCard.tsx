@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, CheckCircle } from 'lucide-react';
+import { Plus, CheckCircle, Users } from 'lucide-react';
 import Image from 'next/image';
 
 import {
@@ -79,34 +79,6 @@ function ProjectSkillCard({
       .substring(0, 2);
   };
 
-  // Generate dummy team data if no team is provided
-  const displayTeam =
-    team.length > 0
-      ? team
-      : [
-          {
-            name: 'Sarah Johnson',
-            email: 'sarah.j@example.com',
-            profilePic: '',
-            color: 'bg-blue-100',
-            textColor: 'text-blue-800',
-          },
-          {
-            name: 'Michael Chen',
-            email: 'michael.c@example.com',
-            profilePic: '',
-            color: 'bg-green-100',
-            textColor: 'text-green-800',
-          },
-          {
-            name: 'Emma Rodriguez',
-            email: 'emma.r@example.com',
-            profilePic: '',
-            color: 'bg-purple-100',
-            textColor: 'text-purple-800',
-          },
-        ];
-
   return (
     <Card className="w-full h-[400px] bg-muted-foreground/20 dark:bg-muted/20 border rounded-lg shadow-sm flex flex-col">
       <CardHeader className="pb-3">
@@ -142,43 +114,54 @@ function ProjectSkillCard({
         {/* Date history/status */}
         <DateHistory startDate={startDate} endDate={endDate} />
         {/* Team members */}
-        <ScrollArea className="flex-1 rounded-md border bg-muted/20 p-3">
+        <ScrollArea className="flex-1 rounded-md border card p-3">
           <div className="space-y-3">
-            {displayTeam.slice(0, 5).map((member, index) => (
-              <div key={index} className="flex items-center">
-                <div className="flex-shrink-0 mr-3">
-                  {member.profilePic ? (
-                    <Image
-                      src={member.profilePic}
-                      alt={member.name}
-                      width={32}
-                      height={32}
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div
-                      className={`h-8 w-8 rounded-full flex items-center justify-center ${member.color} ${member.textColor}`}
-                    >
-                      <span className="text-xs font-medium">
-                        {getInitials(member.name)}
+            {team.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center text-muted-foreground gap-2">
+                <Users className="h-8 w-8" />
+                <div className="flex items-center gap-2 text-sm">
+                  No team members yet
+                </div>
+              </div>
+            ) : (
+              <>
+                {team.slice(0, 5).map((member, index) => (
+                  <div key={index} className="flex items-center">
+                    <div className="flex-shrink-0 mr-3">
+                      {member.profilePic ? (
+                        <Image
+                          src={member.profilePic}
+                          alt={member.name}
+                          width={32}
+                          height={32}
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className={`h-8 w-8 rounded-full flex items-center justify-center ${member.color} ${member.textColor}`}
+                        >
+                          <span className="text-xs font-medium">
+                            {getInitials(member.name)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 flex justify-between items-center min-w-0">
+                      <span className="text-sm font-medium truncate mr-2">
+                        {member.name}
+                      </span>
+                      <span className="text-xs text-gray-500 truncate">
+                        {member.email}
                       </span>
                     </div>
-                  )}
-                </div>
-                <div className="flex-1 flex justify-between items-center min-w-0">
-                  <span className="text-sm font-medium truncate mr-2">
-                    {member.name}
-                  </span>
-                  <span className="text-xs text-gray-500 truncate">
-                    {member.email}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {displayTeam.length > 5 && (
-              <div className="text-sm text-gray-500 pl-11">
-                +{displayTeam.length - 5} more members
-              </div>
+                  </div>
+                ))}
+                {team.length > 5 && (
+                  <div className="text-sm text-gray-500 pl-11">
+                    +{team.length - 5} more members
+                  </div>
+                )}
+              </>
             )}
           </div>
         </ScrollArea>
