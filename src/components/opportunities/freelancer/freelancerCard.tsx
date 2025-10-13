@@ -65,7 +65,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   const [loading, setLoading] = useState(false);
   const user = useSelector((state: RootState) => state.user);
 
-  const handleHireNow = async () => {
+  const handleHireNow = async (data?: any) => {
     // Backend will deduct connects; show toast and sync remaining connects locally
     const requiredConnects = parseInt(
       process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
@@ -73,8 +73,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
     );
     try {
       const res = await axiosInstance.post(
-        `/business/hire-dehixtalent/hire-now`,
-      );
+      `/business/hire-dehixtalent/hire-now`,
+         data ?? {}
+   );
       const remaining = res?.data?.remainingConnects;
       if (typeof remaining === 'number') {
         localStorage.setItem('DHX_CONNECTS', String(remaining));
@@ -520,7 +521,6 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <ConnectsDialog
-                          form={{} as any}
                           loading={loading}
                           setLoading={setLoading}
                           onSubmit={handleHireNow}
@@ -543,7 +543,6 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
             </div>
 
             <ConnectsDialog
-              form={{} as any}
               loading={loading}
               setLoading={setLoading}
               onSubmit={handleHireNow}

@@ -16,7 +16,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 interface ConnectsDialogProps {
-  form: UseFormReturn<any>;
   loading: boolean;
   setLoading: (loading: boolean) => void;
   onSubmit: any;

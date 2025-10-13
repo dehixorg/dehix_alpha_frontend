@@ -61,7 +61,6 @@ const AddToLobbyDialog = ({
         <DialogFooter className="mt-4">
           <ConnectsDialog
             // form is unused internally; provide a dummy to satisfy types
-            form={{} as any}
             loading={isLoading}
             setLoading={setLoading}
             onSubmit={async () => {
@@ -76,6 +75,7 @@ const AddToLobbyDialog = ({
               process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
               10,
             )}
+            skipRedirect={true}
           />
         </DialogFooter>
       </DialogContent>
