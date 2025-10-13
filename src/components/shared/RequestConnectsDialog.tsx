@@ -97,18 +97,18 @@ export default function RequestConnectsDialog({
               >
                 How many connects do you want?
               </label>
-                             <Input
-                 id="connectsAmount"
-                 value={amount}
-                 onChange={(e) => setAmount(e.target.value)}
-                 placeholder="e.g. 10"
-                 type="number"
+              <Input
+                id="connectsAmount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="e.g. 10"
+                type="number"
                 inputMode="numeric"
                 step={1}
                 min={1}
                 max={500}
-                 className="mt-2"
-               />
+                className="mt-2"
+              />
             </div>
           </div>
 

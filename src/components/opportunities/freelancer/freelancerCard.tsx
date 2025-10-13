@@ -73,9 +73,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
     );
     try {
       const res = await axiosInstance.post(
-      `/business/hire-dehixtalent/hire-now`,
-         data ?? {}
-   );
+        `/business/hire-dehixtalent/hire-now`,
+        data ?? {},
+      );
       const remaining = res?.data?.remainingConnects;
       if (typeof remaining === 'number') {
         localStorage.setItem('DHX_CONNECTS', String(remaining));
