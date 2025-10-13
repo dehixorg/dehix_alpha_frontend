@@ -121,7 +121,7 @@ const ProjectVerification = () => {
         defaultValue="all"
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
       >
-        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap">
+        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap mb-6">
           <TabsList className="bg-transparent h-12 p-0">
             <TabsTrigger
               value="all"

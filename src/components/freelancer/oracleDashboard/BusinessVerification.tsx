@@ -133,7 +133,7 @@ export default function BusinessVerification() {
           (t) => (
             <TabsContent key={t} value={t}>
               <CardContent>
-                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 mb-6">
                   {loading ? (
                     Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="rounded-lg border bg-card p-4">

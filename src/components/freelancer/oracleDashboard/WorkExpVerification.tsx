@@ -129,7 +129,7 @@ const WorkExpVerification = () => {
   };
 
   return (
-    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+    <div className="card rounded-xl border shadow-sm overflow-hidden">
       <div className="flex flex-col gap-2 p-6 pb-4">
         <h1 className="text-2xl font-bold tracking-tight">
           Experience Verification
@@ -144,7 +144,7 @@ const WorkExpVerification = () => {
         defaultValue="all"
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
       >
-        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap">
+        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap mb-6">
           <TabsList className="bg-transparent h-12 p-0">
             <TabsTrigger
               value="all"
