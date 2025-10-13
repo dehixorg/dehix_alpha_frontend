@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Building2,
   Target,
@@ -13,7 +14,7 @@ import {
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -34,6 +35,8 @@ import ProjectApplicationForm from '@/components/shared/ProjectApplicationPage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import Header from '@/components/header/header';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
+import { AppDispatch, RootState } from '@/lib/store';
+import { addDraftedProject, removeDraftedProject } from '@/lib/projectDraftSlice';
 
 interface Bid {
   _id: string;
@@ -87,9 +90,17 @@ interface ProjectData {
 const Page = () => {
   const params = useParams();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
 
   const [isLoading, setIsLoading] = useState(false);
   const [project, setProject] = useState<ProjectData | null>(null);
+  const [saving, setSaving] = useState(false);
+  const draftedProjects = useSelector(
+    (state: RootState) => state.projectDraft.draftedProjects,
+  );
+  const isDrafted = project?._id
+    ? draftedProjects?.includes(project._id)
+    : false;
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -116,6 +127,56 @@ const Page = () => {
 
   const handleCancel = (): void => {
     router.back();
+  };
+
+  const handleSave = async () => {
+    if (!project?._id || saving) return;
+    setSaving(true);
+    try {
+      const response = await axiosInstance.put(`/freelancer/draft`, {
+        project_id: project._id,
+      });
+      if (response.status === 200) {
+        dispatch(addDraftedProject(project._id));
+        notifySuccess(
+          'You can find this project in your saved items.',
+          'Added to saved projects',
+        );
+      }
+    } catch (error: any) {
+      console.error('Failed to add project to draft:', error);
+      notifyError(
+        error?.response?.data?.message || 'Failed to save project',
+        'Error',
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUnsave = async () => {
+    if (!project?._id || saving) return;
+    setSaving(true);
+    try {
+      const response = await axiosInstance.delete('/freelancer/draft', {
+        data: { project_id: project._id },
+      });
+      if (response.status === 200) {
+        dispatch(removeDraftedProject(project._id));
+        notifySuccess(
+          'This project has been removed from your saved items.',
+          'Removed from saved projects',
+        );
+      }
+    } catch (error: any) {
+      console.error('Failed to remove project from draft:', error);
+      notifyError(
+        error?.response?.data?.message || 'Failed to remove project',
+        'Error',
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (isLoading && !project) {
@@ -322,9 +383,16 @@ const Page = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handleCancel}>
-                      <Bookmark className="h-4 w-4 mr-2" />
-                      Save for Later
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={saving || !project}
+                      onClick={() => (isDrafted ? handleUnsave() : handleSave())}
+                    >
+                      <Bookmark
+                        className={`h-4 w-4 mr-2 ${isDrafted ? 'fill-current text-amber-500' : ''}`}
+                      />
+                      {isDrafted ? (saving ? 'Removing...' : 'Saved') : saving ? 'Saving...' : 'Save for Later'}
                     </Button>
                   </div>
                 </div>
