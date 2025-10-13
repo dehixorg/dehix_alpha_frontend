@@ -802,6 +802,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     if (v) setOpenSheetId(null);
                   }}
                   isLoading={isLoading}
+                  setLoading={setIsLoading}
                 />
               )}
               <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>

@@ -8,6 +8,8 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 
+import RequestConnectsDialog from './RequestConnectsDialog';
+
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
@@ -121,9 +123,12 @@ export const DisplayConnectsDialog = React.forwardRef<
           {/* Header */}
           <div className="flex justify-between items-center p-3 border-b border-border bg-gradient-to-br from-background/70 to-muted/40">
             <h2 className="text-sm sm:text-base font-semibold">Connects</h2>
-            <Badge className="rounded-md uppercase text-[9px] sm:text-[10px] font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-0.5 text-black dark:text-white">
-              {filteredData.length} total
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className="rounded-md uppercase text-[9px] sm:text-[10px] font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-0.5 text-black dark:text-white">
+                {filteredData.length} total
+              </Badge>
+              <RequestConnectsDialog userId={userId} />
+            </div>
           </div>
 
           {/* Tabs Controls */}
