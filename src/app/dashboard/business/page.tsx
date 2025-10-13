@@ -135,7 +135,7 @@ export default function Dashboard() {
           {/* Left Column */}
           <div className="grid auto-rows-max items-start gap-4 md:gap-6 lg:col-span-2">
             {/* Welcome Card */}
-            <Card className="bg-gradient-to-r from-primary/5 to-background shadow-sm">
+            <Card className="bg-gradient shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                   <div>

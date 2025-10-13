@@ -140,7 +140,7 @@ const Page = () => {
           <main className="p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
             {/* Header Skeleton */}
             <div className="space-y-8">
-              <div className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-lg border">
+              <div className="bg-gradient p-6 rounded-lg border">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-24" />
@@ -258,7 +258,7 @@ const Page = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -285,7 +285,7 @@ const Page = () => {
               className="space-y-8"
             >
               {/* Header Section */}
-              <div className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-lg border">
+              <div className="bg-gradient p-6 rounded-lg border">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="space-y-2">
                     <div className="flex flex-col space-y-1">
@@ -336,7 +336,7 @@ const Page = () => {
                 <div className="lg:col-span-6 space-y-6">
                   {/* Project Overview Card */}
                   <Card>
-                    <CardHeader className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-t-lg border">
+                    <CardHeader className="bg-gradient p-6 rounded-t-lg border">
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-lg">
                           Project Overview

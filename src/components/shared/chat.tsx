@@ -1014,7 +1014,7 @@ export function CardsChat({
       ) : (
         <>
           <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-xl">
-            <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-background text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
+            <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
               <button
                 onClick={handleHeaderClick}
                 className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"

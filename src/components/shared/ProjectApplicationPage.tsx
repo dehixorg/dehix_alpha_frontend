@@ -384,7 +384,7 @@ const ProjectApplicationForm = ({
 
   return (
     <Card className="overflow-hidden shadow-sm">
-      <CardHeader className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-t-lg border">
+      <CardHeader className="bg-gradient p-6 rounded-t-lg border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
