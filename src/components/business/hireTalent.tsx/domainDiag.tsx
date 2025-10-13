@@ -204,7 +204,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           )}
 
           <ConnectsDialog
-            form={form}
             loading={loading}
             setLoading={setLoading}
             onSubmit={onSubmit}

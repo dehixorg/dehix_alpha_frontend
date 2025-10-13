@@ -207,7 +207,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
 
           {/* ConnectsDialog */}
           <ConnectsDialog
-            form={form}
             loading={loading}
             setLoading={setLoading}
             onSubmit={onSubmit}
