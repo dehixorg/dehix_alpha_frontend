@@ -36,7 +36,10 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import Header from '@/components/header/header';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
 import { AppDispatch, RootState } from '@/lib/store';
-import { addDraftedProject, removeDraftedProject } from '@/lib/projectDraftSlice';
+import {
+  addDraftedProject,
+  removeDraftedProject,
+} from '@/lib/projectDraftSlice';
 
 interface Bid {
   _id: string;
@@ -387,12 +390,20 @@ const Page = () => {
                       variant="outline"
                       size="sm"
                       disabled={saving || !project}
-                      onClick={() => (isDrafted ? handleUnsave() : handleSave())}
+                      onClick={() =>
+                        isDrafted ? handleUnsave() : handleSave()
+                      }
                     >
                       <Bookmark
                         className={`h-4 w-4 mr-2 ${isDrafted ? 'fill-current text-amber-500' : ''}`}
                       />
-                      {isDrafted ? (saving ? 'Removing...' : 'Saved') : saving ? 'Saving...' : 'Save for Later'}
+                      {isDrafted
+                        ? saving
+                          ? 'Removing...'
+                          : 'Saved'
+                        : saving
+                          ? 'Saving...'
+                          : 'Save for Later'}
                     </Button>
                   </div>
                 </div>
