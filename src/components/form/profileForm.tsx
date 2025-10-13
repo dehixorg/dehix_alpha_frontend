@@ -364,9 +364,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
       // Save to backend
       try {
-        // --- THIS IS THE FIX ---
-        // Send ONLY the new skill, not the whole list
-        await saveSkillsToProfile([newSkill]);
+        // Send the complete updated list to replace server-side list
+        await saveSkillsToProfile(updatedSkills);
       } catch (error) {
         // Revert local state if API call fails
         setCurrSkills(currSkills);
@@ -426,7 +425,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
       // Save to backend
       try {
-        await saveProjectDomainsToProfile([newProjectDomain]);
+        // Send the complete updated list to replace server-side list
+        await saveProjectDomainsToProfile(updatedProjectDomains);
       } catch (error) {
         // Revert local state if API call fails
         setCurrProjectDomains(currProjectDomains);
