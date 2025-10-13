@@ -21,6 +21,7 @@ interface EducationData {
 }
 
 interface VerificationEntry {
+  _id: string;
   document_id: string;
   verification_status: string;
   comments: string;
@@ -75,19 +76,14 @@ const OracleDashboard = () => {
               `/verification/${entry.requester_id}/education`,
             );
 
-            const educationData =
-              educationResponse.data.data &&
-              educationResponse.data.data.length > 0
-                ? educationResponse.data.data[0].education
-                : null;
-
-            if (!educationData) return null;
-
-            const educationDocsArray = Object.values(
-              educationData,
+            const list = (educationResponse?.data?.data || []) as any[];
+            const allEducationDocs: EducationData[] = list.flatMap((e) =>
+              Object.values(e?.education || {}),
             ) as EducationData[];
 
-            const matchingEducationDoc = educationDocsArray.find(
+            if (!allEducationDocs || allEducationDocs.length === 0) return null;
+
+            const matchingEducationDoc = allEducationDocs.find(
               (doc) => doc._id === entry.document_id,
             );
 

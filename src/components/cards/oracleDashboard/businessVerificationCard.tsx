@@ -29,6 +29,8 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { notifyError } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { VerificationStatus } from '@/utils/verificationStatus';
@@ -52,6 +54,7 @@ interface BusinessProps {
 }
 
 const BusinessVerificationCard: React.FC<BusinessProps> = ({
+  _id,
   firstName,
   lastName,
   email,
@@ -94,9 +97,17 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
   }, [status]);
 
   async function onSubmit(data: { type: string; comment?: string }) {
-    const newStatus = data.type === 'verified' ? 'APPROVED' : 'DENIED';
-    setVerificationStatus(newStatus);
-    onStatusUpdate(newStatus);
+    const apiStatus = data.type === 'verified' ? 'APPROVED' : 'DENIED';
+    try {
+      await axiosInstance.put(`/verification/${_id}/update`, {
+        comment: data.comment,
+        verification_status: apiStatus,
+      });
+    } catch (error) {
+      notifyError('Something went wrong. Please try again.', 'Error');
+    }
+    setVerificationStatus(apiStatus);
+    onStatusUpdate(apiStatus);
     onCommentUpdate(data.comment || '');
   }
 

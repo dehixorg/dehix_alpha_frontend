@@ -100,16 +100,17 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
   }, [status]);
 
   async function onSubmit(data: { type: string; comment?: string }) {
+    const apiStatus = data.type === 'Approved' ? 'APPROVED' : 'DENIED';
     try {
-      await axiosInstance.put(`/verification/${_id}/oracle?doc_type=project`, {
-        comments: data.comment,
-        verification_status: data.type,
+      await axiosInstance.put(`/verification/${_id}/update`, {
+        comment: data.comment,
+        verification_status: apiStatus,
       });
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
     }
     const newStatus =
-      data.type === 'Approved'
+      apiStatus === 'APPROVED'
         ? VerificationStatus.APPROVED
         : VerificationStatus.DENIED;
     setVerificationStatus(newStatus);
