@@ -24,6 +24,7 @@ import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
 import { RootState } from '@/lib/store';
+import { StatusEnum } from '@/utils/freelancer/enum';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -138,8 +139,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           `/freelancer/${freelancerId}/domain`,
         );
 
-        const skillData = freelancerSkillsResponse.data.data[0].skills;
-        const domainData = freelancerDomainsResponse.data.data[0].domain;
+        const skillData =
+          freelancerSkillsResponse?.data?.data?.[0]?.skills || [];
+        const domainData =
+          freelancerDomainsResponse?.data?.data?.[0]?.domain || [];
 
         setSkillData(skillData);
         setDomainData(domainData);
@@ -148,15 +151,28 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           `/freelancer/${user.uid}/dehix-talent`,
         );
 
-        const updatedSkills = skillsDomainResponse.data.data.skills.filter(
-          (skill: any) =>
-            !skillData.some(
-              (existingSkill: any) => existingSkill.name === skill.talentName,
-            ),
-        );
+        const isVerifiedTalent = (t: any) => {
+          const status = String(t?.status || '').toUpperCase();
+          const active = Boolean(t?.activeStatus);
+          return (
+            active &&
+            (status === StatusEnum.ACTIVE || status === StatusEnum.COMPLETED)
+          );
+        };
+
+        const updatedSkills = (skillsDomainResponse.data.data.skills || [])
+          .filter(isVerifiedTalent)
+          .filter(
+            (skill: any) =>
+              !skillData.some(
+                (existingSkill: any) => existingSkill.name === skill.talentName,
+              ),
+          );
         setSkills(updatedSkills);
 
-        const updatedDomains = skillsDomainResponse.data.data.domains.filter(
+        const updatedDomains = (
+          skillsDomainResponse?.data?.data?.domains || []
+        ).filter(
           (domain: any) =>
             !domainData.some(
               (existingDomain: any) =>
