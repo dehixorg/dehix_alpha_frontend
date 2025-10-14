@@ -75,7 +75,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
   return (
     <Card
       className={cn(
-        'w-full overflow-hidden transition-all hover:shadow-lg group border-border/50 hover:border-primary/20 bg-muted/20',
+        'h-full w-full overflow-hidden transition-all hover:shadow-lg group border-border/50 hover:border-primary/20 bg-muted/20',
         className,
       )}
     >
