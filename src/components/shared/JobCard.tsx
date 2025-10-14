@@ -516,7 +516,9 @@ const JobCard: React.FC<JobCardProps> = ({
                     if (onApply) {
                       onApply(job);
                     } else {
-                      router.push(`/freelancer/market/project/${job._id}/apply`);
+                      router.push(
+                        `/freelancer/market/project/${job._id}/apply`,
+                      );
                     }
                   }}
                 >
