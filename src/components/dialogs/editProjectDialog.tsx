@@ -3,7 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
+
 import { DatePicker } from '../shared/datePicker';
+
 import {
   Dialog,
   DialogContent,
@@ -268,7 +270,7 @@ const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
                     <FormControl>
-                      <DatePicker {...field} max={currentDate}/>
+                      <DatePicker {...field} max={currentDate} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
