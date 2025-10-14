@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, ChevronsUpDown, Plus, X, Check, Info } from 'lucide-react';
+import {
+  Copy,
+  ChevronsUpDown,
+  Plus,
+  X,
+  Check,
+  Info,
+  FileText,
+} from 'lucide-react';
 import Image from 'next/image';
 
 import { Badge } from '../ui/badge';
@@ -18,11 +26,11 @@ import {
 } from '../ui/hover-card';
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from '../ui/dialog';
 import {
   Table,
@@ -363,24 +371,31 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
             >
               {taskCount} tasks
             </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-1 h-auto ml-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTask({
-                  _id: 'summary',
-                  title: story.title,
-                  summary: story.summary,
-                  taskStatus: 'SUMMARY',
-                  freelancers: [],
-                } as any);
-              }}
-              aria-label="View story summary"
-            >
-              <Info className="w-4 h-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-auto ml-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedTask({
+                        _id: 'summary',
+                        title: story.title,
+                        summary: story.summary,
+                        taskStatus: 'SUMMARY',
+                        freelancers: [],
+                      } as any);
+                    }}
+                    aria-label="View story summary"
+                  >
+                    <Info className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>View story summary</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <span className="text-sm flex items-center gap-2">
             {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
@@ -583,29 +598,27 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                       <h4 className="text-sm md:text-lg font-medium">
                                         {truncateDescription(task.title, 20)}
                                       </h4>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="p-1 h-auto ml-2"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedTask(task);
-                                        }}
-                                      >
-                                        <svg
-                                          className="w-4 h-4"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                          />
-                                        </svg>
-                                      </Button>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="p-1 h-auto ml-2"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedTask(task);
+                                              }}
+                                              aria-label="View task details"
+                                            >
+                                              <Info className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            View task details
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
                                     </div>
                                     <Badge
                                       className={`${taskBadgeStyle} px-2 py-0.5 text-xs md:text-sm rounded-md`}
@@ -803,16 +816,35 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="rounded-lg mx-auto w-[80vw] shadow-lg ">
+      <DialogContent className="rounded-lg mx-auto w-[86vw] sm:max-w-xl shadow-lg ">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{task.title}</DialogTitle>
+          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+            <FileText className="h-4 w-4 text-primary" />
+            {task.title}
+          </DialogTitle>
         </DialogHeader>
         <DialogDescription className="text-sm mt-2 leading-relaxed">
           {/* Description */}
-          <h4 className="font-semibold mb-1">Description</h4>
-          <p className="mb-3 whitespace-pre-wrap">
-            {task.summary || 'No description provided.'}
-          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-start">
+            <div className="sm:col-span-3 order-2 sm:order-1">
+              <h4 className="font-semibold mb-1">Description</h4>
+              <p className="mb-3 whitespace-pre-wrap">
+                {task.summary || 'No description provided.'}
+              </p>
+            </div>
+            <div className="sm:col-span-2 order-1 sm:order-2">
+              <div className="relative mx-auto h-24 w-24 sm:h-28 sm:w-28">
+                <Image
+                  src="/banner1.svg"
+                  alt="Task details illustration"
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 640px) 96px, 112px"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Key fields (hidden for story SUMMARY popover) */}
           {task.taskStatus !== 'SUMMARY' && (
@@ -844,7 +876,7 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
                 (f: any) =>
                   f.updatePermissionFreelancer && !f.updatePermissionBusiness,
               ) ? (
-                <Table className="border border-gray-300">
+                <Table className="border border-border bg-card rounded-md">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="font-semibold text-left">
@@ -865,7 +897,7 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
                       .map((freelancer: any, index: number) => (
                         <TableRow
                           key={index}
-                          className="border-b border-gray-200"
+                          className="border-b last:border-0"
                         >
                           <TableCell className="py-2 px-4">
                             {freelancer.freelancerName || 'Freelancer'}

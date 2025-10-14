@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type DialogSelectedNoteProps = {
   note: Note;
@@ -88,8 +89,9 @@ const DialogSelectedNote = ({
     >
       <DialogContent
         className={cn(
-          'p-0 max-w-2xl max-h-[90vh] mx-4 sm:mx-0 overflow-hidden',
-          'shadow-2xl card',
+          'p-0 max-w-2xl max-h-[90vh] mx-4 sm:mx-0',
+          'shadow-2xl rounded-xl border-2 border-border',
+          'bg-card text-card-foreground',
           'transition-all duration-200 ease-in-out',
         )}
         onInteractOutside={onClose}
@@ -99,7 +101,7 @@ const DialogSelectedNote = ({
         {note.banner && !note.bgColor && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
         )}
-        <DialogHeader className="p-4 border-b border-gray-200/30 dark:border-gray-700/50 bg-gradient">
+        <DialogHeader className="p-4 border-b border-gray-200 dark:border-gray-700/50 bg-gradient">
           <div className="flex items-center justify-between w-full">
             {isEditMode ? (
               <Input
@@ -129,7 +131,7 @@ const DialogSelectedNote = ({
         </DialogHeader>
 
         {/* Content */}
-        <div className="flex-1 p-6 overflow-y-auto max-h-[60vh] min-h-[200px]">
+        <ScrollArea className="min-h-[200px] max-h-[60vh] px-6 py-4">
           {error && (
             <div className="mb-4 p-3 text-sm bg-red-500/10 text-red-600 dark:text-red-400 rounded-md">
               {error}
@@ -144,7 +146,7 @@ const DialogSelectedNote = ({
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Start writing your note..."
                 className={cn(
-                  'min-h-[200px] p-0 border-0 shadow-none',
+                  'h-full min-h-[200px] p-0 border-0 shadow-none',
                   'focus-visible:ring-0 focus-visible:ring-offset-0',
                   'placeholder-gray-400 dark:placeholder-gray-500',
                   'resize-none text-base leading-relaxed',
@@ -155,13 +157,20 @@ const DialogSelectedNote = ({
           ) : (
             <div className="space-y-4">
               {content ? (
-                <div className="prose dark:prose-invert max-w-none">
-                  {content.split('\n').map((paragraph, i) => (
-                    <p key={i} className="mb-4 last:mb-0">
-                      {paragraph || <br />}
-                    </p>
-                  ))}
-                </div>
+                note.isHTML ? (
+                  <div
+                    className="prose prose-lg dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: content }}
+                  />
+                ) : (
+                  <div className="prose dark:prose-invert max-w-none">
+                    {content.split('\n').map((paragraph, i) => (
+                      <p key={i} className="mb-4 last:mb-0">
+                        {paragraph || <br />}
+                      </p>
+                    ))}
+                  </div>
+                )
               ) : (
                 <div className="p-8 sm:p-10 flex flex-col items-center justify-center text-center rounded-md bg-background/60 border">
                   <div className="mb-4 opacity-90">
@@ -220,9 +229,9 @@ const DialogSelectedNote = ({
               )}
             </div>
           )}
-        </div>
+        </ScrollArea>
 
-        <DialogFooter className="p-4 border-t border-gray-200/30 dark:border-gray-700/50">
+        <DialogFooter className="p-4 border-t border-gray-300/60 dark:border-gray-700/50">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-white">
               {formattedDate && (

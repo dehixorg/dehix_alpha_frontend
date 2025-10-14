@@ -13,9 +13,6 @@ import {
   CheckCircle2,
   XCircle,
 } from 'lucide-react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
 
@@ -50,6 +47,14 @@ import { cn } from '@/lib/utils';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { VerificationStatus } from '@/utils/verificationStatus';
 
 interface WorkExpProps {
   _id: string;
@@ -62,17 +67,12 @@ interface WorkExpProps {
   referencePersonContact: string;
   githubRepoLink: string;
   comments: string;
-  status: string | 'Pending'; // Add initial status prop
-  onStatusUpdate: (newStatus: string) => void;
+  status: VerificationStatus;
+  onStatusUpdate: (newStatus: VerificationStatus) => void;
   onCommentUpdate: (newComment: string) => void;
 }
 
-const FormSchema = z.object({
-  type: z.enum(['Approved', 'Denied'], {
-    required_error: 'You need to select a type.',
-  }),
-  comment: z.string().optional(),
-});
+// Schema handled in reusable form component
 
 const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   _id,
@@ -85,7 +85,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   referencePersonContact,
   githubRepoLink,
   comments,
-  status, // Get initial status from props
+  status,
   onStatusUpdate,
   onCommentUpdate,
 }) => {
@@ -114,7 +114,8 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
     reportedId: user?.uid || 'user123',
   };
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: { type: string; comment?: string }) {
+    const apiStatus = data.type === 'Approved' ? 'APPROVED' : 'DENIED';
     try {
       await axiosInstance.put(
         `/verification/${_id}/oracle?doc_type=experience`,
@@ -136,6 +137,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
       onCommentUpdate(data.comment || '');
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
+      return;
     }
   }
 

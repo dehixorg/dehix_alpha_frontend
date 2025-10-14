@@ -19,6 +19,12 @@ interface BaseStatItemProps {
   icon?: React.ReactNode;
   /** Optional text class */
   text_class?: string;
+  /** Optional container class for the text block */
+  content_class?: string;
+  /** Optional class for the label */
+  label_class?: string;
+  /** Optional class for the value */
+  value_class?: string;
 }
 
 interface DefaultVariantProps extends BaseStatItemProps {
@@ -66,6 +72,9 @@ const StatItem: React.FC<StatItemProps> = ({
   variant = 'default',
   color = 'default',
   text_class = 'text-2xl',
+  content_class = '',
+  label_class = '',
+  value_class = '',
 }) => {
   const colors = colorMap[color] || colorMap.default;
 
@@ -91,9 +100,11 @@ const StatItem: React.FC<StatItemProps> = ({
                 })}
               </div>
             )}
-            <div>
-              <p className="text-sm text-muted-foreground">{label}</p>
-              <p className={text_class}>{value}</p>
+            <div className={cn('min-w-0', content_class)}>
+              <p className={cn('text-sm text-muted-foreground', label_class)}>
+                {label}
+              </p>
+              <p className={cn(text_class, value_class)}>{value}</p>
             </div>
           </div>
         </div>
@@ -111,9 +122,11 @@ const StatItem: React.FC<StatItemProps> = ({
       )}
     >
       {icon && <div className="shrink-0">{icon}</div>}
-      <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium">{value}</p>
+      <div className={cn(content_class)}>
+        <p className={cn('text-xs text-muted-foreground', label_class)}>
+          {label}
+        </p>
+        <p className={cn('text-sm font-medium', value_class)}>{value}</p>
       </div>
     </div>
   );

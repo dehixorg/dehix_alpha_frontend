@@ -675,7 +675,7 @@ export default function ProfileDetailPage() {
               </Alert>
             )}
 
-            <Card className="bg-gradient-to-r from-primary/5 to-background shadow-sm">
+            <Card className="bg-gradient shadow-sm">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                   <div className="flex-1 space-y-2">

@@ -1,22 +1,15 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Filter, PackageOpen } from 'lucide-react';
+import { PackageOpen } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
+import { VerificationStatus } from '@/utils/verificationStatus';
 
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 
 interface WorkExperience {
   _id: string;
@@ -34,7 +27,7 @@ interface WorkExperience {
 
 interface VerificationEntry {
   document_id: string;
-  verification_status: string;
+  verification_status: VerificationStatus;
   comments: string;
   requester_id: string;
   verifier_id: string;
@@ -50,15 +43,17 @@ const WorkExpVerification = () => {
 
   const handleFilterChange = (newFilter: FilterOption) => {
     setFilter(newFilter);
-    setIsDialogOpen(false);
   };
 
   const filteredData = jobData.filter((data) => {
     if (filter === 'all') return true;
-    return (
-      data.verification_status === filter ||
-      (filter === 'current' && data.verification_status === StatusEnum.PENDING)
-    );
+    if (filter === 'pending')
+      return data.verification_status === VerificationStatus.PENDING;
+    if (filter === 'approved')
+      return data.verification_status === VerificationStatus.APPROVED;
+    if (filter === 'denied')
+      return data.verification_status === VerificationStatus.DENIED;
+    return true;
   });
 
   const fetchData = useCallback(async () => {
@@ -86,7 +81,12 @@ const WorkExpVerification = () => {
               (doc: any) => doc._id === entry.document_id,
             );
             if (matchingWorkExpDoc) {
-              return { ...matchingWorkExpDoc, ...entry };
+              return {
+                ...matchingWorkExpDoc,
+                ...entry,
+                verification_status:
+                  entry.verification_status as VerificationStatus,
+              };
             }
             return null;
           } catch (error) {
@@ -118,7 +118,7 @@ const WorkExpVerification = () => {
     setJobData((prev) =>
       prev.map((item) =>
         item.document_id === documentId
-          ? { ...item, verification_status: newStatus }
+          ? { ...item, verification_status: newStatus as VerificationStatus }
           : item,
       ),
     );

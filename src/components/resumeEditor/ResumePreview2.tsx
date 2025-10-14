@@ -95,14 +95,16 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="flex justify-center w-full h-full py-4">
+    <div className="flex justify-center w-full h-full rounded-md">
       <div
         ref={containerRef}
-        className="bg-white w-full max-w-[794px] p-4 flex"
+        className="bg-white w-full max-w-[794px] flex rounded-md overflow-hidden"
         style={{ boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)' }}
       >
+        {' '}
         {/* Left Section - Fixed width */}
         <div className="w-1/3 bg-gray-100 p-4 flex flex-col">
+          {' '}
           {sectionVisibility.personal &&
             personalData.map((person, index) => (
               <div key={index} className="mb-4">
@@ -135,7 +137,6 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
                 </div>
               </div>
             ))}
-
           {sectionVisibility.skills && skillData.length > 0 && (
             <div className="mt-4">
               <h2
@@ -153,7 +154,6 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
             </div>
           )}
         </div>
-
         {/* Right Section - Flexible width */}
         <div className="w-2/3 p-4 flex flex-col">
           {sectionVisibility.summary && summaryData.length > 0 && (

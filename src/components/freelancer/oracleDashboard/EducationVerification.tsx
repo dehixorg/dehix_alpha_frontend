@@ -1,22 +1,13 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Filter, PackageOpen } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 
 interface EducationData {
   _id: string;
@@ -30,6 +21,7 @@ interface EducationData {
 }
 
 interface VerificationEntry {
+  _id: string;
   document_id: string;
   verification_status: string;
   comments: string;
@@ -53,21 +45,17 @@ interface CombinedData extends EducationData, VerificationEntry {}
 const OracleDashboard = () => {
   const [educationdata, setEducationData] = useState<CombinedData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleFilterChange = (newFilter: FilterOption) => {
+  const handleFilterChange = useCallback((newFilter: FilterOption) => {
     setFilter(newFilter);
-    setIsDialogOpen(false);
-  };
+  }, []);
 
   const filteredData = educationdata.filter((data) => {
     if (filter === 'all') return true;
-    return (
-      data.verification_status === filter ||
-      (filter === 'current' && data.verification_status === StatusEnum.PENDING)
-    );
+    if (filter === 'pending') return data.verification_status === 'PENDING';
+    if (filter === 'approved') return data.verification_status === 'APPROVED';
+    if (filter === 'denied') return data.verification_status === 'DENIED';
   });
-
   const fetchData = useCallback(async () => {
     try {
       const verificationResponse = await axiosInstance.get(
@@ -86,19 +74,14 @@ const OracleDashboard = () => {
               `/verification/${entry.requester_id}/education`,
             );
 
-            const educationData =
-              educationResponse.data.data &&
-              educationResponse.data.data.length > 0
-                ? educationResponse.data.data[0].education
-                : null;
-
-            if (!educationData) return null;
-
-            const educationDocsArray = Object.values(
-              educationData,
+            const list = (educationResponse?.data?.data || []) as any[];
+            const allEducationDocs: EducationData[] = list.flatMap((e) =>
+              Object.values(e?.education || {}),
             ) as EducationData[];
 
-            const matchingEducationDoc = educationDocsArray.find(
+            if (!allEducationDocs || allEducationDocs.length === 0) return null;
+
+            const matchingEducationDoc = allEducationDocs.find(
               (doc) => doc._id === entry.document_id,
             );
 
@@ -160,101 +143,93 @@ const OracleDashboard = () => {
   }, [fetchData]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Education Verification</h1>
-          <p className="text-gray-400 mt-2">
-            Monitor the status of your Education verifications.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          className="mr-8 mb-12"
-          onClick={() => setIsDialogOpen(true)}
-        >
-          <Filter className="h-4 w-4" />
-        </Button>
+    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+      <div className="flex flex-col gap-2 p-6 pb-4">
+        <h1 className="text-2xl font-bold tracking-tight">
+          Education Verification
+        </h1>
+        <p className="text-muted-foreground">
+          Monitor and manage education verification requests.
+        </p>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Filter Education Status</DialogTitle>
-          </DialogHeader>
-          <RadioGroup
-            defaultValue="all"
-            value={filter}
-            onValueChange={(value: FilterOption) => handleFilterChange(value)}
-            className="space-y-2"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="all" id="filter-all" />
-              <label htmlFor="filter-all">All</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="current" id="filter-current" />
-              <label htmlFor="filter-current">Pending</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="verified" id="filter-verified" />
-              <label htmlFor="filter-verified">Verified</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="rejected" id="filter-rejected" />
-              <label htmlFor="filter-rejected">Rejected</label>
-            </div>
-          </RadioGroup>
-          <DialogFooter>
-            <Button type="button" onClick={() => setIsDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <main
-        className="grid flex-1 items-start gap-6 p-4 md:p-6 lg:p-8 
-             grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-max"
+      <Tabs
+        value={filter}
+        onValueChange={(v) => handleFilterChange(v as FilterOption)}
       >
-        {filteredData.length > 0 ? (
-          filteredData.map((data) => (
-            <EducationVerificationCard
-              key={data.document_id}
-              _id={data.document_id}
-              type="education"
-              requester={data.Requester}
-              verifier={data.Verifier}
-              location={data.universityName}
-              degree={data.degree}
-              startFrom={data.startDate}
-              endTo={data.endDate}
-              grade={data.grade}
-              fieldOfStudy={data.fieldOfStudy}
-              comments={data.comments}
-              status={data.verification_status}
-              onStatusUpdate={(newStatus: string) =>
-                updateEducationStatus(
-                  data.document_id,
-                  newStatus,
-                  data.comments,
-                )
-              }
-              onCommentUpdate={(newComment) =>
-                updateCommentStatus(data.document_id, newComment)
-              }
-            />
-          ))
-        ) : (
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Education verification for you now.
-            </p>
-          </div>
+        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap mb-6">
+          <TabsList className="bg-transparent h-12 p-0">
+            <TabsTrigger
+              value="all"
+              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            >
+              All
+            </TabsTrigger>
+            <TabsTrigger
+              value="pending"
+              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            >
+              Pending
+            </TabsTrigger>
+            <TabsTrigger
+              value="approved"
+              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            >
+              Approved
+            </TabsTrigger>
+            <TabsTrigger
+              value="denied"
+              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            >
+              Denied
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        {(['all', 'pending', 'approved', 'denied'] as FilterOption[]).map(
+          (t) => (
+            <TabsContent key={t} value={t}>
+              <CardContent>
+                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredData.length > 0 ? (
+                    filteredData.map((data) => (
+                      <EducationVerificationCard
+                        key={data.document_id}
+                        _id={data.document_id}
+                        type="education"
+                        location={data.universityName}
+                        degree={data.degree}
+                        startFrom={data.startDate}
+                        endTo={data.endDate}
+                        grade={data.grade}
+                        fieldOfStudy={data.fieldOfStudy}
+                        comments={data.comments}
+                        status={data.verification_status}
+                        onStatusUpdate={(newStatus: string) =>
+                          updateEducationStatus(
+                            data.document_id,
+                            newStatus,
+                            data.comments,
+                          )
+                        }
+                        onCommentUpdate={(newComment) =>
+                          updateCommentStatus(data.document_id, newComment)
+                        }
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center w-full col-span-full mt-10 py-10">
+                      <p className="text-sm text-muted-foreground">
+                        No education verification records found.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </TabsContent>
+          ),
         )}
-      </main>
+      </Tabs>
     </div>
   );
 };

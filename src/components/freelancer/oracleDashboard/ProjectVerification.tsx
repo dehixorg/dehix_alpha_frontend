@@ -6,10 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
+import { VerificationStatus } from '@/utils/verificationStatus';
 
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 interface ProjectData {
   _id: string;
   projectName: string;
@@ -22,8 +22,8 @@ interface ProjectData {
   comments: string;
   role: string;
   projectType: string;
-  verificationStatus: string;
-  onStatusUpdate: (newStatus: string) => void;
+  verification_status: VerificationStatus;
+  onStatusUpdate: (newStatus: VerificationStatus) => void;
   onCommentUpdate: (newComment: string) => void;
 }
 
@@ -40,9 +40,13 @@ const ProjectVerification = () => {
   const filteredData = useMemo(() => {
     return projectData.filter((data) => {
       if (filter === 'all') return true;
-      if (filter === 'current')
-        return data.verificationStatus === StatusEnum.PENDING;
-      return data.verificationStatus === filter;
+      if (filter === 'pending')
+        return data.verification_status === VerificationStatus.PENDING;
+      if (filter === 'approved')
+        return data.verification_status === VerificationStatus.APPROVED;
+      if (filter === 'denied')
+        return data.verification_status === VerificationStatus.DENIED;
+      return true;
     });
   }, [projectData, filter]);
 
@@ -54,13 +58,33 @@ const ProjectVerification = () => {
       );
       const result = response.data.data;
 
-      const flattenedData = result.flatMap((entry: any) =>
+      const isValidVerificationStatus = (
+        value: any,
+      ): value is VerificationStatus =>
+        Object.values(VerificationStatus).includes(value as VerificationStatus);
+
+      const flattenedData: ProjectData[] = result.flatMap((entry: any) =>
         entry.result?.projects
-          ? Object.values(entry.result.projects).map((project: any) => ({
-              ...project,
-              verifier_id: entry.verifier_id,
-              verifier_username: entry.verifier_username,
-            }))
+          ? (Object.values(entry.result.projects) as any[]).map(
+              (project: any) => {
+                const rawStatus = project.verificationStatus;
+                const validatedStatus = isValidVerificationStatus(rawStatus)
+                  ? rawStatus
+                  : (() => {
+                      console.warn(
+                        'Invalid verificationStatus encountered, defaulting to PENDING:',
+                        rawStatus,
+                      );
+                      return VerificationStatus.PENDING;
+                    })();
+                return {
+                  ...project,
+                  verification_status: validatedStatus,
+                  verifier_id: entry.verifier_id,
+                  verifier_username: entry.verifier_username,
+                } as ProjectData;
+              },
+            )
           : [],
       );
 
@@ -77,10 +101,10 @@ const ProjectVerification = () => {
   }, [fetchData]);
 
   const updateProjectStatus = useCallback(
-    (index: number, newStatus: string) => {
+    (index: number, newStatus: VerificationStatus) => {
       setProjectData((prev) => {
         const next = [...prev];
-        if (next[index]) next[index].verificationStatus = newStatus;
+        if (next[index]) next[index].verification_status = newStatus;
         return next;
       });
     },

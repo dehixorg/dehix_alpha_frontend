@@ -30,6 +30,11 @@ const STATUS_STYLE_MAP: Record<string, StatusStyle> = {
     outline:
       'border-yellow-700/40 text-yellow-600 bg-yellow-100 hover:bg-yellow-300 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/50',
   },
+  ongoing: {
+    solid: 'bg-yellow-500 text-black',
+    outline:
+      'border-yellow-700/40 text-yellow-600 bg-yellow-100 hover:bg-yellow-300 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/50',
+  },
 
   // Red family
   rejected: {
