@@ -10,7 +10,7 @@ import {
   Check,
   ChevronsUpDown,
 } from 'lucide-react';
-
+import {DatePicker} from '../shared/datePicker';
 import DraftDialog from '../shared/DraftDialog';
 
 import { Badge } from '@/components/ui/badge';
@@ -363,7 +363,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Start Date</FormLabel>
                       <FormControl>
-                        <Input type="date" max={currentDate} {...field} />
+                        <DatePicker {...field} max={currentDate} />
                       </FormControl>
                       <FormDescription>Select the start date</FormDescription>
                       <FormMessage />
@@ -378,7 +378,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>End Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <DatePicker {...field} />
                       </FormControl>
                       <FormDescription>Select the end date</FormDescription>
                       <FormMessage />
@@ -525,7 +525,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                   name="thumbnail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project Thumbnail</FormLabel>
                       <FormControl>
                         <ThumbnailUpload
                           onThumbnailUpdate={(url) => field.onChange(url)}
