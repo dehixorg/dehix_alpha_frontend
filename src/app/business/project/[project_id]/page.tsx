@@ -158,6 +158,35 @@ export default function Dashboard() {
       });
   };
 
+  // Handle project mark as incomplete
+  const handleIncompleteProject = (): void => {
+    if (!project_id) {
+      notifyError('Project ID is missing.', 'Error');
+      return;
+    }
+
+    axiosInstance
+      .put(`/project/${project_id}`, { status: StatusEnum.ACTIVE })
+      .then((response) => {
+        if (response.status === 200) {
+          setProject((prev) =>
+            prev ? { ...prev, status: StatusEnum.ACTIVE } : prev,
+          );
+          notifySuccess('Project marked as incomplete!', 'Success');
+        } else {
+          console.error('Unexpected response:', response);
+          notifyError('Failed to mark project as incomplete.', 'Failed');
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating project status:', error);
+        notifyError(
+          'An error occurred while updating the project status.',
+          'Error',
+        );
+      });
+  };
+
   // Handle profile addition
   const handleAddProfile = () => {
     setIsAddProfileDialogOpen(true);
@@ -278,6 +307,7 @@ export default function Dashboard() {
                       projectId={project._id}
                       handleCompleteProject={handleCompleteProject}
                       handleStartProject={handleStartProject}
+                      handleIncompleteProject={handleIncompleteProject}
                       userRole="Business"
                     />
                   </div>

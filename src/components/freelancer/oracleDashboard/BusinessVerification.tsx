@@ -4,12 +4,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
+import { VerificationStatus } from '@/utils/verificationStatus';
 
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
+
+const STATUS = VerificationStatus;
 
 export default function BusinessVerification() {
   const [businessdata, setBusinessData] = useState<any[]>([]);
@@ -24,9 +26,11 @@ export default function BusinessVerification() {
   const filteredData = useMemo(() => {
     return businessdata.filter((data) => {
       if (filter === 'all') return true;
-      if (filter === 'current')
-        return data.verificationStatus === StatusEnum.PENDING;
-      return data.verificationStatus === filter;
+      const status = data.verificationStatus as VerificationStatus;
+      if (filter === 'pending') return status === STATUS.PENDING;
+      if (filter === 'approved') return status === STATUS.APPROVED;
+      if (filter === 'denied') return status === STATUS.DENIED;
+      return true;
     });
   }, [businessdata, filter]);
 
@@ -42,6 +46,13 @@ export default function BusinessVerification() {
         entry.result?.projects
           ? Object.values(entry.result.projects).map((project: any) => ({
               ...project,
+              // canonical status on each item
+              verificationStatus: toVerificationStatus(
+                project.verificationStatus ||
+                  project.status ||
+                  project.verification_status ||
+                  STATUS.PENDING,
+              ),
               verifier_id: entry.verifier_id,
               verifier_username: entry.verifier_username,
             }))
@@ -62,7 +73,7 @@ export default function BusinessVerification() {
   }, [fetchData]);
 
   const updateBusinessStatus = useCallback(
-    (index: number, newStatus: string) => {
+    (index: number, newStatus: VerificationStatus) => {
       setBusinessData((prev: any[]) => {
         const next = [...prev];
         if (next[index]) next[index].status = newStatus;
@@ -82,6 +93,18 @@ export default function BusinessVerification() {
     },
     [],
   );
+
+  const toVerificationStatus = (s: any): VerificationStatus => {
+    switch (s) {
+      case 'APPROVED':
+        return VerificationStatus.APPROVED;
+      case 'DENIED':
+        return VerificationStatus.DENIED;
+      case 'PENDING':
+      default:
+        return VerificationStatus.PENDING;
+    }
+  };
 
   return (
     <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
@@ -107,31 +130,31 @@ export default function BusinessVerification() {
               All
             </TabsTrigger>
             <TabsTrigger
-              value="current"
+              value="pending"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Pending
             </TabsTrigger>
             <TabsTrigger
-              value="verified"
+              value="approved"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
-              Verified
+              Approved
             </TabsTrigger>
             <TabsTrigger
-              value="rejected"
+              value="denied"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
-              Rejected
+              Denied
             </TabsTrigger>
           </TabsList>
         </div>
 
-        {(['all', 'current', 'verified', 'rejected'] as FilterOption[]).map(
+        {(['all', 'pending', 'approved', 'denied'] as FilterOption[]).map(
           (t) => (
             <TabsContent key={t} value={t}>
               <CardContent>
-                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 mb-6">
                   {loading ? (
                     Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="rounded-lg border bg-card p-4">
@@ -163,9 +186,12 @@ export default function BusinessVerification() {
                         linkedInLink={data.linkedInLink}
                         githubLink={data.githubLink}
                         comments={data.comments}
-                        status={data.status}
+                        status={data.verificationStatus}
                         onStatusUpdate={(newStatus) =>
-                          updateBusinessStatus(index, newStatus)
+                          updateBusinessStatus(
+                            index,
+                            newStatus as VerificationStatus,
+                          )
                         }
                         onCommentUpdate={(newComment) =>
                           updateCommentStatus(index, newComment)

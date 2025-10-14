@@ -506,14 +506,23 @@ export function CreateProjectBusinessForm() {
         'Your project has been successfully added.',
         'Project Added',
       );
+
       const connectsCost = parseInt(
-        process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
+        process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '150',
         10,
       );
-      const updatedConnects = (
-        parseInt(localStorage.getItem('DHX_CONNECTS') || '0') - connectsCost
-      ).toString();
-      localStorage.setItem('DHX_CONNECTS', updatedConnects);
+      const prevConnects = parseInt(
+        localStorage.getItem('DHX_CONNECTS') || '0',
+      );
+      const updatedConnects = prevConnects - connectsCost;
+      // Update connects in DB as well
+      try {
+        await axiosInstance.put('/business', { connects: updatedConnects });
+      } catch (err) {
+        // Optionally handle error, but don't block UI
+        console.error('Failed to update connects in DB:', err);
+      }
+      localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
       localStorage.removeItem(FORM_DRAFT_KEY);
       window.dispatchEvent(new Event('connectsUpdated'));
     } catch {
@@ -1105,7 +1114,6 @@ export function CreateProjectBusinessForm() {
                         <Save className="h-4 w-4 mr-1" /> Save Draft
                       </Button>
                       <ConnectsDialog
-                        form={form}
                         loading={loading}
                         isValidCheck={async () => {
                           // Validate all required fields
@@ -1204,7 +1212,7 @@ export function CreateProjectBusinessForm() {
                         userType={'BUSINESS'}
                         requiredConnects={parseInt(
                           process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST ||
-                            '0',
+                            '150',
                           10,
                         )}
                       />

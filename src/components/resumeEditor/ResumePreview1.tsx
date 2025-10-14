@@ -68,7 +68,7 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="flex justify-center w-full h-full py-4">
+    <div className="flex justify-center w-full h-full rounded-md">
       <div
         ref={containerRef}
         className="bg-white w-[900px] p-10 shadow-lg flex flex-col rounded-md border border-gray-300"
