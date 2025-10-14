@@ -165,7 +165,7 @@ const ProjectVerification = () => {
                     ) : filteredData.length > 0 ? (
                       filteredData.map((data, index) => (
                         <ProjectVerificationCard
-                          key={index}
+                          key={data._id}
                           _id={data._id}
                           projectName={data.projectName}
                           description={data.description}

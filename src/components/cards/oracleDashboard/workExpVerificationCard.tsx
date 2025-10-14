@@ -142,7 +142,11 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   // Status configuration matching business cards
   const statusConfig: Record<
     string,
-    { color: string; icon: any; text: string }
+    {
+      color: string;
+      icon: React.ComponentType<{ className?: string }>;
+      text: string;
+    }
   > = {
     pending: {
       color: 'bg-amber-500',
@@ -176,9 +180,6 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
     },
   };
 
-  const currentStatus =
-    statusConfig[verificationStatus] || statusConfig.default;
-
   return (
     <Card
       className={cn(
@@ -187,7 +188,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
     >
       {/* Status indicator */}
       <div
-        className={`absolute top-0 left-0 w-full h-1 ${currentStatus.color}`}
+        className={cn('absolute top-0 left-0 w-full h-1', currentStatus.color)}
       />
 
       {/* 3-dot menu */}
@@ -203,7 +204,6 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
             <DropdownMenuItem
               onClick={() => {
                 setOpenReport(true);
-                notifySuccess('Report dialog opened');
               }}
               className="text-red-600 focus:text-red-600 focus:bg-destructive/50 cursor-pointer"
             >
