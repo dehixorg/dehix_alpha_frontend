@@ -698,19 +698,7 @@ export function ProfileSidebar({
     targetUserId: string,
     block: boolean,
   ) => {
-    console.log('handleToggleBlockChat called', {
-      targetUserId,
-      block,
-      userUid: user?.uid,
-      hasOnConversationUpdate: !!onConversationUpdate,
-    });
-
     if (!user?.uid || !targetUserId || !onConversationUpdate) {
-      console.log('Missing required data:', {
-        hasUser: !!user?.uid,
-        hasTargetUserId: !!targetUserId,
-        hasOnConversationUpdate: !!onConversationUpdate,
-      });
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -1071,19 +1059,10 @@ export function ProfileSidebar({
                             blockStatus.blockedBy !== user?.uid
                           }
                           onClick={() => {
-                            console.log('Block button clicked', {
-                              profileId,
-                              onConversationUpdate,
-                              blockStatus,
-                            });
                             if (profileId && onConversationUpdate) {
                               const isCurrentlyBlocked =
                                 blockStatus.isBlocked &&
                                 blockStatus.blockedBy === user?.uid;
-                              console.log('Setting up confirmation dialog', {
-                                isCurrentlyBlocked,
-                              });
-
                               setConfirmDialogProps({
                                 title: isCurrentlyBlocked
                                   ? 'Unblock this Chat?'

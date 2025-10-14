@@ -99,7 +99,7 @@ export default function Dashboard() {
         />
         <main className="grid flex-1 items-start gap-4 px-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <Card className="bg-gradient-to-r from-primary/5 to-background shadow-sm overflow-hidden">
+            <Card className="bg-gradient shadow-sm overflow-hidden">
               <CardHeader className="py4">
                 <div className="flex justify-between items-start gap-4">
                   <div>

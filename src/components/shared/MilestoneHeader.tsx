@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Info, FileText } from 'lucide-react';
+import Image from 'next/image';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -12,6 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface Milestone {
   title: string;
@@ -20,123 +29,70 @@ interface Milestone {
 }
 
 const MilestoneHeader = ({ milestone }: { milestone: Milestone }) => {
-  const { text: MilestoneStatus, className: MilestoneStatusBadgeStyle } =
-    getStatusBadge(milestone.status);
+  const { text: MilestoneStatus } = getStatusBadge(milestone.status);
   const [isDescOpen, setIsDescOpen] = useState(false);
 
-  const preview = (milestone.description || 'No description provided.').slice(
-    0,
-    120,
-  );
-
   return (
-    <CardHeader className="relative overflow-hidden">
+    <CardHeader className="relative overflow-hidden bg-gradient border-b mb-4">
       <CardTitle className="text-lg md:text-xl font-bold flex flex-col gap-2">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <p className="truncate">Milestone: {milestone.title}</p>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="cursor-pointer rounded-full flex-shrink-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsDescOpen(true);
-              }}
-              aria-label="View milestone description"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="cursor-pointer rounded-full flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsDescOpen(true);
+                    }}
+                    aria-label="View milestone description"
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">View details</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <Badge
-            className={`${MilestoneStatusBadgeStyle} px-3 py-1 text-xs md:text-sm rounded-full`}
+            className={`${statusOutlineClasses(milestone.status)} flex items-center gap-1`}
           >
+            <span className="inline-block h-2 w-2 rounded-full bg-current opacity-70" />
             {MilestoneStatus}
           </Badge>
-        </div>
-
-        {/* Preview line */}
-        <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-          <p className="truncate">
-            {preview}
-            {(milestone.description || '').length > 120 && '…'}
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-shrink-0 rounded-full"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDescOpen(true);
-            }}
-          >
-            Details
-          </Button>
         </div>
       </CardTitle>
 
       {/* Description dialog with subtle illustration */}
       <Dialog open={isDescOpen} onOpenChange={setIsDescOpen}>
-        <DialogContent className="max-w-lg w-[90vw] md:w-auto">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span>Milestone details</span>
+              <FileText className="h-4 w-4 text-primary" />
+              Milestone details
             </DialogTitle>
             <DialogDescription asChild>
-              <div className="text-sm leading-relaxed mt-2">
-                <div className="mb-3 opacity-90">
-                  <svg
-                    width="200"
-                    height="60"
-                    viewBox="0 0 200 60"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                    className="mx-auto"
-                  >
-                    <defs>
-                      <linearGradient
-                        id="ms-grad"
-                        x1="0%"
-                        y1="0%"
-                        x2="100%"
-                        y2="0%"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="hsl(var(--primary))"
-                          stopOpacity="0.25"
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="hsl(var(--accent-foreground))"
-                          stopOpacity="0.18"
-                        />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d="M0 45 C 40 10, 120 10, 200 35"
-                      fill="none"
-                      stroke="url(#ms-grad)"
-                      strokeWidth="3"
-                    />
-                    <circle cx="40" cy="30" r="4" fill="hsl(var(--primary))" />
-                    <circle cx="130" cy="22" r="4" fill="hsl(var(--accent))" />
-                  </svg>
+              <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-5">
+                <div className="order-2 sm:order-1 sm:col-span-3 text-sm leading-relaxed">
+                  <div className="whitespace-pre-wrap">
+                    {milestone.description || 'No description provided.'}
+                  </div>
                 </div>
-                <div className="whitespace-pre-wrap">
-                  {milestone.description || 'No description provided.'}
+                <div className="order-1 sm:order-2 sm:col-span-2">
+                  <div className="relative mx-auto h-24 w-24 sm:h-28 sm:w-28">
+                    <Image
+                      src="/banner1.svg"
+                      alt="Milestone illustration"
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 640px) 96px, 112px"
+                      loading="lazy"
+                    />
+                  </div>
                 </div>
               </div>
             </DialogDescription>
