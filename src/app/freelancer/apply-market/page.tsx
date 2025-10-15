@@ -2,6 +2,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +27,17 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { notifySuccess } from '@/utils/toastMessage';
+import { RootState } from '@/lib/store';
 
 // Project type aligned with JobCard's expected shape
 interface Project {
@@ -101,6 +113,8 @@ interface TalentMarketItem {
   businessId: string;
   skillId?: string;
   skillName?: string;
+  talentId?: string;
+  talentName?: string;
   domainId?: string;
   domainName?: string;
   description?: string;
@@ -127,6 +141,8 @@ interface TalentMarketItem {
 }
 
 const TalentMarketPage: React.FC = () => {
+  const user = useSelector((state: RootState) => state.user);
+
   const [isLargeScreen, setIsLargeScreen] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth >= 1024;
@@ -161,6 +177,10 @@ const TalentMarketPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<TalentMarketItem | null>(
     null,
   );
+  const [coverLetter, setCoverLetter] = useState("");
+  const [selectedProfileId, setSelectedProfileId] = useState<string>("");
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
@@ -181,6 +201,21 @@ const TalentMarketPage: React.FC = () => {
     };
     fetchFilterOptions();
   }, []);
+
+  // Load freelancer profiles when dialog opens
+  useEffect(() => {
+    const loadProfiles = async () => {
+      if (!applyOpen || !user?.uid) return;
+      try {
+        const res = await axiosInstance.get("/freelancer/profiles");
+        const list = res.data?.data || [];
+        setProfiles(list);
+      } catch (e) {
+        console.error("Error loading profiles", e);
+      }
+    };
+    loadProfiles();
+  }, [applyOpen, user?.uid]);
 
   const fetchTalentItems = useCallback(async () => {
     try {
@@ -220,12 +255,15 @@ const TalentMarketPage: React.FC = () => {
   // Map to JobCard-compatible Project and filter
   const jobs: Project[] = useMemo(() => {
     const mapped: Project[] = (items || []).map((it) => {
-      const name = it.skillName || it.domainName || 'Opportunity';
+      const name = it.skillName || it.domainName || it.talentName || 'Opportunity';
+      const nameId = it.skillId || it.domainId || it.talentId || '';
       const skills = it.skillName ? [it.skillName] : [];
       const pdomains = it.domainName ? [it.domainName] : [];
+      const talents = it.talentName ? [it.talentId] : [];
       return {
         _id: it._id,
         projectName: name,
+        projectDomainId: nameId,
         description: it.description || '',
         skillsRequired: skills,
         projectDomain: pdomains,
@@ -265,12 +303,6 @@ const TalentMarketPage: React.FC = () => {
       return true;
     });
 
-    filtered.sort((a, b) => {
-      const aT = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const bT = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return bT - aT;
-    });
-
     return filtered;
   }, [items, filters, searchQuery]);
 
@@ -303,6 +335,8 @@ const TalentMarketPage: React.FC = () => {
     const item = items.find((i) => i._id === job._id) || null;
     setSelectedItem(item);
     setApplyOpen(true);
+    setCoverLetter("");
+    setSelectedProfileId("");
   };
 
   // Status counts
@@ -375,9 +409,9 @@ const TalentMarketPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden px-4 sm:px-8 pb-8">
+        <div className="flex flex-1 px-4 sm:px-8 pb-8">
           {isLargeScreen && (
-            <aside className="w-80 flex-shrink-0 pr-6">
+            <aside className="w-80 flex-shrink-0 pr-6 sticky top-20">
               <FilterComponent
                 filters={filters}
                 setFilters={setFilters}
@@ -396,14 +430,11 @@ const TalentMarketPage: React.FC = () => {
             </aside>
           )}
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1">
             {isLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <Card
-                    key={i}
-                    className="overflow-hidden hover:shadow-md transition-shadow"
-                  >
+                  <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
                       <div className="space-y-3">
                         <div className="flex justify-between items-start">
@@ -480,7 +511,7 @@ const TalentMarketPage: React.FC = () => {
               {selectedItem?.skillName || selectedItem?.domainName || 'Apply'}
             </DialogTitle>
             <DialogDescription>
-              Provide a short cover letter and confirm your interest.
+              Provide a cover letter (min 200 characters) and select a professional profile to apply.
             </DialogDescription>
           </DialogHeader>
 
@@ -518,15 +549,89 @@ const TalentMarketPage: React.FC = () => {
               </Badge>
             </div>
 
-            {/* Since no Apply API for now, show placeholder action */}
-            <div className="text-sm text-muted-foreground">
-              Application submission is not available yet.
+            <div className="space-y-2 pt-2">
+              <Label>Select Professional Profile</Label>
+              <Select value={selectedProfileId} onValueChange={setSelectedProfileId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose one of your profiles" />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles.map((p: any) => (
+                    <SelectItem key={p._id} value={p._id}>
+                      {p.profileName || p.name || p._id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <Label>Cover Letter</Label>
+              <Textarea
+                rows={6}
+                placeholder="Describe why you're a great fit... (min 200 characters)"
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+              />
+              <div className="flex items-center justify-between text-xs">
+                <span className={coverLetter.trim().length < 200 ? "text-red-500" : "text-muted-foreground"}>
+                  {coverLetter.trim().length} / 200 min
+                </span>
+                {coverLetter.trim().length < 200 && (
+                  <span className="text-red-500">Minimum 200 characters required</span>
+                )}
+              </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setApplyOpen(false)}>
+            <Button variant="outline" onClick={() => setApplyOpen(false)} disabled={submitting}>
               Close
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!selectedItem) return;
+                if (!user?.uid) {
+                  notifyError("Please login to apply.");
+                  return;
+                }
+                if (!selectedProfileId) {
+                  notifyError("Please select a professional profile.");
+                  return;
+                }
+                if (coverLetter.trim().length < 200) {
+                  notifyError("Cover letter must be at least 200 characters.");
+                  return;
+                }
+                try {
+                  setSubmitting(true);
+                  const payload = {
+                    business_req_talent_id: selectedItem._id,
+                    businessId: selectedItem.businessId,
+                    freelancerId: user.uid,
+                    freelancer_professional_profile_id: selectedProfileId,
+                    cover_letter: coverLetter.trim(),
+                  };
+                  await axiosInstance.post(
+                    "/freelancer/dehix-talent/apply", 
+                    payload,
+                  );
+                  notifySuccess("Applied successfully", "Success");
+                  setApplyOpen(false);
+                } catch (e) {
+                  console.error("Apply error", e);
+                  notifyError("Failed to submit application.");
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+              disabled={
+                submitting ||
+                !selectedProfileId ||
+                coverLetter.trim().length < 200
+              }
+            >
+              {submitting ? "Submitting..." : "Submit Application"}
             </Button>
           </DialogFooter>
         </DialogContent>
