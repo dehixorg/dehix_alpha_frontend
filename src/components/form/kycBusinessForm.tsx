@@ -4,16 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Image from 'next/image';
-import {
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  HelpCircle,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import LiveCaptureField from './register/livecapture';
+import KYCDetailsView from './KYCDetailsView';
 
 import { Card } from '@/components/ui/card';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -29,10 +23,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
-import KYCDetailsView from './KYCDetailsView';
 
 const KycStatusAlert = ({
   status,
@@ -456,7 +448,9 @@ export function KYCForm({ user_id }: { user_id: string }) {
     'IN_REVIEW',
     'UNDER_REVIEW',
   ];
-  const isReadOnly = READ_ONLY_STATUSES.includes((kycStatus || '').toUpperCase());
+  const isReadOnly = READ_ONLY_STATUSES.includes(
+    (kycStatus || '').toUpperCase(),
+  );
 
   // Badge color purely based on KYC status
   const statusColors = (status: string) => {
@@ -502,348 +496,346 @@ export function KYCForm({ user_id }: { user_id: string }) {
         <KYCDetailsView kycData={transformKYCDataForView(form.getValues())} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Mobile Horizontal Stepper */}
-        <div className="md:hidden col-span-full -mt-1">
-          <div className="flex items-center gap-2">
-            {steps.map((s, idx) => {
-              const active = currentStep === s.id;
-              const done = currentStep > s.id;
-              return (
-                <React.Fragment key={s.id}>
-                  {idx > 0 && (
-                    <div
-                      className={`flex-1 h-px ${done ? 'bg-primary/60' : 'bg-muted-foreground/20'}`}
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(s.id)}
-                    aria-current={active ? 'step' : undefined}
-                    className={`h-6 w-6 shrink-0 rounded-full border flex items-center justify-center transition ${
-                      active
-                        ? 'bg-primary border-primary'
-                        : done
-                          ? 'bg-primary/60 border-primary/60'
-                          : 'bg-muted border-muted-foreground/40'
-                    }`}
-                    title={s.title}
-                  >
-                    <span className="sr-only">{s.title}</span>
-                  </button>
-                </React.Fragment>
-              );
-            })}
-          </div>
-          <div className="mt-2 grid grid-cols-3 text-[10px] text-muted-foreground">
-            {steps.map((s) => (
-              <p key={s.id} className="text-center truncate">
-                {s.title}
-              </p>
-            ))}
-          </div>
-        </div>
-
-        {/* Sidebar Stepper */}
-        <aside className="hidden md:block md:col-span-4 lg:col-span-3 relative">
-          <div ref={lineWrapRef} className="relative pe-6">
-            <div
-              ref={lineRef}
-              className="pointer-events-none absolute right-6 w-px bg-muted-foreground/20"
-            />
-            <ol className="space-y-6">
+          {/* Mobile Horizontal Stepper */}
+          <div className="md:hidden col-span-full -mt-1">
+            <div className="flex items-center gap-2">
               {steps.map((s, idx) => {
                 const active = currentStep === s.id;
                 const done = currentStep > s.id;
                 return (
-                  <li key={s.id} className="relative group">
-                    <div
-                      className="absolute -right-[5px] top-2.5"
-                      ref={
-                        idx === 0
-                          ? firstDotRef
-                          : idx === steps.length - 1
-                            ? lastDotRef
-                            : undefined
-                      }
-                    >
-                      <StepDot active={active} done={done} />
-                    </div>
+                  <React.Fragment key={s.id}>
+                    {idx > 0 && (
+                      <div
+                        className={`flex-1 h-px ${done ? 'bg-primary/60' : 'bg-muted-foreground/20'}`}
+                      />
+                    )}
                     <button
                       type="button"
                       onClick={() => setCurrentStep(s.id)}
                       aria-current={active ? 'step' : undefined}
-                      className={`w-full rounded-md px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                      className={`h-6 w-6 shrink-0 rounded-full border flex items-center justify-center transition ${
                         active
-                          ? 'bg-primary/10 text-foreground'
-                          : 'hover:bg-muted/40'
+                          ? 'bg-primary border-primary'
+                          : done
+                            ? 'bg-primary/60 border-primary/60'
+                            : 'bg-muted border-muted-foreground/40'
                       }`}
+                      title={s.title}
                     >
-                      <p className="text-sm md:text-base font-semibold leading-tight">
-                        {s.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground leading-tight">
-                        {s.subtitle}
-                      </p>
+                      <span className="sr-only">{s.title}</span>
                     </button>
-                  </li>
+                  </React.Fragment>
                 );
               })}
-            </ol>
+            </div>
+            <div className="mt-2 grid grid-cols-3 text-[10px] text-muted-foreground">
+              {steps.map((s) => (
+                <p key={s.id} className="text-center truncate">
+                  {s.title}
+                </p>
+              ))}
+            </div>
           </div>
-        </aside>
 
-        {/* Main Content */}
-        <section className="md:col-span-8 lg:col-span-9">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && currentStep < 3) e.preventDefault();
-              }}
-              className="space-y-6"
-            >
-              {/* Step Header */}
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  Step {currentStep}/3
-                </p>
-                <h3 className="text-xl md:text-2xl font-semibold mt-1">
-                  {steps[currentStep - 1].title}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {steps[currentStep - 1].subtitle}
-                </p>
-              </div>
-              {currentStep === 1 && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="businessProof"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Proof</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter your business registration number"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* New Field for Business Profit */}
-                  <FormField
-                    control={form.control}
-                    name="businessProfit"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Profit</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter your annual business profit"
-                            type="number"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="frontImageUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <ImageUploader
-                              label="Document Front Image"
-                              value={field.value as File | string | null}
-                              onChange={field.onChange}
-                              accept={{
-                                'image/*': ['.png', '.jpg', '.jpeg'],
-                              }}
-                              maxSize={5 * 1024 * 1024}
-                              previewHeight={160}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="backImageUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <ImageUploader
-                              label="Document Back Image"
-                              value={field.value as File | string | null}
-                              onChange={field.onChange}
-                              accept={{
-                                'image/*': ['.png', '.jpg', '.jpeg'],
-                              }}
-                              maxSize={5 * 1024 * 1024}
-                              previewHeight={160}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </>
-              )}
-
-              {currentStep === 2 && (
-                <div className="space-y-6">
-                  <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-                    <p className="font-medium text-foreground mb-1">
-                      Selfie prerequisites
-                    </p>
-                    <ul className="list-disc ms-4 space-y-1">
-                      <li>
-                        Allow camera permission or be ready to upload a clear
-                        selfie.
-                      </li>
-                      <li>Use good lighting and face the camera.</li>
-                      <li>Ensure your face is centered and fully visible.</li>
-                    </ul>
-                  </div>
-                  <LiveCaptureField form={form} />
-                </div>
-              )}
-
-              {currentStep === 3 && (
-                <div className="space-y-4 text-sm">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-muted-foreground">Business Proof</p>
-                      <p className="font-medium break-words">
-                        {form.getValues('businessProof') || '-'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Business Profit</p>
-                      <p className="font-medium">
-                        {form.getValues('businessProfit') || '-'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-                    <div>
-                      <p className="text-muted-foreground mb-2">Front Image</p>
-                      {frontPreview ? (
-                        <Image
-                          src={frontPreview}
-                          alt="Front Document"
-                          width={280}
-                          height={180}
-                          className="rounded-lg object-contain border shadow-sm"
-                        />
-                      ) : (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          No front image
+          {/* Sidebar Stepper */}
+          <aside className="hidden md:block md:col-span-4 lg:col-span-3 relative">
+            <div ref={lineWrapRef} className="relative pe-6">
+              <div
+                ref={lineRef}
+                className="pointer-events-none absolute right-6 w-px bg-muted-foreground/20"
+              />
+              <ol className="space-y-6">
+                {steps.map((s, idx) => {
+                  const active = currentStep === s.id;
+                  const done = currentStep > s.id;
+                  return (
+                    <li key={s.id} className="relative group">
+                      <div
+                        className="absolute -right-[5px] top-2.5"
+                        ref={
+                          idx === 0
+                            ? firstDotRef
+                            : idx === steps.length - 1
+                              ? lastDotRef
+                              : undefined
+                        }
+                      >
+                        <StepDot active={active} done={done} />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(s.id)}
+                        aria-current={active ? 'step' : undefined}
+                        className={`w-full rounded-md px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                          active
+                            ? 'bg-primary/10 text-foreground'
+                            : 'hover:bg-muted/40'
+                        }`}
+                      >
+                        <p className="text-sm md:text-base font-semibold leading-tight">
+                          {s.title}
                         </p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-2">Back Image</p>
-                      {backPreview ? (
-                        <Image
-                          src={backPreview}
-                          alt="Back Document"
-                          width={280}
-                          height={180}
-                          className="rounded-lg object-contain border shadow-sm"
-                        />
-                      ) : (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          No back image
+                        <p className="text-xs text-muted-foreground leading-tight">
+                          {s.subtitle}
                         </p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Selfie</p>
-                      {selfiePreview ? (
-                        <div className="mt-1 inline-block border rounded-lg">
-                          <Image
-                            src={selfiePreview}
-                            alt="Selfie"
-                            width={180}
-                            height={180}
-                            className="rounded-md object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          No selfie provided
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <section className="md:col-span-8 lg:col-span-9">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && currentStep < 3) e.preventDefault();
+                }}
+                className="space-y-6"
+              >
+                {/* Step Header */}
+                <div>
                   <p className="text-xs text-muted-foreground">
-                    Please confirm that the details and images are correct
-                    before submitting.
+                    Step {currentStep}/3
+                  </p>
+                  <h3 className="text-xl md:text-2xl font-semibold mt-1">
+                    {steps[currentStep - 1].title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {steps[currentStep - 1].subtitle}
                   </p>
                 </div>
-              )}
+                {currentStep === 1 && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="businessProof"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Business Proof</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your business registration number"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {/* New Field for Business Profit */}
+                    <FormField
+                      control={form.control}
+                      name="businessProfit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Business Profit</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your annual business profit"
+                              type="number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="frontImageUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <ImageUploader
+                                label="Document Front Image"
+                                value={field.value as File | string | null}
+                                onChange={field.onChange}
+                                accept={{
+                                  'image/*': ['.png', '.jpg', '.jpeg'],
+                                }}
+                                maxSize={5 * 1024 * 1024}
+                                previewHeight={160}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-              {/* Navigation */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleBack}
-                  disabled={currentStep === 1 || loading}
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Back
-                </Button>
-                {currentStep < steps.length ? (
+                      <FormField
+                        control={form.control}
+                        name="backImageUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <ImageUploader
+                                label="Document Back Image"
+                                value={field.value as File | string | null}
+                                onChange={field.onChange}
+                                accept={{
+                                  'image/*': ['.png', '.jpg', '.jpeg'],
+                                }}
+                                maxSize={5 * 1024 * 1024}
+                                previewHeight={160}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {currentStep === 2 && (
+                  <div className="space-y-6">
+                    <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                      <p className="font-medium text-foreground mb-1">
+                        Selfie prerequisites
+                      </p>
+                      <ul className="list-disc ms-4 space-y-1">
+                        <li>
+                          Allow camera permission or be ready to upload a clear
+                          selfie.
+                        </li>
+                        <li>Use good lighting and face the camera.</li>
+                        <li>Ensure your face is centered and fully visible.</li>
+                      </ul>
+                    </div>
+                    <LiveCaptureField form={form} />
+                  </div>
+                )}
+
+                {currentStep === 3 && (
+                  <div className="space-y-4 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-muted-foreground">Business Proof</p>
+                        <p className="font-medium break-words">
+                          {form.getValues('businessProof') || '-'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Business Profit</p>
+                        <p className="font-medium">
+                          {form.getValues('businessProfit') || '-'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                      <div>
+                        <p className="text-muted-foreground mb-2">
+                          Front Image
+                        </p>
+                        {frontPreview ? (
+                          <Image
+                            src={frontPreview}
+                            alt="Front Document"
+                            width={280}
+                            height={180}
+                            className="rounded-lg object-contain border shadow-sm"
+                          />
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No front image
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-2">Back Image</p>
+                        {backPreview ? (
+                          <Image
+                            src={backPreview}
+                            alt="Back Document"
+                            width={280}
+                            height={180}
+                            className="rounded-lg object-contain border shadow-sm"
+                          />
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No back image
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Selfie</p>
+                        {selfiePreview ? (
+                          <div className="mt-1 inline-block border rounded-lg">
+                            <Image
+                              src={selfiePreview}
+                              alt="Selfie"
+                              width={180}
+                              height={180}
+                              className="rounded-md object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No selfie provided
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Please confirm that the details and images are correct
+                      before submitting.
+                    </p>
+                  </div>
+                )}
+
+                {/* Navigation */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <Button
                     type="button"
-                    className="flex-1"
-                    onClick={handleNext}
-                    disabled={
-                      loading ||
-                      (currentStep === 1 && !step1Complete()) ||
-                      (currentStep === 2 && !step2Complete()) ||
-                      isReadOnly
-                    }
-                    variant="default"
+                    variant="outline"
+                    onClick={handleBack}
+                    disabled={currentStep === 1 || loading}
                   >
-                    Next
-                    <ChevronRight className="ml-2 h-4 w-4" />
+                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    Back
                   </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    className="flex-1"
-                    disabled={
-                      loading ||
-                      !allComplete() ||
-                      isReadOnly
-                    }
-                    onClick={() => {
-                      // Mark explicit intent to submit via button click
-                      submitIntentRef.current = true;
-                    }}
-                  >
-                    {loading ? 'Submitting...' : 'Submit KYC'}
-                  </Button>
-                )}
-              </div>
-            </form>
-          </Form>
-        </section>
-      </div>
+                  {currentStep < steps.length ? (
+                    <Button
+                      type="button"
+                      className="flex-1"
+                      onClick={handleNext}
+                      disabled={
+                        loading ||
+                        (currentStep === 1 && !step1Complete()) ||
+                        (currentStep === 2 && !step2Complete()) ||
+                        isReadOnly
+                      }
+                      variant="default"
+                    >
+                      Next
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      className="flex-1"
+                      disabled={loading || !allComplete() || isReadOnly}
+                      onClick={() => {
+                        // Mark explicit intent to submit via button click
+                        submitIntentRef.current = true;
+                      }}
+                    >
+                      {loading ? 'Submitting...' : 'Submit KYC'}
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </Form>
+          </section>
+        </div>
       )}
     </Card>
   );

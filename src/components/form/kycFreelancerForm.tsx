@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '../ui/card';
 
 import LiveCaptureField from './register/livecapture';
+import KYCDetailsView from './KYCDetailsView';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -22,11 +23,9 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
-import KYCDetailsView from './KYCDetailsView';
 
 const profileFormSchema = z.object({
   aadharOrGovtId: z.string().optional(),
@@ -486,7 +485,9 @@ export default function KYCForm({ user_id }: { user_id: string }) {
     'IN_REVIEW',
     'UNDER_REVIEW',
   ];
-  const isReadOnly = READ_ONLY_STATUSES.includes((kycStatus || '').toUpperCase());
+  const isReadOnly = READ_ONLY_STATUSES.includes(
+    (kycStatus || '').toUpperCase(),
+  );
 
   return (
     <Card className="p-6 md:p-8 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto">
@@ -849,11 +850,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                     <Button
                       type="submit"
                       className="flex-1"
-                      disabled={
-                        loading ||
-                        !allComplete() ||
-                        isReadOnly
-                      }
+                      disabled={loading || !allComplete() || isReadOnly}
                       onClick={() => {
                         // Mark explicit intent to submit via button click
                         submitIntentRef.current = true;

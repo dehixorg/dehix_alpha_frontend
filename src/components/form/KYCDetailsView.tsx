@@ -1,6 +1,6 @@
-
 import React from 'react';
 import Image from 'next/image';
+
 import { Card } from '../ui/card';
 import { Separator } from '../ui/separator';
 
@@ -27,9 +27,7 @@ const KYCDetailsView: React.FC<KYCDetailsViewProps> = ({ kycData }) => {
           </div>
           <div>
             <p className="text-muted-foreground">Salary/Earning</p>
-            <p className="font-medium">
-              {kycData.salaryOrEarning || '-'}
-            </p>
+            <p className="font-medium">{kycData.salaryOrEarning || '-'}</p>
           </div>
         </div>
         <Separator />
