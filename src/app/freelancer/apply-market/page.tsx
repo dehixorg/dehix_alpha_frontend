@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -36,7 +36,6 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 
 // Project type aligned with JobCard's expected shape
@@ -177,8 +176,8 @@ const TalentMarketPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<TalentMarketItem | null>(
     null,
   );
-  const [coverLetter, setCoverLetter] = useState("");
-  const [selectedProfileId, setSelectedProfileId] = useState<string>("");
+  const [coverLetter, setCoverLetter] = useState('');
+  const [selectedProfileId, setSelectedProfileId] = useState<string>('');
   const [profiles, setProfiles] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -207,11 +206,11 @@ const TalentMarketPage: React.FC = () => {
     const loadProfiles = async () => {
       if (!applyOpen || !user?.uid) return;
       try {
-        const res = await axiosInstance.get("/freelancer/profiles");
+        const res = await axiosInstance.get('/freelancer/profiles');
         const list = res.data?.data || [];
         setProfiles(list);
       } catch (e) {
-        console.error("Error loading profiles", e);
+        console.error('Error loading profiles', e);
       }
     };
     loadProfiles();
@@ -255,7 +254,8 @@ const TalentMarketPage: React.FC = () => {
   // Map to JobCard-compatible Project and filter
   const jobs: Project[] = useMemo(() => {
     const mapped: Project[] = (items || []).map((it) => {
-      const name = it.skillName || it.domainName || it.talentName || 'Opportunity';
+      const name =
+        it.skillName || it.domainName || it.talentName || 'Opportunity';
       const nameId = it.skillId || it.domainId || it.talentId || '';
       const skills = it.skillName ? [it.skillName] : [];
       const pdomains = it.domainName ? [it.domainName] : [];
@@ -335,8 +335,8 @@ const TalentMarketPage: React.FC = () => {
     const item = items.find((i) => i._id === job._id) || null;
     setSelectedItem(item);
     setApplyOpen(true);
-    setCoverLetter("");
-    setSelectedProfileId("");
+    setCoverLetter('');
+    setSelectedProfileId('');
   };
 
   // Status counts
@@ -434,7 +434,10 @@ const TalentMarketPage: React.FC = () => {
             {isLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <Card
+                    key={i}
+                    className="overflow-hidden hover:shadow-md transition-shadow"
+                  >
                     <CardContent className="p-6">
                       <div className="space-y-3">
                         <div className="flex justify-between items-start">
@@ -511,7 +514,8 @@ const TalentMarketPage: React.FC = () => {
               {selectedItem?.skillName || selectedItem?.domainName || 'Apply'}
             </DialogTitle>
             <DialogDescription>
-              Provide a cover letter (min 200 characters) and select a professional profile to apply.
+              Provide a cover letter (min 200 characters) and select a
+              professional profile to apply.
             </DialogDescription>
           </DialogHeader>
 
@@ -551,7 +555,10 @@ const TalentMarketPage: React.FC = () => {
 
             <div className="space-y-2 pt-2">
               <Label>Select Professional Profile</Label>
-              <Select value={selectedProfileId} onValueChange={setSelectedProfileId}>
+              <Select
+                value={selectedProfileId}
+                onValueChange={setSelectedProfileId}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Choose one of your profiles" />
                 </SelectTrigger>
@@ -574,33 +581,45 @@ const TalentMarketPage: React.FC = () => {
                 onChange={(e) => setCoverLetter(e.target.value)}
               />
               <div className="flex items-center justify-between text-xs">
-                <span className={coverLetter.trim().length < 200 ? "text-red-500" : "text-muted-foreground"}>
+                <span
+                  className={
+                    coverLetter.trim().length < 200
+                      ? 'text-red-500'
+                      : 'text-muted-foreground'
+                  }
+                >
                   {coverLetter.trim().length} / 200 min
                 </span>
                 {coverLetter.trim().length < 200 && (
-                  <span className="text-red-500">Minimum 200 characters required</span>
+                  <span className="text-red-500">
+                    Minimum 200 characters required
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setApplyOpen(false)} disabled={submitting}>
+            <Button
+              variant="outline"
+              onClick={() => setApplyOpen(false)}
+              disabled={submitting}
+            >
               Close
             </Button>
             <Button
               onClick={async () => {
                 if (!selectedItem) return;
                 if (!user?.uid) {
-                  notifyError("Please login to apply.");
+                  notifyError('Please login to apply.');
                   return;
                 }
                 if (!selectedProfileId) {
-                  notifyError("Please select a professional profile.");
+                  notifyError('Please select a professional profile.');
                   return;
                 }
                 if (coverLetter.trim().length < 200) {
-                  notifyError("Cover letter must be at least 200 characters.");
+                  notifyError('Cover letter must be at least 200 characters.');
                   return;
                 }
                 try {
@@ -613,14 +632,14 @@ const TalentMarketPage: React.FC = () => {
                     cover_letter: coverLetter.trim(),
                   };
                   await axiosInstance.post(
-                    "/freelancer/dehix-talent/apply", 
+                    '/freelancer/dehix-talent/apply',
                     payload,
                   );
-                  notifySuccess("Applied successfully", "Success");
+                  notifySuccess('Applied successfully', 'Success');
                   setApplyOpen(false);
                 } catch (e) {
-                  console.error("Apply error", e);
-                  notifyError("Failed to submit application.");
+                  console.error('Apply error', e);
+                  notifyError('Failed to submit application.');
                 } finally {
                   setSubmitting(false);
                 }
@@ -631,7 +650,7 @@ const TalentMarketPage: React.FC = () => {
                 coverLetter.trim().length < 200
               }
             >
-              {submitting ? "Submitting..." : "Submit Application"}
+              {submitting ? 'Submitting...' : 'Submit Application'}
             </Button>
           </DialogFooter>
         </DialogContent>
