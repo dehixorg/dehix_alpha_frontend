@@ -24,7 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import VerificationDecisionForm from '@/components/verification/VerificationDecisionForm';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
@@ -234,8 +234,15 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
       </CardFooter>
 
       <Dialog open={openReport} onOpenChange={setOpenReport}>
-        <DialogContent className="p-0 overflow-hidden">
-          <NewReportTab reportData={reportData} />
+        <DialogContent className="p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+          <NewReportTab
+            reportData={reportData}
+            onSubmitted={() => {
+              notifySuccess('Report submitted successfully!', 'Success');
+              setOpenReport(false);
+              return true;
+            }}
+          />
         </DialogContent>
       </Dialog>
     </Card>

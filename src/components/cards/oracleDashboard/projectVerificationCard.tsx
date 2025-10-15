@@ -37,7 +37,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
@@ -289,7 +289,7 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
 
         {openReport && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-background rounded-lg p-6 w-full max-w-md relative">
+            <div className="bg-background rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative">
               <button
                 onClick={() => setOpenReport(false)}
                 className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
@@ -297,7 +297,14 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
               </button>
-              <NewReportTab reportData={reportData} />
+              <NewReportTab
+                reportData={reportData}
+                onSubmitted={() => {
+                  notifySuccess('Report submitted successfully!', 'Success');
+                  setOpenReport(false);
+                  return true;
+                }}
+              />
             </div>
           </div>
         )}
