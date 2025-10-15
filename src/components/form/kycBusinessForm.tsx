@@ -4,7 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  HelpCircle,
+} from 'lucide-react';
 
 import LiveCaptureField from './register/livecapture';
 
@@ -25,23 +32,76 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
+import KYCDetailsView from './KYCDetailsView';
 
-// Badge color purely based on KYC status
-const statusColors = (status: string) => {
-  const s = (status || '').toUpperCase();
-  if (s === 'APPROVED' || s === 'VERIFIED' || s === 'SUCCESS')
-    return 'bg-green-500/10 text-green-600 hover:bg-green-500/20';
-  if (s === 'REJECTED' || s === 'FAILED')
-    return 'bg-red-500/10 text-red-600 hover:bg-red-500/20';
-  // Pending-like statuses
-  if (
-    s === 'PENDING' ||
-    s === 'APPLIED' ||
-    s === 'IN_REVIEW' ||
-    s === 'UNDER_REVIEW'
-  )
-    return 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20';
-  return 'bg-muted text-muted-foreground hover:bg-muted/20';
+const KycStatusAlert = ({
+  status,
+  rejectionReason,
+}: {
+  status: string;
+  rejectionReason?: string;
+}) => {
+  switch (status) {
+    case 'APPLIED':
+    case 'PENDING':
+      return (
+        <div
+          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4"
+          role="alert"
+        >
+          <p className="font-bold">Under Review</p>
+          <p>
+            Your KYC is currently under review. We will notify you once the
+            review is complete.
+          </p>
+        </div>
+      );
+    case 'VERIFIED':
+      return (
+        <div
+          className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4"
+          role="alert"
+        >
+          <p className="font-bold">KYC Accepted</p>
+          <p>Your KYC has been successfully verified.</p>
+        </div>
+      );
+    case 'REJECTED':
+      return (
+        <div
+          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
+          role="alert"
+        >
+          <p className="font-bold">KYC Rejected</p>
+          <p>
+            Your KYC has been rejected. Please see the reason below and
+            re-submit your application.
+          </p>
+          {rejectionReason && (
+            <p className="mt-2">
+              <strong>Reason:</strong> {rejectionReason}
+            </p>
+          )}
+        </div>
+      );
+    case 'REUPLOAD':
+      return (
+        <div
+          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
+          role="alert"
+        >
+          <p className="font-bold">Re-upload Required</p>
+          <p>Your KYC has been rejected. Please re-upload your documents.</p>
+          {rejectionReason && (
+            <p className="mt-2">
+              <strong>Reason:</strong> {rejectionReason}
+            </p>
+          )}
+        </div>
+      );
+    default:
+      return null;
+  }
 };
 const kycFormSchema = z.object({
   businessProof: z.string().optional(),
@@ -71,9 +131,32 @@ const kycFormSchema = z.object({
 
 type KYCFormValues = z.infer<typeof kycFormSchema>;
 
+// Helper function to transform form data for KYCDetailsView
+const transformKYCDataForView = (formValues: KYCFormValues) => {
+  return {
+    businessProof: formValues.businessProof,
+    businessProfit: formValues.businessProfit,
+    frontImageUrl:
+      typeof formValues.frontImageUrl === 'string'
+        ? formValues.frontImageUrl
+        : undefined,
+    backImageUrl:
+      typeof formValues.backImageUrl === 'string'
+        ? formValues.backImageUrl
+        : undefined,
+    liveCaptureUrl:
+      typeof formValues.liveCaptureUrl === 'string'
+        ? formValues.liveCaptureUrl
+        : undefined,
+  };
+};
+
 export function KYCForm({ user_id }: { user_id: string }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
+  const [rejectionReason, setRejectionReason] = useState<string | undefined>(
+    undefined,
+  );
   const [currentStep, setCurrentStep] = useState<number>(1);
   const submitIntentRef = useRef(false);
   // Review previews (handle File -> object URL and revoke lifecycle)
@@ -103,26 +186,28 @@ export function KYCForm({ user_id }: { user_id: string }) {
 
   const { reset } = form;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get(`/business/${user_id}`);
-        const kycData = response.data?.kyc;
-        setKycStatus(kycData?.status || 'PENDING');
-        reset({
-          businessProof: kycData?.businessProof || '',
-          businessProfit: kycData?.businessProfit || 0,
-          frontImageUrl: kycData?.frontImageUrl || null,
-          backImageUrl: kycData?.backImageUrl || null,
-          liveCaptureUrl: kycData?.liveCaptureUrl || null,
-        });
-      } catch (error) {
-        console.error('API Error:', error);
-        notifyError('Failed to load KYC data. Please try again.', 'Error');
-      }
-    };
-    fetchData();
+  const fetchData = React.useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(`/business/${user_id}`);
+      const kycData = response.data?.data?.kyc;
+      setKycStatus(kycData?.status || 'PENDING');
+      setRejectionReason(kycData?.rejectionReason);
+      reset({
+        businessProof: kycData?.businessProof || '',
+        businessProfit: kycData?.businessProfit || 0,
+        frontImageUrl: kycData?.frontImageUrl || null,
+        backImageUrl: kycData?.backImageUrl || null,
+        liveCaptureUrl: kycData?.liveCaptureUrl || null,
+      });
+    } catch (error) {
+      console.error('API Error:', error);
+      notifyError('Failed to load KYC data. Please try again.', 'Error');
+    }
   }, [user_id, reset]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Keep review previews in sync with form values (and handle reset)
   useEffect(() => {
@@ -202,7 +287,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
         liveUrlRef.current = null;
       }
     };
-  }, [form]);
+  }, [form, kycStatus]);
 
   // Position the vertical connector line between first and last dots (desktop sidebar)
   useEffect(() => {
@@ -273,7 +358,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
           frontImageUrl: data.frontImageUrl,
           backImageUrl: data.backImageUrl,
           liveCaptureUrl: data.liveCaptureUrl,
-          status: 'PENDING',
+          status: 'APPLIED',
         },
       };
 
@@ -297,7 +382,11 @@ export function KYCForm({ user_id }: { user_id: string }) {
       }
 
       await axiosInstance.put(`/business/kyc`, payload);
-      setKycStatus('APPLIED');
+
+      // Wait for a short period to allow backend to process the update
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      await fetchData();
 
       notifySuccess('Your KYC has been successfully updated.', 'KYC Updated');
     } catch (error) {
@@ -314,19 +403,77 @@ export function KYCForm({ user_id }: { user_id: string }) {
     { id: 3, title: 'Review', subtitle: 'Confirm and submit' },
   ] as const;
 
-  const step1Complete = () => {
-    const v1 = form.getValues('frontImageUrl');
-    const v2 = form.getValues('backImageUrl');
-    return (
-      !!(
-        (typeof v1 === 'string' && v1) ||
-        (typeof File !== 'undefined' && v1 instanceof File)
-      ) &&
-      !!(
-        (typeof v2 === 'string' && v2) ||
-        (typeof File !== 'undefined' && v2 instanceof File)
-      )
+  const hasFileOrUrl = (v: unknown) =>
+    !!(
+      (typeof v === 'string' && v.trim() !== '') ||
+      (typeof File !== 'undefined' && v instanceof File)
     );
+
+  const step1Complete = () => {
+    const v = form.getValues();
+    return (
+      (v.businessProof?.trim()?.length || 0) > 0 &&
+      Number(v.businessProfit) > 0 &&
+      hasFileOrUrl(v.frontImageUrl) &&
+      hasFileOrUrl(v.backImageUrl)
+    );
+  };
+
+  const step2Complete = () => {
+    const v = form.getValues();
+    return hasFileOrUrl(v.liveCaptureUrl);
+  };
+
+  const allComplete = () => step1Complete() && step2Complete();
+
+  const handleNext = () => {
+    if (currentStep === 1 && !step1Complete()) {
+      const v = form.getValues();
+      if (!v.businessProof?.trim())
+        form.setError('businessProof' as any, { message: 'Required' } as any);
+      if (!v.businessProfit || Number(v.businessProfit) <= 0)
+        form.setError('businessProfit' as any, { message: 'Required' } as any);
+      if (!hasFileOrUrl(v.frontImageUrl))
+        form.setError('frontImageUrl' as any, { message: 'Required' } as any);
+      if (!hasFileOrUrl(v.backImageUrl))
+        form.setError('backImageUrl' as any, { message: 'Required' } as any);
+      return;
+    }
+    if (currentStep === 2 && !step2Complete()) {
+      form.setError('liveCaptureUrl' as any, { message: 'Required' } as any);
+      return;
+    }
+    setCurrentStep((s) => Math.min(s + 1, steps.length));
+  };
+  const handleBack = () => setCurrentStep((s) => Math.max(s - 1, 1));
+
+  const READ_ONLY_STATUSES = [
+    'APPLIED',
+    'PENDING',
+    'VERIFIED',
+    'APPROVED',
+    'SUCCESS',
+    'IN_REVIEW',
+    'UNDER_REVIEW',
+  ];
+  const isReadOnly = READ_ONLY_STATUSES.includes((kycStatus || '').toUpperCase());
+
+  // Badge color purely based on KYC status
+  const statusColors = (status: string) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'APPROVED' || s === 'VERIFIED' || s === 'SUCCESS')
+      return 'bg-green-500/10 text-green-600 hover:bg-green-500/20';
+    if (s === 'REJECTED' || s === 'FAILED')
+      return 'bg-red-500/10 text-red-600 hover:bg-red-500/20';
+    // Pending-like statuses
+    if (
+      s === 'PENDING' ||
+      s === 'APPLIED' ||
+      s === 'IN_REVIEW' ||
+      s === 'UNDER_REVIEW'
+    )
+      return 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20';
+    return 'bg-muted text-muted-foreground hover:bg-muted/20';
   };
 
   return (
@@ -342,16 +489,19 @@ export function KYCForm({ user_id }: { user_id: string }) {
         </div>
         <Badge
           className={cn(
-            'text-xs md:text-sm font-medium border-0 capitalize',
+            'text-xs md:text-sm font-medium border-0 capitalize hover:bg-primary/60',
             statusColors(kycStatus),
           )}
         >
           {kycStatus.toLowerCase()}
         </Badge>
       </div>
-      <Separator className="my-4 md:my-6" />
+      <KycStatusAlert status={kycStatus} rejectionReason={rejectionReason} />
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      {isReadOnly ? (
+        <KYCDetailsView kycData={transformKYCDataForView(form.getValues())} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Mobile Horizontal Stepper */}
         <div className="md:hidden col-span-full -mt-1">
           <div className="flex items-center gap-2">
@@ -650,28 +800,39 @@ export function KYCForm({ user_id }: { user_id: string }) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setCurrentStep((s) => Math.max(1, s - 1))}
+                  onClick={handleBack}
                   disabled={currentStep === 1 || loading}
                 >
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Back
                 </Button>
-                {currentStep < 3 ? (
+                {currentStep < steps.length ? (
                   <Button
                     type="button"
                     className="flex-1"
-                    onClick={() => setCurrentStep((s) => Math.min(3, s + 1))}
+                    onClick={handleNext}
                     disabled={
-                      loading || (currentStep === 1 && !step1Complete())
+                      loading ||
+                      (currentStep === 1 && !step1Complete()) ||
+                      (currentStep === 2 && !step2Complete()) ||
+                      isReadOnly
                     }
+                    variant="default"
                   >
-                    Next <ChevronRight className="ml-2 h-4 w-4" />
+                    Next
+                    <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 ) : (
                   <Button
                     type="submit"
                     className="flex-1"
-                    disabled={loading}
+                    disabled={
+                      loading ||
+                      !allComplete() ||
+                      isReadOnly
+                    }
                     onClick={() => {
+                      // Mark explicit intent to submit via button click
                       submitIntentRef.current = true;
                     }}
                   >
@@ -683,6 +844,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
           </Form>
         </section>
       </div>
+      )}
     </Card>
   );
 }
