@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { UseFormReturn } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { Coins, AlertTriangle } from 'lucide-react';
 
