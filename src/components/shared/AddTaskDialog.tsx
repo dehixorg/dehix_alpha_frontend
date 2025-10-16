@@ -108,7 +108,7 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
       setIsLoading(true);
       try {
         const response = await axiosInstance.get(
-          `/project/get-freelancer/${project_id}`,
+          `/project/get-freelancer/${project_id}/`,
         );
         const freelancerData = response.data.freelancers.freelancerData || [];
 
