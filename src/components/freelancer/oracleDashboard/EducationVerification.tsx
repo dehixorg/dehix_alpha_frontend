@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
@@ -46,7 +45,6 @@ interface CombinedData extends EducationData, VerificationEntry {}
 const OracleDashboard = () => {
   const [educationdata, setEducationData] = useState<CombinedData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [loading, setLoading] = useState<boolean>(false);
 
   const handleFilterChange = useCallback((newFilter: FilterOption) => {
     setFilter(newFilter);
@@ -62,7 +60,6 @@ const OracleDashboard = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      setLoading(true);
       const verificationResponse = await axiosInstance.get(
         `/verification/oracle?doc_type=education`,
       );
@@ -116,8 +113,6 @@ const OracleDashboard = () => {
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   }, []);
 

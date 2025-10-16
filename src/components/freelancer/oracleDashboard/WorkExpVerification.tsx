@@ -4,7 +4,6 @@ import { PackageOpen } from 'lucide-react';
 
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
@@ -39,7 +38,6 @@ interface CombinedData extends WorkExperience, VerificationEntry {}
 const WorkExpVerification = () => {
   const [jobData, setJobData] = useState<CombinedData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [loading, setLoading] = useState<boolean>(false);
   const handleFilterChange = (newFilter: FilterOption) => {
     setFilter(newFilter);
   };
@@ -57,7 +55,6 @@ const WorkExpVerification = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      setLoading(true);
       const verificationResponse = await axiosInstance.get(
         `/verification/oracle?doc_type=experience`,
       );
@@ -104,8 +101,6 @@ const WorkExpVerification = () => {
       setJobData(combinedData as CombinedData[]);
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
-    } finally {
-      setLoading(false);
     }
   }, []);
 
