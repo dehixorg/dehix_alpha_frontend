@@ -321,7 +321,7 @@ const BusinessProjectsPage: React.FC = () => {
                   /* Table View */
                   <div className="space-y-4">
                     <div className="flex flex-col gap-3 md:gap-4">
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center justify-between gap-3 border-b">
                         <Tabs
                           value={statusFilter}
                           onValueChange={(v) => setStatusFilter(v)}
@@ -557,7 +557,7 @@ const BusinessProjectsPage: React.FC = () => {
                           {filteredSortedProjects.length === 0 && (
                             <TableRow>
                               <TableCell
-                                colSpan={5}
+                                colSpan={4}
                                 className="h-40 text-center text-muted-foreground"
                               >
                                 <div className="flex flex-col items-center justify-center gap-2">
