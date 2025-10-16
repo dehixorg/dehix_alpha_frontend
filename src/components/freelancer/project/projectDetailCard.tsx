@@ -89,8 +89,6 @@ function ProjectDetailCard({
       </CardHeader>
 
       <CardContent className="space-y-5">
-        {/* Dates timeline */}
-        <DateHistory startDate={startDate} endDate={endDate} />
         {/* Progress */}
         <div className="flex items-center gap-3">
           <Progress value={progress} className="h-2 flex-1" />
@@ -164,6 +162,9 @@ function ProjectDetailCard({
             color="green"
           />
         </div>
+
+        {/* Dates timeline */}
+        <DateHistory startDate={startDate} endDate={endDate} />
 
         <p className="text-sm md:text-base leading-relaxed text-muted-foreground">
           {description}
