@@ -1,5 +1,5 @@
 'use client';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,7 +8,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 
-type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
+type FilterOption = 'all' | 'pending' | 'verified' | 'rejected';
 
 interface EducationData {
   _id: string;
@@ -46,6 +46,7 @@ interface CombinedData extends EducationData, VerificationEntry {}
 const OracleDashboard = () => {
   const [educationdata, setEducationData] = useState<CombinedData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleFilterChange = useCallback((newFilter: FilterOption) => {
     setFilter(newFilter);
@@ -56,7 +57,9 @@ const OracleDashboard = () => {
     if (filter === 'pending') return data.verification_status === 'PENDING';
     if (filter === 'verified') return data.verification_status === 'APPROVED';
     if (filter === 'rejected') return data.verification_status === 'DENIED';
+    return true;
   });
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -190,7 +193,7 @@ const OracleDashboard = () => {
           </TabsList>
         </div>
 
-        {(['all', 'current', 'verified', 'rejected'] as FilterOption[]).map(
+        {(['all', 'pending', 'verified', 'rejected'] as FilterOption[]).map(
           (t) => (
             <TabsContent key={t} value={t}>
               <CardContent>

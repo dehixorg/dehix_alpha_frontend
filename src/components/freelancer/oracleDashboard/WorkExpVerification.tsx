@@ -1,5 +1,6 @@
 'use client';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { PackageOpen } from 'lucide-react';
 
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,7 +10,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import { VerificationStatus } from '@/utils/verificationStatus';
 
-type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
+type FilterOption = 'all' | 'pending' | 'verified' | 'rejected';
 
 interface WorkExperience {
   _id: string;
@@ -38,6 +39,7 @@ interface CombinedData extends WorkExperience, VerificationEntry {}
 const WorkExpVerification = () => {
   const [jobData, setJobData] = useState<CombinedData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
+  const [loading, setLoading] = useState<boolean>(false);
   const handleFilterChange = (newFilter: FilterOption) => {
     setFilter(newFilter);
   };
@@ -176,7 +178,7 @@ const WorkExpVerification = () => {
           </TabsList>
         </div>
 
-        {(['all', 'current', 'verified', 'rejected'] as FilterOption[]).map(
+        {(['all', 'pending', 'verified', 'rejected'] as FilterOption[]).map(
           (t) => (
             <TabsContent key={t} value={t}>
               <CardContent>
