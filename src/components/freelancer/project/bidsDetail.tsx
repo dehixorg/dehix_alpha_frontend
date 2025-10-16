@@ -1060,12 +1060,13 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   }, []);
 
   // Update bid status
+  const [activeTab, setActiveTab] = useState<string>('all');
   const handleUpdateStatus = useCallback(
     async (bidId: string, status: BidStatus) => {
+      if (!profileId) return;
+
       try {
         setLoadingBids((prev) => ({ ...prev, [bidId]: true }));
-
-        await axiosInstance.put(`/bid/${bidId}/status`, { bid_status: status });
 
         // Optimistic update
         setBids((prev) =>
@@ -1074,11 +1075,33 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           ),
         );
 
-        notifySuccess(
-          `Bid status updated to ${status.toLowerCase()}.`,
-          'Success',
+        await axiosInstance.put(`/bid/${bidId}/status`, { bid_status: status });
+
+        // Refresh the bids list
+        const response = await axiosInstance.get(
+          `/bid/project/${id}/profile/${profileId}/bid`,
         );
+        const updatedBids = response.data?.data || [];
+        setBids(updatedBids);
+
+        // Switch to the appropriate tab based on the new status
+        if (['ACCEPTED', 'REJECTED', 'PANEL'].includes(status)) {
+          const newActiveTab = status.toLowerCase();
+          // Update URL to reflect the active tab
+          window.history.replaceState(null, '', `?tab=${newActiveTab}`);
+          // Update active tab state
+          setActiveTab(newActiveTab);
+        }
+
+        notifySuccess(`Bid ${status.toLowerCase()} successfully.`, 'Success');
       } catch (error: any) {
+        // Revert optimistic update on error
+        setBids((prev) =>
+          prev.map((bid) =>
+            bid._id === bidId ? { ...bid, bid_status: 'PENDING' } : bid,
+          ),
+        );
+
         const errorMessage =
           error.response?.data?.message || 'Failed to update bid status';
         setError(errorMessage);
@@ -1087,9 +1110,8 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         setLoadingBids((prev) => ({ ...prev, [bidId]: false }));
       }
     },
-    [],
+    [id, profileId, setActiveTab], // Add setActiveTab to dependencies
   );
-
   // Get action options based on bid status
   const getActionOptions = useCallback(
     (status: BidStatus) => {
