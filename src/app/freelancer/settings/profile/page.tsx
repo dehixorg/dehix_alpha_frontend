@@ -166,36 +166,39 @@ export default function FreelancerProfileSettings() {
         />
 
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
-          <div className="w-full mx-auto max-w-6xl">
-            <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+          <div className="w-full mx-auto mt-2">
+            <div className="card rounded-xl border shadow-sm overflow-hidden">
               <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
                 className="w-full"
               >
                 <div className="border-b px-4 sm:px-6">
-                  <div className="flex items-center justify-between gap-3">
-                    <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
+                  <div className="flex sm:flex-row items-center justify-between gap-3">
+                    <TabsList className="bg-transparent h-12 w-full md:w-auto p-0 overflow-x-auto no-scrollbar flex-nowrap -mx-2 px-2 sm:mx-0 sm:px-0">
                       <TabsTrigger
                         value="experience"
-                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent flex-none"
                       >
-                        <Briefcase className="mr-2 h-4 w-4" /> Experience
+                        <Briefcase className="h-4 w-4 mr-0 sm:mr-2" />
+                        <span className="hidden sm:inline">Experience</span>
                       </TabsTrigger>
                       <TabsTrigger
                         value="education"
-                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent flex-none"
                       >
-                        <GraduationCap className="mr-2 h-4 w-4" /> Education
+                        <GraduationCap className="h-4 w-4 mr-0 sm:mr-2" />
+                        <span className="hidden sm:inline">Education</span>
                       </TabsTrigger>
                       <TabsTrigger
                         value="projects"
-                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent flex-none"
                       >
-                        <FolderKanban className="mr-2 h-4 w-4" /> Projects
+                        <FolderKanban className="h-4 w-4 mr-0 sm:mr-2" />
+                        <span className="hidden sm:inline">Projects</span>
                       </TabsTrigger>
                     </TabsList>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ml-auto overflow-x-auto no-scrollbar">
                       {activeTab === 'experience' && (
                         <AddExperience
                           onFormSubmit={() => setExpRefreshKey((v) => v + 1)}
