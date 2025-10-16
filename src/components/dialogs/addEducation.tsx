@@ -1,4 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
+import { ArrowLeft, ArrowRight, GraduationCap } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -77,6 +78,7 @@ interface AddEducationProps {
 export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [step, setStep] = useState<number>(1);
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
 
@@ -103,6 +105,24 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     });
     restoredDraft.current = null;
   }, [form]);
+
+  const validateStep1 = () => {
+    const { degree, universityName, fieldOfStudy } = form.getValues();
+    if (!degree || !universityName || !fieldOfStudy) {
+      notifyError('Please fill degree, university and field of study.', 'Missing fields');
+      return false;
+    }
+    return true;
+  };
+
+  const nextStep = () => {
+    if (step === 1) {
+      if (validateStep1()) setStep(2);
+    }
+  };
+  const prevStep = () => {
+    if (step === 2) setStep(1);
+  };
 
   const {
     showDraftDialog,
@@ -211,6 +231,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         } else {
           // Reset form when dialog is opened
           resetForm();
+          setStep(1);
           // Show draft dialog if there's a draft
           if (restoredDraft.current) {
             setShowDraftDialog(true);
@@ -225,10 +246,26 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen no-scrollbar">
+      <DialogContent className="lg:max-w-screen-lg overflow-y-auto max-h-[90vh] no-scrollbar">
         <DialogHeader>
-          <DialogTitle>Add Education</DialogTitle>
-          <DialogDescription>Add your relevant Education.</DialogDescription>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <GraduationCap className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle>Add Education</DialogTitle>
+              <DialogDescription>
+                {step === 1
+                  ? 'Tell us about your degree and institute.'
+                  : 'Add the timeline and optional grade.'}
+              </DialogDescription>
+            </div>
+          </div>
+          {/* Stepper */}
+          <div className="mt-3 flex items-center gap-2">
+            <div className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}></div>
+          </div>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -241,97 +278,116 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
             className="space-y-4"
           >
             <button type="submit" style={{ display: 'none' }} />
-            <FormField
-              control={form.control}
-              name="degree"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Enter Degree</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your degree title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {step === 1 && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="degree"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Degree</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., B.Tech in Computer Science" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="universityName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>University Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your university name"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="universityName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>University / Institute</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., IIT Delhi" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="fieldOfStudy"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Enter Field of Study</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your field of study" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="fieldOfStudy"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Field of Study</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Computer Science" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
 
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Date</FormLabel>
-                  <FormControl>
-                    <DatePicker {...field} max={currentDate} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {step === 2 && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <DatePicker {...field} max={currentDate} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="endDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End Date</FormLabel>
-                  <FormControl>
-                    <DatePicker {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date</FormLabel>
+                      <FormControl>
+                        <DatePicker {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="grade"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Grade</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your grade" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="grade"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Grade (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 8.5 CGPA / A" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
 
-            <DialogFooter className="flex justify-end pt-4">
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Saving...' : 'Save'}
-              </Button>
+            <DialogFooter className="flex justify-between pt-4">
+              {step === 2 ? (
+                <>
+                  <Button type="button" variant="outline" onClick={prevStep}>
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Back
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Saving...' : 'Save'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div />
+                  <Button type="button" onClick={nextStep}>
+                    Next <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </>
+              )}
             </DialogFooter>
 
             {/* Confirmation Dialog for Discard */}

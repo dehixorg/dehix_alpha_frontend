@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import ExperienceCard from '@/components/cards/experienceCard';
 import { AddExperience } from '@/components/dialogs/addExperiences';
 import EducationInfoCard from '@/components/cards/educationInfoCard';
-import { AddEducation } from '@/components/dialogs/addEduction';
+import { AddEducation } from '@/components/dialogs/addEducation';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import { AddProject } from '@/components/dialogs/addProject';
 import ProjectDetailsDialog from '@/components/dialogs/projectDetailsDialog';

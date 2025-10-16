@@ -2,9 +2,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Plus, ArrowRight, ArrowLeft, Briefcase } from 'lucide-react';
 
 import DraftDialog from '../shared/DraftDialog';
+import { DatePicker } from '@/components/shared/datePicker';
 
 import {
   Dialog,
@@ -252,174 +253,173 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen no-scrollbar">
+      <DialogContent className="lg:max-w-screen-lg overflow-y-auto max-h-[90vh] no-scrollbar">
         <DialogHeader>
-          <DialogTitle>Add Experience - Step {step} of 2</DialogTitle>
-          <DialogDescription>
-            {step === 1
-              ? 'Fill in the basic details of your work experience.'
-              : 'Fill in the reference and additional details.'}
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <Briefcase className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle>Add Experience</DialogTitle>
+              <DialogDescription>
+                {step === 1
+                  ? 'Start with your role, company, and a short description.'
+                  : 'Add references, repository link, and optional comments.'}
+              </DialogDescription>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <div className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}></div>
+          </div>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Step 1: Basic Experience Information */}
             {step === 1 && (
               <>
-                <FormField
-                  control={form.control}
-                  name="company"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter company name" {...field} />
-                      </FormControl>
-                      <FormDescription>Enter the company name</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="jobTitle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Job Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter job title" {...field} />
-                      </FormControl>
-                      <FormDescription>Enter the job title</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="workDescription"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Work Description</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter work description"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the work description
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="workFrom"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Work From</FormLabel>
-                      <FormControl>
-                        <Input type="date" max={currentDate} {...field} />
-                      </FormControl>
-                      <FormDescription>Select the start date</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="workTo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Work To</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormDescription>Select the end date</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="company"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter company name" {...field} />
+                        </FormControl>
+                        <FormDescription>Enter the company name</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="jobTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Job Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter job title" {...field} />
+                        </FormControl>
+                        <FormDescription>Enter the job title</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="workDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Work Description</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter work description" {...field} />
+                          </FormControl>
+                          <FormDescription>Enter the work description</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="workFrom"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Work From</FormLabel>
+                        <FormControl>
+                          <DatePicker {...field} max={currentDate} />
+                        </FormControl>
+                        <FormDescription>Select the start date</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="workTo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Work To</FormLabel>
+                        <FormControl>
+                          <DatePicker {...field} />
+                        </FormControl>
+                        <FormDescription>Select the end date</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </>
             )}
 
             {/* Step 2: Reference and Additional Information */}
             {step === 2 && (
               <>
-                <FormField
-                  control={form.control}
-                  name="referencePersonName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reference Person Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter reference person name"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the reference person&apos;s name
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="referencePersonContact"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reference Person Contact</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter reference person contact"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the reference person&apos;s contact
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="githubRepoLink"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>GitHub Repo Link</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter GitHub repository link"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the GitHub repository link (optional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="comments"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Comments</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter any comments" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Enter any comments (optional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="referencePersonName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reference Person Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter reference person name" {...field} />
+                        </FormControl>
+                        <FormDescription>Enter the reference person&apos;s name</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="referencePersonContact"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reference Person Contact</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter reference person contact" {...field} />
+                        </FormControl>
+                        <FormDescription>Enter the reference person&apos;s contact</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="githubRepoLink"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>GitHub Repo Link</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter GitHub repository link" {...field} />
+                          </FormControl>
+                          <FormDescription>Enter the GitHub repository link (optional)</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="comments"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Comments</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter any comments" {...field} />
+                          </FormControl>
+                          <FormDescription>Enter any comments (optional)</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
               </>
             )}
 
