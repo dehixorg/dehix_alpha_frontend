@@ -117,9 +117,11 @@ const StoriesAccordion = ({
       <Card className="pb-5 mx-3 border shadow-sm rounded-xl overflow-hidden">
         <MilestoneHeader milestone={milestone} />
 
-        <div className={`${openAccordion ? 'mx-0' : 'mx-4'} md:mx-6`}>
+        <div
+          className={`${openAccordion ? 'mx-0' : 'mx-4'} md:mx-6 card border rounded-lg`}
+        >
           {(milestone.stories ?? []).length > 0 && (
-            <div className="flex p-4 justify-between items-center mt-4 rounded-lg card border">
+            <div className="flex p-4 justify-between items-center border-b">
               <div className="flex items-center gap-3">
                 <h3 className="text-lg md:text-xl font-semibold">Stories</h3>
                 <Badge variant="secondary" className="rounded-full">
@@ -184,7 +186,7 @@ const StoriesAccordion = ({
                         </p>
                       </>
                     ) : (
-                      <>
+                      <div className="mx-auto">
                         <h4 className="text-lg font-semibold">
                           Start by adding a story
                         </h4>
@@ -193,10 +195,10 @@ const StoriesAccordion = ({
                           currently has no stories. Create one to track tasks
                           and progress.
                         </p>
-                      </>
+                      </div>
                     )}
                   </div>
-                  <div className="order-1 md:order-2">
+                  <div className="order-1 md:order-2 sm:ml-auto">
                     {!isFreelancer && (
                       <TooltipProvider>
                         <Tooltip>
