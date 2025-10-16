@@ -62,7 +62,7 @@ const EducationInfoCard: React.FC<EducationProps> = ({
   return (
     <Card
       className={cn(
-        'w-full h-full mx-auto md:max-w-2xl bg-muted/20 overflow-hidden transition-all hover:shadow-lg group border-border/50 hover:border-primary/20',
+        'w-full h-full mx-auto md:max-w-2xl overflow-hidden rounded-xl border bg-card/60 shadow-sm transition-all duration-200 group hover:shadow-md hover:-translate-y-0.5 border-border/50 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40',
         className,
       )}
     >
