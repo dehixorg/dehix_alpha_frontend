@@ -199,7 +199,11 @@ function ProjectDetailCard({
         </div>
 
         {/* Dates timeline */}
-        <DateHistory startDate={startDate} endDate={endDate} />
+        <DateHistory
+          startDate={startDate}
+          endDate={endDate}
+          className="dark:bg-background"
+        />
 
         <p className="text-sm md:text-base leading-relaxed text-muted-foreground">
           {description}
