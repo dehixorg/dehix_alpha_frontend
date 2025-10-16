@@ -21,6 +21,7 @@ import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import StatItem from '@/components/shared/StatItem';
 import { DateHistory } from '@/components/shared/DateHistory';
 import { Progress } from '@/components/ui/progress';
+import type { Milestone } from '@/utils/types/Milestone';
 
 export interface ProjectDetailCardProps {
   projectName: string;
@@ -36,6 +37,7 @@ export interface ProjectDetailCardProps {
   handleCompleteProject?: () => void;
   handleStartProject?: () => void; // Added start project handler
   handleIncompleteProject?: () => void; // Added incomplete project handler
+  milestones?: Milestone[]; // Optional milestones to compute progress
 }
 
 function ProjectDetailCard({
@@ -51,6 +53,7 @@ function ProjectDetailCard({
   handleCompleteProject,
   handleStartProject,
   handleIncompleteProject,
+  milestones,
 }: ProjectDetailCardProps) {
   const { text: projectStatus } = getStatusBadge(status);
 
@@ -70,7 +73,19 @@ function ProjectDetailCard({
     return pct;
   };
 
-  const progress = computeProgress(startDate, endDate);
+  const computeMilestoneProgress = (items?: Milestone[]) => {
+    if (!items || items.length === 0) return 0;
+    const total = items.length;
+    const completed = items.filter(
+      (m) => (m.status || '').toUpperCase() === 'COMPLETED',
+    ).length;
+    return Math.round((completed / total) * 100);
+  };
+
+  const progress =
+    milestones && milestones.length > 0
+      ? computeMilestoneProgress(milestones)
+      : computeProgress(startDate, endDate);
 
   return (
     <Card className="rounded-xl border border-border/60 shadow-sm hover:shadow-lg transition-shadow">
@@ -149,6 +164,26 @@ function ProjectDetailCard({
             }
             color="blue"
           />
+          {milestones && milestones.length > 0 && (
+            <>
+              <StatItem
+                icon={<Award className="h-4 w-4" />}
+                label="Milestones"
+                value={String(milestones.length)}
+                color="amber"
+              />
+              <StatItem
+                icon={<Award className="h-4 w-4" />}
+                label="Completed"
+                value={String(
+                  milestones.filter(
+                    (m) => (m.status || '').toUpperCase() === 'COMPLETED',
+                  ).length,
+                )}
+                color="green"
+              />
+            </>
+          )}
           <StatItem
             icon={<Tag className="h-4 w-4" />}
             label="Domains"

@@ -129,7 +129,10 @@ export function ProjectProfileDetailCard({
     >
       <CardHeader className="space-y-2">
         <CardTitle className="text-lg">
-          {domain} <Badge className="text-muted">{freelancersRequired}</Badge>
+          {domain}{' '}
+          {freelancersRequired && (
+            <Badge className="text-muted">{freelancersRequired}</Badge>
+          )}
         </CardTitle>
         <CardDescription className="text-muted-foreground">
           Requirement is of {freelancersRequired} freelancer(s) for{' '}
