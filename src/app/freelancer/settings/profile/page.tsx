@@ -52,7 +52,16 @@ export default function FreelancerProfileSettings() {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
+  const handleEducationDelete = async (educationId?: string): Promise<void> => {
+    if (!educationId) return;
+    try {
+      await axiosInstance.delete(`/freelancer/education/${educationId}`);
+      notifySuccess('Education record deleted successfully!');
+      setEduRefreshKey((prev) => prev + 1);
+    } catch (error) {
+      notifyError('Failed to delete education. Please try again.', 'Error');
+    }
+  };
   // Fetch all slices in one request
   const refreshPulse = expRefreshKey + eduRefreshKey + projRefreshKey;
   useEffect(() => {
@@ -235,7 +244,26 @@ export default function FreelancerProfileSettings() {
                     ) : (
                       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                         {experiences.map((exp: any, idx: number) => (
-                          <ExperienceCard key={idx} {...exp} />
+                          <ExperienceCard
+                            key={idx}
+                            _id={exp._id}
+                            {...exp}
+                            onDelete={async (id?: string) => {
+                              if (!id) return;
+                              try {
+                                await axiosInstance.delete(
+                                  `/freelancer/experience/${id}`,
+                                );
+                                notifySuccess('Experience deleted.');
+                                setExpRefreshKey((v) => v + 1);
+                              } catch (e) {
+                                notifyError(
+                                  'Failed to delete experience.',
+                                  'Error',
+                                );
+                              }
+                            }}
+                          />
                         ))}
                       </div>
                     )}
@@ -273,7 +301,9 @@ export default function FreelancerProfileSettings() {
                           <EducationInfoCard
                             key={idx}
                             {...education}
-                            onDelete={() => setEduRefreshKey((v) => v + 1)}
+                            onDelete={() =>
+                              handleEducationDelete(education._id)
+                            }
                           />
                         ))}
                       </div>
