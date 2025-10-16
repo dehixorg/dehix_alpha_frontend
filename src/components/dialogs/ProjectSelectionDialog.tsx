@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
 
 import {
@@ -174,15 +173,6 @@ export default function ProjectSelectionDialog({
                 Create projects from your Projects page to add them to this
                 profile.
               </p>
-              <Button asChild>
-                <Link
-                  href="/freelancer/settings/projects"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Go to Projects
-                </Link>
-              </Button>
             </div>
           ) : (
             <>

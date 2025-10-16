@@ -46,26 +46,98 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 First, run the development server:
 
-### ✅ Setup Husky (optional for Git hooks)
+### ✅ Git Hooks with Husky (pre-commit lint)
 
-````bash
+This repo uses [Husky](https://typicode.github.io/husky) to run ESLint on commits, aligned with `/.github/workflows/lint-check.yml` (max 5 warnings).
+
+#### 1) Prerequisites
+- **Git** installed.
+- **Node.js 18+** and **pnpm**.
+- Windows users: run commands in **Git Bash** (preferred) or ensure Git’s sh is available.
+  - If you prefer npm, use the npm commands below.
+
+#### 2) Install Husky
+```bash
+# pnpm
+pnpm add -D husky
+
+# npm
 npm install --save-dev husky
-# OR
-yarn add --dev husky
-bash
-Copy
-Edit
-npx husky install
+```
+
+Ensure `package.json` has the prepare script (already added in this repo):
+```json
+{
+  "scripts": { "prepare": "husky" }
+}
+```
+
+Then install hooks:
+```bash
+# pnpm
+pnpm install
+pnpm run prepare
+
+# npm
+npm install
+npm run prepare
+```
+
+#### 3) Pre-commit hook
+The hook is stored at `/.husky/pre-commit` and runs:
+```sh
+# pnpm
+pnpm exec eslint . --ext .ts,.tsx --max-warnings 5
+
+# npm (Node 18+)
+npm exec eslint . --ext .ts,.tsx --max-warnings 5
+# or using npx
+npx eslint . --ext .ts,.tsx --max-warnings 5
+```
+
+Make sure it’s executable (macOS/Linux):
+```bash
+chmod +x .husky/pre-commit
+```
+On Windows, no chmod is needed; use Git Bash to run shell hooks.
+
+#### 4) Verify
+```bash
+git add -A
+git commit -m "test: trigger husky pre-commit"
+```
+Commit will fail if ESLint errors exist or warnings > 5.
+
+#### Optional: Lint only staged files
+```bash
+# pnpm
+pnpm add -D lint-staged
+
+# npm
+npm install --save-dev lint-staged
+```
+Add to `package.json`:
+```json
+{
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --max-warnings 5"
+  }
+}
+```
+Update `/.husky/pre-commit` to:
+```sh
+# pnpm
+pnpm exec lint-staged
+
+# npm (Node 18+)
+npm exec lint-staged
+# or using npx
+npx lint-staged
+```
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
-````
+```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
