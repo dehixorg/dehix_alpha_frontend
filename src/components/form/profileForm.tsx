@@ -66,7 +66,7 @@ const profileFormSchema = z.object({
         return wordCount >= 500;
       },
       {
-        message: 'Cover letter must contain at least 500 words when provided.',
+        message: 'Cover letter must contain at least 200 words when provided.',
       },
     ),
   description: z.string().max(500, {
