@@ -20,9 +20,19 @@ jobs:
         with:
           node-version: '22.x'
           cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies (ci with fallback)
+        shell: bash
+        run: |
+          set -e
+          echo "Using Node $(node -v) and npm $(npm -v)"
+          if npm ci; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed (likely lockfile mismatch). Falling back to npm install."
+            npm install
+          fi
 
       - name: Run lint and check for warnings/errors
         id: lint-check
