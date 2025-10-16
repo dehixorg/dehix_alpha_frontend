@@ -1,21 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Info } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface MilestoneProps {
   date: string;
@@ -34,7 +26,6 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
   isMobile,
   isSelected,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const truncateDescription = (text: string, maxLength: number = 50) => {
     if (text.length > maxLength) {
       return text.slice(0, maxLength) + '...';
@@ -60,35 +51,31 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
       >
         {/* Date chip + Title + Action */}
         <div className="flex flex-col items-center justify-between gap-2 mb-2">
-          <div className="flex flex-row items-center justify-between w-1/2">
+          <div className="flex flex-row items-center justify-between w-full px-2">
             <h3
               className={`font-semibold truncate ${isMobile ? 'text-lg' : 'text-sm'}`}
               title={title}
             >
-              {truncateDescription(title, 20)}
+              {truncateDescription(title, 10)}
             </h3>
             {summary && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="rounded-full"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsOpen(true);
-                      }}
-                      aria-label="View description"
-                    >
-                      <Info className="w-4 h-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>View description</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="rounded-full"
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label="View description"
+                  >
+                    <Info className="w-4 h-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 text-sm whitespace-pre-wrap leading-relaxed">
+                  <h2 className="font-semibold">{title}</h2>
+                  <p>{summary}</p>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
           <span className="inline-block px-2 py-0.5 rounded-full bg-muted text-[10px] md:text-xs text-muted-foreground">
@@ -100,45 +87,8 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
           </span>
         </div>
       </Card>
-      {/* Dialog for description */}
-      {/* Lazy import to avoid circular deps */}
-      {isOpen && (
-        <DescriptionDialog
-          title="Description"
-          content={summary || ''}
-          open={isOpen}
-          onOpenChange={setIsOpen}
-        />
-      )}
     </div>
   );
 };
 
 export default MilestoneCards;
-
-function DescriptionDialog({
-  title,
-  content,
-  open,
-  onOpenChange,
-}: {
-  title: string;
-  content: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription asChild>
-            <div className="text-sm whitespace-pre-wrap leading-relaxed mt-2">
-              {content}
-            </div>
-          </DialogDescription>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
-  );
-}

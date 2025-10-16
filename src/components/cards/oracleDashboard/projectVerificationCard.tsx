@@ -7,6 +7,8 @@ import {
   MoreVertical,
   CircleAlert,
   X,
+  ArrowUpRight,
+  Code2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
@@ -42,6 +44,7 @@ import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { VerificationStatus } from '@/utils/verificationStatus';
+import { DateHistory } from '@/components/shared/DateHistory';
 interface ProjectProps {
   _id: string;
   projectName: string;
@@ -217,26 +220,17 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
                 {projectType}
               </p>
             </div>
-            <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Start</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {new Date(startFrom).toLocaleDateString()}
-              </p>
-            </div>
-            <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
-              <p className="text-xs text-gray-500 dark:text-gray-400">End</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {endTo !== 'current'
-                  ? new Date(endTo).toLocaleDateString()
-                  : 'Current'}
-              </p>
-            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 mt-4">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                Tech Used
-              </h3>
+          <div className="grid grid-cols-1 mt-4 gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
+                  <Code2 className="h-4 w-4 text-primary" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Tech Used
+                </h3>
+              </div>
               <div className="flex flex-wrap gap-2.5">
                 {(techUsed || []).map((tech, index) => (
                   <Badge
@@ -249,18 +243,37 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
                 ))}
               </div>
             </div>
-          </div>
 
-          <div className="mt-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-2">
-                  <Mail className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{reference}</span>
-                </p>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{reference}</TooltipContent>
-            </Tooltip>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
+                  <Mail className="h-4 w-4 text-primary" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Reference
+                </h3>
+              </div>
+              {reference && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-0 text-foreground/90 hover:text-primary hover:bg-transparent justify-start gap-2"
+                      asChild
+                    >
+                      <a href={`mailto:${reference}`}>
+                        <span className="truncate text-sm">{reference}</span>
+                        <ArrowUpRight className="h-3.5 w-3.5 opacity-70" />
+                      </a>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    Click to email reference
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           </div>
 
           {comments && (
@@ -272,6 +285,11 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         </CardContent>
 
         <CardFooter className="px-6 py-5 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex-col items-stretch gap-4">
+          <DateHistory
+            startDate={startFrom ? new Date(startFrom) : undefined}
+            endDate={endTo !== 'current' && endTo ? new Date(endTo) : undefined}
+            className="dark:bg-background"
+          />
           {verificationStatus === VerificationStatus.PENDING && (
             <VerificationDecisionForm
               radioOptions={[

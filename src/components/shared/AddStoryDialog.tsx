@@ -128,32 +128,34 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
                     <p className="text-red-500 text-sm mt-1">{errors.title}</p>
                   )}
                 </div>
-                <label
-                  htmlFor="storyStatus"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Story Status
-                </label>
-                <Select
-                  value={storyData.storyStatus}
-                  onValueChange={(value) =>
-                    handleInputChange('storyStatus', value)
-                  }
-                >
-                  <SelectTrigger id="storyStatus" className="w-full">
-                    <SelectValue placeholder="Select Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NOT_STARTED">Not Started</SelectItem>
-                    <SelectItem value="ONGOING">On Going</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.storyStatus && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.storyStatus}
-                  </p>
-                )}
+                <div>
+                  <label
+                    htmlFor="storyStatus"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Story Status
+                  </label>
+                  <Select
+                    value={storyData.storyStatus}
+                    onValueChange={(value) =>
+                      handleInputChange('storyStatus', value)
+                    }
+                  >
+                    <SelectTrigger id="storyStatus" className="w-full">
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NOT_STARTED">Not Started</SelectItem>
+                      <SelectItem value="ONGOING">On Going</SelectItem>
+                      <SelectItem value="COMPLETED">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.storyStatus && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.storyStatus}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
