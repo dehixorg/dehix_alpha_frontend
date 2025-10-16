@@ -18,6 +18,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Option = Record<string, any>;
 
@@ -99,27 +100,31 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
               />
               <CommandEmpty>No items found.</CommandEmpty>
               <CommandList>
-                <CommandGroup>
-                  {(filteredOptions || []).map((opt, idx) => {
-                    const val = String(opt?.[optionLabelKey]);
-                    const checked = isSelected(val);
-                    return (
-                      <CommandItem
-                        key={`${val}-${idx}`}
-                        value={val}
-                        onSelect={() => toggleValue(val)}
-                        className="flex items-center gap-2"
-                      >
-                        <Checkbox
-                          checked={checked}
-                          className="pointer-events-none"
-                        />
-                        <span className="flex-1">{val}</span>
-                        {checked && <Check className="h-4 w-4 text-primary" />}
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
+                <ScrollArea className="h-60">
+                  <CommandGroup>
+                    {(filteredOptions || []).map((opt, idx) => {
+                      const val = String(opt?.[optionLabelKey]);
+                      const checked = isSelected(val);
+                      return (
+                        <CommandItem
+                          key={`${val}-${idx}`}
+                          value={val}
+                          onSelect={() => toggleValue(val)}
+                          className="flex items-center gap-2"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            className="pointer-events-none"
+                          />
+                          <span className="flex-1">{val}</span>
+                          {checked && (
+                            <Check className="h-4 w-4 text-primary" />
+                          )}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </ScrollArea>
               </CommandList>
             </Command>
           </PopoverContent>
