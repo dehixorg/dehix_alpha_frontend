@@ -5,8 +5,8 @@ import { z } from 'zod';
 import { Plus, ArrowRight, ArrowLeft, Briefcase } from 'lucide-react';
 
 import DraftDialog from '../shared/DraftDialog';
-import { DatePicker } from '@/components/shared/datePicker';
 
+import { DatePicker } from '@/components/shared/datePicker';
 import {
   Dialog,
   DialogTrigger,
@@ -269,8 +269,12 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
             </div>
           </div>
           <div className="mt-3 flex items-center gap-2">
-            <div className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}></div>
-            <div className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div
+              className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}
+            ></div>
+            <div
+              className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}
+            ></div>
           </div>
         </DialogHeader>
         <Form {...form}>
@@ -288,7 +292,9 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                         <FormControl>
                           <Input placeholder="Enter company name" {...field} />
                         </FormControl>
-                        <FormDescription>Enter the company name</FormDescription>
+                        <FormDescription>
+                          Enter the company name
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -315,9 +321,14 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                         <FormItem>
                           <FormLabel>Work Description</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter work description" {...field} />
+                            <Input
+                              placeholder="Enter work description"
+                              {...field}
+                            />
                           </FormControl>
-                          <FormDescription>Enter the work description</FormDescription>
+                          <FormDescription>
+                            Enter the work description
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -366,9 +377,14 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                       <FormItem>
                         <FormLabel>Reference Person Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter reference person name" {...field} />
+                          <Input
+                            placeholder="Enter reference person name"
+                            {...field}
+                          />
                         </FormControl>
-                        <FormDescription>Enter the reference person&apos;s name</FormDescription>
+                        <FormDescription>
+                          Enter the reference person&apos;s name
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -380,9 +396,14 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                       <FormItem>
                         <FormLabel>Reference Person Contact</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter reference person contact" {...field} />
+                          <Input
+                            placeholder="Enter reference person contact"
+                            {...field}
+                          />
                         </FormControl>
-                        <FormDescription>Enter the reference person&apos;s contact</FormDescription>
+                        <FormDescription>
+                          Enter the reference person&apos;s contact
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -395,9 +416,14 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                         <FormItem>
                           <FormLabel>GitHub Repo Link</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter GitHub repository link" {...field} />
+                            <Input
+                              placeholder="Enter GitHub repository link"
+                              {...field}
+                            />
                           </FormControl>
-                          <FormDescription>Enter the GitHub repository link (optional)</FormDescription>
+                          <FormDescription>
+                            Enter the GitHub repository link (optional)
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -411,9 +437,14 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                         <FormItem>
                           <FormLabel>Comments</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter any comments" {...field} />
+                            <Input
+                              placeholder="Enter any comments"
+                              {...field}
+                            />
                           </FormControl>
-                          <FormDescription>Enter any comments (optional)</FormDescription>
+                          <FormDescription>
+                            Enter any comments (optional)
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

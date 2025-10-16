@@ -1,9 +1,8 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { ArrowLeft, ArrowRight, GraduationCap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, GraduationCap, Plus } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus } from 'lucide-react';
 
 import DraftDialog from '../shared/DraftDialog';
 import { DatePicker } from '../shared/datePicker';
@@ -109,7 +108,10 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
   const validateStep1 = () => {
     const { degree, universityName, fieldOfStudy } = form.getValues();
     if (!degree || !universityName || !fieldOfStudy) {
-      notifyError('Please fill degree, university and field of study.', 'Missing fields');
+      notifyError(
+        'Please fill degree, university and field of study.',
+        'Missing fields',
+      );
       return false;
     }
     return true;
@@ -263,8 +265,12 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
           </div>
           {/* Stepper */}
           <div className="mt-3 flex items-center gap-2">
-            <div className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}></div>
-            <div className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div
+              className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}
+            ></div>
+            <div
+              className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}
+            ></div>
           </div>
         </DialogHeader>
         <Form {...form}>
@@ -287,7 +293,10 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Degree</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., B.Tech in Computer Science" {...field} />
+                        <Input
+                          placeholder="e.g., B.Tech in Computer Science"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -315,7 +324,10 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Field of Study</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Computer Science" {...field} />
+                        <Input
+                          placeholder="e.g., Computer Science"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
