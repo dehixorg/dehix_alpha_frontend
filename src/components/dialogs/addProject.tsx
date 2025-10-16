@@ -338,7 +338,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
             {/* Step 1: Basic Project Information */}
             {step === 1 && (
               <>
-                <div className="grid gap-4 grid-cols-1">
+                <div className="grid gap-4 grid-cols-2">
                   <div className="md:col-span-2">
                     <FormField
                       control={form.control}
