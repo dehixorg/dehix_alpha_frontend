@@ -206,12 +206,12 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     }
   }, [isDialogOpen, form]);
   const {
-    handleSaveAndClose,
+    handleSaveAndClose: saveDraftAndClose,
     showDraftDialog,
     setShowDraftDialog,
     confirmExitDialog,
     setConfirmExitDialog,
-    handleDiscardAndClose,
+    handleDiscardAndClose: discardAndClose,
     handleDialogClose,
     discardDraft,
     loadDraft,
@@ -224,10 +224,23 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       restoredDraft.current = { ...values, techUsed: currSkills };
     },
     onDiscard: () => {
+      resetForm(); // Reset the form when discarding
       restoredDraft.current = null;
     },
     setCurrSkills,
   });
+
+  const handleSaveAndClose = async () => {
+    // First save the draft
+    const formValues = form.getValues();
+    restoredDraft.current = { ...formValues, techUsed: currSkills };
+    saveDraftAndClose();
+  };
+
+  const handleDiscardAndClose = () => {
+    resetForm(); // Reset the form when discarding
+    discardAndClose();
+  };
 
   // Reset form function
   const resetForm = () => {
@@ -297,8 +310,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     <Dialog
       open={isDialogOpen}
       onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        if (!open) handleDialogClose();
+        if (!open) {
+          // Only close the dialog, don't reset the form here
+          // The form will be reset when either saving or discarding
+          handleDialogClose();
+        } else {
+          setIsDialogOpen(open);
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -331,7 +349,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <Input placeholder="Enter project name" {...field} />
                       </FormControl>
-                      <FormDescription>Enter the project name</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -349,9 +366,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Enter the project description
-                      </FormDescription>
+                      
                       <FormMessage />
                     </FormItem>
                   )}
@@ -366,7 +381,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <DatePicker {...field} max={currentDate} />
                       </FormControl>
-                      <FormDescription>Select the start date</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -381,7 +395,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <DatePicker {...field} />
                       </FormControl>
-                      <FormDescription>Select the end date</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -489,16 +502,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                   name="githubLink"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>GitHub Repo Link</FormLabel>
+                      <FormLabel>GitHub Repo Link </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter GitHub repository link"
+                          placeholder="Enter GitHub repository link (optional)"
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Enter the GitHub repository link (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -511,11 +521,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Live Demo Link</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter live demo link" {...field} />
+                        <Input placeholder="Enter live demo link (optional)" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Enter the live demo link (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -532,9 +539,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                           existingThumbnailUrl={field.value}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Upload a thumbnail image for your project (required)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -552,9 +556,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Enter the project reference
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -569,7 +570,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <Input placeholder="Enter role" {...field} />
                       </FormControl>
-                      <FormDescription>Enter the role</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -582,11 +582,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Project Type</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter project type" {...field} />
+                        <Input placeholder="Enter project type (optional)" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Enter the project type (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -599,11 +596,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Comments</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter any comments" {...field} />
+                        <Input placeholder="Enter any comments (optional)" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Enter any comments (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
