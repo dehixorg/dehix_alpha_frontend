@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'next/navigation';
+import { Mail, CalendarDays, Award, Link2, Code2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import StatItem from '@/components/shared/StatItem';
 import {
   Card,
   CardContent,
@@ -64,12 +67,11 @@ export function ProjectProfileDetailCard({
   endDate,
   className,
   domain_id,
-  // business_id,
   ...props
 }: CardProps) {
   const user = useSelector((state: RootState) => state.user);
   const [amount, setAmount] = useState('');
-  const [descriptionValue, setDescription] = useState('');
+  const [descriptionValue, setDescription] = useState(description);
   const [dialogOpen, setDialogOpen] = useState(false);
   const params = useParams();
   const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
@@ -118,74 +120,92 @@ export function ProjectProfileDetailCard({
   }, [bidProfiles, _id]);
 
   return (
-    <Card className={cn('w-[350px]', className)} {...props}>
-      <CardHeader>
-        <CardTitle>
-          {domain} ({freelancersRequired})
+    <Card
+      className={cn(
+        'w-full border shadow-sm hover:shadow-md transition-all duration-200',
+        className,
+      )}
+      {...props}
+    >
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-lg">
+          {domain} <Badge className="text-muted">{freelancersRequired}</Badge>
         </CardTitle>
-        <CardDescription className="text-gray-600">
+        <CardDescription className="text-muted-foreground">
           Requirement is of {freelancersRequired} freelancer(s) for{' '}
           {domain.toLowerCase()} profile.
-          <br />
-          <p className="break-words text-white">{description}</p>
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <div>
-          <ul className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {email && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">Email: </span>
-                {email}
-              </li>
+              <StatItem
+                icon={<Mail className="h-4 w-4" />}
+                label="Email"
+                value={email}
+                color="blue"
+              />
             )}
             {status && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">Status: </span>
-                {status}
-              </li>
+              <StatItem
+                icon={<Badge className="uppercase">{status}</Badge>}
+                label="Status"
+                value={status}
+                color="green"
+              />
             )}
             {startDate && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">
-                  Start Date:{' '}
-                </span>
-                {startDate}
-              </li>
+              <StatItem
+                icon={<CalendarDays className="h-4 w-4" />}
+                label="Start Date"
+                value={startDate}
+                color="default"
+              />
             )}
             {endDate && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-400 font-semibold">End Date: </span>
-                {endDate}
-              </li>
+              <StatItem
+                icon={<CalendarDays className="h-4 w-4" />}
+                label="End Date"
+                value={endDate}
+                color="default"
+              />
             )}
-            <li className="min-w-[45%]">
-              <span className="text-gray-400 font-semibold">Experience: </span>
-              {experience} years
-            </li>
-            <li className="min-w-[45%]">
-              <span className="text-gray-400 font-semibold">Min Connect: </span>
-              {minConnect}
-            </li>
-          </ul>
+            <StatItem
+              icon={<Award className="h-4 w-4" />}
+              label="Experience"
+              value={`${experience} years`}
+              color="amber"
+            />
+            <StatItem
+              icon={<Link2 className="h-4 w-4" />}
+              label="Min Connect"
+              value={String(minConnect)}
+              color="amber"
+            />
+          </div>
           {skills.length > 0 && (
-            <div className="mt-2">
-              <span className="text-gray-700 font-semibold">Skills: </span>
-              <ul className="flex flex-wrap gap-1 mt-1">
+            <div className="flex flex-col gap-2 px-3 py-2 text-xs md:text-sm rounded-lg border bg-muted/30 w-full mt-3">
+              <div className="flex items-center gap-2 text-foreground">
+                <Code2 className="w-4 h-4 block md:hidden" />
+                <p className="font-medium">Skills</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => (
-                  <li
+                  <Badge
                     key={index}
-                    className="bg-gray-200 text-black rounded px-2 py-1 text-sm"
+                    variant="secondary"
+                    className="text-xs md:text-sm px-2.5 py-0.5 rounded-full"
                   >
                     {skill}
-                  </li>
+                  </Badge>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex justify-end">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" type="button" disabled={exist}>
@@ -237,11 +257,6 @@ export function ProjectProfileDetailCard({
             </form>
           </DialogContent>
         </Dialog>
-        {/* <div className="ml-3">
-          <Link href={`/freelancer/businessProfile/${_id}`} passHref>
-            <Button className="w-full ">View Profile</Button>
-          </Link>
-        </div> */}
       </CardFooter>
     </Card>
   );
