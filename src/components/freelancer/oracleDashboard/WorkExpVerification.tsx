@@ -182,29 +182,13 @@ const WorkExpVerification = () => {
           (t) => (
             <TabsContent key={t} value={t}>
               <CardContent>
-                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                  {loading ? (
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="rounded-lg border bg-card p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Skeleton className="h-10 w-10 rounded-full" />
-                          <div className="space-y-2 w-full">
-                            <Skeleton className="h-4 w-2/3" />
-                            <Skeleton className="h-3 w-1/2" />
-                          </div>
-                        </div>
-                        <Skeleton className="h-4 w-full mb-2" />
-                        <Skeleton className="h-4 w-5/6 mb-2" />
-                        <Skeleton className="h-8 w-24" />
-                      </div>
-                    ))
-                  ) : filteredData.length > 0 ? (
+                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredData.length > 0 ? (
                     filteredData.map((data) => (
                       <WorkExpVerificationCard
                         key={data.document_id}
                         _id={data._id}
                         jobTitle={data.jobTitle}
-                        workDescription={data.workDescription}
                         company={data.company}
                         startFrom={data.workFrom}
                         endTo={data.workTo}
