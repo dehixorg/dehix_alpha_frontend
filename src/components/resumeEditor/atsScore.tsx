@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { useTheme } from 'next-themes';
+import { Gauge, ClipboardList, Sparkles } from 'lucide-react';
 import {
   Chart as ChartJS,
   BarElement,
@@ -10,7 +11,14 @@ import {
   Legend,
 } from 'chart.js';
 
-import { Card } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   SCORE_MESSAGES,
@@ -194,6 +202,61 @@ const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
   };
 };
 
+// Simple SVG circular progress to visualize the score
+const CircleProgress: React.FC<{ value: number }> = ({ value }) => {
+  const size = 128;
+  const stroke = 10;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.max(0, Math.min(100, value));
+  const offset = circumference * (1 - clamped / 100);
+  const color =
+    clamped >= SCORE_THRESHOLDS.COLOR_GREEN
+      ? '#22c55e' // green-500
+      : clamped >= SCORE_THRESHOLDS.COLOR_YELLOW
+        ? '#eab308' // yellow-500
+        : '#ef4444'; // red-500
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        stroke={
+          typeof window !== 'undefined' &&
+          document?.documentElement?.classList.contains('dark')
+            ? '#374151'
+            : '#E5E7EB'
+        }
+        strokeWidth={stroke}
+        fill="none"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        stroke={color}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        fill="none"
+        strokeDasharray={`${circumference} ${circumference}`}
+        strokeDashoffset={offset}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+      />
+      <text
+        x="50%"
+        y="50%"
+        dominantBaseline="middle"
+        textAnchor="middle"
+        style={{ fontSize: '28px', fontWeight: 700, fill: color }}
+      >
+        {clamped}
+      </text>
+    </svg>
+  );
+};
+
 export const AtsScore: React.FC<ResumeScoreProps> = ({
   name,
   resumeText,
@@ -224,12 +287,6 @@ export const AtsScore: React.FC<ResumeScoreProps> = ({
       matches: analysis.keywordMatches,
       total: analysis.totalKeywords,
     });
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= SCORE_THRESHOLDS.COLOR_GREEN) return 'bg-green-500';
-    if (score >= SCORE_THRESHOLDS.COLOR_YELLOW) return 'bg-yellow-500';
-    return 'bg-red-500';
   };
 
   const getScoreMessage = (score: number) => {
@@ -295,41 +352,96 @@ export const AtsScore: React.FC<ResumeScoreProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-8">
-      <Card className="w-full max-w-3xl p-8 shadow-lg rounded-lg text-center">
-        <h1 className="text-3xl font-bold mb-4">{`${name}'s Resume`}</h1>
+    <div className="flex flex-col items-center justify-center p-6 sm:p-8">
+      <Card className="w-full max-w-4xl">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl sm:text-3xl flex items-center gap-2 justify-center">
+            <Gauge className="h-6 w-6" /> ATS Score
+          </CardTitle>
+          <CardDescription>
+            {name
+              ? `${name}'s resume analysis`
+              : 'Analyze your resume quality and structure'}
+          </CardDescription>
+        </CardHeader>
 
-        {score !== null && (
-          <div className="flex flex-col items-center mb-6">
-            <div
-              className={`w-32 h-32 flex items-center justify-center rounded-full ${getScoreColor(score)} text-white`}
-            >
-              <span className="text-3xl font-bold">{score}</span>
-            </div>
-            <p className="mt-4 text-lg">
-              {`Your resume scored `}
-              <span className="font-bold">{score} out of 100</span>
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              {getScoreMessage(score)}
-            </p>
-            {keywordInfo.total > 0 && (
-              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                Keywords matched: {keywordInfo.matches}/{keywordInfo.total}
+        <CardContent className="space-y-6">
+          {score === null ? (
+            <div className="flex flex-col items-center justify-center py-10">
+              <div className="h-20 w-20 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <ClipboardList className="h-10 w-10" />
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground max-w-md text-center">
+                Click Analyze to get grammar, brevity, impact, and section
+                completeness scores. Optionally provide keywords to check for
+                job match.
               </p>
-            )}
-          </div>
-        )}
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col items-center">
+                <CircleProgress value={score} />
+                <p className="mt-3 text-base sm:text-lg">
+                  Your resume scored{' '}
+                  <span className="font-semibold">{score} / 100</span>
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {getScoreMessage(score)}
+                </p>
+                {keywordInfo.total > 0 && (
+                  <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 mt-2">
+                    Keywords matched: {keywordInfo.matches}/{keywordInfo.total}
+                  </p>
+                )}
+              </div>
 
-        {score === null ? (
-          <Button onClick={handleAnalyzeResume} className="mb-6">
-            Analyze Resume
-          </Button>
-        ) : (
-          <div className="w-full h-66 flex items-center justify-center">
-            <Bar data={chartData} options={chartOptions} />
-          </div>
-        )}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="rounded-md border p-3 text-center">
+                  <div className="text-xs text-muted-foreground">Grammar</div>
+                  <div className="text-lg font-semibold">
+                    {categories.grammar}
+                  </div>
+                </div>
+                <div className="rounded-md border p-3 text-center">
+                  <div className="text-xs text-muted-foreground">Brevity</div>
+                  <div className="text-lg font-semibold">
+                    {categories.brevity}
+                  </div>
+                </div>
+                <div className="rounded-md border p-3 text-center">
+                  <div className="text-xs text-muted-foreground">Impact</div>
+                  <div className="text-lg font-semibold">
+                    {categories.impact}
+                  </div>
+                </div>
+                <div className="rounded-md border p-3 text-center">
+                  <div className="text-xs text-muted-foreground">Sections</div>
+                  <div className="text-lg font-semibold">
+                    {categories.sections}
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full pt-2">
+                <div className="w-full h-66 flex items-center justify-center">
+                  <Bar data={chartData} options={chartOptions} />
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+
+        <CardFooter className="flex justify-center gap-3">
+          {score === null ? (
+            <Button onClick={handleAnalyzeResume} className="">
+              <Sparkles className="mr-2 h-4 w-4" /> Analyze Resume
+            </Button>
+          ) : (
+            <Button onClick={handleAnalyzeResume} variant="outline">
+              <Sparkles className="mr-2 h-4 w-4" /> Analyze Again
+            </Button>
+          )}
+        </CardFooter>
       </Card>
     </div>
   );

@@ -126,7 +126,15 @@ const ProjectList = ({
           url += `&project_type=${projectType}`;
         }
         const response = await axiosInstance.get(url);
-        setProjects(response.data.data);
+        const projectsData = response.data.data;
+        if (status === 'ACTIVE') {
+          const filteredProjects = projectsData.filter(
+            (project: Project) => project.status === 'ACTIVE',
+          );
+          setProjects(filteredProjects);
+        } else {
+          setProjects(projectsData);
+        }
       } catch (error) {
         notifyError('Something went wrong. Please try again.', 'Error');
         console.error('API Error:', error);
@@ -193,14 +201,13 @@ const ProjectList = ({
 export default function ProjectPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const [projectType, setProjectType] = useState('CONSULTANT');
+  const [projectType, setProjectType] = useState('FREELANCER');
   const [activeTab, setActiveTab] = useState('current');
 
   // Sync tab with URL
   useEffect(() => {
     const parts = pathname.split('/');
     const tabFromUrl = parts[parts.length - 1];
-    console.log(tabFromUrl);
     if (['current', 'applied', 'completed', 'rejected'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     } else {
@@ -286,6 +293,13 @@ export default function ProjectPage() {
                 <SectionHeader
                   title="Projects Under Verification"
                   subtitle="Track the status of your projects currently undergoing verification before final approval."
+                  right={
+                    <FilterToggle
+                      id="project-type-applied"
+                      projectType={projectType}
+                      onChange={setProjectType}
+                    />
+                  }
                 />
                 <ProjectList status="PENDING" projectType={projectType} />
               </TabsContent>
@@ -294,6 +308,13 @@ export default function ProjectPage() {
                 <SectionHeader
                   title="Completed Projects"
                   subtitle="Explore and manage your successfully completed freelance projects."
+                  right={
+                    <FilterToggle
+                      id="project-type-completed"
+                      projectType={projectType}
+                      onChange={setProjectType}
+                    />
+                  }
                 />
                 <ProjectList status="COMPLETED" projectType={projectType} />
               </TabsContent>

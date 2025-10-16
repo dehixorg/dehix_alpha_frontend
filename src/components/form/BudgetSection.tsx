@@ -192,14 +192,14 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
         </div>
       )}
 
-      {profileBudgetErrors && (
+      {/* {profileBudgetErrors && (
         <p className="text-sm text-red-600 mt-4">
           {Object.values(profileBudgetErrors || {})
             .map((err: any) => err?.message)
             .filter(Boolean)
             .join(', ')}
         </p>
-      )}
+      )} */}
     </div>
   );
 };

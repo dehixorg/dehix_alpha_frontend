@@ -8,9 +8,6 @@ import {
   CircleAlert,
   X,
 } from 'lucide-react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
 
@@ -24,22 +21,14 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import VerificationDecisionForm from '@/components/verification/VerificationDecisionForm';
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
   TooltipProvider,
 } from '@/components/ui/tooltip';
-import { Textarea } from '@/components/ui/textarea';
+// Textarea is now part of the reusable component
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -48,10 +37,11 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { VerificationStatus } from '@/utils/verificationStatus';
 interface ProjectProps {
   _id: string;
   projectName: string;
@@ -64,17 +54,12 @@ interface ProjectProps {
   comments: string;
   role: string;
   projectType: string;
-  status: string | 'Pending';
-  onStatusUpdate: (newStatus: string) => void;
+  status: VerificationStatus;
+  onStatusUpdate: (newStatus: VerificationStatus) => void;
   onCommentUpdate: (newComment: string) => void;
 }
 
-const FormSchema = z.object({
-  type: z.enum(['Approved', 'Denied'], {
-    required_error: 'You need to select a type.',
-  }),
-  comment: z.string().optional(),
-});
+// Inline schema removed; handled in reusable component
 
 const ProjectVerificationCard: React.FC<ProjectProps> = ({
   _id,
@@ -91,11 +76,10 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
   onStatusUpdate,
   onCommentUpdate,
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState(status);
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-  });
-  const selectedType = form.watch('type');
+  const [verificationStatus, setVerificationStatus] = useState<
+    VerificationStatus | undefined
+  >(status as VerificationStatus);
+  // Form handled by reusable component
   const [openReport, setOpenReport] = useState(false);
 
   const user = useSelector((state: RootState) => state.user);
@@ -112,21 +96,27 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
     reportedId: user?.uid, // project ID
   };
   useEffect(() => {
-    setVerificationStatus(status);
+    setVerificationStatus(status as VerificationStatus);
   }, [status]);
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: { type: string; comment?: string }) {
+    const apiStatus = data.type === 'Approved' ? 'APPROVED' : 'DENIED';
     try {
-      await axiosInstance.put(`/verification/${_id}/oracle?doc_type=project`, {
-        comments: data.comment,
-        verification_status: data.type,
+      await axiosInstance.put(`/verification/${_id}/update`, {
+        comment: data.comment,
+        verification_status: apiStatus,
       });
+      const newStatus =
+        apiStatus === 'APPROVED'
+          ? VerificationStatus.APPROVED
+          : VerificationStatus.DENIED;
+      setVerificationStatus(newStatus);
+      onStatusUpdate(newStatus);
+      onCommentUpdate(data.comment || '');
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
+      return;
     }
-    setVerificationStatus(data.type);
-    onStatusUpdate(data.type);
-    onCommentUpdate(data.comment || '');
   }
 
   return (
@@ -176,20 +166,14 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
               </div>
 
               <div className="mt-1 flex items-center gap-2 flex-wrap">
-                {verificationStatus === 'Pending' ||
-                verificationStatus === 'added' ||
-                verificationStatus === 'reapplied' ? (
+                {verificationStatus === VerificationStatus.PENDING ? (
                   <Badge className="bg-warning-foreground text-white">
-                    {verificationStatus}
+                    PENDING
                   </Badge>
-                ) : verificationStatus === 'Approved' ||
-                  verificationStatus === 'Verified' ||
-                  verificationStatus === 'verified' ? (
-                  <Badge className="bg-success text-white">
-                    {verificationStatus}
-                  </Badge>
+                ) : verificationStatus === VerificationStatus.APPROVED ? (
+                  <Badge className="bg-success text-white">APPROVED</Badge>
                 ) : (
-                  <Badge className="bg-red-500 text-white">Denied</Badge>
+                  <Badge className="bg-red-500 text-white">DENIED</Badge>
                 )}
               </div>
 
@@ -288,70 +272,15 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         </CardContent>
 
         <CardFooter className="px-6 py-5 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex-col items-stretch gap-4">
-          {(verificationStatus === 'Pending' ||
-            verificationStatus === 'added' ||
-            verificationStatus === 'reapplied') && (
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="w-full space-y-6"
-              >
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Choose Verification Status</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex flex-col sm:flex-row gap-4"
-                        >
-                          <FormItem className="flex items-center space-x-3">
-                            <FormControl>
-                              <RadioGroupItem value="Approved" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              Approved
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3">
-                            <FormControl>
-                              <RadioGroupItem value="Denied" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              Denied
-                            </FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="comment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Comments</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Enter comments" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
-                  disabled={!selectedType || form.formState.isSubmitting}
-                >
-                  Submit
-                </Button>
-              </form>
-            </Form>
+          {verificationStatus === VerificationStatus.PENDING && (
+            <VerificationDecisionForm
+              radioOptions={[
+                { value: 'Approved', label: 'Approve' },
+                { value: 'Denied', label: 'Deny' },
+              ]}
+              onSubmit={onSubmit}
+              className="w-full space-y-6"
+            />
           )}
         </CardFooter>
 
@@ -360,7 +289,7 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
 
         {openReport && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-background rounded-lg p-6 w-full max-w-md relative">
+            <div className="bg-background rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative">
               <button
                 onClick={() => setOpenReport(false)}
                 className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
@@ -368,7 +297,14 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
               </button>
-              <NewReportTab reportData={reportData} />
+              <NewReportTab
+                reportData={reportData}
+                onSubmitted={() => {
+                  notifySuccess('Report submitted successfully!', 'Success');
+                  setOpenReport(false);
+                  return true;
+                }}
+              />
             </div>
           </div>
         )}

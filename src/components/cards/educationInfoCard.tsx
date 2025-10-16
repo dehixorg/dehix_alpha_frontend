@@ -1,5 +1,5 @@
 import React from 'react';
-import { GraduationCap, Trash2, Loader2 } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { DateHistory } from '@/components/shared/DateHistory';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import DeleteIconButton from '@/components/shared/DeleteIconButton';
 import {
   Dialog,
   DialogTrigger,
@@ -21,7 +22,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 
 interface EducationProps {
@@ -33,11 +33,10 @@ interface EducationProps {
   endDate?: Date | 'current';
   grade?: string;
   className?: string;
-  onDelete?: (id?: string) => Promise<void> | void;
+  onDelete?: () => Promise<void> | void;
 }
 
 const EducationInfoCard: React.FC<EducationProps> = ({
-  _id,
   degree,
   universityName,
   fieldOfStudy,
@@ -49,12 +48,13 @@ const EducationInfoCard: React.FC<EducationProps> = ({
 }) => {
   const mappedEndDate = endDate === 'current' ? null : endDate;
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const handleDelete = async () => {
     if (!onDelete) return;
     try {
       setIsDeleting(true);
-      await onDelete(_id);
+      await onDelete();
     } finally {
       setIsDeleting(false);
     }
@@ -62,7 +62,7 @@ const EducationInfoCard: React.FC<EducationProps> = ({
   return (
     <Card
       className={cn(
-        'w-full h-full mx-auto md:max-w-2xl bg-muted/20 overflow-hidden transition-all hover:shadow-lg group border-border/50 hover:border-primary/20',
+        'w-full h-full mx-auto md:max-w-2xl overflow-hidden rounded-xl border bg-card/60 shadow-sm transition-all duration-200 group hover:shadow-md hover:-translate-y-0.5 border-border/50 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40',
         className,
       )}
     >
@@ -84,53 +84,46 @@ const EducationInfoCard: React.FC<EducationProps> = ({
           </div>
 
           {onDelete && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-red-400/30 rounded-full"
-                  aria-label="Delete education"
-                >
-                  {isDeleting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4 text-red-400" />
-                  )}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Delete education entry?</DialogTitle>
-                  <DialogDescription>
-                    This action cannot be undone. This will permanently remove
-                    this education record from your profile.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline" disabled={isDeleting}>
+            <>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <DeleteIconButton
+                    label={isDeleting ? 'Deleting' : 'Delete'}
+                    onDelete={async () => {
+                      setOpen(true);
+                    }}
+                    disabled={isDeleting}
+                  />
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete education entry?</DialogTitle>
+                    <DialogDescription>
+                      This action cannot be undone. This will permanently remove
+                      this education record from your profile.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      disabled={isDeleting}
+                      onClick={() => setOpen(false)}
+                    >
                       Cancel
                     </Button>
-                  </DialogClose>
-                  <DialogClose asChild>
-                    <Button
-                      variant="destructive"
-                      onClick={handleDelete}
+                    <DeleteIconButton
+                      iconOnly={false}
+                      label={isDeleting ? 'Deleting' : 'Delete'}
+                      onDelete={async () => {
+                        await handleDelete();
+                        setOpen(false);
+                      }}
                       disabled={isDeleting}
-                    >
-                      {isDeleting ? (
-                        <span className="inline-flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" /> Deleting
-                        </span>
-                      ) : (
-                        'Delete'
-                      )}
-                    </Button>
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                    />
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
           )}
         </div>
       </CardHeader>

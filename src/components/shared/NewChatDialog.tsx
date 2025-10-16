@@ -180,7 +180,7 @@ export function NewChatDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[450px] bg-[hsl(var(--card))]">
+      <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto bg-[hsl(var(--card))]">
         <DialogHeader>
           <DialogTitle>Start a Conversation</DialogTitle>
           <DialogDescription>
@@ -191,68 +191,97 @@ export function NewChatDialog({
         <Tabs
           value={mode}
           onValueChange={(value) => setMode(value as 'individual' | 'group')}
-          className="w-full"
+          className="flex-1 flex flex-col min-h-0"
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="individual">Individual</TabsTrigger>
             <TabsTrigger value="group">Group</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="individual" className="space-y-4 pt-4">
-            <Input
-              placeholder="Search by name or email..."
-              value={userSearchTerm}
-              onChange={(e) => setUserSearchTerm(e.target.value)}
-            />
-            <ScrollArea className="h-60">{renderUserList(false)}</ScrollArea>
+          <TabsContent value="individual" className="flex-1 flex flex-col space-y-4 pt-4">
+            <div className="px-1">
+              <Input
+                placeholder="Search by name or email..."
+                value={userSearchTerm}
+                onChange={(e) => setUserSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex-1 min-h-0">
+              <ScrollArea className="h-full">
+                <div className="pr-4">
+                  {renderUserList(false)}
+                </div>
+              </ScrollArea>
+            </div>
           </TabsContent>
 
-          <TabsContent value="group" className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="groupName">Group Name</Label>
+          <TabsContent value="group" className="flex-1 flex flex-col space-y-4 pt-4">
+            <div className="space-y-4 px-1">
+              <div className="space-y-2">
+                <Label htmlFor="groupName">Group Name</Label>
+                <Input
+                  id="groupName"
+                  placeholder="Enter group name..."
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="groupDescription">Description (Optional)</Label>
+                <Textarea
+                  id="groupDescription"
+                  placeholder="What is this group about?"
+                  value={groupDescription}
+                  onChange={(e) => setGroupDescription(e.target.value)}
+                  className="resize-none min-h-[80px]"
+                />
+              </div>
               <Input
-                id="groupName"
-                placeholder="Enter group name..."
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
+                placeholder="Search members to add..."
+                value={userSearchTerm}
+                onChange={(e) => setUserSearchTerm(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="groupDescription">Description (Optional)</Label>
-              <Textarea
-                id="groupDescription"
-                placeholder="What is this group about?"
-                value={groupDescription}
-                onChange={(e) => setGroupDescription(e.target.value)}
-                className="resize-none"
-              />
-            </div>
-            <Input
-              placeholder="Search members to add..."
-              value={userSearchTerm}
-              onChange={(e) => setUserSearchTerm(e.target.value)}
-            />
+            
             {selectedGroupMembers.length > 0 && (
-              <div className="p-2 border-b">
-                <p className="text-xs font-semibold mb-2 text-[hsl(var(--muted-foreground))]">
-                  SELECTED
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedGroupMembers.map((member) => (
-                    <span
-                      key={member.id}
-                      className="flex items-center gap-1.5 bg-[hsl(var(--accent))] text-xs font-medium px-2 py-1 rounded-full"
-                    >
-                      {member.displayName}
-                      <button onClick={() => handleToggleGroupMember(member)}>
-                        <LucideX className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
+              <div className="px-1">
+                <div className="p-2 border rounded-md bg-background/50">
+                  <p className="text-xs font-semibold mb-2 text-muted-foreground">
+                    SELECTED ({selectedGroupMembers.length})
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedGroupMembers.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center gap-1.5 bg-accent/80 hover:bg-accent text-accent-foreground text-xs font-medium px-2.5 py-1 rounded-full transition-colors"
+                      >
+                        <span className="truncate max-w-[120px] sm:max-w-[160px]">
+                          {member.displayName}
+                        </span>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleGroupMember(member);
+                          }}
+                          className="opacity-70 hover:opacity-100 transition-opacity"
+                          aria-label={`Remove ${member.displayName}`}
+                        >
+                          <LucideX className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
-            <ScrollArea className="h-48">{renderUserList(true)}</ScrollArea>
+            
+            <div className="flex-1 min-h-0">
+              <ScrollArea className="h-full">
+                <div className="pr-4">
+                  {renderUserList(true)}
+                </div>
+              </ScrollArea>
+            </div>
           </TabsContent>
         </Tabs>
 

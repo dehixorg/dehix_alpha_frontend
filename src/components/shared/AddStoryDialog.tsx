@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 
 import { Button } from '../ui/button';
 
@@ -13,11 +13,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Story } from '@/utils/types/Milestone';
 
 interface AddStoryDialogProps {
@@ -93,158 +94,159 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add New Story</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-lg md:text-xl">
+            Add New Story
+          </DialogTitle>
         </DialogHeader>
+        <div className="mb-2 flex items-center gap-4">
+          <p className="text-sm text-muted-foreground hidden sm:block">
+            Provide a clear title, a concise summary, and any important links to
+            help collaborators understand the story context.
+          </p>
+        </div>
         <form onSubmit={handleFormSubmit}>
-          <div className="space-y-6">
-            <div>
-              <label
-                htmlFor="storyTitle"
-                className="block text-sm font-medium mb-1"
-              >
-                Story Title
-              </label>
-              <Input
-                placeholder="Enter story title"
-                value={storyData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                required
-              />
-              {errors.title && (
-                <p className="text-red-500 text-sm mt-1">{errors.title}</p>
-              )}
+          <div className="space-y-6 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6">
+            <div className="sm:col-span-2">
+              <div className="grid sm:grid-cols-[1fr,14rem] gap-3 items-end">
+                <div>
+                  <label
+                    htmlFor="storyTitle"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Story Title
+                  </label>
+                  <Input
+                    id="storyTitle"
+                    placeholder="Enter story title"
+                    value={storyData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    required
+                  />
+                  {errors.title && (
+                    <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+                  )}
+                </div>
+                <label
+                  htmlFor="storyStatus"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Story Status
+                </label>
+                <Select
+                  value={storyData.storyStatus}
+                  onValueChange={(value) =>
+                    handleInputChange('storyStatus', value)
+                  }
+                >
+                  <SelectTrigger id="storyStatus" className="w-full">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NOT_STARTED">Not Started</SelectItem>
+                    <SelectItem value="ONGOING">On Going</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.storyStatus && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.storyStatus}
+                  </p>
+                )}
+              </div>
             </div>
-            <div>
-              <label
-                htmlFor="storySummary"
-                className="block text-sm font-medium mb-1"
+          </div>
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="storySummary"
+              className="block text-sm font-medium mb-1"
+            >
+              Summary
+            </label>
+            <Textarea
+              placeholder="Enter summary"
+              value={storyData.summary}
+              onChange={(e) => handleInputChange('summary', e.target.value)}
+              required
+            />
+            {errors.summary && (
+              <p className="text-red-500 text-sm mt-1">{errors.summary}</p>
+            )}
+          </div>
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="storyUrls"
+              className="block text-sm font-medium mb-2"
+            >
+              Important URLs
+            </label>
+            {storyData.importantUrls.map((url, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 sm:grid-cols-12 gap-3"
               >
-                Summary
-              </label>
-              <Textarea
-                placeholder="Enter summary"
-                value={storyData.summary}
-                onChange={(e) => handleInputChange('summary', e.target.value)}
-                required
-              />
-              {errors.summary && (
-                <p className="text-red-500 text-sm mt-1">{errors.summary}</p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="storyUrls"
-                className="block text-sm font-medium mb-2"
-              >
-                Important URLs
-              </label>
-              {storyData.importantUrls.map((url, index) => (
-                <div key={index} className="flex items-center gap-3 mb-2">
-                  <div className="flex w-full items-center gap-2">
-                    <Input
-                      type="text"
-                      placeholder="URL Name"
-                      value={url.urlName}
-                      className="w-1/2"
-                      onChange={(e) =>
-                        handleInputChange(
-                          'importantUrls',
-                          { ...url, urlName: e.target.value },
-                          index,
-                        )
-                      }
-                      required
-                    />
-                    <Input
-                      type="text"
-                      placeholder="URL"
-                      value={url.url}
-                      className="w-1/2"
-                      onChange={(e) =>
-                        handleInputChange(
-                          'importantUrls',
-                          { ...url, url: e.target.value },
-                          index,
-                        )
-                      }
-                      required
-                    />
-                  </div>
-
+                <div className="sm:col-span-5">
+                  <Input
+                    type="text"
+                    placeholder="URL Name (e.g., Design Doc)"
+                    value={url.urlName}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'importantUrls',
+                        { ...url, urlName: e.target.value },
+                        index,
+                      )
+                    }
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-6">
+                  <Input
+                    type="text"
+                    placeholder="https://example.com/path"
+                    value={url.url}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'importantUrls',
+                        { ...url, url: e.target.value },
+                        index,
+                      )
+                    }
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-1 flex sm:justify-end">
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={() => handleRemoveUrl(index)}
-                    className="text-red-500 px-1"
+                    className="text-red-500 hover:bg-red-500/20 hover:text-red-600 rounded-full"
+                    aria-label="Remove URL"
+                    size="icon"
                   >
                     <X />
                   </Button>
                 </div>
-              ))}
-              {errors.importantUrls && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.importantUrls}
-                </p>
-              )}
+              </div>
+            ))}
+            {errors.importantUrls && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.importantUrls}
+              </p>
+            )}
+            <div className="mt-2 flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Tip: Use clear names and full links (including https://)
+              </p>
               <Button
                 type="button"
                 variant="secondary"
                 onClick={handleAddUrl}
-                className="mt-2"
+                size="sm"
               >
-                Add URL
+                <Plus className="h-4 w-4 mr-1" /> Add another URL
               </Button>
-            </div>
-
-            {/* Story Status */}
-            <div className="flex items-center gap-3">
-              <label
-                htmlFor="storyStatus"
-                className="text-sm flex justify-center items-center font-medium mb-2 w-1/4"
-              >
-                Story Status
-              </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="w-3/4" variant="outline">
-                    {storyData.storyStatus
-                      ? {
-                          NOT_STARTED: 'Not Started',
-                          ONGOING: 'On Going',
-                          COMPLETED: 'Completed',
-                        }[storyData.storyStatus]
-                      : 'Select Status'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      handleInputChange('storyStatus', 'NOT_STARTED')
-                    }
-                  >
-                    Not Started
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleInputChange('storyStatus', 'ONGOING')}
-                  >
-                    On Going
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      handleInputChange('storyStatus', 'COMPLETED')
-                    }
-                  >
-                    Completed
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {errors.storyStatus && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.storyStatus}
-                </p>
-              )}
             </div>
           </div>
 

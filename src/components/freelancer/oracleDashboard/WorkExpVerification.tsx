@@ -6,10 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
+import { VerificationStatus } from '@/utils/verificationStatus';
 
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 
 interface WorkExperience {
   _id: string;
@@ -27,7 +27,7 @@ interface WorkExperience {
 
 interface VerificationEntry {
   document_id: string;
-  verification_status: string;
+  verification_status: VerificationStatus;
   comments: string;
   requester_id: string;
   verifier_id: string;
@@ -38,21 +38,20 @@ interface CombinedData extends WorkExperience, VerificationEntry {}
 const WorkExpVerification = () => {
   const [jobData, setJobData] = useState<CombinedData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [loading, setLoading] = useState<boolean>(false);
+  const handleFilterChange = (newFilter: FilterOption) => {
+    setFilter(newFilter);
+  };
 
-  const handleFilterChange = useCallback(
-    (newFilter: FilterOption) => setFilter(newFilter),
-    [],
-  );
-
-  const filteredData = useMemo(() => {
-    return jobData.filter((data) => {
-      if (filter === 'all') return true;
-      if (filter === 'current')
-        return data.verification_status === StatusEnum.PENDING;
-      return data.verification_status === filter;
-    });
-  }, [jobData, filter]);
+  const filteredData = jobData.filter((data) => {
+    if (filter === 'all') return true;
+    if (filter === 'pending')
+      return data.verification_status === VerificationStatus.PENDING;
+    if (filter === 'verified')
+      return data.verification_status === VerificationStatus.APPROVED;
+    if (filter === 'rejected')
+      return data.verification_status === VerificationStatus.DENIED;
+    return true;
+  });
 
   const fetchData = useCallback(async () => {
     try {
@@ -79,7 +78,12 @@ const WorkExpVerification = () => {
               (doc: any) => doc._id === entry.document_id,
             );
             if (matchingWorkExpDoc) {
-              return { ...matchingWorkExpDoc, ...entry };
+              return {
+                ...matchingWorkExpDoc,
+                ...entry,
+                verification_status:
+                  entry.verification_status as VerificationStatus,
+              };
             }
             return null;
           } catch (error) {
@@ -111,7 +115,7 @@ const WorkExpVerification = () => {
     setJobData((prev) =>
       prev.map((item) =>
         item.document_id === documentId
-          ? { ...item, verification_status: newStatus }
+          ? { ...item, verification_status: newStatus as VerificationStatus }
           : item,
       ),
     );
@@ -134,15 +138,16 @@ const WorkExpVerification = () => {
           Experience Verification
         </h1>
         <p className="text-muted-foreground">
-          Stay updated on your work experience verification status.
+          Monitor and manage work experience verification requests.
         </p>
       </div>
 
       <Tabs
         value={filter}
+        defaultValue="all"
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
       >
-        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap">
+        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap mb-6">
           <TabsList className="bg-transparent h-12 p-0">
             <TabsTrigger
               value="all"
@@ -151,7 +156,7 @@ const WorkExpVerification = () => {
               All
             </TabsTrigger>
             <TabsTrigger
-              value="current"
+              value="pending"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Pending
@@ -216,8 +221,12 @@ const WorkExpVerification = () => {
                     ))
                   ) : (
                     <div className="text-center w-full col-span-full mt-10 py-10">
+                      <PackageOpen
+                        className="mx-auto text-gray-500"
+                        size={64}
+                      />
                       <p className="text-sm text-muted-foreground">
-                        No Work Experience verification found.
+                        No work experience verification records found.
                       </p>
                     </div>
                   )}

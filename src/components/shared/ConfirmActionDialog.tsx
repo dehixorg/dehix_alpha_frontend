@@ -47,9 +47,7 @@ export function ConfirmActionDialog({
   }
 
   const handleConfirm = () => {
-    console.log('ConfirmActionDialog handleConfirm called');
     onConfirm();
-    console.log('ConfirmActionDialog onConfirm executed');
     // onClose(); // Dialog is typically closed by the caller after onConfirm promise resolves or action completes
   };
 

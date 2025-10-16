@@ -58,22 +58,12 @@ export default function PastReportsTab() {
   const fetchReports = useCallback(async () => {
     if (!user?.uid) return;
 
-    console.log(
-      'Fetching reports for user:',
-      user.uid,
-      'page:',
-      page,
-      'limit:',
-      limit,
-    );
     setLoading(true);
     try {
       const res = await apiHelperService.getReportsByUser(user.uid, {
         page: String(page),
         limit: String(limit),
       });
-
-      console.log('Reports fetched:', res.data);
 
       const transformed = (res.data?.data || []).map((r: any) => ({
         id: r._id,
@@ -83,11 +73,9 @@ export default function PastReportsTab() {
         date: r.createdAt,
       }));
 
-      console.log('Transformed reports:', transformed);
       setPastReports(transformed);
       setTotalCount(res.data?.total || transformed.length);
     } catch (error) {
-      console.error('Error fetching reports:', error);
       notifyError('Failed to fetch past reports.', 'Error');
     } finally {
       setLoading(false);
@@ -162,7 +150,7 @@ export default function PastReportsTab() {
                 open={!!viewingReport}
                 onOpenChange={(open) => !open && handleCloseDialog()}
               >
-                <DialogContent className="max-w-5xl w-[90vw] p-0 overflow-hidden">
+                <DialogContent className="w-full max-w-lg sm:max-w-3xl md:max-w-5xl sm:w-[90vw] p-0 overflow-hidden">
                   <DialogHeader className="px-6 pt-6 pb-2 border-b">
                     <div className="flex justify-between items-center">
                       <DialogTitle className="text-2xl font-bold">
@@ -232,7 +220,8 @@ export default function PastReportsTab() {
                     </div>
                   ) : pastReports.length > 0 ? (
                     <>
-                      <div className="overflow-hidden border-none rounded-lg">
+                      {/* Desktop / Tablet: table view */}
+                      <div className="hidden sm:block overflow-hidden border-none rounded-lg">
                         <table className="min-w-full divide-y divide-border">
                           <thead className="bg-muted/30">
                             <tr>
@@ -318,6 +307,59 @@ export default function PastReportsTab() {
                             ))}
                           </tbody>
                         </table>
+                      </div>
+
+                      {/* Mobile: stacked list view */}
+                      <div className="sm:hidden space-y-3">
+                        {pastReports.map((report) => (
+                          <div
+                            key={report.id}
+                            className="bg-card border rounded-lg p-3 shadow-sm hover:shadow-md transition cursor-pointer"
+                            onClick={() => handleViewMessages(report)}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start space-x-3">
+                                <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
+                                <div className="min-w-0">
+                                  <div className="text-sm font-medium text-foreground line-clamp-2">
+                                    {report.subject}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {report.type.replace(/_/g, ' ')} •{' '}
+                                    <span className="align-middle">
+                                      {new Date(report.date).toLocaleDateString(
+                                        'en-US',
+                                        {
+                                          year: 'numeric',
+                                          month: 'short',
+                                          day: 'numeric',
+                                        },
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end space-y-2">
+                                <div>
+                                  <StatusBadge status={report.status} />
+                                </div>
+                                <div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewMessages(report);
+                                    }}
+                                  >
+                                    View
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                       <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 bg-muted/10 border-t">
                         <div className="text-sm text-muted-foreground mb-2 sm:mb-0">

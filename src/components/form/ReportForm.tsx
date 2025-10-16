@@ -86,24 +86,15 @@ export function ReportForm({
 
       // Upload images if any are selected
       if (images.length > 0) {
-        console.log(`Uploading ${images.length} images...`);
-
         for (let i = 0; i < images.length; i++) {
           const file = images[i];
           try {
-            console.log(
-              `Uploading image ${i + 1}/${images.length}:`,
-              file.name,
-            );
-
             // Try using the report service upload
             const response = await apiHelperService.uploadReportImage(file);
-            console.log(`Image ${i + 1} upload response:`, response);
 
             // Check if response has the correct structure
             if (response?.data?.data) {
               const imageData = response.data.data;
-              console.log('Image data received:', imageData);
 
               // Validate required fields
               if (imageData.Location && imageData.Key && imageData.Bucket) {
@@ -112,7 +103,6 @@ export function ReportForm({
                   Key: imageData.Key,
                   Bucket: imageData.Bucket,
                 });
-                console.log(`Image ${i + 1} uploaded successfully`);
               } else {
                 console.warn(
                   `Image ${i + 1} missing required fields:`,
@@ -140,7 +130,6 @@ export function ReportForm({
           }
         }
 
-        console.log('Final imageMeta array:', imageMetaArray);
         setFailedUploads(failed);
       }
 
@@ -151,9 +140,7 @@ export function ReportForm({
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
 
-      console.log('Submitting report with payload:', finalPayload);
-      const response = await apiHelperService.createReport(finalPayload);
-      console.log('Report created successfully:', response);
+      await apiHelperService.createReport(finalPayload);
 
       // Reset form after successful submission
       form.reset();

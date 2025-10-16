@@ -1,10 +1,16 @@
 import React, { useEffect } from 'react';
 // import { useForm } from 'react-hook-form';
-import { X } from 'lucide-react';
+import { NotebookText, X } from 'lucide-react';
 
 import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from '@/components/ui/card';
 
 // const promptTemplate = `
 // Job Title: {jobTitle} ,depends on job title give me summary for my resume within 3-4 lines in JSON format with field experience Level and summary with experience for fresher ,mid-level and experienced
@@ -74,11 +80,20 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
 
   return (
     <div>
-      <div className="space-y-1.5 ml-5 mb-5">
-        <h2 className="text-2xl">Professional Summary</h2>
-        <p className="text-sm text-gray-500">
-          Write a short introduction for your resume.
-        </p>
+      <div className="mb-5">
+        <div className="rounded-xl border bg-gradient p-4 sm:p-5 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 my-auto">
+            <NotebookText className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight">
+              Professional Summary
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Write a short introduction for your resume.
+            </p>
+          </div>
+        </div>
         {/* <Button
           onClick={generateFromAI}
           disabled={loading} // Disable the button while loading
@@ -100,27 +115,31 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
 
       <form className="space-y-5">
         {summaryData.map((summary, index) => (
-          <div key={index} className="relative space-y-4 p-6 shadow-lg">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-semibold">Summary {index + 1}</h3>
-              {index > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={() => handleRemoveSummary(index)}
-                  className="p-1 rounded-full"
-                >
-                  <X className="h-5 w-5 text-red-500" />
-                </Button>
-              )}
-            </div>
-
-            <Textarea
-              value={summary}
-              onChange={(e) => handleInputChange(index, e.target.value)}
-              placeholder="A brief, engaging text about yourself"
-              className="w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
-            />
-          </div>
+          <Card key={index} className="relative">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardDescription>A short professional intro.</CardDescription>
+                {index > 0 && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleRemoveSummary(index)}
+                    className="rounded-full"
+                    type="button"
+                    size="icon"
+                  >
+                    <X className="h-5 w-5 text-red-500" />
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={summary}
+                onChange={(e) => handleInputChange(index, e.target.value)}
+                placeholder="A brief, engaging text about yourself"
+              />
+            </CardContent>
+          </Card>
         ))}
       </form>
 

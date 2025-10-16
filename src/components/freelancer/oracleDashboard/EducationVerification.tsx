@@ -5,11 +5,10 @@ import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 
 interface EducationData {
   _id: string;
@@ -23,6 +22,7 @@ interface EducationData {
 }
 
 interface VerificationEntry {
+  _id: string;
   document_id: string;
   verification_status: string;
   comments: string;
@@ -46,22 +46,17 @@ interface CombinedData extends EducationData, VerificationEntry {}
 const OracleDashboard = () => {
   const [educationdata, setEducationData] = useState<CombinedData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleFilterChange = useCallback(
-    (newFilter: FilterOption) => setFilter(newFilter),
-    [],
-  );
+  const handleFilterChange = useCallback((newFilter: FilterOption) => {
+    setFilter(newFilter);
+  }, []);
 
-  const filteredData = useMemo(() => {
-    return educationdata.filter((data) => {
-      if (filter === 'all') return true;
-      if (filter === 'current')
-        return data.verification_status === StatusEnum.PENDING;
-      return data.verification_status === filter;
-    });
-  }, [educationdata, filter]);
-
+  const filteredData = educationdata.filter((data) => {
+    if (filter === 'all') return true;
+    if (filter === 'pending') return data.verification_status === 'PENDING';
+    if (filter === 'verified') return data.verification_status === 'APPROVED';
+    if (filter === 'rejected') return data.verification_status === 'DENIED';
+  });
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -81,19 +76,14 @@ const OracleDashboard = () => {
               `/verification/${entry.requester_id}/education`,
             );
 
-            const educationData =
-              educationResponse.data.data &&
-              educationResponse.data.data.length > 0
-                ? educationResponse.data.data[0].education
-                : null;
-
-            if (!educationData) return null;
-
-            const educationDocsArray = Object.values(
-              educationData,
+            const list = (educationResponse?.data?.data || []) as any[];
+            const allEducationDocs: EducationData[] = list.flatMap((e) =>
+              Object.values(e?.education || {}),
             ) as EducationData[];
 
-            const matchingEducationDoc = educationDocsArray.find(
+            if (!allEducationDocs || allEducationDocs.length === 0) return null;
+
+            const matchingEducationDoc = allEducationDocs.find(
               (doc) => doc._id === entry.document_id,
             );
 
@@ -163,7 +153,7 @@ const OracleDashboard = () => {
           Education Verification
         </h1>
         <p className="text-muted-foreground">
-          Monitor the status of your Education verifications.
+          Monitor and manage education verification requests.
         </p>
       </div>
 
@@ -171,7 +161,7 @@ const OracleDashboard = () => {
         value={filter}
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
       >
-        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap">
+        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap mb-6">
           <TabsList className="bg-transparent h-12 p-0">
             <TabsTrigger
               value="all"
@@ -180,7 +170,7 @@ const OracleDashboard = () => {
               All
             </TabsTrigger>
             <TabsTrigger
-              value="current"
+              value="pending"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Pending
@@ -226,8 +216,6 @@ const OracleDashboard = () => {
                         key={data.document_id}
                         _id={data.document_id}
                         type="education"
-                        requester={data.Requester}
-                        verifier={data.Verifier}
                         location={data.universityName}
                         degree={data.degree}
                         startFrom={data.startDate}
@@ -251,7 +239,7 @@ const OracleDashboard = () => {
                   ) : (
                     <div className="text-center w-full col-span-full mt-10 py-10">
                       <p className="text-sm text-muted-foreground">
-                        No Education verification found.
+                        No education verification records found.
                       </p>
                     </div>
                   )}

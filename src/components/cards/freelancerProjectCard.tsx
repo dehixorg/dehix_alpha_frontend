@@ -67,7 +67,7 @@ const ProjectCard: React.FC<ProjectProps> = ({
   return (
     <Card
       className={cn(
-        'w-full overflow-hidden transition-all hover:shadow-lg group border-border/50 hover:border-primary/20 bg-muted dark:bg-muted/20',
+        'w-full overflow-hidden rounded-xl border bg-card/60 shadow-sm transition-all duration-200 group hover:shadow-md hover:-translate-y-0.5 border-border/50 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40',
         isViewOnly ? 'cursor-default' : 'cursor-pointer',
       )}
       onClick={!isViewOnly ? onClick : undefined}
