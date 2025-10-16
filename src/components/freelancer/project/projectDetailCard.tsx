@@ -7,6 +7,7 @@ import {
   Play,
   Tag,
   RotateCcw,
+  Award,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
@@ -17,6 +18,9 @@ import { getStatusBadge } from '@/utils/statusBadge';
 import { Button } from '@/components/ui/button';
 import { RootState } from '@/lib/store';
 import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
+import StatItem from '@/components/shared/StatItem';
+import { DateHistory } from '@/components/shared/DateHistory';
+import { Progress } from '@/components/ui/progress';
 
 export interface ProjectDetailCardProps {
   projectName: string;
@@ -55,16 +59,6 @@ function ProjectDetailCard({
   // Construct the milestone route dynamically based on userRole and projectId
   const milestoneRoute = `${user?.type === 'business' ? '/business' : ''}/project/${projectId}/milestone`;
 
-  // Compute timeline progress between start and end dates
-  const formatDate = (d?: Date | null) => {
-    if (!d) return 'N/A';
-    try {
-      return new Date(d).toLocaleDateString();
-    } catch {
-      return 'N/A';
-    }
-  };
-
   const computeProgress = (start?: Date | null, end?: Date | null) => {
     if (!start || !end) return 0;
     const startMs = new Date(start).getTime();
@@ -79,7 +73,7 @@ function ProjectDetailCard({
   const progress = computeProgress(startDate, endDate);
 
   return (
-    <Card className="rounded-xl border border-border/60 shadow-sm hover:shadow-lg transition-shadow bg-muted-foreground/20 dark:bg-muted/20 ">
+    <Card className="rounded-xl border border-border/60 shadow-sm hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-xl md:text-2xl font-semibold tracking-tight">
@@ -95,26 +89,14 @@ function ProjectDetailCard({
       </CardHeader>
 
       <CardContent className="space-y-5">
-        {/* Timeline visualization */}
-        <div className="p-3 rounded-lg border bg-muted/20">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{formatDate(startDate)}</span>
-            <span>{formatDate(endDate)}</span>
-          </div>
-          <div className="relative mt-2 h-2 rounded-full bg-muted">
-            <div
-              className="absolute left-0 top-0 h-2 rounded-full bg-blue-600"
-              style={{ width: `${progress}%` }}
-            />
-            <div
-              className="absolute top-1/2 -translate-y-1/2 h-3 w-3 rounded-full border-2 border-background bg-blue-600 shadow"
-              style={{ left: `calc(${progress}% - 6px)` }}
-              aria-label={`Progress ${progress}%`}
-            />
-          </div>
-          <div className="mt-2 text-right text-xs font-medium text-muted-foreground">
-            {progress}% complete
-          </div>
+        {/* Dates timeline */}
+        <DateHistory startDate={startDate} endDate={endDate} />
+        {/* Progress */}
+        <div className="flex items-center gap-3">
+          <Progress value={progress} className="h-2 flex-1" />
+          <span className="text-xs text-muted-foreground text-right">
+            {progress}%
+          </span>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 md:gap-6">
@@ -157,12 +139,30 @@ function ProjectDetailCard({
           </div>
         </div>
 
-        {/* Email Section */}
-        <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-xs md:text-sm rounded-lg border bg-muted/20">
-          <Mail className="w-4 h-4 text-muted-foreground" />
-          <a href={`mailto:${email}`} className="text-sm hover:underline">
-            {email}
-          </a>
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <StatItem
+            icon={<Mail className="h-4 w-4" />}
+            label="Email"
+            value={
+              <a href={`mailto:${email}`} className="hover:underline">
+                {email}
+              </a>
+            }
+            color="blue"
+          />
+          <StatItem
+            icon={<Tag className="h-4 w-4" />}
+            label="Domains"
+            value={String(projectDomain.length)}
+            color="amber"
+          />
+          <StatItem
+            icon={<Award className="h-4 w-4" />}
+            label="Skills"
+            value={String(skills.length)}
+            color="green"
+          />
         </div>
 
         <p className="text-sm md:text-base leading-relaxed text-muted-foreground">
