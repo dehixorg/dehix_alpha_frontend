@@ -28,7 +28,6 @@ import {
   Dialog,
   DialogTrigger,
   DialogContent,
-  
   DialogHeader,
   DialogFooter,
   DialogTitle,
@@ -412,103 +411,101 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-                  <div className="md:col-span-2">
-                    <FormField
-                      control={form.control}
-                      name="techUsed"
-                      render={({ field }) => {
-                        const toggleSkill = (skillLabel: string) => {
-                          let updatedSkills: string[] = [];
-                          if (currSkills.includes(skillLabel)) {
-                            updatedSkills = currSkills.filter(
-                              (s) => s !== skillLabel,
-                            );
-                          } else {
-                            updatedSkills = [...currSkills, skillLabel];
-                          }
-                          setCurrSkills(updatedSkills);
-                          field.onChange(updatedSkills);
-                        };
+                <div className="md:col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="techUsed"
+                    render={({ field }) => {
+                      const toggleSkill = (skillLabel: string) => {
+                        let updatedSkills: string[] = [];
+                        if (currSkills.includes(skillLabel)) {
+                          updatedSkills = currSkills.filter(
+                            (s) => s !== skillLabel,
+                          );
+                        } else {
+                          updatedSkills = [...currSkills, skillLabel];
+                        }
+                        setCurrSkills(updatedSkills);
+                        field.onChange(updatedSkills);
+                      };
 
-                        return (
-                          <FormItem className="mb-4">
-                            <FormLabel>Skills</FormLabel>
-                            <FormControl>
-                              <div>
-                                <Popover open={open} onOpenChange={setOpen}>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      role="combobox"
-                                      aria-expanded={open}
-                                      className="w-full justify-between"
-                                    >
-                                      {currSkills.length > 0
-                                        ? `${currSkills.length} selected`
-                                        : 'Select skills'}
-                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-full p-0">
-                                    <Command>
-                                      <CommandInput placeholder="Search skills..." />
-                                      <CommandEmpty>
-                                        No skills found.
-                                      </CommandEmpty>
-                                      <CommandGroup>
-                                        {skills.map((skill: any) => (
-                                          <CommandItem
-                                            key={skill.label}
-                                            value={skill.label}
-                                            onSelect={() =>
-                                              toggleSkill(skill.label)
-                                            }
-                                          >
-                                            <Check
-                                              className={`mr-2 h-4 w-4 ${
-                                                currSkills.includes(skill.label)
-                                                  ? 'opacity-100'
-                                                  : 'opacity-0'
-                                              }`}
-                                            />
-                                            {skill.label}
-                                          </CommandItem>
-                                        ))}
-                                      </CommandGroup>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
-
-                                {/* Selected Skills Tags */}
-                                <div className="flex flex-wrap mt-3 gap-2">
-                                  {currSkills.map(
-                                    (skill: any, index: number) => (
-                                      <Badge
-                                        key={index}
-                                        variant="secondary"
-                                        className="text-xs flex items-center gap-1"
-                                      >
-                                        {skill}
-                                        <button
-                                          type="button"
-                                          onClick={() => toggleSkill(skill)}
-                                          className="ml-1 text-red-500 hover:text-red-700"
-                                          aria-label={`Remove ${skill}`}
+                      return (
+                        <FormItem className="mb-4">
+                          <FormLabel>Skills</FormLabel>
+                          <FormControl>
+                            <div>
+                              <Popover open={open} onOpenChange={setOpen}>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={open}
+                                    className="w-full justify-between"
+                                  >
+                                    {currSkills.length > 0
+                                      ? `${currSkills.length} selected`
+                                      : 'Select skills'}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0">
+                                  <Command>
+                                    <CommandInput placeholder="Search skills..." />
+                                    <CommandEmpty>
+                                      No skills found.
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                      {skills.map((skill: any) => (
+                                        <CommandItem
+                                          key={skill.label}
+                                          value={skill.label}
+                                          onSelect={() =>
+                                            toggleSkill(skill.label)
+                                          }
                                         >
-                                          <X className="h-3 w-3" />
-                                        </button>
-                                      </Badge>
-                                    ),
-                                  )}
-                                </div>
+                                          <Check
+                                            className={`mr-2 h-4 w-4 ${
+                                              currSkills.includes(skill.label)
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                            }`}
+                                          />
+                                          {skill.label}
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+
+                              {/* Selected Skills Tags */}
+                              <div className="flex flex-wrap mt-3 gap-2">
+                                {currSkills.map((skill: any, index: number) => (
+                                  <Badge
+                                    key={index}
+                                    variant="secondary"
+                                    className="text-xs flex items-center gap-1"
+                                  >
+                                    {skill}
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleSkill(skill)}
+                                      className="ml-1 text-red-500 hover:text-red-700"
+                                      aria-label={`Remove ${skill}`}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </Badge>
+                                ))}
                               </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+                </div>
               </>
             )}
 
