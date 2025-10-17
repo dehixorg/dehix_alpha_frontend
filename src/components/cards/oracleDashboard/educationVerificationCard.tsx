@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
-import { format } from 'date-fns';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
@@ -42,6 +41,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { VerificationStatus } from '@/utils/verificationStatus';
+import { DateHistory } from '@/components/shared/DateHistory';
 
 interface EducationProps {
   _id: string;
@@ -132,15 +132,6 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
     }
   }
 
-  const formatDate = (dateString: string) => {
-    try {
-      if (!dateString) return 'Invalid Date';
-      return format(new Date(dateString), 'MMMM d, yyyy');
-    } catch (e) {
-      return 'Invalid Date';
-    }
-  };
-
   return (
     <TooltipProvider>
       <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20">
@@ -230,18 +221,6 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                 {grade}
               </p>
             </div>
-            <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Start</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {formatDate(startFrom)}
-              </p>
-            </div>
-            <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
-              <p className="text-xs text-gray-500 dark:text-gray-400">End</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {endTo !== 'current' ? formatDate(endTo) : 'Current'}
-              </p>
-            </div>
           </div>
 
           {comments && (
@@ -253,6 +232,11 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
         </CardContent>
 
         <CardFooter className="px-6 py-5 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex-col items-stretch gap-4">
+          <DateHistory
+            startDate={startFrom ? new Date(startFrom) : undefined}
+            endDate={endTo !== 'current' && endTo ? new Date(endTo) : undefined}
+            className="dark:bg-background"
+          />
           {verificationStatus === VerificationStatus.PENDING && (
             <VerificationDecisionForm
               radioOptions={[

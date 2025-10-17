@@ -7,21 +7,13 @@ import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import MilestoneCards from './MilestoneCards';
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
   Carousel,
@@ -59,8 +51,7 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
   const [internalSelectedIndex, setInternalSelectedIndex] = useState<
     number | null
   >(0);
-  const [isDescOpen, setIsDescOpen] = useState(false);
-  const [descContent, setDescContent] = useState('');
+
   const [api, setApi] = useState<CarouselApi | null>(null);
 
   const selectedIndex =
@@ -245,30 +236,22 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                           </h3>
                           {milestone.description && (
                             <div className="flex items-center justify-center gap-1 mt-1">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-7 w-7"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDescContent(
-                                          milestone.description || '',
-                                        );
-                                        setIsDescOpen(true);
-                                      }}
-                                      aria-label="View description"
-                                    >
-                                      <Info className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>View description</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7"
+                                    onClick={(e) => e.stopPropagation()}
+                                    aria-label="View description"
+                                  >
+                                    <Info className="h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-72 text-sm whitespace-pre-wrap leading-relaxed">
+                                  {milestone.description}
+                                </PopoverContent>
+                              </Popover>
                             </div>
                           )}
                         </div>
@@ -311,19 +294,7 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
           </div>
         </div>
 
-        {/* Shared dialog for mobile milestone description */}
-        <Dialog open={isDescOpen} onOpenChange={setIsDescOpen}>
-          <DialogContent className="w-[90vw] max-w-full md:w-auto">
-            <DialogHeader>
-              <DialogTitle>Description</DialogTitle>
-              <DialogDescription asChild>
-                <div className="text-sm whitespace-pre-wrap leading-relaxed mt-2 max-w-full break-words">
-                  {descContent}
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
+        {/* Popover now handles description display for mobile */}
       </CardContent>
     </Card>
   );
