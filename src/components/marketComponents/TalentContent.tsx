@@ -72,7 +72,10 @@ const TalentContent: React.FC<TalentContentProps> = ({
                 <SelectContent>
                   <SelectItem value="all">All Skills</SelectItem>
                   {filterSkill?.map((skill) => (
-                    <SelectItem key={skill._id} value={skill.label}>
+                    <SelectItem
+                      key={skill._id || skill.label}
+                      value={skill.label}
+                    >
                       {skill.label}
                     </SelectItem>
                   ))}
@@ -86,7 +89,10 @@ const TalentContent: React.FC<TalentContentProps> = ({
                 <SelectContent>
                   <SelectItem value="all">All Domains</SelectItem>
                   {filterDomain?.map((domain) => (
-                    <SelectItem key={domain._id} value={domain.label}>
+                    <SelectItem
+                      key={domain._id || domain.label}
+                      value={domain.label}
+                    >
                       {domain.label}
                     </SelectItem>
                   ))}
