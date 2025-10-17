@@ -94,12 +94,13 @@ interface Talent {
   education?: Record<string, Education>;
   projects?: Record<string, Projects>;
 }
-interface Skill {
+
+interface SkillOption {
   _id: string;
   label: string;
 }
 
-interface Domain {
+interface DomainOption {
   _id: string;
   label: string;
 }
@@ -107,8 +108,8 @@ interface Domain {
 interface TalentCardProps {
   skillFilter: string | null;
   domainFilter: string | null;
-  setFilterSkill?: (skills: { _id: string; label: string }[]) => void;
-  setFilterDomain?: (domains: { _id: string; label: string }[]) => void;
+  setFilterSkill?: (skills: SkillOption[]) => void;
+  setFilterDomain?: (domains: DomainOption[]) => void;
 }
 interface SkillDomainData {
   uid: string;
@@ -135,9 +136,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const [skills, setSkills] = useState<SkillOption[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [domains, setDomains] = useState<Domain[]>([]);
+  const [domains, setDomains] = useState<DomainOption[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const user = useSelector((state: RootState) => state.user);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);

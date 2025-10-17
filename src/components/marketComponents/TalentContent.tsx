@@ -18,12 +18,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface Skill {
+interface SkillOption {
   _id: string;
   label: string;
 }
 
-interface Domain {
+interface DomainOption {
   _id: string;
   label: string;
 }
@@ -42,11 +42,16 @@ const TalentContent: React.FC<TalentContentProps> = ({
   // State for overview tab filters
   const [skillFilter, setSkillFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
-  const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
-  const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
+  const [filterSkill, setFilterSkill] = useState<SkillOption[]>([]);
+  const [filterDomain, setFilterDomain] = useState<DomainOption[]>([]);
 
   const renderCards = () => {
     if (activeTab === 'overview') {
+      if (loading) {
+        return (
+          <div className="text-center text-muted-foreground">Loading...</div>
+        );
+      }
       return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left side: Skill Domain Form (2/3 width) */}
