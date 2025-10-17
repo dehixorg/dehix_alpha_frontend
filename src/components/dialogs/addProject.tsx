@@ -27,6 +27,7 @@ import {
   Dialog,
   DialogTrigger,
   DialogContent,
+  
   DialogHeader,
   DialogFooter,
   DialogTitle,
@@ -237,7 +238,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   };
 
   const handleDiscardAndClose = () => {
-    resetForm(); // Reset the form when discarding
     discardAndClose();
   };
 
