@@ -230,10 +230,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     setCurrSkills,
   });
 
-  const handleSaveAndClose = async () => {
-    // First save the draft
-    const formValues = form.getValues();
-    restoredDraft.current = { ...formValues, techUsed: currSkills };
+  const handleSaveAndClose = () => {
     saveDraftAndClose();
   };
 
@@ -501,7 +498,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                   name="githubLink"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>GitHub Repo Link </FormLabel>
+                      <FormLabel>GitHub Repo Link</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter GitHub repository link (optional)"
