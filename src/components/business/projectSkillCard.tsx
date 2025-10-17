@@ -112,7 +112,11 @@ function ProjectSkillCard({
 
       <CardContent className="flex-1 flex flex-col gap-3 pt-0">
         {/* Date history/status */}
-        <DateHistory startDate={startDate} endDate={endDate} />
+        <DateHistory
+          startDate={startDate}
+          endDate={endDate}
+          className="dark:bg-background"
+        />
         {/* Team members */}
         <ScrollArea className="flex-1 rounded-md border card p-3">
           <div className="space-y-3">

@@ -29,7 +29,7 @@ export const DateHistory: React.FC<DateHistoryProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`rounded-md border bg-muted/20 px-3 py-2 ${className}`}>
+    <div className={`rounded-md card px-3 py-2 ${className}`}>
       <div className="flex items-center gap-2 text-sm">
         <Calendar className="w-4 h-4" />
         {startDate ? (
