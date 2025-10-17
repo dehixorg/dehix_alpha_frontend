@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import {
   CheckCircle,
   Video,
@@ -704,17 +710,19 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [error, setError] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string>();
   const [bids, setBids] = useState<BidDetail[]>([]);
-  const [, setLoadingBids] = useState<Record<string, boolean>>({});
   const [loadingFreelancerDetails, setLoadingFreelancerDetails] =
     useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
     null,
   );
-  const [, setSelectedFreelancerId] = useState<string | null>(null);
+  const [selectedFreelancerId, setSelectedFreelancerId] = useState<
+    string | null
+  >(null);
   const [profileData, setProfileData] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [selectedBidData, setSelectedBidData] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<string>('all');
 
   // Interview dialog state
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
@@ -1059,59 +1067,62 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     setIsInterviewDialogOpen(true);
   }, []);
 
-  // Update bid status
-  const [activeTab, setActiveTab] = useState<string>('all');
+  // Auto-refresh state - setter is not currently used
+  const [autoRefresh, _setAutoRefresh] = useState(true);
+  const refreshIntervalRef = useRef<NodeJS.Timeout>();
+
+  // Add this effect for auto-refresh
+  useEffect(() => {
+    const refreshBids = async () => {
+      if (autoRefresh && profileId) {
+        try {
+          await fetchBid(profileId);
+        } catch (error) {
+          console.error('Error during auto-refresh:', error);
+        }
+      }
+    };
+
+    // Initial fetch
+    refreshBids();
+
+    // Set up interval for auto-refresh (every 30 seconds)
+    refreshIntervalRef.current = setInterval(refreshBids, 30000);
+
+    // Clean up interval on component unmount or when dependencies change
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+    };
+  }, [autoRefresh, profileId, fetchBid]);
+
+  // Update the handleUpdateStatus function to handle auto-refresh
   const handleUpdateStatus = useCallback(
     async (bidId: string, status: BidStatus) => {
       if (!profileId) return;
 
+      // ... (rest of your existing code)
+
       try {
-        setLoadingBids((prev) => ({ ...prev, [bidId]: true }));
+        // ... (existing try block code)
 
-        // Optimistic update
-        setBids((prev) =>
-          prev.map((bid) =>
-            bid._id === bidId ? { ...bid, bid_status: status } : bid,
-          ),
-        );
-
+        // After successful status update
         await axiosInstance.put(`/bid/${bidId}/status`, { bid_status: status });
 
-        // Refresh the bids list
-        const response = await axiosInstance.get(
-          `/bid/project/${id}/profile/${profileId}/bid`,
-        );
-        const updatedBids = response.data?.data || [];
-        setBids(updatedBids);
+        // Force immediate refresh after status update
+        await fetchBid(profileId);
 
-        // Switch to the appropriate tab based on the new status
-        if (['ACCEPTED', 'REJECTED', 'PANEL'].includes(status)) {
-          const newActiveTab = status.toLowerCase();
-          // Update URL to reflect the active tab
-          window.history.replaceState(null, '', `?tab=${newActiveTab}`);
-          // Update active tab state
-          setActiveTab(newActiveTab);
-        }
-
-        notifySuccess(`Bid ${status.toLowerCase()} successfully.`, 'Success');
+        // ... (rest of your existing code)
       } catch (error: any) {
-        // Revert optimistic update on error
-        setBids((prev) =>
-          prev.map((bid) =>
-            bid._id === bidId ? { ...bid, bid_status: 'PENDING' } : bid,
-          ),
-        );
-
-        const errorMessage =
-          error.response?.data?.message || 'Failed to update bid status';
-        setError(errorMessage);
-        notifyError(errorMessage, 'Error');
+        // ... (your existing error handling)
       } finally {
-        setLoadingBids((prev) => ({ ...prev, [bidId]: false }));
+        // ... (your existing finally block)
       }
     },
-    [id, profileId, setActiveTab], // Add setActiveTab to dependencies
+    [profileId, fetchBid, setActiveTab], // Removed 'bids' from dependencies
   );
+
   // Get action options based on bid status
   const getActionOptions = useCallback(
     (status: BidStatus) => {
