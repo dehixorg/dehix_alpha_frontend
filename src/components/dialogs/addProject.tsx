@@ -366,7 +366,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                           {...field}
                         />
                       </FormControl>
-                      
+
                       <FormMessage />
                     </FormItem>
                   )}
@@ -521,7 +521,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Live Demo Link</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter live demo link (optional)" {...field} />
+                        <Input
+                          placeholder="Enter live demo link (optional)"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -582,7 +585,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Project Type</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter project type (optional)" {...field} />
+                        <Input
+                          placeholder="Enter project type (optional)"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -596,7 +602,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Comments</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter any comments (optional)" {...field} />
+                        <Input
+                          placeholder="Enter any comments (optional)"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
