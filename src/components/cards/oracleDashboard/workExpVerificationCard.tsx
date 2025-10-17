@@ -237,7 +237,6 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Repository
             </p>
-            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
               {githubRepoLink ? (
                 <a
                   href={githubRepoLink}
@@ -249,40 +248,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
                 </a>
               ) : (
                 'N/A'
-            <div className="mt-1 space-y-2">
-              {referencePersonName && (
-                <div className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                  <User2Icon className="h-4 w-4" /> {referencePersonName}
-                </div>
               )}
-              {referencePersonContact && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-0 text-foreground/90 hover:text-primary hover:bg-transparent justify-start gap-2"
-                      asChild
-                    >
-                      <a
-                        href={`tel:${referencePersonContact.replace(/\D/g, '')}`}
-                      >
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4" />
-                          <span className="truncate">
-                            {referencePersonContact}
-                          </span>
-                          <ArrowUpRight className="h-3.5 w-3.5 opacity-70" />
-                        </div>
-                      </a>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    Click to call {referencePersonName || 'reference'}
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
           </div>
         </div>
 
