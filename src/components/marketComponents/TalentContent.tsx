@@ -42,7 +42,6 @@ const TalentContent: React.FC<TalentContentProps> = ({
   // State for overview tab filters
   const [skillFilter, setSkillFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
-  const [skillDomainFormProps] = useState<any>();
   const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
 
@@ -100,7 +99,8 @@ const TalentContent: React.FC<TalentContentProps> = ({
               <TalentCard
                 skillFilter={skillFilter}
                 domainFilter={domainFilter}
-                skillDomainFormProps={skillDomainFormProps}
+                setFilterSkill={setFilterSkill}
+                setFilterDomain={setFilterDomain}
               />
             </div>
           </div>
