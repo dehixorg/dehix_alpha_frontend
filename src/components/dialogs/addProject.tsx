@@ -37,6 +37,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -411,48 +412,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="techUsed"
-                  render={({ field }) => {
-                    const toggleSkill = (skillLabel: string) => {
-                      let updatedSkills: string[] = [];
-                      if (currSkills.includes(skillLabel)) {
-                        updatedSkills = currSkills.filter(
-                          (s) => s !== skillLabel,
-                        );
-                      } else {
-                        updatedSkills = [...currSkills, skillLabel];
-                      }
-                      setCurrSkills(updatedSkills);
-                      field.onChange(updatedSkills);
-                    };
-
-                    return (
-                      <FormItem className="mb-4">
-                        <FormLabel>Skills</FormLabel>
-                        <FormControl>
-                          <DatePicker {...field} max={currentDate} />
-                        </FormControl>
-                        <FormDescription>Select the start date</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="end"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Date</FormLabel>
-                        <FormControl>
-                          <DatePicker {...field} />
-                        </FormControl>
-                        <FormDescription>Select the end date</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                   <div className="md:col-span-2">
                     <FormField
                       control={form.control}
@@ -550,7 +509,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       }}
                     />
                   </div>
-                </div>
               </>
             )}
 

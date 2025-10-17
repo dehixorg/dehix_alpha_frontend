@@ -237,18 +237,18 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Repository
             </p>
-              {githubRepoLink ? (
-                <a
-                  href={githubRepoLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 text-primary hover:underline"
-                >
-                  <Github className="h-4 w-4" /> View Repo
-                </a>
-              ) : (
-                'N/A'
-              )}
+            {githubRepoLink ? (
+              <a
+                href={githubRepoLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 text-primary hover:underline"
+              >
+                <Github className="h-4 w-4" /> View Repo
+              </a>
+            ) : (
+              'N/A'
+            )}
           </div>
         </div>
 
