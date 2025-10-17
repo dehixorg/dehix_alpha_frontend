@@ -719,6 +719,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [profileData, setProfileData] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [selectedBidData, setSelectedBidData] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<BidStatus>('PENDING');
 
   // Interview dialog state
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
@@ -1115,7 +1116,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         // Refresh data to ensure consistency
         await fetchBid(profileId);
 
-        // Update URL query parameter if needed
+        // Update URL query parameter and active tab
         const searchParams = new URLSearchParams(window.location.search);
         searchParams.set('status', newStatus);
         window.history.replaceState(
@@ -1123,6 +1124,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           '',
           `${window.location.pathname}?${searchParams.toString()}`,
         );
+        setActiveTab(newStatus);
       } catch (error) {
         // Revert to original status on error
         setBids((prevBids) =>
@@ -1135,9 +1137,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         console.error('Failed to update bid status:', error);
         // Uncomment if you have a toast notification system
         // toast.error('Failed to update bid status. Please try again.');
-
-        // Re-throw to allow error boundaries to catch it if needed
-        throw error;
       }
     },
     [bids, fetchBid, profileId],
@@ -1477,7 +1476,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     />
                   </div>
 
-                  <Tabs defaultValue="PENDING" className="w-full">
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={(value) => setActiveTab(value as BidStatus)}
+                    className="w-full"
+                  >
                     <TabsList className="grid w-full grid-cols-5 mb-4 sticky top-0 z-10">
                       {BID_STATUSES.map((status) => (
                         <TabsTrigger key={status} value={status}>
