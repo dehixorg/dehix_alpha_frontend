@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -114,7 +113,6 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     discardDraft,
     handleSaveAndClose,
     handleDiscardAndClose: handleDiscardAndCloseDraft,
-    handleDialogClose,
   } = useDraft({
     form,
     formSection: 'education',
@@ -234,7 +232,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+            onSubmit={form.handleSubmit(onSubmit, () => {
               notifyError(
                 'Please fill in all required fields',
                 'Validation Error',
