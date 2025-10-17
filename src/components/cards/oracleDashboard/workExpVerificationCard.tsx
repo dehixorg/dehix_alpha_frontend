@@ -161,9 +161,12 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
             <p className="text-xs text-gray-500 dark:text-gray-400">Company</p>
-            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              <Building className="h-4 w-4" /> {company}
-            </p>
+            <div className="flex items-start gap-2 w-full min-w-0">
+              <Building className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                {company}
+              </span>
+            </div>
           </div>
           <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -175,9 +178,12 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
           </div>
           <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
             <p className="text-xs text-gray-500 dark:text-gray-400">Contact</p>
-            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              <Phone className="h-4 w-4" /> {referencePersonContact}
-            </p>
+            <div className="flex items-start gap-2">
+              <Phone className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                {referencePersonContact}
+              </span>
+            </div>
           </div>
           <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
             <p className="text-xs text-gray-500 dark:text-gray-400">
