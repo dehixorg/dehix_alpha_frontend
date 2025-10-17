@@ -38,7 +38,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { notifyError } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomTable } from '@/components/custom-table/CustomTable';
@@ -716,13 +716,9 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
     null,
   );
-  const [selectedFreelancerId, setSelectedFreelancerId] = useState<
-    string | null
-  >(null);
   const [profileData, setProfileData] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [selectedBidData, setSelectedBidData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<string>('all');
 
   // Interview dialog state
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
@@ -1067,60 +1063,84 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     setIsInterviewDialogOpen(true);
   }, []);
 
-  // Auto-refresh state - setter is not currently used
-  const [autoRefresh, _setAutoRefresh] = useState(true);
+  // Auto-refresh interval reference
   const refreshIntervalRef = useRef<NodeJS.Timeout>();
+  const REFRESH_INTERVAL = 30000; // 30 seconds
 
-  // Add this effect for auto-refresh
+  // Auto-refresh effect
   useEffect(() => {
-    const refreshBids = async () => {
-      if (autoRefresh && profileId) {
-        try {
-          await fetchBid(profileId);
-        } catch (error) {
-          console.error('Error during auto-refresh:', error);
-        }
-      }
-    };
+    if (!profileId) return;
 
-    // Initial fetch
-    refreshBids();
+    // Initial fetch is handled by the main fetch effect
 
-    // Set up interval for auto-refresh (every 30 seconds)
-    refreshIntervalRef.current = setInterval(refreshBids, 30000);
+    // Set up interval for auto-refresh
+    refreshIntervalRef.current = setInterval(() => {
+      fetchBid(profileId).catch((error) =>
+        console.error('Error during auto-refresh:', error),
+      );
+    }, REFRESH_INTERVAL);
 
-    // Clean up interval on component unmount or when dependencies change
+    // Clean up interval on unmount or when profileId changes
     return () => {
       if (refreshIntervalRef.current) {
         clearInterval(refreshIntervalRef.current);
       }
     };
-  }, [autoRefresh, profileId, fetchBid]);
+  }, [profileId]); // Only depend on profileId
 
-  // Update the handleUpdateStatus function to handle auto-refresh
+  // Handle bid status updates with optimistic UI
   const handleUpdateStatus = useCallback(
-    async (bidId: string, status: BidStatus) => {
+    async (bidId: string, newStatus: BidStatus) => {
       if (!profileId) return;
 
-      // ... (rest of your existing code)
+      // Find the bid to update and capture its current state
+      const bidToUpdate = bids.find((bid) => bid._id === bidId);
+      if (!bidToUpdate) return;
+
+      const originalStatus = bidToUpdate.bid_status;
+
+      // Optimistic update: immediately update local state
+      setBids((prevBids) =>
+        prevBids.map((bid) =>
+          bid._id === bidId ? { ...bid, bid_status: newStatus } : bid,
+        ),
+      );
 
       try {
-        // ... (existing try block code)
+        // Update status on the server
+        await axiosInstance.put(`/bid/${bidId}/status`, {
+          bid_status: newStatus,
+        });
 
-        // After successful status update
-        await axiosInstance.put(`/bid/${bidId}/status`, { bid_status: status });
-
-        // Force immediate refresh after status update
+        // Refresh data to ensure consistency
         await fetchBid(profileId);
 
-        // ... (rest of your existing code)
-      } catch (error: any) {
-        // ... (your existing error handling)
-      } finally {
-        // ... (your existing finally block)
+        // Update URL query parameter if needed
+        const searchParams = new URLSearchParams(window.location.search);
+        searchParams.set('status', newStatus);
+        window.history.replaceState(
+          {},
+          '',
+          `${window.location.pathname}?${searchParams.toString()}`,
+        );
+      } catch (error) {
+        // Revert to original status on error
+        setBids((prevBids) =>
+          prevBids.map((bid) =>
+            bid._id === bidId ? { ...bid, bid_status: originalStatus } : bid,
+          ),
+        );
+
+        // Show error to user
+        console.error('Failed to update bid status:', error);
+        // Uncomment if you have a toast notification system
+        // toast.error('Failed to update bid status. Please try again.');
+
+        // Re-throw to allow error boundaries to catch it if needed
+        throw error;
       }
     },
-    [profileId, fetchBid, setActiveTab], // Removed 'bids' from dependencies
+    [bids, fetchBid, profileId],
   );
 
   // Get action options based on bid status
