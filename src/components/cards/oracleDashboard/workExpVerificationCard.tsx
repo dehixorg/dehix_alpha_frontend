@@ -1,5 +1,14 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+const isSafeGithubUrl = (value?: string) => {
+  if (!value) return false;
+  try {
+    const u = new URL(value);
+    return u.protocol === 'https:' && u.hostname === 'github.com';
+  } catch {
+    return false;
+  }
+};
 import {
   MessageSquareIcon,
   Github,
@@ -8,7 +17,6 @@ import {
   Building,
   MoreVertical,
   CircleAlert,
-  ArrowUpRight,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
@@ -190,7 +198,8 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
                         <a
                           href={githubRepoLink}
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
+                          aria-label="Open GitHub repository"
                         >
                           <Github className="h-4 w-4" />
                         </a>
@@ -209,48 +218,47 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50 sm:col-span-2">
             <p className="text-xs text-gray-500 dark:text-gray-400">Company</p>
-            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              <Building className="h-4 w-4" /> {company}
-            </p>
+            <div className="flex items-start gap-2 w-full min-w-0">
+              <Building className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                {company}
+              </span>
+            </div>
           </div>
           <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50 sm:col-span-2">
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Reference Contact
             </p>
-            <div className="mt-1 space-y-2">
-              {referencePersonName && (
-                <div className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                  <User2Icon className="h-4 w-4" /> {referencePersonName}
-                </div>
-              )}
-              {referencePersonContact && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-0 text-foreground/90 hover:text-primary hover:bg-transparent justify-start gap-2"
-                      asChild
-                    >
-                      <a
-                        href={`tel:${referencePersonContact.replace(/\D/g, '')}`}
-                      >
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4" />
-                          <span className="truncate">
-                            {referencePersonContact}
-                          </span>
-                          <ArrowUpRight className="h-3.5 w-3.5 opacity-70" />
-                        </div>
-                      </a>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    Click to call {referencePersonName || 'reference'}
-                  </TooltipContent>
-                </Tooltip>
-              )}
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+              <User2Icon className="h-4 w-4" /> {referencePersonName}
+            </p>
+          </div>
+          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+            <p className="text-xs text-gray-500 dark:text-gray-400">Contact</p>
+            <div className="flex items-start gap-2">
+              <Phone className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                {referencePersonContact}
+              </span>
             </div>
+          </div>
+          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Repository
+            </p>
+            {githubRepoLink && isSafeGithubUrl(githubRepoLink) ? (
+              <a
+                href={githubRepoLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-primary hover:underline"
+                aria-label="Open GitHub repository"
+              >
+                <Github className="h-4 w-4" /> View Repo
+              </a>
+            ) : (
+              'N/A'
+            )}
           </div>
         </div>
 
