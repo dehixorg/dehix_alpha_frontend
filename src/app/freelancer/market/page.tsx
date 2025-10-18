@@ -418,7 +418,7 @@ const Market: React.FC = () => {
                   Find Your Next Opportunity
                 </h2>
                 <p className="hidden md:block text-muted-foreground">
-                  Browse through available projects and find your next gig
+                  Browse through available projects and find your next big
                 </p>
               </div>
               <div className="flex items-center justify-between px-1">

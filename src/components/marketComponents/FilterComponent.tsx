@@ -104,7 +104,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   setProjectDomainSearchQuery,
 }) => {
   return (
-    <div className="sticky top-[4rem] h-[calc(100vh-6rem)] border rounded-lg flex flex-col">
+    <div className="sticky top-[4rem] lg:h-[calc(100vh-6rem)] border rounded-lg flex flex-col">
       <div className="bg-gradient border-b p-4 rounded-t-lg">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Filters</h2>

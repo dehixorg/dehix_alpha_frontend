@@ -162,9 +162,7 @@ export default function BusinessFilterComponent({
                   ) : (
                     items
                       .filter((item) =>
-                        item
-                          .toLowerCase()
-                          .includes(searchQuery.toLowerCase()),
+                        item.toLowerCase().includes(searchQuery.toLowerCase()),
                       )
                       .map((item) => (
                         <div
