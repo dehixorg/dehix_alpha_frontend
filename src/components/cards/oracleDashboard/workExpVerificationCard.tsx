@@ -1,6 +1,5 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-
 const isSafeGithubUrl = (value?: string) => {
   if (!value) return false;
   try {
@@ -18,7 +17,6 @@ import {
   Building,
   MoreVertical,
   CircleAlert,
-  ArrowUpRight,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
