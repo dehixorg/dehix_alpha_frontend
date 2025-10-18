@@ -24,13 +24,6 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
   const uid = React.useId();
   const budgetType = form.watch(`profiles.${activeProfile}.budget.type`);
 
-  const profileBudgetErrors = (() => {
-    const profilesErr: any = (form.formState.errors as any)?.profiles;
-    if (Array.isArray(profilesErr)) {
-      return profilesErr?.[activeProfile]?.budget;
-    }
-    return undefined;
-  })();
   return (
     <div
       className={
@@ -192,14 +185,14 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
         </div>
       )}
 
-      {profileBudgetErrors && (
+      {/* {profileBudgetErrors && (
         <p className="text-sm text-red-600 mt-4">
           {Object.values(profileBudgetErrors || {})
             .map((err: any) => err?.message)
             .filter(Boolean)
             .join(', ')}
         </p>
-      )}
+      )} */}
     </div>
   );
 };

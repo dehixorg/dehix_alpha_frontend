@@ -1,10 +1,8 @@
 import {
-  BookOpen,
-  Briefcase,
+  FileText,
   FileWarning,
   HomeIcon,
-  ImagePlus,
-  Package,
+  UserCog,
   ShieldCheck,
   User,
   UserCheck,
@@ -38,24 +36,14 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Personal Info',
   },
   {
+    href: '/freelancer/settings/profile',
+    icon: <UserCog className="h-5 w-5" />,
+    label: 'Profile Settings',
+  },
+  {
     href: '/freelancer/settings/kyc',
     icon: <ShieldCheck className="h-5 w-5" />,
     label: 'KYC',
-  },
-  {
-    href: '/freelancer/settings/professional-info',
-    icon: <Briefcase className="h-5 w-5" />,
-    label: 'Professional Info',
-  },
-  {
-    href: '/freelancer/settings/projects',
-    icon: <Package className="h-5 w-5" />,
-    label: 'Projects',
-  },
-  {
-    href: '/freelancer/settings/education-info',
-    icon: <BookOpen className="h-5 w-5" />,
-    label: 'Education',
   },
   {
     href: '/freelancer/settings/profiles',
@@ -64,8 +52,8 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/freelancer/settings/resume',
-    icon: <ImagePlus className="h-5 w-5" />,
-    label: 'Portfolio',
+    icon: <FileText className="h-5 w-5" />,
+    label: 'Resume',
   },
   {
     href: '/reports', // Link to your new Reports page

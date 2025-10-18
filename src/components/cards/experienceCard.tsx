@@ -27,8 +27,10 @@ import {
 import { DateHistory } from '@/components/shared/DateHistory';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { cn } from '@/lib/utils';
+import DeleteIconButton from '@/components/shared/DeleteIconButton';
 
 export interface ExperienceCardProps {
+  _id?: string;
   company: string;
   jobTitle: string;
   workDescription: string;
@@ -47,9 +49,11 @@ export interface ExperienceCardProps {
     | 'internship'
     | 'freelance';
   skills?: string[];
+  onDelete?: (id?: string) => Promise<void> | void;
 }
 
 const ExperienceCard: React.FC<ExperienceCardProps> = ({
+  _id,
   company,
   jobTitle,
   workDescription,
@@ -63,7 +67,9 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
   workTo,
   employmentType,
   skills = [],
+  onDelete,
 }) => {
+  const [isDeleting, setIsDeleting] = React.useState(false);
   const employmentTypeLabels = {
     'full-time': 'Full-time',
     'part-time': 'Part-time',
@@ -75,7 +81,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
   return (
     <Card
       className={cn(
-        'w-full overflow-hidden transition-all hover:shadow-lg group border-border/50 hover:border-primary/20 bg-muted/20',
+        'w-full h-full overflow-hidden rounded-xl border bg-card/60 shadow-sm transition-all duration-200 group hover:shadow-md hover:-translate-y-0.5 border-border/50 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40',
         className,
       )}
     >
@@ -104,10 +110,27 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
             {workFrom && <DateHistory startDate={workFrom} endDate={workTo} />}
           </div>
-          <StatusBadge
-            status={verificationStatus}
-            className="group-hover:shadow-sm transition-shadow"
-          />
+          <div className="flex items-center gap-2">
+            <StatusBadge
+              status={verificationStatus}
+              className="group-hover:shadow-sm transition-shadow"
+            />
+            {onDelete && (
+              <DeleteIconButton
+                ariaLabel="Delete experience"
+                onDelete={async () => {
+                  if (isDeleting) return;
+                  try {
+                    setIsDeleting(true);
+                    await onDelete?.(_id);
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                disabled={isDeleting}
+              />
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -136,7 +159,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             </div>
           )}
 
-          <Card className="w-full overflow-hidden border-border/50 hover:border-primary/20 transition-colors group bg-muted/20">
+          <Card className="w-full h-full overflow-hidden border-border/50 hover:border-primary/20 transition-colors group bg-muted/20">
             <CardHeader className="p-4 pb-3">
               <CardTitle className="flex items-center gap-3">
                 <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">

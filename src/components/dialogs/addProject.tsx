@@ -9,8 +9,10 @@ import {
   ArrowLeft,
   Check,
   ChevronsUpDown,
+  FolderKanban,
 } from 'lucide-react';
 
+import { DatePicker } from '../shared/datePicker';
 import DraftDialog from '../shared/DraftDialog';
 
 import { Badge } from '@/components/ui/badge';
@@ -306,14 +308,29 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen no-scrollbar">
+      <DialogContent className="lg:max-w-screen-lg overflow-y-auto max-h-[90vh] no-scrollbar">
         <DialogHeader>
-          <DialogTitle>Add Project - Step {step} of 2</DialogTitle>
-          <DialogDescription>
-            {step === 1
-              ? 'Fill in the basic details of your project.'
-              : 'Fill in the additional project details.'}
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <FolderKanban className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle>Add Project</DialogTitle>
+              <DialogDescription>
+                {step === 1
+                  ? 'Start with core details, timeline, and skills.'
+                  : 'Add links, media, and more context.'}
+              </DialogDescription>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <div
+              className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}
+            ></div>
+            <div
+              className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}
+            ></div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
@@ -321,293 +338,305 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
             {/* Step 1: Basic Project Information */}
             {step === 1 && (
               <>
-                <FormField
-                  control={form.control}
-                  name="projectName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter project name" {...field} />
-                      </FormControl>
-                      <FormDescription>Enter the project name</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4 grid-cols-2">
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="projectName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Project Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter project name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Enter the project name
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter project description"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Enter the project description
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter project description"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the project description
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="start"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" max={currentDate} {...field} />
-                      </FormControl>
-                      <FormDescription>Select the start date</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="end"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormDescription>Select the end date</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="techUsed"
-                  render={({ field }) => {
-                    const toggleSkill = (skillLabel: string) => {
-                      let updatedSkills: string[] = [];
-                      if (currSkills.includes(skillLabel)) {
-                        updatedSkills = currSkills.filter(
-                          (s) => s !== skillLabel,
-                        );
-                      } else {
-                        updatedSkills = [...currSkills, skillLabel];
-                      }
-                      setCurrSkills(updatedSkills);
-                      field.onChange(updatedSkills);
-                    };
-
-                    return (
-                      <FormItem className="mb-4">
-                        <FormLabel>Skills</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="start"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
                         <FormControl>
-                          <div>
-                            {/* Multi-select Dropdown with proper accessibility */}
-                            <Popover open={open} onOpenChange={setOpen}>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  role="combobox"
-                                  aria-expanded={open}
-                                  className="w-full justify-between"
-                                >
-                                  {currSkills.length > 0
-                                    ? `${currSkills.length} selected`
-                                    : 'Select skills'}
-                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-full p-0">
-                                <Command>
-                                  <CommandInput placeholder="Search skills..." />
-                                  <CommandEmpty>No skills found.</CommandEmpty>
-                                  <CommandGroup>
-                                    {skills.map((skill: any) => (
-                                      <CommandItem
-                                        key={skill.label}
-                                        value={skill.label}
-                                        onSelect={() =>
-                                          toggleSkill(skill.label)
-                                        }
-                                      >
-                                        <Check
-                                          className={`mr-2 h-4 w-4 ${
-                                            currSkills.includes(skill.label)
-                                              ? 'opacity-100'
-                                              : 'opacity-0'
-                                          }`}
-                                        />
-                                        {skill.label}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                </Command>
-                              </PopoverContent>
-                            </Popover>
-
-                            {/* Selected Skills Tags */}
-                            <div className="flex flex-wrap mt-3 gap-2">
-                              {currSkills.map((skill: any, index: number) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="text-xs flex items-center gap-1"
-                                >
-                                  {skill}
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleSkill(skill)}
-                                    className="ml-1 text-red-500 hover:text-red-700"
-                                    aria-label={`Remove ${skill}`}
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
+                          <DatePicker {...field} max={currentDate} />
                         </FormControl>
+                        <FormDescription>Select the start date</FormDescription>
                         <FormMessage />
                       </FormItem>
-                    );
-                  }}
-                />
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="end"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Date</FormLabel>
+                        <FormControl>
+                          <DatePicker {...field} />
+                        </FormControl>
+                        <FormDescription>Select the end date</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="techUsed"
+                      render={({ field }) => {
+                        const toggleSkill = (skillLabel: string) => {
+                          let updatedSkills: string[] = [];
+                          if (currSkills.includes(skillLabel)) {
+                            updatedSkills = currSkills.filter(
+                              (s) => s !== skillLabel,
+                            );
+                          } else {
+                            updatedSkills = [...currSkills, skillLabel];
+                          }
+                          setCurrSkills(updatedSkills);
+                          field.onChange(updatedSkills);
+                        };
+
+                        return (
+                          <FormItem className="mb-4">
+                            <FormLabel>Skills</FormLabel>
+                            <FormControl>
+                              <div>
+                                <Popover open={open} onOpenChange={setOpen}>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      aria-expanded={open}
+                                      className="w-full justify-between"
+                                    >
+                                      {currSkills.length > 0
+                                        ? `${currSkills.length} selected`
+                                        : 'Select skills'}
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-full p-0">
+                                    <Command>
+                                      <CommandInput placeholder="Search skills..." />
+                                      <CommandEmpty>
+                                        No skills found.
+                                      </CommandEmpty>
+                                      <CommandGroup>
+                                        {skills.map((skill: any) => (
+                                          <CommandItem
+                                            key={skill.label}
+                                            value={skill.label}
+                                            onSelect={() =>
+                                              toggleSkill(skill.label)
+                                            }
+                                          >
+                                            <Check
+                                              className={`mr-2 h-4 w-4 ${
+                                                currSkills.includes(skill.label)
+                                                  ? 'opacity-100'
+                                                  : 'opacity-0'
+                                              }`}
+                                            />
+                                            {skill.label}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
+
+                                {/* Selected Skills Tags */}
+                                <div className="flex flex-wrap mt-3 gap-2">
+                                  {currSkills.map(
+                                    (skill: any, index: number) => (
+                                      <Badge
+                                        key={index}
+                                        variant="secondary"
+                                        className="text-xs flex items-center gap-1"
+                                      >
+                                        {skill}
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleSkill(skill)}
+                                          className="ml-1 text-red-500 hover:text-red-700"
+                                          aria-label={`Remove ${skill}`}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </button>
+                                      </Badge>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  </div>
+                </div>
               </>
             )}
 
             {/* Step 2: Additional Project Information */}
             {step === 2 && (
               <>
-                <FormField
-                  control={form.control}
-                  name="githubLink"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>GitHub Repo Link</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter GitHub repository link"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the GitHub repository link (optional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="liveDemoLink"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Live Demo Link</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter live demo link" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the live demo link (optional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="thumbnail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project Thumbnail</FormLabel>
-                      <FormControl>
-                        <ThumbnailUpload
-                          onThumbnailUpdate={(url) => field.onChange(url)}
-                          existingThumbnailUrl={field.value}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Upload a thumbnail image for your project (required)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="refer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reference</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter project reference"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the project reference
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter role" {...field} />
-                      </FormControl>
-                      <FormDescription>Enter the role</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="projectType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project Type</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter project type" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the project type (optional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="comments"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Comments</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter any comments" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Enter any comments (optional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="githubLink"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>GitHub Repo Link</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter GitHub repository link"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Enter the GitHub repository link (optional)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="liveDemoLink"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Live Demo Link</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter live demo link"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Enter the live demo link (optional)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="thumbnail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <ThumbnailUpload
+                              onThumbnailUpdate={(url) => field.onChange(url)}
+                              existingThumbnailUrl={field.value}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Upload a thumbnail image for your project (required)
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="refer"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reference</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter project reference"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Enter the project reference
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter role" {...field} />
+                        </FormControl>
+                        <FormDescription>Enter the role</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="projectType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Type</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter project type" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Enter the project type (optional)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="comments"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Comments</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter any comments" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Enter any comments (optional)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </>
             )}
 

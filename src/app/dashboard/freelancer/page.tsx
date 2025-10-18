@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import StatItem from '@/components/shared/StatItem';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { cn } from '@/lib/utils';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
@@ -75,6 +76,11 @@ export default function Dashboard() {
     setShowMeetingDialog(true);
   };
 
+  // Total revenue display (placeholder for now, can be made dynamic later)
+  const totalRevenueValue = '$45,231.89';
+  const revenueSpanClass =
+    String(totalRevenueValue).length > 12 ? 'lg:col-span-2' : '';
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
@@ -93,7 +99,7 @@ export default function Dashboard() {
         />
         <main className="grid flex-1 items-start gap-4 px-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <Card className="bg-gradient-to-r from-primary/5 to-background shadow-sm overflow-hidden">
+            <Card className="bg-gradient shadow-sm overflow-hidden">
               <CardHeader className="py4">
                 <div className="flex justify-between items-start gap-4">
                   <div>
@@ -134,11 +140,11 @@ export default function Dashboard() {
               )}
             </Card>
             {/* Project Status Cards */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 grid-flow-row-dense">
               <StatItem
                 variant="card"
                 label="Total Revenue"
-                value="$45,231.89"
+                value={totalRevenueValue}
                 icon={
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -153,9 +159,12 @@ export default function Dashboard() {
                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                   </svg>
                 }
-                className="h-full"
+                className={cn('h-full min-w-0', revenueSpanClass)}
                 color="green"
                 text_class="text-2xl"
+                content_class="min-w-0"
+                label_class="truncate"
+                value_class=""
               />
 
               <StatItem
@@ -163,9 +172,11 @@ export default function Dashboard() {
                 label="Active Projects"
                 value={loadingStats ? '...' : statusCounts[StatusEnum.ACTIVE]}
                 icon={<Activity className="h-5 w-5" />}
-                className="h-full"
+                className="h-full min-w-0"
                 color="green"
                 text_class="text-2xl"
+                content_class="min-w-0"
+                value_class="truncate whitespace-nowrap"
               />
 
               <StatItem
@@ -173,21 +184,26 @@ export default function Dashboard() {
                 label="Pending Projects"
                 value={loadingStats ? '...' : statusCounts[StatusEnum.PENDING]}
                 icon={<Clock className="h-5 w-5" />}
-                className="h-full"
+                className="h-full min-w-0"
                 color="amber"
                 text_class="text-2xl"
+                content_class="min-w-0"
+                value_class="truncate whitespace-nowrap"
               />
 
               <StatItem
                 variant="card"
-                label="Completed"
+                label="Completed Projects"
                 value={
                   loadingStats ? '...' : statusCounts[StatusEnum.COMPLETED] || 0
                 }
                 icon={<CheckCircle className="h-5 w-5" />}
-                className="h-full"
+                className="h-full min-w-0"
                 color="blue"
                 text_class="text-2xl"
+                content_class="min-w-0"
+                label_class=""
+                value_class="truncate whitespace-nowrap"
               />
             </div>
 

@@ -156,8 +156,19 @@ const Page = () => {
     fetchMilestones();
   }, [fetchMilestones]);
 
+  // Keep selected index within bounds after data changes
+  useEffect(() => {
+    if (milestones.length === 0) return;
+    if (
+      selectedMilestoneIndex == null ||
+      selectedMilestoneIndex >= milestones.length
+    ) {
+      setSelectedMilestoneIndex(0);
+    }
+  }, [milestones]);
+
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -178,7 +189,7 @@ const Page = () => {
             { label: 'Milestone', link: '#' },
           ]}
         />
-        <div className="py-4 px-2 md:px-4">
+        <div className="pb-4 px-2 md:px-4 w-full max-w-full overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl md:text-2xl font-bold">
               Project Milestones
@@ -203,34 +214,28 @@ const Page = () => {
               {/* Right Part */}
               <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
                 {/* Top: MilestoneTimeline */}
-                <div className="min-w-0 w-full max-w-full md:h-[280px]">
-                  <div className="w-full max-w-full">
-                    <MilestoneTimeline
-                      fetchMilestones={fetchMilestones}
-                      milestones={milestones}
-                      handleStorySubmit={handleStorySubmit}
-                      selectedIndex={selectedMilestoneIndex}
-                      onMilestoneSelect={(index) =>
-                        setSelectedMilestoneIndex(index)
-                      }
-                    />
-                  </div>
-                </div>
+                <MilestoneTimeline
+                  fetchMilestones={fetchMilestones}
+                  milestones={milestones}
+                  handleStorySubmit={handleStorySubmit}
+                  selectedIndex={selectedMilestoneIndex}
+                  onMilestoneSelect={(index) =>
+                    setSelectedMilestoneIndex(index)
+                  }
+                />
 
                 {/* Bottom: StoriesSection (milestone cards) */}
                 {selectedMilestoneIndex !== null && (
-                  <div className="min-w-0 w-full max-w-full">
-                    <StoriesSection
-                      key={
-                        milestones[selectedMilestoneIndex]?._id ??
-                        selectedMilestoneIndex
-                      }
-                      milestone={milestones[selectedMilestoneIndex]}
-                      fetchMilestones={fetchMilestones}
-                      handleStorySubmit={handleStorySubmit}
-                      isFreelancer={true}
-                    />
-                  </div>
+                  <StoriesSection
+                    key={
+                      milestones[selectedMilestoneIndex]?._id ??
+                      selectedMilestoneIndex
+                    }
+                    milestone={milestones[selectedMilestoneIndex]}
+                    fetchMilestones={fetchMilestones}
+                    handleStorySubmit={handleStorySubmit}
+                    isFreelancer={true}
+                  />
                 )}
               </div>
             </div>

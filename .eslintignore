@@ -4,3 +4,5 @@ dist/
 public/
 src/components/ui/
 postcss.config.js
+*.config.js
+*.config.ts
