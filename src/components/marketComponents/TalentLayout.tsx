@@ -490,9 +490,9 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
 
         <div className="container flex-1 items-start px-4 py-6">
           <div className="grid grid-cols-12 gap-6">
-            <aside className="border bg-background rounded-lg hidden lg:block col-span-3">
+            <aside className="border bg-background flex-shrink-0 rounded-lg hidden lg:block col-span-3">
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-background border-b p-4 rounded-t-lg">
+              <div className="sticky top-[8rem] max-h-[calc(100vh-8rem)] overflow-y-auto z-10 bg-background border-b p-4 rounded-t-lg">
                 <div className="flex items-center justify-between mb-1">
                   <h2 className="text-lg font-semibold">Filters</h2>
                   <Button
@@ -539,36 +539,46 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                       </div>
                       <ScrollArea className="h-48">
                         <div className="space-y-1 p-1">
-                          {skills
-                            .filter((skill) =>
-                              skill
-                                .toLowerCase()
-                                .includes(skillsSearch.toLowerCase()),
-                            )
-                            .map((skill) => (
-                              <div
-                                key={skill}
-                                className="flex items-center space-x-2"
-                              >
-                                <Checkbox
-                                  id={`skill-${skill}`}
-                                  checked={filters.skills.includes(skill)}
-                                  onCheckedChange={(checked) =>
-                                    handleToggleFilter(
-                                      'skills',
-                                      skill,
-                                      !!checked,
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor={`skill-${skill}`}
-                                  className="font-normal"
+                          {skills.filter((skill) =>
+                            skill
+                              .toLowerCase()
+                              .includes(skillsSearch.toLowerCase()),
+                          ).length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              No items found
+                            </p>
+                          ) : (
+                            skills
+                              .filter((skill) =>
+                                skill
+                                  .toLowerCase()
+                                  .includes(skillsSearch.toLowerCase()),
+                              )
+                              .map((skill) => (
+                                <div
+                                  key={skill}
+                                  className="flex items-center space-x-2"
                                 >
-                                  {skill}
-                                </Label>
-                              </div>
-                            ))}
+                                  <Checkbox
+                                    id={`skill-${skill}`}
+                                    checked={filters.skills.includes(skill)}
+                                    onCheckedChange={(checked) =>
+                                      handleToggleFilter(
+                                        'skills',
+                                        skill,
+                                        !!checked,
+                                      )
+                                    }
+                                  />
+                                  <Label
+                                    htmlFor={`skill-${skill}`}
+                                    className="font-normal"
+                                  >
+                                    {skill}
+                                  </Label>
+                                </div>
+                              ))
+                          )}
                         </div>
                       </ScrollArea>
                     </AccordionContent>
@@ -597,36 +607,46 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                       </div>
                       <ScrollArea className="h-48">
                         <div className="space-y-1 p-1">
-                          {domains
-                            .filter((domain) =>
-                              domain
-                                .toLowerCase()
-                                .includes(domainsSearch.toLowerCase()),
-                            )
-                            .map((domain) => (
-                              <div
-                                key={domain}
-                                className="flex items-center space-x-2"
-                              >
-                                <Checkbox
-                                  id={`domain-${domain}`}
-                                  checked={filters.domains.includes(domain)}
-                                  onCheckedChange={(checked) =>
-                                    handleToggleFilter(
-                                      'domains',
-                                      domain,
-                                      !!checked,
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor={`domain-${domain}`}
-                                  className="font-normal"
+                          {domains.filter((domain) =>
+                            domain
+                              .toLowerCase()
+                              .includes(domainsSearch.toLowerCase()),
+                          ).length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              No items found
+                            </p>
+                          ) : (
+                            domains
+                              .filter((domain) =>
+                                domain
+                                  .toLowerCase()
+                                  .includes(domainsSearch.toLowerCase()),
+                              )
+                              .map((domain) => (
+                                <div
+                                  key={domain}
+                                  className="flex items-center space-x-2"
                                 >
-                                  {domain}
-                                </Label>
-                              </div>
-                            ))}
+                                  <Checkbox
+                                    id={`domain-${domain}`}
+                                    checked={filters.domains.includes(domain)}
+                                    onCheckedChange={(checked) =>
+                                      handleToggleFilter(
+                                        'domains',
+                                        domain,
+                                        !!checked,
+                                      )
+                                    }
+                                  />
+                                  <Label
+                                    htmlFor={`domain-${domain}`}
+                                    className="font-normal"
+                                  >
+                                    {domain}
+                                  </Label>
+                                </div>
+                              ))
+                          )}
                         </div>
                       </ScrollArea>
                     </AccordionContent>

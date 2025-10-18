@@ -449,7 +449,7 @@ const Market: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden px-4 sm:px-8 pb-8">
+        <div className="flex flex-1 px-4 sm:px-8 pb-8">
           {/* Desktop Filters */}
           {isLargeScreen && (
             <aside className="w-80 flex-shrink-0 pr-6">
