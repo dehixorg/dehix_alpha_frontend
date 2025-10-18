@@ -101,7 +101,6 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
       endDate: '',
       grade: '',
     });
-    restoredDraft.current = null;
   }, [form]);
 
   const {
@@ -128,6 +127,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
 
   const handleDiscardAndClose = () => {
     resetForm();
+    restoredDraft.current = null;
     if (setIsDialogOpen) {
       setIsDialogOpen(false);
     }
@@ -163,17 +163,14 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         grade: data.grade,
         oracleAssigned: '',
         verificationStatus: 'ADDED',
-        verificationUpdateTime: new Date(),
+        verificationUpdateTime: new Date().toISOString(),
         comments: '',
       };
-
-      console.log('Sending data to API:', formattedData);
 
       const response = await axiosInstance.post(
         '/freelancer/education',
         formattedData,
       );
-      console.log('Education added successfully:', response.data);
       notifySuccess(
         'The education has been successfully added.',
         'Education Added',

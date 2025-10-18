@@ -1,5 +1,15 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+
+const isSafeGithubUrl = (value?: string) => {
+  if (!value) return false;
+  try {
+    const u = new URL(value);
+    return u.protocol === 'https:' && u.hostname === 'github.com';
+  } catch {
+    return false;
+  }
+};
 import {
   MessageSquareIcon,
   Github,
@@ -190,7 +200,8 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
                         <a
                           href={githubRepoLink}
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
+                          aria-label="Open GitHub repository"
                         >
                           <Github className="h-4 w-4" />
                         </a>
@@ -237,12 +248,13 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Repository
             </p>
-            {githubRepoLink ? (
+            {githubRepoLink && isSafeGithubUrl(githubRepoLink) ? (
               <a
                 href={githubRepoLink}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-primary hover:underline"
+                aria-label="Open GitHub repository"
               >
                 <Github className="h-4 w-4" /> View Repo
               </a>
