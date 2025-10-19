@@ -67,7 +67,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-auto flex flex-col sm:flex-row sm:flex-row-reverse items-stretch sm:items-center gap-3 pt-5 border-t border-border">
+                <div className="mt-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-5 border-t border-border">
                   <Skeleton className="h-10 w-full sm:min-w-[140px]" />
                   <Skeleton className="h-10 w-full sm:min-w-[140px]" />
                   <Skeleton className="h-10 w-full sm:min-w-[140px]" />
@@ -86,7 +86,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
             key={index}
             name={freelancer.firstName + ' ' + freelancer.lastName}
             skills={freelancer.skills}
-            domains={freelancer.domains}
+            domains={freelancer.domain}
             experience={freelancer.workExperience}
             profile={freelancer.profilePic}
             userName={freelancer.userName}

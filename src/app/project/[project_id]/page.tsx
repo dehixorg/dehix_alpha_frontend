@@ -1,5 +1,5 @@
 'use client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Users } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -102,7 +102,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -138,13 +138,21 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-6">
-            <CardTitle className="group flex items-center gap-2 text-2xl">
-              Profiles
-            </CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <Users className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl">Profiles</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Open profiles and submit your bid
+                </p>
+              </div>
+            </div>
             {(project?.profiles ?? []).map((profile: any, index: number) => (
               <ProjectProfileDetailCard
                 key={profile?._id ?? profile?.domain_id ?? index}
-                className="w-full min-w-full p-4 shadow-md rounded-lg"
+                className="w-full min-w-full"
                 {...profile}
                 skills={profile?.skills ?? []}
               />

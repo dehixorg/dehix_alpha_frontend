@@ -128,7 +128,7 @@ export default function BusinessFilterComponent({
     const filterValues = getFilterValues(filterKey);
 
     return (
-      <AccordionItem value={filterKey} className="border p-4 rounded-lg card">
+      <AccordionItem value={filterKey} className="border p-3 rounded-lg card">
         <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
           <div className="flex items-center space-x-2">
             {icon}
@@ -140,7 +140,7 @@ export default function BusinessFilterComponent({
             )}
           </div>
         </AccordionTrigger>
-        <AccordionContent className="py-2">
+        <AccordionContent className="py-2 px-1">
           <div className="space-y-3">
             {showSearch && (
               <SearchInput
@@ -153,36 +153,44 @@ export default function BusinessFilterComponent({
             <div className="h-60">
               <ScrollArea className="h-full w-full pr-2">
                 <div className="space-y-1 py-1">
-                  {items
-                    .filter((item) =>
-                      item.toLowerCase().includes(searchQuery.toLowerCase()),
-                    )
-                    .map((item) => (
-                      <div
-                        key={item}
-                        className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
-                      >
-                        <Checkbox
-                          id={toDomId(String(filterKey), item)}
-                          checked={filterValues.includes(item)}
-                          onCheckedChange={(checked) => {
-                            const isChecked = checked === true;
-                            const newValues = isChecked
-                              ? [...filterValues, item]
-                              : filterValues.filter((v) => v !== item);
-
-                            onFilterChange({ [filterKey]: newValues } as any);
-                          }}
-                          className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        />
-                        <label
-                          htmlFor={toDomId(String(filterKey), item)}
-                          className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                  {items.filter((item) =>
+                    item.toLowerCase().includes(searchQuery.toLowerCase()),
+                  ).length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No items found
+                    </p>
+                  ) : (
+                    items
+                      .filter((item) =>
+                        item.toLowerCase().includes(searchQuery.toLowerCase()),
+                      )
+                      .map((item) => (
+                        <div
+                          key={item}
+                          className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
                         >
-                          {item}
-                        </label>
-                      </div>
-                    ))}
+                          <Checkbox
+                            id={toDomId(String(filterKey), item)}
+                            checked={filterValues.includes(item)}
+                            onCheckedChange={(checked) => {
+                              const isChecked = checked === true;
+                              const newValues = isChecked
+                                ? [...filterValues, item]
+                                : filterValues.filter((v) => v !== item);
+
+                              onFilterChange({ [filterKey]: newValues } as any);
+                            }}
+                            className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          />
+                          <label
+                            htmlFor={toDomId(String(filterKey), item)}
+                            className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                          >
+                            {item}
+                          </label>
+                        </div>
+                      ))
+                  )}
                 </div>
               </ScrollArea>
             </div>
@@ -193,8 +201,8 @@ export default function BusinessFilterComponent({
   };
 
   return (
-    <div className="sticky border rounded-lg">
-      <div className="sticky top-0 z-10 bg-gradient border-b p-4 rounded-t-lg">
+    <div className="sticky top-[4rem] lg:h-[calc(100vh-6rem)]  border rounded-lg flex flex-col">
+      <div className="bg-gradient border-b p-4 rounded-t-lg">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Filters</h2>
         </div>
@@ -213,7 +221,7 @@ export default function BusinessFilterComponent({
           </Button>
         </div>
       </div>
-      <ScrollArea className="flex-1 px-4 pb-2 pt-4">
+      <div className="flex-1 px-4 pb-2 pt-4 overflow-auto no-scrollbar">
         <Accordion
           type="multiple"
           defaultValue={[
@@ -331,7 +339,7 @@ export default function BusinessFilterComponent({
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-      </ScrollArea>
+      </div>
     </div>
   );
 }

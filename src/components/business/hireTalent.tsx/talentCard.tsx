@@ -94,12 +94,13 @@ interface Talent {
   education?: Record<string, Education>;
   projects?: Record<string, Projects>;
 }
-interface Skill {
+
+interface SkillOption {
   _id: string;
   label: string;
 }
 
-interface Domain {
+interface DomainOption {
   _id: string;
   label: string;
 }
@@ -107,7 +108,8 @@ interface Domain {
 interface TalentCardProps {
   skillFilter: string | null;
   domainFilter: string | null;
-  skillDomainFormProps: any;
+  setFilterSkill?: (skills: SkillOption[]) => void;
+  setFilterDomain?: (domains: DomainOption[]) => void;
 }
 interface SkillDomainData {
   uid: string;
@@ -125,7 +127,8 @@ const SHEET_SIDES = ['left'] as const;
 const TalentCard: React.FC<TalentCardProps> = ({
   skillFilter,
   domainFilter,
-  skillDomainFormProps,
+  setFilterSkill,
+  setFilterDomain,
 }) => {
   const [talents, setTalents] = useState<Talent[]>([]);
   const skipRef = useRef(0);
@@ -133,9 +136,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const [skills, setSkills] = useState<SkillOption[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [domains, setDomains] = useState<Domain[]>([]);
+  const [domains, setDomains] = useState<DomainOption[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const user = useSelector((state: RootState) => state.user);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
@@ -227,9 +230,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
             _id: item.domainId,
             label: item.domainName,
           }));
-        // Send the filtered skills and domains back to the parent
-        skillDomainFormProps?.skillFilter(fetchedFilterSkills);
-        skillDomainFormProps?.domainFilter(fetchedFilterDomains);
+        // Send the filtered skills and domains back to the parent via setters
+        setFilterSkill?.(fetchedFilterSkills);
+        setFilterDomain?.(fetchedFilterDomains);
 
         // Convert the talent object into an array
         const formattedHireTalentData = Object.values(hireTalentData).map(
@@ -297,7 +300,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         notifyError('Something went wrong. Please try again.', 'Error');
       }
     }
-  }, [user?.uid, skillDomainFormProps]);
+  }, [user?.uid, setFilterSkill, setFilterDomain]);
 
   useEffect(() => {
     fetchUserData();

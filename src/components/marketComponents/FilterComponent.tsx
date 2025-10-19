@@ -104,8 +104,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   setProjectDomainSearchQuery,
 }) => {
   return (
-    <div className="sticky border rounded-lg">
-      <div className="sticky top-0 z-10 bg-gradient border-b p-4 rounded-t-lg">
+    <div className="sticky top-[4rem] lg:h-[calc(100vh-6rem)] border rounded-lg flex flex-col">
+      <div className="bg-gradient border-b p-4 rounded-t-lg">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Filters</h2>
         </div>
@@ -124,7 +124,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
           </Button>
         </div>
       </div>
-      <ScrollArea className="flex-1 px-4 pb-2 pt-4">
+      <div className="h-full overflow-auto no-scrollbar px-4 pb-2 pt-4">
         <Accordion
           type="multiple"
           defaultValue={[
@@ -183,7 +183,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
           <AccordionItem
             value="domains"
-            className="border bg-muted/20 p-4 rounded-lg"
+            className="border bg-muted/20 p-3 rounded-lg"
           >
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
@@ -196,7 +196,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                 )}
               </div>
             </AccordionTrigger>
-            <AccordionContent className="py-2">
+            <AccordionContent className="py-2 px-1">
               <div className="space-y-3">
                 <SearchInput
                   placeholder="Search domains..."
@@ -207,38 +207,49 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                 <div className="h-60 overflow-hidden">
                   <ScrollArea className="h-full w-full pr-2">
                     <div className="space-y-1 py-1">
-                      {domains
-                        .filter((domain) =>
-                          domain
-                            .toLowerCase()
-                            .includes(domainSearchQuery.toLowerCase()),
-                        )
-                        .map((domain) => (
-                          <div
-                            key={domain}
-                            className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
-                          >
-                            <Checkbox
-                              id={`desktop-domain-${domain}`}
-                              checked={filters.domain.includes(domain)}
-                              onCheckedChange={(checked) => {
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  domain: checked
-                                    ? [...prev.domain, domain]
-                                    : prev.domain.filter((d) => d !== domain),
-                                }));
-                              }}
-                              className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <label
-                              htmlFor={`desktop-domain-${domain}`}
-                              className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                      {domains.filter((domain) =>
+                        domain
+                          .toLowerCase()
+                          .includes(domainSearchQuery.toLowerCase()),
+                      ).length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No items found
+                        </p>
+                      ) : (
+                        domains
+                          .filter((domain) =>
+                            domain
+                              .toLowerCase()
+                              .includes(domainSearchQuery.toLowerCase()),
+                          )
+
+                          .map((domain) => (
+                            <div
+                              key={domain}
+                              className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
                             >
-                              {domain}
-                            </label>
-                          </div>
-                        ))}
+                              <Checkbox
+                                id={`desktop-domain-${domain}`}
+                                checked={filters.domain.includes(domain)}
+                                onCheckedChange={(checked) => {
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    domain: checked
+                                      ? [...prev.domain, domain]
+                                      : prev.domain.filter((d) => d !== domain),
+                                  }));
+                                }}
+                                className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                              <label
+                                htmlFor={`desktop-domain-${domain}`}
+                                className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                              >
+                                {domain}
+                              </label>
+                            </div>
+                          ))
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
@@ -248,7 +259,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
           <AccordionItem
             value="project-domains"
-            className="border bg-muted/20 p-4 rounded-lg"
+            className="border bg-muted/20 p-3 rounded-lg"
           >
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
@@ -261,7 +272,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                 )}
               </div>
             </AccordionTrigger>
-            <AccordionContent className="py-2">
+            <AccordionContent className="py-2 px-1">
               <div className="space-y-3">
                 <SearchInput
                   placeholder="Search project domains..."
@@ -272,40 +283,51 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                 <div className="h-60 overflow-hidden">
                   <ScrollArea className="h-full w-full pr-2">
                     <div className="space-y-1 py-1">
-                      {projectDomains
-                        .filter((domain) =>
-                          domain
-                            .toLowerCase()
-                            .includes(projectDomainSearchQuery.toLowerCase()),
-                        )
-                        .map((domain) => (
-                          <div
-                            key={domain}
-                            className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
-                          >
-                            <Checkbox
-                              id={`desktop-project-domain-${domain}`}
-                              checked={filters.projectDomain.includes(domain)}
-                              onCheckedChange={(checked) => {
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  projectDomain: checked
-                                    ? [...prev.projectDomain, domain]
-                                    : prev.projectDomain.filter(
-                                        (d) => d !== domain,
-                                      ),
-                                }));
-                              }}
-                              className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <label
-                              htmlFor={`desktop-project-domain-${domain}`}
-                              className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                      {projectDomains.filter((domain) =>
+                        domain
+                          .toLowerCase()
+                          .includes(projectDomainSearchQuery.toLowerCase()),
+                      ).length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No items found
+                        </p>
+                      ) : (
+                        projectDomains
+                          .filter((domain) =>
+                            domain
+                              .toLowerCase()
+                              .includes(projectDomainSearchQuery.toLowerCase()),
+                          )
+
+                          .map((domain) => (
+                            <div
+                              key={domain}
+                              className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
                             >
-                              {domain}
-                            </label>
-                          </div>
-                        ))}
+                              <Checkbox
+                                id={`desktop-project-domain-${domain}`}
+                                checked={filters.projectDomain.includes(domain)}
+                                onCheckedChange={(checked) => {
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    projectDomain: checked
+                                      ? [...prev.projectDomain, domain]
+                                      : prev.projectDomain.filter(
+                                          (d) => d !== domain,
+                                        ),
+                                  }));
+                                }}
+                                className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                              <label
+                                htmlFor={`desktop-project-domain-${domain}`}
+                                className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                              >
+                                {domain}
+                              </label>
+                            </div>
+                          ))
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
@@ -315,7 +337,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
           <AccordionItem
             value="skills"
-            className="border bg-muted/20 p-4 rounded-lg"
+            className="border bg-muted/20 p-3 rounded-lg"
           >
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
@@ -328,7 +350,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                 )}
               </div>
             </AccordionTrigger>
-            <AccordionContent className="py-2">
+            <AccordionContent className="py-2 px-1">
               <div className="space-y-3">
                 <SearchInput
                   placeholder="Search skills..."
@@ -339,39 +361,48 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                 <div className="h-60 overflow-hidden">
                   <ScrollArea className="h-full w-full pr-2">
                     <div className="space-y-1 py-1">
-                      {skills
-                        .filter((skill) =>
-                          skill
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase()),
-                        )
-                        .slice(0, 50)
-                        .map((skill) => (
-                          <div
-                            key={skill}
-                            className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
-                          >
-                            <Checkbox
-                              id={`desktop-skill-${skill}`}
-                              checked={filters.skills.includes(skill)}
-                              onCheckedChange={(checked) => {
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  skills: checked
-                                    ? [...prev.skills, skill]
-                                    : prev.skills.filter((s) => s !== skill),
-                                }));
-                              }}
-                              className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <label
-                              htmlFor={`desktop-skill-${skill}`}
-                              className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                      {skills.filter((skill) =>
+                        skill.toLowerCase().includes(searchQuery.toLowerCase()),
+                      ).length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No items found
+                        </p>
+                      ) : (
+                        skills
+                          .filter((skill) =>
+                            skill
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()),
+                          )
+
+                          .slice(0, 50)
+                          .map((skill) => (
+                            <div
+                              key={skill}
+                              className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
                             >
-                              {skill}
-                            </label>
-                          </div>
-                        ))}
+                              <Checkbox
+                                id={`desktop-skill-${skill}`}
+                                checked={filters.skills.includes(skill)}
+                                onCheckedChange={(checked) => {
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    skills: checked
+                                      ? [...prev.skills, skill]
+                                      : prev.skills.filter((s) => s !== skill),
+                                  }));
+                                }}
+                                className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                              <label
+                                htmlFor={`desktop-skill-${skill}`}
+                                className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                              >
+                                {skill}
+                              </label>
+                            </div>
+                          ))
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
@@ -501,7 +532,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-      </ScrollArea>
+      </div>
     </div>
   );
 };

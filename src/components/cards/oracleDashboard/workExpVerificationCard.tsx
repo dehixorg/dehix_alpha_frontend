@@ -1,5 +1,14 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+const isSafeGithubUrl = (value?: string) => {
+  if (!value) return false;
+  try {
+    const u = new URL(value);
+    return u.protocol === 'https:' && u.hostname === 'github.com';
+  } catch {
+    return false;
+  }
+};
 import {
   MessageSquareIcon,
   Github,
@@ -23,8 +32,15 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import VerificationDecisionForm from '@/components/verification/VerificationDecisionForm';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
@@ -36,11 +52,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { VerificationStatus } from '@/utils/verificationStatus';
+import { DateHistory } from '@/components/shared/DateHistory';
 
 interface WorkExpProps {
   _id: string;
   jobTitle: string;
-  workDescription: string;
   startFrom: string;
   endTo: string | 'current';
   company: string;
@@ -58,7 +74,6 @@ interface WorkExpProps {
 const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   _id,
   jobTitle,
-  workDescription,
   startFrom,
   company,
   endTo,
@@ -138,36 +153,81 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
           </DropdownMenu>
         </div>
 
-        <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors max-w-[calc(100%-80px)]">
-          {jobTitle}
-        </CardTitle>
+        <div className="flex items-center gap-4">
+          <Avatar className="h-14 w-14 rounded-xl border border-gray-200 dark:border-gray-700">
+            <AvatarImage
+              src="/placeholder-avatar.svg"
+              alt={company || 'Company'}
+            />
+            <AvatarFallback className="bg-primary/10 text-primary rounded-xl text-xl font-bold">
+              {company?.charAt(0) || 'C'}
+            </AvatarFallback>
+          </Avatar>
 
-        <CardDescription className="text-gray-700 dark:text-gray-300">
-          {verificationStatus === VerificationStatus.PENDING ? (
-            <Badge className="bg-warning-foreground text-white my-2">
-              PENDING
-            </Badge>
-          ) : verificationStatus === VerificationStatus.APPROVED ? (
-            <Badge className="bg-success text-white my-2">APPROVED</Badge>
-          ) : (
-            <Badge className="bg-red-500 text-white my-2">DENIED</Badge>
-          )}
-          <br />
-          {workDescription}
-        </CardDescription>
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-center w-full gap-2">
+              <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors max-w-[calc(100%-80px)]">
+                {jobTitle}
+              </CardTitle>
+            </div>
+
+            <div className="mt-1 flex items-center gap-2 flex-wrap">
+              {verificationStatus === VerificationStatus.PENDING ? (
+                <Badge className="bg-warning-foreground text-white">
+                  PENDING
+                </Badge>
+              ) : verificationStatus === VerificationStatus.APPROVED ? (
+                <Badge className="bg-success text-white">APPROVED</Badge>
+              ) : (
+                <Badge className="bg-red-500 text-white">DENIED</Badge>
+              )}
+            </div>
+
+            <CardDescription className="mt-2 text-gray-700 dark:text-gray-300 line-clamp-2">
+              {githubRepoLink && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        aria-label="Open GitHub repo"
+                      >
+                        <a
+                          href={githubRepoLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Open GitHub repository"
+                        >
+                          <Github className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">View GitHub</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
 
       <CardContent className="px-6 py-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50 sm:col-span-2">
             <p className="text-xs text-gray-500 dark:text-gray-400">Company</p>
-            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              <Building className="h-4 w-4" /> {company}
-            </p>
+            <div className="flex items-start gap-2 w-full min-w-0">
+              <Building className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                {company}
+              </span>
+            </div>
           </div>
-          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+          <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50 sm:col-span-2">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Ref. Person
+              Reference Contact
             </p>
             <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
               <User2Icon className="h-4 w-4" /> {referencePersonName}
@@ -175,28 +235,30 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
           </div>
           <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
             <p className="text-xs text-gray-500 dark:text-gray-400">Contact</p>
-            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              <Phone className="h-4 w-4" /> {referencePersonContact}
-            </p>
+            <div className="flex items-start gap-2">
+              <Phone className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                {referencePersonContact}
+              </span>
+            </div>
           </div>
           <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Repository
             </p>
-            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              {githubRepoLink ? (
-                <a
-                  href={githubRepoLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 text-primary hover:underline"
-                >
-                  <Github className="h-4 w-4" /> View Repo
-                </a>
-              ) : (
-                'N/A'
-              )}
-            </p>
+            {githubRepoLink && isSafeGithubUrl(githubRepoLink) ? (
+              <a
+                href={githubRepoLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-primary hover:underline"
+                aria-label="Open GitHub repository"
+              >
+                <Github className="h-4 w-4" /> View Repo
+              </a>
+            ) : (
+              'N/A'
+            )}
           </div>
         </div>
 
@@ -209,15 +271,11 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
       </CardContent>
 
       <CardFooter className="px-6 py-5 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex-col items-stretch gap-4">
-        <div className="flex flex-1 gap-2 text-sm text-muted-foreground">
-          <span>{new Date(startFrom).toLocaleDateString()}</span>
-          <span>-</span>
-          <span>
-            {endTo !== 'current'
-              ? new Date(endTo).toLocaleDateString()
-              : 'Current'}
-          </span>
-        </div>
+        <DateHistory
+          startDate={startFrom ? new Date(startFrom) : undefined}
+          endDate={endTo !== 'current' && endTo ? new Date(endTo) : undefined}
+          className="dark:bg-background"
+        />
 
         {verificationStatus === VerificationStatus.PENDING && (
           <VerificationDecisionForm
@@ -234,8 +292,15 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
       </CardFooter>
 
       <Dialog open={openReport} onOpenChange={setOpenReport}>
-        <DialogContent className="p-0 overflow-hidden">
-          <NewReportTab reportData={reportData} />
+        <DialogContent className="p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+          <NewReportTab
+            reportData={reportData}
+            onSubmitted={() => {
+              notifySuccess('Report submitted successfully!', 'Success');
+              setOpenReport(false);
+              return true;
+            }}
+          />
         </DialogContent>
       </Dialog>
     </Card>
