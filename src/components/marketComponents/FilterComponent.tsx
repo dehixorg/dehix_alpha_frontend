@@ -106,8 +106,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   // Debounced local inputs for better UX
   const [skillsQueryLocal, setSkillsQueryLocal] = useState(searchQuery);
   const [domainQueryLocal, setDomainQueryLocal] = useState(domainSearchQuery);
-  const [projectDomainQueryLocal, setProjectDomainQueryLocal] =
-    useState(projectDomainSearchQuery);
+  const [projectDomainQueryLocal, setProjectDomainQueryLocal] = useState(
+    projectDomainSearchQuery,
+  );
 
   useEffect(() => setSkillsQueryLocal(searchQuery), [searchQuery]);
   useEffect(() => setDomainQueryLocal(domainSearchQuery), [domainSearchQuery]);
@@ -132,7 +133,12 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
     return () => clearTimeout(t);
   }, [projectDomainQueryLocal, setProjectDomainSearchQuery]);
 
-  type ArrayFilterKeys = 'jobType' | 'domain' | 'skills' | 'projectDomain' | 'sorting';
+  type ArrayFilterKeys =
+    | 'jobType'
+    | 'domain'
+    | 'skills'
+    | 'projectDomain'
+    | 'sorting';
   type BooleanFilterKeys = 'favourites' | 'consultant';
 
   const clearSection = (section: ArrayFilterKeys | BooleanFilterKeys) => {
@@ -176,15 +182,25 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
           filters.consultant ||
           filters.minRate ||
           filters.maxRate) && (
-          <div className="mt-3 flex flex-wrap gap-2" aria-label="Active filters">
+          <div
+            className="mt-3 flex flex-wrap gap-2"
+            aria-label="Active filters"
+          >
             {filters.jobType.map((t) => (
-              <Badge key={`t-${t}`} variant="secondary" className="flex items-center gap-1">
+              <Badge
+                key={`t-${t}`}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
                 {t}
                 <button
                   className="ml-1 rounded hover:bg-muted px-1"
                   aria-label={`Remove ${t}`}
                   onClick={() =>
-                    setFilters((prev) => ({ ...prev, jobType: prev.jobType.filter((x) => x !== t) }))
+                    setFilters((prev) => ({
+                      ...prev,
+                      jobType: prev.jobType.filter((x) => x !== t),
+                    }))
                   }
                 >
                   <X className="h-3 w-3" />
@@ -192,13 +208,20 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
               </Badge>
             ))}
             {filters.domain.map((d) => (
-              <Badge key={`d-${d}`} variant="secondary" className="flex items-center gap-1">
+              <Badge
+                key={`d-${d}`}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
                 {d}
                 <button
                   className="ml-1 rounded hover:bg-muted px-1"
                   aria-label={`Remove ${d}`}
                   onClick={() =>
-                    setFilters((prev) => ({ ...prev, domain: prev.domain.filter((x) => x !== d) }))
+                    setFilters((prev) => ({
+                      ...prev,
+                      domain: prev.domain.filter((x) => x !== d),
+                    }))
                   }
                 >
                   <X className="h-3 w-3" />
@@ -206,7 +229,11 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
               </Badge>
             ))}
             {filters.projectDomain.map((pd) => (
-              <Badge key={`pd-${pd}`} variant="secondary" className="flex items-center gap-1">
+              <Badge
+                key={`pd-${pd}`}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
                 {pd}
                 <button
                   className="ml-1 rounded hover:bg-muted px-1"
@@ -223,13 +250,20 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
               </Badge>
             ))}
             {filters.skills.map((s) => (
-              <Badge key={`s-${s}`} variant="secondary" className="flex items-center gap-1">
+              <Badge
+                key={`s-${s}`}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
                 {s}
                 <button
                   className="ml-1 rounded hover:bg-muted px-1"
                   aria-label={`Remove ${s}`}
                   onClick={() =>
-                    setFilters((prev) => ({ ...prev, skills: prev.skills.filter((x) => x !== s) }))
+                    setFilters((prev) => ({
+                      ...prev,
+                      skills: prev.skills.filter((x) => x !== s),
+                    }))
                   }
                 >
                   <X className="h-3 w-3" />
@@ -242,7 +276,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                 <button
                   className="ml-1 rounded hover:bg-muted px-1"
                   aria-label="Disable drafts only"
-                  onClick={() => setFilters((prev) => ({ ...prev, favourites: false }))}
+                  onClick={() =>
+                    setFilters((prev) => ({ ...prev, favourites: false }))
+                  }
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -254,7 +290,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                 <button
                   className="ml-1 rounded hover:bg-muted px-1"
                   aria-label="Disable consultation"
-                  onClick={() => setFilters((prev) => ({ ...prev, consultant: false }))}
+                  onClick={() =>
+                    setFilters((prev) => ({ ...prev, consultant: false }))
+                  }
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -268,7 +306,13 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                 <button
                   className="ml-1 rounded hover:bg-muted px-1"
                   aria-label="Clear budget range"
-                  onClick={() => setFilters((prev) => ({ ...prev, minRate: '', maxRate: '' }))}
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      minRate: '',
+                      maxRate: '',
+                    }))
+                  }
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -299,7 +343,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <Layers className="h-4 w-4 text-muted-foreground" />
-                <span id="filter-project-type" className="font-medium">Project Type</span>
+                <span id="filter-project-type" className="font-medium">
+                  Project Type
+                </span>
                 {filters.jobType.length > 0 && (
                   <Badge variant="secondary" className="h-4 px-1.5 text-xs">
                     {filters.jobType.length}
@@ -359,7 +405,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
-                <span id="filter-domains" className="font-medium">Domains</span>
+                <span id="filter-domains" className="font-medium">
+                  Domains
+                </span>
                 {filters.domain.length > 0 && (
                   <Badge variant="secondary" className="h-4 px-1.5 text-xs">
                     {filters.domain.length}
@@ -451,7 +499,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <FolderGit2 className="h-4 w-4 text-muted-foreground" />
-                <span id="filter-project-domains" className="font-medium">Project Domains</span>
+                <span id="filter-project-domains" className="font-medium">
+                  Project Domains
+                </span>
                 {filters.projectDomain.length > 0 && (
                   <Badge variant="secondary" className="h-4 px-1.5 text-xs">
                     {filters.projectDomain.length}
@@ -545,7 +595,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <Award className="h-4 w-4 text-muted-foreground" />
-                <span id="filter-skills" className="font-medium">Skills</span>
+                <span id="filter-skills" className="font-medium">
+                  Skills
+                </span>
                 {filters.skills.length > 0 && (
                   <Badge variant="secondary" className="h-4 px-1.5 text-xs">
                     {filters.skills.length}
@@ -702,7 +754,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <Sliders className="h-4 w-4 text-muted-foreground" />
-                <span id="filter-other" className="font-medium">Other Options</span>
+                <span id="filter-other" className="font-medium">
+                  Other Options
+                </span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="py-2">

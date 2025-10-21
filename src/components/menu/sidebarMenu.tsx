@@ -267,7 +267,9 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                     : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
                   : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
               }`}
-              aria-current={item.href && isActive(item.href) ? 'page' : undefined}
+              aria-current={
+                item.href && isActive(item.href) ? 'page' : undefined
+              }
               aria-label={item.label}
             >
               {item.icon}

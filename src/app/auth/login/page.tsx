@@ -125,7 +125,7 @@ export default function Login() {
           }
           setSrMessage('Login successful. Redirecting to your dashboard.');
           router.replace(`/dashboard/${claims.type}`);
-          
+
           setTimeout(() => {
             notifySuccess(
               'You have successfully logged in.',
@@ -189,7 +189,9 @@ export default function Login() {
           <form onSubmit={handleLogin} noValidate>
             <div className="grid gap-4">
               {/* SR live updates */}
-              <p className="sr-only" aria-live="polite">{srMessage}</p>
+              <p className="sr-only" aria-live="polite">
+                {srMessage}
+              </p>
               {formError && (
                 <div
                   role="alert"
@@ -245,13 +247,17 @@ export default function Login() {
                     required
                     autoComplete="current-password"
                     aria-invalid={!!passwordError}
-                    aria-describedby={passwordError ? 'password-error' : undefined}
+                    aria-describedby={
+                      passwordError ? 'password-error' : undefined
+                    }
                   />
                   <button
                     type="button"
                     onClick={toggleShowPassword}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={
+                      showPassword ? 'Hide password' : 'Show password'
+                    }
                     aria-pressed={showPassword}
                   >
                     {showPassword ? (
@@ -332,7 +338,8 @@ export default function Login() {
           if (!open) {
             setTimeout(() => {
               const emailEl = document.getElementById('email');
-              if (emailEl && 'focus' in emailEl) (emailEl as HTMLElement).focus();
+              if (emailEl && 'focus' in emailEl)
+                (emailEl as HTMLElement).focus();
             }, 0);
           }
         }}
@@ -360,13 +367,12 @@ export default function Login() {
                 {forgotError}
               </p>
             )}
-            <p className="sr-only" aria-live="polite">{forgotMsg}</p>
+            <p className="sr-only" aria-live="polite">
+              {forgotMsg}
+            </p>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setForgotOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setForgotOpen(false)}>
               Cancel
             </Button>
             <Button
@@ -387,7 +393,9 @@ export default function Login() {
                   notifySuccess('Password reset email sent.');
                   setForgotOpen(false);
                 } catch (e) {
-                  setForgotError('Unable to send reset email. Please try again later.');
+                  setForgotError(
+                    'Unable to send reset email. Please try again later.',
+                  );
                   notifyError('Unable to send reset email.');
                 } finally {
                   setIsForgotLoading(false);

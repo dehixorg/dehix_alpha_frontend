@@ -1,8 +1,9 @@
 'use client';
 import type React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Search } from 'lucide-react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,7 +21,6 @@ import {
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
 import FilterComponent from '@/components/marketComponents/FilterComponent';
 import { FilterSheet } from '@/components/market/FilterSheet';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 

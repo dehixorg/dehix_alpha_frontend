@@ -67,14 +67,18 @@ const Header: React.FC<HeaderProps> = ({
   }, [user?.uid]);
 
   const [searchValue, setSearchValue] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
+  const [, setSearchFocused] = useState(false);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       const tag = target?.tagName?.toLowerCase();
       if (e.key === '/' && !e.altKey && !e.ctrlKey && !e.metaKey) {
-        if (tag !== 'input' && tag !== 'textarea' && !(target as any)?.isContentEditable) {
+        if (
+          tag !== 'input' &&
+          tag !== 'textarea' &&
+          !(target as any)?.isContentEditable
+        ) {
           e.preventDefault();
           const el = document.getElementById('global-search-input');
           if (el && 'focus' in el) (el as HTMLElement).focus();

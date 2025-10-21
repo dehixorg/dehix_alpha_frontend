@@ -201,7 +201,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
               OTP sent to{' '}
               <strong>
                 {(() => {
-                  const raw = (phone || phoneNumber) || '';
+                  const raw = phone || phoneNumber || '';
                   if (!raw) return '';
                   const last4 = raw.slice(-4);
                   const masked = raw.slice(0, -4).replace(/\d/g, '*');

@@ -165,7 +165,9 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
                       step="0.01"
                       className="pl-8 pr-16"
                       aria-invalid={minMaxInvalid}
-                      aria-describedby={minMaxInvalid ? `rate-error-${uid}` : undefined}
+                      aria-describedby={
+                        minMaxInvalid ? `rate-error-${uid}` : undefined
+                      }
                       {...field}
                     />
                     {field.value ? (
@@ -201,7 +203,9 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
                       step="0.01"
                       className="pl-8 pr-16"
                       aria-invalid={minMaxInvalid}
-                      aria-describedby={minMaxInvalid ? `rate-error-${uid}` : undefined}
+                      aria-describedby={
+                        minMaxInvalid ? `rate-error-${uid}` : undefined
+                      }
                       {...field}
                     />
                     {field.value ? (
