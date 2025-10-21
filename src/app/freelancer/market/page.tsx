@@ -1,6 +1,6 @@
 'use client';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Search } from 'lucide-react';
 
@@ -20,6 +20,9 @@ import {
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
 import FilterComponent from '@/components/marketComponents/FilterComponent';
 import { FilterSheet } from '@/components/market/FilterSheet';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useToast } from '@/components/ui/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 interface FilterState {
   projects: string[];
@@ -33,6 +36,7 @@ interface FilterState {
   favourites: boolean;
   consultant: boolean;
 }
+
 export interface Project {
   _id: string;
   companyId: string;
@@ -101,6 +105,11 @@ const Market: React.FC = () => {
     }
     return false;
   });
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { toast } = useToast();
+  const removalTimers = useRef<Record<string, number>>({});
 
   const [searchQuery, setSearchQuery] = useState('');
   const [domainSearchQuery, setDomainSearchQuery] = useState('');
@@ -278,6 +287,38 @@ const Market: React.FC = () => {
     },
     [user.uid, draftedProjects],
   );
+  // Restore filters from URL on first load
+  useEffect(() => {
+    // Parse arrays by repeated params
+    const sp = searchParams;
+    if (!sp) return;
+    const getAll = (key: string) => sp.getAll(key);
+    const parseBool = (key: string) => sp.get(key) === 'true';
+    const initial: FilterState = {
+      jobType: getAll('jobType') || [],
+      domain: getAll('domain') || [],
+      skills: getAll('skills') || [],
+      projects: getAll('projects') || [],
+      projectDomain: getAll('projectDomain') || [],
+      sorting: getAll('sorting') || [],
+      minRate: sp.get('minRate') || '',
+      maxRate: sp.get('maxRate') || '',
+      favourites: parseBool('favourites') || false,
+      consultant: parseBool('consultant') || false,
+    };
+    // Only set if any param exists
+    const hasParams = Array.from(sp.keys()).length > 0;
+    if (hasParams) setFilters(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync filters to URL when they change
+  useEffect(() => {
+    const query = constructQueryString(filters);
+    const url = query ? `${pathname}?${query}` : pathname;
+    router.replace(url);
+  }, [filters, pathname, router]);
+
   // Effect to fetch jobs when filters change or component mounts
   useEffect(() => {
     if (!user?.uid) {
@@ -376,20 +417,50 @@ const Market: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const handleRemoveJob = async (id: string) => {
-    try {
-      await axiosInstance.put(`/freelancer/${id}/not_interested_project`);
-      // Immediately remove from UI
-      setJobs((prev) => prev.filter((job) => job._id !== id));
-      // Refresh the data to ensure consistency
-      setTimeout(() => {
+  const handleRemoveJob = (id: string) => {
+    // Optimistic remove
+    const removedJob = jobs.find((j) => j._id === id);
+    setJobs((prev) => prev.filter((job) => job._id !== id));
+    // Show undo toast and delay server mutation
+    const timer = window.setTimeout(async () => {
+      try {
+        await axiosInstance.put(`/freelancer/${id}/not_interested_project`);
+        // Re-fetch to sync
         fetchJobs(filters);
-      }, 500);
-      notifySuccess('Project marked as not interested.', 'Success');
-    } catch (err) {
-      console.error('Remove job error:', err);
-      notifyError('Failed to update project status.');
-    }
+        notifySuccess('Project marked as not interested.', 'Success');
+      } catch (err) {
+        console.error('Remove job error:', err);
+        notifyError('Failed to update project status.');
+      } finally {
+        delete removalTimers.current[id];
+      }
+    }, 4000);
+    removalTimers.current[id] = timer;
+
+    const t = toast({
+      title: 'Project hidden',
+      description: 'Not interested. You can undo this action.',
+      action: (
+        <ToastAction
+          altText="Undo hide"
+          onClick={() => {
+            const tId = removalTimers.current[id];
+            if (tId) {
+              window.clearTimeout(tId);
+              delete removalTimers.current[id];
+              // Restore UI
+              if (removedJob) {
+                setJobs((prev) => [removedJob!, ...prev]);
+              }
+              notifySuccess('Action undone.', 'Undo');
+            }
+          }}
+        >
+          Undo
+        </ToastAction>
+      ),
+    });
+    return t;
   };
   const activeFilterCount = getActiveFilterCount(filters);
 

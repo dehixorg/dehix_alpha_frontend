@@ -192,6 +192,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       return (
         <Popover>
           <PopoverTrigger
+            aria-haspopup="menu"
+            aria-label={item.label}
             className={`flex h-9 w-9 items-center justify-center rounded-lg ${
               isActiveParent(item)
                 ? 'bg-accent text-accent-foreground'
@@ -217,6 +219,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                       ? 'bg-accent text-accent-foreground'
                       : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                   }`}
+                  aria-current={isActive(subItem.href) ? 'page' : undefined}
                 >
                   {subItem.icon}
                   {subItem.label}
@@ -237,6 +240,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
               <button
                 onClick={item.onClick}
                 className={`flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors md:h-8 md:w-8`}
+                aria-label={item.label}
               >
                 {item.icon}
                 <span className="sr-only">{item.label}</span>
@@ -263,6 +267,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                     : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
                   : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
               }`}
+              aria-current={item.href && isActive(item.href) ? 'page' : undefined}
+              aria-label={item.label}
             >
               {item.icon}
               <span className="sr-only">{item.label}</span>
