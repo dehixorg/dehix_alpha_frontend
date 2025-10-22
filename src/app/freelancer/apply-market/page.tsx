@@ -219,9 +219,7 @@ const TalentMarketPage: React.FC = () => {
   const fetchTalentItems = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await axiosInstance.get(
-        'https://devapi.dehix.org/freelancer/dehix-talent/market',
-      );
+      const res = await axiosInstance.get('/freelancer/dehix-talent/market');
       const data: TalentMarketItem[] = res.data?.data || [];
       setItems(data);
     } catch (err) {

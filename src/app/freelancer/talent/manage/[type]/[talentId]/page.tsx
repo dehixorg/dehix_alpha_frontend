@@ -33,6 +33,8 @@ export default function ManageTalentPage() {
   const [talents, setTalents] = useState<
     Array<{ id: string; label: string; type: 'SKILL' | 'DOMAIN' }>
   >([]);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const type = String(params?.type || '').toUpperCase();
   const talentId = String(params?.talentId || '');
@@ -49,29 +51,6 @@ export default function ManageTalentPage() {
     { label: 'Dehix Talent', link: '/freelancer/talent' },
     { label: 'Manage', link: '#' },
   ];
-
-  const dummyCards = (count: number, prefix: string) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <Card key={`${prefix}-${i}`} className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">
-              {prefix} #{i + 1}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>
-                Project: Awesome {prefix} Project {i + 1}
-              </p>
-              <p>Status: {prefix}</p>
-              <p>Updated: Today</p>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
 
   // Fetch all user's talents (skills and domains) to populate dropdown
   useEffect(() => {
@@ -114,6 +93,24 @@ export default function ManageTalentPage() {
     fetchTalents();
   }, [user?.uid]);
 
+  useEffect(() => {
+    async function fetchApplications() {
+      if (!user?.uid || !talentId) return;
+      setLoading(true);
+      try {
+        const response = await axiosInstance.get(
+          `/freelancer/${user.uid}/dehix-talent/${talentId}/applications`,
+        );
+        setApplications(response.data?.data || []);
+      } catch (error) {
+        console.error('Failed to fetch applications', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchApplications();
+  }, [user?.uid, talentId]);
+
   const selectedValue = `${type}:${talentId}`;
 
   const handleTalentChange = (value: string) => {
@@ -125,6 +122,38 @@ export default function ManageTalentPage() {
       `/freelancer/talent/manage/${newType.toLowerCase()}/${newId}?label=${encodeURIComponent(
         sel?.label || '',
       )}`,
+    );
+  };
+
+  const renderApplicationCards = (status: string) => {
+    const filteredApplications = applications.filter(
+      (app) => app.status.toLowerCase() === status.toLowerCase(),
+    );
+
+    if (loading) {
+      return <p>Loading...</p>;
+    }
+
+    if (filteredApplications.length === 0) {
+      return <p>No applications found.</p>;
+    }
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredApplications.map((app, i) => (
+          <Card key={`${status}-${i}`} className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">{app.project_name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>Status: {app.status}</p>
+                <p>Updated: {new Date(app.updatedAt).toLocaleDateString()}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   };
 
@@ -189,15 +218,15 @@ export default function ManageTalentPage() {
                 </TabsList>
 
                 <TabsContent value="applied" className="mt-4">
-                  {dummyCards(6, 'Applied')}
+                  {renderApplicationCards('applied')}
                 </TabsContent>
 
                 <TabsContent value="invited" className="mt-4">
-                  {dummyCards(4, 'Invited')}
+                  {renderApplicationCards('invited')}
                 </TabsContent>
 
                 <TabsContent value="interview" className="mt-4">
-                  {dummyCards(3, 'Interview')}
+                  {renderApplicationCards('interview')}
                 </TabsContent>
               </Tabs>
             </CardContent>
