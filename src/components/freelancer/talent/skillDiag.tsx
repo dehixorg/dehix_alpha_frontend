@@ -106,7 +106,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
       });
       reset();
       setOpen(false);
-      notifySuccess('Skill added successfully', 'Success');
+      notifySuccess('The Talent has been successfully added.', 'Talent Added');
       onSuccess();
     } catch (error) {
       console.error(error);

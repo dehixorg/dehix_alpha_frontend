@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { ArrowUpRight } from 'lucide-react';
 
+import { TableSelect } from '../../custom-table/TableSelect';
+
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 import VerifyDialog from './verifyDialog';
@@ -24,6 +26,15 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
@@ -63,6 +74,9 @@ const SkillDomainForm: React.FC = () => {
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [limit, setLimit] = useState(10);
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -94,10 +108,12 @@ const SkillDomainForm: React.FC = () => {
         const domainsArray = domainsResponse.data?.data || [];
 
         // fetch talent data
-        let talentResponse = { data: { data: {} } };
+        let talentResponse = {
+          data: { data: {}, pagination: { totalPages: 0 } },
+        };
         if (user?.uid) {
           talentResponse = await axiosInstance.get(
-            `/freelancer/${user.uid}/dehix-talent`,
+            `/freelancer/${user.uid}/dehix-talent?page=${currentPage}&limit=${limit}`,
           );
         }
 
@@ -121,6 +137,7 @@ const SkillDomainForm: React.FC = () => {
         const deduplicatedData = removeDuplicates(formattedTalentData);
         setSkillDomainData(deduplicatedData);
         setStatusVisibility(deduplicatedData.map((item) => item.activeStatus));
+        setTotalPages(talentResponse.data.pagination.totalPages);
 
         // filter global skills/domains
         const usedTalentIds = new Set(
@@ -151,7 +168,7 @@ const SkillDomainForm: React.FC = () => {
 
     fetchData();
     return () => cancelAllRequests();
-  }, [user?.uid, refreshTrigger]);
+  }, [user?.uid, refreshTrigger, currentPage, limit]);
 
   const handleToggleVisibility = async (
     index: number,
@@ -173,6 +190,17 @@ const SkillDomainForm: React.FC = () => {
       console.error('Error updating visibility:', error);
       notifyError('Something went wrong. Please try again.', 'Error');
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleLimitChange = (value: number) => {
+    setLimit(value);
+    setCurrentPage(1);
   };
 
   return (
@@ -199,6 +227,12 @@ const SkillDomainForm: React.FC = () => {
                 onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
               />
             </div>
+            <TableSelect
+              currValue={limit}
+              label="Items Per Page"
+              values={[10, 15, 20, 25]}
+              setCurrValue={handleLimitChange}
+            />
           </div>
 
           <Card>
@@ -418,6 +452,76 @@ const SkillDomainForm: React.FC = () => {
                   )}
                 </TableBody>
               </Table>
+            </div>
+            <div className="flex items-center justify-end">
+              {totalPages > 1 && (
+                <Pagination className="mt-6">
+                  <PaginationContent>
+                    {currentPage > 1 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(currentPage - 1);
+                            }}
+                            className="cursor-pointer"
+                          />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(currentPage - 1);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {currentPage - 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationLink href="#" isActive>
+                        {currentPage}
+                      </PaginationLink>
+                    </PaginationItem>
+
+                    {currentPage < totalPages && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(currentPage + 1);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {currentPage + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(currentPage + 1);
+                            }}
+                            className="cursor-pointer"
+                          />
+                        </PaginationItem>
+                      </>
+                    )}
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
           </Card>
         </CardContent>

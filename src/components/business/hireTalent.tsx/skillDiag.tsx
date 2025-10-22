@@ -219,6 +219,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               10,
             )}
             data={getValues()}
+            skipRedirect={true}
           />
         </form>
       </DialogContent>

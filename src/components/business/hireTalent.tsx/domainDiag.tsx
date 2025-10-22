@@ -216,6 +216,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               10,
             )}
             data={getValues()}
+            skipRedirect={true}
           />
         </form>
       </DialogContent>
