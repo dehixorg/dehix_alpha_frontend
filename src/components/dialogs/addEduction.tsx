@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
 
 import DraftDialog from '../shared/DraftDialog';
+import { DatePicker } from '../shared/datePicker';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,11 +32,13 @@ import useDraft from '@/hooks/useDraft';
 
 const FormSchema = z
   .object({
-    degree: z.string().optional(),
-    universityName: z.string().optional(),
-    fieldOfStudy: z.string().optional(),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
+    degree: z.string().min(1, { message: 'Degree is required' }),
+    universityName: z
+      .string()
+      .min(1, { message: 'University name is required' }),
+    fieldOfStudy: z.string().min(1, { message: 'Field of study is required' }),
+    startDate: z.string().min(1, { message: 'Start date is required' }),
+    endDate: z.string().min(1, { message: 'End date is required' }),
     grade: z.string().optional(),
   })
   .refine(
@@ -50,7 +52,21 @@ const FormSchema = z
     },
     {
       message: 'Start Date must be before End Date',
-      path: ['endDate'], // Show error on endDate field
+      path: ['endDate'],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.startDate) {
+        const start = new Date(data.startDate);
+        const today = new Date();
+        return start <= today;
+      }
+      return true;
+    },
+    {
+      message: 'Start date cannot be in the future',
+      path: ['startDate'],
     },
   );
 
@@ -76,6 +92,17 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     },
   });
 
+  const resetForm = useCallback(() => {
+    form.reset({
+      degree: '',
+      universityName: '',
+      fieldOfStudy: '',
+      startDate: '',
+      endDate: '',
+      grade: '',
+    });
+  }, [form]);
+
   const {
     showDraftDialog,
     setShowDraftDialog,
@@ -84,8 +111,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     loadDraft,
     discardDraft,
     handleSaveAndClose,
-    handleDiscardAndClose,
-    handleDialogClose,
+    handleDiscardAndClose: handleDiscardAndCloseDraft,
   } = useDraft({
     form,
     formSection: 'education',
@@ -95,31 +121,63 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
       restoredDraft.current = { ...values };
     },
     onDiscard: () => {
-      restoredDraft.current = null;
+      resetForm();
     },
   });
 
-  async function onSubmit(data: any) {
-    setLoading(true);
+  const handleDiscardAndClose = () => {
+    resetForm();
+    restoredDraft.current = null;
+    if (setIsDialogOpen) {
+      setIsDialogOpen(false);
+    }
+  };
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    // Check if required fields are filled
+    const requiredFields = [
+      'degree',
+      'universityName',
+      'fieldOfStudy',
+      'startDate',
+      'endDate',
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => !data[field as keyof typeof data],
+    );
+    if (missingFields.length > 0) {
+      notifyError('Please fill in all required fields', 'Validation Error');
+      return;
+    }
+
     try {
+      setLoading(true);
       const formattedData = {
-        ...data,
+        degree: data.degree, // This matches the backend field name
+        universityName: data.universityName,
+        fieldOfStudy: data.fieldOfStudy,
         startDate: data.startDate
           ? new Date(data.startDate).toISOString()
           : null,
         endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
-        oracleAssigned: data.oracleAssigned || '',
-        verificationStatus: data.verificationStatus || 'ADDED',
-        verificationUpdateTime: data.verificationUpdateTime || new Date(),
+        grade: data.grade,
+        oracleAssigned: '',
+        verificationStatus: 'ADDED',
+        verificationUpdateTime: new Date().toISOString(),
         comments: '',
       };
-      await axiosInstance.post(`/freelancer/education`, formattedData);
-      onFormSubmit();
-      setIsDialogOpen(false);
+
+      await axiosInstance.post('/freelancer/education', formattedData);
       notifySuccess(
         'The education has been successfully added.',
         'Education Added',
       );
+      resetForm();
+      onFormSubmit();
+
+      if (setIsDialogOpen) {
+        setIsDialogOpen(false);
+      }
     } catch (error) {
       console.error('API Error:', error);
       notifyError('Failed to add education. Please try again later.', 'Error');
@@ -132,8 +190,27 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     <Dialog
       open={isDialogOpen}
       onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        if (!open) handleDialogClose();
+        if (!open) {
+          const formValues = form.getValues();
+          const hasValues = Object.values(formValues).some(
+            (value) => value && value.toString().trim() !== '',
+          );
+
+          if (hasValues) {
+            setConfirmExitDialog(true);
+          } else {
+            setIsDialogOpen(false);
+            resetForm();
+          }
+        } else {
+          // Reset form when dialog is opened
+          resetForm();
+          // Show draft dialog if there's a draft
+          if (restoredDraft.current) {
+            setShowDraftDialog(true);
+          }
+          setIsDialogOpen(true);
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -148,7 +225,16 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
           <DialogDescription>Add your relevant Education.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, () => {
+              notifyError(
+                'Please fill in all required fields',
+                'Validation Error',
+              );
+            })}
+            className="space-y-4"
+          >
+            <button type="submit" style={{ display: 'none' }} />
             <FormField
               control={form.control}
               name="degree"
@@ -158,7 +244,6 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                   <FormControl>
                     <Input placeholder="Enter your degree title" {...field} />
                   </FormControl>
-                  <FormDescription>Enter your degree title</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -176,7 +261,6 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>Enter your university name</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -191,7 +275,6 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                   <FormControl>
                     <Input placeholder="Enter your field of study" {...field} />
                   </FormControl>
-                  <FormDescription>Enter Field of Study</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -204,9 +287,8 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                 <FormItem>
                   <FormLabel>Start Date</FormLabel>
                   <FormControl>
-                    <Input type="date" max={currentDate} {...field} />
+                    <DatePicker {...field} max={currentDate} />
                   </FormControl>
-                  <FormDescription>Select the start date</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -219,9 +301,8 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                 <FormItem>
                   <FormLabel>End Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DatePicker {...field} />
                   </FormControl>
-                  <FormDescription>Select the end date</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -236,17 +317,49 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                   <FormControl>
                     <Input placeholder="Enter your grade" {...field} />
                   </FormControl>
-                  <FormDescription>Enter your grade</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <DialogFooter>
+            <DialogFooter className="flex justify-end pt-4">
               <Button type="submit" disabled={loading}>
-                {loading ? 'Loading...' : 'Create'}
+                {loading ? 'Saving...' : 'Save'}
               </Button>
             </DialogFooter>
+
+            {/* Confirmation Dialog for Discard */}
+            <Dialog
+              open={confirmExitDialog}
+              onOpenChange={setConfirmExitDialog}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Discard Changes?</DialogTitle>
+                  <DialogDescription>
+                    You have unsaved changes. Are you sure you want to discard
+                    them?
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setConfirmExitDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      handleDiscardAndCloseDraft();
+                      setConfirmExitDialog(false);
+                    }}
+                  >
+                    Discard
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </form>
         </Form>
       </DialogContent>

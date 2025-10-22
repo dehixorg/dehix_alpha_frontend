@@ -19,6 +19,7 @@ interface TextInputProps<T extends FieldValues> {
   type?: string;
   description?: string;
   className?: string; // Add className to the props interface
+  disabled?: boolean;
 }
 
 const TextInput: FC<TextInputProps<any>> = ({
@@ -29,6 +30,7 @@ const TextInput: FC<TextInputProps<any>> = ({
   type = 'text',
   description = '',
   className = '', // Default to an empty string if no className is passed
+  disabled = false,
 }) => {
   return (
     <div className="space-y-2">
@@ -43,6 +45,7 @@ const TextInput: FC<TextInputProps<any>> = ({
                 placeholder={placeholder}
                 type={type}
                 {...field}
+                disabled={disabled}
                 className={`p-2 border rounded-md ${className}`} // Apply className here
                 onChange={(e) => {
                   const value = e.target.value;
@@ -53,7 +56,7 @@ const TextInput: FC<TextInputProps<any>> = ({
                     field.onChange(value);
                   }
                 }}
-                value={type === 'number' ? (field.value ?? '') : field.value}
+                value={field.value ?? ''}
               />
             </FormControl>
             <FormDescription>{description}</FormDescription>

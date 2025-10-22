@@ -1,5 +1,5 @@
 'use client';
-import type React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Search,
   Layers,
@@ -103,11 +103,67 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   projectDomainSearchQuery,
   setProjectDomainSearchQuery,
 }) => {
+  // Debounced local inputs for better UX
+  const [skillsQueryLocal, setSkillsQueryLocal] = useState(searchQuery);
+  const [domainQueryLocal, setDomainQueryLocal] = useState(domainSearchQuery);
+  const [projectDomainQueryLocal, setProjectDomainQueryLocal] = useState(
+    projectDomainSearchQuery,
+  );
+
+  useEffect(() => setSkillsQueryLocal(searchQuery), [searchQuery]);
+  useEffect(() => setDomainQueryLocal(domainSearchQuery), [domainSearchQuery]);
+  useEffect(
+    () => setProjectDomainQueryLocal(projectDomainSearchQuery),
+    [projectDomainSearchQuery],
+  );
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQuery(skillsQueryLocal), 300);
+    return () => clearTimeout(t);
+  }, [skillsQueryLocal, setSearchQuery]);
+  useEffect(() => {
+    const t = setTimeout(() => setDomainSearchQuery(domainQueryLocal), 300);
+    return () => clearTimeout(t);
+  }, [domainQueryLocal, setDomainSearchQuery]);
+  useEffect(() => {
+    const t = setTimeout(
+      () => setProjectDomainSearchQuery(projectDomainQueryLocal),
+      300,
+    );
+    return () => clearTimeout(t);
+  }, [projectDomainQueryLocal, setProjectDomainSearchQuery]);
+
+  type ArrayFilterKeys =
+    | 'jobType'
+    | 'domain'
+    | 'skills'
+    | 'projectDomain'
+    | 'sorting';
+  type BooleanFilterKeys = 'favourites' | 'consultant';
+
+  const clearSection = (section: ArrayFilterKeys | BooleanFilterKeys) => {
+    setFilters((prev) => {
+      if ((['favourites', 'consultant'] as const).includes(section as any)) {
+        const key = section as BooleanFilterKeys;
+        return { ...prev, [key]: false } as FilterState;
+      } else {
+        const key = section as ArrayFilterKeys;
+        return { ...prev, [key]: [] } as FilterState;
+      }
+    });
+  };
+
   return (
-    <div className="sticky border rounded-lg">
-      <div className="sticky top-0 z-10 bg-gradient border-b p-4 rounded-t-lg">
+    <div className="sticky top-[4rem] lg:h-[calc(100vh-6rem)] border rounded-lg flex flex-col">
+      <div className="bg-gradient border-b p-4 rounded-t-lg">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Filters</h2>
+        </div>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''}{' '}
+            applied
+          </p>
           <Button
             variant="ghost"
             size="sm"
@@ -117,11 +173,155 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             Clear all
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} applied
-        </p>
+        {/* Active filter badges */}
+        {(filters.jobType.length > 0 ||
+          filters.domain.length > 0 ||
+          filters.projectDomain.length > 0 ||
+          filters.skills.length > 0 ||
+          filters.favourites ||
+          filters.consultant ||
+          filters.minRate ||
+          filters.maxRate) && (
+          <div
+            className="mt-3 flex flex-wrap gap-2"
+            aria-label="Active filters"
+          >
+            {filters.jobType.map((t) => (
+              <Badge
+                key={`t-${t}`}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
+                {t}
+                <button
+                  className="ml-1 rounded hover:bg-muted px-1"
+                  aria-label={`Remove ${t}`}
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      jobType: prev.jobType.filter((x) => x !== t),
+                    }))
+                  }
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {filters.domain.map((d) => (
+              <Badge
+                key={`d-${d}`}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
+                {d}
+                <button
+                  className="ml-1 rounded hover:bg-muted px-1"
+                  aria-label={`Remove ${d}`}
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      domain: prev.domain.filter((x) => x !== d),
+                    }))
+                  }
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {filters.projectDomain.map((pd) => (
+              <Badge
+                key={`pd-${pd}`}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
+                {pd}
+                <button
+                  className="ml-1 rounded hover:bg-muted px-1"
+                  aria-label={`Remove ${pd}`}
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      projectDomain: prev.projectDomain.filter((x) => x !== pd),
+                    }))
+                  }
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {filters.skills.map((s) => (
+              <Badge
+                key={`s-${s}`}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
+                {s}
+                <button
+                  className="ml-1 rounded hover:bg-muted px-1"
+                  aria-label={`Remove ${s}`}
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      skills: prev.skills.filter((x) => x !== s),
+                    }))
+                  }
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {filters.favourites && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Drafts only
+                <button
+                  className="ml-1 rounded hover:bg-muted px-1"
+                  aria-label="Disable drafts only"
+                  onClick={() =>
+                    setFilters((prev) => ({ ...prev, favourites: false }))
+                  }
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {filters.consultant && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Consultation
+                <button
+                  className="ml-1 rounded hover:bg-muted px-1"
+                  aria-label="Disable consultation"
+                  onClick={() =>
+                    setFilters((prev) => ({ ...prev, consultant: false }))
+                  }
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {(filters.minRate || filters.maxRate) && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {filters.minRate ? `$${filters.minRate}` : ''}
+                {filters.minRate && filters.maxRate ? '–' : ''}
+                {filters.maxRate ? `$${filters.maxRate}` : ''}
+                <button
+                  className="ml-1 rounded hover:bg-muted px-1"
+                  aria-label="Clear budget range"
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      minRate: '',
+                      maxRate: '',
+                    }))
+                  }
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
-      <ScrollArea className="flex-1 px-4 pb-2 pt-4">
+      <div className="h-full overflow-auto no-scrollbar px-4 pb-2 pt-4">
         <Accordion
           type="multiple"
           defaultValue={[
@@ -137,15 +337,33 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
           <AccordionItem
             value="project-type"
             className="border bg-muted/20 p-4 rounded-lg"
+            role="group"
+            aria-labelledby="filter-project-type"
           >
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <Layers className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Project Type</span>
+                <span id="filter-project-type" className="font-medium">
+                  Project Type
+                </span>
                 {filters.jobType.length > 0 && (
                   <Badge variant="secondary" className="h-4 px-1.5 text-xs">
                     {filters.jobType.length}
                   </Badge>
+                )}
+                {filters.jobType.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-2 h-6 px-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      clearSection('jobType');
+                    }}
+                  >
+                    Clear
+                  </Button>
                 )}
               </div>
             </AccordionTrigger>
@@ -180,62 +398,91 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
           <AccordionItem
             value="domains"
-            className="border bg-muted/20 p-4 rounded-lg"
+            className="border bg-muted/20 p-3 rounded-lg"
+            role="group"
+            aria-labelledby="filter-domains"
           >
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Domains</span>
+                <span id="filter-domains" className="font-medium">
+                  Domains
+                </span>
                 {filters.domain.length > 0 && (
                   <Badge variant="secondary" className="h-4 px-1.5 text-xs">
                     {filters.domain.length}
                   </Badge>
                 )}
+                {filters.domain.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-2 h-6 px-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      clearSection('domain');
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
             </AccordionTrigger>
-            <AccordionContent className="py-2">
+            <AccordionContent className="py-2 px-1">
               <div className="space-y-3">
                 <SearchInput
                   placeholder="Search domains..."
-                  value={domainSearchQuery}
-                  onChange={setDomainSearchQuery}
-                  onClear={() => setDomainSearchQuery('')}
+                  value={domainQueryLocal}
+                  onChange={setDomainQueryLocal}
+                  onClear={() => setDomainQueryLocal('')}
                 />
                 <div className="h-60 overflow-hidden">
                   <ScrollArea className="h-full w-full pr-2">
                     <div className="space-y-1 py-1">
-                      {domains
-                        .filter((domain) =>
-                          domain
-                            .toLowerCase()
-                            .includes(domainSearchQuery.toLowerCase()),
-                        )
-                        .map((domain) => (
-                          <div
-                            key={domain}
-                            className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
-                          >
-                            <Checkbox
-                              id={`desktop-domain-${domain}`}
-                              checked={filters.domain.includes(domain)}
-                              onCheckedChange={(checked) => {
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  domain: checked
-                                    ? [...prev.domain, domain]
-                                    : prev.domain.filter((d) => d !== domain),
-                                }));
-                              }}
-                              className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <label
-                              htmlFor={`desktop-domain-${domain}`}
-                              className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                      {domains.filter((domain) =>
+                        domain
+                          .toLowerCase()
+                          .includes(domainSearchQuery.toLowerCase()),
+                      ).length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No items found
+                        </p>
+                      ) : (
+                        domains
+                          .filter((domain) =>
+                            domain
+                              .toLowerCase()
+                              .includes(domainSearchQuery.toLowerCase()),
+                          )
+
+                          .map((domain) => (
+                            <div
+                              key={domain}
+                              className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
                             >
-                              {domain}
-                            </label>
-                          </div>
-                        ))}
+                              <Checkbox
+                                id={`desktop-domain-${domain}`}
+                                checked={filters.domain.includes(domain)}
+                                onCheckedChange={(checked) => {
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    domain: checked
+                                      ? [...prev.domain, domain]
+                                      : prev.domain.filter((d) => d !== domain),
+                                  }));
+                                }}
+                                className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                              <label
+                                htmlFor={`desktop-domain-${domain}`}
+                                className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                              >
+                                {domain}
+                              </label>
+                            </div>
+                          ))
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
@@ -245,64 +492,93 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
           <AccordionItem
             value="project-domains"
-            className="border bg-muted/20 p-4 rounded-lg"
+            className="border bg-muted/20 p-3 rounded-lg"
+            role="group"
+            aria-labelledby="filter-project-domains"
           >
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <FolderGit2 className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Project Domains</span>
+                <span id="filter-project-domains" className="font-medium">
+                  Project Domains
+                </span>
                 {filters.projectDomain.length > 0 && (
                   <Badge variant="secondary" className="h-4 px-1.5 text-xs">
                     {filters.projectDomain.length}
                   </Badge>
                 )}
+                {filters.projectDomain.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-2 h-6 px-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      clearSection('projectDomain');
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
             </AccordionTrigger>
-            <AccordionContent className="py-2">
+            <AccordionContent className="py-2 px-1">
               <div className="space-y-3">
                 <SearchInput
                   placeholder="Search project domains..."
-                  value={projectDomainSearchQuery}
-                  onChange={setProjectDomainSearchQuery}
-                  onClear={() => setProjectDomainSearchQuery('')}
+                  value={projectDomainQueryLocal}
+                  onChange={setProjectDomainQueryLocal}
+                  onClear={() => setProjectDomainQueryLocal('')}
                 />
                 <div className="h-60 overflow-hidden">
                   <ScrollArea className="h-full w-full pr-2">
                     <div className="space-y-1 py-1">
-                      {projectDomains
-                        .filter((domain) =>
-                          domain
-                            .toLowerCase()
-                            .includes(projectDomainSearchQuery.toLowerCase()),
-                        )
-                        .map((domain) => (
-                          <div
-                            key={domain}
-                            className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
-                          >
-                            <Checkbox
-                              id={`desktop-project-domain-${domain}`}
-                              checked={filters.projectDomain.includes(domain)}
-                              onCheckedChange={(checked) => {
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  projectDomain: checked
-                                    ? [...prev.projectDomain, domain]
-                                    : prev.projectDomain.filter(
-                                        (d) => d !== domain,
-                                      ),
-                                }));
-                              }}
-                              className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <label
-                              htmlFor={`desktop-project-domain-${domain}`}
-                              className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                      {projectDomains.filter((domain) =>
+                        domain
+                          .toLowerCase()
+                          .includes(projectDomainSearchQuery.toLowerCase()),
+                      ).length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No items found
+                        </p>
+                      ) : (
+                        projectDomains
+                          .filter((domain) =>
+                            domain
+                              .toLowerCase()
+                              .includes(projectDomainSearchQuery.toLowerCase()),
+                          )
+
+                          .map((domain) => (
+                            <div
+                              key={domain}
+                              className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
                             >
-                              {domain}
-                            </label>
-                          </div>
-                        ))}
+                              <Checkbox
+                                id={`desktop-project-domain-${domain}`}
+                                checked={filters.projectDomain.includes(domain)}
+                                onCheckedChange={(checked) => {
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    projectDomain: checked
+                                      ? [...prev.projectDomain, domain]
+                                      : prev.projectDomain.filter(
+                                          (d) => d !== domain,
+                                        ),
+                                  }));
+                                }}
+                                className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                              <label
+                                htmlFor={`desktop-project-domain-${domain}`}
+                                className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                              >
+                                {domain}
+                              </label>
+                            </div>
+                          ))
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
@@ -312,63 +588,90 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
           <AccordionItem
             value="skills"
-            className="border bg-muted/20 p-4 rounded-lg"
+            className="border bg-muted/20 p-3 rounded-lg"
+            role="group"
+            aria-labelledby="filter-skills"
           >
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <Award className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Skills</span>
+                <span id="filter-skills" className="font-medium">
+                  Skills
+                </span>
                 {filters.skills.length > 0 && (
                   <Badge variant="secondary" className="h-4 px-1.5 text-xs">
                     {filters.skills.length}
                   </Badge>
                 )}
+                {filters.skills.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-2 h-6 px-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      clearSection('skills');
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
             </AccordionTrigger>
-            <AccordionContent className="py-2">
+            <AccordionContent className="py-2 px-1">
               <div className="space-y-3">
                 <SearchInput
                   placeholder="Search skills..."
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  onClear={() => setSearchQuery('')}
+                  value={skillsQueryLocal}
+                  onChange={setSkillsQueryLocal}
+                  onClear={() => setSkillsQueryLocal('')}
                 />
                 <div className="h-60 overflow-hidden">
                   <ScrollArea className="h-full w-full pr-2">
                     <div className="space-y-1 py-1">
-                      {skills
-                        .filter((skill) =>
-                          skill
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase()),
-                        )
-                        .slice(0, 50)
-                        .map((skill) => (
-                          <div
-                            key={skill}
-                            className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
-                          >
-                            <Checkbox
-                              id={`desktop-skill-${skill}`}
-                              checked={filters.skills.includes(skill)}
-                              onCheckedChange={(checked) => {
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  skills: checked
-                                    ? [...prev.skills, skill]
-                                    : prev.skills.filter((s) => s !== skill),
-                                }));
-                              }}
-                              className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <label
-                              htmlFor={`desktop-skill-${skill}`}
-                              className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                      {skills.filter((skill) =>
+                        skill.toLowerCase().includes(searchQuery.toLowerCase()),
+                      ).length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No items found
+                        </p>
+                      ) : (
+                        skills
+                          .filter((skill) =>
+                            skill
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()),
+                          )
+
+                          .slice(0, 50)
+                          .map((skill) => (
+                            <div
+                              key={skill}
+                              className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
                             >
-                              {skill}
-                            </label>
-                          </div>
-                        ))}
+                              <Checkbox
+                                id={`desktop-skill-${skill}`}
+                                checked={filters.skills.includes(skill)}
+                                onCheckedChange={(checked) => {
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    skills: checked
+                                      ? [...prev.skills, skill]
+                                      : prev.skills.filter((s) => s !== skill),
+                                  }));
+                                }}
+                                className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                              <label
+                                htmlFor={`desktop-skill-${skill}`}
+                                className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                              >
+                                {skill}
+                              </label>
+                            </div>
+                          ))
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
@@ -445,11 +748,15 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
           <AccordionItem
             value="other"
             className="border bg-muted/20 p-4 rounded-lg"
+            role="group"
+            aria-labelledby="filter-other"
           >
             <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center space-x-2">
                 <Sliders className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Other Options</span>
+                <span id="filter-other" className="font-medium">
+                  Other Options
+                </span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="py-2">
@@ -498,7 +805,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-      </ScrollArea>
+      </div>
     </div>
   );
 };

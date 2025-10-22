@@ -70,7 +70,7 @@ const NoteCard = ({
     className="relative group w-full h-full"
   >
     <Card
-      className="font-sans border-none cursor-pointer bg-white/90 hover:bg-white/80 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 w-full h-full min-h-[250px] relative"
+      className="font-sans border-none cursor-pointer bg-white/20 hover:bg-white/80 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 w-full h-full min-h-[250px] relative"
       style={
         note.banner
           ? {
@@ -124,7 +124,7 @@ const NoteCard = ({
 
       {/* Actions */}
       <TooltipProvider delayDuration={150}>
-        <div className="absolute top-2 right-2 flex items-center gap-1.5 p-1.5 rounded-lg bg-white/60 backdrop-blur-sm shadow-md opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto focus-within:pointer-events-auto transition-opacity">
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 p-1.5 rounded-lg bg-backdrop-blur-sm shadow-md opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto focus-within:pointer-events-auto transition-opacity">
           {isTrash ? (
             <>
               <Tooltip>

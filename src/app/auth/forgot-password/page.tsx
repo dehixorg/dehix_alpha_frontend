@@ -74,7 +74,7 @@ export default function ForgotPassword() {
           <div className="mt-4 text-center text-sm">
             Remembered your password?{' '}
             <Button variant="outline" size="sm" className="ml-2" asChild>
-              <Link href="/auth/sign-in">Login</Link>
+              <Link href="/auth/login">Login</Link>
             </Button>
           </div>
         </div>

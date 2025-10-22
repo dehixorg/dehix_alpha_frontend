@@ -1,16 +1,18 @@
 'use client';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { PackageOpen } from 'lucide-react';
 
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
-// Define a union type for the filter options
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
-interface JobData {
+import { VerificationStatus } from '@/utils/verificationStatus';
+
+type FilterOption = 'all' | 'pending' | 'verified' | 'rejected';
+
+interface WorkExperience {
   _id: string;
   jobTitle: string;
   workDescription: string;
@@ -22,47 +24,84 @@ interface JobData {
   githubRepoLink: string;
   comments: string;
   verificationStatus: string;
-  onStatusUpdate: (newStatus: string) => void;
-  onCommentUpdate: (newComment: string) => void;
 }
 
+interface VerificationEntry {
+  document_id: string;
+  verification_status: VerificationStatus;
+  comments: string;
+  requester_id: string;
+  verifier_id: string;
+}
+
+interface CombinedData extends WorkExperience, VerificationEntry {}
+
 const WorkExpVerification = () => {
-  const [JobData, setJobData] = useState<JobData[]>([]);
+  const [jobData, setJobData] = useState<CombinedData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [loading, setLoading] = useState<boolean>(false);
+  const handleFilterChange = (newFilter: FilterOption) => {
+    setFilter(newFilter);
+  };
 
-  const handleFilterChange = useCallback(
-    (newFilter: FilterOption) => setFilter(newFilter),
-    [],
-  );
-
-  const filteredData = useMemo(() => {
-    return JobData.filter((data) => {
-      if (filter === 'all') return true;
-      if (filter === 'current')
-        return data.verificationStatus === StatusEnum.PENDING;
-      return data.verificationStatus === filter;
-    });
-  }, [JobData, filter]);
+  const filteredData = jobData.filter((data) => {
+    if (filter === 'all') return true;
+    if (filter === 'pending')
+      return data.verification_status === VerificationStatus.PENDING;
+    if (filter === 'verified')
+      return data.verification_status === VerificationStatus.APPROVED;
+    if (filter === 'rejected')
+      return data.verification_status === VerificationStatus.DENIED;
+    return true;
+  });
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(
+      const verificationResponse = await axiosInstance.get(
         `/verification/oracle?doc_type=experience`,
       );
-      const result = response.data.data;
+      const verificationEntries = verificationResponse.data.data;
 
-      const flattenedData = result.flatMap((entry: any) =>
-        entry.result?.projects
-          ? Object.values(entry.result.projects).map((project: any) => ({
-              ...project,
-              verifier_id: entry.verifier_id,
-              verifier_username: entry.verifier_username,
-            }))
-          : [],
+      if (!verificationEntries || verificationEntries.length === 0) {
+        setJobData([]);
+        return;
+      }
+
+      const transformedDataPromises = verificationEntries.map(
+        async (entry: VerificationEntry) => {
+          try {
+            const workExpResponse = await axiosInstance.get(
+              `/freelancer/${entry.requester_id}/experience`,
+            );
+            const workExpDocuments = workExpResponse.data.data;
+            const workExpArray = Object.values(workExpDocuments);
+            const matchingWorkExpDoc = workExpArray.find(
+              (doc: any) => doc._id === entry.document_id,
+            );
+            if (matchingWorkExpDoc) {
+              return {
+                ...matchingWorkExpDoc,
+                ...entry,
+                verification_status:
+                  entry.verification_status as VerificationStatus,
+              };
+            }
+            return null;
+          } catch (error) {
+            console.error(
+              `Failed to fetch work experience for requester ID ${entry.requester_id}:`,
+              error,
+            );
+            return null;
+          }
+        },
       );
-      setJobData(flattenedData);
+
+      const combinedData = (await Promise.all(transformedDataPromises)).filter(
+        Boolean,
+      );
+      setJobData(combinedData as CombinedData[]);
     } catch (error) {
       notifyError('Something went wrong. Please try again.', 'Error');
     } finally {
@@ -74,24 +113,25 @@ const WorkExpVerification = () => {
     fetchData();
   }, [fetchData]);
 
-  const updateJobStatus = useCallback((index: number, newStatus: string) => {
-    setJobData((prev) => {
-      const next = [...prev];
-      if (next[index]) next[index].verificationStatus = newStatus;
-      return next;
-    });
-  }, []);
+  const updateJobStatus = (documentId: string, newStatus: string) => {
+    setJobData((prev) =>
+      prev.map((item) =>
+        item.document_id === documentId
+          ? { ...item, verification_status: newStatus as VerificationStatus }
+          : item,
+      ),
+    );
+  };
 
-  const updateCommentStatus = useCallback(
-    (index: number, newComment: string) => {
-      setJobData((prev) => {
-        const next = [...prev];
-        if (next[index]) next[index].comments = newComment;
-        return next;
-      });
-    },
-    [],
-  );
+  const updateCommentStatus = (documentId: string, newComment: string) => {
+    setJobData((prev) =>
+      prev.map((item) =>
+        item.document_id === documentId
+          ? { ...item, comments: newComment }
+          : item,
+      ),
+    );
+  };
 
   return (
     <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
@@ -100,14 +140,16 @@ const WorkExpVerification = () => {
           Experience Verification
         </h1>
         <p className="text-muted-foreground">
-          Stay updated on your work experience verification status.
+          Monitor and manage work experience verification requests.
         </p>
       </div>
+
       <Tabs
         value={filter}
+        defaultValue="all"
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
       >
-        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap">
+        <div className="border-b px-2 sm:px-6 flex items-center justify-between gap-3 flex-wrap mb-6">
           <TabsList className="bg-transparent h-12 p-0">
             <TabsTrigger
               value="all"
@@ -116,7 +158,7 @@ const WorkExpVerification = () => {
               All
             </TabsTrigger>
             <TabsTrigger
-              value="current"
+              value="pending"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Pending
@@ -136,33 +178,78 @@ const WorkExpVerification = () => {
           </TabsList>
         </div>
 
-        {(['all', 'current', 'verified', 'rejected'] as FilterOption[]).map(
+        {(['all', 'pending', 'verified', 'rejected'] as FilterOption[]).map(
           (t) => (
-            <TabsContent key={t} value={t} className="m-0">
+            <TabsContent key={t} value={t}>
               <CardContent>
-                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                <div className="grid flex-1 items-start gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {loading ? (
                     Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="rounded-lg border bg-card p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Skeleton className="h-10 w-10 rounded-full" />
-                          <div className="space-y-2 w-full">
-                            <Skeleton className="h-4 w-2/3" />
-                            <Skeleton className="h-3 w-1/2" />
+                      <div
+                        key={i}
+                        className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl bg-muted-foreground/20 dark:bg-muted/20"
+                      >
+                        <div className="pb-3 px-6 pt-6 relative">
+                          <div className="absolute top-4 right-4">
+                            <Skeleton className="h-9 w-9 rounded-full" />
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <Skeleton className="h-14 w-14 rounded-xl" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-center w-full gap-2">
+                                <Skeleton className="h-6 w-48" />
+                              </div>
+                              <div className="mt-2 flex items-center gap-2">
+                                <Skeleton className="h-5 w-20 rounded-full" />
+                                <Skeleton className="h-9 w-9 rounded-full" />
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <Skeleton className="h-4 w-full mb-2" />
-                        <Skeleton className="h-4 w-5/6 mb-2" />
-                        <Skeleton className="h-8 w-24" />
+                        <div className="px-6 py-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="p-3 rounded-lg border border-gray-100 dark:border-gray-700/50 sm:col-span-2">
+                              <Skeleton className="h-3 w-20 mb-2" />
+                              <div className="flex items-center gap-2">
+                                <Skeleton className="h-4 w-4 rounded" />
+                                <Skeleton className="h-4 w-40" />
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg border border-gray-100 dark:border-gray-700/50 sm:col-span-2">
+                              <Skeleton className="h-3 w-28 mb-2" />
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Skeleton className="h-4 w-4 rounded" />
+                                  <Skeleton className="h-4 w-36" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Skeleton className="h-4 w-4 rounded" />
+                                  <Skeleton className="h-4 w-32" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-4">
+                            <Skeleton className="h-4 w-3/4" />
+                          </div>
+                        </div>
+                        <div className="px-6 py-5 border-t border-gray-100 dark:border-gray-800">
+                          <div className="space-y-2">
+                            <Skeleton className="h-3 w-40" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                          <div className="mt-4">
+                            <Skeleton className="h-10 w-full" />
+                          </div>
+                        </div>
                       </div>
                     ))
                   ) : filteredData.length > 0 ? (
-                    filteredData.map((data, index) => (
+                    filteredData.map((data) => (
                       <WorkExpVerificationCard
-                        key={index}
+                        key={data.document_id}
                         _id={data._id}
                         jobTitle={data.jobTitle}
-                        workDescription={data.workDescription}
                         company={data.company}
                         startFrom={data.workFrom}
                         endTo={data.workTo}
@@ -170,19 +257,23 @@ const WorkExpVerification = () => {
                         referencePersonContact={data.referencePersonContact}
                         githubRepoLink={data.githubRepoLink}
                         comments={data.comments}
-                        status={data.verificationStatus}
+                        status={data.verification_status}
                         onStatusUpdate={(newStatus) =>
-                          updateJobStatus(index, newStatus)
+                          updateJobStatus(data.document_id, newStatus)
                         }
                         onCommentUpdate={(newComment) =>
-                          updateCommentStatus(index, newComment)
+                          updateCommentStatus(data.document_id, newComment)
                         }
                       />
                     ))
                   ) : (
                     <div className="text-center w-full col-span-full mt-10 py-10">
+                      <PackageOpen
+                        className="mx-auto text-gray-500"
+                        size={64}
+                      />
                       <p className="text-sm text-muted-foreground">
-                        No Work Experience verification found.
+                        No work experience verification records found.
                       </p>
                     </div>
                   )}

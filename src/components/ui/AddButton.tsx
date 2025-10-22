@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle } from 'lucide-react';
+import { Plus, PlusCircle } from 'lucide-react';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -13,17 +13,17 @@ export const AddButton: React.FC<AddButtonProps> = ({
   ...props
 }) => {
   return (
-    <div className="flex justify-center mt-4">
       <Button
         onClick={onClick}
+        variant="outline"
+        size="icon"
         className={cn(
-          'w-full max-w-full mx-6 text-center justify-center dark:text-black light:bg-black',
+          'w-full mt-4 text-center justify-center',
           className,
         )}
         {...props}
       >
-        <PlusCircle />
+        <Plus />
       </Button>
-    </div>
   );
 };

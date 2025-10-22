@@ -158,6 +158,35 @@ export default function Dashboard() {
       });
   };
 
+  // Handle project mark as incomplete
+  const handleIncompleteProject = (): void => {
+    if (!project_id) {
+      notifyError('Project ID is missing.', 'Error');
+      return;
+    }
+
+    axiosInstance
+      .put(`/project/${project_id}`, { status: StatusEnum.ACTIVE })
+      .then((response) => {
+        if (response.status === 200) {
+          setProject((prev) =>
+            prev ? { ...prev, status: StatusEnum.ACTIVE } : prev,
+          );
+          notifySuccess('Project marked as incomplete!', 'Success');
+        } else {
+          console.error('Unexpected response:', response);
+          notifyError('Failed to mark project as incomplete.', 'Failed');
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating project status:', error);
+        notifyError(
+          'An error occurred while updating the project status.',
+          'Error',
+        );
+      });
+  };
+
   // Handle profile addition
   const handleAddProfile = () => {
     setIsAddProfileDialogOpen(true);
@@ -181,59 +210,65 @@ export default function Dashboard() {
 
   if (!project) {
     return (
-      <div className="flex min-h-screen w-full flex-col p-6 space-y-6">
-        {/* Header Skeleton */}
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-8 w-48" />
-          <div className="flex space-x-2">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
-          </div>
-        </div>
+      <div className="flex min-h-screen w-full flex-col">
+        <SidebarMenu
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          active=""
+        />
+        <div className="flex flex-col sm:gap-4 sm:py-4 md:py-0 sm:pl-14 mb-8">
+          <Header
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            activeMenu=""
+            breadcrumbItems={[
+              { label: 'Project', link: '/dashboard/business' },
+            ]}
+          />
 
-        {/* Main Content Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Project Info Skeleton */}
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <div className="flex flex-wrap gap-2 pt-2">
-                {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="h-6 w-20 rounded-full" />
-                ))}
+          {/* Main Content Skeleton in <main> */}
+          <main className="flex flex-col lg:grid lg:grid-cols-4 xl:grid-cols-4 flex-1 items-start gap-4 p-4 sm:px-6 sm:py-3 md:gap-8">
+            <div className="w-full lg:col-span-3 space-y-4 md:space-y-8">
+              {/* Project Info Skeleton */}
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} className="h-6 w-20 rounded-full" />
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Profiles Skeleton */}
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-48" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="border rounded-lg p-4 space-y-3">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <div className="flex flex-wrap gap-1 pt-2">
-                      <Skeleton className="h-5 w-16 rounded-full" />
-                      <Skeleton className="h-5 w-16 rounded-full" />
+              {/* Profiles Skeleton */}
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-48" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="border rounded-lg p-4 space-y-3">
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                      <div className="flex flex-wrap gap-1 pt-2">
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Column */}
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-32" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-5/6" />
-              <Skeleton className="h-4 w-2/3" />
+            {/* Right Column */}
+            <div className="w-full lg:col-span-1 lg:w-auto mt-8 lg:mt-0 space-y-6 min-w-0">
+              <Skeleton className="h-8 w-32" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     );
@@ -278,6 +313,7 @@ export default function Dashboard() {
                       projectId={project._id}
                       handleCompleteProject={handleCompleteProject}
                       handleStartProject={handleStartProject}
+                      handleIncompleteProject={handleIncompleteProject}
                       userRole="Business"
                     />
                   </div>

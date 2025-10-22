@@ -10,9 +10,6 @@ import {
   Phone,
   MoreVertical,
 } from 'lucide-react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
 
@@ -25,25 +22,18 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import VerificationDecisionForm from '@/components/verification/VerificationDecisionForm';
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
-import { Textarea } from '@/components/ui/textarea';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { notifyError } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { VerificationStatus } from '@/utils/verificationStatus';
 
 interface BusinessProps {
   _id: string;
@@ -58,19 +48,13 @@ interface BusinessProps {
   linkedInLink: string;
   githubLink: string;
   comments: string;
-  status: string | 'pending';
-  onStatusUpdate: (newStatus: string) => void;
+  status: VerificationStatus;
+  onStatusUpdate: (newStatus: VerificationStatus) => void;
   onCommentUpdate: (newComment: string) => void;
 }
 
-const FormSchema = z.object({
-  type: z.enum(['verified', 'rejected'], {
-    required_error: 'You need to select a type.',
-  }),
-  comment: z.string().optional(),
-});
-
 const BusinessVerificationCard: React.FC<BusinessProps> = ({
+  _id,
   firstName,
   lastName,
   email,
@@ -86,7 +70,8 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
   onStatusUpdate,
   onCommentUpdate,
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState(status);
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus>(status);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
@@ -104,19 +89,27 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
     reportedId: user?.uid || 'user123',
   };
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-  });
-
-  const selectedType = form.watch('type');
+  // Reusable decision form will handle its own form state and validation
 
   useEffect(() => {
     setVerificationStatus(status);
   }, [status]);
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
-    setVerificationStatus(data.type);
-    onStatusUpdate(data.type);
+  async function onSubmit(data: { type: string; comment?: string }) {
+    const apiStatus: VerificationStatus =
+      data.type === 'verified'
+        ? VerificationStatus.APPROVED
+        : VerificationStatus.DENIED;
+    try {
+      await axiosInstance.put(`/verification/${_id}/update`, {
+        comment: data.comment,
+        verification_status: apiStatus,
+      });
+    } catch (error) {
+      notifyError('Something went wrong. Please try again.', 'Error');
+    }
+    setVerificationStatus(apiStatus);
+    onStatusUpdate(apiStatus);
     onCommentUpdate(data.comment || '');
   }
 
@@ -176,12 +169,14 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
         <CardDescription className="mt-1 text-justify text-gray-600">
           {companyName}
           <br />
-          {verificationStatus === 'pending' ? (
+          {verificationStatus === VerificationStatus.PENDING && (
             <Badge className="bg-yellow-500 text-white mt-2">PENDING</Badge>
-          ) : verificationStatus === 'verified' ? (
-            <Badge className="bg-green-500 text-white mt-2">VERIFIED</Badge>
-          ) : (
-            <Badge className="bg-red-500 text-white mt-2">REJECTED</Badge>
+          )}
+          {verificationStatus === VerificationStatus.APPROVED && (
+            <Badge className="bg-green-500 text-white mt-2">APPROVED</Badge>
+          )}
+          {verificationStatus === VerificationStatus.DENIED && (
+            <Badge className="bg-red-500 text-white mt-2">DENIED</Badge>
           )}
         </CardDescription>
       </CardHeader>
@@ -235,68 +230,15 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
       </CardContent>
 
       <CardFooter className="flex flex-col items-center">
-        {verificationStatus === 'pending' && (
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="w-full space-y-6 mt-6"
-            >
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Choose Verification Status:</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <FormItem className="flex items-center space-x-3">
-                          <FormControl>
-                            <RadioGroupItem value="verified" />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            Verified
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3">
-                          <FormControl>
-                            <RadioGroupItem value="rejected" />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            Rejected
-                          </FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="comment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Comments:</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter comments..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={!selectedType || form.formState.isSubmitting}
-              >
-                Submit
-              </Button>
-            </form>
-          </Form>
+        {verificationStatus === VerificationStatus.PENDING && (
+          <VerificationDecisionForm
+            radioOptions={[
+              { value: 'verified', label: 'Verify' },
+              { value: 'rejected', label: 'Reject' },
+            ]}
+            onSubmit={onSubmit}
+            className="w-full space-y-6 mt-6"
+          />
         )}
       </CardFooter>
 

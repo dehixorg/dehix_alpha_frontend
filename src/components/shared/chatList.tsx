@@ -321,10 +321,12 @@ export function ChatList({
         <div className="p-3 text-center border-b border-[hsl(var(--border))]">
           <div className="flex items-center justify-between">
             <Button variant="link" onClick={handleOpenInbox}>
-              &larr; Back to Inbox
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--ring))] hover:text-white dark:hover:text-black transition-colors">
+                &larr;
+              </span>
             </Button>
             <h3 className="font-semibold text-lg">Archived Chats</h3>
-            <div style={{ width: '95px' }}></div>
+            <div style={{ width: '60px' }}></div>
           </div>
         </div>
       )}

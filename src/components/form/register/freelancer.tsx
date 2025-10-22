@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Check,
-  X,
   ArrowLeft,
   ArrowRight,
   Briefcase,
@@ -21,6 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 
 import countries from '../../../country-codes.json';
+import PasswordStrength, { getPasswordStrength } from '../PasswordStrength';
 
 import PhoneNumberForm from './phoneNumberChecker';
 
@@ -41,47 +40,7 @@ import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
 import DateOfBirthPicker from '@/components/DateOfBirthPicker/DateOfBirthPicker';
 import TermsDialog from '@/components/shared/FreelancerTermsDialog';
-
-function getPasswordStrength(password: string) {
-  const rules = [
-    { label: 'At least 8 characters', test: (pw: string) => pw.length >= 8 },
-    { label: 'Contains a number', test: (pw: string) => /[0-9]/.test(pw) },
-    {
-      label: 'Contains a special character',
-      test: (pw: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pw),
-    },
-    {
-      label: 'Contains an uppercase letter',
-      test: (pw: string) => /[A-Z]/.test(pw),
-    },
-    {
-      label: 'Contains a lowercase letter',
-      test: (pw: string) => /[a-z]/.test(pw),
-    },
-  ];
-  const passed = rules.map((rule) => rule.test(password));
-  const level = passed.filter(Boolean).length;
-  let color = 'bg-red-500';
-  let label = 'Weak';
-  if (level >= 2) {
-    color = 'bg-yellow-400';
-    label = 'Medium';
-  }
-  if (level >= 3) {
-    color = 'bg-blue-400';
-    label = 'Good';
-  }
-  if (level >= 4) {
-    color = 'bg-green-500';
-    label = 'Strong';
-  }
-  return {
-    label,
-    color,
-    level,
-    rules: rules.map((r, i) => ({ label: r.label, passed: passed[i] })),
-  };
-}
+import EmailOtpDialog from '@/components/shared/emailOtpDialog';
 
 interface Step {
   id: number;
@@ -289,24 +248,6 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
 
-  // const steps = [
-  //   {
-  //     title: 'Account Details',
-  //     description: 'Basic information',
-  //     icon: <UserCircle className="w-6 h-6" />,
-  //   },
-  //   {
-  //     title: 'Company Info',
-  //     description: 'About your business',
-  //     icon: <Building2 className="w-6 h-6" />,
-  //   },
-  //   {
-  //     title: 'Verification',
-  //     description: 'Contact details',
-  //     icon: <Shield className="w-6 h-6" />,
-  //   },
-  // ];
-
   return (
     <div className="flex w-full items-center justify-center">
       <div className="w-full max-w-5xl px-4 sm:px-6 lg:px-4">
@@ -326,7 +267,7 @@ export default function FreelancerPage() {
 
 interface FreelancerRegisterFormProps {
   currentStep: number;
-  setCurrentStep: (step: number) => void;
+  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
 function FreelancerRegisterForm({
@@ -346,6 +287,11 @@ function FreelancerRegisterForm({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
   const [Isverified, setIsVerified] = useState<boolean>(false);
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+  const [isEmailOtpDialogOpen, setIsEmailOtpDialogOpen] =
+    useState<boolean>(false);
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  const [dialogEmail, setDialogEmail] = useState<string>('');
   const searchParams = useSearchParams();
   const [isTermsDialog, setIsTermsDialog] = useState(false);
   const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(
@@ -391,7 +337,19 @@ function FreelancerRegisterForm({
         'confirmPassword',
       ]);
       if (isValid) {
-        setCurrentStep(currentStep + 1);
+        // Check if email is already verified and matches the verified email
+        const currentEmail = form.getValues('email');
+        if (isEmailVerified && verifiedEmail === currentEmail) {
+          // Email already verified and matches, proceed to next step
+          setCurrentStep((s: number) => s + 1);
+        } else {
+          // Email not verified or doesn't match the verified email, open OTP dialog
+          const email = currentEmail;
+          if (email) {
+            setDialogEmail(email);
+            setIsEmailOtpDialogOpen(true);
+          }
+        }
       } else {
         notifyError(
           'Please fill in all required fields before proceeding.',
@@ -447,6 +405,16 @@ function FreelancerRegisterForm({
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
+    // Ensure email is verified and matches the verified email before submitting
+    const currentEmail = form.getValues('email');
+    if (!isEmailVerified || verifiedEmail !== currentEmail) {
+      notifyError(
+        'Please verify your email before submitting the form.',
+        'Email Not Verified',
+      );
+      return;
+    }
+
     const referralCodeFromQuery = searchParams.get('referral');
 
     const referralCodeFromForm = data.referralCode;
@@ -498,6 +466,31 @@ function FreelancerRegisterForm({
       setTimeout(() => setIsLoading(false), 100);
     }
   };
+
+  const handleEmailVerificationSuccess = () => {
+    const currentEmail = form.getValues('email');
+    setIsEmailVerified(true);
+    setVerifiedEmail(currentEmail);
+    setCurrentStep((s: number) => s + 1);
+    notifySuccess(
+      'Email verified successfully! Proceeding to next step.',
+      'Success',
+    );
+  };
+
+  // If the email field changes after verification, invalidate the verification
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'email') {
+        const current = value.email;
+        if (verifiedEmail && current !== verifiedEmail) {
+          setIsEmailVerified(false);
+          setVerifiedEmail(null);
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, verifiedEmail]);
   useEffect(() => {
     const referralCode = searchParams.get('referral');
     if (referralCode) {
@@ -543,6 +536,7 @@ function FreelancerRegisterForm({
                   label="Email"
                   placeholder="john.doe@techinnovators.com"
                   type="email"
+                  disabled={isEmailOtpDialogOpen}
                 />
                 <div className="flex flex-col gap-2 mt-1">
                   <Label className="text-sm font-medium">Date of Birth</Label>
@@ -596,61 +590,9 @@ function FreelancerRegisterForm({
                               )}
                             </button>
                           </div>
-                          {/* Password Strength Indicator */}
-                          <div className="flex flex-col gap-2 mt-2">
-                            {/* Progress Bar */}
-                            <div className="flex w-40 h-2 rounded overflow-hidden">
-                              <div
-                                className={`flex-1 ${passwordStrength.level >= 1 ? passwordStrength.color : 'bg-gray-200'} transition-all`}
-                              ></div>
-                              <div
-                                className={`flex-1 ${passwordStrength.level >= 2 ? passwordStrength.color : 'bg-gray-200'} transition-all`}
-                              ></div>
-                              <div
-                                className={`flex-1 ${passwordStrength.level >= 3 ? passwordStrength.color : 'bg-gray-200'} transition-all`}
-                              ></div>
-                              <div
-                                className={`flex-1 ${passwordStrength.level >= 4 ? passwordStrength.color : 'bg-gray-200'} transition-all`}
-                              ></div>
-                            </div>
-                            <span
-                              className={`text-xs font-semibold ${
-                                passwordStrength.label === 'Weak'
-                                  ? 'text-red-500'
-                                  : passwordStrength.label === 'Medium'
-                                    ? 'text-yellow-500'
-                                    : passwordStrength.label === 'Good'
-                                      ? 'text-blue-500'
-                                      : 'text-green-600'
-                              }`}
-                            >
-                              {passwordStrength.label}
-                            </span>
-                            {/* Checklist */}
-                            <ul className="mt-1 space-y-1">
-                              {passwordStrength.rules.map((rule, idx) => (
-                                <li
-                                  key={idx}
-                                  className="flex items-center gap-2 text-xs"
-                                >
-                                  {rule.passed ? (
-                                    <Check className="text-green-500 w-4 h-4" />
-                                  ) : (
-                                    <X className="text-red-500 w-4 h-4" />
-                                  )}
-                                  <span
-                                    className={
-                                      rule.passed
-                                        ? 'text-green-600'
-                                        : 'text-red-500'
-                                    }
-                                  >
-                                    {rule.label}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                          <PasswordStrength
+                            passwordStrength={passwordStrength}
+                          />
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -866,6 +808,13 @@ function FreelancerRegisterForm({
               phoneNumber={phone}
               isModalOpen={isModalOpen}
               setIsModalOpen={setIsModalOpen}
+            />
+            {/* Email OTP Dialog */}
+            <EmailOtpDialog
+              email={dialogEmail}
+              isOpen={isEmailOtpDialogOpen}
+              setIsOpen={setIsEmailOtpDialogOpen}
+              onVerificationSuccess={handleEmailVerificationSuccess}
             />
           </div>
         </div>

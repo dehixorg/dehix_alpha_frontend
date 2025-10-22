@@ -2,6 +2,7 @@ import {
   Archive,
   BookMarked,
   CheckCircle2,
+  FolderOpen,
   Home,
   MessageSquare,
   Settings,
@@ -22,8 +23,8 @@ export const menuItemsTop: MenuItem[] = [
       <Image
         src="/dehix.png"
         alt="Icon"
-        width={16} // Set the desired width
-        height={16} // Set the desired height
+        width={16}
+        height={16}
         className="transition-all group-hover:scale-110 invert dark:invert-0"
       />
     ),
@@ -38,6 +39,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/business/market',
     icon: <ShoppingCart className="h-5 w-5" />,
     label: 'Market',
+  },
+  {
+    href: '/business/projects',
+    icon: <FolderOpen className="h-5 w-5" />,
+    label: 'Projects',
   },
   {
     href: '/business/talent',

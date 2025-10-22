@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, Plus, X } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -8,15 +8,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import { RootState } from '@/lib/store';
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 
 const AddToLobbyDialog = ({
   skillDomainData = [],
@@ -26,11 +20,20 @@ const AddToLobbyDialog = ({
   handleAddToLobby,
   talent,
   setTmpSkill,
-  tmpSkill,
   open,
   setOpen,
   isLoading,
+  setLoading,
 }: any) => {
+  const user = useSelector((state: RootState) => state.user);
+
+  const isValidCheck = async () => {
+    if (!currSkills || currSkills.length === 0) {
+      // reuse existing error toast in parent path if desired; keeping lightweight here
+      return false;
+    }
+    return true;
+  };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-md">
@@ -38,72 +41,42 @@ const AddToLobbyDialog = ({
           <DialogTitle>Add Skills to Lobby</DialogTitle>
         </DialogHeader>
 
-        <div className=" mt-2">
-          <div className="flex items-center gap-2">
-            <Select
-              value={tmpSkill || ''}
-              onValueChange={(value) => setTmpSkill(value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select skill">
-                  {tmpSkill || null}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {skillDomainData
-                  .filter(
-                    (skill: any) =>
-                      !currSkills.some((s: any) => s.name === skill.label),
-                  )
-                  .map((skill: any, index: any) => (
-                    <SelectItem key={index} value={skill.label}>
-                      {skill.label}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                handleAddSkill();
-                setTmpSkill('');
-              }}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-4">
-            {currSkills.map((skill: any, index: number) => (
-              <Badge
-                key={index}
-                className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-              >
-                {skill.name}
-                <button
-                  type="button"
-                  onClick={() => handleDeleteSkill(skill.name)}
-                  className="ml-2 text-red-500 hover:text-red-700"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </Badge>
-            ))}
-          </div>
+        <div className="mt-2 space-y-4">
+          <SelectTagPicker
+            label="Select skills"
+            options={skillDomainData}
+            selected={currSkills}
+            onAdd={(value: string) => {
+              setTmpSkill(value);
+              handleAddSkill();
+            }}
+            onRemove={(name: string) => handleDeleteSkill(name)}
+            optionLabelKey="label"
+            selectedNameKey="name"
+            selectPlaceholder="Search and select skills"
+            searchPlaceholder="Filter skills..."
+          />
         </div>
 
         <DialogFooter className="mt-4">
-          <Button
-            onClick={() => {
-              handleAddToLobby(talent.freelancer_id);
+          <ConnectsDialog
+            // form is unused internally; provide a dummy to satisfy types
+            loading={isLoading}
+            setLoading={setLoading}
+            onSubmit={async () => {
+              const success = await handleAddToLobby(talent.freelancer_id);
+              if (success) setOpen(false);
             }}
-            className="w-full text-sm py-1 px-2 text-black rounded-md"
-            type="submit"
-          >
-            {isLoading ? <Loader2 className="animate-spin" /> : 'Save'}
-          </Button>
+            isValidCheck={isValidCheck}
+            userId={user?.uid}
+            buttonText="Save"
+            userType="BUSINESS"
+            requiredConnects={parseInt(
+              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+              10,
+            )}
+            skipRedirect={true}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

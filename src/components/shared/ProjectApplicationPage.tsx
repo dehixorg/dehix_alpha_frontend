@@ -301,11 +301,12 @@ const ProjectApplicationForm = ({
         }),
       } as const;
 
-      await axiosInstance.post('/bid', bidData);
-
-      const updatedConnects = (currentConnects - bidAmount).toString();
-      localStorage.setItem('DHX_CONNECTS', updatedConnects);
-      window.dispatchEvent(new Event('connectsUpdated'));
+      const res = await axiosInstance.post('/bid', bidData);
+      const remainingConnects = res?.data?.remainingConnects;
+      if (typeof remainingConnects === 'number') {
+        localStorage.setItem('DHX_CONNECTS', String(remainingConnects));
+        window.dispatchEvent(new Event('connectsUpdated'));
+      }
 
       // Update applied profile IDs to prevent duplicate submissions
       setAppliedProfileIds((prev) => [...prev, selectedProfile._id]);
@@ -384,7 +385,7 @@ const ProjectApplicationForm = ({
 
   return (
     <Card className="overflow-hidden shadow-sm">
-      <CardHeader className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-t-lg border">
+      <CardHeader className="bg-gradient p-6 rounded-t-lg border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
