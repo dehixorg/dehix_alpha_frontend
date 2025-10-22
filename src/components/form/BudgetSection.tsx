@@ -23,6 +23,13 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
   // Unique id suffix so radios don't collide across instances
   const uid = React.useId();
   const budgetType = form.watch(`profiles.${activeProfile}.budget.type`);
+  const minRate = form.watch(`profiles.${activeProfile}.budget.hourly.minRate`);
+  const maxRate = form.watch(`profiles.${activeProfile}.budget.hourly.maxRate`);
+  const minMaxInvalid =
+    budgetType === 'HOURLY' &&
+    minRate &&
+    maxRate &&
+    Number(minRate) > Number(maxRate);
 
   return (
     <div
@@ -58,6 +65,8 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
                 onValueChange={field.onChange}
                 value={field.value}
                 className="flex flex-col space-y-1"
+                role="radiogroup"
+                aria-labelledby={`budget-type-label-${uid}`}
               >
                 <div className="flex flex-row gap-3">
                   <label
@@ -104,13 +113,29 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
                 Fixed Budget Amount ($)
               </FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Enter fixed amount"
-                  min="1"
-                  step="0.01"
-                  {...field}
-                />
+                <div className="relative">
+                  <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="Enter fixed amount"
+                    min="1"
+                    step="0.01"
+                    className="pl-8 pr-16"
+                    aria-describedby={`fixed-help-${uid}`}
+                    {...field}
+                  />
+                  {field.value ? (
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs underline"
+                      onClick={() => field.onChange('')}
+                      aria-label="Clear fixed amount"
+                    >
+                      Clear
+                    </button>
+                  ) : null}
+                </div>
               </FormControl>
               <FormDescription>
                 Enter the total fixed price for the project
@@ -130,13 +155,32 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
               <FormItem>
                 <FormLabel>Minimum Rate ($/hour)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Min rate"
-                    min="1"
-                    step="0.01"
-                    {...field}
-                  />
+                  <div className="relative">
+                    <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="Min rate"
+                      min="1"
+                      step="0.01"
+                      className="pl-8 pr-16"
+                      aria-invalid={minMaxInvalid}
+                      aria-describedby={
+                        minMaxInvalid ? `rate-error-${uid}` : undefined
+                      }
+                      {...field}
+                    />
+                    {field.value ? (
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs underline"
+                        onClick={() => field.onChange('')}
+                        aria-label="Clear minimum rate"
+                      >
+                        Clear
+                      </button>
+                    ) : null}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -149,13 +193,32 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
               <FormItem>
                 <FormLabel>Maximum Rate ($/hour)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Max rate"
-                    min="1"
-                    step="0.01"
-                    {...field}
-                  />
+                  <div className="relative">
+                    <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="Max rate"
+                      min="1"
+                      step="0.01"
+                      className="pl-8 pr-16"
+                      aria-invalid={minMaxInvalid}
+                      aria-describedby={
+                        minMaxInvalid ? `rate-error-${uid}` : undefined
+                      }
+                      {...field}
+                    />
+                    {field.value ? (
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs underline"
+                        onClick={() => field.onChange('')}
+                        aria-label="Clear maximum rate"
+                      >
+                        Clear
+                      </button>
+                    ) : null}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -170,6 +233,7 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
                 <FormControl>
                   <Input
                     type="number"
+                    inputMode="numeric"
                     placeholder="Estimated number of hours"
                     min="1"
                     {...field}
@@ -183,6 +247,17 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
             )}
           />
         </div>
+      )}
+
+      {minMaxInvalid && (
+        <p
+          id={`rate-error-${uid}`}
+          className="mt-2 text-sm text-destructive"
+          role="alert"
+          aria-live="polite"
+        >
+          Minimum rate cannot be greater than maximum rate.
+        </p>
       )}
 
       {/* {profileBudgetErrors && (
