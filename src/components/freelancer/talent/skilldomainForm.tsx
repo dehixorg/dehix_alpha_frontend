@@ -1,7 +1,9 @@
 'use client';
 import type React from 'react';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import { ArrowUpRight } from 'lucide-react';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -25,6 +27,7 @@ import {
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -204,14 +207,23 @@ const SkillDomainForm: React.FC = () => {
                 <TableHeader className="sticky top-0 z-10 bg-background">
                   <TableRow>
                     <TableHead scope="col">Type</TableHead>
-                    <TableHead scope="col">Label</TableHead>
-                    <TableHead scope="col">Experience</TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Label
+                    </TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Experience
+                    </TableHead>
                     <TableHead scope="col" className="text-center">
                       Monthly Pay
                     </TableHead>
-                    <TableHead scope="col">Status</TableHead>
-                    <TableHead scope="col" className="text-right">
+                    <TableHead scope="col" className="text-center">
+                      Status
+                    </TableHead>
+                    <TableHead scope="col" className="text-center">
                       Visibility
+                    </TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Manage
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -288,11 +300,38 @@ const SkillDomainForm: React.FC = () => {
                             aria-label={`Toggle visibility for ${item.label}`}
                           />
                         </TableCell>
+                        <TableCell className="text-center">
+                          {item.type && item.originalTalentId ? (
+                            <Link
+                              href={{
+                                pathname: `/freelancer/talent/manage/${item.type.toLowerCase()}/${item.originalTalentId}`,
+                                query: { label: item.label },
+                              }}
+                            >
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Manage jobs for ${item.label}`}
+                              >
+                                <ArrowUpRight className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled
+                              aria-label={`Manage jobs for ${item.label}`}
+                            >
+                              <ArrowUpRight className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center">
+                      <TableCell colSpan={7} className="text-center">
                         <div className="py-10">
                           <svg
                             width="140"
