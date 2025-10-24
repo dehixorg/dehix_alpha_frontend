@@ -1,8 +1,11 @@
 'use client';
 
-import type React from 'react';
+import { Dehix_Talent_Card_Pagination } from '@/utils/enum';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Expand, Github, Linkedin, Dot, ChevronRight } from 'lucide-react';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { SelectHireDialog } from './SelectHireDialog';
+import { toast } from '@/components/ui/use-toast';
+import { Loader2, Github, Linkedin, Dot } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
@@ -12,7 +15,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -22,19 +24,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { axiosInstance } from '@/lib/axiosinstance';
+
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import InfiniteScroll from '@/components/ui/infinite-scroll';
-import {
-  Dehix_Talent_Card_Pagination,
-  type HireDehixTalentStatusEnum,
-} from '@/utils/enum';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { StatusEnum } from '@/utils/freelancer/enum';
 import type { RootState } from '@/lib/store';
-import AddToLobbyDialog from '@/components/shared/AddToLobbyDialog';
 
 interface Education {
   _id: string;
@@ -140,10 +135,84 @@ const TalentCard: React.FC<TalentCardProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [domains, setDomains] = useState<DomainOption[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const user = useSelector((state: RootState) => state.user);
+  const user = useSelector((state: any) => state.user);
+  const businessId = user?.uid || '';
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [, setStatusVisibility] = useState<boolean[]>([]);
-  const [invitedTalents] = useState<Set<string>>(new Set());
+  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(new Set());
+  const [isSelectHireDialogOpen, setIsSelectHireDialogOpen] = useState(false);
+  const [selectedTalentForInvite, setSelectedTalentForInvite] = useState<{
+    id: string;
+    freelancerId: string;
+    freelancerProfessionalProfileId: string;
+  } | null>(null);
+  const [isInviting, setIsInviting] = useState(false);
+
+  const handleInviteTalent = async (talent: Talent) => {
+    try {
+      setSelectedTalentForInvite({
+        id: talent.dehixTalent._id,
+        freelancerId: talent.freelancer_id,
+        freelancerProfessionalProfileId: talent.dehixTalent._id,
+      });
+      setIsSelectHireDialogOpen(true);
+    } catch (error) {
+      console.error('Error setting up invite:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to prepare invite. Please try again.',
+      });
+    }
+  };
+
+  const handleConfirmInvite = async (hireId: string, businessReqTalentId: string) => {
+    if (!selectedTalentForInvite || !businessId) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Missing required information for invite.',
+      });
+      return;
+    }
+
+    setIsInviting(true);
+    try {
+      const response = await axiosInstance.post('/business/hire/invite', {
+        businessId,
+        freelancerId: selectedTalentForInvite.freelancerId,
+        freelancer_professional_profile_id: selectedTalentForInvite.freelancerProfessionalProfileId,
+        hireId,
+        business_req_talent_id: businessReqTalentId,
+      });
+
+      const responseData = response.data;
+
+      // Add to invited talents
+      setInvitedTalents(prev => {
+        const newSet = new Set(prev);
+        if (selectedTalentForInvite?.id) {
+          newSet.add(selectedTalentForInvite.id);
+        }
+        return newSet;
+      });
+
+      toast({
+        title: 'Success',
+        description: 'Invite sent successfully!',
+      });
+    } catch (error: any) {
+      console.error('Error sending invite:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to send invite. Please try again.',
+      });
+    } finally {
+      setIsInviting(false);
+      setSelectedTalentForInvite(null);
+    }
+  };
   const [selectedTalent, setSelectedTalent] = useState<any>();
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
@@ -328,26 +397,32 @@ const TalentCard: React.FC<TalentCardProps> = ({
           params.talentType = 'DOMAIN';
           params.talentName = domainFilter;
         }
-
+        console.log("---------------------");
+        console.log('Fetching talent data with params:', params);
         const response = await axiosInstance.get('freelancer/dehixtalent', {
           params, // Pass the dynamic params object
         });
 
-        const fetchedData = response?.data?.data || [];
+        console.log('API Response:', response);
+        const fetchedData = Array.isArray(response?.data?.data) ? response.data.data : [];
+        console.log('Fetched data:', fetchedData);
 
         if (fetchedData.length < Dehix_Talent_Card_Pagination.BATCH) {
           setHasMore(false);
+        } else {
+          setHasMore(true);
         }
 
         if (response?.data?.data) {
-          setTalents((prev) =>
-            reset ? fetchedData : [...prev, ...fetchedData],
-          );
+          const updatedTalents = reset ? fetchedData : [...talents, ...fetchedData];
+          console.log('Setting talents:', updatedTalents);
+          setTalents(updatedTalents);
           skipRef.current = reset
             ? Dehix_Talent_Card_Pagination.BATCH
             : skipRef.current + Dehix_Talent_Card_Pagination.BATCH;
         } else {
-          throw new Error('Fail to fetch data');
+          console.error('No data in response:', response);
+          throw new Error('Failed to fetch data: No data in response');
         }
       } catch (error: any) {
         console.error('Error fetching talent data', error);
@@ -371,10 +446,22 @@ const TalentCard: React.FC<TalentCardProps> = ({
     fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
   }, [fetchTalentData]);
 
-  // This useEffect now triggers a new API call when filters change.
+  // Initial data fetch on component mount
   useEffect(() => {
+    console.log('Component mounted, fetching initial data...');
     resetAndFetchData();
-  }, [skillFilter, domainFilter]); // Trigger reset when filters change
+  }, []);
+
+  // Log when talents state changes
+  useEffect(() => {
+    console.log('Talents state updated:', talents);
+  }, [talents]);
+
+  // Log when filters change
+  useEffect(() => {
+    console.log('Filters changed - skill:', skillFilter, 'domain:', domainFilter);
+    resetAndFetchData();
+  }, [skillFilter, domainFilter]);
 
   const handleAddToLobby = async (freelancerId: string): Promise<boolean> => {
     const matchedTalentIds: string[] = [];
@@ -421,36 +508,40 @@ const TalentCard: React.FC<TalentCardProps> = ({
     }
     return false;
   };
+  console.log('Rendering TalentCard with', talents.length, 'talents');
+  
   return (
-    <TooltipProvider>
-      <div className="flex flex-wrap mt-4 justify-center gap-4">
-        {/* Map directly over 'talents' instead of 'filteredTalents' */}
-        {talents.map((talent) => {
-          const talentEntry = talent.dehixTalent;
-          const education = talent.education;
-          const projects = talent.projects;
-          // const label = talentEntry.skillName ? 'Skill' : 'Domain';
-          const label = talentEntry.type === 'SKILL' ? 'Skill' : 'Domain';
-          // const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
-          const value = talentEntry.talentName || 'N/A';
-          const isInvited = invitedTalents.has(talentEntry._id);
+    <div className="w-full">
+      {talents.length === 0 && !loading ? (
+        <div className="text-center py-10">
+          <p className="text-muted-foreground">No talents found. Try adjusting your filters.</p>
+        </div>
+      ) : (
+        <div className="flex flex-wrap justify-center gap-4">
+      {talents.map((talent) => {
+        const talentEntry = talent.dehixTalent;
+        const education = talent.education;
+        const projects = talent.projects;
+        const label = talentEntry.type === 'SKILL' ? 'Skill' : 'Domain';
+        const value = talentEntry.talentName || 'N/A';
+        const isInvited = invitedTalents.has(talentEntry._id);
 
-          return (
-            <Card
-              key={talentEntry._id}
-              className="group relative w-full sm:w-[350px] lg:w-[450px] overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20"
-              onClick={() => {
-                if (isSheetClosingRef.current) return;
-                if (isDialogOpen) return; // prevent opening while dialog is active
-                setOpenSheetId(talentEntry._id);
-              }}
-            >
-              <CardHeader className="flex flex-row items-center gap-4 pb-3 pt-5 px-6">
-                <Link
-                  href={`/business/freelancerProfile/${talent.freelancer_id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-4 max-w-full"
-                >
+        return (
+          <Card
+            key={talentEntry._id}
+            className="group relative w-full sm:w-[350px] lg:w-[450px] overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20"
+            onClick={() => {
+              if (isSheetClosingRef.current) return;
+              if (isDialogOpen) return;
+              setOpenSheetId(talentEntry._id);
+            }}
+          >
+            <CardHeader className="flex flex-row items-center gap-4 pb-3 pt-5 px-6">
+              <Link
+                href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-4 max-w-full"
+              >
                   <Avatar className="h-14 w-14 rounded-xl border border-gray-200 dark:border-gray-700">
                     <AvatarImage
                       src={talent.profilePic || '/default-avatar.png'}
@@ -468,15 +559,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
                       <Dot />
                       <span className="truncate">{value}</span>
                     </div>
-                  </div>
-                </Link>
-              </CardHeader>
-              <CardContent className="px-6 py-3">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                        Experience
+                </div>
+              </Link>
+            </CardHeader>
+            <CardContent className="px-6 py-3">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      Experience
                       </p>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {talentEntry.experience} years
@@ -492,14 +583,47 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     </div>
                   </div>
 
-                  {isInvited && (
-                    <Badge
+                  <div className="flex items-center justify-between mt-3 gap-2">
+                    {isInvited ? (
+                      <Badge
+                        variant="outline"
+                        className="rounded-full text-xs font-medium px-3 py-1 border-blue-300 text-blue-700 dark:text-blue-300 flex-1 text-center"
+                      >
+                        Invited
+                      </Badge>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleInviteTalent(talent);
+                        }}
+                        disabled={isInviting}
+                      >
+                        {isInviting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          'Invite'
+                        )}
+                      </Button>
+                    )}
+                    <Button
                       variant="outline"
-                      className="rounded-full text-xs font-medium px-3 py-1 border-blue-300 text-blue-700 dark:text-blue-300"
+                      size="sm"
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`/business/freelancerProfile/${talent.freelancer_id}`, '_blank');
+                      }}
                     >
-                      Invited
-                    </Badge>
-                  )}
+                      View Profile
+                    </Button>
+                  </div>
 
                   <div className="pt-1">
                     {SHEET_SIDES.map((View) => (
@@ -741,29 +865,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
                             </AccordionItem>
                           </Accordion>
                           <div className="px-6 pb-6 pt-2">
-                            <div className="flex flex-col sm:flex-row gap-3 justify-center space-between">
-                              <Button
-                                className={`w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
-                                onClick={() => {
-                                  setOpenSheetId(null);
-                                  setIsDialogOpen(true);
-                                  setSelectedTalent(talent);
-                                }}
-                              >
-                                <span>
-                                  {isInvited ? 'Invited' : 'Add to Lobby'}
-                                </span>
-                                <ChevronRight className="ml-1.5 h-4 w-4" />
-                              </Button>
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center">
                               <Link
                                 href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                                className="flex-1"
                               >
-                                <Button
-                                  variant="outline"
-                                  className="w-full sm:w-auto"
-                                >
+                                <Button variant="outline" className="w-full">
                                   View Full Profile
-                                  <Expand />
                                 </Button>
                               </Link>
                             </div>
@@ -774,28 +882,20 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
-                <div className="flex flex-col sm:flex-row gap-3 w-full">
-                  <Button
-                    className={`w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenSheetId(null);
-                      setIsDialogOpen(true);
-                      setSelectedTalent(talent);
-                    }}
-                  >
-                    <span>{isInvited ? 'Invited' : 'Add to Lobby'}</span>
-                    <ChevronRight className="ml-1.5 h-4 w-4" />
-                  </Button>
-                </div>
-              </CardFooter>
+              <SelectHireDialog
+                isOpen={isSelectHireDialogOpen}
+                onClose={() => {
+                  setIsSelectHireDialogOpen(false);
+                  setSelectedTalentForInvite(null);
+                }}
+                onSelect={handleConfirmInvite}
+                businessId={businessId}
+              />
               {selectedTalent && (
                 <AddToLobbyDialog
                   skillDomainData={skillDomainData}
                   currSkills={currSkills}
                   handleAddSkill={handleAddSkill}
-                  handleDeleteSkill={handleDeleteSkill}
                   handleAddToLobby={handleAddToLobby}
                   talent={selectedTalent}
                   setTmpSkill={setTmpSkill}
@@ -812,42 +912,48 @@ const TalentCard: React.FC<TalentCardProps> = ({
             </Card>
           );
         })}
-        {/* ... (InfiniteScroll and loading skeleton) */}
-        <InfiniteScroll
-          hasMore={hasMore}
-          isLoading={loading}
-          next={fetchTalentData}
-          threshold={1}
-        >
-          {loading && (
-            <div className="flex flex-wrap justify-center gap-4 w-full mt-4">
-              {[...Array(3)].map((_, index) => (
-                <div
-                  key={`skeleton-${index}`}
-                  className="w-full sm:w-[350px] lg:w-[450px]"
-                >
-                  <div className="animate-pulse space-y-4 p-6 border rounded-lg shadow">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/6"></div>
-                    </div>
-                    <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md w-full"></div>
+        </div>
+      )}
+      
+      {loading && (
+        <div className="flex flex-wrap justify-center gap-4 w-full mt-4">
+          {[...Array(3)].map((_, index) => (
+            <div
+              key={`skeleton-${index}`}
+              className="w-full sm:w-[350px] lg:w-[450px]"
+            >
+              <div className="animate-pulse space-y-4 p-6 border rounded-lg shadow">
+                <div className="flex items-center space-x-4">
+                  <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                   </div>
                 </div>
-              ))}
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/6"></div>
+                </div>
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md w-full"></div>
+              </div>
             </div>
-          )}
-        </InfiniteScroll>
-      </div>
-    </TooltipProvider>
+          ))}
+        </div>
+      )}
+      
+      {!loading && hasMore && (
+        <div className="w-full flex justify-center mt-4">
+          <Button 
+            variant="outline" 
+            onClick={() => fetchTalentData()}
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Load More'}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PackageOpen } from 'lucide-react';
+import { PackageOpen, Users } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -14,6 +16,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
@@ -54,9 +57,32 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   // Get the user data from Redux store
   const user = useSelector((state: RootState) => state.user);
+  
+  // Handle manage button click
+  const handleManageClick = (item: SkillDomainData) => {
+    const type = item.label.toLowerCase().includes('skill') ? 'skill' : 'domain';
+    
+    // Create a clean object with only the data we need
+    const itemData = {
+      id: item.uid,
+      label: item.label,
+      type: type,
+      // Add any other properties you need from the item
+      ...(item.description && { description: item.description }),
+      ...(item.status && { status: item.status }),
+      // Add other properties as needed
+    };
+
+    // Stringify the data and encode it for URL
+    const itemDataString = encodeURIComponent(JSON.stringify(itemData));
+    
+    // Navigate to the skills page with the item data in the URL
+    router.push(`/business/talent/skills/${item.uid}?type=${type}&data=${itemDataString}`);
+  };
 
   // Fetch skills and domains once on component mount
   useEffect(() => {
@@ -103,35 +129,37 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           `/business/hire-dehixtalent`,
         );
         const hireTalentData = hireTalentResponse.data?.data || {};
+        console.log(hireTalentData);
 
-        // Filter and map user data
+        // Filter and map user data using the new field names and type
         const fetchedFilterSkills = hireTalentData
-          .filter((item: any) => item.skillName && item.visible)
+          .filter((item: any) => item.talentName && item.visible && item.type === 'SKILL')
           .map((item: any) => ({
-            _id: item.skillId,
-            label: item.skillName,
+            _id: item.talentId,
+            label: item.talentName,
           }));
 
         const fetchedFilterDomains = hireTalentData
-          .filter((item: any) => item.domainName && item.visible)
+          .filter((item: any) => item.talentName && item.visible && item.type === 'DOMAIN')
           .map((item: any) => ({
-            _id: item.domainId,
-            label: item.domainName,
+            _id: item.talentId,
+            label: item.talentName,
           }));
 
         // Send the filtered skills and domains back to the parent
         setFilterSkill(fetchedFilterSkills);
         setFilterDomain(fetchedFilterDomains);
 
-        // Convert the talent object into an array
+        // Convert the talent object into an array with unique keys
         const formattedHireTalentData = Object.values(hireTalentData).map(
           (item: any) => ({
-            uid: item._id,
-            label: item.skillName || item.domainName || 'N/A',
+            uid: `${item.talentId}_${item.type}`, // Combine talentId and type for unique key
+            label: item.talentName || 'N/A',
             experience: item.experience || 'N/A',
             description: item.description || 'N/A',
             status: item.status,
             visible: item.visible,
+            type: item.type, // Keep type for filtering
           }),
         );
 
@@ -237,109 +265,222 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         await fetchUserData();
       }
     } catch (error) {
-      console.error('Error updating visibility:', error);
-      notifyError('Something went wrong. Please try again.', 'Error');
     }
-  };
+    
+    return skillDomainData.map((item, index) => (
+      <TableRow key={index}>
+        <TableCell>{item.label}</TableCell>
+        <TableCell>{item.experience} years</TableCell>
+        <TableCell>{item.description}</TableCell>
+        <TableCell>
+          <Badge className={getBadgeColor(item.status)}>
+            {item.status.toUpperCase()}
+          </Badge>
+        </TableCell>
+        <TableCell>
+          <Switch
+            checked={statusVisibility[index]}
+            onCheckedChange={
+              (value) =>
+                item.uid
+                  ? handleToggleVisibility(index, value, item.uid)
+                  : console.error('UID missing for item', item) // Fallback check for missing UID
+            }
+          />
+        </TableCell>
+        <TableCell>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleManageClick(item)}
+            className="flex items-center gap-1"
+          >
+            <Users className="h-4 w-4" />
+            <span>Manage</span>
+          </Button>
+        </TableCell>
+      </TableRow>
+    ));
+  }
+
+  const [activeTab, setActiveTab] = useState<'skills' | 'domains'>('skills');
+
+  // Separate skills and domains
+  const skillsData = skillDomainData.filter(item => 
+    skills.some(skill => skill.label === item.label)
+  );
+  
+  const domainsData = skillDomainData.filter(item => 
+    domains.some(domain => domain.label === item.label)
+  );
+  
 
   return (
-    <div className="ml-4">
-      <div className="mb-8 ">
-        <h1 className="text-3xl font-bold"> Hire Talent </h1>
-        <p className="text-gray-400 mt-2">
-          Help us understand the skills and domain you are looking for in
-          potential hires.Enter the required experience and a short description
-          to refine your talent search.
-        </p>
-      </div>
-
-      <div className="">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex space-x-4">
-              <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
-              <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
-            </div>
-          </div>
-          <Card className="h-[65.4vh] overflow-auto no-scrollbar">
-            <Table className="w-full">
-              <TableHeader className="sticky top-0 z-10">
-                <TableRow>
-                  <TableHead>Label</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  // Skeleton loader
-                  [...Array(5)].map((_, index) => (
-                    <TableRow key={`skeleton-${index}`}>
-                      <TableCell>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse"></div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="h-6 w-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : skillDomainData.length > 0 ? (
-                  skillDomainData.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{item.label}</TableCell>
-                      <TableCell>{item.experience} years</TableCell>
-                      <TableCell>{item.description}</TableCell>
-                      <TableCell>
-                        <Badge className={getBadgeColor(item.status)}>
-                          {item.status.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={statusVisibility[index]}
-                          onCheckedChange={
-                            (value) =>
-                              item.uid
-                                ? handleToggleVisibility(index, value, item.uid)
-                                : console.error('UID missing for item', item) // Fallback check for missing UID
-                          }
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="text-center py-10">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size="100"
-                      />
-                      <p className="text-gray-500">
-                        No data available.
-                        <br /> This feature will be available soon.
-                        <br />
-                        Here you can directly hire freelancer for different
-                        roles.
-                      </p>
-                    </td>
-                  </tr>
-                )}
-              </TableBody>
-            </Table>
-          </Card>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold tracking-tight">Skills & Domains</h2>
+        <div className="flex space-x-2">
+          {activeTab === 'skills' ? (
+            <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
+          ) : (
+            <DomainDialog onSave={onSubmitDomain} />
+          )}
         </div>
       </div>
+
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(value) => setActiveTab(value as 'skills' | 'domains')}
+        className="space-y-4"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="skills">
+            Skills {skillsData.length > 0 && `(${skillsData.length})`}
+          </TabsTrigger>
+          <TabsTrigger value="domains">
+            Domains {domainsData.length > 0 && `(${domainsData.length})`}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="skills">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Experience</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Visibility</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <div className="animate-pulse flex justify-center">
+                      <div className="h-2 w-20 bg-gray-200 rounded"></div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : skillsData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
+                      <PackageOpen className="h-10 w-10" />
+                      <p>No skills added yet</p>
+                      <p className="text-sm">Add your first skill to get started</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                skillsData.map((item, index) => (
+                  <TableRow key={item.uid}>
+                    <TableCell>{item.label}</TableCell>
+                    <TableCell>{item.experience} years</TableCell>
+                    <TableCell>
+                      <Badge className={getBadgeColor(item.status)}>
+                        {item.status.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <div className="flex items-center justify-center">
+                        <Switch
+                          checked={statusVisibility[index]}
+                          onCheckedChange={(value) =>
+                            item.uid && handleToggleVisibility(index, value, item.uid)
+                          }
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 pr-4">
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleManageClick(item)}
+                          className="flex items-center gap-1.5 px-3"
+                        >
+                          <Users className="h-4 w-4" />
+                          <span>Manage</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TabsContent>
+
+        <TabsContent value="domains">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Experience</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Visibility</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <div className="animate-pulse flex justify-center">
+                      <div className="h-2 w-20 bg-gray-200 rounded"></div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : domainsData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
+                      <PackageOpen className="h-10 w-10" />
+                      <p>No domains added yet</p>
+                      <p className="text-sm">Add your first domain to get started</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                domainsData.map((item, index) => (
+                  <TableRow key={item.uid}>
+                    <TableCell>{item.label}</TableCell>
+                    <TableCell>{item.experience} years</TableCell>
+                    <TableCell>
+                      <Badge className={getBadgeColor(item.status)}>
+                        {item.status.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <div className="flex items-center justify-center">
+                        <Switch
+                          checked={statusVisibility[index]}
+                          onCheckedChange={(value) =>
+                            item.uid && handleToggleVisibility(index, value, item.uid)
+                          }
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 pr-4">
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleManageClick(item)}
+                          className="flex items-center gap-1.5 px-3"
+                        >
+                          <Users className="h-4 w-4" />
+                          <span>Manage</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
