@@ -28,7 +28,12 @@ import { cn } from '@/lib/utils';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
 
 const profileFormSchema = z.object({
-  aadharOrGovtId: z.string().optional(),
+  aadharOrGovtId: z
+    .string()
+    .min(1, 'ID is required')
+    .refine((val) => !/^-/.test(val), {
+      message: 'Negative numbers are not allowed',
+    }),
   salaryOrEarning: z.coerce.number().optional(), // New field for salary/earning
   frontImageUrl: z
     .union([
