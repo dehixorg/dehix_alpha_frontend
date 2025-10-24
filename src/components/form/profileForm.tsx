@@ -108,9 +108,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     label: '',
     description: '',
   });
-  const [dialogType] = useState<'skill' | 'domain' | 'projectDomain' | null>(
-    null,
-  );
+  const [dialogType, setDialogType] = useState<
+    'skill' | 'domain' | 'projectDomain' | null
+  >(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -145,7 +145,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       await axiosInstance.post('/skills', customSkillData);
 
       const updatedSkills = [...skills, { label: customSkill.label }];
-      setDomains(updatedSkills);
+      setSkills(updatedSkills);
 
       setCurrSkills([
         ...currSkills,
@@ -610,6 +610,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onRemove={handleDeleteSkill}
                   selectPlaceholder="Select skill"
                   searchPlaceholder="Search skills"
+                  showOtherOption
+                  onOtherClick={() => {
+                    setDialogType('skill');
+                    setIsDialogOpen(true);
+                  }}
                 />
               </div>
               <div className="col-span-1">
@@ -621,6 +626,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onRemove={handleDeleteDomain}
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains"
+                  showOtherOption
+                  onOtherClick={() => {
+                    setDialogType('domain');
+                    setIsDialogOpen(true);
+                  }}
                 />
               </div>
               <div className="col-span-1">
@@ -632,6 +642,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onRemove={handleDeleteProjDomain}
                   selectPlaceholder="Select project domain"
                   searchPlaceholder="Search project domains"
+                  showOtherOption
+                  onOtherClick={() => {
+                    setDialogType('projectDomain');
+                    setIsDialogOpen(true);
+                  }}
                 />
               </div>
             </div>
