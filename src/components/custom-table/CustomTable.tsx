@@ -94,8 +94,6 @@ export const CustomTable = ({
 
       // If external data is provided, use it instead of fetching from API
       if (externalData) {
-        setData(externalData);
-        setLoading(false);
         return;
       }
 
