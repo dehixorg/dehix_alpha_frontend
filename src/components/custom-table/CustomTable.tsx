@@ -54,8 +54,38 @@ export const CustomTable = ({
   const [limit, setLimit] = useState<number>(20);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (externalData) {
+      let filteredData = [...externalData];
+
+      // Apply search filter if search term exists
+      if (search && searchColumn && searchColumn.length > 0) {
+        filteredData = filteredData.filter((item) =>
+          searchColumn.some((column) =>
+            String(item[column] || '')
+              .toLowerCase()
+              .includes(search.toLowerCase()),
+          ),
+        );
+      }
+
+      // Apply custom filters
+      selectedFilters.forEach((filter) => {
+        filteredData = filteredData.filter((item) => {
+          const fieldValue = filter.arrayName
+            ? item[filter.fieldName]?.[filter.arrayName]
+            : item[filter.fieldName];
+          return String(fieldValue || '')
+            .toLowerCase()
+            .includes(filter.value.toLowerCase());
+        });
+      });
+
+      setData(filteredData);
+      setLoading(false);
+    } else {
+      fetchData();
+    }
+  }, [search, externalData, selectedFilters, searchColumn]);
 
   const fetchData = async () => {
     try {
@@ -64,33 +94,6 @@ export const CustomTable = ({
 
       // If external data is provided, use it instead of fetching from API
       if (externalData) {
-        let filteredData = [...externalData];
-
-        // Apply search filter if search term exists
-        if (search && searchColumn && searchColumn.length > 0) {
-          filteredData = filteredData.filter((item) =>
-            searchColumn.some((column) =>
-              String(item[column] || '')
-                .toLowerCase()
-                .includes(search.toLowerCase()),
-            ),
-          );
-        }
-
-        // Apply custom filters
-        selectedFilters.forEach((filter) => {
-          filteredData = filteredData.filter((item) => {
-            const fieldValue = filter.arrayName
-              ? item[filter.fieldName]?.[filter.arrayName]
-              : item[filter.fieldName];
-            return String(fieldValue || '')
-              .toLowerCase()
-              .includes(filter.value.toLowerCase());
-          });
-        });
-
-        setData(filteredData);
-        setLoading(false);
         return;
       }
 
