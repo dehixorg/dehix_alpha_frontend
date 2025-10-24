@@ -85,7 +85,7 @@ export const CustomTable = ({
     } else {
       fetchData();
     }
-  }, [search, externalData, selectedFilters]);
+  }, [search, externalData, selectedFilters, searchColumn]);
 
   const fetchData = async () => {
     try {
