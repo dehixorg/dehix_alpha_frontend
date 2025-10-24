@@ -30,9 +30,10 @@ import ImageUploader from '@/components/fileUpload/ImageUploader';
 const profileFormSchema = z.object({
   aadharOrGovtId: z
     .string()
+    .trim()
     .min(1, 'ID is required')
     .refine((val) => !/^-/.test(val), {
-      message: 'Negative numbers are not allowed',
+      message: 'Please enter a valid 12-digit Aadhar or Government ID',
     }),
   salaryOrEarning: z.coerce.number().optional(), // New field for salary/earning
   frontImageUrl: z
