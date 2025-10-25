@@ -85,7 +85,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
   const router = useRouter();
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value as 'overview' | 'invited' | 'accepted' | 'rejected');
     router.push(`/business/talent/${value}`);
   };
 
@@ -112,39 +111,31 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
         />
         {/* Filters will be added later if needed */}
         <div className="container px-4 py-4 ">
-          <Tabs value={activeTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 ">
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview" asChild>
                 <a href="/business/talent">
                   <Users2 className="h-4 w-4 mr-2" />
                   Overview
                 </a>
               </TabsTrigger>
-              <TabsTrigger
-                value="applications"
-                onClick={() => handleTabChange('applications')}
-              >
+              <TabsTrigger value="applications">
                 <FileText className="h-4 w-4 mr-2" />
                 Applications
               </TabsTrigger>
-              <TabsTrigger
-                value="invited"
-                onClick={() => handleTabChange('invited')}
-              >
+              <TabsTrigger value="invited">
                 <BookMarked className="h-4 w-4 mr-2" />
                 Invites
               </TabsTrigger>
-              <TabsTrigger
-                value="accepted"
-                onClick={() => handleTabChange('accepted')}
-              >
+              <TabsTrigger value="accepted">
                 <CheckCircle2 className="h-4 w-4 mr-2" />
                 Accepted
               </TabsTrigger>
-              <TabsTrigger
-                value="rejected"
-                onClick={() => handleTabChange('rejected')}
-              >
+              <TabsTrigger value="rejected">
                 <XCircle className="h-4 w-4 mr-2" />
                 Rejected
               </TabsTrigger>
