@@ -9,7 +9,7 @@ import RejectedProfileCards from './sidebar-projectComponents/profileCards.tsx/r
 import { calculateExperience } from '@/components/marketComponents/TalentLayout'; //
 
 interface TalentContentProps {
-  activeTab: 'invited' | 'accepted' | 'rejected' | 'overview';
+  activeTab: 'invited' | 'accepted' | 'rejected' | 'applications' | 'overview';
   talents: any[];
   loading: boolean;
 }
@@ -20,7 +20,15 @@ const TalentContent: React.FC<TalentContentProps> = ({
   loading,
 }) => {
   const renderCards = () => {
-    if (activeTab === 'invited') {
+    if (activeTab === 'applications') {
+      return (
+        <InvitedProfileCards
+          talents={talents}
+          loading={loading}
+          calculateExperience={calculateExperience}
+        />
+      );
+    } else if (activeTab === 'invited') {
       return (
         <InvitedProfileCards
           talents={talents}

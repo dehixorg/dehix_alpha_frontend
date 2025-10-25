@@ -1,7 +1,13 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users2, BookMarked, CheckCircle2, XCircle } from 'lucide-react';
+import {
+  Users2,
+  BookMarked,
+  CheckCircle2,
+  XCircle,
+  FileText,
+} from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -66,12 +72,19 @@ export default function Talent() {
         {/* Tabs Header */}
         <div className="container px-4 py-4">
           <Tabs value="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview" asChild>
                 <a href="/business/talent">
                   <Users2 className="h-4 w-4 mr-1" />
                   Overview
                 </a>
+              </TabsTrigger>
+              <TabsTrigger
+                value="applications"
+                onClick={() => handleTabChange('applications')}
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                Applications
               </TabsTrigger>
               <TabsTrigger
                 value="invited"

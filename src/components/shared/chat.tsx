@@ -10,21 +10,22 @@ import {
   Search,
   MoreVertical,
   Minimize2,
+  Reply,
   Text,
   Bold,
   Italic,
   Underline,
+  CheckCheck,
   Flag,
   Mic,
   StopCircle,
   Trash2,
   X,
-  Archive,
-  ArchiveRestore,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { doc, DocumentData, updateDoc } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
+import { formatDistanceToNow, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
@@ -46,8 +47,12 @@ import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
-import ChatMessageItem from './ChatMessageItem';
+import Reactions from './reactions';
+import { FileAttachment } from './fileAttachment';
+// Added
+// ProfileSidebar is no longer imported or rendered here
 
+import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -64,10 +69,8 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { toast } from '@/hooks/use-toast';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
-import { db } from '@/config/firebaseConfig';
 import {
   Dialog,
   DialogContent,
@@ -76,8 +79,40 @@ import {
   DialogOverlay,
 } from '@/components/ui/dialog';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import { db } from '@/config/firebaseConfig';
 
+// Format only the time (e.g., 10:30 AM) for in-bubble timestamps
+function formatChatTimestamp(timestamp: string) {
+  return format(new Date(timestamp), 'hh:mm a');
+}
 
+// Helper for date header (Today, Yesterday, Oct 12 2023 …)
+function formatDateHeader(timestamp: string | number) {
+  const msgDate = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const msgDay = msgDate.toDateString(); // gives date as string value
+
+  if (msgDay === today.toDateString()) return 'Today';
+  if (msgDay === yesterday.toDateString()) return 'Yesterday';
+
+  return msgDate.toLocaleDateString(undefined, {
+    weekday: 'long', // “Sunday”
+    month: 'short', // “Sep”
+    day: 'numeric', // 14
+    year: 'numeric', // 2025
+  });
+}
+
+function isSameDay(d1: Date, d2: Date) {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+}
 
   function useDebounce<T> (value: T, delay: number = 500): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -126,7 +161,6 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
-  onConversationUpdate?: (conv: Conversation | null) => void;
 }
 
 export function CardsChat({
@@ -152,15 +186,10 @@ export function CardsChat({
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [, setHoveredMessageId] = useState<string | null>(null);
+  const [, setHoveredMessageId] = useState(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
-
-  // Formatting active states (for visual active toggles)
-  const [boldActive, setBoldActive] = useState<boolean>(false);
-  const [italicActive, setItalicActive] = useState<boolean>(false);
-  const [underlineActive, setUnderlineActive] = useState<boolean>(false);
 
   const prevMessagesLength = useRef(messages.length);
   const [, setOpenDrawer] = useState(false);
@@ -315,30 +344,6 @@ export function CardsChat({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Keep formatting button state in sync with the caret/selection
-  useEffect(() => {
-    const updateFormattingState = () => {
-      try {
-        // queryCommandState returns true/false for the current selection
-        const b = document.queryCommandState('bold');
-        const i = document.queryCommandState('italic');
-        const u = document.queryCommandState('underline');
-        setBoldActive(Boolean(b));
-        setItalicActive(Boolean(i));
-        setUnderlineActive(Boolean(u));
-      } catch (err) {
-        // Some environments may not support queryCommandState - ignore
-      }
-    };
-
-    document.addEventListener('selectionchange', updateFormattingState);
-    // also run once to initialize when the component mounts
-    updateFormattingState();
-    return () => {
-      document.removeEventListener('selectionchange', updateFormattingState);
-    };
-  }, []);
-
   // Subscribe to messages for this conversation and manage loading state
   useEffect(() => {
     if (!conversation?.id) return;
@@ -389,15 +394,16 @@ export function CardsChat({
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
+    // --- ADD THIS CHECK ---
     if (conversation.blocked?.status === true) {
       toast({
         variant: 'destructive',
         title: 'Action Denied',
         description: 'You cannot send messages to a blocked conversation.',
       });
-      return;
+      return; // Stop the function
     }
-
+    // --- END OF CHECK ---
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
@@ -449,7 +455,11 @@ export function CardsChat({
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        notifyError('File size should not exceed 10MB', 'File too large');
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: 'File size should not exceed 10MB',
+        });
         return;
       }
 
@@ -466,10 +476,11 @@ export function CardsChat({
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        notifyError(
-          'Please upload an image, PDF, Word, or PowerPoint file',
-          'Invalid file type',
-        );
+        toast({
+          variant: 'destructive',
+          title: 'Invalid file type',
+          description: 'Please upload an image, PDF, Word, or PowerPoint file',
+        });
         return;
       }
 
@@ -519,7 +530,10 @@ export function CardsChat({
 
         await sendMessage(conversation, message, setInput);
 
-        notifySuccess('File uploaded successfully', 'Success');
+        toast({
+          title: 'Success',
+          description: 'File uploaded successfully',
+        });
       } catch (error: any) {
         console.error('Error uploading file:', {
           error: error.message,
@@ -538,7 +552,11 @@ export function CardsChat({
           errorMessage = error.response.data.message;
         }
 
-        notifyError(errorMessage, 'Upload failed');
+        toast({
+          variant: 'destructive',
+          title: 'Upload failed',
+          description: errorMessage,
+        });
       } finally {
         setIsSending(false);
       }
@@ -571,17 +589,7 @@ export function CardsChat({
    */
   function handleBold() {
     composerRef.current?.focus();
-    try {
-      document.execCommand('bold');
-    } catch (err) {
-      // ignore
-    }
-    // update visual state
-    try {
-      setBoldActive(Boolean(document.queryCommandState('bold')));
-    } catch (err) {
-      console.error('Error applying bold style:');
-    }
+    document.execCommand('bold');
   }
 
   /**
@@ -589,16 +597,7 @@ export function CardsChat({
    */
   const handleUnderline = () => {
     composerRef.current?.focus();
-    try {
-      document.execCommand('underline');
-    } catch (err) {
-      // ignore
-    }
-    try {
-      setUnderlineActive(Boolean(document.queryCommandState('underline')));
-    } catch (err) {
-      console.error('Error applying UnderLine style:');
-    }
+    document.execCommand('underline');
   };
 
   /**
@@ -606,16 +605,7 @@ export function CardsChat({
    */
   function handleitalics() {
     composerRef.current?.focus();
-    try {
-      document.execCommand('italic');
-    } catch (err) {
-      // ignore
-    }
-    try {
-      setItalicActive(Boolean(document.queryCommandState('italic')));
-    } catch (err) {
-      console.error('Error applying italic style:');
-    }
+    document.execCommand('italic');
   }
 
   const toggleFormattingOptions = () => {
@@ -671,13 +661,17 @@ export function CardsChat({
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
       setRecordingStatus('recording');
-      notifySuccess('Speak into your microphone.', 'Recording started');
+      toast({
+        title: 'Recording started',
+        description: 'Speak into your microphone.',
+      });
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      notifyError(
-        'Could not access microphone. Please check permissions.',
-        'Microphone Error',
-      );
+      toast({
+        variant: 'destructive',
+        title: 'Microphone Error',
+        description: 'Could not access microphone. Please check permissions.',
+      });
       setRecordingStatus('idle');
     }
   };
@@ -721,15 +715,16 @@ export function CardsChat({
     if (recordingDurationIntervalRef.current) {
       clearInterval(recordingDurationIntervalRef.current);
     }
-    notifySuccess('Recording discarded');
+    toast({ title: 'Recording discarded' });
   };
 
   const handleSendVoiceMessage = async () => {
     if (!audioBlob || !user || !conversation) {
-      notifyError(
-        'No audio recorded or user/conversation not found.',
-        'Error',
-      );
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No audio recorded or user/conversation not found.',
+      });
       return;
     }
 
@@ -795,7 +790,7 @@ export function CardsChat({
       // Step 6: Send message using the same working sendMessage function
       await sendMessage(conversation, message, setInput);
 
-      notifySuccess('Voice message sent!', 'Success');
+      toast({ title: 'Success', description: 'Voice message sent!' });
     } catch (error: any) {
       console.error('Error sending voice message:', error);
       console.error('Error details:', {
@@ -832,7 +827,11 @@ export function CardsChat({
         errorMessage = `Error: ${error.message}`;
       }
 
-      notifyError(errorMessage, 'Upload Failed');
+      toast({
+        variant: 'destructive',
+        title: 'Upload Failed',
+        description: errorMessage,
+      });
     } finally {
       discardRecording(); // Clean up states regardless of success/failure
       setRecordingStatus('idle');
@@ -885,57 +884,68 @@ export function CardsChat({
     );
   }
 
-  const isBlocked = conversation?.blocked?.status === true;
-  const isArchived =
-    conversation?.participantDetails?.[user.uid]?.viewState === 'archived';
 
+  // --- ADD THIS LOGIC ---
+  // 1. Determine if the current conversation is blocked
+  const isBlocked = conversation?.blocked?.status === true;
+  const isArchived = conversation?.participantDetails?.[user.uid]?.viewState === 'archieved';
+  // 2. Create a dynamic message to show the user
   let blockMessage = '';
   if (isBlocked) {
     if (conversation.blocked?.by === user.uid) {
-      blockMessage =
-        'You have blocked this conversation. Unblock them to send a message.';
+      blockMessage = "You have blocked this conversation. Unblock them to send a message.";
     } else {
-      blockMessage = 'This conversation is blocked. You cannot send a message.';
+      blockMessage = "This conversation is blocked. You cannot send a message.";
     }
   }
 
-  async function handleToggleArchive() {
-    if (!user?.uid || !conversation?.id) return;
+  // Inside your CardsChat component in chat.tsx
 
-    const currentState = conversation.participantDetails?.[user.uid]?.viewState;
-    const newState = currentState === 'archived' ? 'inbox' : 'archived';
+// --- HIGHLIGHT: ADD THIS ENTIRE FUNCTION ---
+async function handleToggleArchive() {
+  console.log('toggled');
+  if (!user?.uid || !conversation?.id) return;
 
-    const conversationDocRef = doc(db, 'conversations', conversation.id);
-    const fieldToUpdate = `participantDetails.${user.uid}.viewState`;
+  console.log(isArchived);
+  // 1. Determine the current and new state
+  const currentState = conversation.participantDetails?.[user.uid]?.viewState;
+  console.log(currentState);
 
-    try {
-      await updateDoc(conversationDocRef, { [fieldToUpdate]: newState });
+  const newState = currentState === 'archieved' ? 'inbox' : 'archieved';
 
-      const updatedConversation = {
-        ...conversation,
-        participantDetails: {
-          ...conversation.participantDetails,
-          [user.uid]: {
-            ...conversation.participantDetails?.[user.uid],
-            viewState: newState,
-          },
+  // 2. Prepare the update for Firestore
+  const conversationDocRef = doc(db, 'conversations', conversation.id);
+  const fieldToUpdate = `participantDetails.${user.uid}.viewState`;
+
+  try {
+    // 3. Update the document in Firestore
+    await updateDoc(conversationDocRef, { [fieldToUpdate]: newState });
+
+    // 4. Create the updated conversation object for the local state
+    const updatedConversation = {
+      ...conversation,
+      participantDetails: {
+        ...conversation.participantDetails,
+        [user.uid]: {
+          ...conversation.participantDetails?.[user.uid],
+          viewState: newState,
         },
-      };
+      },
+    };
 
-      onConversationUpdate?.(updatedConversation as Conversation);
+    // 5. Call the prop to update the parent's state instantly
+    onConversationUpdate(updatedConversation as Conversation);
 
-      toast({
-        title: `Conversation ${newState === 'archived' ? 'Archived' : 'Unarchived'}`,
-      });
-    } catch (error) {
-      console.error('Error toggling archive state:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not update archive status.',
-      });
-    }
+    toast({
+      title: `Conversation ${newState === 'archieved' ? 'Archived' : 'Unarchived'}`,
+    });
+  } catch (error) {
+    console.error("Error toggling archive state:", error);
+    toast({ variant: 'destructive', title: 'Error', description: 'Could not update archive status.' });
   }
+}
+// --- END HIGHLIGHT ---
+
 
   return (
     <>
@@ -1093,21 +1103,21 @@ export function CardsChat({
                   <Search className="h-5 w-5" />
                 </Button>
               )}
-
-              {/* Archive/Unarchive button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
-                onClick={handleToggleArchive}
-                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                {isArchived ? (
-                  <ArchiveRestore className="h-5 w-5" />
-                ) : (
-                  <Archive className="h-5 w-5" />
-                )}
-              </Button>
+              {/* --- HIGHLIGHT: ADD THIS BUTTON --- */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
+                  onClick={handleToggleArchive}
+                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                >
+                  {isArchived ? (
+                    <ArchiveRestore className="h-5 w-5" /> // Icon for unarchiving
+                  ) : (
+                    <Archive className="h-5 w-5" /> // Icon for archiving
+                  )}
+                </Button>
+                {/* --- END HIGHLIGHT --- */}
 
               {/* Video call */}
               <Button
@@ -1171,34 +1181,396 @@ export function CardsChat({
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
               <ScrollArea className="flex flex-col space-y-3">
-                {messages.map((message, index) => (
-                  <ChatMessageItem
-                    key={message.id}
-                    message={message as any}
-                    index={index}
-                    messages={messages as any}
-                    userId={user.uid}
-                    conversation={conversation}
-                    onHoverChange={setHoveredMessageId}
-                    setModalImage={setModalImage}
-                    audioRefs={audioRefs}
-                    handleLoadedMetadata={handleLoadedMetadata}
-                    handlePlay={handlePlay}
-                    toggleReaction={toggleReaction}
-                    setReplyToMessageId={setReplyToMessageId}
-                    messagesEndRef={messagesEndRef}
-                  />
-                ))}
+                {messages.map((message, index) => {
+                  const formattedTimestamp = formatChatTimestamp(
+                    message.timestamp,
+                  );
+                  const prev = messages[index - 1];
+                  const isNewDay =
+                    !prev ||
+                    !isSameDay(
+                      new Date(prev.timestamp),
+                      new Date(message.timestamp),
+                    );
+
+                  // Helper: detect if the content contains ONLY emojis that were inserted via <span class="chat-emoji">…</span>
+                  const { isEmojiOnly, isSingleEmoji } = (() => {
+                    if (
+                      message.voiceMessage ||
+                      message.content.match(
+                        /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                      )
+                    ) {
+                      return { isEmojiOnly: false, isSingleEmoji: false };
+                    }
+
+                    const emojiSpanRegex =
+                      /<span[^>]*class="chat-emoji"[^>]*>[^<]*<\/span>/g;
+                    const emojiMatches =
+                      message.content.match(emojiSpanRegex) || [];
+
+                    // Remove emoji spans and markup to see if any non-emoji text remains
+                    const stripped = message.content
+                      .replace(emojiSpanRegex, '')
+                      .replace(/&nbsp;|<br\s*\/?>/gi, '')
+                      .replace(/\s+/g, '')
+                      .trim();
+
+                    const onlyEmojis =
+                      stripped.length === 0 && emojiMatches.length > 0;
+                    return {
+                      isEmojiOnly: onlyEmojis,
+                      isSingleEmoji: onlyEmojis && emojiMatches.length === 1,
+                    };
+                  })();
+                  const readableTimestamp =
+                    formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+                  const isSender = message.senderId === user.uid;
+                  const isGroupChat = conversation.type === 'group';
+                  const showSenderName = isGroupChat && 
+                    (index === 0 || messages[index - 1]?.senderId !== message.senderId);
+                  const senderName = isGroupChat && !isSender 
+                    ? conversation.participantDetails?.[message.senderId]?.userName 
+                      || 'Unknown User' 
+                    : '';
+                    
+
+                  return (
+                    <div key={message.id} className="w-full">
+                      {isNewDay && (
+                        <div className="w-full flex justify-center my-2">
+                          <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-0.5 rounded-full text-[hsl(var(--muted-foreground))]">
+                            {formatDateHeader(message.timestamp)}
+                          </span>
+                        </div>
+                      )}
+                      <div
+                        id={message.id}
+                        className={cn(
+                          'flex items-start group w-full mb-2',
+                          isSender ? 'justify-end' : 'justify-start',
+                        )}
+                        onMouseEnter={() => setHoveredMessageId(message.id)}
+                        onMouseLeave={() => setHoveredMessageId(null)}
+                      >
+                        {/* Avatar for received messages */}
+                        {!isSender && (
+                          <div className="flex-shrink-0 mr-2">
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage
+                                src={conversation.participantDetails?.[message.senderId]?.profilePic}
+                                alt={conversation.participantDetails?.[message.senderId]?.userName}
+                              />
+                              <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
+                                {senderName ? senderName.charAt(0).toUpperCase() : 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        )}
+
+                        {/* Message content container */}
+                        <div id={`message-${message.id}`} className={cn('flex flex-col', isSender ? 'items-end' : 'items-start', 'max-w-[80%]')}>
+                          {/* Sender name in group chats */}
+                          {isGroupChat && showSenderName && !isSender && (
+                            <div className="mb-0.5">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                {senderName}
+                              </span>
+                            </div>
+                          )}
+                          <div
+                            
+                            className={cn(
+                              'flex w-max max-w-full flex-col gap-1 rounded-2xl px-4 py-2 text-sm shadow-sm',
+                              message.content.match(
+                                /\.(jpeg|jpg|gif|png)(\?|$)/i,
+                              ) ||
+                              isEmojiOnly ||
+                              (message.voiceMessage &&
+                                message.voiceMessage.type === 'voice')
+                                ? isSender
+                                  ? 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
+                                  : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none'
+                                : isSender
+                                  ? 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
+                                  : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none relative flex justify-center items-center pr-20 min-w-[180px]',
+                          )}
+                          onClick={() => {
+                            if (message.replyTo) {
+                              const replyMessageElement =
+                                document.getElementById(message.replyTo);
+                              if (replyMessageElement) {
+                                replyMessageElement.classList.add(
+                                  'ring-2',
+                                  'ring-primary',
+                                  'ring-offset-2',
+                                  'dark:ring-offset-gray-800',
+                                  'transition-all',
+                                  'duration-300',
+                                );
+                                replyMessageElement.scrollIntoView({
+                                  behavior: 'smooth',
+                                  block: 'center',
+                                });
+                                setTimeout(() => {
+                                  replyMessageElement.classList.remove(
+                                    'ring-2',
+                                    'ring-primary',
+                                    'ring-offset-2',
+                                    'dark:ring-offset-gray-800',
+                                  );
+                                }, 2500);
+                              }
+                            }
+                          }}
+                        >
+                          <TooltipProvider delayDuration={300}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="break-words w-full">
+                                  {message.replyTo && (
+                                    <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
+                                      <div
+                                        className={cn(
+                                          'italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2',
+                                          isSender
+                                            ? 'text-primary-foreground dark:text-primary-foreground'
+                                            : 'text-primary dark:text-primary',
+                                        )}
+                                      >
+                                        <span className="font-medium">
+                                          {messages
+                                            .find(
+                                              (msg) =>
+                                                msg.id === message.replyTo,
+                                            )
+                                            ?.content.substring(0, 100) ||
+                                            'Original message'}
+                                          {(messages.find(
+                                            (msg) => msg.id === message.replyTo,
+                                          )?.content?.length || 0) > 100 &&
+                                            '...'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {message.content.match(
+                                    /\.(jpeg|jpg|gif|png)(\?|$)/i,
+                                  ) ? (
+                                    <div
+                                      className="relative inline-block w-full cursor-pointer"
+                                      onClick={() =>
+                                        setModalImage(message.content)
+                                      }
+                                    >
+                                      <Image
+                                        src={
+                                          message.content || '/placeholder.svg'
+                                        }
+                                        alt="Message Image"
+                                        width={300}
+                                        height={300}
+                                        className="rounded-md my-1 w-full object-contain"
+                                      />
+                                      <div className="absolute bottom-2 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded flex items-center space-x-1">
+                                        <span>{formattedTimestamp}</span>
+                                        {isSender && (
+                                          <CheckCheck className="w-3.5 h-3.5 ml-1" />
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : message.content.match(
+                                      /\.(pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                                    ) ? (
+                                    <FileAttachment
+                                      fileName={
+                                        message.content.split('/').pop() ||
+                                        'File'
+                                      }
+                                      fileUrl={message.content}
+                                      fileType={
+                                        message.content.split('.').pop() ||
+                                        'file'
+                                      }
+                                    />
+                                  ) : (
+                                    !message.voiceMessage &&
+                                    !message.content.match(
+                                      /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                                    ) && (
+                                      <>
+                                        <div
+                                          className={cn(
+                                            'w-full break-words',
+                                            isEmojiOnly &&
+                                              'text-4xl leading-snug text-center',
+                                          )}
+                                          dangerouslySetInnerHTML={{
+                                            __html: DOMPurify.sanitize(
+                                              message.content,
+                                              {
+                                                ALLOWED_TAGS: [
+                                                  'b',
+                                                  'strong',
+                                                  'i',
+                                                  'em',
+                                                  'u',
+                                                  'br',
+                                                  'div',
+                                                  'span',
+                                                  'a',
+                                                ],
+                                                ALLOWED_ATTR: [
+                                                  'href',
+                                                  'target',
+                                                  'rel',
+                                                  'style',
+                                                  'class',
+                                                ],
+                                              },
+                                            ),
+                                          }}
+                                        />
+                                        {/* Inline timestamp only for non-emoji messages */}
+                                        {!isEmojiOnly && (
+                                          <div
+                                            className={cn(
+                                              'absolute bottom-1 right-2 text-xs flex items-center space-x-1',
+                                              isSender
+                                                ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
+                                                : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
+                                            )}
+                                          >
+                                            <span>{formattedTimestamp}</span>
+                                            {isSender && (
+                                              <CheckCheck className="w-3.5 h-3.5" />
+                                            )}
+                                          </div>
+                                        )}
+                                      </>
+                                    )
+                                  )}
+                                  {/* Voice Message Player */}
+                                  {message.voiceMessage &&
+                                    message.voiceMessage.type === 'voice' && (
+                                      <div className="mt-2 flex items-center space-x-2 max-w-full">
+                                        <audio
+                                          ref={(el) => {
+                                            audioRefs.current[message.id] = el;
+                                            return undefined;
+                                          }}
+                                          src={message.content}
+                                          controls
+                                          preload="metadata"
+                                          className="h-10 w-40 sm:w-44 md:w-56 lg:w-64 rounded-md"
+                                          onLoadedMetadata={() =>
+                                            handleLoadedMetadata(message.id)
+                                          }
+                                          onPlay={() => handlePlay(message.id)}
+                                        />
+                                        <span className="text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap flex items-center min-w-[48px] justify-end">
+                                          {formattedTimestamp}
+                                          {isSender && (
+                                            <CheckCheck className="w-3.5 h-3.5 ml-1 align-middle text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300" />
+                                          )}
+                                        </span>
+                                      </div>
+                                    )}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="bottom"
+                                sideOffset={5}
+                                className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] text-xs p-1 rounded"
+                              >
+                                <p>{readableTimestamp}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          {/* Reactions moved to bottom-left of message bubble */}
+                          <div className="absolute -bottom-3 left-2 z-10">
+                            <Reactions
+                              messageId={message.id}
+                              reactions={message.reactions || {}}
+                              toggleReaction={toggleReaction}
+                            />
+                          </div>
+                          <div
+                            className={cn(
+                              'flex items-center text-xs mt-1',
+                              isSender
+                                ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-500'
+                                : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
+                              isSender ? 'justify-end' : 'justify-start',
+                            )}
+                          >
+                            {/* For emoji-only messages, display timestamp here */}
+                            {isEmojiOnly &&
+                              (isSingleEmoji ? (
+                                <div className="inline-flex items-center align-middle leading-none space-x-1 bg-[#c8a3ed] dark:bg-[#9966ccba] px-1.5 py-0.5 rounded text-[hsl(var(--foreground))]">
+                                  <span>{formattedTimestamp}</span>
+                                  {isSender && (
+                                    <CheckCheck className="w-3.5 h-3.5" />
+                                  )}
+                                </div>
+                              ) : (
+                                <>
+                                  <span>{formattedTimestamp}</span>
+                                  {isSender && (
+                                    <CheckCheck className="w-3.5 h-3.5 ml-1" />
+                                  )}
+                                </>
+                              ))}
+                          </div>
+                        </div>
+                        </div>
+                        
+                        {/* Message actions (emoji + reply) */}
+                        <div
+                          className={cn(
+                            'flex items-start pt-2 opacity-0 group-hover:opacity-100 transition-opacity',
+                            isSender ? 'ml-2' : 'mr-2'
+                          )}
+                        >
+                          {!isSender && (
+                            <EmojiPicker
+                              aria-label="Add reaction"
+                              onSelect={(emoji: string) => toggleReaction(message.id, emoji)}
+                              className="mr-1"
+                            />
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20',
+                              isSender
+                                ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
+                                : 'text-[hsl(var(--muted-foreground))]',
+                            )}
+                            onClick={() => setReplyToMessageId(message.id)}
+                            aria-label="Reply to message"
+                          >
+                            <Reply className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div ref={messagesEndRef} />
+                    </div>
+                  );
+                })}
               </ScrollArea>
             </CardContent>
             <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-b-xl">
               {isBlocked ? (
-                <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                  <p>{blockMessage}</p>
-                </div>
+                  // If blocked, show this message
+                  <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    <p>{blockMessage}</p>
+                  </div>
               ) : (
-                <form
-                  onSubmit={(event) => {
+              <form
+                onSubmit={(event) => {
                   event.preventDefault();
                   if (input.trim().length === 0) return;
                   const newMessage = {
@@ -1352,13 +1724,7 @@ export function CardsChat({
                     onClick={handleBold}
                     title="Bold"
                     aria-label="Bold"
-                    aria-pressed={boldActive}
-                    className={
-                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                      (boldActive
-                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                    }
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                   >
                     {' '}
                     <Bold className="h-4 w-4" />{' '}
@@ -1370,13 +1736,7 @@ export function CardsChat({
                     onClick={handleitalics}
                     title="Italic"
                     aria-label="Italic"
-                    aria-pressed={italicActive}
-                    className={
-                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                      (italicActive
-                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                    }
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                   >
                     {' '}
                     <Italic className="h-4 w-4" />{' '}
@@ -1388,13 +1748,7 @@ export function CardsChat({
                     onClick={handleUnderline}
                     title="Underline"
                     aria-label="Underline"
-                    aria-pressed={underlineActive}
-                    className={
-                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                      (underlineActive
-                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                    }
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                   >
                     {' '}
                     <Underline className="h-4 w-4" />{' '}
@@ -1431,13 +1785,7 @@ export function CardsChat({
                         onClick={handleBold}
                         title="Bold"
                         aria-label="Bold"
-                        aria-pressed={boldActive}
-                        className={
-                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                          (boldActive
-                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                        }
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                       >
                         {' '}
                         <Bold className="h-4 w-4" />{' '}
@@ -1449,13 +1797,7 @@ export function CardsChat({
                         onClick={handleitalics}
                         title="Italic"
                         aria-label="Italic"
-                        aria-pressed={italicActive}
-                        className={
-                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                          (italicActive
-                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                        }
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                       >
                         {' '}
                         <Italic className="h-4 w-4" />{' '}
@@ -1467,13 +1809,7 @@ export function CardsChat({
                         onClick={handleUnderline}
                         title="Underline"
                         aria-label="Underline"
-                        aria-pressed={underlineActive}
-                        className={
-                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                          (underlineActive
-                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                        }
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                       >
                         {' '}
                         <Underline className="h-4 w-4" />{' '}
@@ -1623,13 +1959,7 @@ export function CardsChat({
              transition-transform duration-300 animate-in fade-in zoom-in-95"
               >
                 <DialogHeader></DialogHeader>
-                <NewReportTab 
-                  reportData={reportData} 
-                  onSubmitted={() => {
-                    setOpenReport(false);
-                    return true;
-                  }}
-                />
+                <NewReportTab reportData={reportData} />
               </DialogContent>
             </DialogPortal>
           </Dialog>
