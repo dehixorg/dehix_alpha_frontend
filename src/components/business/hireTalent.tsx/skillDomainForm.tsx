@@ -344,17 +344,17 @@ const SkillDomainForm: FC<SkillDomainFormProps> = ({
         console.log(hireTalentData);
         // Filter and map user data
         const fetchedFilterSkills = hireTalentData
-          .filter((item: any) => item.skillName && item.visible)
+          .filter((item: any) => item.type === 'SKILL' && item.visible)
           .map((item: any) => ({
-            _id: item.skillId,
-            label: item.skillName,
+            _id: item._id,
+            label: item.talentName,
           }));
 
         const fetchedFilterDomains = hireTalentData
-          .filter((item: any) => item.domainName && item.visible)
+          .filter((item: any) => item.type === 'DOMAIN' && item.visible)
           .map((item: any) => ({
-            _id: item.domainId,
-            label: item.domainName,
+            _id: item._id,
+            label: item.talentName,
           }));
 
         // Send the filtered skills and domains back to the parent
