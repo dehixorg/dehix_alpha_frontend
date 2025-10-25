@@ -2,7 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Briefcase, Clock, FileText, Mail, MapPin, User, Users, Star } from 'lucide-react';
+import {
+  ArrowLeft,
+  Briefcase,
+  Clock,
+  FileText,
+  Mail,
+  MapPin,
+  User,
+  Users,
+  Star,
+} from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,13 +43,17 @@ interface Freelancer {
   certifications?: string[];
 }
 
-export default function SkillFreelancersPage({ params }: { params: { skillId: string } }) {
+export default function SkillFreelancersPage({
+  params,
+}: {
+  params: { skillId: string };
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { skillId } = params;
   const type = searchParams.get('type'); // 'skill' or 'domain'
   const [itemData, setItemData] = useState<any>(null);
-  
+
   // Parse the item data if it exists
   useEffect(() => {
     const itemDataString = searchParams.get('data');
@@ -52,17 +67,18 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
       }
     }
   }, [searchParams]);
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
-  const [selectedFreelancer, setSelectedFreelancer] = useState<Freelancer | null>(null);
+  const [selectedFreelancer, setSelectedFreelancer] =
+    useState<Freelancer | null>(null);
   const [skillName, setSkillName] = useState('');
 
   // Fetch freelancers based on skill or domain
   useEffect(() => {
     const fetchFreelancers = async () => {
       if (!skillId || !type) return;
-      
+
       setIsLoading(true);
       try {
         let endpoint = '';
@@ -74,20 +90,25 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
           // If you want to fetch both skills and domains
           const [skillsResponse, domainsResponse] = await Promise.all([
             axiosInstance.get(`/business/talent/by-skill/${skillId}`),
-            axiosInstance.get(`/business/talent/by-domain/${skillId}`)
+            axiosInstance.get(`/business/talent/by-domain/${skillId}`),
           ]);
-          
+
           if (skillsResponse.data?.success && domainsResponse.data?.success) {
             const combinedFreelancers = [
               ...(skillsResponse.data.data.freelancers || []),
-              ...(domainsResponse.data.data.freelancers || [])
+              ...(domainsResponse.data.data.freelancers || []),
             ];
-            
+
             // Remove duplicates based on freelancer ID
-            const uniqueFreelancers = Array.from(new Map(
-              combinedFreelancers.map(freelancer => [freelancer._id, freelancer])
-            ).values());
-            
+            const uniqueFreelancers = Array.from(
+              new Map(
+                combinedFreelancers.map((freelancer) => [
+                  freelancer._id,
+                  freelancer,
+                ]),
+              ).values(),
+            );
+
             setFreelancers(uniqueFreelancers);
             setSkillName(`${skillsResponse.data.data.name} (Skills & Domains)`);
             if (uniqueFreelancers.length > 0) {
@@ -96,13 +117,15 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
             return;
           }
         }
-        
+
         // For single type (skill or domain)
         const response = await axiosInstance.get(endpoint);
-        
+
         if (response.data?.success) {
           setFreelancers(response.data.data.freelancers || []);
-          setSkillName(`${response.data.data.name} (${type === 'skill' ? 'Skill' : 'Domain'})`);
+          setSkillName(
+            `${response.data.data.name} (${type === 'skill' ? 'Skill' : 'Domain'})`,
+          );
           if (response.data.data.freelancers?.length > 0) {
             setSelectedFreelancer(response.data.data.freelancers[0]);
           }
@@ -122,18 +145,16 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
     try {
       await axiosInstance.patch(`/business/talent/status`, {
         freelancerId,
-        status
+        status,
       });
-      
+
       // Update local state
-      setFreelancers(prev => 
-        prev.map(f => 
-          f._id === freelancerId ? { ...f, status } : f
-        )
+      setFreelancers((prev) =>
+        prev.map((f) => (f._id === freelancerId ? { ...f, status } : f)),
       );
-      
+
       if (selectedFreelancer?._id === freelancerId) {
-        setSelectedFreelancer(prev => prev ? { ...prev, status } : null);
+        setSelectedFreelancer((prev) => (prev ? { ...prev, status } : null));
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -149,45 +170,48 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
   }
 
   // Group freelancers by type (skill or domain)
-  const freelancersByType = freelancers.reduce((acc, freelancer) => {
-    const type = freelancer.skills?.includes(skillName) ? 'skill' : 'domain';
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-    acc[type].push(freelancer);
-    return acc;
-  }, {} as Record<string, Freelancer[]>);
+  const freelancersByType = freelancers.reduce(
+    (acc, freelancer) => {
+      const type = freelancer.skills?.includes(skillName) ? 'skill' : 'domain';
+      if (!acc[type]) {
+        acc[type] = [];
+      }
+      acc[type].push(freelancer);
+      return acc;
+    },
+    {} as Record<string, Freelancer[]>,
+  );
 
   const allTypes = Object.keys(freelancersByType);
   const [activeType, setActiveType] = useState<string>(allTypes[0] || 'all');
 
   // Filter freelancers based on active type
-  const filteredFreelancers = activeType === 'all' 
-    ? freelancers 
-    : freelancersByType[activeType] || [];
+  const filteredFreelancers =
+    activeType === 'all' ? freelancers : freelancersByType[activeType] || [];
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => router.back()}
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" /> Back
         </Button>
-        
+
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">{skillName}</h1>
             <p className="text-gray-500">
-              {freelancers.length} {freelancers.length === 1 ? 'freelancer' : 'freelancers'} found
+              {freelancers.length}{' '}
+              {freelancers.length === 1 ? 'freelancer' : 'freelancers'} found
             </p>
           </div>
-          
+
           {allTypes.length > 1 && (
             <div className="flex space-x-2">
-              <Button 
+              <Button
                 variant={activeType === 'all' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setActiveType('all')}
@@ -216,11 +240,11 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
           <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
             {filteredFreelancers.length > 0 ? (
               filteredFreelancers.map((freelancer) => (
-                <Card 
+                <Card
                   key={freelancer._id}
                   className={`cursor-pointer transition-colors ${
-                    selectedFreelancer?._id === freelancer._id 
-                      ? 'border-primary bg-primary/5' 
+                    selectedFreelancer?._id === freelancer._id
+                      ? 'border-primary bg-primary/5'
                       : 'hover:bg-accent'
                   }`}
                   onClick={() => setSelectedFreelancer(freelancer)}
@@ -234,13 +258,17 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium truncate">{freelancer.name}</h3>
+                        <h3 className="font-medium truncate">
+                          {freelancer.name}
+                        </h3>
                         <p className="text-sm text-muted-foreground truncate">
                           {freelancer.title}
                         </p>
                         <div className="flex items-center text-xs text-muted-foreground mt-1">
                           <MapPin className="h-3 w-3 mr-1" />
-                          <span className="truncate">{freelancer.location || 'Remote'}</span>
+                          <span className="truncate">
+                            {freelancer.location || 'Remote'}
+                          </span>
                           {freelancer.hourly_rate && (
                             <>
                               <span className="mx-2">•</span>
@@ -259,7 +287,13 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <Users className="mx-auto h-10 w-10 mb-2" />
-                <p>No {activeType === 'all' ? 'freelancers' : activeType + ' freelancers'} found</p>
+                <p>
+                  No{' '}
+                  {activeType === 'all'
+                    ? 'freelancers'
+                    : activeType + ' freelancers'}{' '}
+                  found
+                </p>
               </div>
             )}
           </div>
@@ -273,17 +307,21 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle>{selectedFreelancer.name}</CardTitle>
-                    <p className="text-muted-foreground">{selectedFreelancer.title}</p>
+                    <p className="text-muted-foreground">
+                      {selectedFreelancer.title}
+                    </p>
                   </div>
                   <div className="flex items-center">
                     <Star className="h-5 w-5 text-yellow-400 fill-yellow-400 mr-1" />
                     <span className="font-medium">
-                      {selectedFreelancer.match_score ? `${selectedFreelancer.match_score}% Match` : 'N/A'}
+                      {selectedFreelancer.match_score
+                        ? `${selectedFreelancer.match_score}% Match`
+                        : 'N/A'}
                     </span>
                   </div>
                 </div>
               </CardHeader>
-              
+
               <Tabs defaultValue="overview" className="w-full px-6">
                 <TabsList className="grid w-full grid-cols-3 mb-6">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -297,7 +335,9 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                     <h3 className="font-medium">Basic Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Full Name</p>
+                        <p className="text-sm text-muted-foreground">
+                          Full Name
+                        </p>
                         <p className="text-sm">{selectedFreelancer.name}</p>
                       </div>
                       <div className="space-y-2">
@@ -315,7 +355,9 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                       )}
                       {selectedFreelancer.location && (
                         <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">Location</p>
+                          <p className="text-sm text-muted-foreground">
+                            Location
+                          </p>
                           <p className="text-sm flex items-center">
                             <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
                             {selectedFreelancer.location}
@@ -324,13 +366,19 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                       )}
                       {selectedFreelancer.availability && (
                         <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">Availability</p>
-                          <p className="text-sm">{selectedFreelancer.availability}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Availability
+                          </p>
+                          <p className="text-sm">
+                            {selectedFreelancer.availability}
+                          </p>
                         </div>
                       )}
                       {selectedFreelancer.hourly_rate && (
                         <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">Hourly Rate</p>
+                          <p className="text-sm text-muted-foreground">
+                            Hourly Rate
+                          </p>
                           <p className="text-sm flex items-center">
                             <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                             ${selectedFreelancer.hourly_rate}/hour
@@ -341,22 +389,25 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                   </div>
 
                   {/* Skills & Expertise */}
-                  {selectedFreelancer.skills && selectedFreelancer.skills.length > 0 && (
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Skills & Expertise</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedFreelancer.skills.map((skill, i) => (
-                          <Badge 
-                            key={i} 
-                            variant={skill === skillName ? 'default' : 'secondary'} 
-                            className="text-sm"
-                          >
-                            {skill}
-                          </Badge>
-                        ))}
+                  {selectedFreelancer.skills &&
+                    selectedFreelancer.skills.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="font-medium">Skills & Expertise</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedFreelancer.skills.map((skill, i) => (
+                            <Badge
+                              key={i}
+                              variant={
+                                skill === skillName ? 'default' : 'secondary'
+                              }
+                              className="text-sm"
+                            >
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   {/* Professional Summary */}
                   {selectedFreelancer.summary && (
@@ -373,10 +424,14 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                   {/* Work Experience */}
                   <div className="space-y-4">
                     <h3 className="font-medium">Work Experience</h3>
-                    {selectedFreelancer.experience && selectedFreelancer.experience.length > 0 ? (
+                    {selectedFreelancer.experience &&
+                    selectedFreelancer.experience.length > 0 ? (
                       <div className="space-y-4">
                         {selectedFreelancer.experience.map((exp, i) => (
-                          <div key={i} className="border-l-2 border-primary pl-4 py-1">
+                          <div
+                            key={i}
+                            className="border-l-2 border-primary pl-4 py-1"
+                          >
                             <div className="flex justify-between">
                               <h4 className="font-medium">{exp.title}</h4>
                               <span className="text-sm text-muted-foreground">
@@ -393,17 +448,23 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No work experience added</p>
+                      <p className="text-sm text-muted-foreground">
+                        No work experience added
+                      </p>
                     )}
                   </div>
 
                   {/* Education */}
                   <div className="space-y-4">
                     <h3 className="font-medium">Education</h3>
-                    {selectedFreelancer.education && selectedFreelancer.education.length > 0 ? (
+                    {selectedFreelancer.education &&
+                    selectedFreelancer.education.length > 0 ? (
                       <div className="space-y-4">
                         {selectedFreelancer.education.map((edu, i) => (
-                          <div key={i} className="border-l-2 border-primary pl-4 py-1">
+                          <div
+                            key={i}
+                            className="border-l-2 border-primary pl-4 py-1"
+                          >
                             <div className="flex justify-between">
                               <h4 className="font-medium">{edu.degree}</h4>
                               <span className="text-sm text-muted-foreground">
@@ -421,7 +482,9 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No education information available</p>
+                      <p className="text-sm text-muted-foreground">
+                        No education information available
+                      </p>
                     )}
                   </div>
                 </TabsContent>
@@ -437,14 +500,17 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                         </p>
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No cover letter provided</p>
+                      <p className="text-sm text-muted-foreground">
+                        No cover letter provided
+                      </p>
                     )}
                   </div>
 
                   {/* Resume & Portfolio */}
                   <div className="space-y-4">
                     <h3 className="font-medium">Documents</h3>
-                    {selectedFreelancer.documents && selectedFreelancer.documents.length > 0 ? (
+                    {selectedFreelancer.documents &&
+                    selectedFreelancer.documents.length > 0 ? (
                       <div className="space-y-2">
                         {selectedFreelancer.documents.map((doc, i) => (
                           <a
@@ -460,29 +526,37 @@ export default function SkillFreelancersPage({ params }: { params: { skillId: st
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No documents uploaded</p>
+                      <p className="text-sm text-muted-foreground">
+                        No documents uploaded
+                      </p>
                     )}
                   </div>
                 </TabsContent>
               </Tabs>
 
               <div className="flex justify-end space-x-2 p-6 pt-0 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleStatusUpdate(selectedFreelancer._id, 'rejected')}
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    handleStatusUpdate(selectedFreelancer._id, 'rejected')
+                  }
                   disabled={selectedFreelancer.status === 'rejected'}
                 >
                   Reject
                 </Button>
-                <Button 
+                <Button
                   variant="outline"
-                  onClick={() => handleStatusUpdate(selectedFreelancer._id, 'shortlisted')}
+                  onClick={() =>
+                    handleStatusUpdate(selectedFreelancer._id, 'shortlisted')
+                  }
                   disabled={selectedFreelancer.status === 'shortlisted'}
                 >
                   Shortlist
                 </Button>
-                <Button 
-                  onClick={() => handleStatusUpdate(selectedFreelancer._id, 'hired')}
+                <Button
+                  onClick={() =>
+                    handleStatusUpdate(selectedFreelancer._id, 'hired')
+                  }
                   disabled={selectedFreelancer.status === 'hired'}
                 >
                   {selectedFreelancer.status === 'hired' ? 'Hired' : 'Hire Now'}
