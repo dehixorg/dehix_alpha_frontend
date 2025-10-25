@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+<<<<<<< HEAD
 import {
   Users2,
   BookMarked,
@@ -35,16 +36,18 @@ interface Domain {
   _id: string;
   label: string;
 }
+=======
+>>>>>>> develop
 
 export default function Talent() {
   const router = useRouter();
-  const [skillFilter, setSkillFilter] = useState<string>('all');
-  const [domainFilter, setDomainFilter] = useState<string>('all');
-  const [skillDomainFormProps] = useState<any>();
 
-  const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
-  const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
+  useEffect(() => {
+    // Redirect to overview tab to maintain backward compatibility
+    router.replace('/business/talent/overview');
+  }, [router]);
 
+<<<<<<< HEAD
   const handleTabChange = (value: string) => {
     router.push(`/business/talent/${value}`);
   };
@@ -167,4 +170,8 @@ export default function Talent() {
       </div>
     </div>
   );
+=======
+  // Return null or a loading spinner while redirecting
+  return null;
+>>>>>>> develop
 }

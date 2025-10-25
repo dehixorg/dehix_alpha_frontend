@@ -55,7 +55,7 @@ export default function OracleDashboardPage() {
           ]}
         />
         <div className="flex-1 px-4">
-          <div className="mx-auto w-full max-w-7xl">
+          <div className="mx-auto w-full max-w-7xl mt-4 md:mt-0">
             <Tabs
               value={currentTabFromURL}
               onValueChange={handleTabChange}

@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
 
+import { DatePicker } from '../shared/datePicker';
+
 import {
   Dialog,
   DialogContent,
@@ -117,7 +119,7 @@ const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
   );
   const [tmpSkill, setTmpSkill] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
-
+  const currentDate = new Date().toISOString().split('T')[0];
   const form = useForm<EditProjectFormValues>({
     resolver: zodResolver(editProjectFormSchema),
     defaultValues: {
@@ -268,7 +270,7 @@ const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker {...field} max={currentDate} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -282,7 +284,7 @@ const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
                   <FormItem>
                     <FormLabel>End Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

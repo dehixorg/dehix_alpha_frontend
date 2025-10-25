@@ -792,6 +792,95 @@ export function ProfileSidebar({
     }
   };
 
+<<<<<<< HEAD
+=======
+  const handleToggleBlockChat = async (
+    targetUserId: string,
+    block: boolean,
+  ) => {
+    if (!user?.uid || !targetUserId || !onConversationUpdate) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'User information is missing.',
+      });
+      return;
+    }
+
+    // Set loading state
+    setConfirmDialogProps((prev) => ({ ...prev, isLoading: true }));
+
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('type', '==', 'individual'),
+      where('participants', 'array-contains', user.uid),
+    );
+
+    let conversationDocToUpdate: any;
+    try {
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        if (doc.data().participants.includes(targetUserId)) {
+          conversationDocToUpdate = doc;
+        }
+      });
+
+      if (!conversationDocToUpdate) {
+        toast({
+          variant: 'destructive',
+          title: 'Cannot Block',
+          description: 'A direct 1-on-1 chat must exist to block this user.',
+        });
+        setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+        return;
+      }
+
+      const conversationDocRef = doc(
+        db,
+        'conversations',
+        conversationDocToUpdate.id,
+      );
+
+      if (block) {
+        await updateDoc(conversationDocRef, {
+          blocked: { status: true, by: user.uid },
+        });
+        setBlockStatus({ isBlocked: true, blockedBy: user.uid });
+        toast({
+          title: 'Chat Blocked',
+          description: 'You will no longer receive messages in this chat.',
+        });
+      } else {
+        await updateDoc(conversationDocRef, {
+          blocked: deleteField(),
+        });
+        setBlockStatus({ isBlocked: false, blockedBy: null });
+        toast({
+          title: 'Chat Unblocked',
+          description: 'You can now message in this chat.',
+        });
+      }
+
+      const currentConvData = (
+        await getDoc(conversationDocRef)
+      ).data() as Conversation;
+      onConversationUpdate({ ...currentConvData, id: conversationDocRef.id });
+    } catch (error) {
+      console.error('Error updating block status:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update block status.',
+      });
+      setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+    } finally {
+      setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+      setIsConfirmDialogOpen(false);
+    }
+  };
+
+>>>>>>> develop
   const getFallbackName = (data: ProfileUser | ProfileGroup | null): string => {
     if (!data || !data.displayName || !data.displayName.trim()) return 'P';
     return data.displayName.charAt(0).toUpperCase();
@@ -996,6 +1085,7 @@ export function ProfileSidebar({
                             </div>
                           )}
                         </div>
+<<<<<<< HEAD
                         <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
                           <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">
                             Actions
@@ -1016,6 +1106,113 @@ export function ProfileSidebar({
                             disabled={
                               blockStatus.isBlocked &&
                               blockStatus.blockedBy !== user?.uid
+=======
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">
+                          Shared Files
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {isLoadingFiles ? (
+                          <div className="flex justify-center items-center h-20">
+                            <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                          </div>
+                        ) : sharedFiles.length > 0 ? (
+                          <ul className="space-y-2">
+                            {sharedFiles.map((file) => (
+                              <li
+                                key={file.id}
+                                className="flex items-center justify-between border rounded-md p-2"
+                              >
+                                <div className="min-w-0 mr-2">
+                                  <p className="text-sm font-medium truncate">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {file.type}
+                                    {file.size ? ` • ${file.size}` : ''}
+                                  </p>
+                                </div>
+                                <div className="shrink-0 flex items-center gap-2">
+                                  <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="hover:bg-accent hover:text-accent-foreground"
+                                  >
+                                    <a
+                                      href={file.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      Open
+                                    </a>
+                                  </Button>
+                                  <Button asChild size="sm">
+                                    <a href={file.url} download>
+                                      Download
+                                    </a>
+                                  </Button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                            <p>No files have been shared yet.</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Actions</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
+                          disabled
+                        >
+                          <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))]"
+                          disabled={
+                            blockStatus.isBlocked &&
+                            blockStatus.blockedBy !== user?.uid
+                          }
+                          onClick={() => {
+                            if (profileId && onConversationUpdate) {
+                              const isCurrentlyBlocked =
+                                blockStatus.isBlocked &&
+                                blockStatus.blockedBy === user?.uid;
+                              setConfirmDialogProps({
+                                title: isCurrentlyBlocked
+                                  ? 'Unblock this Chat?'
+                                  : 'Block this Chat?',
+                                description: isCurrentlyBlocked
+                                  ? 'Unblocking will allow both of you to send messages in this chat again. Are you sure?'
+                                  : 'Blocking will prevent both of you from sending messages in this 1-on-1 chat. Do you want to block it?',
+                                onConfirm: () =>
+                                  handleToggleBlockChat(
+                                    profileId,
+                                    !isCurrentlyBlocked,
+                                  ),
+                                confirmButtonText: isCurrentlyBlocked
+                                  ? 'Unblock Chat'
+                                  : 'Block Chat',
+                                confirmButtonVariant: 'destructive',
+                                isLoading: false,
+                              });
+                              setIsConfirmDialogOpen(true);
+>>>>>>> develop
                             }
                             onClick={() => {
                               if (profileId) {

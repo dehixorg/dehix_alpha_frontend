@@ -19,6 +19,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import SelectTagPicker from '@/components/shared/SelectTagPicker'; // Import your picker
+import { Input } from '@/components/ui/input';
 
 interface Skill {
   _id: string;
@@ -101,16 +102,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
           'The Hire Talent has been successfully added.',
           'Talent Added',
         );
-
-        const connectsCost = parseInt(
-          process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-          10,
-        );
-        const currentConnects =
-          Number(localStorage.getItem('DHX_CONNECTS')) || 0;
-        const updatedConnects = Math.max(0, currentConnects - connectsCost);
-        localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
-        window.dispatchEvent(new Event('connectsUpdated'));
+        // Server deducts connects; avoid client-side deduction to prevent double counting.
+        // If you want immediate UI sync, refresh the user profile/connects from backend here.
       } else {
         throw new Error('Failed to add hire talent');
       }
@@ -175,16 +168,16 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               name="experience"
               render={({ field }) => (
                 <div className="relative">
-                  <input
+                  <Input
                     type="number"
                     placeholder="Experience (years)"
                     min={0}
                     max={50}
                     step={0.1}
                     {...field}
-                    className="border p-2 rounded mt-0 w-full"
+                    className="mt-0 w-full bg-muted/20 dark:bg-muted/20 border border-border"
                   />
-                  <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                  <span className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
                     YEARS
                   </span>
                 </div>
@@ -200,11 +193,11 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             control={control}
             name="description"
             render={({ field }) => (
-              <input
+              <Input
                 type="text"
                 placeholder="Description"
                 {...field}
-                className="border p-2 rounded mt-2 w-full"
+                className="mt-2 mb-4 w-full bg-muted/20 dark:bg-muted/20 border border-border"
               />
             )}
           />
@@ -214,7 +207,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
 
           {/* ConnectsDialog */}
           <ConnectsDialog
-            form={form}
             loading={loading}
             setLoading={setLoading}
             onSubmit={onSubmit}
@@ -227,6 +219,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               10,
             )}
             data={getValues()}
+            skipRedirect={true}
           />
         </form>
       </DialogContent>

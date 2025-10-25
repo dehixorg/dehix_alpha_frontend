@@ -58,22 +58,12 @@ export default function PastReportsTab() {
   const fetchReports = useCallback(async () => {
     if (!user?.uid) return;
 
-    console.log(
-      'Fetching reports for user:',
-      user.uid,
-      'page:',
-      page,
-      'limit:',
-      limit,
-    );
     setLoading(true);
     try {
       const res = await apiHelperService.getReportsByUser(user.uid, {
         page: String(page),
         limit: String(limit),
       });
-
-      console.log('Reports fetched:', res.data);
 
       const transformed = (res.data?.data || []).map((r: any) => ({
         id: r._id,
@@ -83,11 +73,9 @@ export default function PastReportsTab() {
         date: r.createdAt,
       }));
 
-      console.log('Transformed reports:', transformed);
       setPastReports(transformed);
       setTotalCount(res.data?.total || transformed.length);
     } catch (error) {
-      console.error('Error fetching reports:', error);
       notifyError('Failed to fetch past reports.', 'Error');
     } finally {
       setLoading(false);

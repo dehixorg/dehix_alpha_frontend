@@ -13,16 +13,36 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-export function DatePicker() {
-  const [date, setDate] = React.useState<Date>();
+interface DatePickerProps {
+  value?: string;
+  onChange: (date: string) => void;
+  disabled?: boolean;
+  max?: string;
+}
+
+export function DatePicker({
+  value,
+  onChange,
+  disabled,
+  max,
+}: DatePickerProps) {
+  const date = value ? new Date(value) : undefined;
+  const maxDate = max ? new Date(max) : undefined;
+
+  const isDateDisabled = (date: Date) => {
+    if (disabled) return true;
+    if (maxDate && date > maxDate) return true;
+    return false;
+  };
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          variant={'outline'}
+          variant="outline"
+          disabled={disabled}
           className={cn(
-            'w-[280px] justify-start text-left font-normal',
+            'w-full justify-start text-left font-normal',
             !date && 'text-muted-foreground',
           )}
         >
@@ -30,11 +50,12 @@ export function DatePicker() {
           {date ? format(date, 'PPP') : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
+      <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
           selected={date}
-          onSelect={setDate}
+          onSelect={(date) => date && onChange(date.toISOString())}
+          disabled={isDateDisabled}
           initialFocus
         />
       </PopoverContent>

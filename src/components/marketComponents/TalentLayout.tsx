@@ -85,6 +85,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
   const router = useRouter();
 
   const handleTabChange = (value: string) => {
+    setActiveTab(value as 'overview' | 'invited' | 'accepted' | 'rejected');
     router.push(`/business/talent/${value}`);
   };
 

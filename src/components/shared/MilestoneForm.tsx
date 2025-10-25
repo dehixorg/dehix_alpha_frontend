@@ -3,9 +3,18 @@ import { useSelector } from 'react-redux';
 
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
+import { Separator } from '../ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 import { MilestoneDatePicker } from './milestoneDatePicker';
-import { Dropdown } from './DropdownProps';
 
 import { MilestoneStatus } from '@/utils/types/Milestone';
 import { useFormState } from '@/hooks/useFormState';
@@ -52,155 +61,170 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
   };
 
   return (
-    <div className="flex justify-center items-center py-4">
-      <div className="w-full max-w-lg shadow-lg">
-        <div>
-          <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="flex justify-center items-center">
+      <div className="w-full max-w-lg">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title */}
+          <div>
+            <Label htmlFor="title" className="mb-2 block text-sm font-medium">
+              Title
+            </Label>
+            <Input
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Enter milestone title"
+              required
+              aria-describedby={errors.title ? 'title-error' : undefined}
+            />
+            {errors.title && (
+              <p id="title-error" className="text-xs text-red-500 mt-1">
+                {errors.title}
+              </p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div>
+            <Label
+              htmlFor="description"
+              className="mb-2 block text-sm font-medium"
+            >
+              Description
+            </Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Briefly describe the milestone goals and scope"
+              required
+              rows={3}
+              aria-describedby={
+                errors.description ? 'description-error' : undefined
+              }
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Keep it concise and actionable.
+            </p>
+            {errors.description && (
+              <p id="description-error" className="text-xs text-red-500 mt-1">
+                {errors.description}
+              </p>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Amount & Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium mb-2">
-                Title
-              </label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="Title"
-                required
-                className="mt-1 block w-full"
-              />
-              {errors.title && (
-                <p className="text-xs text-red-500 mt-1">{errors.title}</p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium mb-2"
-              >
-                Description
-              </label>
-              <Input
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Description"
-                required
-                className="mt-1 block w-full"
-              />
-              {errors.description && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.description}
-                </p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="startDate"
-                  className="block whitespace-nowrap text-sm font-medium mb-2"
-                >
-                  Start Date (Expected)
-                </label>
-                <MilestoneDatePicker
-                  selected={
-                    formData.startDate.expected
-                      ? new Date(formData.startDate.expected)
-                      : null
-                  }
-                  onChange={(date) =>
-                    handleDateChange('startDate', 'expected', date)
-                  }
-                  placeholderText="Start Date (Expected)"
-                  className="mt-1 block text-xs w-full"
-                />
-                {errors.startDate && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.startDate}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="endDate"
-                  className="block whitespace-nowrap text-sm font-medium mb-2"
-                >
-                  End Date (Expected)
-                </label>
-                <MilestoneDatePicker
-                  selected={
-                    formData.endDate.expected
-                      ? new Date(formData.endDate.expected)
-                      : null
-                  }
-                  onChange={(date) =>
-                    handleDateChange('endDate', 'expected', date)
-                  }
-                  placeholderText="End Date (Expected)"
-                  className="mt-1 block text-xs w-full"
-                />
-                {errors.endDate && (
-                  <p className="text-xs text-red-500 mt-1">{errors.endDate}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label
+              <Label
                 htmlFor="amount"
-                className="block text-sm font-medium mb-2"
+                className="mb-2 block text-sm font-medium"
               >
                 Amount
-              </label>
+              </Label>
               <Input
                 id="amount"
                 name="amount"
                 type="number"
+                inputMode="decimal"
+                min={0}
                 value={formData.amount}
                 onChange={handleChange}
-                placeholder="Amount"
+                placeholder="Enter amount"
                 required
-                className="mt-1 block w-full"
+                aria-describedby={errors.amount ? 'amount-error' : undefined}
               />
               {errors.amount && (
-                <p className="text-xs text-red-500 mt-1">{errors.amount}</p>
+                <p id="amount-error" className="text-xs text-red-500 mt-1">
+                  {errors.amount}
+                </p>
               )}
             </div>
 
             <div>
-              <label
+              <Label
                 htmlFor="status"
-                className="block text-sm font-medium mb-2"
+                className="mb-2 block text-sm font-medium"
               >
                 Status
-              </label>
-              <Dropdown
-                options={[
-                  { label: 'Not Started', value: MilestoneStatus.NOT_STARTED },
-                  { label: 'Ongoing', value: MilestoneStatus.ONGOING },
-                  { label: 'Completed', value: MilestoneStatus.COMPLETED },
-                ]}
+              </Label>
+              <Select
                 value={formData.status}
-                onChange={(value: any) =>
+                onValueChange={(value) =>
                   setFormData((prevState) => ({ ...prevState, status: value }))
                 }
-              />
+              >
+                <SelectTrigger
+                  className="w-full"
+                  aria-describedby={errors.status ? 'status-error' : undefined}
+                >
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={MilestoneStatus.NOT_STARTED}>
+                    Not Started
+                  </SelectItem>
+                  <SelectItem value={MilestoneStatus.ONGOING}>
+                    Ongoing
+                  </SelectItem>
+                  <SelectItem value={MilestoneStatus.COMPLETED}>
+                    Completed
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               {errors.status && (
-                <p className="text-xs text-red-500 mt-1">{errors.status}</p>
-              )}
+                <p id="status-error" className="text-xs text-red-500 mt-1">
+                  {errors.status}
+                </p>
+              )}{' '}
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <MilestoneDatePicker
+                selected={
+                  formData.startDate.expected
+                    ? new Date(formData.startDate.expected)
+                    : null
+                }
+                onChange={(date) =>
+                  handleDateChange('startDate', 'expected', date)
+                }
+                placeholderText="Select start date"
+                className="w-full text-xs"
+              />
             </div>
 
-            <div className="mt-4">
-              <Button type="submit" className="w-full py-2" variant="default">
-                Create Milestone
-              </Button>
+            <div>
+              <MilestoneDatePicker
+                selected={
+                  formData.endDate.expected
+                    ? new Date(formData.endDate.expected)
+                    : null
+                }
+                onChange={(date) =>
+                  handleDateChange('endDate', 'expected', date)
+                }
+                placeholderText="Select end date"
+                className="w-full text-xs"
+              />
+              {errors.endDate && (
+                <p className="text-xs text-red-500 mt-1">{errors.endDate}</p>
+              )}
             </div>
-          </form>
-        </div>
+          </div>
+
+          {/* Submit */}
+          <Button type="submit" className="w-full" variant="default">
+            Create
+          </Button>
+        </form>
       </div>
     </div>
   );

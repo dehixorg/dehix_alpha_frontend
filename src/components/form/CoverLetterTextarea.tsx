@@ -34,17 +34,20 @@ const CoverLetterTextarea: React.FC<CoverLetterTextareaProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
 
-    // Limit to 500 words
+    // Count words
     const words = newValue
       .trim()
       .split(/\s+/)
       .filter((word) => word.length > 0);
+
+    // ✅ Allow typing only up to 500 words
     if (words.length <= 500) {
       onChange(newValue);
     }
   };
 
-  const isWordCountValid = wordCount >= 500;
+  // ✅ Valid only when between 200 and 500 (inclusive)
+  const isWordCountValid = wordCount >= 200 && wordCount <= 500;
 
   const tooltipContent = (
     <div className="max-w-xs">
@@ -57,7 +60,7 @@ const CoverLetterTextarea: React.FC<CoverLetterTextareaProps> = ({
           • Mention specific technologies or tools you are proficient with
         </li>
         <li>• Describe your work style and communication approach</li>
-        <li>• Write at least 500 words for a complete cover letter</li>
+        <li>• Write between 200–500 words for a complete cover letter</li>
       </ul>
     </div>
   );
@@ -67,7 +70,7 @@ const CoverLetterTextarea: React.FC<CoverLetterTextareaProps> = ({
       <FormControl>
         <div className="relative">
           <Textarea
-            placeholder="Write your cover letter here... (optional - minimum 500 words if provided)"
+            placeholder="Write your cover letter here... (optional - minimum 200 to maximum 500 words if provided)"
             value={value}
             onChange={handleChange}
             className={`min-h-[200px] resize-y pr-10 text-foreground placeholder:text-muted-foreground`}
@@ -105,7 +108,7 @@ const CoverLetterTextarea: React.FC<CoverLetterTextareaProps> = ({
 
           {!isWordCountValid && wordCount > 0 && (
             <span className="text-muted-foreground text-xs">
-              Cover letter should be at least 500 words
+              Cover letter should be between 200 and 500 words
             </span>
           )}
         </div>
@@ -113,8 +116,8 @@ const CoverLetterTextarea: React.FC<CoverLetterTextareaProps> = ({
 
       {(!value || value.trim().length === 0) && (
         <div className="text-sm text-muted-foreground">
-          Cover letter is optional. Leave empty to skip, or write at least 500
-          words for a complete cover letter.
+          Cover letter is optional. Leave empty to skip, or write between
+          200–500 words for a complete cover letter.
         </div>
       )}
 
