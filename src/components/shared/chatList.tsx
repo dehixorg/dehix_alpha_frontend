@@ -200,7 +200,7 @@ export function ChatList({
       lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
-
+  // @typescript-eslint/no-unused-vars
   const displayedConversations = conversations
     .filter((conversation) => {
       // --- HIGHLIGHT: FIRST, FILTER BY VIEW (INBOX/ARCHIVED) ---
