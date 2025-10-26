@@ -163,6 +163,7 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
+  onConversationUpdate?: (updatedConversation: any) => void;
 }
 
 export function CardsChat({
