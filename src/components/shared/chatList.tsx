@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { RootState } from '@/lib/store';
-import { toast } from '@/hooks/use-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { CombinedUser } from '@/hooks/useAllUsers';
 import { useAllUsers } from '@/hooks/useAllUsers';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,10 +31,8 @@ export interface Conversation extends DocumentData {
     content?: string;
     senderId?: string;
     timestamp?: string;
-  } | null;
-  blocked?: {
-    status: boolean; // Will be true when blocked
-    by: string; // The UID of the user who initiated the block
+    voiceMessage?: boolean;
+    attachments?: Array<{ type?: string }>;
   } | null;
   participantDetails?: {
     [uid: string]: {
@@ -42,7 +40,7 @@ export interface Conversation extends DocumentData {
       profilePic?: string;
       email?: string;
       userType?: 'freelancer' | 'business';
-      viewState: 'archieved' | 'inbox';
+      viewState?: 'archived' | 'inbox';
     };
   };
   groupName?: string;
@@ -90,10 +88,6 @@ export function ChatList({
   const currentUser = useSelector((state: RootState) => state.user);
   const userSearchTerm = searchTerm;
   const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  // --- HIGHLIGHT: ADD THIS STATE AND HANDLERS ---
-  const [activeView, setActiveView] = useState<'inbox' | 'archived'>('inbox');
-
   interface SelectedUser {
     id: string;
     displayName?: string;
@@ -102,12 +96,89 @@ export function ChatList({
 
   const selectedUsers: SelectedUser[] = [];
   const [isSearching, setIsSearching] = useState(false);
+  const [activeView, setActiveView] = useState<'inbox' | 'archived'>('inbox');
 
   const stripHtml = (html: string): string =>
     html
       .replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/g, ' ')
       .trim();
+
+  // Utility function to detect and format media messages
+  const formatLastMessage = (
+    lastMessage: Conversation['lastMessage'],
+  ): string => {
+    if (!lastMessage) return 'No messages yet';
+    const content = lastMessage.content;
+    const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
+    // Check if content is an S3 URL
+    if (
+      typeof content === 'string' &&
+      s3BucketUrl &&
+      content.startsWith(s3BucketUrl)
+    ) {
+      try {
+        const url = new URL(content);
+        const fileName = decodeURIComponent(url.pathname.substring(1));
+        const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+        // Check if it's a voice message based on the message type
+        if (lastMessage.voiceMessage) {
+          return '🎤 Voice message';
+        }
+        // Check file extension for different media types
+        const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
+        const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
+        const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac'];
+        const documentExtensions = [
+          'pdf',
+          'doc',
+          'docx',
+          'ppt',
+          'pptx',
+          'xls',
+          'xlsx',
+          'txt',
+        ];
+        if (imageExtensions.includes(fileExtension)) {
+          return '📷 Photo';
+        } else if (videoExtensions.includes(fileExtension)) {
+          return '🎥 Video';
+        } else if (audioExtensions.includes(fileExtension)) {
+          return '🎵 Audio';
+        } else if (documentExtensions.includes(fileExtension)) {
+          return '📄 Document';
+        } else {
+          return '📎 File';
+        }
+      } catch (error) {
+        console.error('Error parsing S3 URL:', error);
+        return '📎 Attachment';
+      }
+    }
+    // Check if there are attachments
+    if (
+      lastMessage.attachments &&
+      Array.isArray(lastMessage.attachments) &&
+      lastMessage.attachments.length > 0
+    ) {
+      const attachment = lastMessage.attachments[0];
+      if (attachment.type) {
+        if (attachment.type.startsWith('image/')) {
+          return '📷 Photo';
+        } else if (attachment.type.startsWith('video/')) {
+          return '🎥 Video';
+        } else if (attachment.type.startsWith('audio/')) {
+          return '🎵 Audio';
+        } else {
+          return '📄 Document';
+        }
+      }
+      return '📎 File';
+    }
+    // Return stripped HTML content for regular text messages
+    const textContent = content ? stripHtml(content) : '';
+    return textContent || 'Message';
+  };
 
   const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
     e.stopPropagation();
@@ -153,23 +224,11 @@ export function ChatList({
       setSearchResults(filtered);
     } catch (error) {
       console.error('Error filtering users:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to search users. Please try again.',
-      });
+      notifyError('Failed to search users. Please try again.', 'Error');
     } finally {
       setIsSearching(false);
     }
   }, [userSearchTerm, allFetchedUsers, currentUser.uid]);
-
-  const handleOpenArchivedChats = () => {
-    setActiveView('archived');
-  };
-
-  const handleOpenInbox = () => {
-    setActiveView('inbox');
-  };
 
   const updateLastUpdated = useCallback(() => {
     const updatedTimes: Record<string, string> = {};
@@ -192,41 +251,34 @@ export function ChatList({
     return () => clearInterval(intervalId);
   }, [updateLastUpdated]);
 
-  const filteredConversations = conversations.filter((conversation) => {
-    const name = conversation.project_name || 'Unnamed Project';
-    const lastMessageContent = conversation.lastMessage?.content || '';
-    return (
-      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-  // @typescript-eslint/no-unused-vars
+  const handleOpenArchivedChats = () => {
+    setActiveView('archived');
+  };
+
+  const handleOpenInbox = () => {
+    setActiveView('inbox');
+  };
+
   const displayedConversations = conversations
     .filter((conversation) => {
-      // --- HIGHLIGHT: FIRST, FILTER BY VIEW (INBOX/ARCHIVED) ---
       const userDetails = conversation.participantDetails?.[currentUser.uid];
       if (activeView === 'archived') {
-        // Corrected typo 'archieved' to 'archived' for the check
-        return userDetails?.viewState === 'archieved';
+        return userDetails?.viewState === 'archived';
       } else {
-        // In inbox view, show chats that are not archived
-        return userDetails?.viewState !== 'archieved';
+        return userDetails?.viewState !== 'archived';
       }
     })
     .filter((conversation) => {
-      // --- HIGHLIGHT: THEN, FILTER BY THE EXISTING SEARCH TERM ---
       const name =
         conversation.groupName ||
         conversation.participantDetails?.[
           conversation.participants.find((p) => p !== currentUser.uid) || ''
         ]?.userName ||
         '';
-      const lastMessageContent = conversation.lastMessage?.content || '';
+      const lastMessageContent = formatLastMessage(conversation.lastMessage);
       return (
         name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stripHtml(lastMessageContent)
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
+        lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
       );
     });
 
@@ -241,11 +293,10 @@ export function ChatList({
           >
             <SquarePen className="h-4 w-4 mr-2" /> New Chat
           </Button>
-          {/* --- HIGHLIGHT: NEW ARCHIVED CHAT BUTTON --- */}
           <Button
-            variant="outline" // Using "outline" to make it look secondary
+            variant="outline"
             className="flex items-center justify-center text-sm px-3 py-2 rounded-full shadow-lg"
-            onClick={handleOpenArchivedChats} // You will need to create this function
+            onClick={handleOpenArchivedChats}
             aria-label="View archived chats"
           >
             <Archive className="h-4 w-4" />
@@ -264,21 +315,21 @@ export function ChatList({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        {/* --- HIGHLIGHT: ADD THIS ENTIRE BLOCK --- */}
-        {activeView === 'archived' && (
-          <div className="p-3 text-center border-b border-[hsl(var(--border))]">
-            <div className="flex items-center justify-between">
-              <Button variant="link" onClick={handleOpenInbox}>
-                &larr; Back to Inbox
-              </Button>
-              <h3 className="font-semibold text-lg">Archived Chats</h3>
-              <div style={{ width: '95px' }}></div>{' '}
-              {/* Spacer to keep title centered */}
-            </div>
-          </div>
-        )}
-        {/* --- END HIGHLIGHT --- */}
       </div>
+
+      {activeView === 'archived' && (
+        <div className="p-3 text-center border-b border-[hsl(var(--border))]">
+          <div className="flex items-center justify-between">
+            <Button variant="link" onClick={handleOpenInbox}>
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--ring))] hover:text-white dark:hover:text-black transition-colors">
+                &larr;
+              </span>
+            </Button>
+            <h3 className="font-semibold text-lg">Archived Chats</h3>
+            <div style={{ width: '60px' }}></div>
+          </div>
+        </div>
+      )}
 
       <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="p-2 space-y-2">
@@ -307,21 +358,20 @@ export function ChatList({
                     } else {
                       // Fallback: open the generic new chat dialog
                       onOpenNewChatDialog();
-                      toast({
-                        title: 'Starting new chat',
-                        description: `Preparing a new chat with ${user.displayName || user.email}`,
-                      });
+                      notifySuccess(
+                        `Preparing a new chat with ${user.displayName || user.email}`,
+                        'Starting new chat',
+                      );
                     }
                     // Close search UI
                     setSearchTerm('');
                     setSearchResults([]);
                   } catch (err: any) {
                     console.error('Failed to start chat:', err);
-                    toast({
-                      variant: 'destructive',
-                      title: 'Could not start chat',
-                      description: err?.message || 'Please try again',
-                    });
+                    notifyError(
+                      err?.message || 'Please try again',
+                      'Could not start chat',
+                    );
                   } finally {
                     setIsSearching(false);
                   }
@@ -351,15 +401,14 @@ export function ChatList({
             </div>
           ) : (
             <>
-              {filteredConversations.length > 0 ? (
-                filteredConversations.map((conversation) => {
+              {displayedConversations.length > 0 ? (
+                displayedConversations.map((conversation) => {
                   const lastUpdated =
                     lastUpdatedTimes[conversation.id] || 'N/A';
                   const isActive = active?.id === conversation.id;
-                  const lastMessageText = stripHtml(
-                    conversation.lastMessage?.content || '',
+                  const displayText = formatLastMessage(
+                    conversation.lastMessage,
                   );
-                  const displayText = lastMessageText || 'No messages yet';
 
                   return (
                     <div
