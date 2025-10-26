@@ -21,6 +21,8 @@ import {
   StopCircle,
   Trash2,
   X,
+  ArchiveRestore,
+  Archive,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { doc, DocumentData, updateDoc } from 'firebase/firestore';
@@ -888,7 +890,7 @@ export function CardsChat({
   // --- ADD THIS LOGIC ---
   // 1. Determine if the current conversation is blocked
   const isBlocked = conversation?.blocked?.status === true;
-  const isArchived = conversation?.participantDetails?.[user.uid]?.viewState === 'archieved';
+  const isArchived = conversation?.participantDetails?.[user.uid]?.viewState === 'archived';
   // 2. Create a dynamic message to show the user
   let blockMessage = '';
   if (isBlocked) {
@@ -911,7 +913,7 @@ async function handleToggleArchive() {
   const currentState = conversation.participantDetails?.[user.uid]?.viewState;
   console.log(currentState);
 
-  const newState = currentState === 'archieved' ? 'inbox' : 'archieved';
+  const newState = currentState === 'archived' ? 'inbox' : 'archived';
 
   // 2. Prepare the update for Firestore
   const conversationDocRef = doc(db, 'conversations', conversation.id);
@@ -937,7 +939,7 @@ async function handleToggleArchive() {
     onConversationUpdate(updatedConversation as Conversation);
 
     toast({
-      title: `Conversation ${newState === 'archieved' ? 'Archived' : 'Unarchived'}`,
+      title: `Conversation ${newState === 'archived' ? 'Archived' : 'Unarchived'}`,
     });
   } catch (error) {
     console.error("Error toggling archive state:", error);
