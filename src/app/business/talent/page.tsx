@@ -1,5 +1,5 @@
 'use client';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Users2,
   BookMarked,
@@ -38,6 +38,7 @@ interface Domain {
 
 export default function Talent() {
   const router = useRouter();
+  const pathname = usePathname();
   const [skillFilter, setSkillFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
 
@@ -45,8 +46,20 @@ export default function Talent() {
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
 
   const handleTabChange = (value: string) => {
-    router.push(`/business/talent/${value}`);
+    const path = value ? `/business/talent/${value}` : '/business/talent';
+    router.push(path);
   };
+
+  // Derive current tab value from the pathname to keep Tabs in sync with routing
+  const currentTab = (() => {
+    const path = pathname?.replace(/\/+$/, '') || '/business/talent';
+    if (path === '/business/talent') return 'overview';
+    const parts = path.split('/');
+    const last = parts[parts.length - 1];
+    return ['applications', 'invited', 'accepted', 'rejected'].includes(last)
+      ? last
+      : 'overview';
+  })();
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-auto">
@@ -70,13 +83,11 @@ export default function Talent() {
 
         {/* Tabs Header */}
         <div className="container px-4 py-4">
-          <Tabs value="overview" className="w-full">
+          <Tabs value={currentTab} className="w-full">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview" asChild>
-                <a href="/business/talent">
-                  <Users2 className="h-4 w-4 mr-1" />
-                  Overview
-                </a>
+              <TabsTrigger value="overview" onClick={() => handleTabChange('')}>
+                <Users2 className="h-4 w-4 mr-1" />
+                Overview
               </TabsTrigger>
               <TabsTrigger
                 value="applications"

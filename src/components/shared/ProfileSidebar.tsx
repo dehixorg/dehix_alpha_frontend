@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
   VolumeX,
@@ -154,6 +154,9 @@ export function ProfileSidebar({
     blockedBy: string | null;
   }>({ isBlocked: false, blockedBy: null });
 
+  // Guard to avoid duplicate saves from overlapping events
+  const isSavingRef = useRef(false);
+
   // Handle field edit start
   const handleFieldClick = (field: string, currentValue: string = '') => {
     setEditingField(field);
@@ -164,16 +167,57 @@ export function ProfileSidebar({
   const handleSaveField = async () => {
     if (!editingField || !profileData) return;
 
+    // Only allow editing own profile
+    if (profileType === 'user' && user?.uid !== profileData.id) {
+      toast({
+        title: 'Unauthorized',
+        description: 'You can only edit your own profile.',
+        variant: 'destructive',
+      });
+      setEditingField(null);
+      return;
+    }
+
+    // Validate input
+    const trimmedValue = editedValue.trim();
+    if (!trimmedValue && editingField === 'displayName') {
+      toast({
+        title: 'Validation Error',
+        description: 'Display name cannot be empty.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (
+      editingField === 'email' &&
+      trimmedValue &&
+      !trimmedValue.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+    ) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Store original value for revert
+    const originalValue = (profileData as any)[editingField];
+
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
+
     try {
       // Update the profile data in the state
       setProfileData({
         ...profileData,
-        [editingField]: editedValue,
+        [editingField]: trimmedValue,
       });
 
       // Send update to the server
       await axiosInstance.patch(`/freelancer/${profileData.id}`, {
-        [editingField]: editedValue,
+        [editingField]: trimmedValue,
       });
 
       toast({
@@ -193,7 +237,10 @@ export function ProfileSidebar({
       // Revert the changes in the UI if the API call fails
       setProfileData({
         ...profileData,
+        [editingField]: originalValue,
       });
+    } finally {
+      isSavingRef.current = false;
     }
   };
 
@@ -955,7 +1002,6 @@ export function ProfileSidebar({
                         className="text-xl font-semibold bg-transparent border-b border-primary focus:outline-none focus:border-primary w-full text-center"
                         value={editedValue}
                         onChange={(e) => setEditedValue(e.target.value)}
-                        onBlur={handleSaveField}
                         onKeyDown={handleKeyDown}
                       />
                     ) : (
@@ -1044,8 +1090,12 @@ export function ProfileSidebar({
                               className="w-full p-2 text-sm text-foreground bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                               value={editedValue}
                               onChange={(e) => setEditedValue(e.target.value)}
-                              onBlur={handleSaveField}
+                              onBlur={() => {
+                                if (isSavingRef.current) return;
+                                handleSaveField();
+                              }}
                               onKeyDown={(e) => {
+                                if (isSavingRef.current) return;
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                   e.preventDefault();
                                   handleSaveField();

@@ -46,7 +46,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
   const [filterDomain, setFilterDomain] = useState<DomainOption[]>([]);
 
   const renderCards = () => {
-    if (activeTab === 'applications') {
+    if (activeTab === 'applications' || activeTab === 'invited') {
       return (
         <InvitedProfileCards
           talents={talents}
@@ -124,14 +124,6 @@ const TalentContent: React.FC<TalentContentProps> = ({
             </div>
           </div>
         </div>
-      );
-    } else if (activeTab === 'invited') {
-      return (
-        <InvitedProfileCards
-          talents={talents}
-          loading={loading}
-          calculateExperience={calculateExperience}
-        />
       );
     } else if (activeTab === 'accepted') {
       return (

@@ -124,7 +124,7 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
-  onConversationUpdate?: (updatedConversation: any) => void;
+  onConversationUpdate?: (updatedConversation: Conversation) => void;
 }
 
 export function CardsChat({
@@ -874,13 +874,10 @@ export function CardsChat({
 
 // --- HIGHLIGHT: ADD THIS ENTIRE FUNCTION ---
 async function handleToggleArchive() {
-  console.log('toggled');
   if (!user?.uid || !conversation?.id) return;
 
-  console.log(isArchived);
   // 1. Determine the current and new state
   const currentState = conversation.participantDetails?.[user.uid]?.viewState;
-  console.log(currentState);
 
   const newState = currentState === 'archived' ? 'inbox' : 'archived';
 
@@ -915,84 +912,81 @@ async function handleToggleArchive() {
     toast({ variant: 'destructive', title: 'Error', description: 'Could not update archive status.' });
   }
 }
-// --- END HIGHLIGHT ---
-
-
-  return (
-    <>
-      {/* Image Modal */}
-      {modalImage && (
+return (
+  <>
+    {/* Image Modal */}
+    {modalImage && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+        onClick={() => setModalImage(null)}
+      >
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
-          onClick={() => setModalImage(null)}
+          className="relative max-w-3xl w-full flex flex-col items-center"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div
-            className="relative max-w-3xl w-full flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 z-10"
+            onClick={() => setModalImage(null)}
           >
-            <button
-              className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 z-10"
-              onClick={() => setModalImage(null)}
-            >
-              <X className="w-6 h-6 text-black" />
-            </button>
-            <Image
-              src={modalImage}
-              alt="Full Image"
-              width={800}
-              height={800}
-              className="rounded-lg max-h-[80vh] w-auto h-auto object-contain bg-white"
-            />
+            <X className="w-6 h-6 text-black" />
+          </button>
+          <Image
+            src={modalImage}
+            alt="Full Image"
+            width={800}
+            height={800}
+            className="rounded-lg max-h-[80vh] w-auto h-auto object-contain bg-white"
+          />
+        </div>
+      </div>
+    )}
+    {loading ? (
+      <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
+          <div className="flex items-center space-x-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-8 rounded-full" />
           </div>
         </div>
-      )}
-      {loading ? (
-        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
-          {/* Header Skeleton */}
-          <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
-            <div className="flex items-center space-x-3">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="space-y-1">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <Skeleton className="h-8 w-8 rounded-full" />
+
+        {/* Messages Skeleton */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-6">
+          {/* Incoming message skeleton */}
+          <div className="flex items-start space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-16 w-64 rounded-lg" />
             </div>
           </div>
 
-          {/* Messages Skeleton */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-6">
-            {/* Incoming message skeleton */}
-            <div className="flex items-start space-x-2">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-16 w-64 rounded-lg" />
-              </div>
-            </div>
-
-            {/* Outgoing message skeleton */}
-            <div className="flex justify-end">
-              <div className="space-y-2 max-w-[80%]">
-                <Skeleton className="h-4 w-16 ml-auto" />
-                <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
-              </div>
+          {/* Outgoing message skeleton */}
+          <div className="flex justify-end">
+            <div className="space-y-2 max-w-[80%]">
+              <Skeleton className="h-4 w-16 ml-auto" />
+              <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
             </div>
           </div>
+        </div>
 
-          {/* Input area skeleton */}
-          <div className="p-3 border-t border-[hsl(var(--border))]">
-            <div className="flex items-center space-x-2">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="flex-1 h-10 rounded-full" />
-              <Skeleton className="h-10 w-10 rounded-full" />
-            </div>
+        {/* Input area skeleton */}
+        <div className="p-3 border-t border-[hsl(var(--border))]">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="flex-1 h-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
           </div>
-        </Card>
-      ) : (
+        </div>
+      </Card>
+    ) : (
         <>
           <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
@@ -1577,5 +1571,5 @@ async function handleToggleArchive() {
         </>
       )}
     </>
-  );
+    );
 }

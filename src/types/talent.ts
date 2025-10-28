@@ -1,10 +1,10 @@
 export interface FreelancerApplication {
   _id: string;
   freelancerId: string;
-  freelancer_professional_profile_id: string;
+  freelancerProfessionalProfileId: string;
   status: 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
   cover_letter?: string;
-  interview_ids: string[];
+  interviewIds?: string[];
   updatedAt: string;
   firstName?: string;
   lastName?: string;
@@ -24,5 +24,5 @@ export interface FreelancerApplication {
   location?: string;
   phone?: string;
   githubLink?: string;
-  kyc?: any;
+  kyc?: unknown;
 }

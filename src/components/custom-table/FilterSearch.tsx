@@ -23,13 +23,14 @@ export const SearchComponent = ({
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [search]);
+  }, [search, setSearchValue]);
 
   return (
     <form
       className="relative w-full"
       onSubmit={(e) => {
         e.preventDefault();
+        setSearchValue(search);
         refetch?.();
       }}
     >
