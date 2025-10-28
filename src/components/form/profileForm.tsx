@@ -66,7 +66,7 @@ const profileFormSchema = z.object({
         return wordCount >= 500;
       },
       {
-        message: 'Cover letter must contain at least 200 words when provided.',
+        message: 'Cover letter must contain at least 500 words when provided.',
       },
     ),
   description: z.string().max(500, {
@@ -136,31 +136,37 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     const customSkillData = {
       label: customSkill.label,
       interviewInfo: customSkill.description,
+      status: 'INACTIVE',
       createdBy: Type.FREELANCER,
       createdById: user_id,
-      status: StatusEnum.ACTIVE,
     };
 
     try {
+      // Create the new skill in master table
       await axiosInstance.post('/skills', customSkillData);
 
       const updatedSkills = [...skills, { label: customSkill.label }];
       setSkills(updatedSkills);
 
-      setCurrSkills([
-        ...currSkills,
-        {
-          name: customSkill.label,
-          level: '',
-          experience: '',
-          interviewStatus: 'PENDING',
-          interviewInfo: customSkill.description,
-          interviewerRating: 0,
-        },
-      ]);
+      const newSkill = {
+        name: customSkill.label,
+        level: '',
+        experience: '',
+        interviewStatus: 'PENDING',
+        interviewInfo: customSkill.description,
+        interviewerRating: 0,
+        interviewPermission: 'NOT_VERIFIED',
+      };
+
+      const updatedCurrSkills = [...currSkills, newSkill];
+      setCurrSkills(updatedCurrSkills);
+
+      // Save to freelancer profile
+      await saveSkillsToProfile(updatedCurrSkills);
 
       setCustomSkill({ label: '', description: '' });
       setIsDialogOpen(false);
+      notifySuccess('New skill added to your profile successfully.');
     } catch (error: any) {
       console.error(
         'Failed to add skill:',
@@ -179,10 +185,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     const customDomainData = {
       label: customDomain.label,
-      interviewInfo: customSkill.description,
+      interviewInfo: customDomain.description,
       createdBy: Type.FREELANCER,
       createdById: user_id,
-      status: StatusEnum.ACTIVE,
     };
 
     try {
@@ -225,7 +230,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       label: customProjectDomain.label,
       createdBy: Type.FREELANCER,
       createdById: user_id,
-      status: StatusEnum.ACTIVE,
     };
 
     try {
@@ -237,17 +241,23 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       ];
       setProjectDomains(updatedProjectDomains);
 
-      setCurrProjectDomains([
+      const newProjectDomain = {
+        name: customProjectDomain.label,
+        level: '',
+        experience: '',
+        interviewStatus: 'PENDING',
+        interviewInfo: customProjectDomain.description,
+        interviewerRating: 0,
+      };
+
+      const updatedCurrProjectDomains = [
         ...currProjectDomains,
-        {
-          name: customProjectDomain.label,
-          level: '',
-          experience: '',
-          interviewStatus: 'PENDING',
-          interviewInfo: customProjectDomain.description,
-          interviewerRating: 0,
-        },
-      ]);
+        newProjectDomain,
+      ];
+      setCurrProjectDomains(updatedCurrProjectDomains);
+
+      // Save to freelancer profile
+      await saveProjectDomainsToProfile(updatedCurrProjectDomains);
 
       setCustomProjectDomain({ label: '', description: '' });
       setIsDialogOpen(false);
@@ -262,25 +272,109 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
+  // Function to save skills to backend
+  const saveSkillsToProfile = async (skillsToSave: any[]) => {
+    // ADD THIS MAPPING LOGIC
+    const completeSkillsArray = skillsToSave.map((skill: any) => ({
+      ...skill,
+      level: skill.level || '',
+      experience: skill.experience || '',
+      interviewInfo: skill.interviewInfo || '',
+      interviewerRating: skill.interviewerRating || 0,
+      interviewStatus: skill.interviewStatus || StatusEnum.PENDING,
+      interviewPermission: skill.interviewPermission ?? 'NOT_VERIFIED',
+    }));
+    // END OF NEW LOGIC
+
+    try {
+      // Send the 'completeSkillsArray' instead of 'skillsToSave'
+      const response = await axiosInstance.put('/freelancer/skill', {
+        skills: completeSkillsArray,
+      });
+
+      if (response.status === 200) {
+        notifySuccess('Skills added successfully to your profile.');
+        return response.data.data;
+      }
+    } catch (error: any) {
+      console.error(
+        'Failed to add skills to profile:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to add skills to profile. Please try again.');
+      throw error;
+    }
+  };
+
+  // Function to save project domains to backend
+  const saveProjectDomainsToProfile = async (projectDomainsToSave: any[]) => {
+    const completeProjectDomainsArray = projectDomainsToSave.map(
+      (projectDomain: any) => ({
+        ...projectDomain,
+        level: projectDomain.level || '',
+        experience: projectDomain.experience || '',
+        interviewInfo: projectDomain.interviewInfo || '',
+        interviewerRating: projectDomain.interviewerRating || 0,
+        interviewStatus: projectDomain.interviewStatus || StatusEnum.PENDING,
+      }),
+    );
+
+    try {
+      const response = await axiosInstance.put('/freelancer/project-domain', {
+        projectDomain: completeProjectDomainsArray,
+      });
+
+      if (response.status === 200) {
+        notifySuccess('Project domains added successfully to your profile.');
+        return response.data.data;
+      }
+    } catch (error: any) {
+      console.error(
+        'Failed to add project domains to profile:',
+        error.response?.data || error.message,
+      );
+      notifyError(
+        'Failed to add project domains to profile. Please try again.',
+      );
+      throw error;
+    }
+  };
+
   // New: add-by-value helpers for reusable component
-  const handleAddSkillByValue = (value: string) => {
+  const handleAddSkillByValue = async (value: string) => {
     addSkill(value, skills, setSkills);
     if (value && !currSkills.some((skill: any) => skill.name === value)) {
-      setCurrSkills([
-        ...currSkills,
-        {
-          name: value,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
+      const newSkill = {
+        name: value,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+        interviewPermission: 'NOT_VERIFIED', // Keep this as 1
+      };
+
+      // Update local state immediately
+      const updatedSkills = [...currSkills, newSkill];
+      setCurrSkills(updatedSkills);
       setLastAddedItems((prev) => ({
         ...prev,
         skills: [...prev.skills, { name: value }],
       }));
+
+      // Save to backend
+      try {
+        // --- THIS IS THE FIX ---
+        // Send ONLY the new skill, not the whole list
+        await saveSkillsToProfile([newSkill]);
+      } catch (error) {
+        // Revert local state if API call fails
+        setCurrSkills(currSkills);
+        setLastAddedItems((prev) => ({
+          ...prev,
+          skills: prev.skills.filter((s) => s.name !== value),
+        }));
+      }
     }
   };
 
@@ -305,7 +399,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
-  const handleAddProjectDomainByValue = (value: string) => {
+  const handleAddProjectDomainByValue = async (value: string) => {
     addProjectDomain(value, projectDomains, setProjectDomains);
     if (
       value &&
@@ -313,41 +407,161 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         (projectDomain: any) => projectDomain.name === value,
       )
     ) {
-      setCurrProjectDomains([
-        ...currProjectDomains,
-        {
-          name: value,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
+      const newProjectDomain = {
+        name: value,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+      };
+
+      // Update local state immediately
+      const updatedProjectDomains = [...currProjectDomains, newProjectDomain];
+      setCurrProjectDomains(updatedProjectDomains);
       setLastAddedItems((prev) => ({
         ...prev,
         projectsDomains: [...prev.projectsDomains, { name: value }],
       }));
+
+      // Save to backend
+      try {
+        await saveProjectDomainsToProfile([newProjectDomain]);
+      } catch (error) {
+        // Revert local state if API call fails
+        setCurrProjectDomains(currProjectDomains);
+        setLastAddedItems((prev) => ({
+          ...prev,
+          projectsDomains: prev.projectsDomains.filter(
+            (pd) => pd.name !== value,
+          ),
+        }));
+      }
     }
   };
 
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(
-      currSkills.filter((skill: any) => skill.name !== skillToDelete),
+  const handleDeleteSkill = async (skillToDeleteName: string) => {
+    // 1. Find the full skill object from the state to get its ID
+    const skillObject = currSkills.find(
+      (skill: any) => skill.name === skillToDeleteName,
     );
+
+    if (!skillObject) {
+      console.error('Skill not found in local state. Cannot delete.');
+      notifyError('Error: Skill not found.');
+      return;
+    }
+
+    // 2. Get the ID (Change '_id' to 'id' if that's what your DB uses)
+    const skillId = skillObject._id;
+
+    if (!skillId) {
+      console.error('Skill has no ID. Cannot delete.');
+      notifyError('Error: Skill has no ID.');
+      return;
+    }
+
+    // 3. Save original state for revert
+    const originalSkills = [...currSkills];
+
+    // 4. Update local state optimistically
+    const updatedSkillsList = currSkills.filter(
+      (skill: any) => skill.name !== skillToDeleteName,
+    );
+    setCurrSkills(updatedSkillsList);
+
+    // 5. Call the new DELETE endpoint
+    try {
+      await axiosInstance.delete(`/freelancer/skill/${skillId}`);
+      notifySuccess('Skill removed successfully.');
+    } catch (error: any) {
+      console.error(
+        'Failed to remove skill:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to remove skill. Please try again.');
+      // 6. Revert local state on failure
+      setCurrSkills(originalSkills);
+    }
   };
 
-  const handleDeleteDomain = (domainToDelete: string) => {
-    setCurrDomains(
-      currDomains.filter((domain: any) => domain.name !== domainToDelete),
+  const handleDeleteDomain = async (domainToDelete: string) => {
+    const domainObject = currDomains.find(
+      (domain: any) => domain.name === domainToDelete,
     );
+
+    if (!domainObject) {
+      console.error('Domain not found in local state. Cannot delete.');
+      notifyError('Error: Domain not found.');
+      return;
+    }
+
+    const domainId = domainObject._id;
+
+    if (!domainId) {
+      console.error('Domain has no ID. Cannot delete.');
+      notifyError('Error: Domain has no ID.');
+      return;
+    }
+
+    const originalDomains = [...currDomains];
+
+    const updatedDomainsList = currDomains.filter(
+      (domain: any) => domain.name !== domainToDelete,
+    );
+    setCurrDomains(updatedDomainsList);
+
+    try {
+      await axiosInstance.delete(`/freelancer/domain/${domainId}`);
+      notifySuccess('Domain removed successfully.');
+    } catch (error: any) {
+      console.error(
+        'Failed to remove domain:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to remove domain. Please try again.');
+      setCurrDomains(originalDomains);
+    }
   };
-  const handleDeleteProjDomain = (projectDomainToDelete: string) => {
-    setCurrProjectDomains(
-      currProjectDomains.filter(
-        (projectDomain: any) => projectDomain.name !== projectDomainToDelete,
-      ),
+  const handleDeleteProjDomain = async (projectDomainToDelete: string) => {
+    const projectDomainObject = currProjectDomains.find(
+      (projectDomain: any) => projectDomain.name === projectDomainToDelete,
     );
+
+    if (!projectDomainObject) {
+      console.error('Project Domain not found in local state. Cannot delete.');
+      notifyError('Error: Project Domain not found.');
+      return;
+    }
+
+    const projectDomainId = projectDomainObject._id;
+
+    if (!projectDomainId) {
+      console.error('Project Domain has no ID. Cannot delete.');
+      notifyError('Error: Project Domain has no ID.');
+      return;
+    }
+
+    const originalProjectDomains = [...currProjectDomains];
+
+    const updatedProjectDomainsList = currProjectDomains.filter(
+      (projectDomain: any) => projectDomain.name !== projectDomainToDelete,
+    );
+    setCurrProjectDomains(updatedProjectDomainsList);
+
+    try {
+      await axiosInstance.delete(
+        `/freelancer/project-domain/${projectDomainId}`,
+      );
+      notifySuccess('Project Domain removed successfully.');
+    } catch (error: any) {
+      console.error(
+        'Failed to remove project domain:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to remove project domain. Please try again.');
+      setCurrProjectDomains(originalProjectDomains);
+    }
   };
 
   useEffect(() => {
@@ -423,6 +637,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         interviewInfo: skill.interviewInfo || '',
         interviewerRating: skill.interviewerRating || 0,
         interviewStatus: skill.interviewStatus || 'PENDING',
+        interviewPermission: skill.interviewPermission ?? 'NOT_VERIFIED',
       }));
 
       await axiosInstance.put(`/freelancer`, {
@@ -447,7 +662,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         description: data.description,
         skills: updatedSkills,
         domain: currDomains,
-        projectDomains: currProjectDomains,
+        projectDomain: currProjectDomains,
       });
       notifySuccess(
         'Your profile has been successfully updated.',
