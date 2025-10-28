@@ -251,15 +251,22 @@ export function CardsChat({
 
     if (conversation.type === 'group') {
       onOpenProfileSidebar(conversation.id, 'group', {
-        userName: conversation.displayName,
+        userName: conversation.groupName,
+        email: '',
         profilePic: conversation.avatar,
       });
     } else {
-      const otherParticipantUid = conversation.participants.find(
-        (p) => p !== user.uid,
+      // For 1:1 chats, pass the other user's details
+      const otherParticipantUid = conversation.participants?.find(
+        (p: string) => p !== user.uid,
       );
       if (otherParticipantUid) {
-        const participantDetails =
+        const participantDetails = conversation.participantDetails?.[otherParticipantUid];
+        onOpenProfileSidebar(otherParticipantUid, 'user', {
+          userName: participantDetails?.userName || '',
+          email: participantDetails?.email || '',
+          profilePic: participantDetails?.profilePic || '',
+        });
           conversation.participantDetails?.[otherParticipantUid];
         const initialUserData = {
           userName: participantDetails?.userName || primaryUser.userName,
@@ -1045,13 +1052,13 @@ export function CardsChat({
                       : 'P'}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))]">
+                <div className="cursor-pointer">
+                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))] hover:underline">
                     {conversation.type === 'group'
                       ? conversation.groupName
                       : primaryUser.userName || 'Chat'}
                   </p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] hover:underline">
                     {conversation.type === 'group'
                       ? `${Object.keys(conversation.participantDetails || {}).length} members`
                       : primaryUser.email || 'Click to view profile'}
@@ -1187,6 +1194,7 @@ export function CardsChat({
                     toggleReaction={toggleReaction}
                     setReplyToMessageId={setReplyToMessageId}
                     messagesEndRef={messagesEndRef}
+                    onOpenProfileSidebar={onOpenProfileSidebar}
                   />
                 ))}
               </ScrollArea>
