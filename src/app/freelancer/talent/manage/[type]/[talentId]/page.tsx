@@ -232,11 +232,11 @@ export default function ManageTalentPage() {
                 </TabsContent>
 
                 <TabsContent value="accepted" className="mt-4">
-                  {renderApplicationCards('Accepted')}
+                  {renderApplicationCards('accepted')}
                 </TabsContent>
 
                 <TabsContent value="rejected" className="mt-4">
-                  {renderApplicationCards('Rejected')}
+                  {renderApplicationCards('rejected')}
                 </TabsContent>
               </Tabs>
             </CardContent>
