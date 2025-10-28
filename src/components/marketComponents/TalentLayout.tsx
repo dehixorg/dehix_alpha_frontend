@@ -20,21 +20,12 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
+import { FreelancerApplication } from '@/types/talent';
 
 interface ProfessionalExperience {
   workFrom?: string;
   workTo?: string;
   jobTitle?: string;
-}
-
-interface FreelancerApplication {
-  _id: string;
-  freelancerId: string;
-  freelancer_professional_profile_id: string;
-  status: 'INVITED' | 'SELECTED' | 'REJECTED';
-  cover_letter?: string;
-  interview_ids: string[];
-  updatedAt: string;
 }
 
 interface TalentLayoutProps {

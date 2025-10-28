@@ -3,41 +3,7 @@ import React, { useEffect, useState } from 'react';
 
 import TalentLayout from '@/components/marketComponents/TalentLayout';
 import { axiosInstance } from '@/lib/axiosinstance';
-
-// Define interfaces for the API response
-interface Skill {
-  _id: string;
-  name: string;
-}
-
-interface ProfessionalExperience {
-  workFrom: string;
-  workTo: string;
-  jobTitle?: string;
-}
-
-interface FreelancerApplication {
-  _id: string;
-  freelancerId: string;
-  freelancer_professional_profile_id: string;
-  status: 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
-  cover_letter?: string;
-  interview_ids: string[];
-  updatedAt: string;
-  // Enriched fields for profile cards
-  firstName: string;
-  lastName: string;
-  email: string;
-  profilePic: string;
-  domainName: string;
-  role: string;
-  professionalInfo: ProfessionalExperience[];
-  skills: Skill[];
-  location?: string;
-  phone?: string;
-  githubLink?: string;
-  kyc?: any;
-}
+import { FreelancerApplication } from '@/types/talent';
 
 interface HireTalentItem {
   _id: string;

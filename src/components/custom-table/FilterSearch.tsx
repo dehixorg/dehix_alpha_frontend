@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 type Params = {
   searchValue: string;
   setSearchValue: Dispatch<SetStateAction<string>>;
-  refetch: () => void;
+  refetch?: () => void;
 };
 
 export const SearchComponent = ({
@@ -30,7 +30,7 @@ export const SearchComponent = ({
       className="relative w-full"
       onSubmit={(e) => {
         e.preventDefault();
-        refetch();
+        refetch?.();
       }}
     >
       <Input
