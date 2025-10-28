@@ -1,19 +1,14 @@
 // src/components/marketComponents/TalentLayout.tsx
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   BookMarked,
   CheckCircle2,
-  Search,
   Users2,
   XCircle,
-  Sliders,
-  Award,
-  Globe,
-  UserCheck,
+  FileText,
 } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import Header from '../header/header';
 
@@ -23,24 +18,8 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/components/ui/use-toast';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { RootState } from '@/lib/store';
-import { axiosInstance } from '@/lib/axiosinstance';
 
 interface ProfessionalExperience {
   workFrom?: string;
@@ -48,22 +27,20 @@ interface ProfessionalExperience {
   jobTitle?: string;
 }
 
-interface TalentData {
-  invited: any[];
-  accepted: any[];
-  rejected: any[];
-}
-
-// REMOVED 'location: string[]' from the interface
-interface FilterState {
-  search: string;
-  skills: string[];
-  domains: string[];
-  experience: string[];
+interface FreelancerApplication {
+  _id: string;
+  freelancerId: string;
+  freelancer_professional_profile_id: string;
+  status: 'INVITED' | 'SELECTED' | 'REJECTED';
+  cover_letter?: string;
+  interview_ids: string[];
+  updatedAt: string;
 }
 
 interface TalentLayoutProps {
-  activeTab: 'invited' | 'accepted' | 'rejected' | 'overview';
+  activeTab: 'invited' | 'accepted' | 'rejected' | 'applications' | 'overview';
+  talents?: FreelancerApplication[];
+  loading?: boolean;
 }
 
 export const calculateExperience = (
@@ -101,195 +78,14 @@ export const calculateExperience = (
 };
 
 const TalentLayout: React.FC<TalentLayoutProps> = ({
-  activeTab: initialActiveTab,
+  activeTab,
+  talents = [],
+  loading = false,
 }) => {
   const router = useRouter();
-  const pathname = usePathname();
-  const user = useSelector((state: RootState) => state.user);
-  const businessId = user?.uid;
-  const [activeTab, setActiveTab] = useState(initialActiveTab);
-  const [talentData, setTalentData] = useState<TalentData>({
-    invited: [],
-    accepted: [],
-    rejected: [],
-  });
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  // NEW: State for skills/domains list, search query, and 'show more' functionality
-  const [skills, setSkills] = useState<string[]>([]);
-  const [domains, setDomains] = useState<string[]>([]);
-
-  const [skillsSearch, setSkillsSearch] = useState('');
-  const [domainsSearch, setDomainsSearch] = useState('');
-
-  // REMOVED 'location: []' from the initial state
-  const [filters, setFilters] = useState<FilterState>({
-    search: '',
-    skills: [],
-    domains: [],
-    experience: [],
-  });
-
-  const experienceMapping = {
-    Junior: '1',
-    'Mid-level': '2',
-    Senior: '3',
-    Lead: '4',
-  };
-
-  // REMOVED 'location' from the filterType parameter
-  const handleToggleFilter = useCallback(
-    (
-      filterType: 'skills' | 'domains' | 'experience',
-      value: string,
-      isChecked: boolean,
-    ) => {
-      setFilters((prevFilters) => {
-        const currentValues = prevFilters[filterType] as string[];
-        const updatedValues = isChecked
-          ? [...currentValues, value]
-          : currentValues.filter((item) => item !== value);
-        return {
-          ...prevFilters,
-          [filterType]: updatedValues,
-        };
-      });
-    },
-    [],
-  );
-
-  // REMOVED the 'location' part of the query string logic
-  const constructQueryString = useCallback((currentFilters: FilterState) => {
-    const queryParts: string[] = [];
-    if (currentFilters.search) {
-      queryParts.push(`search=${encodeURIComponent(currentFilters.search)}`);
-    }
-    if (currentFilters.skills.length > 0) {
-      queryParts.push(
-        `skillName=${currentFilters.skills.map(encodeURIComponent).join(',')}`,
-      );
-    }
-    if (currentFilters.domains.length > 0) {
-      queryParts.push(
-        `domainName=${currentFilters.domains.map(encodeURIComponent).join(',')}`,
-      );
-    }
-    if (currentFilters.experience.length > 0) {
-      queryParts.push(
-        `experience=${currentFilters.experience.map(encodeURIComponent).join(',')}`,
-      );
-    }
-
-    return queryParts.join('&');
-  }, []);
-
-  const fetchData = useCallback(
-    async (currentFilters: FilterState) => {
-      if (!businessId || activeTab === 'overview') {
-        return;
-      }
-      setLoading(true);
-
-      try {
-        let endpoint = '';
-        if (activeTab === 'invited') {
-          endpoint = `/business/hire-dehixtalent/free/invited`;
-        } else if (activeTab === 'accepted') {
-          endpoint = `/business/hire-dehixtalent/free/selected`;
-        } else if (activeTab === 'rejected') {
-          endpoint = `/business/hire-dehixtalent/free/rejected`;
-        }
-
-        const queryString = constructQueryString(currentFilters);
-        const response = await axiosInstance.get(`${endpoint}?${queryString}`);
-
-        setTalentData((prevData) => {
-          const newState = {
-            ...prevData,
-            [activeTab]: response.data.data,
-          };
-          return newState;
-        });
-      } catch (err) {
-        console.error('Error fetching talents:', err);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [businessId, activeTab, constructQueryString],
-  );
-
-  useEffect(() => {
-    const fetchFilterData = async () => {
-      try {
-        const [skillsResponse, domainsResponse] = await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'),
-        ]);
-
-        setSkills(skillsResponse.data.data.map((skill: any) => skill.label));
-        setDomains(
-          domainsResponse.data.data.map((domain: any) => domain.label),
-        );
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load filter options.',
-        });
-        console.error('Error fetching filter data:', error);
-      }
-    };
-    fetchFilterData();
-    fetchData(filters);
-  }, [activeTab, filters, fetchData]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setOpen(false); // close sheet
-      }
-    };
-
-    handleResize(); // run once on mount
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Sync tab with URL
-  useEffect(() => {
-    const parts = pathname.split('/');
-    const tabFromUrl = parts[parts.length - 1];
-    if (['overview', 'invited', 'accepted', 'rejected'].includes(tabFromUrl)) {
-      setActiveTab(
-        tabFromUrl as 'overview' | 'invited' | 'accepted' | 'rejected',
-      );
-    } else {
-      setActiveTab('overview');
-      router.replace('/business/talent/overview'); // default
-    }
-  }, [pathname, router]);
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value as 'overview' | 'invited' | 'accepted' | 'rejected');
     router.push(`/business/talent/${value}`);
-  };
-
-  // REMOVED 'location: []' from the reset object
-  const handleResetFilters = () => {
-    const emptyFilters = {
-      search: '',
-      skills: [],
-      domains: [],
-      experience: [],
-    };
-    setFilters(emptyFilters);
   };
 
   return (
@@ -313,200 +109,33 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
             },
           ]}
         />
-        {/* Filter Sheet Trigger - Hidden for overview tab */}
-        {activeTab !== 'overview' && (
-          <div className="lg:hidden">
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Sliders className="h-4 w-4" />
-                  Filters
-                </Button>
-              </SheetTrigger>
-
-              <SheetContent side="right" className="w-80 sm:w-96 p-4">
-                <div className="flex items-center justify-between mb-2 w-full pl-2">
-                  <h2 className="flex items-center gap-2 flex-shrink-0 text-lg font-semibold">
-                    Filters
-                  </h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleResetFilters}
-                    className="flex items-center gap-1 text-red-500 hover:text-red-500/80 transition-colors bg-red-500/10 hover:bg-red-500/20 whitespace-nowrap"
-                  >
-                    Clear all
-                  </Button>
-                </div>
-
-                {/* Make the entire sheet scrollable */}
-                <ScrollArea className="h-[calc(100vh-5rem)] pr-4">
-                  <div className="space-y-4 mt-4 px-1">
-                    {/* Skills */}
-                    <div className="space-y-2">
-                      <Label>Skills</Label>
-                      <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search Skills"
-                          className="pl-8"
-                          value={skillsSearch}
-                          onChange={(e) => setSkillsSearch(e.target.value)}
-                        />
-                      </div>
-                      <ScrollArea className="h-48 pr-2 rounded-md border">
-                        <div className="space-y-1 py-1">
-                          {skills
-                            .filter((skill) =>
-                              skill
-                                .toLowerCase()
-                                .includes(skillsSearch.toLowerCase()),
-                            )
-                            .map((skill) => (
-                              <div
-                                key={skill}
-                                className="flex items-center space-x-4"
-                              >
-                                <Checkbox
-                                  id={`skill-${skill}`}
-                                  checked={filters.skills.includes(skill)}
-                                  onCheckedChange={(Checked) =>
-                                    handleToggleFilter(
-                                      'skills',
-                                      skill,
-                                      !!Checked,
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor={`skill-${skill}`}
-                                  className="font-normal"
-                                >
-                                  {skill}
-                                </Label>
-                              </div>
-                            ))}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                    <Separator />
-
-                    {/* Domains */}
-                    <div className="space-y-2">
-                      <Label>Domains</Label>
-                      <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search Domains"
-                          className="pl-8"
-                          value={domainsSearch}
-                          onChange={(e) => setDomainsSearch(e.target.value)}
-                        />
-                      </div>
-                      <ScrollArea className="h-48 pr-2 rounded-md border">
-                        <div className="space-y-1 py-1">
-                          {domains
-                            .filter((domain) =>
-                              domain
-                                .toLowerCase()
-                                .includes(domainsSearch.toLowerCase()),
-                            )
-                            .map((domain) => (
-                              <div
-                                key={domain}
-                                className="flex items-center space-x-2"
-                              >
-                                <Checkbox
-                                  id={`domain-${domain}`}
-                                  checked={filters.domains.includes(domain)}
-                                  onCheckedChange={(Checked) =>
-                                    handleToggleFilter(
-                                      'domains',
-                                      domain,
-                                      !!Checked,
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor={`domain-${domain}`}
-                                  className="font-normal"
-                                >
-                                  {domain}
-                                </Label>
-                              </div>
-                            ))}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                    <Separator />
-
-                    {/* Experience */}
-                    <div className="space-y-2">
-                      <Label>Experience</Label>
-                      <div className="space-y-1">
-                        {Object.entries(experienceMapping).map(
-                          ([label, value]) => (
-                            <div
-                              key={label}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`exp-${label}`}
-                                checked={filters.experience.includes(value)}
-                                onCheckedChange={(Checked) =>
-                                  handleToggleFilter(
-                                    'experience',
-                                    value,
-                                    !!Checked,
-                                  )
-                                }
-                              />
-                              <Label
-                                htmlFor={`exp-${label}`}
-                                className="font-normal"
-                              >
-                                {label}
-                              </Label>
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                    <Separator />
-                  </div>
-                </ScrollArea>
-              </SheetContent>
-            </Sheet>
-          </div>
-        )}
+        {/* Filters will be added later if needed */}
         <div className="container px-4 py-4 ">
-          <Tabs value={activeTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 ">
-              <TabsTrigger
-                value="overview"
-                onClick={() => handleTabChange('overview')}
-              >
-                <Users2 className="h-4 w-4 mr-2" />
-                Overview
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="overview" asChild>
+                <a href="/business/talent">
+                  <Users2 className="h-4 w-4 mr-2" />
+                  Overview
+                </a>
               </TabsTrigger>
-              <TabsTrigger
-                value="invited"
-                onClick={() => handleTabChange('invited')}
-              >
+              <TabsTrigger value="applications">
+                <FileText className="h-4 w-4 mr-2" />
+                Applications
+              </TabsTrigger>
+              <TabsTrigger value="invited">
                 <BookMarked className="h-4 w-4 mr-2" />
                 Invites
               </TabsTrigger>
-              <TabsTrigger
-                value="accepted"
-                onClick={() => handleTabChange('accepted')}
-              >
+              <TabsTrigger value="accepted">
                 <CheckCircle2 className="h-4 w-4 mr-2" />
                 Accepted
               </TabsTrigger>
-              <TabsTrigger
-                value="rejected"
-                onClick={() => handleTabChange('rejected')}
-              >
+              <TabsTrigger value="rejected">
                 <XCircle className="h-4 w-4 mr-2" />
                 Rejected
               </TabsTrigger>
@@ -516,206 +145,13 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
 
         <div className="container flex-1 items-start px-4 py-6">
           <div className="grid grid-cols-12 gap-6">
-            {/* Only show filters sidebar for non-overview tabs */}
-            {activeTab !== 'overview' && (
-              <aside className="border bg-background rounded-lg hidden lg:block col-span-3">
-                {/* Header */}
-                <div className="sticky top-0 z-10 bg-background border-b p-4 rounded-t-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <h2 className="text-lg font-semibold">Filters</h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleResetFilters}
-                      className="flex items-center gap-1 text-red-500 hover:text-red-500/80 transition-colors bg-red-500/10 hover:bg-red-500/20 whitespace-nowrap"
-                    >
-                      Clear all
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {/* {filtersCount} filter{filtersCount !== 1 ? 's' : ''} applied */}
-                  </p>
-                </div>
-
-                {/* Scrollable Content */}
-                <ScrollArea>
-                  <Accordion
-                    type="multiple"
-                    defaultValue={['skills', 'domains', 'experience']}
-                  >
-                    {/* Skills Section */}
-                    <AccordionItem
-                      value="skills"
-                      className="border bg-muted/10 p-4 rounded-lg"
-                    >
-                      <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                        <div className="flex items-center space-x-2">
-                          <Award className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">Skills</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="py-2 space-y-2">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                          <Input
-                            type="text"
-                            placeholder="Search Skills"
-                            value={skillsSearch}
-                            onChange={(e) => setSkillsSearch(e.target.value)}
-                            className="pl-9"
-                          />
-                        </div>
-                        <ScrollArea className="h-48">
-                          <div className="space-y-1 p-1">
-                            {skills
-                              .filter((skill) =>
-                                skill
-                                  .toLowerCase()
-                                  .includes(skillsSearch.toLowerCase()),
-                              )
-                              .map((skill) => (
-                                <div
-                                  key={skill}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <Checkbox
-                                    id={`skill-${skill}`}
-                                    checked={filters.skills.includes(skill)}
-                                    onCheckedChange={(checked) =>
-                                      handleToggleFilter(
-                                        'skills',
-                                        skill,
-                                        !!checked,
-                                      )
-                                    }
-                                  />
-                                  <Label
-                                    htmlFor={`skill-${skill}`}
-                                    className="font-normal"
-                                  >
-                                    {skill}
-                                  </Label>
-                                </div>
-                              ))}
-                          </div>
-                        </ScrollArea>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Domains Section */}
-                    <AccordionItem
-                      value="domains"
-                      className="border bg-muted/10 p-4 rounded-lg"
-                    >
-                      <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                        <div className="flex items-center space-x-2">
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">Domains</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="py-2 space-y-2">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                          <Input
-                            placeholder="Search Domains"
-                            value={domainsSearch}
-                            onChange={(e) => setDomainsSearch(e.target.value)}
-                            className="pl-8"
-                          />
-                        </div>
-                        <ScrollArea className="h-48">
-                          <div className="space-y-1 p-1">
-                            {domains
-                              .filter((domain) =>
-                                domain
-                                  .toLowerCase()
-                                  .includes(domainsSearch.toLowerCase()),
-                              )
-                              .map((domain) => (
-                                <div
-                                  key={domain}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <Checkbox
-                                    id={`domain-${domain}`}
-                                    checked={filters.domains.includes(domain)}
-                                    onCheckedChange={(checked) =>
-                                      handleToggleFilter(
-                                        'domains',
-                                        domain,
-                                        !!checked,
-                                      )
-                                    }
-                                  />
-                                  <Label
-                                    htmlFor={`domain-${domain}`}
-                                    className="font-normal"
-                                  >
-                                    {domain}
-                                  </Label>
-                                </div>
-                              ))}
-                          </div>
-                        </ScrollArea>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Experience Section */}
-                    <AccordionItem
-                      value="experience"
-                      className="border bg-muted/10 p-4 rounded-lg"
-                    >
-                      <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                        <div className="flex items-center space-x-2">
-                          <UserCheck className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">Experience</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="py-2 space-y-1">
-                        {Object.entries(experienceMapping).map(
-                          ([label, value]) => (
-                            <div
-                              key={label}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`exp-${label}`}
-                                checked={filters.experience.includes(value)}
-                                onCheckedChange={(checked) =>
-                                  handleToggleFilter(
-                                    'experience',
-                                    value,
-                                    !!checked,
-                                  )
-                                }
-                              />
-                              <Label
-                                htmlFor={`exp-${label}`}
-                                className="font-normal"
-                              >
-                                {label}
-                              </Label>
-                            </div>
-                          ),
-                        )}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </ScrollArea>
-              </aside>
-            )}
+            {/* Filters sidebar will be added later if needed */}
 
             {/* Talent Content */}
-            <div
-              className={
-                activeTab === 'overview'
-                  ? 'col-span-12'
-                  : 'col-span-12 lg:col-span-9'
-              }
-            >
+            <div className="col-span-12">
               <TalentContent
                 activeTab={activeTab}
-                talents={activeTab === 'overview' ? [] : talentData[activeTab]}
+                talents={activeTab === 'overview' ? [] : talents}
                 loading={loading}
               />
             </div>

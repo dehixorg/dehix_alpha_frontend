@@ -29,7 +29,7 @@ interface DomainOption {
 }
 
 interface TalentContentProps {
-  activeTab: 'invited' | 'accepted' | 'rejected' | 'overview';
+  activeTab: 'invited' | 'accepted' | 'rejected' | 'applications' | 'overview';
   talents: any[];
   loading: boolean;
 }
@@ -46,7 +46,15 @@ const TalentContent: React.FC<TalentContentProps> = ({
   const [filterDomain, setFilterDomain] = useState<DomainOption[]>([]);
 
   const renderCards = () => {
-    if (activeTab === 'overview') {
+    if (activeTab === 'applications') {
+      return (
+        <InvitedProfileCards
+          talents={talents}
+          loading={loading}
+          calculateExperience={calculateExperience}
+        />
+      );
+    } else if (activeTab === 'overview') {
       if (loading) {
         return (
           <div className="text-center text-muted-foreground">Loading...</div>
