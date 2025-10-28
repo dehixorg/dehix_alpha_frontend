@@ -215,6 +215,8 @@ export default function ManageTalentPage() {
                   <TabsTrigger value="applied">Applied</TabsTrigger>
                   <TabsTrigger value="invited">Invited</TabsTrigger>
                   <TabsTrigger value="interview">Interview</TabsTrigger>
+                  <TabsTrigger value="accepted">Accepted</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="applied" className="mt-4">
@@ -227,6 +229,14 @@ export default function ManageTalentPage() {
 
                 <TabsContent value="interview" className="mt-4">
                   {renderApplicationCards('interview')}
+                </TabsContent>
+
+                <TabsContent value="accepted" className="mt-4">
+                  {renderApplicationCards('Accepted')}
+                </TabsContent>
+
+                <TabsContent value="rejected" className="mt-4">
+                  {renderApplicationCards('Rejected')}
                 </TabsContent>
               </Tabs>
             </CardContent>
