@@ -26,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Type } from '@/utils/enum';
-import { StatusEnum } from '@/utils/freelancer/enum';
+import { InterviewPermission, StatusEnum } from '@/utils/freelancer/enum';
 import { addSkill } from '@/utils/skillUtils';
 import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
@@ -155,7 +155,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         interviewStatus: 'PENDING',
         interviewInfo: customSkill.description,
         interviewerRating: 0,
-        interviewPermission: 'NOT_VERIFIED',
+        interviewPermission: InterviewPermission.NOT_VERIFIED,
       };
 
       const updatedCurrSkills = [...currSkills, newSkill];
@@ -299,7 +299,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       interviewInfo: skill.interviewInfo || '',
       interviewerRating: skill.interviewerRating || 0,
       interviewStatus: skill.interviewStatus || StatusEnum.PENDING,
-      interviewPermission: skill.interviewPermission ?? 'NOT_VERIFIED',
+      interviewPermission:
+        skill.interviewPermission ?? InterviewPermission.NOT_VERIFIED,
     }));
     // END OF NEW LOGIC
 
@@ -398,7 +399,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         interviewStatus: StatusEnum.PENDING,
         interviewInfo: '',
         interviewerRating: 0,
-        interviewPermission: 'NOT_VERIFIED', // Keep this as 1
+        interviewPermission: InterviewPermission.NOT_VERIFIED,
       };
 
       // Update local state immediately
@@ -712,7 +713,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         interviewInfo: skill.interviewInfo || '',
         interviewerRating: skill.interviewerRating || 0,
         interviewStatus: skill.interviewStatus || 'PENDING',
-        interviewPermission: skill.interviewPermission ?? 'NOT_VERIFIED',
+        interviewPermission:
+          skill.interviewPermission ?? InterviewPermission.NOT_VERIFIED,
       }));
 
       await axiosInstance.put(`/freelancer`, {
