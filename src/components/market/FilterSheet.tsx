@@ -57,12 +57,12 @@ export function FilterSheet({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md p-0">
-        <ScrollArea className="h-full">
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
+        <ScrollArea className="flex-1">
           <FilterComponent
             filters={filters}
             setFilters={setFilters}
-            handleReset={handleResetAndClose}
+            handleReset={handleReset}
             activeFilterCount={activeFilterCount}
             skills={skills}
             domains={domains}
@@ -75,6 +75,23 @@ export function FilterSheet({
             setProjectDomainSearchQuery={setProjectDomainSearchQuery}
           />
         </ScrollArea>
+        <div className="sticky bottom-0 border-t bg-background p-3 flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={handleResetAndClose}
+            aria-label="Reset all filters"
+          >
+            Reset
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={() => setIsOpen(false)}
+            aria-label="Apply filters"
+          >
+            Apply
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
   );
