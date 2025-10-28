@@ -18,6 +18,11 @@ export enum StatusEnum {
   COMPLETED = 'COMPLETED',
 }
 
+export enum InterviewPermission {
+  NOT_VERIFIED = 'NOT_VERIFIED',
+  VERIFIED = 'VERIFIED',
+}
+
 export const kycBadgeColors: { [key: string]: string } = {
   APPLIED: 'bg-blue-500 text-white hover:text-black',
   PENDING: 'bg-green-500 text-white hover:text-black',
