@@ -335,21 +335,22 @@ const SkillDomainForm: React.FC = () => {
                           />
                         </TableCell>
                         <TableCell className="text-center">
-                          {item.type && item.originalTalentId ? (
-                            <Link
-                              href={{
-                                pathname: `/freelancer/talent/manage/${item.type.toLowerCase()}/${item.originalTalentId}`,
-                                query: { label: item.label },
-                              }}
+                          {item.originalTalentId ? (
+                            <Button
+                              asChild
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Manage jobs for ${item.label}`}
                             >
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                aria-label={`Manage jobs for ${item.label}`}
+                              <Link
+                                href={{
+                                  pathname: `/freelancer/talent/manage/${item.type.toLowerCase()}/${item.originalTalentId}`,
+                                  query: { label: item.label },
+                                }}
                               >
                                 <ArrowUpRight className="h-4 w-4" />
-                              </Button>
-                            </Link>
+                              </Link>
+                            </Button>
                           ) : (
                             <Button
                               variant="ghost"

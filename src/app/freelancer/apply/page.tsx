@@ -169,7 +169,8 @@ const TalentMarketPage: React.FC = () => {
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
   const [projectDomains, setProjectDomains] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFiltersLoading, setIsFiltersLoading] = useState(false);
+  const [isListingsLoading, setIsListingsLoading] = useState(false);
 
   // Apply dialog state
   const [applyOpen, setApplyOpen] = useState(false);
@@ -184,7 +185,7 @@ const TalentMarketPage: React.FC = () => {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        setIsLoading(true);
+        setIsFiltersLoading(true);
         const skillsRes = await axiosInstance.get('/skills');
         setSkills(skillsRes.data.data.map((s: any) => s.label));
         const domainsRes = await axiosInstance.get('/domain');
@@ -195,7 +196,7 @@ const TalentMarketPage: React.FC = () => {
         console.error('Error loading filters', err);
         notifyError('Failed to load filter options.');
       } finally {
-        setIsLoading(false);
+        setIsFiltersLoading(false);
       }
     };
     fetchFilterOptions();
@@ -218,7 +219,7 @@ const TalentMarketPage: React.FC = () => {
 
   const fetchTalentItems = useCallback(async () => {
     try {
-      setIsLoading(true);
+      setIsListingsLoading(true);
       const res = await axiosInstance.get('/freelancer/dehix-talent/market');
       const data: TalentMarketItem[] = res.data?.data || [];
       setItems(data);
@@ -226,7 +227,7 @@ const TalentMarketPage: React.FC = () => {
       console.error('Fetch talent market error:', err);
       notifyError('Failed to load talent market listings.');
     } finally {
-      setIsLoading(false);
+      setIsListingsLoading(false);
     }
   }, []);
 
@@ -257,7 +258,6 @@ const TalentMarketPage: React.FC = () => {
       const nameId = it.skillId || it.domainId || it.talentId || '';
       const skills = it.skillName ? [it.skillName] : [];
       const pdomains = it.domainName ? [it.domainName] : [];
-      const talents = it.talentName ? [it.talentId] : [];
       return {
         _id: it._id,
         projectName: name,
@@ -319,6 +319,8 @@ const TalentMarketPage: React.FC = () => {
   );
 
   const activeFilterCount = getActiveFilterCount(filters);
+
+  const isAnyLoading = isFiltersLoading || isListingsLoading;
 
   const handleResize = () => {
     setIsLargeScreen(window.innerWidth >= 1024);
@@ -429,7 +431,7 @@ const TalentMarketPage: React.FC = () => {
           )}
 
           <div className="flex-1">
-            {isLoading ? (
+            {isAnyLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
                   <Card
