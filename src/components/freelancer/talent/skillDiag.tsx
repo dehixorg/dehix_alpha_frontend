@@ -137,7 +137,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
           <div className="mb-3">
             <Controller
               control={control}
-              name="label"
+              name="skillId"
               render={({ field }) => (
                 <Select
                   value={field.value}

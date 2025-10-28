@@ -168,17 +168,22 @@ export default function ManageTalentPage() {
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="Projects"
+          activeMenu="Talent"
           breadcrumbItems={breadcrumbItems}
         />
         <main className="px-4 sm:px-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Link href="/freelancer/talent">
-                <Button variant="ghost" size="icon" aria-label="Back to Talent">
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                aria-label="Back to Talent"
+              >
+                <Link href="/freelancer/talent">
                   <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
               <h1 className="text-xl sm:text-2xl font-semibold">{title}</h1>
             </div>
           </div>
