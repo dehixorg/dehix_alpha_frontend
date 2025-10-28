@@ -33,6 +33,8 @@ type SelectTagPickerProps = {
   selectedNameKey?: string;
   selectPlaceholder?: string;
   searchPlaceholder?: string;
+  showOtherOption?: boolean;
+  onOtherClick?: () => void;
 };
 
 const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
@@ -46,6 +48,8 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
   selectedNameKey = 'name',
   selectPlaceholder = 'Select',
   searchPlaceholder = 'Search',
+  showOtherOption = false,
+  onOtherClick,
 }) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,6 +128,20 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
                       );
                     })}
                   </CommandGroup>
+                  {showOtherOption && (
+                    <CommandGroup>
+                      <CommandItem
+                        value="__other__"
+                        onSelect={() => {
+                          if (onOtherClick) onOtherClick();
+                          setOpen(false);
+                        }}
+                        className="flex items-center gap-2 text-primary"
+                      >
+                        <span className="flex-1">Other...</span>
+                      </CommandItem>
+                    </CommandGroup>
+                  )}
                 </ScrollArea>
               </CommandList>
             </Command>
