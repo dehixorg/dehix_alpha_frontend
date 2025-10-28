@@ -43,6 +43,7 @@ interface Project {
   _id: string;
   projectName: string;
   projectDomain?: string[];
+  projectDomainId?: string;
   description?: string;
   status?: string;
   position?: string;
