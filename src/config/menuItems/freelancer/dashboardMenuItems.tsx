@@ -12,6 +12,7 @@ import {
   Archive,
   StickyNote,
   Trash2,
+  FileSignature,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -40,6 +41,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/market',
     icon: <Store className="h-5 w-5" />,
     label: 'Market',
+  },
+  {
+    href: '/freelancer/apply',
+    icon: <FileSignature className="h-5 w-5" />,
+    label: 'Talent Market',
   },
   {
     href: '/freelancer/project/current',
