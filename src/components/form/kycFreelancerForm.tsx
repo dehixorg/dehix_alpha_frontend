@@ -32,8 +32,8 @@ const profileFormSchema = z.object({
     .string()
     .trim()
     .min(1, 'ID is required')
-    .refine((val) => !/^-/.test(val), {
-      message: 'Please enter a valid 12-digit Aadhar or Government ID',
+    .refine((val) => /^\d{12}$/.test(val) || /^[A-Z0-9]{6,20}$/i.test(val), {
+      message: 'Please enter a valid 12-digit Aadhar number or Government ID',
     }),
   salaryOrEarning: z.coerce.number().optional(), // New field for salary/earning
   frontImageUrl: z

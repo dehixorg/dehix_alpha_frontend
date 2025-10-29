@@ -20,21 +20,12 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
+import { FreelancerApplication } from '@/types/talent';
 
 interface ProfessionalExperience {
   workFrom?: string;
   workTo?: string;
   jobTitle?: string;
-}
-
-interface FreelancerApplication {
-  _id: string;
-  freelancerId: string;
-  freelancer_professional_profile_id: string;
-  status: 'INVITED' | 'SELECTED' | 'REJECTED';
-  cover_letter?: string;
-  interview_ids: string[];
-  updatedAt: string;
 }
 
 interface TalentLayoutProps {
@@ -85,7 +76,11 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
   const router = useRouter();
 
   const handleTabChange = (value: string) => {
-    router.push(`/business/talent/${value}`);
+    if (value === 'overview') {
+      router.push('/business/talent');
+    } else {
+      router.push(`/business/talent/${value}`);
+    }
   };
 
   return (
@@ -117,11 +112,9 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview" asChild>
-                <a href="/business/talent">
-                  <Users2 className="h-4 w-4 mr-2" />
-                  Overview
-                </a>
+              <TabsTrigger value="overview">
+                <Users2 className="h-4 w-4 mr-2" />
+                Overview
               </TabsTrigger>
               <TabsTrigger value="applications">
                 <FileText className="h-4 w-4 mr-2" />

@@ -10,12 +10,10 @@ import {
   Search,
   MoreVertical,
   Minimize2,
-  Reply,
   Text,
   Bold,
   Italic,
   Underline,
-  CheckCheck,
   Flag,
   Mic,
   StopCircle,
@@ -27,10 +25,9 @@ import {
 import { useSelector } from 'react-redux';
 import { doc, DocumentData, updateDoc } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
-import { formatDistanceToNow, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import DOMPurify from 'dompurify';
+import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
 import {
@@ -49,12 +46,8 @@ import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
-import Reactions from './reactions';
-import { FileAttachment } from './fileAttachment';
-// Added
-// ProfileSidebar is no longer imported or rendered here
+import ChatMessageItem from './ChatMessageItem';
 
-import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -83,38 +76,6 @@ import {
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { db } from '@/config/firebaseConfig';
 
-// Format only the time (e.g., 10:30 AM) for in-bubble timestamps
-function formatChatTimestamp(timestamp: string) {
-  return format(new Date(timestamp), 'hh:mm a');
-}
-
-// Helper for date header (Today, Yesterday, Oct 12 2023 …)
-function formatDateHeader(timestamp: string | number) {
-  const msgDate = new Date(timestamp);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
-
-  const msgDay = msgDate.toDateString(); // gives date as string value
-
-  if (msgDay === today.toDateString()) return 'Today';
-  if (msgDay === yesterday.toDateString()) return 'Yesterday';
-
-  return msgDate.toLocaleDateString(undefined, {
-    weekday: 'long', // “Sunday”
-    month: 'short', // “Sep”
-    day: 'numeric', // 14
-    year: 'numeric', // 2025
-  });
-}
-
-function isSameDay(d1: Date, d2: Date) {
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
-}
 
   function useDebounce<T> (value: T, delay: number = 500): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -163,7 +124,7 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
-  onConversationUpdate?: (updatedConversation: any) => void;
+  onConversationUpdate?: (updatedConversation: Conversation) => void;
 }
 
 export function CardsChat({
@@ -189,7 +150,7 @@ export function CardsChat({
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [, setHoveredMessageId] = useState(null);
+  const [, setHoveredMessageId] = useState<string | null>(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
@@ -913,13 +874,10 @@ export function CardsChat({
 
 // --- HIGHLIGHT: ADD THIS ENTIRE FUNCTION ---
 async function handleToggleArchive() {
-  console.log('toggled');
   if (!user?.uid || !conversation?.id) return;
 
-  console.log(isArchived);
   // 1. Determine the current and new state
   const currentState = conversation.participantDetails?.[user.uid]?.viewState;
-  console.log(currentState);
 
   const newState = currentState === 'archived' ? 'inbox' : 'archived';
 
@@ -944,7 +902,7 @@ async function handleToggleArchive() {
     };
 
     // 5. Call the prop to update the parent's state instantly
-    onConversationUpdate(updatedConversation as Conversation);
+    onConversationUpdate?.(updatedConversation as Conversation);
 
     toast({
       title: `Conversation ${newState === 'archived' ? 'Archived' : 'Unarchived'}`,
@@ -954,84 +912,81 @@ async function handleToggleArchive() {
     toast({ variant: 'destructive', title: 'Error', description: 'Could not update archive status.' });
   }
 }
-// --- END HIGHLIGHT ---
-
-
-  return (
-    <>
-      {/* Image Modal */}
-      {modalImage && (
+return (
+  <>
+    {/* Image Modal */}
+    {modalImage && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+        onClick={() => setModalImage(null)}
+      >
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
-          onClick={() => setModalImage(null)}
+          className="relative max-w-3xl w-full flex flex-col items-center"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div
-            className="relative max-w-3xl w-full flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 z-10"
+            onClick={() => setModalImage(null)}
           >
-            <button
-              className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 z-10"
-              onClick={() => setModalImage(null)}
-            >
-              <X className="w-6 h-6 text-black" />
-            </button>
-            <Image
-              src={modalImage}
-              alt="Full Image"
-              width={800}
-              height={800}
-              className="rounded-lg max-h-[80vh] w-auto h-auto object-contain bg-white"
-            />
+            <X className="w-6 h-6 text-black" />
+          </button>
+          <Image
+            src={modalImage}
+            alt="Full Image"
+            width={800}
+            height={800}
+            className="rounded-lg max-h-[80vh] w-auto h-auto object-contain bg-white"
+          />
+        </div>
+      </div>
+    )}
+    {loading ? (
+      <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
+          <div className="flex items-center space-x-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-8 rounded-full" />
           </div>
         </div>
-      )}
-      {loading ? (
-        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
-          {/* Header Skeleton */}
-          <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
-            <div className="flex items-center space-x-3">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="space-y-1">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <Skeleton className="h-8 w-8 rounded-full" />
+
+        {/* Messages Skeleton */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-6">
+          {/* Incoming message skeleton */}
+          <div className="flex items-start space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-16 w-64 rounded-lg" />
             </div>
           </div>
 
-          {/* Messages Skeleton */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-6">
-            {/* Incoming message skeleton */}
-            <div className="flex items-start space-x-2">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-16 w-64 rounded-lg" />
-              </div>
-            </div>
-
-            {/* Outgoing message skeleton */}
-            <div className="flex justify-end">
-              <div className="space-y-2 max-w-[80%]">
-                <Skeleton className="h-4 w-16 ml-auto" />
-                <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
-              </div>
+          {/* Outgoing message skeleton */}
+          <div className="flex justify-end">
+            <div className="space-y-2 max-w-[80%]">
+              <Skeleton className="h-4 w-16 ml-auto" />
+              <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
             </div>
           </div>
+        </div>
 
-          {/* Input area skeleton */}
-          <div className="p-3 border-t border-[hsl(var(--border))]">
-            <div className="flex items-center space-x-2">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="flex-1 h-10 rounded-full" />
-              <Skeleton className="h-10 w-10 rounded-full" />
-            </div>
+        {/* Input area skeleton */}
+        <div className="p-3 border-t border-[hsl(var(--border))]">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="flex-1 h-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
           </div>
-        </Card>
-      ) : (
+        </div>
+      </Card>
+    ) : (
         <>
           <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
@@ -1199,7 +1154,7 @@ async function handleToggleArchive() {
                     messages={messages as any}
                     userId={user.uid}
                     conversation={conversation}
-                    onHoverChange={setHoveredMessageId}
+                    onHoverChange={(id) => setHoveredMessageId(id)}
                     setModalImage={setModalImage}
                     audioRefs={audioRefs}
                     handleLoadedMetadata={handleLoadedMetadata}
@@ -1616,5 +1571,5 @@ async function handleToggleArchive() {
         </>
       )}
     </>
-  );
+    );
 }

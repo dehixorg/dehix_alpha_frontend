@@ -175,6 +175,8 @@ function ChatMessageItem({
       >
         {!isSender && (
           <div
+            role="button"
+            tabIndex={0}
             className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => {
               if (onOpenProfileSidebar) {
@@ -186,6 +188,21 @@ function ChatMessageItem({
                     profilePic: senderAvatar,
                   }
                 );
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (onOpenProfileSidebar) {
+                  onOpenProfileSidebar(
+                    message.senderId,
+                    'user',
+                    {
+                      userName: senderName,
+                      profilePic: senderAvatar,
+                    }
+                  );
+                }
               }
             }}
           >
