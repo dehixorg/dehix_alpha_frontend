@@ -87,12 +87,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   });
 
   const onSubmit = async (data: SkillDomainData) => {
-    // Ensure a skill is selected
-    if (!data.skillId || !data.label) {
-      notifyError('Please select a skill', 'Error');
-      return;
-    }
-
     setLoading(true);
     try {
       await axiosInstance.post(`/freelancer/dehix-talent`, {
@@ -106,7 +100,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
       });
       reset();
       setOpen(false);
-      notifySuccess('The Talent has been successfully added.', 'Talent Added');
+      notifySuccess('The skill has been successfully added.', 'Skill Added');
       onSuccess();
     } catch (error) {
       console.error(error);
@@ -147,7 +141,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
                     );
                     field.onChange(selectedLabel);
                     setValue('skillId', selectedSkill?._id || '');
-                    setValue('label', selectedLabel);
                   }}
                 >
                   <SelectTrigger>

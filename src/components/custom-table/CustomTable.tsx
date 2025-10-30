@@ -142,8 +142,22 @@ export const CustomTable = ({
         filteredData.sort((a, b) => {
           const aVal = a[sortByValue];
           const bVal = b[sortByValue];
-          if (aVal < bVal) return sortOrder === 1 ? -1 : 1;
-          if (aVal > bVal) return sortOrder === 1 ? 1 : -1;
+
+          // Handle null/undefined - push to end
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return 1;
+          if (bVal == null) return -1;
+
+          // Handle numeric comparison
+          if (typeof aVal === 'number' && typeof bVal === 'number') {
+            return sortOrder === 1 ? aVal - bVal : bVal - aVal;
+          }
+
+          // String comparison (case-insensitive)
+          const aStr = String(aVal).toLowerCase();
+          const bStr = String(bVal).toLowerCase();
+          if (aStr < bStr) return sortOrder === 1 ? -1 : 1;
+          if (aStr > bStr) return sortOrder === 1 ? 1 : -1;
           return 0;
         });
       }

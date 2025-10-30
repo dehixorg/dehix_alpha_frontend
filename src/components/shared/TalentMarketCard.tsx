@@ -97,11 +97,25 @@ const TalentMarketCard: React.FC<Props> = ({
     item.skillName || item.domainName || item.talentName || 'Opportunity';
   const [bookmarked, setBookmarked] = useState<boolean>(!!item.bookmarked);
 
+  React.useEffect(() => {
+    setBookmarked(!!item.bookmarked);
+  }, [item.bookmarked]);
+
   const created = item.createdAt
-    ? formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })
+    ? (() => {
+        const date = new Date(item.createdAt);
+        return isNaN(date.getTime())
+          ? 'Recently'
+          : formatDistanceToNow(date, { addSuffix: true });
+      })()
     : 'Recently';
   const updated = item.updatedAt
-    ? formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })
+    ? (() => {
+        const date = new Date(item.updatedAt);
+        return isNaN(date.getTime())
+          ? undefined
+          : formatDistanceToNow(date, { addSuffix: true });
+      })()
     : undefined;
 
   return (
