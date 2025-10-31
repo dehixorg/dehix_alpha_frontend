@@ -162,7 +162,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       setCurrSkills(updatedCurrSkills);
 
       // Save to freelancer profile
-      await saveSkillsToProfile(updatedCurrSkills);
+      const savedProfile = await saveSkillsToProfile([newSkill]);
+      // Update state with the skill that includes the ID from backend
+      if (savedProfile && savedProfile.skills) {
+        const skillWithId = savedProfile.skills.find(
+          (s: any) => s.name === newSkill.name,
+        );
+        if (skillWithId) {
+          setCurrSkills((prev: any) =>
+            prev.map((s: any) => (s.name === newSkill.name ? skillWithId : s)),
+          );
+        }
+      }
 
       setCustomSkill({ label: '', description: '' });
       setIsDialogOpen(false);
@@ -196,20 +207,37 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       const updatedDomains = [...domains, { label: customDomain.label }];
       setDomains(updatedDomains);
 
-      setCurrDomains([
-        ...currDomains,
-        {
-          name: customDomain.label,
-          level: '',
-          experience: '',
-          interviewStatus: 'PENDING',
-          interviewInfo: customDomain.description,
-          interviewerRating: 0,
-        },
-      ]);
+      const newDomain = {
+        name: customDomain.label,
+        level: '',
+        experience: '',
+        interviewStatus: 'PENDING',
+        interviewInfo: customDomain.description,
+        interviewerRating: 0,
+      };
+
+      const updatedCurrDomains = [...currDomains, newDomain];
+      setCurrDomains(updatedCurrDomains);
+
+      // Save to freelancer profile
+      const savedProfile = await saveDomainsToProfile([newDomain]);
+      // Update state with the domain that includes the ID from backend
+      if (savedProfile && savedProfile.domain) {
+        const domainWithId = savedProfile.domain.find(
+          (d: any) => d.name === newDomain.name,
+        );
+        if (domainWithId) {
+          setCurrDomains((prev: any) =>
+            prev.map((d: any) =>
+              d.name === newDomain.name ? domainWithId : d,
+            ),
+          );
+        }
+      }
 
       setCustomDomain({ label: '', description: '' });
       setIsDialogOpen(false);
+      notifySuccess('New domain added to your profile successfully.');
     } catch (error: any) {
       console.error(
         'Failed to add domain:',
@@ -257,7 +285,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       setCurrProjectDomains(updatedCurrProjectDomains);
 
       // Save to freelancer profile
-      await saveProjectDomainsToProfile(updatedCurrProjectDomains);
+      const savedProfile = await saveProjectDomainsToProfile([
+        newProjectDomain,
+      ]);
+      // Update state with the project domain that includes the ID from backend
+      if (savedProfile && savedProfile.projectDomain) {
+        const projectDomainWithId = savedProfile.projectDomain.find(
+          (pd: any) => pd.name === newProjectDomain.name,
+        );
+        if (projectDomainWithId) {
+          setCurrProjectDomains((prev: any) =>
+            prev.map((pd: any) =>
+              pd.name === newProjectDomain.name ? projectDomainWithId : pd,
+            ),
+          );
+        }
+      }
 
       setCustomProjectDomain({ label: '', description: '' });
       setIsDialogOpen(false);
@@ -303,6 +346,36 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         error.response?.data || error.message,
       );
       notifyError('Failed to add skills to profile. Please try again.');
+      throw error;
+    }
+  };
+
+  // Function to save domains to backend
+  const saveDomainsToProfile = async (domainsToSave: any[]) => {
+    const completeDomainsArray = domainsToSave.map((domain: any) => ({
+      ...domain,
+      level: domain.level || '',
+      experience: domain.experience || '',
+      interviewInfo: domain.interviewInfo || '',
+      interviewerRating: domain.interviewerRating || 0,
+      interviewStatus: domain.interviewStatus || StatusEnum.PENDING,
+    }));
+
+    try {
+      const response = await axiosInstance.put('/freelancer/domain', {
+        domain: completeDomainsArray,
+      });
+
+      if (response.status === 200) {
+        notifySuccess('Domains added successfully to your profile.');
+        return response.data.data;
+      }
+    } catch (error: any) {
+      console.error(
+        'Failed to add domains to profile:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to add domains to profile. Please try again.');
       throw error;
     }
   };
@@ -365,9 +438,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
       // Save to backend
       try {
-        // --- THIS IS THE FIX ---
         // Send ONLY the new skill, not the whole list
-        await saveSkillsToProfile([newSkill]);
+        const savedProfile = await saveSkillsToProfile([newSkill]);
+        // Update state with the skill that includes the ID from backend
+        if (savedProfile && savedProfile.skills) {
+          const skillWithId = savedProfile.skills.find(
+            (s: any) => s.name === value,
+          );
+          if (skillWithId) {
+            setCurrSkills((prev: any) =>
+              prev.map((s: any) => (s.name === value ? skillWithId : s)),
+            );
+          }
+        }
       } catch (error) {
         // Revert local state if API call fails
         setCurrSkills(currSkills);
@@ -379,24 +462,49 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
-  const handleAddDomainByValue = (value: string) => {
+  const handleAddDomainByValue = async (value: string) => {
     addDomain(value, domains, setDomains);
     if (value && !currDomains.some((domain: any) => domain.name === value)) {
-      setCurrDomains([
-        ...currDomains,
-        {
-          name: value,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
+      const newDomain = {
+        _id: '',
+        name: value,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+      };
+
+      // Update local state immediately
+      const updatedDomains = [...currDomains, newDomain];
+      setCurrDomains(updatedDomains);
       setLastAddedItems((prev) => ({
         ...prev,
         domains: [...prev.domains, { name: value }],
       }));
+
+      // Save to backend
+      try {
+        const savedProfile = await saveDomainsToProfile([newDomain]);
+        // Update state with the domain that includes the ID from backend
+        if (savedProfile && savedProfile.domain) {
+          const domainWithId = savedProfile.domain.find(
+            (d: any) => d.name === value,
+          );
+          if (domainWithId) {
+            setCurrDomains((prev: any) =>
+              prev.map((d: any) => (d.name === value ? domainWithId : d)),
+            );
+          }
+        }
+      } catch (error) {
+        // Revert local state if API call fails
+        setCurrDomains(currDomains);
+        setLastAddedItems((prev) => ({
+          ...prev,
+          domains: prev.domains.filter((d) => d.name !== value),
+        }));
+      }
     }
   };
 
@@ -427,7 +535,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
       // Save to backend
       try {
-        await saveProjectDomainsToProfile([newProjectDomain]);
+        const savedProfile = await saveProjectDomainsToProfile([
+          newProjectDomain,
+        ]);
+        // Update state with the project domain that includes the ID from backend
+        if (savedProfile && savedProfile.projectDomain) {
+          const projectDomainWithId = savedProfile.projectDomain.find(
+            (pd: any) => pd.name === value,
+          );
+          if (projectDomainWithId) {
+            setCurrProjectDomains((prev: any) =>
+              prev.map((pd: any) =>
+                pd.name === value ? projectDomainWithId : pd,
+              ),
+            );
+          }
+        }
       } catch (error) {
         // Revert local state if API call fails
         setCurrProjectDomains(currProjectDomains);
