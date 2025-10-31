@@ -90,7 +90,11 @@ export const FilterTable = ({
       {/* Search Bar */}
       {isSearch && (
         <div className="w-1/3 mr-4">
-          <SearchComponent searchValue={search} setSearchValue={setSearch} />
+          <SearchComponent
+            searchValue={search}
+            setSearchValue={setSearch}
+            refetch={refetch}
+          />
         </div>
       )}
 

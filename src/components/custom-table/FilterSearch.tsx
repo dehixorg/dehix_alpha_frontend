@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
@@ -7,12 +7,33 @@ import { Button } from '@/components/ui/button';
 type Params = {
   searchValue: string;
   setSearchValue: Dispatch<SetStateAction<string>>;
+  refetch?: () => void;
 };
 
-export const SearchComponent = ({ searchValue, setSearchValue }: Params) => {
+export const SearchComponent = ({
+  searchValue,
+  setSearchValue,
+  refetch,
+}: Params) => {
   const [search, setSearch] = useState<string>(searchValue);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setSearchValue(search);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, setSearchValue]);
+
   return (
-    <form className="relative w-full" action={() => setSearchValue(search)}>
+    <form
+      className="relative w-full"
+      onSubmit={(e) => {
+        e.preventDefault();
+        setSearchValue(search);
+        refetch?.();
+      }}
+    >
       <Input
         value={search}
         onChange={(e) => setSearch(e.target.value)}

@@ -1,7 +1,11 @@
 'use client';
 import type React from 'react';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import { ArrowUpRight } from 'lucide-react';
+
+import { TableSelect } from '../../custom-table/TableSelect';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -22,9 +26,19 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -60,6 +74,9 @@ const SkillDomainForm: React.FC = () => {
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [limit, setLimit] = useState(10);
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -91,10 +108,12 @@ const SkillDomainForm: React.FC = () => {
         const domainsArray = domainsResponse.data?.data || [];
 
         // fetch talent data
-        let talentResponse = { data: { data: {} } };
+        let talentResponse = {
+          data: { data: {}, pagination: { totalPages: 0 } },
+        };
         if (user?.uid) {
           talentResponse = await axiosInstance.get(
-            `/freelancer/${user.uid}/dehix-talent`,
+            `/freelancer/${user.uid}/dehix-talent?page=${currentPage}&limit=${limit}`,
           );
         }
 
@@ -118,6 +137,7 @@ const SkillDomainForm: React.FC = () => {
         const deduplicatedData = removeDuplicates(formattedTalentData);
         setSkillDomainData(deduplicatedData);
         setStatusVisibility(deduplicatedData.map((item) => item.activeStatus));
+        setTotalPages(talentResponse.data.pagination.totalPages);
 
         // filter global skills/domains
         const usedTalentIds = new Set(
@@ -148,7 +168,7 @@ const SkillDomainForm: React.FC = () => {
 
     fetchData();
     return () => cancelAllRequests();
-  }, [user?.uid, refreshTrigger]);
+  }, [user?.uid, refreshTrigger, currentPage, limit]);
 
   const handleToggleVisibility = async (
     index: number,
@@ -170,6 +190,17 @@ const SkillDomainForm: React.FC = () => {
       console.error('Error updating visibility:', error);
       notifyError('Something went wrong. Please try again.', 'Error');
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleLimitChange = (value: number) => {
+    setLimit(value);
+    setCurrentPage(1);
   };
 
   return (
@@ -196,6 +227,12 @@ const SkillDomainForm: React.FC = () => {
                 onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
               />
             </div>
+            <TableSelect
+              currValue={limit}
+              label="Items Per Page"
+              values={[10, 15, 20, 25]}
+              setCurrValue={handleLimitChange}
+            />
           </div>
 
           <Card>
@@ -204,14 +241,23 @@ const SkillDomainForm: React.FC = () => {
                 <TableHeader className="sticky top-0 z-10 bg-background">
                   <TableRow>
                     <TableHead scope="col">Type</TableHead>
-                    <TableHead scope="col">Label</TableHead>
-                    <TableHead scope="col">Experience</TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Label
+                    </TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Experience
+                    </TableHead>
                     <TableHead scope="col" className="text-center">
                       Monthly Pay
                     </TableHead>
-                    <TableHead scope="col">Status</TableHead>
-                    <TableHead scope="col" className="text-right">
+                    <TableHead scope="col" className="text-center">
+                      Status
+                    </TableHead>
+                    <TableHead scope="col" className="text-center">
                       Visibility
+                    </TableHead>
+                    <TableHead scope="col" className="text-center">
+                      Manage
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -288,11 +334,39 @@ const SkillDomainForm: React.FC = () => {
                             aria-label={`Toggle visibility for ${item.label}`}
                           />
                         </TableCell>
+                        <TableCell className="text-center">
+                          {item.originalTalentId ? (
+                            <Button
+                              asChild
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Manage jobs for ${item.label}`}
+                            >
+                              <Link
+                                href={{
+                                  pathname: `/freelancer/talent/manage/${item.type.toLowerCase()}/${item.originalTalentId}`,
+                                  query: { label: item.label },
+                                }}
+                              >
+                                <ArrowUpRight className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled
+                              aria-label={`Manage jobs for ${item.label}`}
+                            >
+                              <ArrowUpRight className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center">
+                      <TableCell colSpan={7} className="text-center">
                         <div className="py-10">
                           <svg
                             width="140"
@@ -379,6 +453,78 @@ const SkillDomainForm: React.FC = () => {
                   )}
                 </TableBody>
               </Table>
+            </div>
+            <div className="flex items-center justify-end">
+              {totalPages > 1 && (
+                <Pagination className="mt-6">
+                  <PaginationContent>
+                    {currentPage > 1 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(currentPage - 1);
+                            }}
+                            className="cursor-pointer"
+                          />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(currentPage - 1);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {currentPage - 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationLink href="#" isActive>
+                        {currentPage}
+                      </PaginationLink>
+                    </PaginationItem>
+
+                    {currentPage < totalPages && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(currentPage + 1);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {currentPage + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                        {currentPage + 1 < totalPages && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(currentPage + 1);
+                            }}
+                            className="cursor-pointer"
+                          />
+                        </PaginationItem>
+                      </>
+                    )}
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
           </Card>
         </CardContent>
