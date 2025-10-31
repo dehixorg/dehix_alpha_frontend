@@ -835,40 +835,32 @@ export function CreateProjectBusinessForm() {
                           label: d.label,
                           _id: d.value,
                         }))}
-                        selected={(currDomains[index] || [])
-                          .slice(0, 1)
-                          .map((d: string) => ({ name: d }))}
+                        selected={(currDomains[index] || []).map(
+                          (d: string) => ({ name: d }),
+                        )}
                         onAdd={(val: string) => {
                           if (!val) return;
-                          const updated = [val];
-                          setCurrDomains((prev) => ({
-                            ...prev,
-                            [index]: updated,
-                          }));
-                          form.setValue(`profiles.${index}.domain`, updated, {
-                            shouldValidate: true,
+                          setCurrDomains((prev) => {
+                            const prevDomains = prev[index] || [];
+                            if (prevDomains.includes(val)) return prev; // avoid duplicates
+                            const updated = [...prevDomains, val];
+                            const newDomains = { ...prev, [index]: updated };
+                            form.setValue(`profiles.${index}.domain`, updated, {
+                              shouldValidate: true,
+                            });
+                            return newDomains;
                           });
-                          // Also persist the selected domain's id alongside the label in the profile
-                          const selected = domains.find(
-                            (d: any) => d.label === val,
-                          );
-                          form.setValue(
-                            `profiles.${index}.domain_id`,
-                            selected?.domain_id || '',
-                            { shouldValidate: true },
-                          );
                         }}
-                        onRemove={() => {
-                          const updated: string[] = [];
-                          setCurrDomains((prev) => ({
-                            ...prev,
-                            [index]: updated,
-                          }));
-                          form.setValue(`profiles.${index}.domain`, updated, {
-                            shouldValidate: true,
-                          });
-                          form.setValue(`profiles.${index}.domain_id`, '', {
-                            shouldValidate: true,
+                        onRemove={(val: string) => {
+                          setCurrDomains((prev) => {
+                            const updated = (prev[index] || []).filter(
+                              (d) => d !== val,
+                            );
+                            const newDomains = { ...prev, [index]: updated };
+                            form.setValue(`profiles.${index}.domain`, updated, {
+                              shouldValidate: true,
+                            });
+                            return newDomains;
                           });
                         }}
                         className="w-full"
