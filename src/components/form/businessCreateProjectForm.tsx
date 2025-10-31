@@ -619,86 +619,159 @@ export function CreateProjectBusinessForm() {
   );
 
   const renderProjectInfoStep = () => (
-    <>
-      <FormField
-        control={form.control}
-        name="projectName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-foreground">Project Name</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter your Project Name" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-foreground">Contact Email</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter your email" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="projectDomain"
-        render={() => (
-          <FormItem className="col-span-2">
-            <FormLabel className="text-foreground">Project Domain</FormLabel>
-            <FormControl>
-              <div>
-                <SelectTagPicker
-                  label=""
-                  options={projectDomains.map((d) => ({
-                    ...d,
-                    value: d.label,
-                  }))}
-                  selected={currProjectDomains.map((domain) => ({
-                    name: domain,
-                  }))}
-                  onAdd={(value: string) => {
-                    if (value && !currProjectDomains.includes(value)) {
-                      const updatedDomains = [...currProjectDomains, value];
-                      setCurrProjectDomains(updatedDomains);
-                      form.setValue('projectDomain', updatedDomains, {
-                        shouldValidate: true,
-                      });
-                    }
-                  }}
-                  onRemove={(name) => handleRemoveProjectDomain(name)}
-                  selectPlaceholder="Select project domain"
-                  searchPlaceholder="Search domains..."
-                  className="w-full"
-                  optionLabelKey="label"
-                />
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="description"
-        render={({ field }) => (
-          <FormItem className="col-span-2">
-            <FormLabel className="text-foreground">
-              Project Description
-            </FormLabel>
-            <FormControl>
-              <Textarea placeholder="Enter description" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+    <div className="lg:col-span-2 xl:col-span-2 border border-border rounded-xl mb-4 overflow-hidden">
+      {/* Header with icon and title */}
+      <div className="bg-muted/50 p-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-full bg-primary/10 border border-primary flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-primary"
+            >
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+              <polyline points="14 2 14 8 20 8" />
+              <path d="M16 13H8" />
+              <path d="M16 17H8" />
+              <path d="M10 9H8" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-base font-semibold leading-tight">
+              Project Information
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Provide the basic details about your project
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Form fields with internal borders */}
+      <div className="bg-card">
+        {/* Project Name */}
+        <div className="p-4 border-b border-border">
+          <FormField
+            control={form.control}
+            name="projectName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-foreground text-sm font-medium">
+                  Project Name
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your Project Name"
+                    {...field}
+                    className="bg-background border-border mt-1"
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Contact Email */}
+        <div className="p-4 border-b border-border">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-foreground text-sm font-medium">
+                  Contact Email
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your email"
+                    {...field}
+                    className="bg-background border-border mt-1"
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Project Domain */}
+        <div className="p-4 border-b border-border">
+          <FormField
+            control={form.control}
+            name="projectDomain"
+            render={() => (
+              <FormItem>
+                <FormLabel className="text-foreground text-sm font-medium">
+                  Project Domain
+                </FormLabel>
+                <FormControl>
+                  <div className="mt-1">
+                    <SelectTagPicker
+                      label=""
+                      options={projectDomains.map((d) => ({
+                        label: d.label,
+                        value: d.value,
+                        _id: d._id,
+                      }))}
+                      selected={currProjectDomains.map((domain) => ({
+                        name: domain,
+                      }))}
+                      onAdd={(value: string) => {
+                        if (value && !currProjectDomains.includes(value)) {
+                          const updatedDomains = [...currProjectDomains, value];
+                          setCurrProjectDomains(updatedDomains);
+                          form.setValue('projectDomain', updatedDomains, {
+                            shouldValidate: true,
+                          });
+                        }
+                      }}
+                      onRemove={(name: string) =>
+                        handleRemoveProjectDomain(name)
+                      }
+                      selectPlaceholder="Select project domain"
+                      searchPlaceholder="Search domains..."
+                      className="w-full bg-background border-border"
+                      optionLabelKey="label"
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Project Description */}
+        <div className="p-4">
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-foreground text-sm font-medium">
+                  Project Description
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Enter a detailed description of your project"
+                    {...field}
+                    className="min-h-[120px] bg-background border-border mt-1"
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+        </div>
+      </div>
       <div className="lg:col-span-2 xl:col-span-2">
         {urlFields.map((field, index) => (
           <FormField
@@ -744,7 +817,7 @@ export function CreateProjectBusinessForm() {
           />
         ))}
       </div>
-    </>
+    </div>
   );
 
   const renderProfileInfoStep = () => (
