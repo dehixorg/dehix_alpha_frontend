@@ -1,6 +1,7 @@
 // src/components/marketComponents/TalentContent.tsx
 'use client';
 import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 import InvitedProfileCards from './sidebar-projectComponents/profileCards.tsx/invitedProfileCards';
 import AcceptedProfileCards from './sidebar-projectComponents/profileCards.tsx/acceptedProfileCards';
@@ -57,7 +58,10 @@ const TalentContent: React.FC<TalentContentProps> = ({
     } else if (activeTab === 'overview') {
       if (loading) {
         return (
-          <div className="text-center text-muted-foreground">Loading...</div>
+          <div className="flex items-center justify-center py-10 text-muted-foreground">
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            <span>Loading</span>
+          </div>
         );
       }
       return (
@@ -158,7 +162,14 @@ const TalentContent: React.FC<TalentContentProps> = ({
               {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Talents
             </h2>
             <span className="text-muted-foreground">
-              {loading ? 'Loading...' : `Showing ${talents.length} results`}
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading</span>
+                </span>
+              ) : (
+                `Showing ${talents.length} results`
+              )}
             </span>
           </div>
           {renderCards()}
