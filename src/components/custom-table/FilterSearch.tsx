@@ -18,6 +18,10 @@ export const SearchComponent = ({
   const [search, setSearch] = useState<string>(searchValue);
 
   useEffect(() => {
+    setSearch(searchValue);
+  }, [searchValue]);
+
+  useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       setSearchValue(search);
     }, 300);

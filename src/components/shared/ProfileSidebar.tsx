@@ -1002,6 +1002,7 @@ export function ProfileSidebar({
                         className="text-xl font-semibold bg-transparent border-b border-primary focus:outline-none focus:border-primary w-full text-center"
                         value={editedValue}
                         onChange={(e) => setEditedValue(e.target.value)}
+                        onBlur={handleSaveField}
                         onKeyDown={handleKeyDown}
                       />
                     ) : (

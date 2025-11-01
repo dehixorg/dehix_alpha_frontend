@@ -137,10 +137,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
         </div>
 
         <div className="container flex-1 items-start px-4 py-6">
-          <div className="grid grid-cols-12 gap-6">
-            {/* Filters sidebar will be added later if needed */}
-
-            {/* Talent Content */}
+          <div className="grid grid-cols-12">
             <div className="col-span-12">
               <TalentContent
                 activeTab={activeTab}
