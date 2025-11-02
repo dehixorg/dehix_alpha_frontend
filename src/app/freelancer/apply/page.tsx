@@ -1,7 +1,7 @@
 'use client';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Users, Mail, Check } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import Header from '@/components/header/header';
-import JobCard from '@/components/shared/JobCard';
+import TalentMarketCard from '@/components/shared/TalentMarketCard';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
@@ -469,15 +469,36 @@ const TalentMarketPage: React.FC = () => {
               </div>
             ) : visibleJobs.length > 0 ? (
               <div className="grid gap-4">
-                {visibleJobs.map((job) => (
-                  <JobCard
-                    key={job._id}
-                    job={job}
-                    onNotInterested={() => handleRemoveJob(job._id)}
-                    bidCount={0}
-                    onApply={openApplyDialog}
-                  />
-                ))}
+                {visibleJobs.map((job) => {
+                  const item = items.find((i) => i._id === job._id);
+                  if (!item) return null;
+                  return (
+                    <TalentMarketCard
+                      key={item._id}
+                      item={item}
+                      onNotInterested={() => handleRemoveJob(item._id)}
+                      onToggleBookmark={(it, next) =>
+                        setItems((prev) =>
+                          prev.map((p) =>
+                            p._id === it._id ? { ...p, bookmarked: next } : p,
+                          ),
+                        )
+                      }
+                      onApply={(it) =>
+                        openApplyDialog({
+                          _id: it._id,
+                          projectName: job.projectName,
+                          projectDomain: job.projectDomain,
+                          description: job.description,
+                          profiles: job.profiles,
+                          createdAt: it.createdAt,
+                          updatedAt: it.updatedAt,
+                          status: it.status,
+                        } as any)
+                      }
+                    />
+                  );
+                })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-xl bg-muted/30">
@@ -521,11 +542,6 @@ const TalentMarketPage: React.FC = () => {
           </DialogHeader>
 
           <div className="space-y-3">
-            {selectedItem?.description && (
-              <p className="text-sm text-muted-foreground">
-                {selectedItem.description}
-              </p>
-            )}
             <div className="flex flex-wrap gap-2 text-sm">
               {selectedItem?.experience && (
                 <Badge variant="secondary">
@@ -537,19 +553,28 @@ const TalentMarketPage: React.FC = () => {
                   Required: {selectedItem.freelancerRequired}
                 </Badge>
               )}
-              {selectedItem?.status && (
-                <Badge variant="outline">Status: {selectedItem.status}</Badge>
-              )}
             </div>
 
             <div className="flex flex-wrap gap-2 text-xs">
-              <Badge variant="outline">
+              <Badge
+                variant="outline"
+                className="rounded-full border-sky-300 text-sky-700 bg-sky-50 px-2.5 py-1 flex items-center gap-1"
+              >
+                <Users className="h-3.5 w-3.5" />
                 Applied: {statusCounts['APPLIED'] || 0}
               </Badge>
-              <Badge variant="outline">
+              <Badge
+                variant="outline"
+                className="rounded-full border-purple-300 text-purple-700 bg-purple-50 px-2.5 py-1 flex items-center gap-1"
+              >
+                <Mail className="h-3.5 w-3.5" />
                 Invited: {statusCounts['INVITED'] || 0}
               </Badge>
-              <Badge variant="outline">
+              <Badge
+                variant="outline"
+                className="rounded-full border-emerald-300 text-emerald-700 bg-emerald-50 px-2.5 py-1 flex items-center gap-1"
+              >
+                <Check className="h-3.5 w-3.5" />
                 Selected: {statusCounts['SELECTED'] || 0}
               </Badge>
             </div>
@@ -601,13 +626,6 @@ const TalentMarketPage: React.FC = () => {
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setApplyOpen(false)}
-              disabled={submitting}
-            >
-              Close
-            </Button>
             <Button
               onClick={async () => {
                 if (!selectedItem) return;

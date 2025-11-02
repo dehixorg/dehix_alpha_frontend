@@ -85,7 +85,6 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
           <SkeletonCard key={index} />
         ))
       ) : talents.length > 0 ? (
-        // The CORRECTED map function with a unique key
         talents.map((talent, index) => (
           <Card key={`${talent._id}-${index}`} className="overflow-hidden">
             <CardHeader className="pb-2">
@@ -140,9 +139,9 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
             </CardContent>
             <div className="flex justify-between p-6 pt-2">
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost">
+                {/* <Button size="sm" variant="ghost">
                   Cancel
-                </Button>
+                </Button> */}
                 <Button
                   size="sm"
                   variant="outline"
