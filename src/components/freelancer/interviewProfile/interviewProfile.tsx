@@ -19,7 +19,10 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import DomainDialog from '@/components/dialogs/domainDialog';
-import { getBadgeColor, statusOutlineClasses } from '@/utils/common/getBadgeStatus';
+import {
+  getBadgeColor,
+  statusOutlineClasses,
+} from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
 import { RootState } from '@/lib/store';
@@ -433,10 +436,18 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-200 hover:bg-gray-300 dark:bg-[#09090B] dark:hover:bg-[#09090B]">
-                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">Item</TableHead>
-                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">Level</TableHead>
-                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">Experience</TableHead>
-                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">Status</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Item
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Level
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Experience
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Status
+                </TableHead>
                 <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                   <div className="flex gap-2 items-center">
                     Actions
@@ -474,27 +485,40 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                     </TableRow>
                   ))
                 : filteredData()!.map((item) => (
-                    <TableRow key={item._id} className="hover:bg-gray-50 dark:hover:bg-[#0C0C0F]">
-                      <TableCell className="font-medium text-gray-900 dark:text-gray-100">{item.name}</TableCell>
+                    <TableRow
+                      key={item._id}
+                      className="hover:bg-gray-50 dark:hover:bg-[#0C0C0F]"
+                    >
+                      <TableCell className="font-medium text-gray-900 dark:text-gray-100">
+                        {item.name}
+                      </TableCell>
                       <TableCell className="">
-                        <Badge className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.level)}`}>
+                        <Badge
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.level)}`}
+                        >
                           {item?.level?.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-gray-600 dark:text-gray-300">
-                        {typeof item.experience === 'number' && item.experience > 0
+                        {typeof item.experience === 'number' &&
+                        item.experience > 0
                           ? item.experience + ' yrs'
                           : ''}
                       </TableCell>
                       <TableCell className="">
-                        <Badge className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.interviewStatus)}`}>
+                        <Badge
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.interviewStatus)}`}
+                        >
                           {item?.interviewStatus?.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell className="py-2">
-                        {String(item?.interviewStatus).toUpperCase() === 'COMPLETED' ? (
+                        {String(item?.interviewStatus).toUpperCase() ===
+                        'COMPLETED' ? (
                           <div className="flex justify-start">
-                            <Button variant="secondary" size="sm">View Report</Button>
+                            <Button variant="secondary" size="sm">
+                              View Report
+                            </Button>
                           </div>
                         ) : (
                           <div className="flex justify-start">

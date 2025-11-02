@@ -113,12 +113,14 @@ export default function CurrentComponent() {
   return (
     <>
       <div className="ml-5 md:ml-10 mr-5 md:mr-10">
-        <div className='w-full rounded-xl p-5 md:p-6 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500'>
-        <h1 className="text-2xl md:text-3xl font-bold text-white">Current Interviews</h1>
-        <p className="mt-2 text-slate-200">
-          View and manage your current interviews, and update skills for better
-          matches.
-        </p>
+        <div className="w-full rounded-xl p-5 md:p-6 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500">
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
+            Current Interviews
+          </h1>
+          <p className="mt-2 text-slate-200">
+            View and manage your current interviews, and update skills for
+            better matches.
+          </p>
         </div>
       </div>
       <div className="flex flex-col flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
