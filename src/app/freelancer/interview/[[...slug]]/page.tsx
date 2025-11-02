@@ -56,28 +56,31 @@ export default function InterviewPage() {
               }
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-4 mb-5">
+              <TabsList className="grid w-full grid-cols-4 mb-5 rounded-xl border bg-white/60 dark:bg-[#0B0B0E]/60 backdrop-blur p-1 shadow-sm">
                 <TabsTrigger
                   value="profile"
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   <Users2 className="h-4 w-4" />
                   <span>Profile</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="current"
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   <ListVideo className="h-4 w-4" />
                   <span>Current</span>
                 </TabsTrigger>
-                <TabsTrigger value="bids" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="bids"
+                  className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
                   <Briefcase className="h-4 w-4" />
                   <span>Bids</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="history"
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   <History className="h-4 w-4" />
                   <span>History</span>

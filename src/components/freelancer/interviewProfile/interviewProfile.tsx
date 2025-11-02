@@ -18,9 +18,11 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ButtonIcon } from '@/components/shared/buttonIcon';
 import DomainDialog from '@/components/dialogs/domainDialog';
-import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import {
+  getBadgeColor,
+  statusOutlineClasses,
+} from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
 import { RootState } from '@/lib/store';
@@ -391,7 +393,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           </DropdownMenu>
         </div>
 
-        <div className="w-full relative border border-gray-200 rounded-lg p-4">
+        <div className="w-full relative border border-gray-200 rounded-xl shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs md:text-xl font-semibold w-1/2">
               Skills & Domains
@@ -433,12 +435,20 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           </div>
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-[#09090B]">
-                <TableHead className="">Item</TableHead>
-                <TableHead className="">Level</TableHead>
-                <TableHead className="">Experience</TableHead>
-                <TableHead className="">Status</TableHead>
-                <TableHead className="">
+              <TableRow className="bg-gray-200 hover:bg-gray-300 dark:bg-[#09090B] dark:hover:bg-[#09090B]">
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Item
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Level
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Experience
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Status
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                   <div className="flex gap-2 items-center">
                     Actions
                     <Popover>
@@ -475,37 +485,56 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                     </TableRow>
                   ))
                 : filteredData()!.map((item) => (
-                    <TableRow key={item._id}>
-                      <TableCell className="">{item.name}</TableCell>
+                    <TableRow
+                      key={item._id}
+                      className="hover:bg-gray-50 dark:hover:bg-[#0C0C0F]"
+                    >
+                      <TableCell className="font-medium text-gray-900 dark:text-gray-100">
+                        {item.name}
+                      </TableCell>
                       <TableCell className="">
-                        <Badge className={getBadgeColor(item.level)}>
+                        <Badge
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.level)}`}
+                        >
                           {item?.level?.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className="">
+                      <TableCell className="text-gray-600 dark:text-gray-300">
                         {typeof item.experience === 'number' &&
                         item.experience > 0
-                          ? item.experience + ' years'
+                          ? item.experience + ' yrs'
                           : ''}
                       </TableCell>
                       <TableCell className="">
-                        <Badge className={getBadgeColor(item.interviewStatus)}>
+                        <Badge
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.interviewStatus)}`}
+                        >
                           {item?.interviewStatus?.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className="flex items-center gap-2">
-                        <ButtonIcon
-                          icon={
-                            <Edit2 className="w-4 h-4 text-gray-400 cursor-not-allowed" />
-                          }
-                          disabled
-                          onClick={() =>
-                            handleSkillDomainDialog(
-                              item,
-                              item.experience ? 'SKILL' : 'DOMAIN',
-                            )
-                          }
-                        />
+                      <TableCell className="py-2">
+                        {String(item?.interviewStatus).toUpperCase() ===
+                        'COMPLETED' ? (
+                          <div className="flex justify-start">
+                            <Button variant="secondary" size="sm">
+                              View Report
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex justify-start">
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                handleSkillDomainDialog(
+                                  item,
+                                  item.experience ? 'SKILL' : 'DOMAIN',
+                                )
+                              }
+                            >
+                              Conduct Interview
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
