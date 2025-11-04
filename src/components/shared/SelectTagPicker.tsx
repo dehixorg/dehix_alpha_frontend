@@ -62,7 +62,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
         (s) =>
           String((s as any)[selectedNameKey]) === String(opt?.[optionLabelKey]),
       );
-      return label.includes(q) && !alreadySelected;
+      return label.includes(q);
     });
   }, [options, selected, optionLabelKey, selectedNameKey, searchQuery]);
 
@@ -121,9 +121,6 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
                             className="pointer-events-none"
                           />
                           <span className="flex-1">{val}</span>
-                          {checked && (
-                            <Check className="h-4 w-4 text-primary" />
-                          )}
                         </CommandItem>
                       );
                     })}
