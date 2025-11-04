@@ -19,15 +19,15 @@ import {
   StopCircle,
   Trash2,
   X,
-  Archive,
   ArchiveRestore,
+  Archive,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { doc, DocumentData, updateDoc } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import DOMPurify from 'dompurify';
+import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
 import {
@@ -64,10 +64,8 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { toast } from '@/hooks/use-toast';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
-import { db } from '@/config/firebaseConfig';
 import {
   Dialog,
   DialogContent,
@@ -76,7 +74,7 @@ import {
   DialogOverlay,
 } from '@/components/ui/dialog';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
-
+import { db } from '@/config/firebaseConfig';
 
 
   function useDebounce<T> (value: T, delay: number = 500): T {
@@ -126,7 +124,7 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
-  onConversationUpdate?: (conv: Conversation | null) => void;
+  onConversationUpdate?: (updatedConversation: Conversation) => void;
 }
 
 export function CardsChat({
@@ -156,11 +154,6 @@ export function CardsChat({
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
-
-  // Formatting active states (for visual active toggles)
-  const [boldActive, setBoldActive] = useState<boolean>(false);
-  const [italicActive, setItalicActive] = useState<boolean>(false);
-  const [underlineActive, setUnderlineActive] = useState<boolean>(false);
 
   const prevMessagesLength = useRef(messages.length);
   const [, setOpenDrawer] = useState(false);
@@ -251,15 +244,22 @@ export function CardsChat({
 
     if (conversation.type === 'group') {
       onOpenProfileSidebar(conversation.id, 'group', {
-        userName: conversation.displayName,
+        userName: conversation.groupName,
+        email: '',
         profilePic: conversation.avatar,
       });
     } else {
-      const otherParticipantUid = conversation.participants.find(
-        (p) => p !== user.uid,
+      // For 1:1 chats, pass the other user's details
+      const otherParticipantUid = conversation.participants?.find(
+        (p: string) => p !== user.uid,
       );
       if (otherParticipantUid) {
-        const participantDetails =
+        const participantDetails = conversation.participantDetails?.[otherParticipantUid];
+        onOpenProfileSidebar(otherParticipantUid, 'user', {
+          userName: participantDetails?.userName || '',
+          email: participantDetails?.email || '',
+          profilePic: participantDetails?.profilePic || '',
+        });
           conversation.participantDetails?.[otherParticipantUid];
         const initialUserData = {
           userName: participantDetails?.userName || primaryUser.userName,
@@ -315,30 +315,6 @@ export function CardsChat({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Keep formatting button state in sync with the caret/selection
-  useEffect(() => {
-    const updateFormattingState = () => {
-      try {
-        // queryCommandState returns true/false for the current selection
-        const b = document.queryCommandState('bold');
-        const i = document.queryCommandState('italic');
-        const u = document.queryCommandState('underline');
-        setBoldActive(Boolean(b));
-        setItalicActive(Boolean(i));
-        setUnderlineActive(Boolean(u));
-      } catch (err) {
-        // Some environments may not support queryCommandState - ignore
-      }
-    };
-
-    document.addEventListener('selectionchange', updateFormattingState);
-    // also run once to initialize when the component mounts
-    updateFormattingState();
-    return () => {
-      document.removeEventListener('selectionchange', updateFormattingState);
-    };
-  }, []);
-
   // Subscribe to messages for this conversation and manage loading state
   useEffect(() => {
     if (!conversation?.id) return;
@@ -389,15 +365,16 @@ export function CardsChat({
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
+    // --- ADD THIS CHECK ---
     if (conversation.blocked?.status === true) {
       toast({
         variant: 'destructive',
         title: 'Action Denied',
         description: 'You cannot send messages to a blocked conversation.',
       });
-      return;
+      return; // Stop the function
     }
-
+    // --- END OF CHECK ---
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
@@ -449,7 +426,11 @@ export function CardsChat({
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        notifyError('File size should not exceed 10MB', 'File too large');
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: 'File size should not exceed 10MB',
+        });
         return;
       }
 
@@ -466,10 +447,11 @@ export function CardsChat({
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        notifyError(
-          'Please upload an image, PDF, Word, or PowerPoint file',
-          'Invalid file type',
-        );
+        toast({
+          variant: 'destructive',
+          title: 'Invalid file type',
+          description: 'Please upload an image, PDF, Word, or PowerPoint file',
+        });
         return;
       }
 
@@ -519,7 +501,10 @@ export function CardsChat({
 
         await sendMessage(conversation, message, setInput);
 
-        notifySuccess('File uploaded successfully', 'Success');
+        toast({
+          title: 'Success',
+          description: 'File uploaded successfully',
+        });
       } catch (error: any) {
         console.error('Error uploading file:', {
           error: error.message,
@@ -538,7 +523,11 @@ export function CardsChat({
           errorMessage = error.response.data.message;
         }
 
-        notifyError(errorMessage, 'Upload failed');
+        toast({
+          variant: 'destructive',
+          title: 'Upload failed',
+          description: errorMessage,
+        });
       } finally {
         setIsSending(false);
       }
@@ -571,17 +560,7 @@ export function CardsChat({
    */
   function handleBold() {
     composerRef.current?.focus();
-    try {
-      document.execCommand('bold');
-    } catch (err) {
-      // ignore
-    }
-    // update visual state
-    try {
-      setBoldActive(Boolean(document.queryCommandState('bold')));
-    } catch (err) {
-      console.error('Error applying bold style:');
-    }
+    document.execCommand('bold');
   }
 
   /**
@@ -589,16 +568,7 @@ export function CardsChat({
    */
   const handleUnderline = () => {
     composerRef.current?.focus();
-    try {
-      document.execCommand('underline');
-    } catch (err) {
-      // ignore
-    }
-    try {
-      setUnderlineActive(Boolean(document.queryCommandState('underline')));
-    } catch (err) {
-      console.error('Error applying UnderLine style:');
-    }
+    document.execCommand('underline');
   };
 
   /**
@@ -606,16 +576,7 @@ export function CardsChat({
    */
   function handleitalics() {
     composerRef.current?.focus();
-    try {
-      document.execCommand('italic');
-    } catch (err) {
-      // ignore
-    }
-    try {
-      setItalicActive(Boolean(document.queryCommandState('italic')));
-    } catch (err) {
-      console.error('Error applying italic style:');
-    }
+    document.execCommand('italic');
   }
 
   const toggleFormattingOptions = () => {
@@ -671,13 +632,17 @@ export function CardsChat({
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
       setRecordingStatus('recording');
-      notifySuccess('Speak into your microphone.', 'Recording started');
+      toast({
+        title: 'Recording started',
+        description: 'Speak into your microphone.',
+      });
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      notifyError(
-        'Could not access microphone. Please check permissions.',
-        'Microphone Error',
-      );
+      toast({
+        variant: 'destructive',
+        title: 'Microphone Error',
+        description: 'Could not access microphone. Please check permissions.',
+      });
       setRecordingStatus('idle');
     }
   };
@@ -721,15 +686,16 @@ export function CardsChat({
     if (recordingDurationIntervalRef.current) {
       clearInterval(recordingDurationIntervalRef.current);
     }
-    notifySuccess('Recording discarded');
+    toast({ title: 'Recording discarded' });
   };
 
   const handleSendVoiceMessage = async () => {
     if (!audioBlob || !user || !conversation) {
-      notifyError(
-        'No audio recorded or user/conversation not found.',
-        'Error',
-      );
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No audio recorded or user/conversation not found.',
+      });
       return;
     }
 
@@ -795,7 +761,7 @@ export function CardsChat({
       // Step 6: Send message using the same working sendMessage function
       await sendMessage(conversation, message, setInput);
 
-      notifySuccess('Voice message sent!', 'Success');
+      toast({ title: 'Success', description: 'Voice message sent!' });
     } catch (error: any) {
       console.error('Error sending voice message:', error);
       console.error('Error details:', {
@@ -832,7 +798,11 @@ export function CardsChat({
         errorMessage = `Error: ${error.message}`;
       }
 
-      notifyError(errorMessage, 'Upload Failed');
+      toast({
+        variant: 'destructive',
+        title: 'Upload Failed',
+        description: errorMessage,
+      });
     } finally {
       discardRecording(); // Clean up states regardless of success/failure
       setRecordingStatus('idle');
@@ -885,133 +855,138 @@ export function CardsChat({
     );
   }
 
-  const isBlocked = conversation?.blocked?.status === true;
-  const isArchived =
-    conversation?.participantDetails?.[user.uid]?.viewState === 'archived';
 
+  // --- ADD THIS LOGIC ---
+  // 1. Determine if the current conversation is blocked
+  const isBlocked = conversation?.blocked?.status === true;
+  const isArchived = conversation?.participantDetails?.[user.uid]?.viewState === 'archived';
+  // 2. Create a dynamic message to show the user
   let blockMessage = '';
   if (isBlocked) {
     if (conversation.blocked?.by === user.uid) {
-      blockMessage =
-        'You have blocked this conversation. Unblock them to send a message.';
+      blockMessage = "You have blocked this conversation. Unblock them to send a message.";
     } else {
-      blockMessage = 'This conversation is blocked. You cannot send a message.';
+      blockMessage = "This conversation is blocked. You cannot send a message.";
     }
   }
 
-  async function handleToggleArchive() {
-    if (!user?.uid || !conversation?.id) return;
+  // Inside your CardsChat component in chat.tsx
 
-    const currentState = conversation.participantDetails?.[user.uid]?.viewState;
-    const newState = currentState === 'archived' ? 'inbox' : 'archived';
+// --- HIGHLIGHT: ADD THIS ENTIRE FUNCTION ---
+async function handleToggleArchive() {
+  if (!user?.uid || !conversation?.id) return;
 
-    const conversationDocRef = doc(db, 'conversations', conversation.id);
-    const fieldToUpdate = `participantDetails.${user.uid}.viewState`;
+  // 1. Determine the current and new state
+  const currentState = conversation.participantDetails?.[user.uid]?.viewState;
 
-    try {
-      await updateDoc(conversationDocRef, { [fieldToUpdate]: newState });
+  const newState = currentState === 'archived' ? 'inbox' : 'archived';
 
-      const updatedConversation = {
-        ...conversation,
-        participantDetails: {
-          ...conversation.participantDetails,
-          [user.uid]: {
-            ...conversation.participantDetails?.[user.uid],
-            viewState: newState,
-          },
+  // 2. Prepare the update for Firestore
+  const conversationDocRef = doc(db, 'conversations', conversation.id);
+  const fieldToUpdate = `participantDetails.${user.uid}.viewState`;
+
+  try {
+    // 3. Update the document in Firestore
+    await updateDoc(conversationDocRef, { [fieldToUpdate]: newState });
+
+    // 4. Create the updated conversation object for the local state
+    const updatedConversation = {
+      ...conversation,
+      participantDetails: {
+        ...conversation.participantDetails,
+        [user.uid]: {
+          ...conversation.participantDetails?.[user.uid],
+          viewState: newState,
         },
-      };
+      },
+    };
 
-      onConversationUpdate?.(updatedConversation as Conversation);
+    // 5. Call the prop to update the parent's state instantly
+    onConversationUpdate?.(updatedConversation as Conversation);
 
-      toast({
-        title: `Conversation ${newState === 'archived' ? 'Archived' : 'Unarchived'}`,
-      });
-    } catch (error) {
-      console.error('Error toggling archive state:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not update archive status.',
-      });
-    }
+    toast({
+      title: `Conversation ${newState === 'archived' ? 'Archived' : 'Unarchived'}`,
+    });
+  } catch (error) {
+    console.error("Error toggling archive state:", error);
+    toast({ variant: 'destructive', title: 'Error', description: 'Could not update archive status.' });
   }
-
-  return (
-    <>
-      {/* Image Modal */}
-      {modalImage && (
+}
+return (
+  <>
+    {/* Image Modal */}
+    {modalImage && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+        onClick={() => setModalImage(null)}
+      >
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
-          onClick={() => setModalImage(null)}
+          className="relative max-w-3xl w-full flex flex-col items-center"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div
-            className="relative max-w-3xl w-full flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 z-10"
+            onClick={() => setModalImage(null)}
           >
-            <button
-              className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 z-10"
-              onClick={() => setModalImage(null)}
-            >
-              <X className="w-6 h-6 text-black" />
-            </button>
-            <Image
-              src={modalImage}
-              alt="Full Image"
-              width={800}
-              height={800}
-              className="rounded-lg max-h-[80vh] w-auto h-auto object-contain bg-white"
-            />
+            <X className="w-6 h-6 text-black" />
+          </button>
+          <Image
+            src={modalImage}
+            alt="Full Image"
+            width={800}
+            height={800}
+            className="rounded-lg max-h-[80vh] w-auto h-auto object-contain bg-white"
+          />
+        </div>
+      </div>
+    )}
+    {loading ? (
+      <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
+          <div className="flex items-center space-x-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-8 rounded-full" />
           </div>
         </div>
-      )}
-      {loading ? (
-        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
-          {/* Header Skeleton */}
-          <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
-            <div className="flex items-center space-x-3">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="space-y-1">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <Skeleton className="h-8 w-8 rounded-full" />
+
+        {/* Messages Skeleton */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-6">
+          {/* Incoming message skeleton */}
+          <div className="flex items-start space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-16 w-64 rounded-lg" />
             </div>
           </div>
 
-          {/* Messages Skeleton */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-6">
-            {/* Incoming message skeleton */}
-            <div className="flex items-start space-x-2">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-16 w-64 rounded-lg" />
-              </div>
-            </div>
-
-            {/* Outgoing message skeleton */}
-            <div className="flex justify-end">
-              <div className="space-y-2 max-w-[80%]">
-                <Skeleton className="h-4 w-16 ml-auto" />
-                <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
-              </div>
+          {/* Outgoing message skeleton */}
+          <div className="flex justify-end">
+            <div className="space-y-2 max-w-[80%]">
+              <Skeleton className="h-4 w-16 ml-auto" />
+              <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
             </div>
           </div>
+        </div>
 
-          {/* Input area skeleton */}
-          <div className="p-3 border-t border-[hsl(var(--border))]">
-            <div className="flex items-center space-x-2">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="flex-1 h-10 rounded-full" />
-              <Skeleton className="h-10 w-10 rounded-full" />
-            </div>
+        {/* Input area skeleton */}
+        <div className="p-3 border-t border-[hsl(var(--border))]">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="flex-1 h-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
           </div>
-        </Card>
-      ) : (
+        </div>
+      </Card>
+    ) : (
         <>
           <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
@@ -1045,13 +1020,13 @@ export function CardsChat({
                       : 'P'}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))]">
+                <div className="cursor-pointer">
+                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))] hover:underline">
                     {conversation.type === 'group'
                       ? conversation.groupName
                       : primaryUser.userName || 'Chat'}
                   </p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] hover:underline">
                     {conversation.type === 'group'
                       ? `${Object.keys(conversation.participantDetails || {}).length} members`
                       : primaryUser.email || 'Click to view profile'}
@@ -1093,21 +1068,21 @@ export function CardsChat({
                   <Search className="h-5 w-5" />
                 </Button>
               )}
-
-              {/* Archive/Unarchive button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
-                onClick={handleToggleArchive}
-                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                {isArchived ? (
-                  <ArchiveRestore className="h-5 w-5" />
-                ) : (
-                  <Archive className="h-5 w-5" />
-                )}
-              </Button>
+              {/* --- HIGHLIGHT: ADD THIS BUTTON --- */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
+                  onClick={handleToggleArchive}
+                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                >
+                  {isArchived ? (
+                    <ArchiveRestore className="h-5 w-5" /> // Icon for unarchiving
+                  ) : (
+                    <Archive className="h-5 w-5" /> // Icon for archiving
+                  )}
+                </Button>
+                {/* --- END HIGHLIGHT --- */}
 
               {/* Video call */}
               <Button
@@ -1179,7 +1154,7 @@ export function CardsChat({
                     messages={messages as any}
                     userId={user.uid}
                     conversation={conversation}
-                    onHoverChange={setHoveredMessageId}
+                    onHoverChange={(id) => setHoveredMessageId(id)}
                     setModalImage={setModalImage}
                     audioRefs={audioRefs}
                     handleLoadedMetadata={handleLoadedMetadata}
@@ -1187,18 +1162,20 @@ export function CardsChat({
                     toggleReaction={toggleReaction}
                     setReplyToMessageId={setReplyToMessageId}
                     messagesEndRef={messagesEndRef}
+                    onOpenProfileSidebar={onOpenProfileSidebar}
                   />
                 ))}
               </ScrollArea>
             </CardContent>
             <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-b-xl">
               {isBlocked ? (
-                <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                  <p>{blockMessage}</p>
-                </div>
+                  // If blocked, show this message
+                  <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    <p>{blockMessage}</p>
+                  </div>
               ) : (
-                <form
-                  onSubmit={(event) => {
+              <form
+                onSubmit={(event) => {
                   event.preventDefault();
                   if (input.trim().length === 0) return;
                   const newMessage = {
@@ -1352,13 +1329,7 @@ export function CardsChat({
                     onClick={handleBold}
                     title="Bold"
                     aria-label="Bold"
-                    aria-pressed={boldActive}
-                    className={
-                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                      (boldActive
-                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                    }
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                   >
                     {' '}
                     <Bold className="h-4 w-4" />{' '}
@@ -1370,13 +1341,7 @@ export function CardsChat({
                     onClick={handleitalics}
                     title="Italic"
                     aria-label="Italic"
-                    aria-pressed={italicActive}
-                    className={
-                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                      (italicActive
-                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                    }
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                   >
                     {' '}
                     <Italic className="h-4 w-4" />{' '}
@@ -1388,13 +1353,7 @@ export function CardsChat({
                     onClick={handleUnderline}
                     title="Underline"
                     aria-label="Underline"
-                    aria-pressed={underlineActive}
-                    className={
-                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                      (underlineActive
-                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                    }
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                   >
                     {' '}
                     <Underline className="h-4 w-4" />{' '}
@@ -1431,13 +1390,7 @@ export function CardsChat({
                         onClick={handleBold}
                         title="Bold"
                         aria-label="Bold"
-                        aria-pressed={boldActive}
-                        className={
-                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                          (boldActive
-                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                        }
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                       >
                         {' '}
                         <Bold className="h-4 w-4" />{' '}
@@ -1449,13 +1402,7 @@ export function CardsChat({
                         onClick={handleitalics}
                         title="Italic"
                         aria-label="Italic"
-                        aria-pressed={italicActive}
-                        className={
-                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                          (italicActive
-                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                        }
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                       >
                         {' '}
                         <Italic className="h-4 w-4" />{' '}
@@ -1467,13 +1414,7 @@ export function CardsChat({
                         onClick={handleUnderline}
                         title="Underline"
                         aria-label="Underline"
-                        aria-pressed={underlineActive}
-                        className={
-                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                          (underlineActive
-                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                        }
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                       >
                         {' '}
                         <Underline className="h-4 w-4" />{' '}
@@ -1623,18 +1564,12 @@ export function CardsChat({
              transition-transform duration-300 animate-in fade-in zoom-in-95"
               >
                 <DialogHeader></DialogHeader>
-                <NewReportTab 
-                  reportData={reportData} 
-                  onSubmitted={() => {
-                    setOpenReport(false);
-                    return true;
-                  }}
-                />
+                <NewReportTab reportData={reportData} />
               </DialogContent>
             </DialogPortal>
           </Dialog>
         </>
       )}
     </>
-  );
+    );
 }

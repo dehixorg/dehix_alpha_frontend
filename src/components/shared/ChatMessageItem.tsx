@@ -78,6 +78,11 @@ type Props = {
   toggleReaction: (messageId: string, emoji: string) => Promise<void>;
   setReplyToMessageId: (id: string) => void;
   messagesEndRef?: RefObject<HTMLDivElement>;
+  onOpenProfileSidebar?: (
+    id: string,
+    type: 'user' | 'group',
+    initialDetails?: { userName?: string; email?: string; profilePic?: string },
+  ) => void;
 };
 
 function ChatMessageItem({
@@ -94,6 +99,7 @@ function ChatMessageItem({
   toggleReaction,
   setReplyToMessageId,
   messagesEndRef,
+  onOpenProfileSidebar,
 }: Props) {
   const formattedTimestamp = useMemo(() => formatChatTimestamp(message.timestamp), [message.timestamp]);
   const readableTimestamp = useMemo(() => formatDistanceToNow(new Date(message.timestamp)) + ' ago', [message.timestamp]);
@@ -133,6 +139,11 @@ function ChatMessageItem({
     [conversation.participantDetails, isGroupChat, isSender, message.senderId]
   );
 
+  const senderAvatar = useMemo(
+    () => (isGroupChat && !isSender ? (conversation.participantDetails?.[message.senderId]?.profilePic || '') : ''),
+    [conversation.participantDetails, isGroupChat, isSender, message.senderId]
+  );
+
   const sanitizedContent = useMemo(
     () =>
       DOMPurify.sanitize(message.content, {
@@ -163,12 +174,40 @@ function ChatMessageItem({
         onMouseLeave={() => onHoverChange(null)}
       >
         {!isSender && (
-          <div className="flex-shrink-0 mr-2">
+          <div
+            role="button"
+            tabIndex={0}
+            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => {
+              if (onOpenProfileSidebar) {
+                onOpenProfileSidebar(
+                  message.senderId,
+                  'user',
+                  {
+                    userName: senderName,
+                    profilePic: senderAvatar,
+                  }
+                );
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (onOpenProfileSidebar) {
+                  onOpenProfileSidebar(
+                    message.senderId,
+                    'user',
+                    {
+                      userName: senderName,
+                      profilePic: senderAvatar,
+                    }
+                  );
+                }
+              }
+            }}
+          >
             <Avatar className="w-8 h-8">
-              <AvatarImage
-                src={conversation.participantDetails?.[message.senderId]?.profilePic}
-                alt={conversation.participantDetails?.[message.senderId]?.userName}
-              />
+              <AvatarImage src={senderAvatar} alt={senderName} />
               <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
                 {senderName ? senderName.charAt(0).toUpperCase() : 'U'}
               </AvatarFallback>

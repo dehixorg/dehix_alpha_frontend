@@ -112,12 +112,14 @@ interface JobCardProps {
   job: Project;
   onNotInterested: () => void;
   bidCount: number;
+  onApply?: (job: Project) => void;
 }
 
 const JobCard: React.FC<JobCardProps> = ({
   job,
   onNotInterested,
   bidCount,
+  onApply,
 }) => {
   const [loading, setLoading] = useState(false);
 
@@ -511,7 +513,13 @@ const JobCard: React.FC<JobCardProps> = ({
                   className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg"
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push(`/freelancer/market/project/${job._id}/apply`);
+                    if (onApply) {
+                      onApply(job);
+                    } else {
+                      router.push(
+                        `/freelancer/market/project/${job._id}/apply`,
+                      );
+                    }
                   }}
                 >
                   <span>Apply Now</span>
