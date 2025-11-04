@@ -46,7 +46,6 @@ export default function BidedInterviews() {
   const [error, setError] = useState<string | null>(null);
 
   const getRowKey = (bid: PendingBid) => `${bid.interviewId}-${bid.bidKey}`;
-
   // This function is now identical to the working version in CurrentInterviews,
   // making it much more robust at finding the ID.
   const getInterviewerName = useCallback(

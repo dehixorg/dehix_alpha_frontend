@@ -308,9 +308,16 @@ export default function CurrentInterviews() {
   // ---------- Empty State ----------
   if (interviews.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground text-sm">
-          No scheduled interviews found.
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+          <Calendar className="h-10 w-10 text-gray-400" />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          No Scheduled Interviews
+        </h3>
+        <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
+          You don&apos;t have any scheduled interviews at the moment. Check
+          back later for new opportunities.
         </p>
       </div>
     );
@@ -318,20 +325,81 @@ export default function CurrentInterviews() {
 
   // ---------- Main UI ----------
   return (
-    <div className="space-y-4">
-      <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+    <div className="space-y-6 p-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                Total Interviews
+              </p>
+              <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                {interviews.length}
+              </p>
+            </div>
+            <Calendar className="h-8 w-8 text-blue-500" />
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                Upcoming
+              </p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                {
+                  interviews.filter((i) => {
+                    const interviewDate = new Date(i.interviewDate);
+                    const today = new Date();
+                    return interviewDate >= today;
+                  }).length
+                }
+              </p>
+            </div>
+            <Clock className="h-8 w-8 text-green-500" />
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+                Past Due
+              </p>
+              <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                {
+                  interviews.filter((i) => {
+                    const interviewDate = new Date(i.interviewDate);
+                    const today = new Date();
+                    return interviewDate < today;
+                  }).length
+                }
+              </p>
+            </div>
+            <Info className="h-8 w-8 text-purple-500" />
+          </div>
+        </div>
+      </div>
+
+      <div className="w-full bg-white dark:bg-[#0a0a0b] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-[#09090B]">
-              <TableHead className="text-center font-medium">
+            <TableRow className="bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-900/50">
+              <TableHead className="text-center font-semibold text-gray-700 dark:text-gray-300">
                 Interviewer
               </TableHead>
-              <TableHead className="text-center font-medium">Date</TableHead>
-              <TableHead className="text-center font-medium">Time</TableHead>
-              <TableHead className="text-center font-medium">
+              <TableHead className="text-center font-semibold text-gray-700 dark:text-gray-300">
+                Date
+              </TableHead>
+              <TableHead className="text-center font-semibold text-gray-700 dark:text-gray-300">
+                Time
+              </TableHead>
+              <TableHead className="text-center font-semibold text-gray-700 dark:text-gray-300">
                 Link/Feedback
               </TableHead>
-              <TableHead className="text-center font-medium"></TableHead>
+              <TableHead className="text-center font-semibold text-gray-700 dark:text-gray-300">
+                Details
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -357,47 +425,65 @@ export default function CurrentInterviews() {
               const status = todayDate > InterviewDate ? 'past' : 'upcoming';
 
               return (
-                <TableRow key={interview._id}>
+                <TableRow
+                  key={interview._id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors border-b border-gray-100 dark:border-gray-800"
+                >
                   {/* Interviewer */}
-                  <TableCell className="py-3 text-center font-semibold text-gray-900 dark:text-white">
-                    {interviewerName}
+                  <TableCell className="py-4 text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold shadow-md">
+                        {interviewerName.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {interviewerName}
+                      </span>
+                    </div>
                   </TableCell>
 
                   {/* Date */}
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Calendar className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <TableCell className="py-4 text-center">
+                    <div className="inline-flex items-center justify-center gap-2 bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-lg">
+                      <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
                         {date}
                       </span>
                     </div>
                   </TableCell>
 
                   {/* Time */}
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Clock className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <TableCell className="py-4 text-center">
+                    <div className="inline-flex items-center justify-center gap-2 bg-green-50 dark:bg-green-950/30 px-3 py-1.5 rounded-lg">
+                      <Clock className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <span className="text-sm font-medium text-green-700 dark:text-green-300">
                         {time}
                       </span>
                     </div>
                   </TableCell>
 
                   {/* Link or Feedback */}
-                  <TableCell className="py-3 text-center">
+                  <TableCell className="py-4 text-center">
                     <div className="flex items-center justify-center gap-2">
                       {status === 'past' ? (
                         interview.interviewerFeedback ? (
-                          <Button variant="outline" size="sm">
-                            Submitted
-                          </Button>
+                          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                            <Star className="h-4 w-4 fill-green-500 text-green-500" />
+                            <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                              Submitted
+                            </span>
+                          </div>
                         ) : (
                           <Dialog
                             open={isDialogOpen}
                             onOpenChange={setIsDialogOpen}
                           >
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40"
+                              >
+                                <Star className="h-4 w-4 mr-2" />
                                 Feedback
                               </Button>
                             </DialogTrigger>
@@ -441,8 +527,9 @@ export default function CurrentInterviews() {
                                     onClick={() => handleRejected(interview)}
                                     className="w-full"
                                     disabled={submitting}
+                                    variant="destructive"
                                   >
-                                    Rejected
+                                    Reject
                                   </Button>
                                 </div>
                               </div>
@@ -451,23 +538,21 @@ export default function CurrentInterviews() {
                         )
                       ) : (
                         <>
-                          <Video className="h-4 w-4 text-purple-500" />
                           {interview.meetingLink ? (
                             <Button
-                              variant="outline"
+                              variant="default"
                               size="sm"
                               onClick={() =>
                                 window.open(interview.meetingLink, '_blank')
                               }
-                              className="flex items-center gap-2"
+                              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-md"
                             >
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
-                                Join Meeting
-                              </span>
+                              <Video className="h-4 w-4 mr-2" />
+                              Join Meeting
                             </Button>
                           ) : (
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              No Link
+                            <span className="text-sm text-gray-500 dark:text-gray-400 italic">
+                              No Link Available
                             </span>
                           )}
                         </>
@@ -476,18 +561,21 @@ export default function CurrentInterviews() {
                   </TableCell>
 
                   {/* Info Button */}
-                  <TableCell className="py-3 text-center relative">
+                  <TableCell className="py-4 text-center relative">
                     <button
                       onClick={() =>
                         setOpenDescIdx(openDescIdx === idx ? null : idx)
                       }
-                      className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
+                      className="bg-gray-100 dark:bg-gray-800 rounded-full p-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <Info size={16} color="white" />
+                      <Info
+                        size={18}
+                        className="text-gray-600 dark:text-gray-400"
+                      />
                     </button>
                     {openDescIdx === idx && (
                       <div
-                        className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"
+                        className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-left absolute z-10 min-w-[250px] max-w-[350px]"
                         style={{
                           top: '50%',
                           right: '50%',
@@ -495,13 +583,13 @@ export default function CurrentInterviews() {
                           marginRight: '8px',
                         }}
                       >
-                        <div className="text-sm leading-relaxed">
+                        <div className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                           {interview.interviewer?.description ||
                             interview.description ||
                             'No description available'}
                         </div>
                         <div
-                          className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
+                          className="absolute w-0 h-0 border-l-8 border-l-white dark:border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
                           style={{
                             top: '50%',
                             right: '-8px',
@@ -520,11 +608,11 @@ export default function CurrentInterviews() {
 
       {/* Show More Button */}
       {hasMoreInterviews && (
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-4">
           <Button
             onClick={handleShowMore}
             variant="outline"
-            className="px-6 py-2"
+            className="px-6 py-2 hover:bg-gray-50 dark:hover:bg-gray-900 border-2"
           >
             Show More ({interviews.length - displayCount} remaining)
           </Button>

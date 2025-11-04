@@ -47,7 +47,19 @@ export default function InterviewPage() {
             { label: 'Interview', link: '/freelancer/interview/profile' },
           ]}
         />
-        <main className="flex-1 px-4 md:px-6 py-0 md:py-2">
+
+        <main className="flex-1 px-4 md:px-6 lg:px-8 py-0 md:py-2">
+          {/* Page Header */}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Interviews Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Manage your interview profile, track current interviews, and
+              review your history
+            </p>
+          </div>
+
           <div className="w-full">
             <Tabs
               value={activeTab}
@@ -56,45 +68,60 @@ export default function InterviewPage() {
               }
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-4 mb-5">
-                <TabsTrigger
-                  value="profile"
-                  className="flex items-center gap-2"
-                >
-                  <Users2 className="h-4 w-4" />
-                  <span>Profile</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="current"
-                  className="flex items-center gap-2"
-                >
-                  <ListVideo className="h-4 w-4" />
-                  <span>Current</span>
-                </TabsTrigger>
-                <TabsTrigger value="bids" className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" />
-                  <span>Bids</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="history"
-                  className="flex items-center gap-2"
-                >
-                  <History className="h-4 w-4" />
-                  <span>History</span>
-                </TabsTrigger>
-              </TabsList>
+              {/* Enhanced Tab List */}
+              <div className="bg-white dark:bg-[#0a0a0b] rounded-xl border border-gray-200 dark:border-gray-800 p-2 mb-6 shadow-sm">
+                <TabsList className="grid w-full grid-cols-4 bg-transparent gap-2 h-auto p-0">
+                  <TabsTrigger
+                    value="profile"
+                    className="flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-4 rounded-lg data-[state=active]:bg-purple-50 dark:data-[state=active]:bg-purple-950/30 data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm transition-all"
+                  >
+                    <Users2 className="h-5 w-5" />
+                    <span className="font-medium">Profile</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="current"
+                    className="flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-4 rounded-lg data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-950/30 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-sm transition-all"
+                  >
+                    <ListVideo className="h-5 w-5" />
+                    <span className="font-medium">Current</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="bids"
+                    className="flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-4 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-950/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-400 data-[state=active]:shadow-sm transition-all"
+                  >
+                    <Briefcase className="h-5 w-5" />
+                    <span className="font-medium">Bids</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="history"
+                    className="flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-4 rounded-lg data-[state=active]:bg-indigo-50 dark:data-[state=active]:bg-indigo-950/30 data-[state=active]:text-indigo-700 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-sm transition-all"
+                  >
+                    <History className="h-5 w-5" />
+                    <span className="font-medium">History</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-              <TabsContent value="profile">
-                <ProfileComponent />
+              {/* Tab Contents */}
+              <TabsContent value="profile" className="mt-0">
+                <div className="bg-white dark:bg-[#0a0a0b] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                  <ProfileComponent />
+                </div>
               </TabsContent>
-              <TabsContent value="current">
-                <CurrentComponent />
+              <TabsContent value="current" className="mt-0">
+                <div className="bg-white dark:bg-[#0a0a0b] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                  <CurrentComponent />
+                </div>
               </TabsContent>
-              <TabsContent value="bids">
-                <BidsComponent />
+              <TabsContent value="bids" className="mt-0">
+                <div className="bg-white dark:bg-[#0a0a0b] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                  <BidsComponent />
+                </div>
               </TabsContent>
-              <TabsContent value="history">
-                <HistoryComponent />
+              <TabsContent value="history" className="mt-0">
+                <div className="bg-white dark:bg-[#0a0a0b] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                  <HistoryComponent />
+                </div>
               </TabsContent>
             </Tabs>
           </div>
