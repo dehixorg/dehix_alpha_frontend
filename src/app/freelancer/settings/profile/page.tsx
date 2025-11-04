@@ -255,7 +255,7 @@ export default function FreelancerProfileSettings() {
                               if (!id) return;
                               try {
                                 await axiosInstance.delete(
-                                  `/freelancer/experience/${id}`,
+                                  `/freelancer/${user.uid}/experience/${id}`,
                                 );
                                 notifySuccess('Experience deleted.');
                                 setExpRefreshKey((v) => v + 1);
