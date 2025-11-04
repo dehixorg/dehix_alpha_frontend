@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { ChevronsUpDown, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,10 +58,6 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
     const q = searchQuery.toLowerCase();
     return (options || []).filter((opt) => {
       const label = String(opt?.[optionLabelKey] ?? '').toLowerCase();
-      const alreadySelected = (selected || []).some(
-        (s) =>
-          String((s as any)[selectedNameKey]) === String(opt?.[optionLabelKey]),
-      );
       return label.includes(q);
     });
   }, [options, selected, optionLabelKey, selectedNameKey, searchQuery]);
