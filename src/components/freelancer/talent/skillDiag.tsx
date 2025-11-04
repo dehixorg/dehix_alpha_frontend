@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -65,7 +64,11 @@ const skillSchema = z.object({
   status: z.string(),
 });
 
-const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess, children }) => {
+const SkillDialog: React.FC<SkillDialogProps> = ({
+  skills,
+  onSuccess,
+  children,
+}) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -113,9 +116,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess, children }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
