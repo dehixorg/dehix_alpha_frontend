@@ -126,9 +126,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   const [docId, setDocId] = useState<string>();
   const [docType, setDocType] = useState<string>();
 
-  const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
-    'All',
-  );
+  const [filter, setFilter] = useState<'All' | 'Skills' | 'Domain'>('All');
 
   useEffect(() => {
     async function fetchData() {
@@ -356,63 +354,61 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   return (
     <>
       <div className="flex flex-col gap-4 p-2 sm:px-6 sm:py-0 md:gap-8  pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
-        <div className="w-full">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1 w-auto text-sm"
-              >
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only">Filter</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={filter === 'All'}
-                onSelect={() => setFilter('All')}
-              >
-                All
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Skills'}
-                onSelect={() => setFilter('Skills')}
-              >
-                Skills
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Domain'}
-                onSelect={() => setFilter('Domain')}
-              >
-                Domain
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
         <div className="w-full relative border border-gray-200 rounded-xl shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs md:text-xl font-semibold w-1/2">
               Skills & Domains
             </h2>
             <div className="flex justify-end items-center  w-1/2">
-              <Button
-                onClick={() => setOpenSkillDialog(true)}
-                className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm"
-              >
-                <Plus className=" mr-1 md:mr-2 h-4 w-4" />{' '}
-                <span className="hidden  md:block mr-1">Add</span> Skill
-              </Button>
-              <Button
-                onClick={() => setOpenDomainDialog(true)}
-                className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm"
-              >
-                <Plus className=" mr-1 md:mr-2 h-4 w-4" />{' '}
-                <span className="hidden md:block mr-1">Add</span> Domain
-              </Button>
+              <div className="flex items-center gap-4">
+                <Button
+                  className="flex items-center gap-2"
+                  onClick={() => setOpenSkillDialog(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Skill
+                </Button>
+                <Button
+                  className="flex items-center gap-2"
+                  onClick={() => setOpenDomainDialog(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Domain
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <ListFilter className="h-4 w-4" />
+                      Filter
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={filter === 'All'}
+                      onCheckedChange={() => setFilter('All')}
+                    >
+                      All
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={filter === 'Skills'}
+                      onCheckedChange={() => setFilter('Skills')}
+                    >
+                      Skills
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={filter === 'Domain'}
+                      onCheckedChange={() => setFilter('Domain')}
+                    >
+                      Domain
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
             <SkillDialog
               open={openSkillDialog}

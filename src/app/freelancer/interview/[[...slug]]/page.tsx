@@ -54,49 +54,50 @@ export default function InterviewPage() {
               onValueChange={(val) =>
                 router.push(`/freelancer/interview/${val}`)
               }
-              className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-4 mb-5 rounded-xl border bg-white/60 dark:bg-[#0B0B0E]/60 backdrop-blur p-1 shadow-sm">
-                <TabsTrigger
-                  value="profile"
-                  className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
-                >
-                  <Users2 className="h-4 w-4" />
-                  <span>Profile</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="current"
-                  className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
-                >
-                  <ListVideo className="h-4 w-4" />
-                  <span>Current</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="bids"
-                  className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
-                >
-                  <Briefcase className="h-4 w-4" />
-                  <span>Bids</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="history"
-                  className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
-                >
-                  <History className="h-4 w-4" />
-                  <span>History</span>
-                </TabsTrigger>
-              </TabsList>
+              <div className="border-b px-2 sm:px-6">
+                <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
+                  <TabsTrigger
+                    value="profile"
+                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <Users2 className="h-4 w-4" />
+                    <span>Profile</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="current"
+                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <ListVideo className="h-4 w-4" />
+                    <span>Current</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="bids"
+                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    <span>Bids</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="history"
+                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <History className="h-4 w-4" />
+                    <span>History</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-              <TabsContent value="profile">
+              <TabsContent value="profile" className="m-0 pt-4">
                 <ProfileComponent />
               </TabsContent>
-              <TabsContent value="current">
+              <TabsContent value="current" className="m-0 pt-4">
                 <CurrentComponent />
               </TabsContent>
-              <TabsContent value="bids">
+              <TabsContent value="bids" className="m-0 pt-4">
                 <BidsComponent />
               </TabsContent>
-              <TabsContent value="history">
+              <TabsContent value="history" className="m-0 pt-4">
                 <HistoryComponent />
               </TabsContent>
             </Tabs>
