@@ -39,6 +39,7 @@ interface SkillDomainData {
 interface SkillDialogProps {
   skills: Skill[];
   onSuccess: () => void;
+  children: React.ReactNode;
 }
 
 const skillSchema = z.object({
@@ -56,7 +57,7 @@ const skillSchema = z.object({
   status: z.string(),
 });
 
-const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
+const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess, children }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
@@ -114,7 +115,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">Add Skill</Button>
+        {children}
       </DialogTrigger>
 
       <DialogContent>
