@@ -177,8 +177,8 @@ const SkillDomainForm: React.FC = () => {
   );
 
   return (
-    <section className="min-h-screen bg-muted/30 py-6 px-4 sm:px-6 lg:px-8">
-      <Card className="max-w-7xl mx-auto shadow-lg">
+    <section className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
+      <Card className="max-full shadow-lg">
         <CardHeader className="border-b bg-card/50">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -447,7 +447,7 @@ const SkillDomainForm: React.FC = () => {
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Badge className={getBadgeColor(r.status)}>
-                            {r.status.toUpperCase()}
+                            {r.status?.toUpperCase()}
                           </Badge>
                           {r.status === StatusEnum.PENDING && r.uid && (
                             <VerifyDialog
@@ -490,7 +490,7 @@ const SkillDomainForm: React.FC = () => {
                         ) : (
                           <div className="flex items-center justify-center gap-2">
                             <Badge className={getBadgeColor(r.status)}>
-                              {r.status.toUpperCase()}
+                              {r.status?.toUpperCase()}
                             </Badge>
                             {r.status === StatusEnum.PENDING && r.uid && (
                               <VerifyDialog
@@ -610,7 +610,7 @@ const SkillDomainForm: React.FC = () => {
 
                   <div className="mt-3 flex justify-center items-center gap-2">
                     <Badge className={getBadgeColor(r.status)}>
-                      {r.status.toUpperCase()}
+                      {r.status?.toUpperCase()}
                     </Badge>
                     {r.status === StatusEnum.PENDING && r.uid && (
                       <VerifyDialog

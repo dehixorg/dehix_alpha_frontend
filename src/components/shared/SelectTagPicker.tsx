@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { ChevronsUpDown, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +53,20 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const removeLockRef = useRef(false);
+
+  const safeRemove = (value: string) => {
+    if (removeLockRef.current) return;
+    removeLockRef.current = true;
+    try {
+      onRemove(value);
+    } finally {
+      // release lock on next tick to coalesce duplicate events within same interaction
+      setTimeout(() => {
+        removeLockRef.current = false;
+      }, 0);
+    }
+  };
 
   const filteredOptions = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -67,7 +81,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
 
   const toggleValue = (value: string) => {
     if (isSelected(value)) {
-      onRemove(value);
+      safeRemove(value);
     } else {
       onAdd(value);
     }
@@ -151,7 +165,10 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
             {String((item as any)[selectedNameKey])}
             <button
               type="button"
-              onClick={() => onRemove(String((item as any)[selectedNameKey]))}
+              onClick={(e) => {
+                e.stopPropagation();
+                safeRemove(String((item as any)[selectedNameKey]));
+              }}
               className="ml-2 text-red-500 hover:text-red-700"
               aria-label={`Remove ${String((item as any)[selectedNameKey])}`}
             >
