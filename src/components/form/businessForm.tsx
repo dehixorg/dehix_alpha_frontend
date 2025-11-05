@@ -82,11 +82,11 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   useEffect(() => {
     const fetchData = async () => {
       if (!user_id) return;
-      
+
       try {
         const response = await axiosInstance.get(`/business/${user_id}`);
         const data = response.data;
-        
+
         // Update form with the latest data
         form.reset({
           firstName: data.firstName || '',
@@ -99,18 +99,18 @@ export function BusinessForm({ user_id }: { user_id: string }) {
           linkedin: data.linkedin || '',
           website: data.personalWebsite || data.website || '',
         });
-        
+
         // Update local state
         setUserInfo({
           ...data,
-          personalWebsite: data.personalWebsite || data.website || ''
+          personalWebsite: data.personalWebsite || data.website || '',
         });
       } catch (error) {
         console.error('Failed to fetch business data:', error);
         notifyError('Failed to load business data. Please refresh the page.');
       }
     };
-    
+
     fetchData();
   }, [user_id, form]); // Add form to dependencies since we're using reset
 
@@ -121,19 +121,19 @@ export function BusinessForm({ user_id }: { user_id: string }) {
       notifyError(errorMsg);
       return;
     }
-    
+
     setLoading(true);
     try {
       // 1. Prepare the data to send
       const updateData = {
         ...data,
         personalWebsite: data.website,
-        userId: user_id
+        userId: user_id,
       };
-      
+
       // 2. Send update request
       await axiosInstance.put(`/business`, updateData);
-      
+
       // 3. Refetch the data from server to ensure we have the latest
       const response = await axiosInstance.get(`/business/${user_id}`);
       const updatedData = response.data;
@@ -149,23 +149,26 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         linkedin: updatedData.linkedin || '',
         website: updatedData.personalWebsite || updatedData.website || '',
       };
-      
+
       // 5. Reset form with the fresh data
       form.reset(formData);
-      
+
       // 6. Update local state and Redux
       const userInfoData = {
         ...updatedData,
-        personalWebsite: updatedData.personalWebsite || updatedData.website || '',
-        website: updatedData.personalWebsite || updatedData.website || ''
+        personalWebsite:
+          updatedData.personalWebsite || updatedData.website || '',
+        website: updatedData.personalWebsite || updatedData.website || '',
       };
-      
+
       setUserInfo(userInfoData);
-      dispatch(setUser({
-        ...userInfoData,
-        uid: user_id
-      }));
-      
+      dispatch(
+        setUser({
+          ...userInfoData,
+          uid: user_id,
+        }),
+      );
+
       // 5. Show success message
       notifySuccess(
         'Your profile has been successfully updated.',

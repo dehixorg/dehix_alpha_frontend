@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Edit2, ListFilter, Info } from 'lucide-react';
+import { Plus, ListFilter, Info } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -19,10 +19,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import DomainDialog from '@/components/dialogs/domainDialog';
-import {
-  getBadgeColor,
-  statusOutlineClasses,
-} from '@/utils/common/getBadgeStatus';
+import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
 import { RootState } from '@/lib/store';
