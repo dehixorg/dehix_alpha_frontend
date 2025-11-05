@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import LiveCaptureField from './register/livecapture';
+import KYCDetailsView from './KYCDetailsView';
 
 import { Card } from '@/components/ui/card';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -22,26 +23,77 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
 
-// Badge color purely based on KYC status
-const statusColors = (status: string) => {
-  const s = (status || '').toUpperCase();
-  if (s === 'APPROVED' || s === 'VERIFIED' || s === 'SUCCESS')
-    return 'bg-green-500/10 text-green-600 hover:bg-green-500/20';
-  if (s === 'REJECTED' || s === 'FAILED')
-    return 'bg-red-500/10 text-red-600 hover:bg-red-500/20';
-  // Pending-like statuses
-  if (
-    s === 'PENDING' ||
-    s === 'APPLIED' ||
-    s === 'IN_REVIEW' ||
-    s === 'UNDER_REVIEW'
-  )
-    return 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20';
-  return 'bg-muted text-muted-foreground hover:bg-muted/20';
+const KycStatusAlert = ({
+  status,
+  rejectionReason,
+}: {
+  status: string;
+  rejectionReason?: string;
+}) => {
+  switch (status) {
+    case 'APPLIED':
+    case 'PENDING':
+      return (
+        <div
+          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4"
+          role="alert"
+        >
+          <p className="font-bold">Under Review</p>
+          <p>
+            Your KYC is currently under review. We will notify you once the
+            review is complete.
+          </p>
+        </div>
+      );
+    case 'VERIFIED':
+      return (
+        <div
+          className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4"
+          role="alert"
+        >
+          <p className="font-bold">KYC Accepted</p>
+          <p>Your KYC has been successfully verified.</p>
+        </div>
+      );
+    case 'REJECTED':
+      return (
+        <div
+          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
+          role="alert"
+        >
+          <p className="font-bold">KYC Rejected</p>
+          <p>
+            Your KYC has been rejected. Please see the reason below and
+            re-submit your application.
+          </p>
+          {rejectionReason && (
+            <p className="mt-2">
+              <strong>Reason:</strong> {rejectionReason}
+            </p>
+          )}
+        </div>
+      );
+    case 'REUPLOAD':
+      return (
+        <div
+          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
+          role="alert"
+        >
+          <p className="font-bold">Re-upload Required</p>
+          <p>Your KYC has been rejected. Please re-upload your documents.</p>
+          {rejectionReason && (
+            <p className="mt-2">
+              <strong>Reason:</strong> {rejectionReason}
+            </p>
+          )}
+        </div>
+      );
+    default:
+      return null;
+  }
 };
 const kycFormSchema = z.object({
   businessProof: z.string().optional(),
@@ -71,9 +123,32 @@ const kycFormSchema = z.object({
 
 type KYCFormValues = z.infer<typeof kycFormSchema>;
 
+// Helper function to transform form data for KYCDetailsView
+const transformKYCDataForView = (formValues: KYCFormValues) => {
+  return {
+    businessProof: formValues.businessProof,
+    businessProfit: formValues.businessProfit,
+    frontImageUrl:
+      typeof formValues.frontImageUrl === 'string'
+        ? formValues.frontImageUrl
+        : undefined,
+    backImageUrl:
+      typeof formValues.backImageUrl === 'string'
+        ? formValues.backImageUrl
+        : undefined,
+    liveCaptureUrl:
+      typeof formValues.liveCaptureUrl === 'string'
+        ? formValues.liveCaptureUrl
+        : undefined,
+  };
+};
+
 export function KYCForm({ user_id }: { user_id: string }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
+  const [rejectionReason, setRejectionReason] = useState<string | undefined>(
+    undefined,
+  );
   const [currentStep, setCurrentStep] = useState<number>(1);
   const submitIntentRef = useRef(false);
   // Review previews (handle File -> object URL and revoke lifecycle)
@@ -103,26 +178,28 @@ export function KYCForm({ user_id }: { user_id: string }) {
 
   const { reset } = form;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get(`/business/${user_id}`);
-        const kycData = response.data?.kyc;
-        setKycStatus(kycData?.status || 'PENDING');
-        reset({
-          businessProof: kycData?.businessProof || '',
-          businessProfit: kycData?.businessProfit || 0,
-          frontImageUrl: kycData?.frontImageUrl || null,
-          backImageUrl: kycData?.backImageUrl || null,
-          liveCaptureUrl: kycData?.liveCaptureUrl || null,
-        });
-      } catch (error) {
-        console.error('API Error:', error);
-        notifyError('Failed to load KYC data. Please try again.', 'Error');
-      }
-    };
-    fetchData();
+  const fetchData = React.useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(`/business/${user_id}`);
+      const kycData = response.data?.data?.kyc;
+      setKycStatus(kycData?.status || 'PENDING');
+      setRejectionReason(kycData?.rejectionReason);
+      reset({
+        businessProof: kycData?.businessProof || '',
+        businessProfit: kycData?.businessProfit || 0,
+        frontImageUrl: kycData?.frontImageUrl || null,
+        backImageUrl: kycData?.backImageUrl || null,
+        liveCaptureUrl: kycData?.liveCaptureUrl || null,
+      });
+    } catch (error) {
+      console.error('API Error:', error);
+      notifyError('Failed to load KYC data. Please try again.', 'Error');
+    }
   }, [user_id, reset]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Keep review previews in sync with form values (and handle reset)
   useEffect(() => {
@@ -202,7 +279,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
         liveUrlRef.current = null;
       }
     };
-  }, [form]);
+  }, [form, kycStatus]);
 
   // Position the vertical connector line between first and last dots (desktop sidebar)
   useEffect(() => {
@@ -273,7 +350,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
           frontImageUrl: data.frontImageUrl,
           backImageUrl: data.backImageUrl,
           liveCaptureUrl: data.liveCaptureUrl,
-          status: 'PENDING',
+          status: 'APPLIED',
         },
       };
 
@@ -297,7 +374,11 @@ export function KYCForm({ user_id }: { user_id: string }) {
       }
 
       await axiosInstance.put(`/business/kyc`, payload);
-      setKycStatus('APPLIED');
+
+      // Wait for a short period to allow backend to process the update
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      await fetchData();
 
       notifySuccess('Your KYC has been successfully updated.', 'KYC Updated');
     } catch (error) {
@@ -314,19 +395,79 @@ export function KYCForm({ user_id }: { user_id: string }) {
     { id: 3, title: 'Review', subtitle: 'Confirm and submit' },
   ] as const;
 
-  const step1Complete = () => {
-    const v1 = form.getValues('frontImageUrl');
-    const v2 = form.getValues('backImageUrl');
-    return (
-      !!(
-        (typeof v1 === 'string' && v1) ||
-        (typeof File !== 'undefined' && v1 instanceof File)
-      ) &&
-      !!(
-        (typeof v2 === 'string' && v2) ||
-        (typeof File !== 'undefined' && v2 instanceof File)
-      )
+  const hasFileOrUrl = (v: unknown) =>
+    !!(
+      (typeof v === 'string' && v.trim() !== '') ||
+      (typeof File !== 'undefined' && v instanceof File)
     );
+
+  const step1Complete = () => {
+    const v = form.getValues();
+    return (
+      (v.businessProof?.trim()?.length || 0) > 0 &&
+      Number(v.businessProfit) > 0 &&
+      hasFileOrUrl(v.frontImageUrl) &&
+      hasFileOrUrl(v.backImageUrl)
+    );
+  };
+
+  const step2Complete = () => {
+    const v = form.getValues();
+    return hasFileOrUrl(v.liveCaptureUrl);
+  };
+
+  const allComplete = () => step1Complete() && step2Complete();
+
+  const handleNext = () => {
+    if (currentStep === 1 && !step1Complete()) {
+      const v = form.getValues();
+      if (!v.businessProof?.trim())
+        form.setError('businessProof' as any, { message: 'Required' } as any);
+      if (!v.businessProfit || Number(v.businessProfit) <= 0)
+        form.setError('businessProfit' as any, { message: 'Required' } as any);
+      if (!hasFileOrUrl(v.frontImageUrl))
+        form.setError('frontImageUrl' as any, { message: 'Required' } as any);
+      if (!hasFileOrUrl(v.backImageUrl))
+        form.setError('backImageUrl' as any, { message: 'Required' } as any);
+      return;
+    }
+    if (currentStep === 2 && !step2Complete()) {
+      form.setError('liveCaptureUrl' as any, { message: 'Required' } as any);
+      return;
+    }
+    setCurrentStep((s) => Math.min(s + 1, steps.length));
+  };
+  const handleBack = () => setCurrentStep((s) => Math.max(s - 1, 1));
+
+  const READ_ONLY_STATUSES = [
+    'APPLIED',
+    'PENDING',
+    'VERIFIED',
+    'APPROVED',
+    'SUCCESS',
+    'IN_REVIEW',
+    'UNDER_REVIEW',
+  ];
+  const isReadOnly = READ_ONLY_STATUSES.includes(
+    (kycStatus || '').toUpperCase(),
+  );
+
+  // Badge color purely based on KYC status
+  const statusColors = (status: string) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'APPROVED' || s === 'VERIFIED' || s === 'SUCCESS')
+      return 'bg-green-500/10 text-green-600 hover:bg-green-500/20';
+    if (s === 'REJECTED' || s === 'FAILED')
+      return 'bg-red-500/10 text-red-600 hover:bg-red-500/20';
+    // Pending-like statuses
+    if (
+      s === 'PENDING' ||
+      s === 'APPLIED' ||
+      s === 'IN_REVIEW' ||
+      s === 'UNDER_REVIEW'
+    )
+      return 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20';
+    return 'bg-muted text-muted-foreground hover:bg-muted/20';
   };
 
   return (
@@ -342,347 +483,360 @@ export function KYCForm({ user_id }: { user_id: string }) {
         </div>
         <Badge
           className={cn(
-            'text-xs md:text-sm font-medium border-0 capitalize',
+            'text-xs md:text-sm font-medium border-0 capitalize hover:bg-primary/60',
             statusColors(kycStatus),
           )}
         >
           {kycStatus.toLowerCase()}
         </Badge>
       </div>
-      <Separator className="my-4 md:my-6" />
+      <KycStatusAlert status={kycStatus} rejectionReason={rejectionReason} />
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Mobile Horizontal Stepper */}
-        <div className="md:hidden col-span-full -mt-1">
-          <div className="flex items-center gap-2">
-            {steps.map((s, idx) => {
-              const active = currentStep === s.id;
-              const done = currentStep > s.id;
-              return (
-                <React.Fragment key={s.id}>
-                  {idx > 0 && (
-                    <div
-                      className={`flex-1 h-px ${done ? 'bg-primary/60' : 'bg-muted-foreground/20'}`}
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(s.id)}
-                    aria-current={active ? 'step' : undefined}
-                    className={`h-6 w-6 shrink-0 rounded-full border flex items-center justify-center transition ${
-                      active
-                        ? 'bg-primary border-primary'
-                        : done
-                          ? 'bg-primary/60 border-primary/60'
-                          : 'bg-muted border-muted-foreground/40'
-                    }`}
-                    title={s.title}
-                  >
-                    <span className="sr-only">{s.title}</span>
-                  </button>
-                </React.Fragment>
-              );
-            })}
-          </div>
-          <div className="mt-2 grid grid-cols-3 text-[10px] text-muted-foreground">
-            {steps.map((s) => (
-              <p key={s.id} className="text-center truncate">
-                {s.title}
-              </p>
-            ))}
-          </div>
-        </div>
-
-        {/* Sidebar Stepper */}
-        <aside className="hidden md:block md:col-span-4 lg:col-span-3 relative">
-          <div ref={lineWrapRef} className="relative pe-6">
-            <div
-              ref={lineRef}
-              className="pointer-events-none absolute right-6 w-px bg-muted-foreground/20"
-            />
-            <ol className="space-y-6">
+      {isReadOnly ? (
+        <KYCDetailsView kycData={transformKYCDataForView(form.getValues())} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Mobile Horizontal Stepper */}
+          <div className="md:hidden col-span-full -mt-1">
+            <div className="flex items-center gap-2">
               {steps.map((s, idx) => {
                 const active = currentStep === s.id;
                 const done = currentStep > s.id;
                 return (
-                  <li key={s.id} className="relative group">
-                    <div
-                      className="absolute -right-[5px] top-2.5"
-                      ref={
-                        idx === 0
-                          ? firstDotRef
-                          : idx === steps.length - 1
-                            ? lastDotRef
-                            : undefined
-                      }
-                    >
-                      <StepDot active={active} done={done} />
-                    </div>
+                  <React.Fragment key={s.id}>
+                    {idx > 0 && (
+                      <div
+                        className={`flex-1 h-px ${done ? 'bg-primary/60' : 'bg-muted-foreground/20'}`}
+                      />
+                    )}
                     <button
                       type="button"
                       onClick={() => setCurrentStep(s.id)}
                       aria-current={active ? 'step' : undefined}
-                      className={`w-full rounded-md px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                      className={`h-6 w-6 shrink-0 rounded-full border flex items-center justify-center transition ${
                         active
-                          ? 'bg-primary/10 text-foreground'
-                          : 'hover:bg-muted/40'
+                          ? 'bg-primary border-primary'
+                          : done
+                            ? 'bg-primary/60 border-primary/60'
+                            : 'bg-muted border-muted-foreground/40'
                       }`}
+                      title={s.title}
                     >
-                      <p className="text-sm md:text-base font-semibold leading-tight">
-                        {s.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground leading-tight">
-                        {s.subtitle}
-                      </p>
+                      <span className="sr-only">{s.title}</span>
                     </button>
-                  </li>
+                  </React.Fragment>
                 );
               })}
-            </ol>
+            </div>
+            <div className="mt-2 grid grid-cols-3 text-[10px] text-muted-foreground">
+              {steps.map((s) => (
+                <p key={s.id} className="text-center truncate">
+                  {s.title}
+                </p>
+              ))}
+            </div>
           </div>
-        </aside>
 
-        {/* Main Content */}
-        <section className="md:col-span-8 lg:col-span-9">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && currentStep < 3) e.preventDefault();
-              }}
-              className="space-y-6"
-            >
-              {/* Step Header */}
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  Step {currentStep}/3
-                </p>
-                <h3 className="text-xl md:text-2xl font-semibold mt-1">
-                  {steps[currentStep - 1].title}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {steps[currentStep - 1].subtitle}
-                </p>
-              </div>
-              {currentStep === 1 && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="businessProof"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Proof</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter your business registration number"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* New Field for Business Profit */}
-                  <FormField
-                    control={form.control}
-                    name="businessProfit"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Profit</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter your annual business profit"
-                            type="number"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="frontImageUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <ImageUploader
-                              label="Document Front Image"
-                              value={field.value as File | string | null}
-                              onChange={field.onChange}
-                              accept={{
-                                'image/*': ['.png', '.jpg', '.jpeg'],
-                              }}
-                              maxSize={5 * 1024 * 1024}
-                              previewHeight={160}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="backImageUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <ImageUploader
-                              label="Document Back Image"
-                              value={field.value as File | string | null}
-                              onChange={field.onChange}
-                              accept={{
-                                'image/*': ['.png', '.jpg', '.jpeg'],
-                              }}
-                              maxSize={5 * 1024 * 1024}
-                              previewHeight={160}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </>
-              )}
-
-              {currentStep === 2 && (
-                <div className="space-y-6">
-                  <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-                    <p className="font-medium text-foreground mb-1">
-                      Selfie prerequisites
-                    </p>
-                    <ul className="list-disc ms-4 space-y-1">
-                      <li>
-                        Allow camera permission or be ready to upload a clear
-                        selfie.
-                      </li>
-                      <li>Use good lighting and face the camera.</li>
-                      <li>Ensure your face is centered and fully visible.</li>
-                    </ul>
-                  </div>
-                  <LiveCaptureField form={form} />
-                </div>
-              )}
-
-              {currentStep === 3 && (
-                <div className="space-y-4 text-sm">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-muted-foreground">Business Proof</p>
-                      <p className="font-medium break-words">
-                        {form.getValues('businessProof') || '-'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Business Profit</p>
-                      <p className="font-medium">
-                        {form.getValues('businessProfit') || '-'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-                    <div>
-                      <p className="text-muted-foreground mb-2">Front Image</p>
-                      {frontPreview ? (
-                        <Image
-                          src={frontPreview}
-                          alt="Front Document"
-                          width={280}
-                          height={180}
-                          className="rounded-lg object-contain border shadow-sm"
-                        />
-                      ) : (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          No front image
+          {/* Sidebar Stepper */}
+          <aside className="hidden md:block md:col-span-4 lg:col-span-3 relative">
+            <div ref={lineWrapRef} className="relative pe-6">
+              <div
+                ref={lineRef}
+                className="pointer-events-none absolute right-6 w-px bg-muted-foreground/20"
+              />
+              <ol className="space-y-6">
+                {steps.map((s, idx) => {
+                  const active = currentStep === s.id;
+                  const done = currentStep > s.id;
+                  return (
+                    <li key={s.id} className="relative group">
+                      <div
+                        className="absolute -right-[5px] top-2.5"
+                        ref={
+                          idx === 0
+                            ? firstDotRef
+                            : idx === steps.length - 1
+                              ? lastDotRef
+                              : undefined
+                        }
+                      >
+                        <StepDot active={active} done={done} />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(s.id)}
+                        aria-current={active ? 'step' : undefined}
+                        className={`w-full rounded-md px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                          active
+                            ? 'bg-primary/10 text-foreground'
+                            : 'hover:bg-muted/40'
+                        }`}
+                      >
+                        <p className="text-sm md:text-base font-semibold leading-tight">
+                          {s.title}
                         </p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-2">Back Image</p>
-                      {backPreview ? (
-                        <Image
-                          src={backPreview}
-                          alt="Back Document"
-                          width={280}
-                          height={180}
-                          className="rounded-lg object-contain border shadow-sm"
-                        />
-                      ) : (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          No back image
+                        <p className="text-xs text-muted-foreground leading-tight">
+                          {s.subtitle}
                         </p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Selfie</p>
-                      {selfiePreview ? (
-                        <div className="mt-1 inline-block border rounded-lg">
-                          <Image
-                            src={selfiePreview}
-                            alt="Selfie"
-                            width={180}
-                            height={180}
-                            className="rounded-md object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          No selfie provided
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <section className="md:col-span-8 lg:col-span-9">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && currentStep < 3) e.preventDefault();
+                }}
+                className="space-y-6"
+              >
+                {/* Step Header */}
+                <div>
                   <p className="text-xs text-muted-foreground">
-                    Please confirm that the details and images are correct
-                    before submitting.
+                    Step {currentStep}/3
+                  </p>
+                  <h3 className="text-xl md:text-2xl font-semibold mt-1">
+                    {steps[currentStep - 1].title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {steps[currentStep - 1].subtitle}
                   </p>
                 </div>
-              )}
+                {currentStep === 1 && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="businessProof"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Business Proof</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your business registration number"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {/* New Field for Business Profit */}
+                    <FormField
+                      control={form.control}
+                      name="businessProfit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Business Profit</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your annual business profit"
+                              type="number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="frontImageUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <ImageUploader
+                                label="Document Front Image"
+                                value={field.value as File | string | null}
+                                onChange={field.onChange}
+                                accept={{
+                                  'image/*': ['.png', '.jpg', '.jpeg'],
+                                }}
+                                maxSize={5 * 1024 * 1024}
+                                previewHeight={160}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-              {/* Navigation */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep((s) => Math.max(1, s - 1))}
-                  disabled={currentStep === 1 || loading}
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                {currentStep < 3 ? (
+                      <FormField
+                        control={form.control}
+                        name="backImageUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <ImageUploader
+                                label="Document Back Image"
+                                value={field.value as File | string | null}
+                                onChange={field.onChange}
+                                accept={{
+                                  'image/*': ['.png', '.jpg', '.jpeg'],
+                                }}
+                                maxSize={5 * 1024 * 1024}
+                                previewHeight={160}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {currentStep === 2 && (
+                  <div className="space-y-6">
+                    <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                      <p className="font-medium text-foreground mb-1">
+                        Selfie prerequisites
+                      </p>
+                      <ul className="list-disc ms-4 space-y-1">
+                        <li>
+                          Allow camera permission or be ready to upload a clear
+                          selfie.
+                        </li>
+                        <li>Use good lighting and face the camera.</li>
+                        <li>Ensure your face is centered and fully visible.</li>
+                      </ul>
+                    </div>
+                    <LiveCaptureField form={form} />
+                  </div>
+                )}
+
+                {currentStep === 3 && (
+                  <div className="space-y-4 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-muted-foreground">Business Proof</p>
+                        <p className="font-medium break-words">
+                          {form.getValues('businessProof') || '-'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Business Profit</p>
+                        <p className="font-medium">
+                          {form.getValues('businessProfit') || '-'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                      <div>
+                        <p className="text-muted-foreground mb-2">
+                          Front Image
+                        </p>
+                        {frontPreview ? (
+                          <Image
+                            src={frontPreview}
+                            alt="Front Document"
+                            width={280}
+                            height={180}
+                            className="rounded-lg object-contain border shadow-sm"
+                          />
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No front image
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-2">Back Image</p>
+                        {backPreview ? (
+                          <Image
+                            src={backPreview}
+                            alt="Back Document"
+                            width={280}
+                            height={180}
+                            className="rounded-lg object-contain border shadow-sm"
+                          />
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No back image
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Selfie</p>
+                        {selfiePreview ? (
+                          <div className="mt-1 inline-block border rounded-lg">
+                            <Image
+                              src={selfiePreview}
+                              alt="Selfie"
+                              width={180}
+                              height={180}
+                              className="rounded-md object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No selfie provided
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Please confirm that the details and images are correct
+                      before submitting.
+                    </p>
+                  </div>
+                )}
+
+                {/* Navigation */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <Button
                     type="button"
-                    className="flex-1"
-                    onClick={() => setCurrentStep((s) => Math.min(3, s + 1))}
-                    disabled={
-                      loading || (currentStep === 1 && !step1Complete())
-                    }
+                    variant="outline"
+                    onClick={handleBack}
+                    disabled={currentStep === 1 || loading}
                   >
-                    Next <ChevronRight className="ml-2 h-4 w-4" />
+                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    Back
                   </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    className="flex-1"
-                    disabled={loading}
-                    onClick={() => {
-                      submitIntentRef.current = true;
-                    }}
-                  >
-                    {loading ? 'Submitting...' : 'Submit KYC'}
-                  </Button>
-                )}
-              </div>
-            </form>
-          </Form>
-        </section>
-      </div>
+                  {currentStep < steps.length ? (
+                    <Button
+                      type="button"
+                      className="flex-1"
+                      onClick={handleNext}
+                      disabled={
+                        loading ||
+                        (currentStep === 1 && !step1Complete()) ||
+                        (currentStep === 2 && !step2Complete()) ||
+                        isReadOnly
+                      }
+                      variant="default"
+                    >
+                      Next
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      className="flex-1"
+                      disabled={loading || !allComplete() || isReadOnly}
+                      onClick={() => {
+                        // Mark explicit intent to submit via button click
+                        submitIntentRef.current = true;
+                      }}
+                    >
+                      {loading ? 'Submitting...' : 'Submit KYC'}
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </Form>
+          </section>
+        </div>
+      )}
     </Card>
   );
 }
