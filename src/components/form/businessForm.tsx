@@ -115,7 +115,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   }, [user_id, form]); // Add form to dependencies since we're using reset
 
   async function onSubmit(data: ProfileFormValues) {
-    console.log('Form submitted with data:', data);
     if (!user_id) {
       const errorMsg = 'User ID is missing. Please refresh the page.';
       console.error(errorMsg);
