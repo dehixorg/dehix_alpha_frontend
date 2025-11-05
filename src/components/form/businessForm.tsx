@@ -111,11 +111,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
     setLoading(true);
     try {
       const res = await axiosInstance.put(`/business`, {
-        ...data,
-      });
-
-      setUserInfo({
-        ...userInfo,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -128,14 +123,15 @@ export function BusinessForm({ user_id }: { user_id: string }) {
       });
 
       if (res.status === 200) {
-        const updatedUser = {
-          ...userInfo,
+        // Refetch the updated data from the server
+        const updatedResponse = await axiosInstance.get(`/business/${user_id}`);
+        const updatedUserInfo = {
+          ...updatedResponse.data,
+          uid: updatedResponse.data._id,
         };
 
-        updatedUser.uid = userInfo._id;
-
-        dispatch(setUser(updatedUser));
-        setUserInfo(updatedUser);
+        setUserInfo(updatedUserInfo);
+        dispatch(setUser(updatedUserInfo));
 
         notifySuccess(
           'Your profile has been successfully updated.',
