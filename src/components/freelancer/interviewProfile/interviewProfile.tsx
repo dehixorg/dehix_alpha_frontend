@@ -19,10 +19,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import DomainDialog from '@/components/dialogs/domainDialog';
-import {
-  getBadgeColor,
-  statusOutlineClasses,
-} from '@/utils/common/getBadgeStatus';
+import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
 import { RootState } from '@/lib/store';
