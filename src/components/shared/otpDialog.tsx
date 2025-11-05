@@ -181,14 +181,32 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
 
   return (
     <>
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) {
+            setTimeout(() => {
+              const emailEl = document.getElementById('email');
+              if (emailEl && 'focus' in emailEl) {
+                (emailEl as HTMLElement).focus();
+              }
+            }, 0);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <p className="text-sm text-center text-gray-500">
               OTP sent to{' '}
               <strong>
-                {(phone || phoneNumber)?.substring(0, 3)}{' '}
-                {(phone || phoneNumber)?.substring(3)}
+                {(() => {
+                  const raw = phone || phoneNumber || '';
+                  if (!raw) return '';
+                  const last4 = raw.slice(-4);
+                  const masked = raw.slice(0, -4).replace(/\d/g, '*');
+                  return `${masked}${last4}`;
+                })()}
               </strong>
             </p>
             <button
@@ -208,6 +226,9 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
               maxLength={6}
               value={otp}
               onChange={(value) => setOtp(value)}
+              aria-label="One-time password"
+              inputMode="numeric"
+              autoComplete="one-time-code"
             >
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
@@ -221,10 +242,16 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
+            <p className="text-xs text-muted-foreground mt-2" id="otp-help">
+              You can paste the 6-digit code here.
+            </p>
 
             <Button
+              type="button"
+              onClick={requestOtp}
               disabled={isPending || resendCountdown > 0}
               className="mt-5"
+              aria-live="polite"
             >
               {resendCountdown > 0
                 ? `Resend OTP in ${resendCountdown}`
@@ -234,8 +261,16 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
             </Button>
 
             <div className="p-10 text-center">
-              {error && <p className="text-red-500">{error}</p>}
-              {success && <p className="text-green-500">{success}</p>}
+              {error && (
+                <p className="text-red-500" role="alert" aria-live="assertive">
+                  {error}
+                </p>
+              )}
+              {success && (
+                <p className="text-green-500" role="status" aria-live="polite">
+                  {success}
+                </p>
+              )}
             </div>
             {isPending && loadingIndicator}
           </div>
@@ -249,7 +284,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         setPhone={setPhone}
       />
 
-      <div id="recaptcha-container" />
+      <div id="recaptcha-container" aria-hidden="true" />
     </>
   );
 }

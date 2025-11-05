@@ -36,13 +36,13 @@ const ProjectTypeCard = ({
   href: string;
 }) => (
   <Link href={href} className="block h-full">
-    <Card className="h-full transition-all hover:border-primary hover:shadow-md">
-      <CardHeader>
-        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mb-4">
+    <Card className="h-full transition-all hover:border-primary hover:shadow-md flex flex-col">
+      <CardHeader className="flex-1">
+        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mb-4 mx-auto">
           <Icon className="h-6 w-6 text-primary" />
         </div>
-        <CardTitle className="text-lg">{title}</CardTitle>
-        <CardDescription className="min-h-[40px]">
+        <CardTitle className="text-lg text-center">{title}</CardTitle>
+        <CardDescription className="text-center min-h-[40px] mt-2">
           {description}
         </CardDescription>
       </CardHeader>
@@ -76,41 +76,49 @@ export function ProjectTypeDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
-        <div className="grid md:grid-cols-1">
-          <div className="hidden md:block bg-primary/5 p-8">
-            <div className="h-full flex flex-col justify-center">
-              <h3 className="text-2xl font-bold mb-2">Start a New Project</h3>
-              <p className="text-muted-foreground mb-8">
-                Choose the type of project that best fits your needs. You can
-                always change this later.
-              </p>
+      <DialogContent className="w-[95vw] max-w-5xl p-0 overflow-hidden flex flex-col h-[90vh] max-h-[800px] sm:max-h-[90vh] m-0 sm:m-4 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-[350px,1fr] flex-1 overflow-hidden">
+          <div className="hidden md:flex flex-col bg-primary/5 p-6 overflow-y-auto">
+            <div className="h-full flex flex-col justify-center space-y-6">
+              <div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">
+                  Start a New Project
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  Choose the type of project that best fits your needs. You can
+                  always change this later.
+                </p>
+              </div>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
                     1
                   </div>
-                  <span>Select project type</span>
+                  <span className="text-sm font-medium">
+                    Select project type
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 text-muted-foreground">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-medium">
                     2
                   </div>
-                  <span>Fill in project details</span>
+                  <span className="text-sm">Fill in project details</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="p-8">
-            <DialogHeader className="mb-8">
-              <DialogTitle className="text-2xl">Create New Project</DialogTitle>
-              <DialogDescription>
+          <div className="p-6 overflow-y-auto">
+            <DialogHeader className="mb-6 sm:mb-8">
+              <DialogTitle className="text-xl sm:text-2xl">
+                Create New Project
+              </DialogTitle>
+              <DialogDescription className="text-sm sm:text-base">
                 Select the type of project you want to create
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
               <ProjectTypeCard
                 title="Single Profile"
                 description="Hire one professional for your project"
@@ -136,7 +144,11 @@ export function ProjectTypeDialog({
                       Learn more
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-4 space-y-4" align="center">
+                  <PopoverContent
+                    className="w-[280px] sm:w-80 p-4 space-y-4"
+                    align="center"
+                    sideOffset={8}
+                  >
                     <h4 className="font-medium leading-none">Project Types</h4>
                     <div className="space-y-3">
                       <div className="border-l-2 border-primary pl-3">

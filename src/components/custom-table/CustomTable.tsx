@@ -1,7 +1,7 @@
 'use client';
 
 import { DownloadIcon, PackageOpen } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { Card } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
@@ -53,48 +53,15 @@ export const CustomTable = ({
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(20);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       window.scrollTo(0, 0);
 
-      // If external data is provided, use it instead of fetching from API
       if (externalData) {
-        let filteredData = [...externalData];
-
-        // Apply search filter if search term exists
-        if (search && searchColumn && searchColumn.length > 0) {
-          filteredData = filteredData.filter((item) =>
-            searchColumn.some((column) =>
-              String(item[column] || '')
-                .toLowerCase()
-                .includes(search.toLowerCase()),
-            ),
-          );
-        }
-
-        // Apply custom filters
-        selectedFilters.forEach((filter) => {
-          filteredData = filteredData.filter((item) => {
-            const fieldValue = filter.arrayName
-              ? item[filter.fieldName]?.[filter.arrayName]
-              : item[filter.fieldName];
-            return String(fieldValue || '')
-              .toLowerCase()
-              .includes(filter.value.toLowerCase());
-          });
-        });
-
-        setData(filteredData);
-        setLoading(false);
         return;
       }
 
-      // Only fetch from API if api prop is provided
       if (!api) {
         setLoading(false);
         return;
@@ -130,7 +97,92 @@ export const CustomTable = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    api,
+    externalData,
+    limit,
+    page,
+    search,
+    searchColumn,
+    selectedFilters,
+    sortByValue,
+    sortOrder,
+    title,
+  ]);
+
+  useEffect(() => {
+    if (externalData) {
+      let filteredData = [...externalData];
+
+      // Apply search filter if search term exists
+      if (search && searchColumn && searchColumn.length > 0) {
+        filteredData = filteredData.filter((item) =>
+          searchColumn.some((column) =>
+            String(item[column] || '')
+              .toLowerCase()
+              .includes(search.toLowerCase()),
+          ),
+        );
+      }
+
+      // Apply custom filters
+      selectedFilters.forEach((filter) => {
+        filteredData = filteredData.filter((item) => {
+          const fieldValue = filter.arrayName
+            ? item[filter.fieldName]?.[filter.arrayName]
+            : item[filter.fieldName];
+          return String(fieldValue || '')
+            .toLowerCase()
+            .includes(filter.value.toLowerCase());
+        });
+      });
+
+      // Apply sorting
+      if (sortByValue) {
+        filteredData.sort((a, b) => {
+          const aVal = a[sortByValue];
+          const bVal = b[sortByValue];
+
+          // Handle null/undefined - push to end
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return 1;
+          if (bVal == null) return -1;
+
+          // Handle numeric comparison
+          if (typeof aVal === 'number' && typeof bVal === 'number') {
+            return sortOrder === 1 ? aVal - bVal : bVal - aVal;
+          }
+
+          // String comparison (case-insensitive)
+          const aStr = String(aVal).toLowerCase();
+          const bStr = String(bVal).toLowerCase();
+          if (aStr < bStr) return sortOrder === 1 ? -1 : 1;
+          if (aStr > bStr) return sortOrder === 1 ? 1 : -1;
+          return 0;
+        });
+      }
+
+      // Apply pagination
+      const startIndex = (page - 1) * limit;
+      const paginatedData = filteredData.slice(startIndex, startIndex + limit);
+
+      setData(paginatedData);
+      setLoading(false);
+    } else {
+      fetchData();
+    }
+  }, [
+    search,
+    externalData,
+    selectedFilters,
+    searchColumn,
+    page,
+    limit,
+    sortByValue,
+    sortOrder,
+    fetchData,
+  ]);
+
   useEffect(() => {
     setPage(1);
   }, [selectedFilters, search, limit]);

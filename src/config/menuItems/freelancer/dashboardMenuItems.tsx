@@ -43,7 +43,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Market',
   },
   {
-    href: '/freelancer/apply-market',
+    href: '/freelancer/apply',
     icon: <FileSignature className="h-5 w-5" />,
     label: 'Talent Market',
   },

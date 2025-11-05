@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, ChevronsUpDown, Plus, X, Check, Info } from 'lucide-react';
+import {
+  Copy,
+  ChevronsUpDown,
+  Plus,
+  X,
+  Check,
+  Info,
+  FileText,
+  Link as LinkIcon,
+} from 'lucide-react';
 import Image from 'next/image';
 
 import { Badge } from '../ui/badge';
@@ -11,18 +20,14 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '../ui/carousel';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '../ui/hover-card';
+// removed hover-card for a more minimal URLs UI
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from '../ui/dialog';
 import {
   Table,
@@ -65,6 +70,7 @@ import {
 } from '@/components/ui/command';
 import { Task } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
 
 interface TaskDetailsDialogProps {
   task: Task | null;
@@ -96,9 +102,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   freelancerId,
   fetchMilestones,
 }) => {
-  const { text: projectStatus, className: statusBadgeStyle } = getStatusBadge(
-    story.storyStatus,
-  );
+  const { text: projectStatus } = getStatusBadge(story.storyStatus);
 
   const taskCount = story?.tasks?.length || 0;
 
@@ -344,12 +348,12 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     <AccordionItem
       key={story._id}
       value={story._id ?? ''}
-      className={`py-2 ${idx === milestoneStoriesLength - 1 ? 'border-b-0' : 'border-b'} transition-colors`}
+      className={`${idx === milestoneStoriesLength - 1 ? 'border-b-0' : 'border-b'} transition-colors`}
     >
       <AccordionTrigger
         className={`flex hover:no-underline items-center px-2 md:px-4 w-full`}
       >
-        <div className="flex justify-between items-center w-full px-2 md:px-4 py-1 md:py-2 rounded-lg hover:bg-muted/40 transition-colors">
+        <div className="flex justify-between items-center w-full px-3 md:px-5 py-2 md:py-3 rounded-xl transition-colors">
           <div className="flex items-center gap-2 min-w-0">
             <h3
               className="text-base md:text-lg font-semibold truncate"
@@ -359,30 +363,33 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
             </h3>
             <Badge
               variant="secondary"
-              className="rounded-full hidden sm:inline"
+              className="rounded-full px-2 py-0.5 text-xs"
             >
               {taskCount} tasks
             </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-1 h-auto ml-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTask({
-                  _id: 'summary',
-                  title: story.title,
-                  summary: story.summary,
-                  taskStatus: 'SUMMARY',
-                  freelancers: [],
-                } as any);
-              }}
-              aria-label="View story summary"
-            >
-              <Info className="w-4 h-4" />
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 h-auto ml-1 rounded-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  aria-label="View story summary"
+                >
+                  <Info className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 text-sm whitespace-pre-wrap leading-relaxed">
+                <div className="space-y-1">
+                  <h4 className="font-semibold">{story.title}</h4>
+                  <p>{story.summary || 'No summary provided.'}</p>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
-          <span className="text-sm flex items-center gap-2">
+          <span className="text-sm flex items-center gap-3">
             {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
               ? !story?.tasks[0]?.freelancers[0]?.acceptanceFreelancer &&
                 story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
@@ -448,26 +455,23 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 )}
           </span>
           <Badge
-            className={`${statusBadgeStyle} px-3 py-1 hidden md:flex text-xs md:text-sm rounded-full`}
+            className={`${profileTypeOutlineClasses(projectStatus)} hidden md:flex rounded-full`}
           >
             {projectStatus}
           </Badge>
         </div>
       </AccordionTrigger>
       <AccordionContent className="w-full px-4 py-4 sm:px-6 sm:py-4 md:px-8 md:py-6 lg:px-10 lg:py-8">
-        <div
-          className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border"
-          style={{ borderColor: '#09090b' }}
-        >
+        <div className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border border-border">
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-1">
               <Badge
-                className={`${statusBadgeStyle} px-2 py-1 block md:hidden text-xs md:text-sm rounded-full`}
+                className={`${profileTypeOutlineClasses(projectStatus)} block md:hidden text-xs md:text-sm rounded-full`}
                 style={{ width: 'fit-content' }}
               >
                 {projectStatus}
               </Badge>
-              <div className="space-y-4 hidden md:flex justify-start items-center gap-4 ">
+              <div className="space-y-4 hidden md:flex justify-start items-center gap-4">
                 <h4 className="text-lg md:text-xl font-semibold mt-2">
                   Important URLs:
                 </h4>
@@ -496,36 +500,66 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                         <CommandGroup>
                           {story.importantUrls.map(
                             (url: { urlName: string; url: string }) => (
-                              <div key={url.urlName}>
-                                <HoverCard>
-                                  <HoverCardTrigger asChild>
-                                    <CommandItem
-                                      value={url.urlName}
-                                      className="cursor-pointer"
-                                      onSelect={() => {
-                                        setValue(url.urlName);
-                                        setOpen(false);
-                                      }}
-                                    >
-                                      {truncateDescription(url.urlName, 20)}
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="ml-auto cursor-pointer"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleCopy(url.url);
-                                        }}
-                                      >
-                                        <Copy className="w-4 h-4" />
-                                      </Button>
-                                    </CommandItem>
-                                  </HoverCardTrigger>
-                                  <HoverCardContent className="w-auto py-1">
-                                    {url.url}
-                                  </HoverCardContent>
-                                </HoverCard>
-                              </div>
+                              <CommandItem
+                                key={url.urlName}
+                                value={url.urlName}
+                                className="cursor-pointer"
+                                onSelect={() => {
+                                  setValue(url.urlName);
+                                  setOpen(false);
+                                }}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <LinkIcon className="w-4 h-4 opacity-70" />
+                                  <span className="truncate">
+                                    {truncateDescription(url.urlName, 28)}
+                                  </span>
+                                </div>
+                                <div className="ml-auto flex items-center gap-1">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="cursor-pointer"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(
+                                              url.url,
+                                              '_blank',
+                                              'noopener,noreferrer',
+                                            );
+                                          }}
+                                          aria-label="Open link"
+                                        >
+                                          <FileText className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Open link</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="cursor-pointer"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCopy(url.url);
+                                          }}
+                                          aria-label="Copy URL"
+                                        >
+                                          <Copy className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Copy URL</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                              </CommandItem>
                             ),
                           )}
                         </CommandGroup>
@@ -535,10 +569,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 </Popover>
               </div>
             </div>
-            <div
-              className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border"
-              style={{ borderColor: '#09090b' }}
-            >
+            <div className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border border-border">
               {story?.tasks?.length > 0 ? (
                 <div className="bg-transparent">
                   <div className="flex justify-between items-center px-3 mt-4">
@@ -583,32 +614,30 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                       <h4 className="text-sm md:text-lg font-medium">
                                         {truncateDescription(task.title, 20)}
                                       </h4>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="p-1 h-auto ml-2"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedTask(task);
-                                        }}
-                                      >
-                                        <svg
-                                          className="w-4 h-4"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                          />
-                                        </svg>
-                                      </Button>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="p-1 h-auto ml-2"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedTask(task);
+                                              }}
+                                              aria-label="View task details"
+                                            >
+                                              <Info className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            View task details
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
                                     </div>
                                     <Badge
-                                      className={`${taskBadgeStyle} px-2 py-0.5 text-xs md:text-sm rounded-md`}
+                                      className={`${taskBadgeStyle} px-3 py-1 text-xs md:text-sm rounded-full`}
                                     >
                                       {task.taskStatus}
                                     </Badge>
@@ -629,23 +658,43 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                       {/* Show accept/reject buttons only for tasks that haven't been acted upon */}
                                       {shouldShowAcceptRejectButtons(task) && (
                                         <div className="flex justify-between items-center">
-                                          <Button
-                                            onClick={() =>
-                                              handleAcceptTask(task._id)
-                                            }
-                                            className="w-20 md:w-16 h-7"
-                                          >
-                                            Accept
-                                          </Button>
+                                          <TooltipProvider>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  onClick={() =>
+                                                    handleAcceptTask(task._id)
+                                                  }
+                                                  className="w-20 md:w-16 h-7"
+                                                  aria-label="Accept task"
+                                                >
+                                                  Accept
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                Accept task
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
                                           <div className="flex-1 flex justify-center">
-                                            <Button
-                                              onClick={() =>
-                                                handleRejectTask(task._id)
-                                              }
-                                              className="w-20 md:w-16 h-7"
-                                            >
-                                              Reject
-                                            </Button>
+                                            <TooltipProvider>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <Button
+                                                    onClick={() =>
+                                                      handleRejectTask(task._id)
+                                                    }
+                                                    className="w-20 md:w-16 h-7"
+                                                    aria-label="Reject task"
+                                                  >
+                                                    Reject
+                                                  </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  Reject task
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </TooltipProvider>
                                           </div>
                                         </div>
                                       )}
@@ -740,35 +789,42 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                   </Carousel>
                 </div>
               ) : (
-                <div className="text-center mt-10 p-6 rounded-md border bg-muted/20">
-                  <div className="flex flex-col items-center gap-3">
-                    <Image
-                      src="/banner1.svg"
-                      alt="Empty tasks"
-                      width={200}
-                      height={90}
-                      className="opacity-90 select-none pointer-events-none"
-                    />
-                    {!isFreelancer ? (
-                      <p>
-                        This {story.title} currently has no tasks. Add tasks to
-                        ensure smooth progress and better tracking.
+                <div className="mt-8 p-6 rounded-xl border bg-muted/20 text-center">
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  {!isFreelancer ? (
+                    <>
+                      <h4 className="text-base md:text-lg font-semibold">
+                        No tasks yet
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        This “{story.title}” currently has no tasks. Create
+                        tasks to track progress.
                       </p>
-                    ) : (
-                      <p>
-                        This {story.title} currently has no tasks. Wait until
-                        the business assigns you to any task.
+                    </>
+                  ) : (
+                    <>
+                      <h4 className="text-base md:text-lg font-semibold">
+                        No tasks assigned
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        This “{story.title}” currently has no tasks assigned.
+                        Please check back later.
                       </p>
-                    )}
-                    {!isFreelancer && (
+                    </>
+                  )}
+                  {!isFreelancer && (
+                    <div className="mt-4">
                       <Button
-                        className="mt-2 px-3 py-1 text-sm sm:text-base rounded-full"
+                        variant="secondary"
+                        className="px-3 py-1.5 rounded-full"
                         onClick={() => setIsTaskDialogOpen(true)}
                       >
                         <Plus size={15} className="mr-1" /> Add Task
                       </Button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -800,23 +856,55 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
   onRejectUpdatePermission,
 }) => {
   if (!task) return null;
+  const { className: dialogStatusBadgeStyle } = getStatusBadge(
+    (task as any).taskStatus,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="rounded-lg mx-auto w-[80vw] shadow-lg ">
+      <DialogContent className="rounded-lg mx-auto w-[86vw] sm:max-w-xl shadow-lg ">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{task.title}</DialogTitle>
+          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+            <FileText className="h-4 w-4 text-primary" />
+            {task.title}
+          </DialogTitle>
         </DialogHeader>
         <DialogDescription className="text-sm mt-2 leading-relaxed">
+          {task.taskStatus !== 'SUMMARY' && (
+            <div className="mb-3">
+              <Badge
+                className={`${dialogStatusBadgeStyle} rounded-full px-3 py-1 w-fit`}
+              >
+                {task.taskStatus}
+              </Badge>
+            </div>
+          )}
           {/* Description */}
-          <h4 className="font-semibold mb-1">Description</h4>
-          <p className="mb-3 whitespace-pre-wrap">
-            {task.summary || 'No description provided.'}
-          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-start">
+            <div className="sm:col-span-3 order-2 sm:order-1">
+              <h4 className="font-semibold mb-1">Description</h4>
+              <p className="mb-3 whitespace-pre-wrap">
+                {task.summary || 'No description provided.'}
+              </p>
+            </div>
+            <div className="sm:col-span-2 order-1 sm:order-2">
+              <div className="relative mx-auto h-24 w-24 sm:h-28 sm:w-28">
+                <Image
+                  src="/banner1.svg"
+                  alt="Task details illustration"
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 640px) 96px, 112px"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Key fields (hidden for story SUMMARY popover) */}
           {task.taskStatus !== 'SUMMARY' && (
             <>
+              <Separator className="my-3" />
               <p className="mt-2 text-sm">
                 Task status:{' '}
                 <span className="font-medium ">{task?.taskStatus}</span>
@@ -844,7 +932,7 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
                 (f: any) =>
                   f.updatePermissionFreelancer && !f.updatePermissionBusiness,
               ) ? (
-                <Table className="border border-gray-300">
+                <Table className="border border-border bg-card rounded-md">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="font-semibold text-left">
@@ -865,53 +953,73 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
                       .map((freelancer: any, index: number) => (
                         <TableRow
                           key={index}
-                          className="border-b border-gray-200"
+                          className="border-b last:border-0"
                         >
                           <TableCell className="py-2 px-4">
                             {freelancer.freelancerName || 'Freelancer'}
                           </TableCell>
                           <TableCell className="py-2 px-4">
                             <div className="flex items-center justify-center gap-4">
-                              <button
-                                aria-label="Approve update permission"
-                                onClick={async () => {
-                                  if (onApproveUpdatePermission) {
-                                    const ok = await onApproveUpdatePermission(
-                                      task._id,
-                                    );
-                                    if (ok) {
-                                      (task as any).freelancers = (
-                                        task.freelancers || []
-                                      ).filter(
-                                        (f: any) => f._id !== freelancer._id,
-                                      );
-                                    }
-                                  }
-                                }}
-                                className="rounded p-1 hover:bg-emerald-950/40"
-                              >
-                                <Check className="text-green-500 w-5 h-5" />
-                              </button>
-                              <button
-                                aria-label="Reject update permission"
-                                onClick={async () => {
-                                  if (onRejectUpdatePermission) {
-                                    const ok = await onRejectUpdatePermission(
-                                      task._id,
-                                    );
-                                    if (ok) {
-                                      (task as any).freelancers = (
-                                        task.freelancers || []
-                                      ).filter(
-                                        (f: any) => f._id !== freelancer._id,
-                                      );
-                                    }
-                                  }
-                                }}
-                                className="rounded p-1 hover:bg-red-950/40"
-                              >
-                                <X className="text-red-500 w-5 h-5" />
-                              </button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      aria-label="Approve update permission"
+                                      onClick={async () => {
+                                        if (onApproveUpdatePermission) {
+                                          const ok =
+                                            await onApproveUpdatePermission(
+                                              task._id,
+                                            );
+                                          if (ok) {
+                                            (task as any).freelancers = (
+                                              task.freelancers || []
+                                            ).filter(
+                                              (f: any) =>
+                                                f._id !== freelancer._id,
+                                            );
+                                          }
+                                        }
+                                      }}
+                                    >
+                                      <Check className="text-green-500 w-5 h-5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Approve</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      aria-label="Reject update permission"
+                                      onClick={async () => {
+                                        if (onRejectUpdatePermission) {
+                                          const ok =
+                                            await onRejectUpdatePermission(
+                                              task._id,
+                                            );
+                                          if (ok) {
+                                            (task as any).freelancers = (
+                                              task.freelancers || []
+                                            ).filter(
+                                              (f: any) =>
+                                                f._id !== freelancer._id,
+                                            );
+                                          }
+                                        }
+                                      }}
+                                    >
+                                      <X className="text-red-500 w-5 h-5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Reject</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -935,5 +1043,4 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
     </Dialog>
   );
 };
-
 export default StoryAccordionItem;

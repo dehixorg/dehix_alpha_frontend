@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { ChevronsUpDown, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Option = Record<string, any>;
 
@@ -32,6 +33,8 @@ type SelectTagPickerProps = {
   selectedNameKey?: string;
   selectPlaceholder?: string;
   searchPlaceholder?: string;
+  showOtherOption?: boolean;
+  onOtherClick?: () => void;
 };
 
 const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
@@ -45,6 +48,8 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
   selectedNameKey = 'name',
   selectPlaceholder = 'Select',
   searchPlaceholder = 'Search',
+  showOtherOption = false,
+  onOtherClick,
 }) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,11 +58,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
     const q = searchQuery.toLowerCase();
     return (options || []).filter((opt) => {
       const label = String(opt?.[optionLabelKey] ?? '').toLowerCase();
-      const alreadySelected = (selected || []).some(
-        (s) =>
-          String((s as any)[selectedNameKey]) === String(opt?.[optionLabelKey]),
-      );
-      return label.includes(q) && !alreadySelected;
+      return label.includes(q);
     });
   }, [options, selected, optionLabelKey, selectedNameKey, searchQuery]);
 
@@ -99,27 +100,42 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
               />
               <CommandEmpty>No items found.</CommandEmpty>
               <CommandList>
-                <CommandGroup>
-                  {(filteredOptions || []).map((opt, idx) => {
-                    const val = String(opt?.[optionLabelKey]);
-                    const checked = isSelected(val);
-                    return (
+                <ScrollArea className="h-60">
+                  <CommandGroup>
+                    {(filteredOptions || []).map((opt, idx) => {
+                      const val = String(opt?.[optionLabelKey]);
+                      const checked = isSelected(val);
+                      return (
+                        <CommandItem
+                          key={`${val}-${idx}`}
+                          value={val}
+                          onSelect={() => toggleValue(val)}
+                          className="flex items-center gap-2"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            className="pointer-events-none"
+                          />
+                          <span className="flex-1">{val}</span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                  {showOtherOption && (
+                    <CommandGroup>
                       <CommandItem
-                        key={`${val}-${idx}`}
-                        value={val}
-                        onSelect={() => toggleValue(val)}
-                        className="flex items-center gap-2"
+                        value="__other__"
+                        onSelect={() => {
+                          if (onOtherClick) onOtherClick();
+                          setOpen(false);
+                        }}
+                        className="flex items-center gap-2 text-primary"
                       >
-                        <Checkbox
-                          checked={checked}
-                          className="pointer-events-none"
-                        />
-                        <span className="flex-1">{val}</span>
-                        {checked && <Check className="h-4 w-4 text-primary" />}
+                        <span className="flex-1">Other...</span>
                       </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
+                    </CommandGroup>
+                  )}
+                </ScrollArea>
               </CommandList>
             </Command>
           </PopoverContent>

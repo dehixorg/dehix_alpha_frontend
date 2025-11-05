@@ -506,14 +506,23 @@ export function CreateProjectBusinessForm() {
         'Your project has been successfully added.',
         'Project Added',
       );
+
       const connectsCost = parseInt(
-        process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
+        process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '150',
         10,
       );
-      const updatedConnects = (
-        parseInt(localStorage.getItem('DHX_CONNECTS') || '0') - connectsCost
-      ).toString();
-      localStorage.setItem('DHX_CONNECTS', updatedConnects);
+      const prevConnects = parseInt(
+        localStorage.getItem('DHX_CONNECTS') || '0',
+      );
+      const updatedConnects = prevConnects - connectsCost;
+      // Update connects in DB as well
+      try {
+        await axiosInstance.put('/business', { connects: updatedConnects });
+      } catch (err) {
+        // Optionally handle error, but don't block UI
+        console.error('Failed to update connects in DB:', err);
+      }
+      localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
       localStorage.removeItem(FORM_DRAFT_KEY);
       window.dispatchEvent(new Event('connectsUpdated'));
     } catch {
@@ -826,40 +835,32 @@ export function CreateProjectBusinessForm() {
                           label: d.label,
                           _id: d.value,
                         }))}
-                        selected={(currDomains[index] || [])
-                          .slice(0, 1)
-                          .map((d: string) => ({ name: d }))}
+                        selected={(currDomains[index] || []).map(
+                          (d: string) => ({ name: d }),
+                        )}
                         onAdd={(val: string) => {
                           if (!val) return;
-                          const updated = [val];
-                          setCurrDomains((prev) => ({
-                            ...prev,
-                            [index]: updated,
-                          }));
-                          form.setValue(`profiles.${index}.domain`, updated, {
-                            shouldValidate: true,
+                          setCurrDomains((prev) => {
+                            const prevDomains = prev[index] || [];
+                            if (prevDomains.includes(val)) return prev; // avoid duplicates
+                            const updated = [...prevDomains, val];
+                            const newDomains = { ...prev, [index]: updated };
+                            form.setValue(`profiles.${index}.domain`, updated, {
+                              shouldValidate: true,
+                            });
+                            return newDomains;
                           });
-                          // Also persist the selected domain's id alongside the label in the profile
-                          const selected = domains.find(
-                            (d: any) => d.label === val,
-                          );
-                          form.setValue(
-                            `profiles.${index}.domain_id`,
-                            selected?.domain_id || '',
-                            { shouldValidate: true },
-                          );
                         }}
-                        onRemove={() => {
-                          const updated: string[] = [];
-                          setCurrDomains((prev) => ({
-                            ...prev,
-                            [index]: updated,
-                          }));
-                          form.setValue(`profiles.${index}.domain`, updated, {
-                            shouldValidate: true,
-                          });
-                          form.setValue(`profiles.${index}.domain_id`, '', {
-                            shouldValidate: true,
+                        onRemove={(val: string) => {
+                          setCurrDomains((prev) => {
+                            const updated = (prev[index] || []).filter(
+                              (d) => d !== val,
+                            );
+                            const newDomains = { ...prev, [index]: updated };
+                            form.setValue(`profiles.${index}.domain`, updated, {
+                              shouldValidate: true,
+                            });
+                            return newDomains;
                           });
                         }}
                         className="w-full"
@@ -1105,7 +1106,6 @@ export function CreateProjectBusinessForm() {
                         <Save className="h-4 w-4 mr-1" /> Save Draft
                       </Button>
                       <ConnectsDialog
-                        form={form}
                         loading={loading}
                         isValidCheck={async () => {
                           // Validate all required fields
@@ -1204,7 +1204,7 @@ export function CreateProjectBusinessForm() {
                         userType={'BUSINESS'}
                         requiredConnects={parseInt(
                           process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST ||
-                            '0',
+                            '150',
                           10,
                         )}
                       />

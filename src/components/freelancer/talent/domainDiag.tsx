@@ -2,7 +2,6 @@
 
 import type React from 'react';
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -49,6 +48,7 @@ interface SkillDomainData {
 interface DomainDialogProps {
   domains: Domain[];
   onSuccess: () => void;
+  children: React.ReactNode;
 }
 
 const domainSchema = z.object({
@@ -66,7 +66,11 @@ const domainSchema = z.object({
   status: z.string(),
 });
 
-const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
+const DomainDialog: React.FC<DomainDialogProps> = ({
+  domains,
+  onSuccess,
+  children,
+}) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
@@ -121,9 +125,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="h-4 w-4" /> Add Domain
-        </Button>
+        <div onClick={() => setOpen(true)}>{children}</div>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Edit2, ListFilter, Info } from 'lucide-react';
+import { Plus, ListFilter, Info } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -18,12 +18,15 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ButtonIcon } from '@/components/shared/buttonIcon';
 import DomainDialog from '@/components/dialogs/domainDialog';
-import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import {
+  getBadgeColor,
+  statusOutlineClasses,
+} from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
 import { RootState } from '@/lib/store';
+import { StatusEnum } from '@/utils/freelancer/enum';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -123,9 +126,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   const [docId, setDocId] = useState<string>();
   const [docType, setDocType] = useState<string>();
 
-  const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
-    'All',
-  );
+  const [filter, setFilter] = useState<'All' | 'Skills' | 'Domain'>('All');
 
   useEffect(() => {
     async function fetchData() {
@@ -138,8 +139,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           `/freelancer/${freelancerId}/domain`,
         );
 
-        const skillData = freelancerSkillsResponse.data.data[0].skills;
-        const domainData = freelancerDomainsResponse.data.data[0].domain;
+        const skillData =
+          freelancerSkillsResponse?.data?.data?.[0]?.skills || [];
+        const domainData =
+          freelancerDomainsResponse?.data?.data?.[0]?.domain || [];
 
         setSkillData(skillData);
         setDomainData(domainData);
@@ -148,15 +151,28 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           `/freelancer/${user.uid}/dehix-talent`,
         );
 
-        const updatedSkills = skillsDomainResponse.data.data.skills.filter(
-          (skill: any) =>
-            !skillData.some(
-              (existingSkill: any) => existingSkill.name === skill.talentName,
-            ),
-        );
+        const isVerifiedTalent = (t: any) => {
+          const status = String(t?.status || '').toUpperCase();
+          const active = Boolean(t?.activeStatus);
+          return (
+            active &&
+            (status === StatusEnum.ACTIVE || status === StatusEnum.COMPLETED)
+          );
+        };
+
+        const updatedSkills = (skillsDomainResponse.data.data.skills || [])
+          .filter(isVerifiedTalent)
+          .filter(
+            (skill: any) =>
+              !skillData.some(
+                (existingSkill: any) => existingSkill.name === skill.talentName,
+              ),
+          );
         setSkills(updatedSkills);
 
-        const updatedDomains = skillsDomainResponse.data.data.domains.filter(
+        const updatedDomains = (
+          skillsDomainResponse?.data?.data?.domains || []
+        ).filter(
           (domain: any) =>
             !domainData.some(
               (existingDomain: any) =>
@@ -338,63 +354,61 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   return (
     <>
       <div className="flex flex-col gap-4 p-2 sm:px-6 sm:py-0 md:gap-8  pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
-        <div className="w-full">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1 w-auto text-sm"
-              >
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only">Filter</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={filter === 'All'}
-                onSelect={() => setFilter('All')}
-              >
-                All
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Skills'}
-                onSelect={() => setFilter('Skills')}
-              >
-                Skills
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Domain'}
-                onSelect={() => setFilter('Domain')}
-              >
-                Domain
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <div className="w-full relative border border-gray-200 rounded-lg p-4">
+        <div className="w-full relative border border-gray-200 rounded-xl shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs md:text-xl font-semibold w-1/2">
               Skills & Domains
             </h2>
             <div className="flex justify-end items-center  w-1/2">
-              <Button
-                onClick={() => setOpenSkillDialog(true)}
-                className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm"
-              >
-                <Plus className=" mr-1 md:mr-2 h-4 w-4" />{' '}
-                <span className="hidden  md:block mr-1">Add</span> Skill
-              </Button>
-              <Button
-                onClick={() => setOpenDomainDialog(true)}
-                className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm"
-              >
-                <Plus className=" mr-1 md:mr-2 h-4 w-4" />{' '}
-                <span className="hidden md:block mr-1">Add</span> Domain
-              </Button>
+              <div className="flex items-center gap-4">
+                <Button
+                  className="flex items-center gap-2"
+                  onClick={() => setOpenSkillDialog(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Skill
+                </Button>
+                <Button
+                  className="flex items-center gap-2"
+                  onClick={() => setOpenDomainDialog(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Domain
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <ListFilter className="h-4 w-4" />
+                      Filter
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={filter === 'All'}
+                      onCheckedChange={() => setFilter('All')}
+                    >
+                      All
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={filter === 'Skills'}
+                      onCheckedChange={() => setFilter('Skills')}
+                    >
+                      Skills
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={filter === 'Domain'}
+                      onCheckedChange={() => setFilter('Domain')}
+                    >
+                      Domain
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
             <SkillDialog
               open={openSkillDialog}
@@ -417,12 +431,20 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           </div>
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-[#09090B]">
-                <TableHead className="">Item</TableHead>
-                <TableHead className="">Level</TableHead>
-                <TableHead className="">Experience</TableHead>
-                <TableHead className="">Status</TableHead>
-                <TableHead className="">
+              <TableRow className="bg-gray-200 hover:bg-gray-300 dark:bg-[#09090B] dark:hover:bg-[#09090B]">
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Item
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Level
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Experience
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Status
+                </TableHead>
+                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                   <div className="flex gap-2 items-center">
                     Actions
                     <Popover>
@@ -459,37 +481,56 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                     </TableRow>
                   ))
                 : filteredData()!.map((item) => (
-                    <TableRow key={item._id}>
-                      <TableCell className="">{item.name}</TableCell>
+                    <TableRow
+                      key={item._id}
+                      className="hover:bg-gray-50 dark:hover:bg-[#0C0C0F]"
+                    >
+                      <TableCell className="font-medium text-gray-900 dark:text-gray-100">
+                        {item.name}
+                      </TableCell>
                       <TableCell className="">
-                        <Badge className={getBadgeColor(item.level)}>
+                        <Badge
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.level)}`}
+                        >
                           {item?.level?.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className="">
+                      <TableCell className="text-gray-600 dark:text-gray-300">
                         {typeof item.experience === 'number' &&
                         item.experience > 0
-                          ? item.experience + ' years'
+                          ? item.experience + ' yrs'
                           : ''}
                       </TableCell>
                       <TableCell className="">
-                        <Badge className={getBadgeColor(item.interviewStatus)}>
+                        <Badge
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.interviewStatus)}`}
+                        >
                           {item?.interviewStatus?.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className="flex items-center gap-2">
-                        <ButtonIcon
-                          icon={
-                            <Edit2 className="w-4 h-4 text-gray-400 cursor-not-allowed" />
-                          }
-                          disabled
-                          onClick={() =>
-                            handleSkillDomainDialog(
-                              item,
-                              item.experience ? 'SKILL' : 'DOMAIN',
-                            )
-                          }
-                        />
+                      <TableCell className="py-2">
+                        {String(item?.interviewStatus).toUpperCase() ===
+                        'COMPLETED' ? (
+                          <div className="flex justify-start">
+                            <Button variant="secondary" size="sm">
+                              View Report
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex justify-start">
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                handleSkillDomainDialog(
+                                  item,
+                                  item.experience ? 'SKILL' : 'DOMAIN',
+                                )
+                              }
+                            >
+                              Conduct Interview
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

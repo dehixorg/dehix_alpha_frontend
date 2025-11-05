@@ -1,7 +1,13 @@
 'use client';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+  Users2,
+  BookMarked,
+  CheckCircle2,
+  XCircle,
+  FileText,
+} from 'lucide-react';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Users2, BookMarked, CheckCircle2, XCircle } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -32,16 +38,28 @@ interface Domain {
 
 export default function Talent() {
   const router = useRouter();
+  const pathname = usePathname();
   const [skillFilter, setSkillFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
-  const [skillDomainFormProps] = useState<any>();
 
   const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
 
   const handleTabChange = (value: string) => {
-    router.push(`/business/talent/${value}`);
+    const path = value ? `/business/talent/${value}` : '/business/talent';
+    router.push(path);
   };
+
+  // Derive current tab value from the pathname to keep Tabs in sync with routing
+  const currentTab = (() => {
+    const path = pathname?.replace(/\/+$/, '') || '/business/talent';
+    if (path === '/business/talent') return 'overview';
+    const parts = path.split('/');
+    const last = parts[parts.length - 1];
+    return ['applications', 'invited', 'accepted', 'rejected'].includes(last)
+      ? last
+      : 'overview';
+  })();
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-auto">
@@ -65,13 +83,18 @@ export default function Talent() {
 
         {/* Tabs Header */}
         <div className="container px-4 py-4">
-          <Tabs value="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview" asChild>
-                <a href="/business/talent">
-                  <Users2 className="h-4 w-4 mr-1" />
-                  Overview
-                </a>
+          <Tabs value={currentTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="overview" onClick={() => handleTabChange('')}>
+                <Users2 className="h-4 w-4 mr-1" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="applications"
+                onClick={() => handleTabChange('applications')}
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                Applications
               </TabsTrigger>
               <TabsTrigger
                 value="invited"
@@ -146,7 +169,6 @@ export default function Talent() {
               <TalentCard
                 skillFilter={skillFilter}
                 domainFilter={domainFilter}
-                skillDomainFormProps={skillDomainFormProps}
               />
             </div>
           </div>

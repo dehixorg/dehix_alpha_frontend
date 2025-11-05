@@ -1,4 +1,5 @@
 import React from 'react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -33,12 +34,19 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
+      <DialogContent className="sm:max-w-md">
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="h-12 w-12 rounded-full bg-red-500/10 text-red-600 flex items-center justify-center">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <DialogHeader className="items-center">
+            <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed">
+              {description}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        <DialogFooter className="sm:justify-center gap-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -50,7 +58,9 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
             variant="destructive"
             onClick={onConfirm}
             disabled={confirmLoading}
+            className="inline-flex items-center gap-2"
           >
+            {confirmLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             {confirmText}
           </Button>
         </DialogFooter>

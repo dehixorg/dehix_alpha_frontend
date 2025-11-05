@@ -54,46 +54,50 @@ export default function InterviewPage() {
               onValueChange={(val) =>
                 router.push(`/freelancer/interview/${val}`)
               }
-              className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-4 mb-5">
-                <TabsTrigger
-                  value="profile"
-                  className="flex items-center gap-2"
-                >
-                  <Users2 className="h-4 w-4" />
-                  <span>Profile</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="current"
-                  className="flex items-center gap-2"
-                >
-                  <ListVideo className="h-4 w-4" />
-                  <span>Current</span>
-                </TabsTrigger>
-                <TabsTrigger value="bids" className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" />
-                  <span>Bids</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="history"
-                  className="flex items-center gap-2"
-                >
-                  <History className="h-4 w-4" />
-                  <span>History</span>
-                </TabsTrigger>
-              </TabsList>
+              <div className="border-b px-2 sm:px-6">
+                <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
+                  <TabsTrigger
+                    value="profile"
+                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <Users2 className="h-4 w-4" />
+                    <span>Profile</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="current"
+                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <ListVideo className="h-4 w-4" />
+                    <span>Current</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="bids"
+                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    <span>Bids</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="history"
+                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <History className="h-4 w-4" />
+                    <span>History</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-              <TabsContent value="profile">
+              <TabsContent value="profile" className="m-0 pt-4">
                 <ProfileComponent />
               </TabsContent>
-              <TabsContent value="current">
+              <TabsContent value="current" className="m-0 pt-4">
                 <CurrentComponent />
               </TabsContent>
-              <TabsContent value="bids">
+              <TabsContent value="bids" className="m-0 pt-4">
                 <BidsComponent />
               </TabsContent>
-              <TabsContent value="history">
+              <TabsContent value="history" className="m-0 pt-4">
                 <HistoryComponent />
               </TabsContent>
             </Tabs>

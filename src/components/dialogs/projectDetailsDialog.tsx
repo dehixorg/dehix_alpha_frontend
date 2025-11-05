@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
+import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
 
 interface ProjectDetailsDialogProps {
   isOpen: boolean;
@@ -54,6 +55,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
   project,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleLinkClick = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -258,22 +260,26 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
               variant="destructive"
               onClick={(e) => {
                 e.preventDefault();
-                if (
-                  confirm(
-                    'Are you sure you want to delete this project? This action cannot be undone.',
-                  )
-                ) {
-                  handleDelete();
-                }
+                setDeleteOpen(true);
               }}
               disabled={isDeleting}
               className="gap-2"
             >
               <Trash2 className="h-4 w-4" />
-              {isDeleting ? 'Deleting...' : 'Delete Project'}
+              Delete Project
             </Button>
           </div>
         </DialogFooter>
+        <DeleteConfirmationDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          title="Delete project"
+          description="Are you sure you want to delete this project? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDelete}
+          confirmLoading={isDeleting}
+        />
       </DialogContent>
     </Dialog>
   );

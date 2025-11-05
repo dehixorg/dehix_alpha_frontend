@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -47,6 +46,7 @@ interface SkillDomainData {
 interface SkillDialogProps {
   skills: Skill[];
   onSuccess: () => void;
+  children: React.ReactNode;
 }
 
 const skillSchema = z.object({
@@ -64,7 +64,11 @@ const skillSchema = z.object({
   status: z.string(),
 });
 
-const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
+const SkillDialog: React.FC<SkillDialogProps> = ({
+  skills,
+  onSuccess,
+  children,
+}) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -87,12 +91,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   });
 
   const onSubmit = async (data: SkillDomainData) => {
-    // Ensure a skill is selected
-    if (!data.skillId || !data.label) {
-      notifyError('Please select a skill', 'Error');
-      return;
-    }
-
     setLoading(true);
     try {
       await axiosInstance.post(`/freelancer/dehix-talent`, {
@@ -106,7 +104,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
       });
       reset();
       setOpen(false);
-      notifySuccess('Skill added successfully', 'Success');
+      notifySuccess('The skill has been successfully added.', 'Skill Added');
       onSuccess();
     } catch (error) {
       console.error(error);
@@ -118,12 +116,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="h-4 w-4" />
-          Add Skill
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

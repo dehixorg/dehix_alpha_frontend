@@ -330,7 +330,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
         className,
       )}
     >
-      <CardHeader className="flex-shrink-0 sticky top-0 z-10 bg-muted-foreground/20 dark:bg-muted/20 border-b relative">
+      <CardHeader className="flex-shrink-0 sticky top-0 z-10 bg-gradient border-b relative">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">Team Members</CardTitle>
           {isBusinessUser && (
