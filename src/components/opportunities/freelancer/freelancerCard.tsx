@@ -30,7 +30,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { RootState } from '@/lib/store';
-import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import ProjectProfileSelectionDialog from '@/components/dialogs/ProjectProfileSelectionDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifySuccess, notifyError } from '@/utils/toastMessage';
 interface FreelancerCardProps {
@@ -44,6 +44,8 @@ interface FreelancerCardProps {
   githubUrl?: string;
   linkedInUrl?: string;
   websiteUrl?: string;
+  freelancerId?: string;
+  freelancer_professional_profile_id?: string;
 }
 
 const FreelancerCard: React.FC<FreelancerCardProps> = ({
@@ -57,11 +59,14 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   githubUrl,
   linkedInUrl,
   websiteUrl,
+  freelancerId,
+  freelancer_professional_profile_id,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const user = useSelector((state: RootState) => state.user);
 
   const handleHireNow = async (data?: any) => {
@@ -147,6 +152,17 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
         }
       }}
     >
+      {/* Mount ProjectProfileSelectionDialog at card root so external Hire Now works when profile dialog is closed */}
+      <ProjectProfileSelectionDialog
+        open={isProjectDialogOpen}
+        onOpenChange={setIsProjectDialogOpen}
+        freelancerId={freelancerId}
+        freelancer_professional_profile_id={freelancer_professional_profile_id}
+        onSuccess={() => {
+          // Optionally refresh or notify
+        }}
+      />
+
       <div className="md:flex md:gap-6 border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20">
         {/* Left Side - Profile */}
         <div className="flex flex-col items-center md:items-start md:border-r md:border-border md:pr-6 md:w-80 p-4 pr-0 md:p-6 bg-muted-foreground/20 dark:bg-muted/20">
@@ -557,21 +573,27 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <div onClick={(e) => e.stopPropagation()}>
-                          <ConnectsDialog
-                            loading={loading}
-                            setLoading={setLoading}
-                            onSubmit={handleHireNow}
-                            isValidCheck={noopValidate}
-                            userId={user?.uid}
-                            buttonText="Hire Now"
-                            userType="BUSINESS"
-                            requiredConnects={parseInt(
-                              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST ||
-                                '0',
-                              10,
-                            )}
-                            skipRedirect
+                          <ProjectProfileSelectionDialog
+                            open={isProjectDialogOpen}
+                            onOpenChange={setIsProjectDialogOpen}
+                            freelancerId={freelancerId}
+                            freelancer_professional_profile_id={
+                              freelancer_professional_profile_id
+                            }
+                            onSuccess={() => {
+                              // Optionally refresh or notify
+                            }}
                           />
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsProjectDialogOpen(true);
+                            }}
+                          >
+                            Invite Now
+                          </Button>
                         </div>
                       </div>
                     </DialogFooter>
@@ -581,20 +603,13 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
             </div>
 
             <div onClick={(e) => e.stopPropagation()}>
-              <ConnectsDialog
-                loading={loading}
-                setLoading={setLoading}
-                onSubmit={handleHireNow}
-                isValidCheck={noopValidate}
-                userId={user?.uid}
-                buttonText="Hire Now"
-                userType="BUSINESS"
-                requiredConnects={parseInt(
-                  process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-                  10,
-                )}
-                skipRedirect
-              />
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setIsProjectDialogOpen(true)}
+              >
+                Invite Now
+              </Button>
             </div>
           </div>
         </div>

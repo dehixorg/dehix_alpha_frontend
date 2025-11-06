@@ -81,21 +81,41 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
           No talent found
         </p>
       ) : (
-        freelancers.map((freelancer: any, index: number) => (
-          <FreelancerCard
-            key={index}
-            name={freelancer.firstName + ' ' + freelancer.lastName}
-            skills={freelancer.skills}
-            domains={freelancer.domain}
-            experience={freelancer.workExperience}
-            profile={freelancer.profilePic}
-            userName={freelancer.userName}
-            monthlyPay={freelancer.monthlyPay}
-            githubUrl={freelancer.github || freelancer.githubLink}
-            linkedInUrl={freelancer.linkedin}
-            websiteUrl={freelancer.personalWebsite}
-          />
-        ))
+        freelancers.map((freelancer: any, index: number) => {
+          // Extract active dehixTalent profile id (supports object, Map, or array shapes)
+          const getActiveDehixTalentId = (f: any) => {
+            if (!f?.dehixTalent) return undefined;
+            let entries: any[] = [];
+            if (Array.isArray(f.dehixTalent)) entries = f.dehixTalent;
+            else if (f.dehixTalent instanceof Map)
+              entries = Array.from(f.dehixTalent.values());
+            else entries = Object.values(f.dehixTalent || {});
+            const active = entries.find(
+              (entry: any) => entry?.activeStatus === true,
+            );
+            return active?._id;
+          };
+
+          const profId = getActiveDehixTalentId(freelancer);
+
+          return (
+            <FreelancerCard
+              key={index}
+              name={freelancer.firstName + ' ' + freelancer.lastName}
+              skills={freelancer.skills}
+              domains={freelancer.domain}
+              experience={freelancer.workExperience}
+              profile={freelancer.profilePic}
+              userName={freelancer.userName}
+              monthlyPay={freelancer.monthlyPay}
+              githubUrl={freelancer.github || freelancer.githubLink}
+              linkedInUrl={freelancer.linkedin}
+              websiteUrl={freelancer.personalWebsite}
+              freelancerId={freelancer._id}
+              freelancer_professional_profile_id={profId}
+            />
+          );
+        })
       )}
     </div>
   );
