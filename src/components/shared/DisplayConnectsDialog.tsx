@@ -79,7 +79,7 @@ export const DisplayConnectsDialog = React.forwardRef<
 
   useEffect(() => {
     if (open) fetchConnectsRequest();
-  }, [open, fetchConnectsRequest]);
+  }, [open]);
 
   useEffect(() => {
     setFilteredData(() =>
