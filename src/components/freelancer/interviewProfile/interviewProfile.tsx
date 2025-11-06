@@ -352,13 +352,14 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     <>
       <div className="flex flex-col gap-4 p-2 sm:px-6 sm:py-0 md:gap-8  pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
         <div className="w-full relative border border-gray-200 rounded-xl shadow-sm p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs md:text-xl font-semibold w-1/2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold w-full sm:w-1/2">
               Skills & Domains
             </h2>
-            <div className="flex justify-end items-center  w-1/2">
-              <div className="flex items-center gap-4">
+            <div className="flex justify-start sm:justify-end items-center w-full sm:w-1/2">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <Button
+                  size="sm"
                   className="flex items-center gap-2"
                   onClick={() => setOpenSkillDialog(true)}
                 >
@@ -366,6 +367,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                   Add Skill
                 </Button>
                 <Button
+                  size="sm"
                   className="flex items-center gap-2"
                   onClick={() => setOpenDomainDialog(true)}
                 >
@@ -376,6 +378,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
+                      size="sm"
                       className="flex items-center gap-2"
                     >
                       <ListFilter className="h-4 w-4" />
@@ -426,6 +429,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               loading={loading}
             />
           </div>
+          <div className="w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-200 hover:bg-gray-300 dark:bg-[#09090B] dark:hover:bg-[#09090B]">
@@ -533,6 +537,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                   ))}
             </TableBody>
           </Table>
+          </div>
         </div>
       </div>
       <SkillDomainMeetingDialog
