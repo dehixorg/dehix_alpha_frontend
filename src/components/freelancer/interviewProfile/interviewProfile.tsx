@@ -352,13 +352,14 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     <>
       <div className="flex flex-col gap-4 p-2 sm:px-6 sm:py-0 md:gap-8  pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
         <div className="w-full relative border border-gray-200 rounded-xl shadow-sm p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs md:text-xl font-semibold w-1/2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold w-full sm:w-1/2">
               Skills & Domains
             </h2>
-            <div className="flex justify-end items-center  w-1/2">
-              <div className="flex items-center gap-4">
+            <div className="flex justify-start sm:justify-end items-center w-full sm:w-1/2">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <Button
+                  size="sm"
                   className="flex items-center gap-2"
                   onClick={() => setOpenSkillDialog(true)}
                 >
@@ -366,6 +367,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                   Add Skill
                 </Button>
                 <Button
+                  size="sm"
                   className="flex items-center gap-2"
                   onClick={() => setOpenDomainDialog(true)}
                 >
@@ -376,6 +378,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
+                      size="sm"
                       className="flex items-center gap-2"
                     >
                       <ListFilter className="h-4 w-4" />
@@ -426,113 +429,115 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               loading={loading}
             />
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-200 hover:bg-gray-300 dark:bg-[#09090B] dark:hover:bg-[#09090B]">
-                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Item
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Level
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Experience
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Status
-                </TableHead>
-                <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  <div className="flex gap-2 items-center">
-                    Actions
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Info className="w-4 h-4 text-muted-foreground  cursor-pointer" />
-                      </PopoverTrigger>
-                      <PopoverContent className="text-sm w-fit  border rounded p-2 shadow">
-                        This will be available in the next phase.
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading
-                ? [...Array(4)].map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="">
-                        <Skeleton className="h-6 w-24" />
-                      </TableCell>
-                      <TableCell className="">
-                        <Skeleton className="h-6 w-24" />
-                      </TableCell>
-                      <TableCell className="">
-                        <Skeleton className="h-6 w-24" />
-                      </TableCell>
-                      <TableCell className="">
-                        <Skeleton className="h-6 w-20 rounded-full" />
-                      </TableCell>
-                      <TableCell className="">
-                        <Skeleton className="w-8 h-8 p-2 rounded-md" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                : filteredData()!.map((item) => (
-                    <TableRow
-                      key={item._id}
-                      className="hover:bg-gray-50 dark:hover:bg-[#0C0C0F]"
-                    >
-                      <TableCell className="font-medium text-gray-900 dark:text-gray-100">
-                        {item.name}
-                      </TableCell>
-                      <TableCell className="">
-                        <Badge
-                          className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.level)}`}
-                        >
-                          {item?.level?.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-gray-600 dark:text-gray-300">
-                        {typeof item.experience === 'number' &&
-                        item.experience > 0
-                          ? item.experience + ' yrs'
-                          : ''}
-                      </TableCell>
-                      <TableCell className="">
-                        <Badge
-                          className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.interviewStatus)}`}
-                        >
-                          {item?.interviewStatus?.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="py-2">
-                        {String(item?.interviewStatus).toUpperCase() ===
-                        'COMPLETED' ? (
-                          <div className="flex justify-start">
-                            <Button variant="secondary" size="sm">
-                              View Report
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex justify-start">
-                            <Button
-                              size="sm"
-                              onClick={() =>
-                                handleSkillDomainDialog(
-                                  item,
-                                  item.experience ? 'SKILL' : 'DOMAIN',
-                                )
-                              }
-                            >
-                              Conduct Interview
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-            </TableBody>
-          </Table>
+          <div className="w-full overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-200 hover:bg-gray-300 dark:bg-[#09090B] dark:hover:bg-[#09090B]">
+                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    Item
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    Level
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    Experience
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    <div className="flex gap-2 items-center">
+                      Actions
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Info className="w-4 h-4 text-muted-foreground  cursor-pointer" />
+                        </PopoverTrigger>
+                        <PopoverContent className="text-sm w-fit  border rounded p-2 shadow">
+                          This will be available in the next phase.
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading
+                  ? [...Array(4)].map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="">
+                          <Skeleton className="h-6 w-24" />
+                        </TableCell>
+                        <TableCell className="">
+                          <Skeleton className="h-6 w-24" />
+                        </TableCell>
+                        <TableCell className="">
+                          <Skeleton className="h-6 w-24" />
+                        </TableCell>
+                        <TableCell className="">
+                          <Skeleton className="h-6 w-20 rounded-full" />
+                        </TableCell>
+                        <TableCell className="">
+                          <Skeleton className="w-8 h-8 p-2 rounded-md" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  : filteredData()!.map((item) => (
+                      <TableRow
+                        key={item._id}
+                        className="hover:bg-gray-50 dark:hover:bg-[#0C0C0F]"
+                      >
+                        <TableCell className="font-medium text-gray-900 dark:text-gray-100">
+                          {item.name}
+                        </TableCell>
+                        <TableCell className="">
+                          <Badge
+                            className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.level)}`}
+                          >
+                            {item?.level?.toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-gray-600 dark:text-gray-300">
+                          {typeof item.experience === 'number' &&
+                          item.experience > 0
+                            ? item.experience + ' yrs'
+                            : ''}
+                        </TableCell>
+                        <TableCell className="">
+                          <Badge
+                            className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.interviewStatus)}`}
+                          >
+                            {item?.interviewStatus?.toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-2">
+                          {String(item?.interviewStatus).toUpperCase() ===
+                          'COMPLETED' ? (
+                            <div className="flex justify-start">
+                              <Button variant="secondary" size="sm">
+                                View Report
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex justify-start">
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleSkillDomainDialog(
+                                    item,
+                                    item.experience ? 'SKILL' : 'DOMAIN',
+                                  )
+                                }
+                              >
+                                Conduct Interview
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
       <SkillDomainMeetingDialog
