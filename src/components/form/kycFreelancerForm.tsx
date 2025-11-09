@@ -89,67 +89,217 @@ const KycStatusAlert = ({
   status: string;
   rejectionReason?: string;
 }) => {
-  switch (status) {
-    case 'APPLIED':
-    case 'PENDING':
-      return (
-        <div
-          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4"
-          role="alert"
-        >
-          <p className="font-bold">Under Review</p>
-          <p>
-            Your KYC is currently under review. We will notify you once the
-            review is complete.
-          </p>
-        </div>
-      );
-    case 'VERIFIED':
-      return (
-        <div
-          className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4"
-          role="alert"
-        >
-          <p className="font-bold">KYC Accepted</p>
-          <p>Your KYC has been successfully verified.</p>
-        </div>
-      );
-    case 'REJECTED':
-      return (
-        <div
-          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
-          role="alert"
-        >
-          <p className="font-bold">KYC Rejected</p>
-          <p>
-            Your KYC has been rejected. Please see the reason below and
-            re-submit your application.
-          </p>
-          {rejectionReason && (
-            <p className="mt-2">
-              <strong>Reason:</strong> {rejectionReason}
+  const getStatusConfig = () => {
+    switch (status) {
+      case 'APPLIED':
+      case 'PENDING':
+        return {
+          icon: (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100">
+              <svg
+                className="h-5 w-5 text-yellow-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+          ),
+          title: 'Under Review',
+          description:
+            'Your KYC is currently under review. We will notify you once the review is complete.',
+          className: 'border-yellow-200 bg-yellow-50',
+          textColor: 'text-yellow-800',
+          progress: 50,
+          button: null,
+        };
+      case 'VERIFIED':
+        return {
+          icon: (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+              <svg
+                className="h-5 w-5 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          ),
+          title: 'KYC Verified',
+          description: 'Your KYC has been successfully verified and approved.',
+          className: 'border-green-200 bg-green-50',
+          textColor: 'text-green-800',
+          progress: 100,
+          button: null,
+        };
+      case 'REJECTED':
+        return {
+          icon: (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+              <svg
+                className="h-5 w-5 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </div>
+          ),
+          title: 'KYC Rejected',
+          description:
+            'Your KYC application has been rejected. Please find the reason below.',
+          className: 'border-red-200 bg-red-50',
+          textColor: 'text-red-800',
+          progress: 0,
+          button: (
+            <div className="space-y-3">
+              {rejectionReason && (
+                <div className="mt-2 rounded-md border border-red-200 bg-white p-3 shadow-sm">
+                  <p className="text-sm font-medium text-gray-900">
+                    Reason for Rejection:
+                  </p>
+                  <p className="mt-1 text-sm text-gray-700">
+                    {rejectionReason}
+                  </p>
+                </div>
+              )}
+            </div>
+          ),
+        };
+      case 'REUPLOAD':
+        return {
+          icon: (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+              <svg
+                className="h-5 w-5 text-amber-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+            </div>
+          ),
+          title: 'Re-upload Required',
+          description:
+            'We need some additional documents to complete your verification.',
+          className: 'border-amber-200 bg-amber-50',
+          textColor: 'text-amber-800',
+          progress: 25,
+          button: (
+            <button className="mt-3 inline-flex items-center rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700">
+              Upload Documents
+            </button>
+          ),
+        };
+      default:
+        return null;
+    }
+  };
+
+  const statusConfig = getStatusConfig();
+  if (!statusConfig) return null;
+
+  return (
+    <div
+      className={`rounded-lg border ${statusConfig.className} mb-6 overflow-hidden shadow-sm`}
+    >
+      <div className="p-5">
+        <div className="flex items-start">
+          {statusConfig.icon}
+          <div className="ml-4 flex-1">
+            <h3 className={`text-lg font-semibold ${statusConfig.textColor}`}>
+              {statusConfig.title}
+            </h3>
+            <p className="mt-1 text-sm text-gray-600">
+              {statusConfig.description}
             </p>
+
+            {rejectionReason && (
+              <div className="mt-3 rounded-md bg-white p-3 text-sm">
+                <p className="font-medium text-gray-900">
+                  Reason for Rejection:
+                </p>
+                <p className="mt-1 text-gray-600">{rejectionReason}</p>
+              </div>
+            )}
+
+            {statusConfig.button}
+
+            {status === 'PENDING' && (
+              <div className="mt-4 border-t border-gray-100 pt-4">
+                <div className="flex items-center text-sm text-gray-500">
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>
+                    Need help?{' '}
+                    <button
+                      onClick={() => {
+                        // TODO: Implement contact support functionality
+                        console.log('Contact support clicked');
+                      }}
+                      className="font-medium text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded"
+                    >
+                      Contact Support
+                    </button>
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {statusConfig.progress > 0 && (
+            <div className="ml-4 flex flex-col items-end">
+              <span className="text-xs font-medium text-gray-500">
+                {statusConfig.progress}% complete
+              </span>
+              <div className="mt-1 h-1.5 w-20 overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className="h-full bg-current"
+                  style={{ width: `${statusConfig.progress}%` }}
+                />
+              </div>
+            </div>
           )}
         </div>
-      );
-    case 'REUPLOAD':
-      return (
-        <div
-          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
-          role="alert"
-        >
-          <p className="font-bold">Re-upload Required</p>
-          <p>Your KYC has been rejected. Please re-upload your documents.</p>
-          {rejectionReason && (
-            <p className="mt-2">
-              <strong>Reason:</strong> {rejectionReason}
-            </p>
-          )}
-        </div>
-      );
-    default:
-      return null;
-  }
+      </div>
+    </div>
+  );
 };
 
 export default function KYCForm({ user_id }: { user_id: string }) {
@@ -159,6 +309,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
     undefined,
   );
   const [currentStep, setCurrentStep] = useState<number>(1);
+
   const submitIntentRef = useRef(false);
   const lineWrapRef = useRef<HTMLDivElement | null>(null);
   const lineRef = useRef<HTMLDivElement | null>(null);
@@ -279,12 +430,15 @@ export default function KYCForm({ user_id }: { user_id: string }) {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
         const kycData = userResponse.data.data.kyc;
-        setKycStatus(kycData?.status || 'PENDING');
-        setRejectionReason(kycData?.rejectionReason);
+        const status = kycData?.status || 'PENDING';
+        const rejectionReason = kycData?.rejectionReason;
+        setKycStatus(status);
+        setRejectionReason(rejectionReason);
         reset({
           aadharOrGovtId: kycData?.aadharOrGovtId || '',
           salaryOrEarning: kycData?.salaryOrEarning || 0,
           frontImageUrl: kycData?.frontImageUrl || null,
+          rejectionReason: rejectionReason,
           backImageUrl: kycData?.backImageUrl || null,
           liveCaptureUrl: kycData?.liveCaptureUrl || null,
         });
@@ -312,9 +466,21 @@ export default function KYCForm({ user_id }: { user_id: string }) {
 
   async function onSubmit(data: ProfileFormValues) {
     // Defensive guard: only allow actual submission on the final step
-    if (currentStep !== steps.length || !submitIntentRef.current) {
+    if (currentStep !== steps.length) {
       return;
     }
+
+    // Validate the form first
+    const isValid = await form.trigger();
+    if (!isValid) {
+      console.error('Form validation failed');
+      return;
+    }
+
+    if (!submitIntentRef.current) {
+      return;
+    }
+
     // Reset intent immediately so accidental re-submits are ignored
     submitIntentRef.current = false;
     setLoading(true);
@@ -362,10 +528,21 @@ export default function KYCForm({ user_id }: { user_id: string }) {
         },
       } as const;
 
-      await axiosInstance.put(`/freelancer/kyc`, payload);
-      setKycStatus('APPLIED');
+      const response = await axiosInstance.put(`/freelancer/kyc`, payload);
 
-      notifySuccess('Your KYC has been successfully updated.', 'KYC Updated');
+      if (response.data.success) {
+        setKycStatus('APPLIED');
+        // Navigate to review stage
+        setCurrentStep(3); // 3 is the review step
+
+        // Show success notification with auto-close after 5 seconds
+        notifySuccess(
+          'Your KYC has been successfully submitted and is under review. You will be notified once verified.',
+          'KYC Submitted Successfully ✅',
+        );
+      } else {
+        throw new Error(response.data.message || 'Failed to submit KYC');
+      }
     } catch (error) {
       console.error('API Error:', error);
       notifyError('Failed to update KYC. Please try again later.', 'Error');
@@ -377,7 +554,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   const steps = [
     { id: 1, title: 'ID Verification', subtitle: 'Browse and upload' },
     { id: 2, title: 'Selfie', subtitle: 'Capture and upload' },
-    { id: 3, title: 'Review', subtitle: 'Confirm and submit' },
+    { id: 3, title: 'Review', subtitle: 'Under Review' },
   ];
 
   const StepDot = ({ active, done }: { active: boolean; done: boolean }) => (
@@ -413,8 +590,6 @@ export default function KYCForm({ user_id }: { user_id: string }) {
     return hasFileOrUrl(v.liveCaptureUrl);
   };
 
-  const allComplete = () => step1Complete() && step2Complete();
-
   const handleNext = () => {
     if (currentStep === 1 && !step1Complete()) {
       const v = form.getValues();
@@ -432,7 +607,10 @@ export default function KYCForm({ user_id }: { user_id: string }) {
       form.setError('liveCaptureUrl' as any, { message: 'Required' } as any);
       return;
     }
-    setCurrentStep((s) => Math.min(s + 1, steps.length));
+    // Don't allow going to step 3 unless submitting
+    if (currentStep < steps.length - 1) {
+      setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
+    }
   };
   const handleBack = () => setCurrentStep((s) => Math.max(s - 1, 1));
 
@@ -854,12 +1032,14 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                     </Button>
                   ) : (
                     <Button
-                      type="submit"
+                      type="button"
                       className="flex-1"
-                      disabled={loading || !allComplete() || isReadOnly}
-                      onClick={() => {
-                        // Mark explicit intent to submit via button click
+                      disabled={loading || isReadOnly}
+                      onClick={async (e) => {
+                        e.preventDefault();
                         submitIntentRef.current = true;
+                        // Manually trigger form submission
+                        await form.handleSubmit(onSubmit)();
                       }}
                     >
                       {loading ? 'Submitting...' : 'Submit KYC'}
