@@ -30,7 +30,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { RootState } from '@/lib/store';
-import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import ProjectProfileSelectionDialog from '@/components/dialogs/ProjectProfileSelectionDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifySuccess, notifyError } from '@/utils/toastMessage';
 interface FreelancerCardProps {
