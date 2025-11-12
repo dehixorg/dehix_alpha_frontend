@@ -80,7 +80,7 @@ export const DisplayConnectsDialog = React.forwardRef<
         }
       });
 
-      // Update DHX_CONNECTS in localStorage for new approved requests
+      // Update DHX_CONNECTS in localStorage and database for new approved requests
       if (newApprovedRequests.length > 0) {
         const currentConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
         
@@ -92,6 +92,21 @@ export const DisplayConnectsDialog = React.forwardRef<
           0
         );
         
+        // First, send the current wallet connects to the backend
+        await Promise.all(
+          newApprovedRequests.map(async (request) => {
+            try {
+              await axiosInstance.put(`/token-request/${request._id}/status`, {
+                status: 'APPROVED',
+                totalConnects: currentConnects // Use the value before we updated it
+              });
+            } catch (error) {
+              console.error('Error updating token request status:', error);
+            }
+          })
+        );
+        
+        // Now update the local storage with the new total
         const newTotal = currentConnects + totalNewConnects;
         localStorage.setItem('DHX_CONNECTS', newTotal.toString());
         
