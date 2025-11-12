@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
@@ -18,8 +18,18 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
-import SelectTagPicker from '@/components/shared/SelectTagPicker'; // Import your picker
+import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { CardContent } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 interface Skill {
   _id: string;
@@ -47,8 +57,15 @@ const skillSchema = z.object({
   experience: z
     .string()
     .nonempty('Please enter your experience')
-    .regex(/^\d+$/, 'Experience must be a number'),
-  description: z.string().nonempty('Please enter description'),
+    .regex(/^\d+$/, 'Experience must be a number')
+    .refine(
+      (val) => parseInt(val) <= 40,
+      'Maximum 40 years of experience allowed',
+    ),
+  description: z
+    .string()
+    .min(10, 'Description must be at least 10 characters')
+    .max(500, 'Description must not exceed 500 characters'),
   visible: z.boolean(),
   status: z.string(),
 });
@@ -70,15 +87,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
     },
   });
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-    getValues,
-    trigger,
-  } = form;
+  const { control, handleSubmit, reset, setValue, getValues, trigger } = form;
 
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
@@ -117,111 +126,160 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          reset();
+        }
+      }}
+    >
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)} className="w-full sm:w-auto">
+        <Button className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add Skill
         </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Skill</DialogTitle>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-xl">Add New Skill</DialogTitle>
           <DialogDescription>
-            Select a skill, enter your experience and description.
+            Select a skill and provide details about your experience
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Skill Selector */}
-          <div className="mb-3">
-            <Controller
-              control={control}
-              name="label"
-              render={({ field }) => (
-                <SelectTagPicker
-                  label="Skills"
-                  options={skills}
-                  selected={field.value ? [{ name: field.value }] : []}
-                  onAdd={(val) => {
-                    field.onChange(val);
-                    const selectedSkill = skills.find((s) => s.label === val);
-                    setValue('skillId', selectedSkill?._id || '');
-                  }}
-                  onRemove={() => {
-                    field.onChange('');
-                    setValue('skillId', '');
-                  }}
-                  selectPlaceholder="Select skill"
-                  searchPlaceholder="Search skill"
-                />
-              )}
-            />
-            {errors.label && (
-              <p className="text-red-600">{errors.label.message}</p>
-            )}
-          </div>
 
-          {/* Experience Input */}
-          <div className="mb-3">
-            <Controller
-              control={control}
-              name="experience"
-              render={({ field }) => (
-                <div className="relative">
-                  <Input
-                    type="number"
-                    placeholder="Experience (years)"
-                    min={0}
-                    max={50}
-                    step={0.1}
-                    {...field}
-                    className="mt-0 w-full bg-muted/20 dark:bg-muted/20 border border-border"
-                  />
-                  <span className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                    YEARS
-                  </span>
-                </div>
-              )}
-            />
-            {errors.experience && (
-              <p className="text-red-600">{errors.experience.message}</p>
-            )}
-          </div>
-
-          {/* Description Input */}
-          <Controller
-            control={control}
-            name="description"
-            render={({ field }) => (
-              <Input
-                type="text"
-                placeholder="Description"
-                {...field}
-                className="mt-2 mb-4 w-full bg-muted/20 dark:bg-muted/20 border border-border"
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <CardContent className="p-0 space-y-4">
+              {/* Skill Selection */}
+              <FormField
+                control={control}
+                name="label"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <SelectTagPicker
+                        label="Skill"
+                        options={skills}
+                        selected={field.value ? [{ name: field.value }] : []}
+                        onAdd={(val) => {
+                          field.onChange(val);
+                          const selectedSkill = skills.find(
+                            (s) => s.label === val,
+                          );
+                          setValue('skillId', selectedSkill?._id || '');
+                        }}
+                        onRemove={() => {
+                          field.onChange('');
+                          setValue('skillId', '');
+                        }}
+                        selectPlaceholder="Select a skill"
+                        searchPlaceholder="Search skills..."
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            )}
-          />
-          {errors.description && (
-            <p className="text-red-600">{errors.description.message}</p>
-          )}
 
-          {/* ConnectsDialog */}
-          <ConnectsDialog
-            loading={loading}
-            setLoading={setLoading}
-            onSubmit={onSubmit}
-            isValidCheck={trigger}
-            userId={user.uid}
-            buttonText="Submit"
-            userType="BUSINESS"
-            requiredConnects={parseInt(
-              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-              10,
-            )}
-            data={getValues()}
-            skipRedirect={true}
-          />
-        </form>
+              {/* Experience */}
+              <FormField
+                control={control}
+                name="experience"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Experience (Years)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          placeholder="e.g. 5"
+                          min={0}
+                          max={40}
+                          step={0.1}
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (
+                              value === '' ||
+                              (parseInt(value) <= 40 && parseInt(value) >= 0)
+                            ) {
+                              field.onChange(value);
+                            }
+                          }}
+                          className="pl-3 pr-16"
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <span className="text-muted-foreground text-sm">
+                            {field.value ? 'years' : ''}
+                          </span>
+                        </div>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Description */}
+              <FormField
+                control={control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe your experience with this skill..."
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <div className="flex justify-between">
+                      <FormMessage />
+                      <span
+                        className={`text-xs ${
+                          field.value?.length > 500
+                            ? 'text-destructive'
+                            : 'text-muted-foreground'
+                        }`}
+                      >
+                        {field.value?.length || 0}/500
+                      </span>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+
+            <div className="flex justify-end space-x-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <ConnectsDialog
+                loading={loading}
+                setLoading={setLoading}
+                onSubmit={onSubmit}
+                isValidCheck={trigger}
+                userId={user.uid}
+                buttonText="Add Skill"
+                userType="BUSINESS"
+                requiredConnects={parseInt(
+                  process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '20',
+                  10,
+                )}
+                data={getValues()}
+                skipRedirect={true}
+              />
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

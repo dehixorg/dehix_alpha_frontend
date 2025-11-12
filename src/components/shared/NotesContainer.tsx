@@ -126,10 +126,12 @@ const NotesContainer = ({
           onClose={handleDialogClose}
           onArchive={(noteId, toType) => handleUpdateNoteType(noteId, toType)}
           onDelete={(noteId) => {
-            setIsDeleting(true);
-            setSelectedDeleteNote(
-              notes.find((note) => note._id === noteId) || null,
-            );
+            handleDialogClose();
+            const noteToDelete = notes.find((n) => n._id === noteId);
+            if (noteToDelete) {
+              setSelectedDeleteNote(noteToDelete);
+              setIsDeleting(true);
+            }
           }}
         />
       )}
