@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Loader2, Minus } from 'lucide-react';
+import { Plus, Loader2, Minus, UserCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -30,7 +30,9 @@ const ProfilePictureUpload = ({
   const dispatch = useDispatch();
   const [selectedProfilePicture, setSelectedProfilePicture] =
     useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(profile);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    profile && profile.trim() !== '' ? profile : null,
+  );
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -123,15 +125,17 @@ const ProfilePictureUpload = ({
                 alt="Avatar Preview"
                 className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
               />
+            ) : profile && profile.trim() !== '' ? (
+              <Image
+                width={112}
+                height={112}
+                src={profile}
+                alt="Avatar Preview"
+                className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
+              />
             ) : (
               <div className="w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center">
-                <Image
-                  width={112}
-                  height={112}
-                  src={profile}
-                  alt="Avatar Preview"
-                  className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
-                />
+                <UserCircle className="h-8 w-8 text-gray-400" />
               </div>
             )}
             <Button

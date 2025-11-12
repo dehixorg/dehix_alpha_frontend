@@ -96,24 +96,6 @@ export default function ResumeEditor({
   const user = useSelector((state: RootState) => state.user);
   const resumeRef = useRef<HTMLDivElement>(null);
 
-  // Saved resume from backend
-  const [savedResume, setSavedResume] = useState<ResumeData | null>(null);
-
-  useEffect(() => {
-    const fetchResume = async () => {
-      if (!user.uid) return;
-      try {
-        const response = await axiosInstance.get(`/resume/user/${user.uid}`);
-        if (response.data && response.data.resume) {
-          setSavedResume(response.data.resume);
-        }
-      } catch (error) {
-        console.error('Error fetching saved resume:', error);
-      }
-    };
-    fetchResume();
-  }, [user.uid]);
-
   // Initialize all states with default values for a new resume
   const [personalData, setPersonalData] = useState<any[]>([
     {
@@ -174,7 +156,7 @@ export default function ResumeEditor({
 
   // Populate data from savedResume or initialResume
   useEffect(() => {
-    const resume = savedResume || initialResume;
+    const resume = initialResume;
     if (resume) {
       setPersonalData([
         {
@@ -203,7 +185,7 @@ export default function ResumeEditor({
       );
       setSelectedTemplate(resume.selectedTemplate || 'ResumePreview2');
     }
-  }, [savedResume, initialResume]);
+  }, [initialResume]);
 
   // PDF Optimization
   const optimizePdfContent = () => {
