@@ -60,21 +60,24 @@ export const DisplayConnectsDialog = React.forwardRef<
           params: { latestConnects: true },
         },
       );
-      
+
       const newData = response.data.data;
-      
+
       // Check for new approved requests
       const newApprovedRequests: TokenRequest[] = [];
       const isInitialLoad = data.length === 0;
-      
+
       newData.forEach((newItem: TokenRequest) => {
         // If it's the initial load, include all APPROVED requests
         // Otherwise, only include newly approved requests
-        const isNewApproval = isInitialLoad 
+        const isNewApproval = isInitialLoad
           ? newItem.status === 'APPROVED'
-          : newItem.status === 'APPROVED' && 
-            !data.some((oldItem: TokenRequest) => oldItem._id === newItem._id && oldItem.status === 'APPROVED');
-        
+          : newItem.status === 'APPROVED' &&
+            !data.some(
+              (oldItem: TokenRequest) =>
+                oldItem._id === newItem._id && oldItem.status === 'APPROVED',
+            );
+
         if (isNewApproval) {
           newApprovedRequests.push(newItem);
         }
@@ -82,40 +85,45 @@ export const DisplayConnectsDialog = React.forwardRef<
 
       // Update DHX_CONNECTS in localStorage and database for new approved requests
       if (newApprovedRequests.length > 0) {
-        const currentConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
-        
+        const currentConnects = parseInt(
+          localStorage.getItem('DHX_CONNECTS') || '0',
+          10,
+        );
+
         const totalNewConnects = newApprovedRequests.reduce(
           (sum: number, req: TokenRequest) => {
             const amount = Number(req.amount);
             return sum + amount;
-          }, 
-          0
+          },
+          0,
         );
-        
+
         // First, send the current wallet connects to the backend
         await Promise.all(
           newApprovedRequests.map(async (request) => {
             try {
               await axiosInstance.put(`/token-request/${request._id}/status`, {
                 status: 'APPROVED',
-                totalConnects: currentConnects // Use the value before we updated it
+                totalConnects: currentConnects, // Use the value before we updated it
               });
             } catch (error) {
               console.error('Error updating token request status:', error);
             }
-          })
+          }),
         );
-        
+
         // Now update the local storage with the new total
         const newTotal = currentConnects + totalNewConnects;
         localStorage.setItem('DHX_CONNECTS', newTotal.toString());
-        
+
         // Notify other components about the update
-        window.dispatchEvent(new CustomEvent('connectsUpdated', { 
-          detail: { newTotal } 
-        }));
+        window.dispatchEvent(
+          new CustomEvent('connectsUpdated', {
+            detail: { newTotal },
+          }),
+        );
       }
-      
+
       setData(newData);
       setFilteredData(newData);
     } catch (error) {
