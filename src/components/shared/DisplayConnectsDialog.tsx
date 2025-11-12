@@ -27,6 +27,14 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
+interface TokenRequest {
+  _id: string;
+  amount: number | string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  // Add other properties that might be on the request object
+  [key: string]: any;
+}
+
 interface DisplayConnectsDialogProps {
   connects: number;
   userId: string;
@@ -37,8 +45,8 @@ export const DisplayConnectsDialog = React.forwardRef<
   DisplayConnectsDialogProps
 >(({ connects, userId }, ref) => {
   const [filter, setFilter] = useState('ALL');
-  const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [data, setData] = useState<any[]>([]);
+  const [filteredData, setFilteredData] = useState<TokenRequest[]>([]);
+  const [data, setData] = useState<TokenRequest[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -52,14 +60,55 @@ export const DisplayConnectsDialog = React.forwardRef<
           params: { latestConnects: true },
         },
       );
-      setData(response.data.data);
-      setFilteredData(response.data.data);
+      
+      const newData = response.data.data;
+      
+      // Check for new approved requests
+      const newApprovedRequests: TokenRequest[] = [];
+      const isInitialLoad = data.length === 0;
+      
+      newData.forEach((newItem: TokenRequest) => {
+        // If it's the initial load, include all APPROVED requests
+        // Otherwise, only include newly approved requests
+        const isNewApproval = isInitialLoad 
+          ? newItem.status === 'APPROVED'
+          : newItem.status === 'APPROVED' && 
+            !data.some((oldItem: TokenRequest) => oldItem._id === newItem._id && oldItem.status === 'APPROVED');
+        
+        if (isNewApproval) {
+          newApprovedRequests.push(newItem);
+        }
+      });
+
+      // Update DHX_CONNECTS in localStorage for new approved requests
+      if (newApprovedRequests.length > 0) {
+        const currentConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
+        
+        const totalNewConnects = newApprovedRequests.reduce(
+          (sum: number, req: TokenRequest) => {
+            const amount = Number(req.amount);
+            return sum + amount;
+          }, 
+          0
+        );
+        
+        const newTotal = currentConnects + totalNewConnects;
+        localStorage.setItem('DHX_CONNECTS', newTotal.toString());
+        
+        // Notify other components about the update
+        window.dispatchEvent(new CustomEvent('connectsUpdated', { 
+          detail: { newTotal } 
+        }));
+      }
+      
+      setData(newData);
+      setFilteredData(newData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, [userId, loading]);
+  }, [userId, data]);
 
   const handleNewConnectRequest = (event: Event) => {
     const newConnect = (event as CustomEvent).detail;
