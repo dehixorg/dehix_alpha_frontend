@@ -32,7 +32,7 @@ export default function PersonalInfo() {
             { label: 'KYC', link: '#' },
           ]}
         />
-        <main className="flex-1 bg-muted/40 p-4 sm:p-8 md:p-12">
+        <main className="flex-1 p-4 sm:p-8 md:p-12">
           <div className="mx-auto w-full max-w-6xl">
             <KYCForm user_id={user.uid} />
           </div>
