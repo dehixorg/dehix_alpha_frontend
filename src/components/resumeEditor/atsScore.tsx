@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { useTheme } from 'next-themes';
 import { Gauge, ClipboardList, Sparkles } from 'lucide-react';
@@ -23,8 +23,6 @@ import { Button } from '@/components/ui/button';
 import {
   SCORE_MESSAGES,
   ACTION_VERBS,
-  REQUIRED_SECTIONS,
-  OPTIONAL_SECTIONS,
   SCORE_THRESHOLDS,
   ANALYSIS_WEIGHTS,
   SCORING_RULES,
@@ -39,17 +37,110 @@ interface ResumeScoreProps {
   jobKeywords: string[];
 }
 
-// Improved resume analysis function
+// Improved resume analysis function (supports plain text or JSON-like string)
 const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
-  const text = resumeText.toLowerCase();
+  // 1) Try to parse structured resume input if provided as JSON string
+  let structured: any | null = null;
+  try {
+    const trimmed = (resumeText || '').trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      structured = JSON.parse(trimmed);
+    }
+  } catch {
+    structured = null;
+  }
 
-  // Grammar and formatting analysis
+  // 2) Build a normalized text corpus and capture section presence
+  let originalText = resumeText || '';
+  let normalizedLower = (resumeText || '').toLowerCase();
+  const hasSections = {
+    contact: false,
+    experience: false,
+    education: false,
+    skills: false,
+    summary: false,
+  };
+
+  if (structured && typeof structured === 'object') {
+    try {
+      const blocks: string[] = [];
+
+      // Personal/contact
+      const personal = structured.personalData || structured.personal || [];
+      if (Array.isArray(personal) && personal.length) {
+        hasSections.contact = true;
+        const p = personal[0] || {};
+        blocks.push(
+          [
+            p.firstName,
+            p.lastName,
+            p.email,
+            p.phoneNumber,
+            p.city,
+            p.country,
+            p.github,
+            p.linkedin,
+          ]
+            .filter(Boolean)
+            .join(' '),
+        );
+      }
+
+      // Summary
+      const summary = structured.summaryData || structured.summary || [];
+      if (Array.isArray(summary) && summary.length) {
+        hasSections.summary = true;
+        blocks.push(summary.join(' '));
+      }
+
+      // Experience
+      const exp = structured.workExperienceData || structured.experience || [];
+      if (Array.isArray(exp) && exp.length) {
+        hasSections.experience = true;
+        exp.forEach((e: any) =>
+          blocks.push(
+            [e.jobTitle, e.company, e.description].filter(Boolean).join(' '),
+          ),
+        );
+      }
+
+      // Education
+      const edu = structured.educationData || structured.education || [];
+      if (Array.isArray(edu) && edu.length) {
+        hasSections.education = true;
+        edu.forEach((e: any) =>
+          blocks.push([e.degree, e.school].filter(Boolean).join(' ')),
+        );
+      }
+
+      // Skills
+      const skills = structured.skills || [];
+      if (Array.isArray(skills) && skills.length) {
+        hasSections.skills = true;
+        blocks.push(
+          skills
+            .map((s: any) => s?.skillName || s)
+            .filter(Boolean)
+            .join(' '),
+        );
+      }
+
+      originalText = blocks.join('. ');
+      normalizedLower = originalText.toLowerCase();
+    } catch {
+      // Fallback to plain text handling
+      structured = null;
+    }
+  }
+
+  const text = normalizedLower;
+
+  // 3) Grammar and formatting analysis (use lower for patterns, original for capitalization)
   const grammarScore = (() => {
     let score = 100;
 
-    // Check for common grammar issues
     const grammarIssues = [
-      /\b(i|me|my)\b/g, // First person pronouns (should be avoided)
+      /\b(i|me|my)\b/g, // First person pronouns (should be avoided in bullets)
       /\s{2,}/g, // Multiple spaces
       /[.]{2,}/g, // Multiple periods
       /[!]{2,}/g, // Multiple exclamation marks
@@ -69,12 +160,12 @@ const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
       }
     });
 
-    // Check for proper capitalization after periods
-    const sentences = text.split('.');
+    // Capitalization after sentence boundaries based on original text
+    const sentencesOriginal = (originalText || '').split(/[.!?]+/);
     let capitalizationErrors = 0;
-    sentences.forEach((sentence) => {
-      const trimmed = sentence.trim();
-      if (trimmed.length > 0 && trimmed[0] !== trimmed[0].toUpperCase()) {
+    sentencesOriginal.forEach((s) => {
+      const t = s.trim();
+      if (t.length > 0 && /[a-z]/.test(t[0])) {
         capitalizationErrors++;
       }
     });
@@ -83,16 +174,15 @@ const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
     return Math.max(0, Math.min(100, score));
   })();
 
-  // Brevity analysis
+  // 4) Brevity analysis (use original text for sentence boundaries)
   const brevityScore = (() => {
-    const words = text.split(/\s+/).filter((word) => word.length > 0);
-    const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
-
+    const words = text.split(/\s+/).filter((w) => w.length > 0);
+    const sentences = (originalText || '')
+      .split(/[.!?]+/)
+      .filter((s) => s.trim().length > 0);
     if (sentences.length === 0) return 0;
 
     const avgWordsPerSentence = words.length / sentences.length;
-
-    // Ideal range: 15-20 words per sentence
     let score = 100;
     if (avgWordsPerSentence > SCORING_RULES.IDEAL_SENTENCE_MAX) {
       score -=
@@ -104,81 +194,113 @@ const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
         SCORING_RULES.SHORT_SENTENCE_PENALTY;
     }
 
-    // Check for overly long words (jargon penalty)
     const longWords = words.filter(
-      (word) => word.length > SCORING_RULES.LONG_WORD_THRESHOLD,
+      (w) => w.length > SCORING_RULES.LONG_WORD_THRESHOLD,
     );
     score -= longWords.length * SCORING_RULES.LONG_WORD_PENALTY;
-
     return Math.max(0, Math.min(100, score));
   })();
 
-  // Impact analysis (action verbs and quantifiable achievements)
+  // 5) Impact analysis (action verbs and quantifiable achievements)
   const impactScore = (() => {
-    const numbers = text.match(/\d+(\.\d+)?[%$k]?/g) || [];
+    const numbers = text.match(/\d+(\.\d+)?(%|k|m|b|\$)?/g) || [];
     const actionVerbMatches = ACTION_VERBS.filter((verb) =>
       text.includes(verb),
     ).length;
-
     let score = 0;
-
-    // Score for action verbs (up to 50 points)
     score += Math.min(
       SCORING_RULES.MAX_ACTION_VERB_SCORE,
       actionVerbMatches * SCORING_RULES.ACTION_VERB_POINTS,
     );
-
-    // Score for quantifiable achievements (up to 50 points)
     score += Math.min(
       SCORING_RULES.MAX_QUANTIFIABLE_SCORE,
       numbers.length * SCORING_RULES.QUANTIFIABLE_POINTS,
     );
-
     return Math.min(100, score);
   })();
 
-  // Sections analysis
+  // 6) Sections analysis (prefer structured presence if available)
   const sectionsScore = (() => {
     let score = 0;
+    const lower = text;
 
-    // Required sections
-    REQUIRED_SECTIONS.forEach((section) => {
-      if (text.includes(section)) {
-        score += SCORING_RULES.REQUIRED_SECTION_POINTS;
-      }
+    const requiredMap = {
+      contact:
+        hasSections.contact ||
+        /contact|email|phone|linkedin|github/.test(lower),
+      experience:
+        hasSections.experience ||
+        /experience|employment|work history/.test(lower),
+      education:
+        hasSections.education || /education|degree|university/.test(lower),
+      skills:
+        hasSections.skills || /skills|technologies|tech stack/.test(lower),
+      summary: hasSections.summary || /summary|profile|objective/.test(lower),
+    } as const;
+
+    Object.values(requiredMap).forEach((present) => {
+      if (present) score += SCORING_RULES.REQUIRED_SECTION_POINTS;
     });
 
-    // Optional sections (up to max allowed)
+    // Optional: certifications, projects, awards
     let optionalCount = 0;
-    OPTIONAL_SECTIONS.forEach((section) => {
+    const optionalCandidates = [
+      'certifications',
+      'projects',
+      'awards',
+      'volunteer',
+    ];
+    optionalCandidates.forEach((sec) => {
       if (
-        text.includes(section) &&
+        lower.includes(sec) &&
         optionalCount < SCORING_RULES.MAX_OPTIONAL_SECTIONS
       ) {
         score += SCORING_RULES.OPTIONAL_SECTION_POINTS;
         optionalCount++;
       }
     });
-
     return Math.min(100, score);
   })();
 
-  // Keyword matching bonus
+  // 7) Keyword matching with weights (skills get higher weight)
   const keywordScore = (() => {
-    if (jobKeywords.length === 0) return 0;
-
-    const matchedKeywords = jobKeywords.filter((keyword) =>
-      text.includes(keyword.toLowerCase()),
+    if (!jobKeywords || jobKeywords.length === 0) return 0;
+    const normalizedKeywords = Array.from(
+      new Set(
+        jobKeywords.map((k) => (k || '').toLowerCase().trim()).filter(Boolean),
+      ),
     );
+    if (normalizedKeywords.length === 0) return 0;
 
+    // If structured, try to weight skills higher
+    let weightedMatches = 0;
+    let totalWeight = normalizedKeywords.length;
+    let skillsLower: string[] = [];
+    if (structured && Array.isArray(structured.skills)) {
+      skillsLower = structured.skills
+        .map((s: any) => (s?.skillName || s || '').toString().toLowerCase())
+        .filter(Boolean);
+    }
+
+    normalizedKeywords.forEach((kw) => {
+      const inText = text.includes(kw);
+      const inSkills = skillsLower.some((s) => s.includes(kw));
+      if (inSkills) {
+        weightedMatches += 2; // higher weight for explicit skills match
+        totalWeight += 1; // increase denominator due to extra weight slot
+      } else if (inText) {
+        weightedMatches += 1;
+      }
+    });
+
+    const ratio = weightedMatches / totalWeight;
     return Math.min(
       SCORING_RULES.KEYWORD_BONUS_MAX,
-      (matchedKeywords.length / jobKeywords.length) *
-        SCORING_RULES.KEYWORD_BONUS_MAX,
+      ratio * SCORING_RULES.KEYWORD_BONUS_MAX,
     );
   })();
 
-  // Calculate total score with weights
+  // 8) Final score
   const totalScore = Math.round(
     grammarScore * ANALYSIS_WEIGHTS.GRAMMAR +
       brevityScore * ANALYSIS_WEIGHTS.BREVITY +
@@ -193,12 +315,11 @@ const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
     brevityScore: Math.round(brevityScore),
     impactScore: Math.round(impactScore),
     sectionsScore: Math.round(sectionsScore),
-    keywordMatches:
-      jobKeywords.length > 0
-        ? jobKeywords.filter((keyword) => text.includes(keyword.toLowerCase()))
-            .length
-        : 0,
-    totalKeywords: jobKeywords.length,
+    keywordMatches: Array.isArray(jobKeywords)
+      ? jobKeywords.filter((k) => text.includes((k || '').toLowerCase().trim()))
+          .length
+      : 0,
+    totalKeywords: Array.isArray(jobKeywords) ? jobKeywords.length : 0,
   };
 };
 
@@ -288,6 +409,19 @@ export const AtsScore: React.FC<ResumeScoreProps> = ({
       total: analysis.totalKeywords,
     });
   };
+
+  // Auto-calculate when resumeText or keywords change
+  useEffect(() => {
+    const text = (resumeText || '').trim();
+    if (text.length === 0) {
+      setScore(null);
+      setCategories({ grammar: 0, brevity: 0, impact: 0, sections: 0 });
+      setKeywordInfo({ matches: 0, total: (jobKeywords || []).length });
+      return;
+    }
+    handleAnalyzeResume();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeText, jobKeywords]);
 
   const getScoreMessage = (score: number) => {
     if (score >= SCORE_THRESHOLDS.EXCELLENT) return SCORE_MESSAGES.EXCELLENT;
