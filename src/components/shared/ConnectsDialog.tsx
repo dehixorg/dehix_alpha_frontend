@@ -43,7 +43,7 @@ export default function ConnectsDialog({
   const [lowConnects, setLowConnects] = useState(false);
 
   const userConnects = parseInt(
-    localStorage.getItem('DHX_CONNECTS') || '0',
+    localStorage.getItem('DHX_CONNECTS') || '20',
     10,
   );
 

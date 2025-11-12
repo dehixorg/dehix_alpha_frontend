@@ -353,7 +353,7 @@ export function CreateProjectTeamGroupDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-[hsl(var(--card))]">
+      <DialogContent className="sm:max-w-[500px] bg-[hsl(var(--card))] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />

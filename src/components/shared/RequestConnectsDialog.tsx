@@ -81,7 +81,7 @@ export default function RequestConnectsDialog({
   return (
     <>
       <Button size="sm" onClick={() => setOpen(true)} className="gap-2">
-        <Coins className="h-4 w-4" /> Connect
+        Request <Coins className="h-4 w-4" />
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
