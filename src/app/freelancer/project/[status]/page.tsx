@@ -42,10 +42,10 @@ function SectionHeader({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="flex justify-between items-center mb-8 ml-6 pr-6">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8 px-4 sm:px-6">
       <div>
-        <h1 className="text-3xl font-bold">{title}</h1>
-        <p className="text-gray-400 mt-2">{subtitle}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
+        <p className="text-gray-400 mt-2 text-sm sm:text-base">{subtitle}</p>
       </div>
       {right}
     </div>
@@ -179,7 +179,7 @@ const ProjectList = ({
             ))}
           </div>
         ) : (
-          <main className="grid flex-1 items-start gap-4 px-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+          <main className="grid grid-cols-1 flex-1 items-start gap-4 px-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
             {projects.length === 0 ? (
               <div className="col-span-full text-center mt-20 w-full">
                 <PackageOpen className="mx-auto text-gray-500" size={100} />
@@ -247,28 +247,28 @@ export default function ProjectPage() {
               onValueChange={handleTabChange}
               className="w-full flex flex-col gap-4"
             >
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2 overflow-x-auto no-scrollbar">
                 <TabsTrigger
                   value="current"
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
                 >
                   <FolderDot className="h-4 w-4" /> Current
                 </TabsTrigger>
                 <TabsTrigger
                   value="applied"
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
                 >
                   <Pointer className="h-4 w-4" /> Applied
                 </TabsTrigger>
                 <TabsTrigger
                   value="completed"
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
                 >
                   <FileCheck className="h-4 w-4" /> Completed
                 </TabsTrigger>
                 <TabsTrigger
                   value="rejected"
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
                 >
                   <CircleX className="h-4 w-4" /> Rejected
                 </TabsTrigger>
