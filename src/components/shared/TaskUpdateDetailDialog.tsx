@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { AlertCircle, FileText, Tag } from 'lucide-react';
 
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -12,14 +12,22 @@ import {
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
-import { Select, SelectTrigger, SelectContent, SelectItem } from '../ui/select';
+import { Label } from '../ui/label';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '../ui/select';
 
+import { cn } from '@/lib/utils';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 interface TaskUpdateDetailDialogProps {
   task: any;
-  milestoneId: string;
+  milestoneId?: string;
   storyId: string;
   taskId: string;
   userType: string;
@@ -139,88 +147,167 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
     }
   };
 
+  const isDisabled =
+    isPermissionSent ||
+    (!isUpdatePermissionAllowed && userType === 'freelancer');
+  const hasChanges =
+    JSON.stringify(taskData) !== JSON.stringify(initialTaskData);
+
   return (
     <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
       <DialogTrigger className="hidden">Trigger</DialogTrigger>
-      <DialogContent className=" sm:w-[86vw] md:w-[450px]  p-6 border rounded-md shadow-md">
+      <DialogContent className="w-full max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Update Task Details</DialogTitle>
-          <DialogDescription>
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <DialogTitle className="text-xl font-semibold">
+              Update Task Details
+            </DialogTitle>
+          </div>
+          <p className="text-sm text-muted-foreground">
             {isUpdatePermissionAllowed
-              ? 'You have permission to update the task details.'
+              ? 'Update the task details below.'
               : isPermissionSent
-                ? 'Your request has been sent. Please wait until permission is accepted.'
-                : "You don't have permission to update. Please request permission."}
-          </DialogDescription>
+                ? 'Your update request has been sent and is pending approval.'
+                : 'Update task information and request permission if needed.'}
+          </p>
         </DialogHeader>
 
-        {!isUpdatePermissionAllowed && userType === 'freelancer' ? (
-          <DialogFooter className="flex mt-2 justify-end gap-4">
-            <Button
-              onClick={handleSendRequest}
-              variant="outline"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md"
-            >
-              Send Permission Request
-            </Button>
-            <Button
-              onClick={() => setShowPermissionDialog(false)}
-              variant="outline"
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        ) : (
-          <div className="flex flex-col gap-2">
-            <div>
-              <label htmlFor="taskTitle" className="text-sm font-medium mb-2">
-                Task Title:
-              </label>
-              <Input
-                id="taskTitle"
-                type="text"
-                value={taskData.title}
-                onChange={(e) => handleTaskChange('title', e.target.value)}
-                className="mb-2 mt-1"
-              />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (isUpdatePermissionAllowed) {
+              handleSave();
+            } else {
+              handleSendRequest();
+            }
+          }}
+          className="space-y-6"
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              {/* Task Title */}
+              <div className="space-y-2">
+                <Label htmlFor="title" className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  Task Title
+                </Label>
+                <Input
+                  id="title"
+                  value={taskData.title}
+                  onChange={(e) => handleTaskChange('title', e.target.value)}
+                  disabled={isDisabled}
+                  className={cn('w-full', isDisabled && 'bg-muted/50')}
+                  placeholder="e.g., Update Homepage Design"
+                />
+              </div>
+
+              {/* Task Description */}
+              <div className="space-y-2">
+                <Label htmlFor="summary" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  Description
+                </Label>
+                <Textarea
+                  id="summary"
+                  value={taskData.summary}
+                  onChange={(e) => handleTaskChange('summary', e.target.value)}
+                  disabled={isDisabled}
+                  className={cn('min-h-[100px]', isDisabled && 'bg-muted/50')}
+                  placeholder="Describe the task in detail..."
+                />
+              </div>
+
+              {/* Task Status */}
+              <div className="space-y-2">
+                <Label htmlFor="status" className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  Status
+                </Label>
+                <Select
+                  value={taskData.taskStatus}
+                  onValueChange={(value) =>
+                    handleTaskChange('taskStatus', value)
+                  }
+                  disabled={isDisabled}
+                >
+                  <SelectTrigger
+                    className={cn('w-full', isDisabled && 'bg-muted/50')}
+                  >
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NOT_STARTED">Not Started</SelectItem>
+                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <label htmlFor="taskSummary" className="text-sm font-medium mb-2">
-                Summary:
-              </label>
-              <Textarea
-                id="taskSummary"
-                value={taskData.summary}
-                onChange={(e) => handleTaskChange('summary', e.target.value)}
-                rows={4}
-                className="mb-2 mt-1"
-              />
-            </div>
-            <div>
-              <label htmlFor="taskStatus" className="text-sm font-medium mb-1">
-                Task Status:
-              </label>
-              <Select
-                value={taskData.taskStatus}
-                onValueChange={(value) => handleTaskChange('taskStatus', value)}
-              >
-                <SelectTrigger className="p-2 mt-1 border rounded-md">
-                  <span>{taskData.taskStatus}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NOT_STARTED">NOT_STARTED</SelectItem>
-                  <SelectItem value="ONGOING">ONGOING</SelectItem>
-                  <SelectItem value="COMPLETED">COMPLETED</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter className="flex mt-2 justify-end gap-3">
-              <Button onClick={handleSave} variant="default">
-                Save
-              </Button>
-            </DialogFooter>
+
+            {/* Status Messages */}
+            {!isUpdatePermissionAllowed && !isPermissionSent && (
+              <div className="flex items-start gap-2 p-3 text-sm text-amber-600 bg-amber-50 rounded-md">
+                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">Permission Required</p>
+                  <p>
+                    You need permission to update this task. Click &quot;Request
+                    Update Permission&quot; to continue.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isPermissionSent && (
+              <div className="flex items-start gap-2 p-3 text-blue-600 bg-blue-50 rounded-md">
+                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">Request Sent</p>
+                  <p>
+                    Your update request has been sent and is pending approval.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+
+          <DialogFooter>
+            <div className="flex justify-end gap-3 w-full">
+              <Button
+                variant="outline"
+                onClick={() => setShowPermissionDialog(false)}
+                type="button"
+              >
+                Cancel
+              </Button>
+
+              {isUpdatePermissionAllowed ? (
+                <Button
+                  type="submit"
+                  disabled={!hasChanges || !taskData.title.trim()}
+                  className="min-w-[120px]"
+                >
+                  Save Changes
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={isPermissionSent}
+                  variant={isPermissionSent ? 'outline' : 'default'}
+                  className={cn(
+                    'min-w-[200px]',
+                    isPermissionSent && 'bg-transparent',
+                  )}
+                >
+                  {isPermissionSent
+                    ? 'Request Sent'
+                    : 'Request Update Permission'}
+                </Button>
+              )}
+            </div>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

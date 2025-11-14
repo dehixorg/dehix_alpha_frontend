@@ -107,7 +107,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
                 }
               >
                 <Edit className="w-4 h-4 text-blue-500" />
-                Update Task Details
+                Update
                 {task?.freelancers[0]?.rejectionFreelancer && (
                   <span className="ml-2 text-xs text-gray-500">
                     (Disabled - Task Rejected)
@@ -148,7 +148,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
                 onClick={() => setShowPermissionDialog(true)}
               >
                 <Edit className="w-4 h-4 text-blue-500" />
-                Update Task Details
+                Update
               </DropdownMenuItem>
             </>
           ) : (

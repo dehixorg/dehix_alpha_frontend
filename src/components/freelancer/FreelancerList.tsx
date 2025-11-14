@@ -409,9 +409,9 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
               {/* Groups Section */}
               {groups.length > 0 && (
                 <>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {isBusinessUser ? 'Project Team Groups' : 'Team Groups'} (
-                    {groups.length})
+                  <div className="text-sm font-medium text-muted-foreground mt-4">
+                    {isBusinessUser ? 'Project Groups' : 'Team Groups'}
+                    <Badge className="ml-1">{groups.length}</Badge>
                   </div>
                   <div className="space-y-2">
                     {groups.map((group) => (

@@ -11,6 +11,7 @@ import {
   Trash2,
   Users2,
   XCircle,
+  SendHorizontal,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -44,6 +45,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/business/projects',
     icon: <FolderOpen className="h-5 w-5" />,
     label: 'Projects',
+  },
+  {
+    href: '/business/project-invitations',
+    icon: <SendHorizontal className="h-5 w-5" />,
+    label: 'Project Invitations',
   },
   {
     href: '/business/talent',
