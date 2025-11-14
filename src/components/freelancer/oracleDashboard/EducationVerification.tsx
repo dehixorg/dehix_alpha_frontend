@@ -253,7 +253,7 @@ const OracleDashboard = () => {
                     filteredData.map((data) => (
                       <EducationVerificationCard
                         key={data.document_id}
-                        _id={data.document_id}
+                        _id={data._id}
                         type="education"
                         location={data.universityName}
                         degree={data.degree}

@@ -58,30 +58,13 @@ const ProjectVerification = () => {
       );
       const result = response.data.data;
 
-      const isValidVerificationStatus = (
-        value: any,
-      ): value is VerificationStatus =>
-        Object.values(VerificationStatus).includes(value as VerificationStatus);
-
       const flattenedData: ProjectData[] = result.flatMap((entry: any) =>
         entry.result?.projects
           ? (Object.values(entry.result.projects) as any[]).map(
               (project: any) => {
-                const rawStatus = project.verificationStatus;
-                const validatedStatus = isValidVerificationStatus(rawStatus)
-                  ? rawStatus
-                  : (() => {
-                      console.warn(
-                        'Invalid verificationStatus encountered, defaulting to PENDING:',
-                        rawStatus,
-                      );
-                      return VerificationStatus.PENDING;
-                    })();
                 return {
                   ...project,
-                  verification_status: validatedStatus,
-                  verifier_id: entry.verifier_id,
-                  verifier_username: entry.verifier_username,
+                  ...entry,
                 } as ProjectData;
               },
             )
@@ -146,19 +129,19 @@ const ProjectVerification = () => {
               All
             </TabsTrigger>
             <TabsTrigger
-              value="pending"
+              value="PENDING"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Pending
             </TabsTrigger>
             <TabsTrigger
-              value="approved"
+              value="APPROVED"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Approved
             </TabsTrigger>
             <TabsTrigger
-              value="denied"
+              value="DENIED"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Denied
@@ -166,7 +149,7 @@ const ProjectVerification = () => {
           </TabsList>
         </div>
 
-        {(['all', 'pending', 'approved', 'denied'] as FilterOption[]).map(
+        {(['all', 'PENDING', 'APPROVED', 'DENIED'] as FilterOption[]).map(
           (t) => (
             <TabsContent key={t} value={t}>
               <CardContent>
