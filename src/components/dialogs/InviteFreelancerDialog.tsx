@@ -16,23 +16,7 @@ import { Card } from '@/components/ui/card';
 import ConnectsDialog from '@/components/dialogs/ConnectsDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifySuccess, notifyError } from '@/utils/toastMessage';
-
-interface Project {
-  _id: string;
-  projectName: string;
-  companyName: string;
-  status: string;
-  profiles?: Profile[];
-}
-
-interface Profile {
-  _id: string;
-  domain: string;
-  description: string;
-  profileType: string;
-  freelancersRequired?: number;
-  required?: number;
-}
+import { ProjectWithProfiles, Profile } from '@/types/project';
 
 interface InviteFreelancerDialogProps {
   open: boolean;
@@ -52,7 +36,7 @@ export default function InviteFreelancerDialog({
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectWithProfiles[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
   const [isConnectsDialogOpen, setIsConnectsDialogOpen] = useState(false);
@@ -83,7 +67,7 @@ export default function InviteFreelancerDialog({
     try {
       const response = await axiosInstance.get('/project/business');
       const filteredProjects = response.data.data.filter(
-        (project: Project) =>
+        (project: ProjectWithProfiles) =>
           project.status === 'ACTIVE' || project.status === 'PENDING',
       );
       setProjects(filteredProjects);

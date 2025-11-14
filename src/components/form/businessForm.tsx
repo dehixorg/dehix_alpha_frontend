@@ -137,7 +137,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         userId: user_id,
       });
 
-      if (res.status === 200) {
+      if (res.status >= 200 && res.status < 300) {
         // Refetch the updated data from the server
         const updatedResponse = await axiosInstance.get(`/business/${user_id}`);
         const updatedData = updatedResponse.data;
@@ -158,6 +158,12 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         notifySuccess(
           'Your profile has been successfully updated.',
           'Profile Updated',
+        );
+      } else {
+        // Handle non-2xx responses
+        console.error('Unexpected response status:', res.status);
+        notifyError(
+          `Failed to update profile. Server returned status ${res.status}.`,
         );
       }
     } catch (error) {

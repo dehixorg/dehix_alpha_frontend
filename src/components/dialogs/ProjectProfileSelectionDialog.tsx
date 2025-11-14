@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { ProjectWithProfiles, Profile } from '@/types/project';
 
 interface Props {
   open: boolean;
@@ -36,7 +37,7 @@ const ProjectProfileSelectionDialog: React.FC<Props> = ({
   const [step, setStep] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<ProjectWithProfiles[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null,
   );
@@ -44,7 +45,7 @@ const ProjectProfileSelectionDialog: React.FC<Props> = ({
     null,
   );
   const hireCost = parseInt(
-    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '10',
   );
   const [isConnectsDialogOpen, setIsConnectsDialogOpen] = useState(false);
 
@@ -58,7 +59,8 @@ const ProjectProfileSelectionDialog: React.FC<Props> = ({
         const data = res?.data?.data || [];
         setProjects(
           (data || []).filter(
-            (p: any) => p.status === 'ACTIVE' || p.status === 'PENDING',
+            (p: ProjectWithProfiles) =>
+              p.status === 'ACTIVE' || p.status === 'PENDING',
           ),
         );
       } catch (err) {
@@ -80,12 +82,10 @@ const ProjectProfileSelectionDialog: React.FC<Props> = ({
     }
   }, [open]);
 
-  const profilesForSelectedProject = () => {
+  const profilesForSelectedProject = (): Profile[] => {
     const p = projects.find((x) => x._id === selectedProjectId);
     if (!p) return [];
-    return (p.profiles || []).filter(
-      (pr: any) => pr.profileType === 'FREELANCER',
-    );
+    return (p.profiles || []).filter((pr) => pr.profileType === 'FREELANCER');
   };
 
   const handleConfirm = async () => {
@@ -187,7 +187,7 @@ const ProjectProfileSelectionDialog: React.FC<Props> = ({
                         No freelancer profiles available in this project.
                       </p>
                     ) : (
-                      profilesForSelectedProject().map((pr: any) => (
+                      profilesForSelectedProject().map((pr) => (
                         <Card
                           key={pr._id}
                           className={`p-3 cursor-pointer border ${selectedProfileId === pr._id ? 'border-primary' : ''}`}
@@ -226,7 +226,7 @@ const ProjectProfileSelectionDialog: React.FC<Props> = ({
                       <strong>
                         {
                           profilesForSelectedProject().find(
-                            (p: any) => p._id === selectedProfileId,
+                            (p) => p._id === selectedProfileId,
                           )?.domain
                         }
                       </strong>
