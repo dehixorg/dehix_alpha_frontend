@@ -34,6 +34,14 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
+interface TokenRequest {
+  _id: string;
+  amount: number | string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  [key: string]: any;
+}
+
 interface DisplayConnectsDialogProps {
   connects: number;
   userId: string;
@@ -44,67 +52,171 @@ export const DisplayConnectsDialog = React.forwardRef<
   DisplayConnectsDialogProps
 >(({ connects, userId }, ref) => {
   const [filter, setFilter] = useState('ALL');
-  const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [data, setData] = useState<any[]>([]);
+  const [filteredData, setFilteredData] = useState<TokenRequest[]>([]);
+  const [data, setData] = useState<TokenRequest[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const fetchConnectsRequest = useCallback(async () => {
-    if (loading) return;
-    setLoading(true);
     try {
+      setLoading(true);
       const response = await axiosInstance.get(
         `/token-request/user/${userId}`,
         {
           params: { latestConnects: true },
         },
       );
-      setData(response.data.data);
-      setFilteredData(response.data.data);
+
+      const newData = response.data.data || [];
+      const currentConnects = parseInt(
+        localStorage.getItem('DHX_CONNECTS') || '0',
+        10,
+      );
+
+      // Get the set of processed request IDs from localStorage
+      const processedRequests = new Set(
+        JSON.parse(localStorage.getItem('PROCESSED_REQUESTS') || '[]'),
+      );
+
+      const newApprovedRequests: TokenRequest[] = [];
+      const updatedProcessedRequests = new Set(processedRequests);
+      let hasUpdates = false;
+
+      // Process new data
+      newData.forEach((newItem: TokenRequest) => {
+        // Only process approved requests that haven't been processed yet
+        if (
+          newItem.status === 'APPROVED' &&
+          !processedRequests.has(newItem._id)
+        ) {
+          newApprovedRequests.push(newItem);
+          updatedProcessedRequests.add(newItem._id);
+          hasUpdates = true;
+        }
+      });
+
+      // Update processed requests in localStorage if there are new ones
+      if (hasUpdates) {
+        localStorage.setItem(
+          'PROCESSED_REQUESTS',
+          JSON.stringify(Array.from(updatedProcessedRequests)),
+        );
+      }
+
+      setData(newData);
+      setFilteredData(newData);
+
+      if (newApprovedRequests.length > 0) {
+        const totalNewConnects = newApprovedRequests.reduce(
+          (sum: number, req: TokenRequest) => sum + Number(req.amount),
+          0,
+        );
+
+        try {
+          await Promise.all(
+            newApprovedRequests.map((request) =>
+              axiosInstance.put(`/token-request/${request._id}/status`, {
+                status: 'APPROVED',
+                totalConnects: currentConnects,
+              }),
+            ),
+          );
+
+          const newTotal = currentConnects + totalNewConnects;
+          localStorage.setItem('DHX_CONNECTS', newTotal.toString());
+          window.dispatchEvent(
+            new CustomEvent('connectsUpdated', { detail: { newTotal } }),
+          );
+        } catch (error) {
+          console.error('Error updating token request status:', error);
+        }
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, [userId, loading]);
+  }, [userId]);
 
-  const handleNewConnectRequest = (event: Event) => {
+  const handleNewConnectRequest = useCallback((event: Event) => {
     const newConnect = (event as CustomEvent).detail;
     setData((prevData) => {
       const updatedData = [newConnect, ...prevData.slice(0, 2)];
       setFilteredData(updatedData);
       return updatedData;
     });
-  };
+  }, []);
 
   useEffect(() => {
     window.addEventListener('newConnectRequest', handleNewConnectRequest);
     return () => {
       window.removeEventListener('newConnectRequest', handleNewConnectRequest);
     };
-  }, []);
+  }, [handleNewConnectRequest]);
 
   useEffect(() => {
     if (open) fetchConnectsRequest();
-  }, [open]);
+  }, [open, fetchConnectsRequest]);
 
   useEffect(() => {
-    setFilteredData(() =>
-      filter === 'ALL'
-        ? (data ?? [])
-        : (data ?? []).filter((item: any) => item.status === filter),
+    setFilteredData(
+      filter === 'ALL' ? data : data.filter((item) => item.status === filter),
     );
   }, [data, filter]);
 
-  // tabs will set filter via onValueChange
-
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-    };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    try {
+      // Handle different date string formats
+      let date: Date;
+
+      // If it's already a valid date string that can be parsed by Date
+      if (dateString) {
+        // Try parsing as ISO string first
+        date = new Date(dateString);
+
+        // If invalid, try parsing as timestamp
+        if (isNaN(date.getTime())) {
+          const timestamp = Date.parse(dateString);
+          if (!isNaN(timestamp)) {
+            date = new Date(timestamp);
+          } else {
+            // Try parsing as a custom format if needed
+            // Example for 'YYYY-MM-DDTHH:mm:ss.SSSZ' format
+            const parts = dateString.split(/[-T:.]/);
+            if (parts.length >= 6) {
+              date = new Date(
+                parseInt(parts[0]),
+                parseInt(parts[1]) - 1, // months are 0-indexed
+                parseInt(parts[2]),
+                parts[3] ? parseInt(parts[3]) : 0,
+                parts[4] ? parseInt(parts[4]) : 0,
+                parts[5] ? parseInt(parts[5]) : 0,
+              );
+            }
+          }
+        }
+      } else {
+        // If no date string is provided, use current date
+        date = new Date();
+      }
+
+      // If we still don't have a valid date, return a placeholder
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateString);
+        return 'Invalid date';
+      }
+
+      const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+      };
+
+      return date.toLocaleDateString('en-US', options);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   const StatusBadge = ({ status }: { status: string }) => {
@@ -199,82 +311,82 @@ export const DisplayConnectsDialog = React.forwardRef<
                   Rejected
                 </TabsTrigger>
               </TabsList>
-            </Tabs>
-          </div>
 
-          {/* Table */}
-          <div className="relative">
-            <ScrollArea className="h-[280px] w-full">
-              <Table className="min-w-full">
-                <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                  <TableRow className="h-9">
-                    <TableHead className="w-[120px] text-xs font-medium text-muted-foreground">
-                      Connects
-                    </TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">
-                      Status
-                    </TableHead>
-                    <TableHead className="text-right text-xs font-medium text-muted-foreground">
-                      Date
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          <Skeleton className="h-4 w-10 mx-auto" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-20 mx-auto" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-16 ml-auto" />
-                        </TableCell>
+              {/* Table */}
+              <div className="relative">
+                <ScrollArea className="h-[280px] w-full">
+                  <Table className="min-w-full">
+                    <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                      <TableRow className="h-9">
+                        <TableHead className="w-[120px] text-xs font-medium text-muted-foreground">
+                          Connects
+                        </TableHead>
+                        <TableHead className="text-xs font-medium text-muted-foreground">
+                          Status
+                        </TableHead>
+                        <TableHead className="text-right text-xs font-medium text-muted-foreground">
+                          Date
+                        </TableHead>
                       </TableRow>
-                    ))
-                  ) : filteredData.length > 0 ? (
-                    filteredData.map((item, idx) => (
-                      <TableRow
-                        key={idx}
-                        className="group h-11 hover:bg-muted/40"
-                      >
-                        <TableCell className="font-medium text-sm text-center">
-                          <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full bg-primary/10 text-primary font-semibold">
-                            {item.amount}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-center">
-                            <StatusBadge status={item.status} />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right text-sm text-muted-foreground">
-                          {formatDate(item.createdAt)}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="h-40 text-center">
-                        <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
-                          <Wallet className="h-8 w-8 opacity-40" />
-                          <p className="text-sm font-medium">
-                            No connect requests found
-                          </p>
-                          <p className="text-xs">
-                            {filter === 'ALL'
-                              ? 'You have no connect requests yet.'
-                              : `No ${filter.toLowerCase()} connect requests.`}
-                          </p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </ScrollArea>
+                    </TableHeader>
+                    <TableBody>
+                      {loading ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell>
+                              <Skeleton className="h-4 w-10 mx-auto" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-20 mx-auto" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-16 ml-auto" />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : filteredData.length > 0 ? (
+                        filteredData.map((item, idx) => (
+                          <TableRow
+                            key={idx}
+                            className="group h-11 hover:bg-muted/40"
+                          >
+                            <TableCell className="font-medium text-sm text-center">
+                              <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full bg-primary/10 text-primary font-semibold">
+                                {item.amount}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex justify-center">
+                                <StatusBadge status={item.status} />
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right text-sm text-muted-foreground">
+                              {formatDate(item.createdAt)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={3} className="h-40 text-center">
+                            <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
+                              <Wallet className="h-8 w-8 opacity-40" />
+                              <p className="text-sm font-medium">
+                                No connect requests found
+                              </p>
+                              <p className="text-xs">
+                                {filter === 'ALL'
+                                  ? 'You have no connect requests yet.'
+                                  : `No ${filter.toLowerCase()} connect requests.`}
+                              </p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </div>
+            </Tabs>
           </div>
 
           {/* Footer */}
