@@ -8,6 +8,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import { notifyError } from '@/utils/toastMessage';
 import { VerificationStatus } from '@/utils/verificationStatus';
+import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
 
 type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 interface ProjectData {
@@ -106,15 +107,10 @@ const ProjectVerification = () => {
   );
 
   return (
-    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-      <div className="flex flex-col gap-2 p-6 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Project Verification
-        </h1>
-        <p className="text-muted-foreground">
-          Monitor the status of your project verifications.
-        </p>
-      </div>
+    <OracleVerificationLayout
+      title="Project Verification"
+      description="Monitor the status of your project verifications."
+    >
       <Tabs
         value={filter}
         defaultValue="all"
@@ -129,19 +125,19 @@ const ProjectVerification = () => {
               All
             </TabsTrigger>
             <TabsTrigger
-              value="PENDING"
+              value="pending"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Pending
             </TabsTrigger>
             <TabsTrigger
-              value="APPROVED"
+              value="approved"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Approved
             </TabsTrigger>
             <TabsTrigger
-              value="DENIED"
+              value="denied"
               className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
             >
               Denied
@@ -149,7 +145,7 @@ const ProjectVerification = () => {
           </TabsList>
         </div>
 
-        {(['all', 'PENDING', 'APPROVED', 'DENIED'] as FilterOption[]).map(
+        {(['all', 'pending', 'approved', 'denied'] as FilterOption[]).map(
           (t) => (
             <TabsContent key={t} value={t}>
               <CardContent>
@@ -265,7 +261,7 @@ const ProjectVerification = () => {
           ),
         )}
       </Tabs>
-    </div>
+    </OracleVerificationLayout>
   );
 };
 

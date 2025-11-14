@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
 
 type FilterOption = 'all' | 'pending' | 'verified' | 'rejected';
 
@@ -150,16 +151,10 @@ const OracleDashboard = () => {
   }, [fetchData]);
 
   return (
-    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-      <div className="flex flex-col gap-2 p-6 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Education Verification
-        </h1>
-        <p className="text-muted-foreground">
-          Monitor and manage education verification requests.
-        </p>
-      </div>
-
+    <OracleVerificationLayout
+      title="Education Verification"
+      description="Monitor and manage education verification requests."
+    >
       <Tabs
         value={filter}
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
@@ -288,7 +283,7 @@ const OracleDashboard = () => {
           ),
         )}
       </Tabs>
-    </div>
+    </OracleVerificationLayout>
   );
 };
 
