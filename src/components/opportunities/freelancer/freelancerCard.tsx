@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
 import {
   Github,
   Linkedin,
@@ -29,10 +28,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { RootState } from '@/lib/store';
-import ProjectProfileSelectionDialog from '@/components/dialogs/ProjectProfileSelectionDialog';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { notifySuccess, notifyError } from '@/utils/toastMessage';
+import InviteFreelancerDialog from '@/components/dialogs/InviteFreelancerDialog';
+
 interface FreelancerCardProps {
   name: string;
   skills: { name: string }[];
@@ -45,6 +42,7 @@ interface FreelancerCardProps {
   linkedInUrl?: string;
   websiteUrl?: string;
   freelancer_id?: string;
+  freelancer_professional_profile_id?: string;
 }
 
 const FreelancerCard: React.FC<FreelancerCardProps> = ({
@@ -59,71 +57,12 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   linkedInUrl,
   websiteUrl,
   freelancer_id,
+  freelancer_professional_profile_id,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const user = useSelector((state: RootState) => state.user);
-
-  const handleHireNow = async (data?: any) => {
-    // Backend will deduct connects; show toast and sync remaining connects locally
-    const requiredConnects = parseInt(
-      process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-      10,
-    );
-    try {
-      // Include freelancer identification in the hire request
-      const hireData = {
-        ...data,
-        freelancer_id: freelancer_id || userName,
-      };
-
-      const res = await axiosInstance.post(
-        `/business/hire-dehixtalent/hire-now`,
-        hireData,
-      );
-      const remaining = res?.data?.remainingConnects;
-      if (typeof remaining === 'number') {
-        try {
-          localStorage.setItem('DHX_CONNECTS', String(remaining));
-        } catch (storageError) {
-          console.error(
-            'Failed to update connects in localStorage:',
-            storageError,
-          );
-        }
-        // Trigger a global event so header wallet rerenders
-        try {
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('connectsUpdated'));
-          }
-        } catch (eventError) {
-          console.error(
-            'Failed to dispatch connectsUpdated event:',
-            eventError,
-          );
-        }
-      }
-      notifySuccess(
-        `Deducted ${requiredConnects} connects.${
-          typeof remaining === 'number' ? ` Remaining: ${remaining}` : ''
-        }`,
-        'Hire Now successful',
-      );
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        (error?.response?.status === 400
-          ? 'Insufficient connects to proceed.'
-          : 'Failed to complete Hire Now. Please try again.');
-      notifyError(message, 'Hire Now failed');
-      throw error; // keep ConnectsDialog loading UX consistent
-    }
-  };
-
-  const noopValidate = async () => true;
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
@@ -587,24 +526,15 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                         </div>
                         <div className="flex items-center gap-2">
                           <div onClick={(e) => e.stopPropagation()}>
-                            <ConnectsDialog
-                              loading={loading}
-                              setLoading={setLoading}
-                              onSubmit={handleHireNow}
-                              isValidCheck={noopValidate}
-                              userId={user?.uid}
-                              buttonText="Hire Now"
-                              userType="BUSINESS"
-                              requiredConnects={parseInt(
-                                process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST ||
-                                  '0',
-                                10,
-                              )}
-                              skipRedirect
-                              onCloseParentDialog={() => setIsDialogOpen(false)}
-                              externalOpen={showConfirmDialog}
-                              setExternalOpen={setShowConfirmDialog}
-                            />
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsInviteDialogOpen(true);
+                                setIsDialogOpen(false);
+                              }}
+                            >
+                              Invite Now
+                            </Button>
                           </div>
                         </div>
                       </DialogFooter>
@@ -614,21 +544,14 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
               </div>
 
               <div onClick={(e) => e.stopPropagation()}>
-                <ConnectsDialog
-                  loading={loading}
-                  setLoading={setLoading}
-                  onSubmit={handleHireNow}
-                  isValidCheck={noopValidate}
-                  userId={user?.uid}
-                  buttonText="Hire Now"
-                  userType="BUSINESS"
-                  requiredConnects={parseInt(
-                    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-                    10,
-                  )}
-                  skipRedirect
-                  onCloseParentDialog={() => setIsDialogOpen(false)}
-                />
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsInviteDialogOpen(true);
+                  }}
+                >
+                  Invite Now
+                </Button>
               </div>
             </div>
           </div>
@@ -636,25 +559,19 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
         {/* Hover effect border */}
         <div className="absolute inset-0 border border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>
       </Card>
-      {/* Confirm dialog rendered outside parent dialog */}
-      {showConfirmDialog && (
-        <ConnectsDialog
-          loading={loading}
-          setLoading={setLoading}
-          onSubmit={handleHireNow}
-          isValidCheck={noopValidate}
-          userId={user?.uid}
-          buttonText="Hire Now"
-          userType="BUSINESS"
-          requiredConnects={parseInt(
-            process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-            10,
-          )}
-          skipRedirect
-          externalOpen={showConfirmDialog}
-          setExternalOpen={setShowConfirmDialog}
-        />
-      )}
+
+      {/* Invite Freelancer Dialog */}
+      <InviteFreelancerDialog
+        open={isInviteDialogOpen}
+        onOpenChange={setIsInviteDialogOpen}
+        freelancerId={freelancer_id || ''}
+        freelancer_professional_profile_id={
+          freelancer_professional_profile_id || ''
+        }
+        onSuccess={() => {
+          setIsInviteDialogOpen(false);
+        }}
+      />
     </>
   );
 };

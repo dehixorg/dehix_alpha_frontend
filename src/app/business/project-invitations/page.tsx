@@ -2,19 +2,38 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  Search,
+  LayoutGrid,
+  Table as TableIcon,
+  Filter,
+  User,
+} from 'lucide-react';
+import Image from 'next/image';
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import processInvitations from '@/utils/invitations/processInvitations';
 import InvitationCard from '@/components/business/invitations/InvitationCard';
+import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import {
   ProjectInvitation,
   InvitationStatus,
   InvitationStatusFilter,
 } from '@/types/invitation';
-import { Search, LayoutGrid, Table as TableIcon, Filter } from 'lucide-react';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import {
@@ -47,7 +66,44 @@ const ProjectInvitationsPage: React.FC = () => {
         const hires = hiRes?.data?.data || [];
         const projects = pRes?.data?.data || [];
 
-        const processed = processInvitations(hires, projects, {});
+        // Extract unique freelancer IDs from all hire documents
+        const freelancerIdsSet = new Set<string>();
+        for (const hire of hires) {
+          const freelancers = hire.freelancers || [];
+          for (const entry of freelancers) {
+            const freelancerId =
+              entry.freelancerId || entry.freelancer_id || entry.freelancer;
+            if (freelancerId) {
+              freelancerIdsSet.add(freelancerId);
+            }
+          }
+        }
+
+        // Fetch freelancer details using batch API
+        const freelancersMap: Record<string, any> = {};
+        const freelancerIds = Array.from(freelancerIdsSet);
+
+        if (freelancerIds.length > 0) {
+          try {
+            const idsParam = JSON.stringify(freelancerIds);
+            const freelancerRes = await axiosInstance.get('/public/user_id', {
+              params: { user_ids: idsParam },
+            });
+            const freelancersData = freelancerRes?.data?.data || [];
+
+            // Build freelancersMap
+            for (const freelancer of freelancersData) {
+              if (freelancer._id) {
+                freelancersMap[freelancer._id] = freelancer;
+              }
+            }
+          } catch (freelancerErr) {
+            console.warn('Failed to fetch freelancer details:', freelancerErr);
+            // Continue with empty map
+          }
+        }
+
+        const processed = processInvitations(hires, projects, freelancersMap);
         setInvitations(processed);
       } catch (err: any) {
         console.error('Failed to load invitations', err);
@@ -182,53 +238,131 @@ const ProjectInvitationsPage: React.FC = () => {
           </div>
 
           {loading ? (
-            <div className="grid gap-4">
-              <div className="h-12 bg-muted/50 rounded" />
-              <div className="h-12 bg-muted/50 rounded" />
-              <div className="h-12 bg-muted/50 rounded" />
-            </div>
+            isTableView ? (
+              <div className="rounded-lg border shadow-sm p-4">
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-48 w-full" />
+                ))}
+              </div>
+            )
           ) : filtered.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
               <Search className="mx-auto mb-2" />
               <div>No invitations found</div>
             </div>
           ) : isTableView ? (
-            <div className="overflow-auto">
-              <table className="w-full table-auto">
-                <thead>
-                  <tr className="text-left text-sm text-muted-foreground">
-                    <th className="p-2">Project</th>
-                    <th className="p-2">Profile</th>
-                    <th className="p-2">Freelancer</th>
-                    <th className="p-2">Status</th>
-                    <th className="p-2">Invited</th>
-                    <th className="p-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((inv) => (
-                    <tr key={inv._id} className="border-t">
-                      <td className="p-2">{inv.projectName}</td>
-                      <td className="p-2">{inv.profileDomain}</td>
-                      <td className="p-2">{inv.freelancerName}</td>
-                      <td className="p-2">{inv.status}</td>
-                      <td className="p-2">
-                        {new Date(inv.invitedAt).toLocaleDateString()}
-                      </td>
-                      <td className="p-2">
-                        <Button
-                          variant="outline"
-                          onClick={() =>
-                            router.push(`/business/project/${inv.projectId}`)
-                          }
-                        >
-                          View Project
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="rounded-lg border shadow-sm">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead>Freelancer</TableHead>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Profile</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead>Invited Date</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="h-40 text-center text-muted-foreground"
+                      >
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Search className="h-8 w-8" />
+                          <span>No invitations found</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filtered.map((inv) => (
+                      <TableRow key={inv._id} className="hover:bg-muted/50">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            {inv.freelancerProfilePic ? (
+                              <Image
+                                width={32}
+                                height={32}
+                                src={inv.freelancerProfilePic}
+                                alt={inv.freelancerName}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                <User className="w-4 h-4" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="font-medium">
+                                {inv.freelancerName}
+                              </div>
+                              {inv.freelancerEmail && (
+                                <div className="text-sm text-muted-foreground">
+                                  {inv.freelancerEmail}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{inv.projectName}</div>
+                          {inv.projectStatus && (
+                            <div className="text-sm text-muted-foreground capitalize">
+                              {inv.projectStatus.toLowerCase()}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{inv.profileDomain}</div>
+                          {inv.profileDescription && (
+                            <div className="text-sm text-muted-foreground line-clamp-1">
+                              {inv.profileDescription}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge className={statusOutlineClasses(inv.status)}>
+                            {inv.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {new Date(inv.invitedAt).toLocaleDateString()}
+                          </div>
+                          {inv.respondedAt && (
+                            <div className="text-xs text-muted-foreground">
+                              Responded:{' '}
+                              {new Date(inv.respondedAt).toLocaleDateString()}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              router.push(`/business/project/${inv.projectId}`)
+                            }
+                          >
+                            View Project
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

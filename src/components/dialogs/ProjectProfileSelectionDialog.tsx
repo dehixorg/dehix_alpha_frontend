@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
+
+import ConnectsDialog from './ConnectsDialog';
 
 import {
   Dialog,
@@ -16,8 +17,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { RootState } from '@/lib/store';
-import ConnectsDialog from './ConnectsDialog';
 
 interface Props {
   open: boolean;
@@ -34,7 +33,6 @@ const ProjectProfileSelectionDialog: React.FC<Props> = ({
   freelancer_professional_profile_id,
   onSuccess,
 }) => {
-  const user = useSelector((state: RootState) => state.user);
   const [step, setStep] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -45,8 +43,8 @@ const ProjectProfileSelectionDialog: React.FC<Props> = ({
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
     null,
   );
-  const [hireCost, setHireCost] = useState<number | null>(
-    Number(process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0'),
+  const hireCost = parseInt(
+    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
   );
   const [isConnectsDialogOpen, setIsConnectsDialogOpen] = useState(false);
 

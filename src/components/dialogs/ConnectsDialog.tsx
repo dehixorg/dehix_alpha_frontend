@@ -51,11 +51,7 @@ const ConnectsDialog: React.FC<Props> = ({
             Cancel
           </Button>
           <Button onClick={onConfirm} disabled={loading}>
-            {loading ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              'Confirm & Hire'
-            )}
+            {loading ? <Loader2 className="animate-spin" /> : 'Confirm & Hire'}
           </Button>
         </DialogFooter>
       </DialogContent>

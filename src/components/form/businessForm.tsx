@@ -135,40 +135,31 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         linkedin: data.linkedin,
         personalWebsite: data.website,
         userId: user_id,
-      };
+      });
 
       if (res.status === 200) {
         // Refetch the updated data from the server
         const updatedResponse = await axiosInstance.get(`/business/${user_id}`);
-        const updatedUserInfo = {
-          ...updatedResponse.data,
-          uid: updatedResponse.data._id,
+        const updatedData = updatedResponse.data;
+
+        // Update local state and Redux
+        const userInfoData = {
+          ...updatedData,
+          personalWebsite:
+            updatedData.personalWebsite || updatedData.website || '',
+          website: updatedData.personalWebsite || updatedData.website || '',
+          uid: user_id,
         };
 
-        setUserInfo(updatedUserInfo);
-        dispatch(setUser(updatedUserInfo));
+        setUserInfo(userInfoData);
+        dispatch(setUser(userInfoData));
 
-      // 6. Update local state and Redux
-      const userInfoData = {
-        ...updatedData,
-        personalWebsite:
-          updatedData.personalWebsite || updatedData.website || '',
-        website: updatedData.personalWebsite || updatedData.website || '',
-      };
-
-      setUserInfo(userInfoData);
-      dispatch(
-        setUser({
-          ...userInfoData,
-          uid: user_id,
-        }),
-      );
-
-      // 5. Show success message
-      notifySuccess(
-        'Your profile has been successfully updated.',
-        'Profile Updated',
-      );
+        // Show success message
+        notifySuccess(
+          'Your profile has been successfully updated.',
+          'Profile Updated',
+        );
+      }
     } catch (error) {
       console.error('API Error:', error);
       notifyError('Failed to update profile. Please try again later.');

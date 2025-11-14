@@ -111,7 +111,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
               githubUrl={freelancer.github || freelancer.githubLink}
               linkedInUrl={freelancer.linkedin}
               websiteUrl={freelancer.personalWebsite}
-              freelancerId={freelancer._id}
+              freelancer_id={freelancer._id}
               freelancer_professional_profile_id={profId}
             />
           );
