@@ -13,10 +13,10 @@ import {
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
+import { ScrollArea } from '../ui/scroll-area';
 
 import RequestConnectsDialog from './RequestConnectsDialog';
 
-import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -58,9 +58,8 @@ export const DisplayConnectsDialog = React.forwardRef<
   const [loading, setLoading] = useState(false);
 
   const fetchConnectsRequest = useCallback(async () => {
-    if (loading) return;
-    setLoading(true);
     try {
+      setLoading(true);
       const response = await axiosInstance.get(
         `/token-request/user/${userId}`,
         {
@@ -68,7 +67,7 @@ export const DisplayConnectsDialog = React.forwardRef<
         },
       );
 
-      const newData = response.data.data;
+      const newData = response.data.data || [];
       const currentConnects = parseInt(
         localStorage.getItem('DHX_CONNECTS') || '0',
         10,
@@ -107,41 +106,37 @@ export const DisplayConnectsDialog = React.forwardRef<
       setData(newData);
       setFilteredData(newData);
 
-      if (newApprovedRequests.length === 0) {
-        setLoading(false);
-        return;
+      if (newApprovedRequests.length > 0) {
+        const totalNewConnects = newApprovedRequests.reduce(
+          (sum: number, req: TokenRequest) => sum + Number(req.amount),
+          0,
+        );
+
+        try {
+          await Promise.all(
+            newApprovedRequests.map((request) =>
+              axiosInstance.put(`/token-request/${request._id}/status`, {
+                status: 'APPROVED',
+                totalConnects: currentConnects,
+              }),
+            ),
+          );
+
+          const newTotal = currentConnects + totalNewConnects;
+          localStorage.setItem('DHX_CONNECTS', newTotal.toString());
+          window.dispatchEvent(
+            new CustomEvent('connectsUpdated', { detail: { newTotal } }),
+          );
+        } catch (error) {
+          console.error('Error updating token request status:', error);
+        }
       }
-
-      const totalNewConnects = newApprovedRequests.reduce(
-        (sum: number, req: TokenRequest) => sum + Number(req.amount),
-        0,
-      );
-
-      await Promise.all(
-        newApprovedRequests.map(async (request) => {
-          try {
-            await axiosInstance.put(`/token-request/${request._id}/status`, {
-              status: 'APPROVED',
-              totalConnects: currentConnects,
-            });
-          } catch (error) {
-            console.error('Error updating token request status:', error);
-          }
-        }),
-      );
-
-      const newTotal = currentConnects + totalNewConnects;
-      localStorage.setItem('DHX_CONNECTS', newTotal.toString());
-
-      window.dispatchEvent(
-        new CustomEvent('connectsUpdated', { detail: { newTotal } }),
-      );
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, [userId, data, loading]);
+  }, [userId]);
 
   const handleNewConnectRequest = useCallback((event: Event) => {
     const newConnect = (event as CustomEvent).detail;
@@ -317,116 +312,79 @@ export const DisplayConnectsDialog = React.forwardRef<
                 </TabsTrigger>
               </TabsList>
 
-          {/* Table */}
-          <div className="relative">
-            <ScrollArea className="h-[280px] w-full">
-              <Table className="min-w-full">
-                <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                  <TableRow className="h-9">
-                    <TableHead className="w-[120px] text-xs font-medium text-muted-foreground">
-                      Connects
-                    </TableHead>
-                    <TableHead className="text-xs font-medium text-muted-foreground">
-                      Status
-                    </TableHead>
-                    <TableHead className="text-right text-xs font-medium text-muted-foreground">
-                      Date
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          <Skeleton className="h-4 w-10 mx-auto" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-20 mx-auto" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-16 ml-auto" />
-                        </TableCell>
+              {/* Table */}
+              <div className="relative">
+                <ScrollArea className="h-[280px] w-full">
+                  <Table className="min-w-full">
+                    <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                      <TableRow className="h-9">
+                        <TableHead className="w-[120px] text-xs font-medium text-muted-foreground">
+                          Connects
+                        </TableHead>
+                        <TableHead className="text-xs font-medium text-muted-foreground">
+                          Status
+                        </TableHead>
+                        <TableHead className="text-right text-xs font-medium text-muted-foreground">
+                          Date
+                        </TableHead>
                       </TableRow>
-                    ))
-                  ) : filteredData.length > 0 ? (
-                    filteredData.map((item, idx) => (
-                      <TableRow
-                        key={idx}
-                        className="group h-11 hover:bg-muted/40"
-                      >
-                        <TableCell className="font-medium text-sm text-center">
-                          <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full bg-primary/10 text-primary font-semibold">
-                            {item.amount}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-center">
-                            <StatusBadge status={item.status} />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right text-sm text-muted-foreground">
-                          {formatDate(item.createdAt)}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="h-40 text-center">
-                        <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
-                          <Wallet className="h-8 w-8 opacity-40" />
-                          <p className="text-sm font-medium">
-                            No connect requests found
-                          </p>
-                          <p className="text-xs">
-                            {filter === 'ALL'
-                              ? 'You have no connect requests yet.'
-                              : `No ${filter.toLowerCase()} connect requests.`}
-                          </p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredData.length > 0 ? (
-                      filteredData.map((item) => (
-                        <TableRow key={item._id}>
-                          <TableCell className="text-center">
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                'text-xs',
-                                item.status === 'APPROVED' &&
-                                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-                                item.status === 'PENDING' &&
-                                  'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-                                item.status === 'REJECTED' &&
-                                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-                              )}
-                            >
-                              {item.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center text-xs font-medium">
-                            {item.amount}
-                          </TableCell>
-                          <TableCell className="text-center text-xs">
-                            {formatDate(item.createdAt)}
+                    </TableHeader>
+                    <TableBody>
+                      {loading ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell>
+                              <Skeleton className="h-4 w-10 mx-auto" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-20 mx-auto" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-16 ml-auto" />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : filteredData.length > 0 ? (
+                        filteredData.map((item, idx) => (
+                          <TableRow
+                            key={idx}
+                            className="group h-11 hover:bg-muted/40"
+                          >
+                            <TableCell className="font-medium text-sm text-center">
+                              <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full bg-primary/10 text-primary font-semibold">
+                                {item.amount}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex justify-center">
+                                <StatusBadge status={item.status} />
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right text-sm text-muted-foreground">
+                              {formatDate(item.createdAt)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={3} className="h-40 text-center">
+                            <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
+                              <Wallet className="h-8 w-8 opacity-40" />
+                              <p className="text-sm font-medium">
+                                No connect requests found
+                              </p>
+                              <p className="text-xs">
+                                {filter === 'ALL'
+                                  ? 'You have no connect requests yet.'
+                                  : `No ${filter.toLowerCase()} connect requests.`}
+                              </p>
+                            </div>
                           </TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={3}
-                          className="text-center py-4 text-sm text-muted-foreground"
-                        >
-                          No data available
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
               </div>
             </Tabs>
           </div>
