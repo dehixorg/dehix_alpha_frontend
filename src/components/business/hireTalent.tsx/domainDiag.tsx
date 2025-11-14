@@ -20,6 +20,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import SelectTagPicker from '@/components/shared/SelectTagPicker'; // Import your picker
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Domain {
   _id: string;
@@ -47,8 +48,15 @@ const domainSchema = z.object({
   experience: z
     .string()
     .nonempty('Please enter your experience')
-    .regex(/^\d+$/, 'Experience must be a number'),
-  description: z.string().nonempty('Please enter description'),
+    .regex(/^\d+$/, 'Experience must be a number')
+    .refine(
+      (val) => parseInt(val) <= 40,
+      'Maximum 40 years of experience allowed',
+    ),
+  description: z
+    .string()
+    .min(10, 'Description must be at least 10 characters')
+    .max(500, 'Description must be at most 500 characters'),
   visible: z.boolean(),
   status: z.string(),
 });
@@ -139,7 +147,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               name="label"
               render={({ field }) => (
                 <SelectTagPicker
-                  label="Domains"
+                  label="Domain"
                   options={domains}
                   selected={field.value ? [{ name: field.value }] : []} // Convert to expected format
                   onAdd={(val) => {
@@ -177,7 +185,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                     className="mt-0 w-full bg-muted/20 dark:bg-muted/20 border border-border"
                   />
                   <span className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                    YEARS
+                    years
                   </span>
                 </div>
               )}
@@ -191,12 +199,17 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
             control={control}
             name="description"
             render={({ field }) => (
-              <Input
-                type="text"
-                placeholder="Description"
-                {...field}
-                className="mt-2 mb-4 w-full bg-muted/20 dark:bg-muted/20 border border-border"
-              />
+              <div className="relative">
+                <Textarea
+                  placeholder="Description (max 40 characters)"
+                  {...field}
+                  maxLength={40}
+                  className="mt-2 mb-1 w-full bg-muted/20 dark:bg-muted/20 border border-border min-h-[100px]"
+                />
+                <div className="text-xs text-muted-foreground text-right">
+                  {field.value?.length || 0}/40
+                </div>
+              </div>
             )}
           />
           {errors.description && (
@@ -212,7 +225,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
             buttonText={'Submit'}
             userType={'BUSINESS'}
             requiredConnects={parseInt(
-              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '20',
               10,
             )}
             data={getValues()}

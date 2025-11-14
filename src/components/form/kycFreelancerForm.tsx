@@ -26,6 +26,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
+import KycStatusAlert from '@/components/shared/KycStatusAlert';
 
 const profileFormSchema = z.object({
   aadharOrGovtId: z
@@ -80,76 +81,6 @@ const transformKYCDataForView = (formValues: ProfileFormValues) => {
         ? formValues.liveCaptureUrl
         : undefined,
   };
-};
-
-const KycStatusAlert = ({
-  status,
-  rejectionReason,
-}: {
-  status: string;
-  rejectionReason?: string;
-}) => {
-  switch (status) {
-    case 'APPLIED':
-    case 'PENDING':
-      return (
-        <div
-          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4"
-          role="alert"
-        >
-          <p className="font-bold">Under Review</p>
-          <p>
-            Your KYC is currently under review. We will notify you once the
-            review is complete.
-          </p>
-        </div>
-      );
-    case 'VERIFIED':
-      return (
-        <div
-          className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4"
-          role="alert"
-        >
-          <p className="font-bold">KYC Accepted</p>
-          <p>Your KYC has been successfully verified.</p>
-        </div>
-      );
-    case 'REJECTED':
-      return (
-        <div
-          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
-          role="alert"
-        >
-          <p className="font-bold">KYC Rejected</p>
-          <p>
-            Your KYC has been rejected. Please see the reason below and
-            re-submit your application.
-          </p>
-          {rejectionReason && (
-            <p className="mt-2">
-              <strong>Reason:</strong> {rejectionReason}
-            </p>
-          )}
-        </div>
-      );
-    case 'REUPLOAD':
-      return (
-        <div
-          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
-          role="alert"
-        >
-          <p className="font-bold">Re-upload Required</p>
-          <p>Your KYC has been rejected. Please re-upload your documents.</p>
-          {rejectionReason && (
-            <p className="mt-2">
-              <strong>Reason:</strong> {rejectionReason}
-            </p>
-          )}
-        </div>
-      );
-    default:
-      return null;
-  }
 };
 
 export default function KYCForm({ user_id }: { user_id: string }) {

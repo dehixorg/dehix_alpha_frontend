@@ -66,10 +66,12 @@ const StoriesAccordion = ({
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string,
+    event:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | { target: { name: string; value: any } },
   ) => {
     const { name, value } =
-      typeof e === 'string' ? { name: 'taskStatus', value: e } : e.target;
+      'target' in event ? event.target : { name: 'taskStatus', value: event };
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
