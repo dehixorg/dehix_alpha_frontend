@@ -7,6 +7,7 @@ import {
   Globe,
   Layers,
   Award,
+  UserPlus,
 } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -527,13 +528,15 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                         <div className="flex items-center gap-2">
                           <div onClick={(e) => e.stopPropagation()}>
                             <Button
+                              size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setIsInviteDialogOpen(true);
                                 setIsDialogOpen(false);
                               }}
                             >
-                              Invite Now
+                              <UserPlus className="h-4 w-4" />
+                              Invite
                             </Button>
                           </div>
                         </div>
@@ -545,12 +548,14 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 
               <div onClick={(e) => e.stopPropagation()}>
                 <Button
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsInviteDialogOpen(true);
                   }}
                 >
-                  Invite Now
+                  <UserPlus className="h-4 w-4" />
+                  Invite
                 </Button>
               </div>
             </div>

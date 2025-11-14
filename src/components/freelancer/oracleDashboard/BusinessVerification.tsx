@@ -8,6 +8,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 import { VerificationStatus } from '@/utils/verificationStatus';
+import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
 
 type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 
@@ -107,16 +108,10 @@ export default function BusinessVerification() {
   };
 
   return (
-    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-      <div className="flex flex-col gap-2 p-6 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Business Verification
-        </h1>
-        <p className="text-muted-foreground">
-          Monitor and manage business verification requests.
-        </p>
-      </div>
-
+    <OracleVerificationLayout
+      title="Business Verification"
+      description="Monitor and manage business verification requests."
+    >
       <Tabs
         value={filter}
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
@@ -211,6 +206,6 @@ export default function BusinessVerification() {
           ),
         )}
       </Tabs>
-    </div>
+    </OracleVerificationLayout>
   );
 }
