@@ -6,13 +6,12 @@ import { Wallet } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { ScrollArea } from '../ui/scroll-area';
 
 import RequestConnectsDialog from './RequestConnectsDialog';
 
+import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import {
   Table,
   TableHeader,
@@ -31,7 +30,7 @@ interface TokenRequest {
   _id: string;
   amount: number | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  // Add other properties that might be on the request object
+  createdAt: string;
   [key: string]: any;
 }
 
@@ -62,114 +61,159 @@ export const DisplayConnectsDialog = React.forwardRef<
       );
 
       const newData = response.data.data;
+      const currentConnects = parseInt(
+        localStorage.getItem('DHX_CONNECTS') || '0',
+        10,
+      );
 
-      // Check for new approved requests
+      // Get the set of processed request IDs from localStorage
+      const processedRequests = new Set(
+        JSON.parse(localStorage.getItem('PROCESSED_REQUESTS') || '[]'),
+      );
+
       const newApprovedRequests: TokenRequest[] = [];
-      const isInitialLoad = data.length === 0;
+      const updatedProcessedRequests = new Set(processedRequests);
+      let hasUpdates = false;
 
+      // Process new data
       newData.forEach((newItem: TokenRequest) => {
-        // If it's the initial load, include all APPROVED requests
-        // Otherwise, only include newly approved requests
-        const isNewApproval = isInitialLoad
-          ? newItem.status === 'APPROVED'
-          : newItem.status === 'APPROVED' &&
-            !data.some(
-              (oldItem: TokenRequest) =>
-                oldItem._id === newItem._id && oldItem.status === 'APPROVED',
-            );
-
-        if (isNewApproval) {
+        // Only process approved requests that haven't been processed yet
+        if (
+          newItem.status === 'APPROVED' &&
+          !processedRequests.has(newItem._id)
+        ) {
           newApprovedRequests.push(newItem);
+          updatedProcessedRequests.add(newItem._id);
+          hasUpdates = true;
         }
       });
 
-      // Update DHX_CONNECTS in localStorage and database for new approved requests
-      if (newApprovedRequests.length > 0) {
-        const currentConnects = parseInt(
-          localStorage.getItem('DHX_CONNECTS') || '0',
-          10,
-        );
-
-        const totalNewConnects = newApprovedRequests.reduce(
-          (sum: number, req: TokenRequest) => {
-            const amount = Number(req.amount);
-            return sum + amount;
-          },
-          0,
-        );
-
-        // First, send the current wallet connects to the backend
-        await Promise.all(
-          newApprovedRequests.map(async (request) => {
-            try {
-              await axiosInstance.put(`/token-request/${request._id}/status`, {
-                status: 'APPROVED',
-                totalConnects: currentConnects, // Use the value before we updated it
-              });
-            } catch (error) {
-              console.error('Error updating token request status:', error);
-            }
-          }),
-        );
-
-        // Now update the local storage with the new total
-        const newTotal = currentConnects + totalNewConnects;
-        localStorage.setItem('DHX_CONNECTS', newTotal.toString());
-
-        // Notify other components about the update
-        window.dispatchEvent(
-          new CustomEvent('connectsUpdated', {
-            detail: { newTotal },
-          }),
+      // Update processed requests in localStorage if there are new ones
+      if (hasUpdates) {
+        localStorage.setItem(
+          'PROCESSED_REQUESTS',
+          JSON.stringify(Array.from(updatedProcessedRequests)),
         );
       }
 
       setData(newData);
       setFilteredData(newData);
+
+      if (newApprovedRequests.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      const totalNewConnects = newApprovedRequests.reduce(
+        (sum: number, req: TokenRequest) => sum + Number(req.amount),
+        0,
+      );
+
+      await Promise.all(
+        newApprovedRequests.map(async (request) => {
+          try {
+            await axiosInstance.put(`/token-request/${request._id}/status`, {
+              status: 'APPROVED',
+              totalConnects: currentConnects,
+            });
+          } catch (error) {
+            console.error('Error updating token request status:', error);
+          }
+        }),
+      );
+
+      const newTotal = currentConnects + totalNewConnects;
+      localStorage.setItem('DHX_CONNECTS', newTotal.toString());
+
+      window.dispatchEvent(
+        new CustomEvent('connectsUpdated', { detail: { newTotal } }),
+      );
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, [userId, data]);
+  }, [userId, data, loading]);
 
-  const handleNewConnectRequest = (event: Event) => {
+  const handleNewConnectRequest = useCallback((event: Event) => {
     const newConnect = (event as CustomEvent).detail;
     setData((prevData) => {
       const updatedData = [newConnect, ...prevData.slice(0, 2)];
       setFilteredData(updatedData);
       return updatedData;
     });
-  };
+  }, []);
 
   useEffect(() => {
     window.addEventListener('newConnectRequest', handleNewConnectRequest);
     return () => {
       window.removeEventListener('newConnectRequest', handleNewConnectRequest);
     };
-  }, []);
+  }, [handleNewConnectRequest]);
 
   useEffect(() => {
     if (open) fetchConnectsRequest();
-  }, [open]);
+  }, [open, fetchConnectsRequest]);
 
   useEffect(() => {
-    setFilteredData(() =>
-      filter === 'ALL'
-        ? (data ?? [])
-        : (data ?? []).filter((item: any) => item.status === filter),
+    setFilteredData(
+      filter === 'ALL' ? data : data.filter((item) => item.status === filter),
     );
   }, [data, filter]);
 
-  // tabs will set filter via onValueChange
-
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-    };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    try {
+      // Handle different date string formats
+      let date: Date;
+
+      // If it's already a valid date string that can be parsed by Date
+      if (dateString) {
+        // Try parsing as ISO string first
+        date = new Date(dateString);
+
+        // If invalid, try parsing as timestamp
+        if (isNaN(date.getTime())) {
+          const timestamp = Date.parse(dateString);
+          if (!isNaN(timestamp)) {
+            date = new Date(timestamp);
+          } else {
+            // Try parsing as a custom format if needed
+            // Example for 'YYYY-MM-DDTHH:mm:ss.SSSZ' format
+            const parts = dateString.split(/[-T:.]/);
+            if (parts.length >= 6) {
+              date = new Date(
+                parseInt(parts[0]),
+                parseInt(parts[1]) - 1, // months are 0-indexed
+                parseInt(parts[2]),
+                parts[3] ? parseInt(parts[3]) : 0,
+                parts[4] ? parseInt(parts[4]) : 0,
+                parts[5] ? parseInt(parts[5]) : 0,
+              );
+            }
+          }
+        }
+      } else {
+        // If no date string is provided, use current date
+        date = new Date();
+      }
+
+      // If we still don't have a valid date, return a placeholder
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateString);
+        return 'Invalid date';
+      }
+
+      const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+      };
+
+      return date.toLocaleDateString('en-US', options);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   return (
@@ -190,156 +234,88 @@ export const DisplayConnectsDialog = React.forwardRef<
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 overflow-hidden rounded-xl shadow-lg w-[min(92vw,420px)]">
+      <PopoverContent
+        className="w-[500px] p-0 overflow-hidden rounded-xl shadow-lg"
+        align="end"
+      >
         <div className="h-full flex flex-col">
-          {/* Header */}
           <div className="flex justify-between items-center p-3 border-b border-border bg-gradient-to-br from-background/70 to-muted/40">
-            <h2 className="text-sm sm:text-base font-semibold">Connects</h2>
+            <h2 className="text-sm sm:text-base font-semibold">
+              Your Connects
+            </h2>
             <div className="flex items-center gap-2">
-              <Badge className="rounded-md uppercase text-[9px] sm:text-[10px] font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-0.5 text-black dark:text-white">
-                {filteredData.length} total
+              <Badge className="rounded-md uppercase text-[9px] sm:text-[10px] font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center gap-1 px-2 py-0.5 text-black dark:text-white">
+                {connects} connects
               </Badge>
               <RequestConnectsDialog userId={userId} />
             </div>
           </div>
-
-          {/* Tabs Controls */}
-          <div className="p-2">
-            <Tabs
-              value={filter}
-              onValueChange={(v) => setFilter(v)}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-4 bg-transparent h-10 p-0">
-                <TabsTrigger
-                  value="ALL"
-                  className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                >
-                  All
-                </TabsTrigger>
-                <TabsTrigger
-                  value="APPROVED"
-                  className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-green-600 dark:text-green-500 data-[state=active]:text-green-600 dark:data-[state=active]:text-green-500 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-green-500 data-[state=active]:bg-transparent"
-                >
-                  Approved
-                </TabsTrigger>
-                <TabsTrigger
-                  value="PENDING"
-                  className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-amber-600 dark:text-amber-400 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-amber-500 data-[state=active]:bg-transparent"
-                >
-                  Pending
-                </TabsTrigger>
-                <TabsTrigger
-                  value="REJECTED"
-                  className="relative h-10 px-3 rounded-none text-xs flex items-center gap-1.5 text-red-600 dark:text-red-500 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-500 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-red-500 data-[state=active]:bg-transparent"
-                >
-                  Rejected
-                </TabsTrigger>
+          <div className="p-4">
+            <Tabs value={filter} onValueChange={setFilter} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
+                <TabsTrigger value="ALL">All</TabsTrigger>
+                <TabsTrigger value="PENDING">Pending</TabsTrigger>
+                <TabsTrigger value="APPROVED">Approved</TabsTrigger>
+                <TabsTrigger value="REJECTED">Rejected</TabsTrigger>
               </TabsList>
-            </Tabs>
-          </div>
 
-          {/* Table */}
-          <div className="relative overflow-hidden">
-            <Table className="min-w-full border-t">
-              <TableHeader className="sticky top-0 z-10 bg-muted/40">
-                <TableRow className="text-center">
-                  <TableHead className="text-center w-1/3 h-10 text-xs">
-                    Connects
-                  </TableHead>
-                  <TableHead className="text-center w-1/3 h-10 text-xs">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-center w-1/3 h-10 text-xs">
-                    Date
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-            </Table>
-            <ScrollArea className="max-h-[240px] no-scrollbar pb-1 overflow-y-auto">
-              <Table className="min-w-full">
-                <TableBody>
-                  {filteredData.length > 0 ? (
-                    filteredData.map((item, idx) => (
-                      <TableRow
-                        key={idx}
-                        className="text-center hover:bg-muted/40"
-                      >
-                        <TableCell className="font-medium text-center w-1/3 text-xs">
-                          {item.amount}
-                        </TableCell>
-                        <TableCell className="text-center w-1/3">
-                          <Badge
-                            className={`${statusOutlineClasses(item.status)}`}
-                          >
-                            {item.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center w-1/3 text-[11px]">
-                          {formatDate(item.dateTime)}
+              <div className="relative overflow-hidden">
+                <Table className="min-w-full border-t">
+                  <TableHeader className="sticky top-0 z-10 bg-muted/40">
+                    <TableRow>
+                      <TableHead className="text-center w-1/3 h-10 text-xs">
+                        Status
+                      </TableHead>
+                      <TableHead className="text-center w-1/3 h-10 text-xs">
+                        Amount
+                      </TableHead>
+                      <TableHead className="text-center w-1/3 h-10 text-xs">
+                        Date
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.length > 0 ? (
+                      filteredData.map((item) => (
+                        <TableRow key={item._id}>
+                          <TableCell className="text-center">
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                'text-xs',
+                                item.status === 'APPROVED' &&
+                                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+                                item.status === 'PENDING' &&
+                                  'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+                                item.status === 'REJECTED' &&
+                                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                              )}
+                            >
+                              {item.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center text-xs font-medium">
+                            {item.amount}
+                          </TableCell>
+                          <TableCell className="text-center text-xs">
+                            {formatDate(item.createdAt)}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={3}
+                          className="text-center py-4 text-sm text-muted-foreground"
+                        >
+                          No data available
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="p-5">
-                        <div className="text-center space-y-2">
-                          <div className="mx-auto w-16 h-16">
-                            <svg
-                              viewBox="0 0 200 200"
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="w-full h-full"
-                              aria-hidden="true"
-                            >
-                              <defs>
-                                <linearGradient
-                                  id="grad2"
-                                  x1="0"
-                                  y1="0"
-                                  x2="1"
-                                  y2="1"
-                                >
-                                  <stop
-                                    offset="0%"
-                                    stopColor="hsl(var(--primary))"
-                                    stopOpacity="0.25"
-                                  />
-                                  <stop
-                                    offset="100%"
-                                    stopColor="hsl(var(--primary))"
-                                    stopOpacity="0.05"
-                                  />
-                                </linearGradient>
-                              </defs>
-                              <circle
-                                cx="100"
-                                cy="100"
-                                r="80"
-                                fill="url(#grad2)"
-                              />
-                              <g fill="hsl(var(--primary))" opacity="0.25">
-                                <rect
-                                  x="70"
-                                  y="70"
-                                  width="60"
-                                  height="40"
-                                  rx="8"
-                                />
-                                <circle cx="140" cy="70" r="6" />
-                                <circle cx="60" cy="110" r="4" />
-                              </g>
-                            </svg>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            No transactions found
-                          </p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </ScrollArea>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Tabs>
           </div>
         </div>
       </PopoverContent>
