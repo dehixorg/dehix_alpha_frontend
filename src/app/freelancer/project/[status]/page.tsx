@@ -6,9 +6,11 @@ import {
   Pointer,
   FileCheck,
   CircleX,
+  Inbox,
+  Search,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,7 +18,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -30,6 +32,12 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import FreelancerInvitationCard from '@/components/freelancer/invitations/FreelancerInvitationCard';
+import {
+  FreelancerInvitation,
+  FreelancerInvitationsResponse,
+} from '@/types/freelancerInvitation';
 
 // Section header component
 function SectionHeader({
@@ -109,9 +117,11 @@ interface Project {
 const ProjectList = ({
   status,
   projectType,
+  refreshTrigger,
 }: {
   status: string;
   projectType?: string;
+  refreshTrigger?: number;
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -144,7 +154,7 @@ const ProjectList = ({
     };
 
     fetchData();
-  }, [user.uid, status, projectType]);
+  }, [user.uid, status, projectType, refreshTrigger]);
 
   return (
     <div className="flex w-full flex-col">
@@ -204,17 +214,138 @@ export default function ProjectPage() {
   const [projectType, setProjectType] = useState('FREELANCER');
   const [activeTab, setActiveTab] = useState('current');
 
+  // Invitation state
+  const [invitations, setInvitations] = useState<FreelancerInvitationsResponse>(
+    {
+      pending: [],
+      accepted: [],
+      rejected: [],
+    },
+  );
+  const [invitationsLoading, setInvitationsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [processingInvitation, setProcessingInvitation] = useState<
+    string | null
+  >(null);
+  const [projectsRefreshTrigger, setProjectsRefreshTrigger] = useState(0);
+
+  // Fetch invitations
+  const fetchInvitations = async () => {
+    setInvitationsLoading(true);
+    try {
+      const response = await axiosInstance.get('/freelancer/invitations');
+      const data = response?.data?.data;
+
+      setInvitations({
+        pending: data?.pending || [],
+        accepted: data?.accepted || [],
+        rejected: data?.rejected || [],
+      });
+    } catch (error: any) {
+      console.error('Failed to fetch invitations:', error);
+      notifyError('Failed to load invitations', 'Error');
+      setInvitations({
+        pending: [],
+        accepted: [],
+        rejected: [],
+      });
+    } finally {
+      setInvitationsLoading(false);
+    }
+  };
+
+  // Handle accept invitation
+  const handleAcceptInvitation = async (invitation: FreelancerInvitation) => {
+    setProcessingInvitation(invitation.hireId);
+    try {
+      await axiosInstance.post('/freelancer/respond-invite', {
+        hireId: invitation.hireId,
+        freelancer_professional_profile_id: invitation.freelancerEntryId,
+        projectId: invitation.projectId,
+        profileId: invitation.profileId,
+        action: 'ACCEPT',
+      });
+      notifySuccess('Invitation accepted successfully', 'Success');
+      await fetchInvitations();
+      setProjectsRefreshTrigger((prev) => prev + 1);
+    } catch (error: any) {
+      console.error('Failed to accept invitation:', error);
+      notifyError(
+        error?.response?.data?.message || 'Failed to accept invitation',
+        'Error',
+      );
+    } finally {
+      setProcessingInvitation(null);
+    }
+  };
+
+  // Handle reject invitation
+  const handleRejectInvitation = async (invitation: FreelancerInvitation) => {
+    setProcessingInvitation(invitation.hireId);
+    try {
+      await axiosInstance.post('/freelancer/respond-invite', {
+        hireId: invitation.hireId,
+        freelancer_professional_profile_id: invitation.freelancerEntryId,
+        projectId: invitation.projectId,
+        profileId: invitation.profileId,
+        action: 'REJECT',
+      });
+      notifySuccess('Invitation rejected successfully', 'Success');
+      await fetchInvitations();
+      setProjectsRefreshTrigger((prev) => prev + 1);
+    } catch (error: any) {
+      console.error('Failed to reject invitation:', error);
+      notifyError(
+        error?.response?.data?.message || 'Failed to reject invitation',
+        'Error',
+      );
+    } finally {
+      setProcessingInvitation(null);
+    }
+  };
+
+  // Handle view invitation details
+  const handleViewInvitationDetails = (projectId: string) => {
+    router.push(`/freelancer/project/${projectId}`);
+  };
+
+  // Filter pending invitations based on search
+  const filteredInvitations = useMemo(() => {
+    const pendingInvitations = invitations.pending;
+
+    if (!searchQuery) return pendingInvitations;
+
+    const query = searchQuery.toLowerCase();
+    return pendingInvitations.filter(
+      (inv) =>
+        inv.projectName.toLowerCase().includes(query) ||
+        inv.companyName.toLowerCase().includes(query) ||
+        inv.profileDomain.toLowerCase().includes(query),
+    );
+  }, [invitations.pending, searchQuery]);
+
   // Sync tab with URL
   useEffect(() => {
     const parts = pathname.split('/');
     const tabFromUrl = parts[parts.length - 1];
-    if (['current', 'applied', 'completed', 'rejected'].includes(tabFromUrl)) {
+    if (
+      ['current', 'applied', 'invitations', 'completed', 'rejected'].includes(
+        tabFromUrl,
+      )
+    ) {
       setActiveTab(tabFromUrl);
     } else {
       setActiveTab('current');
       router.replace('/freelancer/project/current'); // default
     }
   }, [pathname, router]);
+
+  // Fetch invitations when invitations tab is active
+  useEffect(() => {
+    if (activeTab === 'invitations') {
+      fetchInvitations();
+    }
+  }, [activeTab]);
 
   // Handle tab change
   const handleTabChange = (tab: string) => {
@@ -247,7 +378,7 @@ export default function ProjectPage() {
               onValueChange={handleTabChange}
               className="w-full flex flex-col gap-4"
             >
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2 overflow-x-auto no-scrollbar">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 overflow-x-auto no-scrollbar">
                 <TabsTrigger
                   value="current"
                   className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
@@ -259,6 +390,12 @@ export default function ProjectPage() {
                   className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
                 >
                   <Pointer className="h-4 w-4" /> Applied
+                </TabsTrigger>
+                <TabsTrigger
+                  value="invitations"
+                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
+                >
+                  <Inbox className="h-4 w-4" /> Invitations
                 </TabsTrigger>
                 <TabsTrigger
                   value="completed"
@@ -286,7 +423,11 @@ export default function ProjectPage() {
                     />
                   }
                 />
-                <ProjectList status="ACTIVE" projectType={projectType} />
+                <ProjectList
+                  status="ACTIVE"
+                  projectType={projectType}
+                  refreshTrigger={projectsRefreshTrigger}
+                />
               </TabsContent>
 
               <TabsContent value="applied">
@@ -302,6 +443,63 @@ export default function ProjectPage() {
                   }
                 />
                 <ProjectList status="PENDING" projectType={projectType} />
+              </TabsContent>
+
+              <TabsContent value="invitations">
+                <SectionHeader
+                  title="Project Invitations"
+                  subtitle="Review and respond to pending project invitations. Accepted invitations appear in Current tab, rejected ones in Rejected tab."
+                />
+
+                {/* Search bar */}
+                <div className="px-4 sm:px-6 mb-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by project, company, or profile..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Pending invitations list */}
+                <div className="px-4 sm:px-6">
+                  {invitationsLoading ? (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {[...Array(6)].map((_, i) => (
+                        <Skeleton key={i} className="h-48" />
+                      ))}
+                    </div>
+                  ) : filteredInvitations.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">
+                        No pending invitations
+                      </h3>
+                      <p className="text-sm text-muted-foreground max-w-md">
+                        New invitations will appear here. Accepted invitations
+                        move to Current tab, rejected ones to Rejected tab.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredInvitations.map((invitation) => (
+                        <FreelancerInvitationCard
+                          key={invitation.hireId}
+                          invitation={invitation}
+                          onAccept={handleAcceptInvitation}
+                          onReject={handleRejectInvitation}
+                          onViewDetails={handleViewInvitationDetails}
+                          isProcessing={
+                            processingInvitation === invitation.hireId
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </TabsContent>
 
               <TabsContent value="completed">
@@ -331,7 +529,11 @@ export default function ProjectPage() {
                     />
                   }
                 />
-                <ProjectList status="REJECTED" projectType={projectType} />
+                <ProjectList
+                  status="REJECTED"
+                  projectType={projectType}
+                  refreshTrigger={projectsRefreshTrigger}
+                />
               </TabsContent>
             </Tabs>
           </div>

@@ -29,3 +29,20 @@ export interface Project {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface Profile {
+  _id: string;
+  domain: string;
+  description: string;
+  profileType: string;
+  freelancersRequired?: number;
+  required?: number;
+}
+
+export interface ProjectWithProfiles {
+  _id: string;
+  projectName: string;
+  companyName: string;
+  status: string;
+  profiles?: Profile[];
+}

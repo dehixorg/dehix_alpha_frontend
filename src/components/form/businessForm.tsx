@@ -124,56 +124,48 @@ export function BusinessForm({ user_id }: { user_id: string }) {
 
     setLoading(true);
     try {
-      // 1. Prepare the data to send
-      const updateData = {
-        ...data,
+      const res = await axiosInstance.put(`/business`, {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        companyName: data.companyName,
+        companySize: data.companySize,
+        position: data.position,
+        linkedin: data.linkedin,
         personalWebsite: data.website,
         userId: user_id,
-      };
+      });
 
-      // 2. Send update request
-      await axiosInstance.put(`/business`, updateData);
+      if (res.status >= 200 && res.status < 300) {
+        // Refetch the updated data from the server
+        const updatedResponse = await axiosInstance.get(`/business/${user_id}`);
+        const updatedData = updatedResponse.data;
 
-      // 3. Refetch the data from server to ensure we have the latest
-      const response = await axiosInstance.get(`/business/${user_id}`);
-      const updatedData = response.data;
-      // 4. Prepare the form data, handling the website/personalWebsite mapping
-      const formData = {
-        firstName: updatedData.firstName || '',
-        lastName: updatedData.lastName || '',
-        email: updatedData.email || '',
-        phone: updatedData.phone || '',
-        companyName: updatedData.companyName || '',
-        companySize: updatedData.companySize || '',
-        position: updatedData.position || '',
-        linkedin: updatedData.linkedin || '',
-        website: updatedData.personalWebsite || updatedData.website || '',
-      };
-
-      // 5. Reset form with the fresh data
-      form.reset(formData);
-
-      // 6. Update local state and Redux
-      const userInfoData = {
-        ...updatedData,
-        personalWebsite:
-          updatedData.personalWebsite || updatedData.website || '',
-        website: updatedData.personalWebsite || updatedData.website || '',
-      };
-
-      setUserInfo(userInfoData);
-      dispatch(
-        setUser({
-          ...userInfoData,
+        // Update local state and Redux
+        const userInfoData = {
+          ...updatedData,
+          personalWebsite:
+            updatedData.personalWebsite || updatedData.website || '',
+          website: updatedData.personalWebsite || updatedData.website || '',
           uid: user_id,
-        }),
-      );
+        };
 
-      // 5. Show success message
-      notifySuccess(
-        'Your profile has been successfully updated.',
-        'Profile Updated',
-      );
+        setUserInfo(userInfoData);
+        dispatch(setUser(userInfoData));
+
+        // Show success message
+        notifySuccess(
+          'Your profile has been successfully updated.',
+          'Profile Updated',
+        );
+      } else {
+        // Handle non-2xx responses
+        console.error('Unexpected response status:', res.status);
+        notifyError(
+          `Failed to update profile. Server returned status ${res.status}.`,
+        );
+      }
     } catch (error) {
       console.error('API Error:', error);
       notifyError('Failed to update profile. Please try again later.');

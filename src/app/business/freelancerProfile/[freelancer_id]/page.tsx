@@ -12,9 +12,10 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import { useSelector } from 'react-redux';
 
 import ProjectCard from '@/components/cards/freelancerProjectCard';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
   menuItemsBottom,
@@ -24,6 +25,8 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import { RootState } from '@/lib/store';
 
 interface Skill {
   _id: string;
@@ -95,6 +98,8 @@ const FreelancerProfile = () => {
   );
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [hireLoading, setHireLoading] = useState(false);
+  const user = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     if (freelancer_id) {
@@ -147,6 +152,64 @@ const FreelancerProfile = () => {
       return dateString;
     }
   };
+
+  const handleHireNow = async (data?: any) => {
+    // Backend will deduct connects; show toast and sync remaining connects locally
+    const requiredConnects = parseInt(
+      process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+      10,
+    );
+    try {
+      // Include freelancer_id in the hire request
+      const hireData = {
+        ...data,
+        freelancer_id: freelancer_id,
+      };
+
+      const res = await axiosInstance.post(
+        `/business/hire-dehixtalent/hire-now`,
+        hireData,
+      );
+      const remaining = res?.data?.remainingConnects;
+      if (typeof remaining === 'number') {
+        try {
+          localStorage.setItem('DHX_CONNECTS', String(remaining));
+        } catch (storageError) {
+          console.error(
+            'Failed to update connects in localStorage:',
+            storageError,
+          );
+        }
+        // Trigger a global event so header wallet rerenders
+        try {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('connectsUpdated'));
+          }
+        } catch (eventError) {
+          console.error(
+            'Failed to dispatch connectsUpdated event:',
+            eventError,
+          );
+        }
+      }
+      notifySuccess(
+        `Deducted ${requiredConnects} connects.${
+          typeof remaining === 'number' ? ` Remaining: ${remaining}` : ''
+        }`,
+        'Hire Now successful',
+      );
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        (error?.response?.status === 400
+          ? 'Insufficient connects to proceed.'
+          : 'Failed to complete Hire Now. Please try again.');
+      notifyError(message, 'Hire Now failed');
+      throw error; // keep ConnectsDialog loading UX consistent
+    }
+  };
+
+  const noopValidate = async () => true;
 
   if (loading) {
     return (
@@ -268,28 +331,46 @@ const FreelancerProfile = () => {
             {/* Profile Info */}
             <Card className="mb-8 shadow-md">
               <CardContent className="p-6">
-                <div className="flex items-center gap-6">
-                  <div className="relative h-24 w-24 rounded-full overflow-hidden bg-muted border-2 border-border shadow-md">
-                    {profileData?.profilePic ? (
-                      <Image
-                        src={profileData.profilePic}
-                        alt="Profile"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-primary/10">
-                        <UserCircle className="h-12 w-12 text-primary/60" />
-                      </div>
-                    )}
+                <div className="flex items-center justify-between gap-6">
+                  <div className="flex items-center gap-6">
+                    <div className="relative h-24 w-24 rounded-full overflow-hidden bg-muted border-2 border-border shadow-md">
+                      {profileData?.profilePic ? (
+                        <Image
+                          src={profileData.profilePic}
+                          alt="Profile"
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center bg-primary/10">
+                          <UserCircle className="h-12 w-12 text-primary/60" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold text-foreground">
+                        {profileData?.firstName} {profileData?.lastName}
+                      </h1>
+                      <p className="text-muted-foreground mt-1">
+                        {profileData?.description || 'No description available'}
+                      </p>
+                    </div>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-foreground">
-                      {profileData?.firstName} {profileData?.lastName}
-                    </h1>
-                    <p className="text-muted-foreground mt-1">
-                      {profileData?.description || 'No description available'}
-                    </p>
+                    <ConnectsDialog
+                      loading={hireLoading}
+                      setLoading={setHireLoading}
+                      onSubmit={handleHireNow}
+                      isValidCheck={noopValidate}
+                      userId={user?.uid}
+                      buttonText="Hire Now"
+                      userType="BUSINESS"
+                      requiredConnects={parseInt(
+                        process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+                        10,
+                      )}
+                      skipRedirect
+                    />
                   </div>
                 </div>
               </CardContent>
