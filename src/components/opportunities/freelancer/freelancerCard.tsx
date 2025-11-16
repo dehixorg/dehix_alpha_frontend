@@ -456,23 +456,6 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                       {/* Footer actions inside content for mobile stacking */}
                       <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {websiteUrl && (
-                            <a
-                              href={websiteUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Globe className="h-4 w-4" /> Website
-                              </Button>
-                            </a>
-                          )}
                           {githubUrl && (
                             <a
                               href={githubUrl}
