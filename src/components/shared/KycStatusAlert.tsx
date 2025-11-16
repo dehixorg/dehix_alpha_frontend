@@ -59,12 +59,12 @@ const KycStatusAlert: React.FC<Props> = ({ status, rejectionReason }) => {
     );
   }
 
-  if (s === 'APPLIED') {
+  if (s === 'APPLIED' || s === 'IN_REVIEW' || s === 'UNDER_REVIEW') {
     return (
       <Alert className="mb-4 border-blue-200 bg-blue-50 text-blue-800">
         <AlertTitle>KYC Applied</AlertTitle>
         <AlertDescription>
-          Your have applied for the KYC we will get back to you soon.
+          You have applied for the KYC we will get back to you soon.
         </AlertDescription>
       </Alert>
     );
@@ -75,7 +75,7 @@ const KycStatusAlert: React.FC<Props> = ({ status, rejectionReason }) => {
     <Alert className="mb-4 border-yellow-200 bg-yellow-50 text-yellow-800">
       <AlertTitle>Not Applied</AlertTitle>
       <AlertDescription>
-        <p>PLease Complete the Mandatory KYC and earn reward.</p>
+        <p>Please Complete the Mandatory KYC and earn reward.</p>
       </AlertDescription>
     </Alert>
   );
