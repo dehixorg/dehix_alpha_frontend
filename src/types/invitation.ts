@@ -2,7 +2,6 @@ export enum InvitationStatus {
   PENDING = 'PENDING',
   ACCEPTED = 'ACCEPTED',
   REJECTED = 'REJECTED',
-  ACTIVE = 'ACTIVE',
 }
 
 export type InvitationStatusFilter = 'ALL' | InvitationStatus;

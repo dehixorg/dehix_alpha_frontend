@@ -344,8 +344,7 @@ const ProjectInvitationsPage: React.FC = () => {
                             </div>
                           )}
                           <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-background flex items-center justify-center">
-                            {inv.status === InvitationStatus.ACCEPTED ||
-                            inv.status === InvitationStatus.ACTIVE ? (
+                            {inv.status === InvitationStatus.ACCEPTED ? (
                               <CheckCircle2 className="w-3 h-3 text-green-500 fill-green-500/20" />
                             ) : inv.status === InvitationStatus.REJECTED ? (
                               <XCircle className="w-3 h-3 text-red-500 fill-red-500/20" />
