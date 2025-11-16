@@ -9,6 +9,7 @@ import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectV
 import { notifyError } from '@/utils/toastMessage';
 import { VerificationStatus } from '@/utils/verificationStatus';
 import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
+import EmptyState from '@/components/shared/EmptyState';
 
 type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 interface ProjectData {
@@ -249,10 +250,12 @@ const ProjectVerification = () => {
                       />
                     ))
                   ) : (
-                    <div className="text-center w-full col-span-full mt-10 py-10">
-                      <p className="text-sm text-muted-foreground">
-                        No Project verification found.
-                      </p>
+                    <div className="w-full col-span-full mt-10">
+                      <EmptyState
+                        title="No project verifications found"
+                        description="When there are project verification requests, they will be listed here."
+                        className="py-10"
+                      />
                     </div>
                   )}
                 </div>

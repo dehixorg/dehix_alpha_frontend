@@ -21,6 +21,7 @@ import { RootState } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import FreelancerListItem from '@/components/freelancer/FreelancerListItem';
 import { CreateProjectTeamGroupDialog } from '@/components/shared/CreateProjectTeamGroupDialog';
+import EmptyState from '@/components/shared/EmptyState';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 
 // Types
@@ -394,16 +395,17 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
               </div>
             </div>
           ) : filteredFreelancers.length === 0 && groups.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                {searchTerm
+            <EmptyState
+              icon={<Users className="h-12 w-12 text-muted-foreground mb-2" />}
+              title={
+                searchTerm
                   ? 'No freelancers match your search'
                   : isBusinessUser
                     ? 'No freelancers found for this project'
-                    : 'No other freelancers found for this project'}
-              </p>
-            </div>
+                    : 'No other freelancers found for this project'
+              }
+              className="py-8 border-0 bg-transparent"
+            />
           ) : (
             <div className="space-y-3">
               {/* Groups Section */}

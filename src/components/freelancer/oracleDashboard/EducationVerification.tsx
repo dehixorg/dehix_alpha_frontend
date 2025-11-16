@@ -8,6 +8,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
+import EmptyState from '@/components/shared/EmptyState';
 
 type FilterOption = 'all' | 'pending' | 'verified' | 'rejected';
 
@@ -271,10 +272,12 @@ const OracleDashboard = () => {
                       />
                     ))
                   ) : (
-                    <div className="text-center w-full col-span-full mt-10 py-10">
-                      <p className="text-sm text-muted-foreground">
-                        No education verification records found.
-                      </p>
+                    <div className="w-full col-span-full mt-10">
+                      <EmptyState
+                        title="No education verification records found"
+                        description="Education verification requests will show up here once they are submitted."
+                        className="py-10"
+                      />
                     </div>
                   )}
                 </div>

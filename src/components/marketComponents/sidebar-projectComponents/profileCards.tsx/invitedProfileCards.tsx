@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import EmptyState from '@/components/shared/EmptyState';
 interface Skill {
   _id?: string;
   name: string;
@@ -156,9 +157,13 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
           </Card>
         ))
       ) : (
-        <p className="col-span-full text-center text-muted-foreground">
-          No invited talents found.
-        </p>
+        <div className="col-span-full">
+          <EmptyState
+            icon={<User className="h-10 w-10 text-muted-foreground" />}
+            title="No invited talents found"
+            className="border-0 bg-transparent py-8"
+          />
+        </div>
       )}
     </div>
   );

@@ -17,6 +17,7 @@ import { ChatList, type Conversation } from '@/components/shared/chatList';
 import ProfileSidebar from '@/components/shared/ProfileSidebar';
 import { NewChatDialog } from '@/components/shared/NewChatDialog';
 import type { CombinedUser as NewChatUser } from '@/hooks/useAllUsers';
+import EmptyState from '@/components/shared/EmptyState';
 import {
   menuItemsBottom as businessMenuItemsBottom,
   menuItemsTop as businessMenuItemsTop,
@@ -332,14 +333,17 @@ const HomePage = () => {
     );
   } else {
     chatListComponentContent = (
-      <div className="flex flex-col items-center justify-center h-full text-center text-[hsl(var(--muted-foreground))] p-4">
-        <MessageSquare className="w-10 h-10 mb-2" />
-        <p className="text-lg font-medium">No conversations</p>
-        <p className="text-sm">New chats will appear here.</p>
-        <Button onClick={() => setIsNewChatDialogOpen(true)} className="mt-4">
-          Start a Chat
-        </Button>
-      </div>
+      <EmptyState
+        icon={<MessageSquare className="w-10 h-10 text-muted-foreground/80" />}
+        title="No conversations"
+        description="New chats will appear here."
+        actions={
+          <Button onClick={() => setIsNewChatDialogOpen(true)} className="mt-2">
+            Start a Chat
+          </Button>
+        }
+        className="h-full border-0 bg-transparent py-8"
+      />
     );
   }
 
@@ -412,11 +416,12 @@ const HomePage = () => {
     );
   } else {
     chatWindowComponentContent = (
-      <div className="flex flex-col h-full items-center justify-center text-center text-[hsl(var(--muted-foreground))] bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none p-4">
-        <MessageSquare className="w-10 h-10 mb-2" />
-        <p className="text-lg font-medium">No conversations found</p>
-        <p className="text-sm">Start a new chat to get connected!</p>
-      </div>
+      <EmptyState
+        icon={<MessageSquare className="w-10 h-10 text-muted-foreground/80" />}
+        title="No conversations found"
+        description="Start a new chat to get connected!"
+        className="h-full bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none"
+      />
     );
   }
 

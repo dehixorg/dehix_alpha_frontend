@@ -34,6 +34,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import FreelancerInvitationCard from '@/components/freelancer/invitations/FreelancerInvitationCard';
+import EmptyState from '@/components/shared/EmptyState';
 import {
   FreelancerInvitation,
   FreelancerInvitationsResponse,
@@ -191,9 +192,18 @@ const ProjectList = ({
         ) : (
           <main className="grid grid-cols-1 flex-1 items-start gap-4 px-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
             {projects.length === 0 ? (
-              <div className="col-span-full text-center mt-20 w-full">
-                <PackageOpen className="mx-auto text-gray-500" size={100} />
-                <p className="text-gray-500">No projects available</p>
+              <div className="col-span-full w-full">
+                <EmptyState
+                  icon={
+                    <PackageOpen
+                      className="mx-auto text-muted-foreground"
+                      size={100}
+                    />
+                  }
+                  title="No projects available"
+                  description="Once you have projects in this status, they will appear here."
+                  className="border-0 bg-transparent py-6"
+                />
               </div>
             ) : (
               projects.map((project, index: number) => (
@@ -473,16 +483,14 @@ export default function ProjectPage() {
                       ))}
                     </div>
                   ) : filteredInvitations.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">
-                        No pending invitations
-                      </h3>
-                      <p className="text-sm text-muted-foreground max-w-md">
-                        New invitations will appear here. Accepted invitations
-                        move to Current tab, rejected ones to Rejected tab.
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={
+                        <Inbox className="h-12 w-12 text-muted-foreground" />
+                      }
+                      title="No pending invitations"
+                      description="New invitations will appear here. Accepted invitations move to Current tab, rejected ones to Rejected tab."
+                      className="py-12"
+                    />
                   ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {filteredInvitations.map((invitation) => (
