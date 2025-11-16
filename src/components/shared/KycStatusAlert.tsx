@@ -59,15 +59,23 @@ const KycStatusAlert: React.FC<Props> = ({ status, rejectionReason }) => {
     );
   }
 
-  // Applied/Pending/Under review
+  if (s === 'APPLIED') {
+    return (
+      <Alert className="mb-4 border-blue-200 bg-blue-50 text-blue-800">
+        <AlertTitle>KYC Applied</AlertTitle>
+        <AlertDescription>
+          Your have applied for the KYC we will get back to you soon.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Pending/Under review
   return (
     <Alert className="mb-4 border-yellow-200 bg-yellow-50 text-yellow-800">
-      <AlertTitle>Under Review</AlertTitle>
+      <AlertTitle>Not Applied</AlertTitle>
       <AlertDescription>
-        <p>
-          Your KYC is currently under review. We will notify you once the review
-          is complete.
-        </p>
+        <p>PLease Complete the Mandatory KYC and earn reward.</p>
       </AlertDescription>
     </Alert>
   );
