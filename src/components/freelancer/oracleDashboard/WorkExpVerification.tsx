@@ -10,6 +10,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import { VerificationStatus } from '@/utils/verificationStatus';
 import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
+import EmptyState from '@/components/shared/EmptyState';
 
 type FilterOption = 'all' | 'pending' | 'verified' | 'rejected';
 
@@ -262,14 +263,18 @@ const WorkExpVerification = () => {
                       />
                     ))
                   ) : (
-                    <div className="text-center w-full col-span-full mt-10 py-10">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size={64}
+                    <div className="w-full col-span-full mt-10">
+                      <EmptyState
+                        icon={
+                          <PackageOpen
+                            className="mx-auto text-muted-foreground"
+                            size={64}
+                          />
+                        }
+                        title="No work experience verification records found"
+                        description="Work experience verification requests will appear here once available."
+                        className="py-10"
                       />
-                      <p className="text-sm text-muted-foreground">
-                        No work experience verification records found.
-                      </p>
                     </div>
                   )}
                 </div>

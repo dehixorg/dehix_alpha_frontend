@@ -9,6 +9,7 @@ import { notifyError } from '@/utils/toastMessage';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 import { VerificationStatus } from '@/utils/verificationStatus';
 import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
+import EmptyState from '@/components/shared/EmptyState';
 
 type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 
@@ -194,10 +195,12 @@ export default function BusinessVerification() {
                       />
                     ))
                   ) : (
-                    <div className="text-center w-full col-span-full mt-10 py-10">
-                      <p className="text-sm text-muted-foreground">
-                        No business verification records found.
-                      </p>
+                    <div className="w-full col-span-full mt-10">
+                      <EmptyState
+                        title="No business verification records found"
+                        description="Once there are business verification requests, they will appear here."
+                        className="py-10"
+                      />
                     </div>
                   )}
                 </div>

@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import EmptyState from '@/components/shared/EmptyState';
 
 // Define the Skill interface as it exists in your project
 interface Skill {
@@ -173,9 +174,13 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
           </Card>
         ))
       ) : (
-        <p className="col-span-full text-center text-muted-foreground">
-          No accepted talents found.
-        </p>
+        <div className="col-span-full">
+          <EmptyState
+            icon={<User className="h-10 w-10 text-muted-foreground" />}
+            title="No accepted talents found"
+            className="border-0 bg-transparent py-8"
+          />
+        </div>
       )}
     </div>
   );

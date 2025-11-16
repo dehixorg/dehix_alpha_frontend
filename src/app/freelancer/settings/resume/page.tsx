@@ -16,6 +16,7 @@ import { notifyError } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ResumeInfoCard from '@/components/cards/resumeInfoCard';
 import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/shared/EmptyState';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
@@ -104,20 +105,34 @@ export default function Resume() {
               onClick={() => handleEditResume(resume)}
             />
           ))}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleNewResume}
-            className="my-auto"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+
+          {resumeData.length > 0 && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleNewResume}
+              className="my-auto"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
           {resumeData.length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center py-12">
-              <p className="text-gray-500 mb-4">No resumes found</p>
-              <Button variant="outline" size="icon" onClick={handleNewResume}>
-                <Plus className="h-4 w-4" />
-              </Button>
+            <div className="col-span-full">
+              <EmptyState
+                icon={<Plus className="h-12 w-12 text-muted-foreground/80" />}
+                title="No resumes found"
+                description="Create your first resume to get started."
+                actions={
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNewResume}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                }
+                className="py-8"
+              />
             </div>
           )}
         </main>

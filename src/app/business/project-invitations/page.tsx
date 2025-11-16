@@ -43,6 +43,7 @@ import {
   menuItemsTop,
   menuItemsBottom,
 } from '@/config/menuItems/business/dashboardMenuItems';
+import EmptyState from '@/components/shared/EmptyState';
 
 const ProjectInvitationsPage: React.FC = () => {
   const router = useRouter();
@@ -263,161 +264,153 @@ const ProjectInvitationsPage: React.FC = () => {
               </div>
             </div>
           </div>
-          <Card className="mt-4">
-            {loading ? (
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {[...Array(6)].map((_, i) => (
-                      <Card key={i} className="overflow-hidden">
-                        <div className="p-4 space-y-4">
-                          <div className="flex items-center space-x-3">
-                            <Skeleton className="h-10 w-10 rounded-full" />
-                            <div className="space-y-2">
-                              <Skeleton className="h-4 w-32" />
-                              <Skeleton className="h-3 w-24" />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Skeleton className="h-5 w-40" />
-                            <Skeleton className="h-3 w-32" />
-                          </div>
-                          <div className="flex justify-between items-center pt-2">
-                            <Skeleton className="h-6 w-20 rounded-full" />
-                            <Skeleton className="h-8 w-24" />
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <Search className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-1">
-                  No invitations found
-                </h3>
-                <p className="text-sm text-muted-foreground max-w-md">
-                  {search || statusFilter !== 'ALL'
-                    ? 'Try adjusting your search or filter criteria.'
-                    : "You haven't sent any project invitations yet."}
-                </p>
-                {(search || statusFilter !== 'ALL') && (
-                  <Button
-                    variant="ghost"
-                    className="mt-4"
-                    onClick={() => {
-                      setSearch('');
-                      setStatusFilter('ALL');
-                    }}
-                  >
-                    Clear filters
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="p-6">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {filtered.map((inv) => (
-                    <Card
-                      key={inv._id}
-                      className="overflow-hidden hover:shadow-md transition-shadow"
-                    >
-                      <div className="p-5 space-y-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="relative">
-                              {inv.freelancerProfilePic ? (
-                                <Image
-                                  width={40}
-                                  height={40}
-                                  src={inv.freelancerProfilePic}
-                                  alt={inv.freelancerName}
-                                  className="w-10 h-10 rounded-full object-cover border"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center">
-                                  <User className="w-5 h-5 text-muted-foreground" />
-                                </div>
-                              )}
-                              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-background flex items-center justify-center">
-                                {inv.status === InvitationStatus.ACCEPTED ? (
-                                  <CheckCircle2 className="w-3 h-3 text-green-500 fill-green-500/20" />
-                                ) : inv.status === InvitationStatus.REJECTED ? (
-                                  <XCircle className="w-3 h-3 text-red-500 fill-red-500/20" />
-                                ) : (
-                                  <Clock4 className="w-3 h-3 text-amber-500 fill-amber-500/20" />
-                                )}
-                              </div>
-                            </div>
-                            <div>
-                              <h3 className="font-medium">
-                                {inv.freelancerName}
-                              </h3>
-                              <p className="text-sm text-muted-foreground">
-                                {inv.profileDomain}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              statusOutlineClasses(inv.status),
-                              'text-xs h-6 px-2 py-0.5',
-                            )}
-                          >
-                            {inv.status}
-                          </Badge>
-                        </div>
-
+          {loading ? (
+            <div className="space-y-4 mt-6">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="overflow-hidden">
+                    <div className="p-4 space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <Skeleton className="h-10 w-10 rounded-full" />
                         <div className="space-y-2">
-                          <h4 className="font-medium">{inv.projectName}</h4>
-                          {inv.projectStatus && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs capitalize"
-                            >
-                              {inv.projectStatus.toLowerCase()}
-                            </Badge>
-                          )}
-                          {inv.profileDescription && (
-                            <p className="text-sm text-muted-foreground line-clamp-2">
-                              {inv.profileDescription}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between pt-2">
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Calendar className="w-4 h-4 mr-1.5" />
-                            <span>
-                              {new Date(inv.invitedAt).toLocaleDateString(
-                                'en-US',
-                                {
-                                  month: 'short',
-                                  day: 'numeric',
-                                },
-                              )}
-                            </span>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              router.push(`/business/project/${inv.projectId}`)
-                            }
-                          >
-                            View Project
-                          </Button>
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
                         </div>
                       </div>
-                    </Card>
-                  ))}
-                </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-40" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                      <div className="flex justify-between items-center pt-2">
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                        <Skeleton className="h-8 w-24" />
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
-            )}
-          </Card>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="mt-6">
+              <EmptyState
+                icon={
+                  <Search className="h-12 w-12 text-muted-foreground mb-4" />
+                }
+                title="No invitations found"
+                description={
+                  search || statusFilter !== 'ALL'
+                    ? 'Try adjusting your search or filter criteria.'
+                    : "You haven't sent any project invitations yet."
+                }
+                actions={
+                  (search || statusFilter !== 'ALL') && (
+                    <Button
+                      variant="ghost"
+                      className="mt-4"
+                      onClick={() => {
+                        setSearch('');
+                        setStatusFilter('ALL');
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  )
+                }
+                className="py-16 text-center"
+              />
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-6">
+              {filtered.map((inv) => (
+                <Card
+                  key={inv._id}
+                  className="overflow-hidden hover:shadow-md transition-shadow"
+                >
+                  <div className="p-5 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          {inv.freelancerProfilePic ? (
+                            <Image
+                              width={40}
+                              height={40}
+                              src={inv.freelancerProfilePic}
+                              alt={inv.freelancerName}
+                              className="w-10 h-10 rounded-full object-cover border"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center">
+                              <User className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-background flex items-center justify-center">
+                            {inv.status === InvitationStatus.ACCEPTED ||
+                            inv.status === InvitationStatus.ACTIVE ? (
+                              <CheckCircle2 className="w-3 h-3 text-green-500 fill-green-500/20" />
+                            ) : inv.status === InvitationStatus.REJECTED ? (
+                              <XCircle className="w-3 h-3 text-red-500 fill-red-500/20" />
+                            ) : (
+                              <Clock4 className="w-3 h-3 text-amber-500 fill-amber-500/20" />
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{inv.freelancerName}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {inv.profileDomain}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          statusOutlineClasses(inv.status),
+                          'text-xs h-6 px-2 py-0.5',
+                        )}
+                      >
+                        {inv.status}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-medium">{inv.projectName}</h4>
+                      {inv.projectStatus && (
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {inv.projectStatus.toLowerCase()}
+                        </Badge>
+                      )}
+                      {inv.profileDescription && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {inv.profileDescription}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 mr-1.5" />
+                        <span>
+                          {new Date(inv.invitedAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          router.push(`/business/project/${inv.projectId}`)
+                        }
+                      >
+                        View Project
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </main>
       </div>
     </div>

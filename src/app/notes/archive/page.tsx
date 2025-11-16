@@ -12,6 +12,7 @@ import Header from '@/components/header/header';
 import { menuItemsBottom } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
+import EmptyState from '@/components/shared/EmptyState';
 
 const Page = () => {
   const user = useSelector((state: any) => state.user);
@@ -44,8 +45,8 @@ const Page = () => {
           ]}
         />
         {/* Main content area */}
-        <div className="px-4">
-          <Card className="overflow-hidden border pb-16">
+        <div className="px-4 mb-5">
+          <Card className="overflow-hidden border">
             <NotesHeader
               isTrash={false}
               setNotes={setArchive}
@@ -70,59 +71,60 @@ const Page = () => {
                   isArchive={true}
                 />
               ) : (
-                <div className="p-8 sm:p-12 flex flex-col items-center justify-center text-center">
-                  <div className="mb-6 opacity-90">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 200 120"
-                      className="w-56 h-32 mx-auto"
-                      aria-hidden
-                    >
-                      <rect
-                        x="10"
-                        y="20"
-                        width="180"
-                        height="80"
-                        rx="12"
-                        className="fill-muted"
-                      />
-                      <rect
-                        x="26"
-                        y="36"
-                        width="60"
-                        height="10"
-                        rx="5"
-                        className="fill-muted-foreground/40"
-                      />
-                      <rect
-                        x="26"
-                        y="54"
-                        width="120"
-                        height="10"
-                        rx="5"
-                        className="fill-muted-foreground/30"
-                      />
-                      <rect
-                        x="26"
-                        y="72"
-                        width="90"
-                        height="10"
-                        rx="5"
-                        className="fill-muted-foreground/20"
-                      />
-                      <circle
-                        cx="160"
-                        cy="60"
-                        r="10"
-                        className="fill-primary/30"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">No archive yet</h3>
-                  <p className="text-muted-foreground max-w-md">
-                    Your archived notes will appear here.
-                  </p>
-                </div>
+                <EmptyState
+                  icon={
+                    <div className="mb-6 opacity-90">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 200 120"
+                        className="w-56 h-32 mx-auto"
+                        aria-hidden
+                      >
+                        <rect
+                          x="10"
+                          y="20"
+                          width="180"
+                          height="80"
+                          rx="12"
+                          className="fill-muted"
+                        />
+                        <rect
+                          x="26"
+                          y="36"
+                          width="60"
+                          height="10"
+                          rx="5"
+                          className="fill-muted-foreground/40"
+                        />
+                        <rect
+                          x="26"
+                          y="54"
+                          width="120"
+                          height="10"
+                          rx="5"
+                          className="fill-muted-foreground/30"
+                        />
+                        <rect
+                          x="26"
+                          y="72"
+                          width="90"
+                          height="10"
+                          rx="5"
+                          className="fill-muted-foreground/20"
+                        />
+                        <circle
+                          cx="160"
+                          cy="60"
+                          r="10"
+                          className="fill-primary/30"
+                        />
+                      </svg>
+                    </div>
+                  }
+                  title="No archive yet"
+                  description="Your archived notes will appear here."
+                  className="p-8 sm:p-12 border-0 bg-transparent"
+                />
               )}
             </div>
           </Card>

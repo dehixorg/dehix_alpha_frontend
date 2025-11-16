@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import EmptyState from '@/components/shared/EmptyState';
 
 // Define the Skill interface as it exists in your project
 interface Skill {
@@ -140,8 +141,13 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
           </Card>
         ))
       ) : (
-        // FIX 3: Give a key to the empty state element
-        <div key="no-rejected-talents">No rejected talents found.</div>
+        <div className="col-span-full">
+          <EmptyState
+            icon={<User className="h-10 w-10 text-muted-foreground" />}
+            title="No rejected talents found"
+            className="border-0 bg-transparent py-8"
+          />
+        </div>
       )}
     </div>
   );

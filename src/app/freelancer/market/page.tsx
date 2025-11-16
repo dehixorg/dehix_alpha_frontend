@@ -23,6 +23,7 @@ import FilterComponent from '@/components/marketComponents/FilterComponent';
 import { FilterSheet } from '@/components/market/FilterSheet';
 import { useToast } from '@/components/ui/use-toast';
 import { ToastAction } from '@/components/ui/toast';
+import EmptyState from '@/components/shared/EmptyState';
 
 interface FilterState {
   projects: string[];
@@ -596,28 +597,26 @@ const Market: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-xl bg-muted/30">
-                <div className="w-48 h-48 bg-muted/20 rounded-full flex items-center justify-center mb-6">
-                  <Search className="h-16 w-16 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">
-                  No projects found
-                </h3>
-                <p className="text-muted-foreground max-w-md mb-6">
-                  {activeFilterCount > 0
+              <EmptyState
+                icon={<Search className="h-16 w-16 text-muted-foreground/50" />}
+                title="No projects found"
+                description={
+                  activeFilterCount > 0
                     ? "We couldn't find any projects matching your current filters."
-                    : 'There are currently no projects available. Check back later!'}
-                </p>
-                {activeFilterCount > 0 ? (
-                  <Button variant="outline" onClick={handleReset}>
-                    Clear all filters
-                  </Button>
-                ) : (
-                  <Button onClick={() => window.location.reload()}>
-                    Refresh page
-                  </Button>
-                )}
-              </div>
+                    : 'There are currently no projects available. Check back later!'
+                }
+                actions={
+                  activeFilterCount > 0 ? (
+                    <Button variant="outline" onClick={handleReset}>
+                      Clear all filters
+                    </Button>
+                  ) : (
+                    <Button onClick={() => window.location.reload()}>
+                      Refresh page
+                    </Button>
+                  )
+                }
+              />
             )}
           </div>
         </div>
