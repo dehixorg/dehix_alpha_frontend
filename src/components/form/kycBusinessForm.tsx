@@ -113,8 +113,9 @@ export function KYCForm({ user_id }: { user_id: string }) {
   const fetchData = React.useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/business/${user_id}`);
-      const kycData = response.data?.data?.kyc;
+      const kycData = response.data?.kyc;
       setKycStatus(kycData?.status || 'PENDING');
+      console.log('kycData', response.data.kyc);
       setRejectionReason(kycData?.rejectionReason);
       reset({
         businessProof: kycData?.businessProof || '',
@@ -373,7 +374,6 @@ export function KYCForm({ user_id }: { user_id: string }) {
 
   const READ_ONLY_STATUSES = [
     'APPLIED',
-    'PENDING',
     'VERIFIED',
     'APPROVED',
     'SUCCESS',
@@ -391,13 +391,10 @@ export function KYCForm({ user_id }: { user_id: string }) {
       return 'bg-green-500/10 text-green-600 hover:bg-green-500/20';
     if (s === 'REJECTED' || s === 'FAILED')
       return 'bg-red-500/10 text-red-600 hover:bg-red-500/20';
+    if (s === 'APPLIED' || s === 'IN_REVIEW' || s === 'UNDER_REVIEW')
+      return 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20';
     // Pending-like statuses
-    if (
-      s === 'PENDING' ||
-      s === 'APPLIED' ||
-      s === 'IN_REVIEW' ||
-      s === 'UNDER_REVIEW'
-    )
+    if (s === 'PENDING')
       return 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20';
     return 'bg-muted text-muted-foreground hover:bg-muted/20';
   };
