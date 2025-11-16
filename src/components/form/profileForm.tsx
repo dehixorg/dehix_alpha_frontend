@@ -698,13 +698,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
 
+        const tmpSkills: any[] = [],
+          tmpDomains: any[] = [];
+        userResponse.data.data.attributes.forEach((attr: any) => {
+          if (attr.type === 'SKILL') {
+            tmpSkills.push(attr);
+          } else if (attr.type === 'DOMAIN') {
+            tmpDomains.push(attr);
+          }
+        });
         // Set options for dropdowns
         setSkills(skillsResponse.data.data);
         setDomains(domainsResponse.data.data);
         setProjectDomains(projectDomainResponse.data.data);
 
-        setCurrSkills(userResponse.data.data.skills);
-        setCurrDomains(userResponse.data.data.domain);
+        setCurrSkills(tmpSkills);
+        setCurrDomains(tmpDomains);
         setCurrProjectDomains(userResponse.data.data.projectDomain);
 
         // Ensure cover letter is treated as text, not URL
