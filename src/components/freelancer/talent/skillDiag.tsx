@@ -30,7 +30,8 @@ import {
 
 interface Skill {
   _id: string;
-  label: string;
+  type_id: string;
+  name: string;
 }
 
 interface SkillDomainData {
@@ -136,10 +137,15 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                   value={field.value}
                   onValueChange={(selectedLabel) => {
                     const selectedSkill = skills.find(
-                      (skill) => skill.label === selectedLabel,
+                      (skill) => skill.name === selectedLabel,
                     );
                     field.onChange(selectedLabel);
-                    setValue('skillId', selectedSkill?._id || '');
+                    setValue(
+                      'skillId',
+                      (selectedSkill?.type_id as string | undefined) ??
+                        selectedSkill?._id ??
+                        '',
+                    );
                   }}
                 >
                   <SelectTrigger>
@@ -148,8 +154,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                   <SelectContent>
                     {skills.length > 0 ? (
                       skills.map((skill) => (
-                        <SelectItem key={skill._id} value={skill.label}>
-                          {skill.label}
+                        <SelectItem key={skill._id} value={skill.name}>
+                          {skill.name}
                         </SelectItem>
                       ))
                     ) : (

@@ -37,12 +37,14 @@ import { formatCurrency } from '@/utils/format';
 
 interface Skill {
   _id: string;
-  label: string;
+  type_id: string;
+  name: string;
 }
 
 interface Domain {
   _id: string;
-  label: string;
+  type_id: string;
+  name: string;
 }
 
 interface SkillDomainData {
@@ -67,66 +69,28 @@ const SkillDomainForm: React.FC = () => {
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
     const fetch = async () => {
       setLoading(true);
       try {
-        const [skRes, domRes, talRes] = await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'),
-          user?.uid
-            ? axiosInstance.get(`/freelancer/${user.uid}/dehix-talent`)
-            : Promise.resolve({ data: { data: [] } }),
-        ]);
-
-        if (cancelled) return;
-
-        const skillArr: Skill[] = (skRes.data?.data ?? []).map((s: any) => ({
-          _id: s._id,
-          label: s.label,
-        }));
-        const domainArr: Domain[] = (domRes.data?.data ?? []).map((d: any) => ({
-          _id: d._id,
-          label: d.label,
-        }));
-
-        const rawTalent = Array.isArray(talRes.data?.data)
-          ? talRes.data.data
-          : Object.values(talRes.data?.data ?? {});
-        const talentFlat = rawTalent.flat();
-
-        const formatted: SkillDomainData[] = talentFlat.map((t: any) => ({
-          uid: t._id,
-          label: t.talentName ?? '—',
-          experience: t.experience ?? '—',
-          monthlyPay: t.monthlyPay ?? '—',
-          type: t.type,
-          status: t.status,
-          activeStatus: t.activeStatus ?? false,
-          originalTalentId: t.talentId,
-        }));
-
-        setRows(formatted);
-        setVisibility(formatted.map((r) => r.activeStatus));
-
-        const used = new Set(
-          formatted.map((i) => i.originalTalentId).filter(Boolean),
+        const result = await axiosInstance.get(
+          `/freelancer/${user.uid}/dehix-talent/status`,
         );
-        setSkills(skillArr.filter((s) => !used.has(s._id)));
-        setDomains(domainArr.filter((d) => !used.has(d._id)));
+
+        const talentData = result.data?.data ?? {};
+        setSkills(talentData.NOT_APPLIED.SKILL);
+        setDomains(talentData.NOT_APPLIED.DOMAIN);
       } catch (err: any) {
         if (err?.code !== 'ERR_CANCELED') {
           console.error(err);
           notifyError('Failed to load data. Please try again.', 'Error');
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     };
 
     fetch();
     return () => {
-      cancelled = true;
       cancelAllRequests();
     };
   }, [user?.uid, refresh]);

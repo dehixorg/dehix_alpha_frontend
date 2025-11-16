@@ -336,6 +336,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         skills: completeSkillsArray,
       });
 
+      console.log('TEST@', completeSkillsArray);
+
       if (response.status === 200) {
         notifySuccess('Skills added successfully to your profile.');
         return response.data.data;
@@ -418,7 +420,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const handleAddSkillByValue = async (value: string) => {
     addSkill(value, skills, setSkills);
     if (value && !currSkills.some((skill: any) => skill.name === value)) {
+      const matchedSkill = skills.find(
+        (s: any) => s.name === value || s.label === value,
+      );
       const newSkill = {
+        type_id: matchedSkill?._id || '',
         name: value,
         level: '',
         experience: '',
@@ -447,7 +453,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const handleAddDomainByValue = async (value: string) => {
     addDomain(value, domains, setDomains);
     if (value && !currDomains.some((domain: any) => domain.name === value)) {
+      const matchedDomain = domains.find(
+        (d: any) => d.name === value || d.label === value,
+      );
       const newDomain = {
+        type_id: matchedDomain?._id || '',
         _id: '',
         name: value,
         level: '',
