@@ -77,8 +77,35 @@ const SkillDomainForm: React.FC = () => {
         );
 
         const talentData = result.data?.data ?? {};
-        setSkills(talentData.NOT_APPLIED.SKILL);
-        setDomains(talentData.NOT_APPLIED.DOMAIN);
+        setSkills(talentData.NOT_APPLIED?.SKILL ?? []);
+        setDomains(talentData.NOT_APPLIED?.DOMAIN ?? []);
+
+        const statusEntries = Object.entries(talentData ?? {});
+
+        const nonNotAppliedGroups = statusEntries
+          .filter(([statusKey]) => statusKey !== 'NOT_APPLIED')
+          .map(([, group]) => group);
+
+        const talentFlat = nonNotAppliedGroups.flatMap((group: any) => {
+          if (!group || typeof group !== 'object') return [];
+          const skillsGroup = Array.isArray(group.SKILL) ? group.SKILL : [];
+          const domainsGroup = Array.isArray(group.DOMAIN) ? group.DOMAIN : [];
+          return [...skillsGroup, ...domainsGroup];
+        });
+
+        const formatted: SkillDomainData[] = talentFlat.map((t: any) => ({
+          uid: t._id,
+          label: t.talentName ?? t.name ?? '—',
+          experience: t.experience ?? '—',
+          monthlyPay: t.monthlyPay ?? '—',
+          type: t.type,
+          status: (t.status ?? t.dehixTalentStatus) as StatusEnum,
+          activeStatus: t.talentActiveStatus === 'ACTIVE',
+          originalTalentId: t.talentId ?? t.type_id ?? '',
+        }));
+
+        setRows(formatted);
+        setVisibility(formatted.map((r) => r.activeStatus));
       } catch (err: any) {
         if (err?.code !== 'ERR_CANCELED') {
           console.error(err);
@@ -407,6 +434,14 @@ const SkillDomainForm: React.FC = () => {
                       </TableCell>
 
                       <TableCell className="font-medium">{r.label}</TableCell>
+
+                      <TableCell className="text-center">
+                        {r.experience} yrs
+                      </TableCell>
+
+                      <TableCell className="text-center">
+                        {formatCurrency(r.monthlyPay)}
+                      </TableCell>
 
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
