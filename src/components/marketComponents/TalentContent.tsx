@@ -9,8 +9,8 @@ import RejectedProfileCards from './sidebar-projectComponents/profileCards.tsx/r
 
 import { calculateExperience } from '@/components/marketComponents/TalentLayout'; //
 import { CardTitle } from '@/components/ui/card';
-import SkillDomainForm from '@/components/business/hireTalent.tsx/skillDomainForm';
-import TalentCard from '@/components/business/hireTalent.tsx/talentCard';
+import SkillDomainForm from '@/components/business/hireTalent/skillDomainForm';
+import TalentCard from '@/components/business/hireTalent/talentCard';
 import {
   Select,
   SelectContent,
