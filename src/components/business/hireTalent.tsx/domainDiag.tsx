@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Briefcase, Gauge } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +21,7 @@ import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import SelectTagPicker from '@/components/shared/SelectTagPicker'; // Import your picker
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
 
 interface Domain {
   _id: string;
@@ -31,6 +32,7 @@ interface SkillDomainData {
   uid: string;
   domainId: string;
   label: string;
+  level: string;
   experience: string;
   description: string;
   visible: boolean;
@@ -45,6 +47,7 @@ interface DomainDialogProps {
 const domainSchema = z.object({
   label: z.string().nonempty('Please select a domain'),
   domainId: z.string().nonempty('Domain ID is required'),
+  level: z.string().nonempty('Please select a level'),
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -74,6 +77,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     defaultValues: {
       domainId: '',
       label: '',
+      level: '',
       experience: '',
       description: '',
       visible: false,
@@ -98,6 +102,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         domainId: data.domainId,
         domainName: data.label,
         businessId: user.uid,
+        level: data.level,
         experience: data.experience,
         description: data.description,
         status: data.status,
@@ -133,12 +138,20 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           Add Domain
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Domain</DialogTitle>
-          <DialogDescription>
-            Select a domain, enter your experience and description.
-          </DialogDescription>
+          <div className="flex items-start gap-3">
+            <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-950/40 px-2">
+              <Briefcase className="h-5 w-5 text-purple-600 dark:text-purple-300" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl">Add Dehix Domain</DialogTitle>
+              <DialogDescription className="mt-1 text-sm">
+                Select a domain you want to target and describe the experience
+                you expect for this role.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-3">
@@ -166,6 +179,61 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
             />
             {errors.label && (
               <p className="text-red-600">{errors.label.message}</p>
+            )}
+          </div>
+
+          {/* Level slider */}
+          <div className="mb-3">
+            <Controller
+              control={control}
+              name="level"
+              render={({ field }) => {
+                const levels = [
+                  'BEGINNER',
+                  'INTERMEDIATE',
+                  'ADVANCED',
+                  'EXPERT',
+                ];
+                const currentIndex = (() => {
+                  const idx = levels.indexOf(field.value || '');
+                  return idx >= 0 ? idx : 0;
+                })();
+
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        <Gauge className="h-3 w-3" />
+                        <span>Seniority level</span>
+                      </div>
+                      {field.value && (
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                          {field.value}
+                        </span>
+                      )}
+                    </div>
+                    <Slider
+                      min={0}
+                      max={3}
+                      step={1}
+                      value={[currentIndex]}
+                      onValueChange={([val]) => {
+                        const next = levels[val] ?? levels[0];
+                        field.onChange(next);
+                      }}
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                      <span>Beginner</span>
+                      <span>Intermediate</span>
+                      <span>Advanced</span>
+                      <span>Expert</span>
+                    </div>
+                  </div>
+                );
+              }}
+            />
+            {errors.level && (
+              <p className="text-red-600">{errors.level.message}</p>
             )}
           </div>
 
