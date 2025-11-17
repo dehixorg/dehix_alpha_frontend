@@ -3,7 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
-import { ArrowUpRight, Award, Briefcase, Eye, Zap } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Award,
+  Briefcase,
+  Eye,
+  Zap,
+  VideoIcon,
+} from 'lucide-react';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -24,6 +31,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
@@ -183,7 +196,7 @@ const SkillDomainForm: React.FC = () => {
   );
 
   return (
-    <section className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
+    <section className="min-h-screen py-4 px-4 sm:px-6 lg:px-8">
       <Card className="w-full shadow-lg">
         <CardHeader className="border-b bg-card/50">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -325,7 +338,7 @@ const SkillDomainForm: React.FC = () => {
                   <TableHead className="w-32 text-center">Pay</TableHead>
                   <TableHead className="w-28 text-center">Status</TableHead>
                   <TableHead className="w-28 text-center">Visible</TableHead>
-                  <TableHead className="w-28 text-center">Manage</TableHead>
+                  <TableHead className="w-32 text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -498,40 +511,69 @@ const SkillDomainForm: React.FC = () => {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {r.originalTalentId ? (
-                          <Button
-                            asChild
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Manage jobs for ${r.label}`}
-                          >
-                            <Link
-                              href={{
-                                pathname: `/freelancer/talent/manage/${r.type.toLowerCase()}/${r.originalTalentId}`,
-                                query: { label: r.label },
-                              }}
-                            >
-                              <ArrowUpRight className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                        ) : (
-                          <div className="flex items-center justify-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className={statusOutlineClasses(r.status)}
-                            >
-                              {r.status?.toUpperCase()}
-                            </Badge>
-                            {r.status === StatusEnum.PENDING && r.uid && (
-                              <VerifyDialog
-                                talentType={r.type}
-                                _id={r.uid}
-                                userId={user.uid}
-                                originalTalentId={r.originalTalentId}
-                              />
-                            )}
-                          </div>
-                        )}
+                        <div className="flex items-center justify-center gap-2">
+                          {r.originalTalentId ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    asChild
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Manage jobs for ${r.label}`}
+                                  >
+                                    <Link
+                                      href={{
+                                        pathname: `/freelancer/talent/manage/${r.type.toLowerCase()}/${r.originalTalentId}`,
+                                        query: { label: r.label },
+                                      }}
+                                    >
+                                      <ArrowUpRight className="h-4 w-4" />
+                                    </Link>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Manage jobs</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <div className="flex items-center justify-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={statusOutlineClasses(r.status)}
+                              >
+                                {r.status?.toUpperCase()}
+                              </Badge>
+                              {r.status === StatusEnum.PENDING && r.uid && (
+                                <VerifyDialog
+                                  talentType={r.type}
+                                  _id={r.uid}
+                                  userId={user.uid}
+                                  originalTalentId={r.originalTalentId}
+                                />
+                              )}
+                            </div>
+                          )}
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Schedule interview for ${r.label}`}
+                                >
+                                  <VideoIcon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Schedule interview</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
