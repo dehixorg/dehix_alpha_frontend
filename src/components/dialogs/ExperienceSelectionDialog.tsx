@@ -113,61 +113,26 @@ export default function ExperienceSelectionDialog({
       return;
     }
 
-    const experiencesToAdd = experiences.filter((exp) =>
-      selectedExperiences.includes(exp._id),
-    );
-
     setIsAdding(true);
     try {
-      // Fetch current profile experiences
-      const profileRes = await axiosInstance.get(
-        `/freelancer/profile/${currentProfileId}`,
-      );
-      const currentExperiences = profileRes.data?.data?.experiences || [];
-
-      // Combine current + new selected experiences without duplicates
-      const updatedExperiences = [
-        ...currentExperiences,
-        ...experiencesToAdd.filter(
-          (exp) => !currentExperiences.some((ce: any) => ce._id === exp._id),
-        ),
-      ];
-
-      // Derive actually added items for accurate UX/callback
-      const existingIds = new Set<string>(
-        currentExperiences.map((e: any) => String(e._id)),
-      );
-      const actuallyAdded = experiencesToAdd.filter(
-        (e) => !existingIds.has(String(e._id)),
+      // Build full experience objects for the newly selected ones
+      const selectedObjects = experiences.filter((exp) =>
+        selectedExperiences.includes(exp._id),
       );
 
-      // PUT combined array to backend
-      await axiosInstance.put(`/freelancer/profile/${currentProfileId}`, {
-        experiences: updatedExperiences.map((e) => ({
-          _id: e._id,
-          jobTitle: e.jobTitle,
-          company: e.company,
-          workDescription: e.workDescription,
-          workFrom: e.workFrom,
-          workTo: e.workTo,
-          referencePersonName: e.referencePersonName,
-        })),
-      });
-
-      // ✅ Single success toast with accurate count
       notifySuccess(
-        `${actuallyAdded.length} experience(s) added to profile.`,
-        'Success',
+        `${selectedObjects.length} experience(s) selected. Save the profile to persist changes.`,
+        'Selected',
       );
 
-      // Call onSuccess with only the actually added items
-      onSuccess?.(actuallyAdded);
+      // Return selection to parent; parent will merge and persist on save
+      onSuccess?.(selectedObjects);
 
       // Clear selection and close dialog
       setSelectedExperiences([]);
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error adding experiences:', error);
+      console.error('Error preparing selected experiences:', error);
       notifyError('Could not process selected experiences', 'Error');
     } finally {
       setIsAdding(false);

@@ -81,8 +81,9 @@ export default function ProfilesPage() {
     useState('');
   const [newProfileAvailability, setNewProfileAvailability] =
     useState('FREELANCE');
-  const [newProfileSkills, setNewProfileSkills] = useState<string[]>([]);
-  const [newProfileDomains, setNewProfileDomains] = useState<string[]>([]);
+  // Store full selected option objects for skills/domains
+  const [newProfileSkills, setNewProfileSkills] = useState<any[]>([]);
+  const [newProfileDomains, setNewProfileDomains] = useState<any[]>([]);
   const [newProfileProjects, setNewProfileProjects] = useState<any[]>([]);
   const [newProfileExperiences, setNewProfileExperiences] = useState<any[]>([]);
   const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
@@ -127,31 +128,29 @@ export default function ProfilesPage() {
     if (!user.uid) return;
 
     try {
-      const [skillsResponse, domainsResponse, freelancerResponse] =
-        await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'),
-          axiosInstance.get(`/freelancer/${user.uid}`),
-        ]);
+      const freelancerResponse = await axiosInstance.get(
+        `/freelancer/${user.uid}`,
+      );
 
-      const allSkills = skillsResponse.data.data || [];
-      const allDomains = domainsResponse.data.data || [];
       const freelancerData = freelancerResponse.data.data || {};
 
-      const freelancerSkillNames = (freelancerData.skills || [])
-        .map((s: any) => s.name || s.label)
-        .filter(Boolean);
+      const attributes: any[] = Array.isArray(freelancerData.attributes)
+        ? freelancerData.attributes
+        : [];
 
-      const freelancerDomainNames = (freelancerData.domain || [])
-        .map((d: any) => d.name || d.label)
-        .filter(Boolean);
+      const skillsForOptions = attributes
+        .filter((item: any) => item?.type === 'SKILL')
+        .map((item: any) => ({
+          ...item,
+          label: item.label || item.name || '',
+        }));
 
-      const skillsForOptions = allSkills.filter((s: any) =>
-        freelancerSkillNames.includes(s.label || s.name),
-      );
-      const domainsForOptions = allDomains.filter((d: any) =>
-        freelancerDomainNames.includes(d.label || d.name),
-      );
+      const domainsForOptions = attributes
+        .filter((item: any) => item?.type === 'DOMAIN')
+        .map((item: any) => ({
+          ...item,
+          label: item.label || item.name || '',
+        }));
 
       setSkillsOptions(skillsForOptions);
       setDomainsOptions(domainsForOptions);
@@ -160,16 +159,9 @@ export default function ProfilesPage() {
     }
   }, [user.uid]);
 
-  const fetchFreelancerProjectsAndExperiences = async () => {
-    // This function is called but the data is not currently used
-    // The projects and experiences are fetched directly in the dialogs
-    // Keeping this for potential future use
-  };
-
   useEffect(() => {
     fetchProfiles();
     fetchSkillsAndDomains();
-    fetchFreelancerProjectsAndExperiences();
   }, [fetchProfiles, fetchSkillsAndDomains]);
 
   const handleCreateProfile = async () => {
@@ -187,13 +179,24 @@ export default function ProfilesPage() {
     }
 
     try {
+      // Map selected skill/domain option objects to {_id, label} for the API payload
+      const skillsPayload = newProfileSkills.map((skill: any) => ({
+        _id: skill?.type_id || '',
+        label: skill?.name || '',
+      }));
+
+      const domainsPayload = newProfileDomains.map((domain: any) => ({
+        _id: domain?.type_id || '',
+        label: domain?.name || '',
+      }));
+
       const profilePayload = {
         profileName: newProfileName.trim(),
         description: newProfileDescription.trim(),
         profileType: newProfileType,
         hourlyRate: newProfileHourlyRate || 0,
-        skills: newProfileSkills,
-        domains: newProfileDomains,
+        skills: skillsPayload,
+        domains: domainsPayload,
         projects: newProfileProjects,
         experiences: newProfileExperiences,
         portfolioLinks: [],
@@ -210,25 +213,12 @@ export default function ProfilesPage() {
 
       const newProfile = response.data.data;
 
-      // Use the skills/domains we sent in the request since backend might not return them
-      // Enrich with full objects from our options for immediate display
-      const enrichedSkills = newProfileSkills.map((skillId: string) => {
-        const foundSkill = skillsOptions.find((s: any) => s._id === skillId);
-        return foundSkill || { _id: skillId, label: skillId, name: skillId };
-      });
-
-      const enrichedDomains = newProfileDomains.map((domainId: string) => {
-        const foundDomain = domainsOptions.find((d: any) => d._id === domainId);
-        return (
-          foundDomain || { _id: domainId, label: domainId, name: domainId }
-        );
-      });
-
+      // Use our selected objects directly for immediate display
       const localProfile = {
         ...newProfile,
         profileType: newProfileType,
-        skills: enrichedSkills,
-        domains: enrichedDomains,
+        skills: newProfileSkills,
+        domains: newProfileDomains,
         projects: newProfileProjects,
         experiences: newProfileExperiences,
       } as FreelancerProfile;
@@ -338,7 +328,7 @@ export default function ProfilesPage() {
               </p>
             </div>
 
-            <div className="bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+            <div className="bg-muted/20 rounded-xl border shadow-sm overflow-hidden mb-6">
               <Tabs
                 value={activeTab}
                 onValueChange={(v) => setActiveTab(v as any)}
@@ -755,9 +745,8 @@ export default function ProfilesPage() {
                 <SelectTagPicker
                   label=""
                   options={skillsOptions}
-                  selected={newProfileSkills.map((id: string) => ({
-                    name:
-                      skillsOptions.find((s: any) => s._id === id)?.label || id,
+                  selected={newProfileSkills.map((skill: any) => ({
+                    name: skill?.label || skill?.name || '',
                   }))}
                   onAdd={(value: string) => {
                     const selectedSkill = skillsOptions.find(
@@ -765,23 +754,19 @@ export default function ProfilesPage() {
                     );
                     if (
                       selectedSkill &&
-                      !newProfileSkills.includes(selectedSkill._id)
+                      !newProfileSkills.some(
+                        (s: any) => s._id === selectedSkill._id,
+                      )
                     ) {
-                      setNewProfileSkills([
-                        ...newProfileSkills,
-                        selectedSkill._id,
-                      ]);
+                      setNewProfileSkills([...newProfileSkills, selectedSkill]);
                     }
                   }}
                   onRemove={(name: string) => {
-                    const skill = skillsOptions.find(
-                      (s: any) => (s.label || s.name) === name,
+                    setNewProfileSkills(
+                      newProfileSkills.filter(
+                        (s: any) => (s.label || s.name) !== name,
+                      ),
                     );
-                    if (skill) {
-                      setNewProfileSkills(
-                        newProfileSkills.filter((id) => id !== skill._id),
-                      );
-                    }
                   }}
                   optionLabelKey="label"
                   selectedNameKey="name"
@@ -796,10 +781,8 @@ export default function ProfilesPage() {
                 <SelectTagPicker
                   label=""
                   options={domainsOptions}
-                  selected={newProfileDomains.map((id: string) => ({
-                    name:
-                      domainsOptions.find((d: any) => d._id === id)?.label ||
-                      id,
+                  selected={newProfileDomains.map((domain: any) => ({
+                    name: domain?.label || domain?.name || '',
                   }))}
                   onAdd={(value: string) => {
                     const selectedDomain = domainsOptions.find(
@@ -807,23 +790,22 @@ export default function ProfilesPage() {
                     );
                     if (
                       selectedDomain &&
-                      !newProfileDomains.includes(selectedDomain._id)
+                      !newProfileDomains.some(
+                        (d: any) => d._id === selectedDomain._id,
+                      )
                     ) {
                       setNewProfileDomains([
                         ...newProfileDomains,
-                        selectedDomain._id,
+                        selectedDomain,
                       ]);
                     }
                   }}
                   onRemove={(name: string) => {
-                    const domain = domainsOptions.find(
-                      (d: any) => (d.label || d.name) === name,
+                    setNewProfileDomains(
+                      newProfileDomains.filter(
+                        (d: any) => (d.label || d.name) !== name,
+                      ),
                     );
-                    if (domain) {
-                      setNewProfileDomains(
-                        newProfileDomains.filter((id) => id !== domain._id),
-                      );
-                    }
                   }}
                   optionLabelKey="label"
                   selectedNameKey="name"

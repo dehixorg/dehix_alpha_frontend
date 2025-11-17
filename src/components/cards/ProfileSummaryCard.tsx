@@ -45,6 +45,7 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
     experiences,
     hourlyRate,
   } = profile;
+  console.log('PROFILE:', profile);
 
   // Extract a display label from various item shapes (string or object)
   const getItemLabel = (item: any): string => {
