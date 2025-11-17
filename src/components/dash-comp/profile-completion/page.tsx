@@ -337,7 +337,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
             </div>
             <Progress
               value={completionPercentage}
-              className={cn('h-1', completionColor)}
+              className={cn('h-1 bg-foreground/20', completionColor)}
             />
           </div>
 

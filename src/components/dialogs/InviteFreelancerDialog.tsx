@@ -116,15 +116,15 @@ export default function InviteFreelancerDialog({
   };
 
   const handleNext = () => {
-    if (step === 1 && !selectedProjectId) {
+    if (!selectedProjectId) {
       notifyError('Please select a project');
       return;
     }
-    if (step === 2 && !selectedProfileId) {
+    if (!selectedProfileId) {
       notifyError('Please select a profile');
       return;
     }
-    setStep(step + 1);
+    setStep(2);
   };
 
   const handleBack = () => {
@@ -204,9 +204,7 @@ export default function InviteFreelancerDialog({
                   <span className="text-sm text-muted-foreground">
                     {step === 1
                       ? 'Choose a project to invite this freelancer to'
-                      : step === 2
-                        ? 'Review details before sending invitation'
-                        : 'Confirm invitation details'}
+                      : 'Review details before sending invitation'}
                   </span>
                 </DialogDescription>
               </div>
@@ -263,7 +261,7 @@ export default function InviteFreelancerDialog({
                   >
                     <button
                       type="button"
-                      onClick={() => step > 2 && setStep(2)}
+                      onClick={() => step > 1 && setStep(2)}
                       className="group flex items-center gap-2 sm:gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-background rounded-md"
                       aria-current={step === 2 ? 'step' : undefined}
                     >
@@ -279,46 +277,6 @@ export default function InviteFreelancerDialog({
                       </div>
                       <span className="text-xs sm:text-sm font-medium truncate">
                         Review
-                      </span>
-                    </button>
-                  </li>
-
-                  <li
-                    aria-hidden
-                    className="flex-1 min-w-[48px] sm:min-w-[72px]"
-                  >
-                    <div
-                      className={cn(
-                        'h-px w-full',
-                        step >= 3 ? 'bg-primary/40' : 'bg-border',
-                      )}
-                    />
-                  </li>
-
-                  <li
-                    className={cn(
-                      'min-w-0 flex items-center gap-2 sm:gap-3',
-                      step === 3 ? 'text-primary' : 'text-muted-foreground',
-                    )}
-                  >
-                    <button
-                      type="button"
-                      disabled={step < 3}
-                      className="group flex items-center gap-2 sm:gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-background rounded-md disabled:opacity-60"
-                      aria-current={step === 3 ? 'step' : undefined}
-                    >
-                      <div
-                        className={cn(
-                          'h-8 w-8 sm:h-9 sm:w-9 rounded-full flex items-center justify-center border',
-                          step === 3
-                            ? 'bg-primary/10 border-primary'
-                            : 'border-border',
-                        )}
-                      >
-                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </div>
-                      <span className="text-xs sm:text-sm font-medium truncate">
-                        Confirm
                       </span>
                     </button>
                   </li>
@@ -647,45 +605,6 @@ export default function InviteFreelancerDialog({
                       </div>
                     </Card>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Confirmation */}
-            {step === 3 && (
-              <div className="space-y-4">
-                <Card className="p-6">
-                  <h3 className="font-semibold text-lg mb-4">
-                    Invitation Summary
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Project</p>
-                      <p className="font-medium">
-                        {getSelectedProject()?.projectName}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Profile Role
-                      </p>
-                      <p className="font-medium">
-                        {getSelectedProfile()?.domain}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Connects Cost
-                      </p>
-                      <p className="font-medium text-lg">{hireCost} Connects</p>
-                    </div>
-                  </div>
-                </Card>
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> {hireCost} connects will be deducted
-                    from your account when you confirm this invitation.
-                  </p>
                 </div>
               </div>
             )}
