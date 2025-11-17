@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
-import { ArrowUpRight, Briefcase, Eye, Zap } from 'lucide-react';
+import { ArrowUpRight, Award, Briefcase, Eye, Zap } from 'lucide-react';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -30,7 +30,10 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
-import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import {
+  getBadgeColor,
+  statusOutlineClasses,
+} from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
@@ -50,6 +53,7 @@ interface Domain {
 interface SkillDomainData {
   uid: string;
   label: string;
+  level: string;
   experience: string;
   monthlyPay: string;
   type: 'SKILL' | 'DOMAIN';
@@ -96,14 +100,15 @@ const SkillDomainForm: React.FC = () => {
         const formatted: SkillDomainData[] = talentFlat.map((t: any) => ({
           uid: t._id,
           label: t.talentName ?? t.name ?? '—',
+          level: t.level ?? '—',
           experience: t.experience ?? '—',
-          monthlyPay: t.monthlyPay ?? '—',
+          monthlyPay: t.talentMonthlyPay ?? '—',
           type: t.type,
           status: (t.status ?? t.dehixTalentStatus) as StatusEnum,
           activeStatus: t.talentActiveStatus === 'ACTIVE',
           originalTalentId: t.talentId ?? t.type_id ?? '',
         }));
-
+        console.log('TEST:', formatted);
         setRows(formatted);
         setVisibility(formatted.map((r) => r.activeStatus));
       } catch (err: any) {
@@ -162,7 +167,7 @@ const SkillDomainForm: React.FC = () => {
         size="sm"
         className="bg-white text-black hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-gray-300"
       >
-        <Briefcase className="h-4 w-4 mr-1" />
+        <Award className="h-4 w-4 mr-1" />
         Add Skill
       </Button>
     </SkillDialog>
@@ -315,6 +320,7 @@ const SkillDomainForm: React.FC = () => {
                 <TableRow>
                   <TableHead className="w-20">Type</TableHead>
                   <TableHead className="min-w-[140px]">Label</TableHead>
+                  <TableHead className="w-28 text-center">Level</TableHead>
                   <TableHead className="w-28 text-center">Exp.</TableHead>
                   <TableHead className="w-32 text-center">Pay</TableHead>
                   <TableHead className="w-28 text-center">Status</TableHead>
@@ -446,6 +452,15 @@ const SkillDomainForm: React.FC = () => {
                       <TableCell className="font-medium">{r.label}</TableCell>
 
                       <TableCell className="text-center">
+                        <Badge
+                          variant="outline"
+                          className={statusOutlineClasses(r.level)}
+                        >
+                          {r.level}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-center">
                         {r.experience} yrs
                       </TableCell>
 
@@ -455,7 +470,10 @@ const SkillDomainForm: React.FC = () => {
 
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Badge className={getBadgeColor(r.status)}>
+                          <Badge
+                            variant="outline"
+                            className={statusOutlineClasses(r.status)}
+                          >
                             {r.status?.toUpperCase()}
                           </Badge>
                           {r.status === StatusEnum.PENDING && r.uid && (
@@ -498,7 +516,10 @@ const SkillDomainForm: React.FC = () => {
                           </Button>
                         ) : (
                           <div className="flex items-center justify-center gap-2">
-                            <Badge className={getBadgeColor(r.status)}>
+                            <Badge
+                              variant="outline"
+                              className={statusOutlineClasses(r.status)}
+                            >
                               {r.status?.toUpperCase()}
                             </Badge>
                             {r.status === StatusEnum.PENDING && r.uid && (
