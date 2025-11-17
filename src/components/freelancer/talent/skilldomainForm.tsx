@@ -123,21 +123,31 @@ const SkillDomainForm: React.FC = () => {
   }, [user?.uid, refresh]);
 
   const toggleVisibility = useCallback(
-    async (idx: number, checked: boolean, id: string) => {
+    async (idx: number, checked: boolean, id: string, previous: boolean) => {
+      // Optimistically update UI
+      setVisibility((v) => {
+        const copy = [...v];
+        copy[idx] = checked;
+        return copy;
+      });
+
       try {
         const { status } = await axiosInstance.put(
           `/freelancer/dehix-talent/${id}`,
-          { activeStatus: checked },
+          { talentActiveStatus: checked ? 'ACTIVE' : 'INACTIVE' },
         );
-        if (status === 200) {
-          setVisibility((v) => {
-            const copy = [...v];
-            copy[idx] = checked;
-            return copy;
-          });
+
+        if (status !== 200) {
+          throw new Error('Failed to update visibility');
         }
       } catch (e) {
         console.error(e);
+        // Revert UI on failure
+        setVisibility((v) => {
+          const copy = [...v];
+          copy[idx] = previous;
+          return copy;
+        });
         notifyError('Could not update visibility.', 'Error');
       }
     },
@@ -463,7 +473,7 @@ const SkillDomainForm: React.FC = () => {
                         <Switch
                           checked={visibility[idx]}
                           onCheckedChange={(v) =>
-                            toggleVisibility(idx, v, r.uid)
+                            toggleVisibility(idx, v, r.uid, visibility[idx])
                           }
                           aria-label={`Toggle visibility for ${r.label}`}
                         />
@@ -589,7 +599,9 @@ const SkillDomainForm: React.FC = () => {
                     )}
                     <Switch
                       checked={visibility[idx]}
-                      onCheckedChange={(v) => toggleVisibility(idx, v, r.uid)}
+                      onCheckedChange={(v) =>
+                        toggleVisibility(idx, v, r.uid, visibility[idx])
+                      }
                       aria-label={`Toggle visibility for ${r.label}`}
                     />
                   </div>
