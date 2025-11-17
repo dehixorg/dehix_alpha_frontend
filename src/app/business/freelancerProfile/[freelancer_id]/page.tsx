@@ -6,9 +6,8 @@ import {
   Briefcase,
   GraduationCap,
   Code,
-  Layers,
-  BookOpen,
   UserCircle,
+  Award,
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
@@ -25,7 +24,9 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import EmptyState from '@/components/shared/EmptyState';
 import { RootState } from '@/lib/store';
 
 interface Skill {
@@ -83,6 +84,7 @@ interface FreelancerProfile {
   githubLink?: string;
   linkedin?: string;
   personalWebsite?: string;
+  attributes?: any[];
   skills: Skill[];
   domain: Domain[];
   projectDomain: Domain[];
@@ -112,6 +114,24 @@ const FreelancerProfile = () => {
           if (response.status === 200) {
             const freelancerData = response.data.data || response.data;
 
+            const attrs = Array.isArray(freelancerData.attributes)
+              ? freelancerData.attributes
+              : [];
+
+            const skillsFromAttributes: Skill[] = attrs
+              .filter((attr: any) => attr?.type === 'SKILL')
+              .map((attr: any) => ({
+                _id: attr._id,
+                name: attr.name,
+              }));
+
+            const domainsFromAttributes: Domain[] = attrs
+              .filter((attr: any) => attr?.type === 'DOMAIN')
+              .map((attr: any) => ({
+                _id: attr._id,
+                name: attr.name,
+              }));
+
             // Transform the data to match our interface
             const transformedData: FreelancerProfile = {
               firstName: freelancerData.firstName || '',
@@ -122,8 +142,15 @@ const FreelancerProfile = () => {
               githubLink: freelancerData.githubLink || '',
               linkedin: freelancerData.linkedin || '',
               personalWebsite: freelancerData.personalWebsite || '',
-              skills: freelancerData.skills || [],
-              domain: freelancerData.domain || [],
+              attributes: attrs,
+              skills:
+                skillsFromAttributes.length > 0
+                  ? skillsFromAttributes
+                  : freelancerData.skills || [],
+              domain:
+                domainsFromAttributes.length > 0
+                  ? domainsFromAttributes
+                  : freelancerData.domain || [],
               projectDomain: freelancerData.projectDomain || [],
               projects: freelancerData.projects || [],
               professionalInfo: freelancerData.professionalInfo || [],
@@ -163,7 +190,7 @@ const FreelancerProfile = () => {
       // Include freelancer_id in the hire request
       const hireData = {
         ...data,
-        freelancer_id: freelancer_id,
+        freelancerId: freelancer_id,
       };
 
       const res = await axiosInstance.post(
@@ -317,8 +344,7 @@ const FreelancerProfile = () => {
           activeMenu="Projects"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
-            { label: 'Business Marketplace', link: '/business/market' },
-            { label: 'Freelancer Profile', link: '/business/market' },
+            { label: 'Freelancer', link: '/business/market' },
             {
               label: `${profileData?.firstName || ''} ${profileData?.lastName || ''}`,
               link: `/dashboard/business/${freelancer_id}`,
@@ -347,12 +373,21 @@ const FreelancerProfile = () => {
                         </div>
                       )}
                     </div>
-                    <div>
-                      <h1 className="text-2xl font-bold text-foreground">
-                        {profileData?.firstName} {profileData?.lastName}
-                      </h1>
-                      <p className="text-muted-foreground mt-1">
-                        {profileData?.description || 'No description available'}
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h1 className="text-2xl font-bold text-foreground">
+                          {profileData?.firstName} {profileData?.lastName}
+                        </h1>
+                        <Badge
+                          variant="outline"
+                          className="text-xs font-medium border-primary/30 text-primary bg-primary/5"
+                        >
+                          Freelancer
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground max-w-xl">
+                        {profileData?.description ||
+                          'This freelancer has not added a description yet.'}
                       </p>
                     </div>
                   </div>
@@ -376,83 +411,83 @@ const FreelancerProfile = () => {
               </CardContent>
             </Card>
 
-            {/* Skills */}
+            {/* Skills & Domains */}
             <Card className="mb-6 overflow-hidden border border-border shadow-md">
               <CardHeader className="bg-primary/5 border-b border-border py-4">
                 <CardTitle className="text-md font-semibold text-primary flex items-center gap-2">
-                  <Code className="h-5 w-5" />
-                  Skills
+                  <Award className="h-5 w-5" />
+                  Skills & Domains
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                <div className="flex flex-wrap gap-2">
-                  {profileData?.skills?.map((skill) => (
-                    <div
-                      key={skill._id}
-                      className="flex items-center gap-1 px-3 py-1 bg-muted/50 border border-border rounded-full shadow-sm"
-                    >
-                      <span>{skill.name}</span>
-                    </div>
-                  ))}
-                  {!profileData?.skills?.length && (
-                    <p className="text-muted-foreground italic">
-                      No skills added
-                    </p>
-                  )}
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                    Skills
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {profileData?.skills?.map((skill) => (
+                      <Badge
+                        key={skill._id}
+                        variant="outline"
+                        className="text-xs px-3 py-1 rounded-full border-primary/20 bg-primary/5"
+                      >
+                        {skill.name}
+                      </Badge>
+                    ))}
+                    {!profileData?.skills?.length && (
+                      <p className="text-muted-foreground italic text-sm">
+                        No skills added
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Domain */}
-            <Card className="mb-6 overflow-hidden border border-border shadow-md">
-              <CardHeader className="bg-indigo-500/5 dark:bg-indigo-500/10 border-b border-border py-4">
-                <CardTitle className="text-md font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
-                  <Layers className="h-5 w-5" />
-                  Domain
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="space-y-1">
-                  {profileData?.domain?.map((domain) => (
-                    <div
-                      key={domain._id}
-                      className="py-2 px-3 bg-muted/50 border border-border rounded-md mb-2 shadow-sm"
-                    >
-                      {domain.name}
-                    </div>
-                  ))}
-                  {!profileData?.domain?.length && (
-                    <p className="text-muted-foreground italic">
-                      No domains added
-                    </p>
-                  )}
+                <Separator className="h-px bg-border" />
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                    Domains
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {profileData?.domain?.map((domain) => (
+                      <Badge
+                        key={domain._id}
+                        variant="outline"
+                        className="text-xs px-3 py-1 rounded-full border-indigo-500/30 bg-indigo-500/5 text-indigo-700 dark:text-indigo-300"
+                      >
+                        {domain.name}
+                      </Badge>
+                    ))}
+                    {!profileData?.domain?.length && (
+                      <p className="text-muted-foreground italic text-sm">
+                        No domains added
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Project Domain */}
-            <Card className="mb-6 overflow-hidden border border-border shadow-md">
-              <CardHeader className="bg-purple-500/5 dark:bg-purple-500/10 border-b border-border py-4">
-                <CardTitle className="text-md font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  Project Domain
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="space-y-1">
-                  {profileData?.projectDomain?.map((domain) => (
-                    <div
-                      key={domain._id}
-                      className="py-2 px-3 bg-muted/50 border border-border rounded-md mb-2 shadow-sm"
-                    >
-                      {domain.name}
-                    </div>
-                  ))}
-                  {!profileData?.projectDomain?.length && (
-                    <p className="text-muted-foreground italic">
-                      No project domains added
-                    </p>
-                  )}
+                <Separator className="h-px bg-border" />
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                    Project Domains
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {profileData?.projectDomain?.map((domain) => (
+                      <Badge
+                        key={domain._id}
+                        variant="outline"
+                        className="text-xs px-3 py-1 rounded-full border-purple-500/30 bg-purple-500/5 text-purple-700 dark:text-purple-300"
+                      >
+                        {domain.name}
+                      </Badge>
+                    ))}
+                    {!profileData?.projectDomain?.length && (
+                      <p className="text-muted-foreground italic text-sm">
+                        No project domains added
+                      </p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -466,10 +501,10 @@ const FreelancerProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="space-y-4">
-                  {profileData &&
-                  profileData.projects &&
-                  profileData.projects.length > 0 ? (
+                {profileData &&
+                profileData.projects &&
+                profileData.projects.length > 0 ? (
+                  <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {profileData.projects.slice(0, 4).map((project) => (
                         <ProjectCard
@@ -497,17 +532,20 @@ const FreelancerProfile = () => {
                         />
                       ))}
                     </div>
-                  ) : (
-                    <p className="text-muted-foreground italic">
-                      No projects added
-                    </p>
-                  )}
-                  {profileData?.projects && profileData.projects.length > 4 && (
-                    <p className="text-sm text-muted-foreground text-center mt-4">
-                      And {profileData.projects.length - 4} more projects...
-                    </p>
-                  )}
-                </div>
+                    {profileData.projects.length > 4 && (
+                      <p className="text-sm text-muted-foreground text-center mt-4">
+                        And {profileData.projects.length - 4} more projects...
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="No projects added yet"
+                    description="Once this freelancer adds projects to their profile, you'll see them listed here."
+                    icon={<Code className="h-16 w-16 text-green-500" />}
+                    className="py-10 border-border/60 bg-background"
+                  />
+                )}
               </CardContent>
             </Card>
 
@@ -520,11 +558,11 @@ const FreelancerProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="space-y-4">
-                  {profileData &&
-                  profileData.professionalInfo &&
-                  profileData.professionalInfo.length > 0 ? (
-                    profileData.professionalInfo
+                {profileData &&
+                profileData.professionalInfo &&
+                profileData.professionalInfo.length > 0 ? (
+                  <div className="space-y-4">
+                    {profileData.professionalInfo
                       .slice(0, 5)
                       .map((experience) => (
                         <div
@@ -547,13 +585,16 @@ const FreelancerProfile = () => {
                             </p>
                           </div>
                         </div>
-                      ))
-                  ) : (
-                    <p className="text-muted-foreground italic">
-                      No professional experience added
-                    </p>
-                  )}
-                </div>
+                      ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="No professional experience added"
+                    description="Work experience added by the freelancer will appear here."
+                    icon={<Briefcase className="h-16 w-16 text-amber-500" />}
+                    className="py-10 border-border/60 bg-background"
+                  />
+                )}
               </CardContent>
             </Card>
 
@@ -634,9 +675,9 @@ const FreelancerProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="space-y-4">
-                  {profileData?.education?.length ? (
-                    profileData.education.slice(0, 3).map((edu) => (
+                {profileData?.education?.length ? (
+                  <div className="space-y-4">
+                    {profileData.education.slice(0, 3).map((edu) => (
                       <div
                         key={edu._id}
                         className="flex justify-between p-3 bg-muted/50 border border-border rounded-md shadow-sm"
@@ -657,13 +698,16 @@ const FreelancerProfile = () => {
                           {formatDate(edu.endDate)}
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground italic">
-                      No education details added
-                    </p>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="No education details added"
+                    description="Education details added by the freelancer will appear here."
+                    icon={<GraduationCap className="h-16 w-16 text-cyan-500" />}
+                    className="py-10 border-border/60 bg-background"
+                  />
+                )}
               </CardContent>
             </Card>
           </main>
