@@ -63,8 +63,7 @@ const profileFormSchema = z.object({
   description: z
     .string()
     .min(4, { message: 'Description must be at least 4 characters long.' })
-    .max(160, { message: 'Description cannot exceed 160 characters.' })
-    .optional(),
+    .max(160, { message: 'Description cannot exceed 160 characters.' }),
   profiles: z
     .array(
       z.object({
@@ -1027,6 +1026,7 @@ export function CreateProjectBusinessForm() {
                 'projectName',
                 'email',
                 'projectDomain',
+                'description',
               ]);
               if (!ok) {
                 notifyError(
@@ -1073,6 +1073,7 @@ export function CreateProjectBusinessForm() {
                           'projectName',
                           'email',
                           'projectDomain',
+                          'description',
                         ]);
                         if (!ok) {
                           notifyError(
