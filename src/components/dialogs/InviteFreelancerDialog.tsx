@@ -353,7 +353,7 @@ export default function InviteFreelancerDialog({
                     </div>
                     <ProjectTypeDialog
                       onOpenChange={setModalOpen}
-                      trigger={<Button size="sm">CreateNew Project</Button>}
+                      trigger={<Button size="sm">Create New Project</Button>}
                     />
                   </div>
                 ) : (
