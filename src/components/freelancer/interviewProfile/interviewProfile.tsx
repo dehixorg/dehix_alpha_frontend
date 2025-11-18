@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Plus, ListFilter, Info } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Plus } from 'lucide-react';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
@@ -18,333 +14,171 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import DomainDialog from '@/components/dialogs/domainDialog';
 import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
-import SkillDialog from '@/components/dialogs/skillDialog';
-import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
-import { RootState } from '@/lib/store';
-import { StatusEnum } from '@/utils/freelancer/enum';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
-interface Skill {
-  talentName: string;
-}
+const InterviewProfile: React.FC = () => {
+  interface VerifiedAttribute {
+    _id: string;
+    type: 'SKILL' | 'DOMAIN' | string;
+    type_id: string;
+    name: string;
+    experience: number;
+    level: string;
+    freelancerProfileId: string;
+    dehixTalentStatus: string;
+    talentMonthlyPay?: number;
+    talentActiveStatus?: 'ACTIVE' | 'INACTIVE' | string;
+    interviewerStatus:
+      | 'NOT_APPLIED'
+      | 'PENDING'
+      | 'APPROVED'
+      | 'REJECTED'
+      | string;
+    perInterviewCharge?: number;
+    interviewerActiveStatus?: 'ACTIVE' | 'INACTIVE' | string;
+  }
 
-interface Domain {
-  talentName: string;
-}
-interface SkillFormData {
-  name: string;
-  experience: number;
-  level: string;
-}
+  const [verifiedAttributes, setVerifiedAttributes] = useState<
+    VerifiedAttribute[]
+  >([]);
+  const [interviewerLoading, setInterviewerLoading] = useState<boolean>(false);
 
-interface DomainFormData {
-  name: string;
-  experience: string;
-  level: string;
-}
+  const [selectedSkillAttrId, setSelectedSkillAttrId] = useState('');
+  const [skillCharge, setSkillCharge] = useState('');
+  const [selectedDomainAttrId, setSelectedDomainAttrId] = useState('');
+  const [domainCharge, setDomainCharge] = useState('');
 
-interface SkillData {
-  _id?: string;
-  name: string;
-  experience: number;
-  level: string;
-  interviewStatus: string;
-}
-
-interface DomainData {
-  _id?: string;
-  name: string;
-  experience: string;
-  level: string;
-  interviewStatus: string;
-}
-
-const levels = ['Mastery', 'Proficient', 'Beginner'];
-const defaultStatus = 'Pending';
-
-const SkillSchema = z.object({
-  skill: z.string().min(1, 'Skill is required'),
-  experience: z.preprocess(
-    (val) => parseFloat(val as string),
-    z
-      .number()
-      .min(0, 'Experience must be a non-negative number')
-      .max(50, "Experience can't exceed 50"),
-  ),
-  level: z.string().min(1, 'Level is required'),
-});
-
-const DomainSchema = z.object({
-  domain: z.string().min(1, 'Domain is required'),
-  experience: z.preprocess(
-    (val) => parseFloat(val as string),
-    z
-      .number()
-      .min(0, 'Experience must be a non-negative number')
-      .max(50, "Experience can't exceed 50"),
-  ),
-  level: z.string().min(1, 'Level is required'),
-});
-
-const InterviewProfile: React.FC<{ freelancerId: string }> = ({
-  freelancerId,
-}) => {
-  const user = useSelector((state: RootState) => state.user);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [domains, setDomains] = useState<Domain[]>([]);
-  const [skillData, setSkillData] = useState<SkillData[]>([]);
-  const [domainData, setDomainData] = useState<DomainData[]>([]);
-
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const [openSkillDialog, setOpenSkillDialog] = useState(false);
-  const [openDomainDialog, setOpenDomainDialog] = useState(false);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [editingSkill, setEditingSkill] = useState<SkillData | null>(null);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [editingDomain, setEditingDomain] = useState<DomainData | null>(null);
-  const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
-  const [docId, setDocId] = useState<string>();
-  const [docType, setDocType] = useState<string>();
-
-  const [filter, setFilter] = useState<'All' | 'Skills' | 'Domain'>('All');
+  const [openSkillApplyDialog, setOpenSkillApplyDialog] = useState(false);
+  const [openDomainApplyDialog, setOpenDomainApplyDialog] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
+    const fetchVerifiedAttributes = async () => {
+      setInterviewerLoading(true);
       try {
-        const freelancerSkillsResponse = await axiosInstance.get(
-          `/freelancer/${user.uid}/skill`,
-        );
-        const freelancerDomainsResponse = await axiosInstance.get(
-          `/freelancer/${freelancerId}/domain`,
+        const res = await axiosInstance.get(
+          `/freelancer/dehix-talent/attributes/verified`,
         );
 
-        const skillData =
-          freelancerSkillsResponse?.data?.data?.[0]?.skills || [];
-        const domainData =
-          freelancerDomainsResponse?.data?.data?.[0]?.domain || [];
-
-        setSkillData(skillData);
-        setDomainData(domainData);
-
-        const skillsDomainResponse = await axiosInstance.get(
-          `/freelancer/${user.uid}/dehix-talent`,
-        );
-
-        const isVerifiedTalent = (t: any) => {
-          const status = String(t?.status || '').toUpperCase();
-          const active = Boolean(t?.activeStatus);
-          return (
-            active &&
-            (status === StatusEnum.ACTIVE || status === StatusEnum.COMPLETED)
+        const items: VerifiedAttribute[] = res?.data?.data || [];
+        setVerifiedAttributes(items);
+      } catch (error: any) {
+        if (error?.response?.status === 404) {
+          setVerifiedAttributes([]);
+        } else {
+          console.error('Error fetching verified attributes:', error);
+          notifyError(
+            'Failed to fetch verified Dehix talent attributes. Please try again later.',
+            'Error',
           );
-        };
-
-        const updatedSkills = (skillsDomainResponse.data.data.skills || [])
-          .filter(isVerifiedTalent)
-          .filter(
-            (skill: any) =>
-              !skillData.some(
-                (existingSkill: any) => existingSkill.name === skill.talentName,
-              ),
-          );
-        setSkills(updatedSkills);
-
-        const updatedDomains = (
-          skillsDomainResponse?.data?.data?.domains || []
-        ).filter(
-          (domain: any) =>
-            !domainData.some(
-              (existingDomain: any) =>
-                existingDomain.name === domain.talentName,
-            ),
-        );
-        setDomains(updatedDomains);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        notifyError('Failed to fetch data. Please try again later.', 'Error');
+        }
       } finally {
-        setLoading(false);
+        setInterviewerLoading(false);
       }
+    };
+
+    fetchVerifiedAttributes();
+  }, []);
+
+  const handleApplyAsInterviewer = async (
+    attributeId: string,
+    perInterviewChargeValue: number,
+  ) => {
+    if (
+      !attributeId ||
+      !perInterviewChargeValue ||
+      perInterviewChargeValue <= 0
+    ) {
+      notifyError(
+        'Please select an attribute and enter a valid interview fee.',
+        'Error',
+      );
+      return;
     }
-    fetchData();
-  }, [freelancerId, user?.uid]);
 
-  const { reset: resetSkill } = useForm<SkillFormData>({
-    resolver: zodResolver(SkillSchema),
-  });
-
-  const { reset: resetDomain } = useForm<DomainFormData>({
-    resolver: zodResolver(DomainSchema),
-  });
-
-  const onSubmitSkill = async (data: SkillFormData) => {
-    setLoading(true);
-
+    setInterviewerLoading(true);
     try {
-      const skillToSubmit = {
-        name: data.name,
-        level: data.level,
-        experience: data.experience,
-        interviewPermission: 'NOT_VERIFIED', // Ensure interviewStatus is set
-      };
+      const res = await axiosInstance.post(
+        `/freelancer/attributes/${attributeId}/interviewer/apply`,
+        {
+          perInterviewCharge: perInterviewChargeValue,
+        },
+      );
 
-      const payload = {
-        skills: [skillToSubmit], // Wrap in an array
-      };
+      const updated: VerifiedAttribute | undefined = res?.data?.data;
 
-      if (editingSkill) {
-        // Update existing skill using API
-        const updatedSkill = {
-          ...editingSkill,
-          ...data,
-          interviewStatus: defaultStatus,
-        };
-
-        const response = await axiosInstance.put(`/freelancer/skill`, payload);
-
-        if (response.status === 200) {
-          // After a successful response (status 200), update local state
-          const updatedSkills = skillData.map((item) =>
-            item._id === editingSkill._id ? { ...item, ...updatedSkill } : item,
-          );
-          setSkillData(updatedSkills);
-
-          notifySuccess(
-            `${data.name} skill updated successfully.`,
-            'Skill Updated',
-          );
-        } else {
-          // Handle non-200 responses (optional)
-          throw new Error('Failed to update skill');
-        }
-      } else {
-        // Add new skill
-        const response = await axiosInstance.put(`/freelancer/skill`, payload);
-
-        if (response.status === 200) {
-          // After a successful response (status 200), update local state
-
-          setSkillData([
-            ...skillData,
-            {
-              name: data.name,
-              experience: data.experience,
-              level: data.level,
-              interviewStatus: defaultStatus,
-            },
-          ]);
-          notifySuccess(
-            `${data.name} skill added successfully.`,
-            'Skill Added',
-          );
-        } else {
-          // Handle non-200 responses (optional)
-          throw new Error('Failed to add skill');
-        }
-
-        setSkillData([
-          ...skillData,
-          {
-            name: data.name,
-            experience: data.experience,
-            level: data.level,
-            interviewStatus: defaultStatus,
-          },
-        ]);
-        notifySuccess(`${data.name} skill added successfully.`, 'Skill Added');
-      }
-      resetSkill();
-      setOpenSkillDialog(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onSubmitDomain = async (data: DomainFormData) => {
-    setLoading(true);
-    try {
-      if (editingDomain) {
-        // Update existing domain using API
-        const updatedDomain = {
-          ...editingDomain,
-          ...data,
-        };
-
-        const response = await axiosInstance.put(
-          `/freelancer/domain`,
-          updatedDomain,
-        );
-
-        if (response.status === 200) {
-          // After a successful response (status 200), update local state
-          const updatedDomains = domainData.map((item) =>
-            item._id === editingDomain._id
-              ? { ...item, ...updatedDomain }
-              : item,
-          );
-          setDomainData(updatedDomains);
-          notifySuccess(
-            `${data.name} domain updated successfully.`,
-            'Domain Updated',
-          );
-        } else {
-          // Handle non-200 responses (optional)
-          throw new Error('Failed to update domain');
-        }
-      } else {
-        // Add new domain
-        setDomainData([
-          ...domainData,
-          {
-            name: data.name,
-            experience: data.experience,
-            level: data.level,
-            interviewStatus: defaultStatus,
-          },
-        ]);
-        notifySuccess(
-          `${data.name} domain added successfully.`,
-          'Domain Added',
+      if (updated?._id) {
+        setVerifiedAttributes((prev) =>
+          prev.map((attr) =>
+            attr._id === updated._id ? { ...attr, ...updated } : attr,
+          ),
         );
       }
-      resetDomain();
-      setOpenDomainDialog(false);
+
+      notifySuccess(
+        'Your interviewer application has been submitted.',
+        'Success',
+      );
+    } catch (error: any) {
+      console.error('Error applying as interviewer:', error);
+      const message =
+        error?.response?.data?.message ||
+        'Failed to apply as interviewer. Please try again later.';
+      notifyError(message, 'Error');
     } finally {
-      setLoading(false);
+      setInterviewerLoading(false);
     }
   };
 
-  const handleSkillDomainDialog = (data: any, type: string) => {
-    setShowMeetingDialog(true);
-    setDocId(data?._id);
-    setDocType(type);
-  };
+  const handleToggleInterviewerActive = async (
+    attribute: VerifiedAttribute,
+  ) => {
+    const { _id } = attribute;
+    if (!_id) return;
 
-  const filteredData = () => {
-    if (filter === 'All') {
-      return [...skillData, ...domainData];
-    } else if (filter === 'Skills') {
-      return skillData;
-    } else if (filter === 'Domain') {
-      return domainData;
+    const prevStatus = attribute.interviewerActiveStatus;
+
+    setVerifiedAttributes((prev) =>
+      prev.map((a) =>
+        a._id === _id
+          ? {
+              ...a,
+              interviewerActiveStatus:
+                a.interviewerActiveStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+            }
+          : a,
+      ),
+    );
+
+    try {
+      const res = await axiosInstance.put(
+        `/freelancer/attributes/${_id}/interviewer/active-status`,
+      );
+
+      const updated: VerifiedAttribute | undefined = res?.data?.data;
+      if (updated?._id) {
+        setVerifiedAttributes((prev) =>
+          prev.map((a) => (a._id === updated._id ? { ...a, ...updated } : a)),
+        );
+      }
+    } catch (error: any) {
+      console.error('Error toggling interviewer active status:', error);
+      notifyError('Failed to update interviewer active status.', 'Error');
+
+      setVerifiedAttributes((prev) =>
+        prev.map((a) =>
+          a._id === _id ? { ...a, interviewerActiveStatus: prevStatus } : a,
+        ),
+      );
     }
   };
 
@@ -352,200 +186,288 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     <>
       <div className="flex flex-col gap-4 p-2 sm:px-6 sm:py-0 md:gap-8  pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
         <div className="w-full relative border border-gray-200 rounded-xl shadow-sm p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold w-full sm:w-1/2">
-              Skills & Domains
-            </h2>
-            <div className="flex justify-start sm:justify-end items-center w-full sm:w-1/2">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <Button
-                  size="sm"
-                  className="flex items-center gap-2"
-                  onClick={() => setOpenSkillDialog(true)}
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold">
+                Dehix Talent & Interviewer
+              </h2>
+
+              <div className="flex flex-wrap gap-3">
+                <Dialog
+                  open={openSkillApplyDialog}
+                  onOpenChange={setOpenSkillApplyDialog}
                 >
-                  <Plus className="h-4 w-4" />
-                  Add Skill
-                </Button>
-                <Button
-                  size="sm"
-                  className="flex items-center gap-2"
-                  onClick={() => setOpenDomainDialog(true)}
+                  <Button
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={() => setOpenSkillApplyDialog(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Apply to be Interviewer (Skill)
+                  </Button>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Apply to be Interviewer - Skill</DialogTitle>
+                      <DialogDescription>
+                        Select a verified skill and set your per interview
+                        charge.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-2">
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-gray-600">
+                          Skill
+                        </p>
+                        <select
+                          className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                          value={selectedSkillAttrId}
+                          onChange={(e) =>
+                            setSelectedSkillAttrId(e.target.value)
+                          }
+                          disabled={interviewerLoading}
+                        >
+                          <option value="">Select a verified skill</option>
+                          {verifiedAttributes
+                            .filter(
+                              (a) =>
+                                a.type === 'SKILL' &&
+                                String(a.interviewerStatus).toUpperCase() ===
+                                  'NOT_APPLIED',
+                            )
+                            .map((a) => (
+                              <option key={a._id} value={a._id}>
+                                {a.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-gray-600">
+                          Per Interview Charge (₹)
+                        </p>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={skillCharge}
+                          onChange={(e) => setSkillCharge(e.target.value)}
+                          placeholder="Enter amount"
+                          disabled={interviewerLoading}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          await handleApplyAsInterviewer(
+                            selectedSkillAttrId,
+                            Number(skillCharge),
+                          );
+                          setOpenSkillApplyDialog(false);
+                        }}
+                        disabled={interviewerLoading}
+                      >
+                        Apply
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog
+                  open={openDomainApplyDialog}
+                  onOpenChange={setOpenDomainApplyDialog}
                 >
-                  <Plus className="h-4 w-4" />
-                  Add Domain
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      <ListFilter className="h-4 w-4" />
-                      Filter
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem
-                      checked={filter === 'All'}
-                      onCheckedChange={() => setFilter('All')}
-                    >
-                      All
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                      checked={filter === 'Skills'}
-                      onCheckedChange={() => setFilter('Skills')}
-                    >
-                      Skills
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                      checked={filter === 'Domain'}
-                      onCheckedChange={() => setFilter('Domain')}
-                    >
-                      Domain
-                    </DropdownMenuCheckboxItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  <Button
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={() => setOpenDomainApplyDialog(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Apply as Interviewer (Domain)
+                  </Button>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Apply as Interviewer - Domain</DialogTitle>
+                      <DialogDescription>
+                        Select a verified domain and set your per interview
+                        charge.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-2">
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-gray-600">
+                          Domain
+                        </p>
+                        <select
+                          className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                          value={selectedDomainAttrId}
+                          onChange={(e) =>
+                            setSelectedDomainAttrId(e.target.value)
+                          }
+                          disabled={interviewerLoading}
+                        >
+                          <option value="">Select a verified domain</option>
+                          {verifiedAttributes
+                            .filter(
+                              (a) =>
+                                a.type === 'DOMAIN' &&
+                                String(a.interviewerStatus).toUpperCase() ===
+                                  'NOT_APPLIED',
+                            )
+                            .map((a) => (
+                              <option key={a._id} value={a._id}>
+                                {a.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-gray-600">
+                          Per Interview Charge (₹)
+                        </p>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={domainCharge}
+                          onChange={(e) => setDomainCharge(e.target.value)}
+                          placeholder="Enter amount"
+                          disabled={interviewerLoading}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          await handleApplyAsInterviewer(
+                            selectedDomainAttrId,
+                            Number(domainCharge),
+                          );
+                          setOpenDomainApplyDialog(false);
+                        }}
+                        disabled={interviewerLoading}
+                      >
+                        Apply
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
-            <SkillDialog
-              open={openSkillDialog}
-              onClose={() => setOpenSkillDialog(false)}
-              onSubmit={onSubmitSkill}
-              skillOptions={skills}
-              levels={levels}
-              defaultValues={editingSkill || undefined}
-              loading={loading}
-            />
-            <DomainDialog
-              open={openDomainDialog}
-              onClose={() => setOpenDomainDialog(false)}
-              onSubmit={onSubmitDomain}
-              domainOptions={domains}
-              levels={levels}
-              defaultValues={editingDomain || undefined}
-              loading={loading}
-            />
-          </div>
-          <div className="w-full overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-200 hover:bg-gray-300 dark:bg-[#09090B] dark:hover:bg-[#09090B]">
-                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    Item
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    Level
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    Experience
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    <div className="flex gap-2 items-center">
-                      Actions
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Info className="w-4 h-4 text-muted-foreground  cursor-pointer" />
-                        </PopoverTrigger>
-                        <PopoverContent className="text-sm w-fit  border rounded p-2 shadow">
-                          This will be available in the next phase.
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading
-                  ? [...Array(4)].map((_, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="">
-                          <Skeleton className="h-6 w-24" />
-                        </TableCell>
-                        <TableCell className="">
-                          <Skeleton className="h-6 w-24" />
-                        </TableCell>
-                        <TableCell className="">
-                          <Skeleton className="h-6 w-24" />
-                        </TableCell>
-                        <TableCell className="">
-                          <Skeleton className="h-6 w-20 rounded-full" />
-                        </TableCell>
-                        <TableCell className="">
-                          <Skeleton className="w-8 h-8 p-2 rounded-md" />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  : filteredData()!.map((item) => (
-                      <TableRow
-                        key={item._id}
-                        className="hover:bg-gray-50 dark:hover:bg-[#0C0C0F]"
-                      >
-                        <TableCell className="font-medium text-gray-900 dark:text-gray-100">
-                          {item.name}
-                        </TableCell>
-                        <TableCell className="">
-                          <Badge
-                            className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.level)}`}
-                          >
-                            {item?.level?.toUpperCase()}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-gray-600 dark:text-gray-300">
-                          {typeof item.experience === 'number' &&
-                          item.experience > 0
-                            ? item.experience + ' yrs'
-                            : ''}
-                        </TableCell>
-                        <TableCell className="">
-                          <Badge
-                            className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(item.interviewStatus)}`}
-                          >
-                            {item?.interviewStatus?.toUpperCase()}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="py-2">
-                          {String(item?.interviewStatus).toUpperCase() ===
-                          'COMPLETED' ? (
-                            <div className="flex justify-start">
-                              <Button variant="secondary" size="sm">
-                                View Report
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="flex justify-start">
-                              <Button
-                                size="sm"
-                                onClick={() =>
-                                  handleSkillDomainDialog(
-                                    item,
-                                    item.experience ? 'SKILL' : 'DOMAIN',
-                                  )
-                                }
+
+            <div className="w-full overflow-x-auto mt-6">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-200 hover:bg-gray-300 dark:bg-[#09090B] dark:hover:bg-[#09090B]">
+                    <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      Type
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      Name
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      Level
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      Experience
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      Interviewer Status
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      Per Interview Charge
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      Active
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {interviewerLoading
+                    ? [...Array(3)].map((_, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Skeleton className="h-6 w-16" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-24" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-16" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-16" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-24" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-16" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-10" />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    : verifiedAttributes
+                        .filter(
+                          (a) =>
+                            String(a.interviewerStatus).toUpperCase() !==
+                            'NOT_APPLIED',
+                        )
+                        .map((a) => (
+                          <TableRow key={a._id}>
+                            <TableCell className="text-xs font-medium text-gray-800 dark:text-gray-100">
+                              {a.type}
+                            </TableCell>
+                            <TableCell className="text-xs font-medium text-gray-800 dark:text-gray-100">
+                              {a.name}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(a.level)}`}
                               >
-                                Conduct Interview
-                              </Button>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-              </TableBody>
-            </Table>
+                                {a.level?.toUpperCase()}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-gray-700 dark:text-gray-300">
+                              {a.experience ? `${a.experience} yrs` : ''}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={`px-3 py-1 rounded-full text-xs font-medium border ${statusOutlineClasses(a.interviewerStatus)}`}
+                              >
+                                {String(a.interviewerStatus).toUpperCase()}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-gray-700 dark:text-gray-300">
+                              {a.perInterviewCharge ?? '-'}
+                            </TableCell>
+                            <TableCell>
+                              <Switch
+                                checked={
+                                  String(
+                                    a.interviewerActiveStatus,
+                                  ).toUpperCase() === 'ACTIVE'
+                                }
+                                onCheckedChange={() =>
+                                  handleToggleInterviewerActive(a)
+                                }
+                                disabled={
+                                  String(a.dehixTalentStatus).toUpperCase() !==
+                                  'APPROVED'
+                                }
+                                aria-label="Toggle interviewer active status"
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
       </div>
-      <SkillDomainMeetingDialog
-        isOpen={showMeetingDialog}
-        onClose={() => setShowMeetingDialog(false)}
-        doc_id={docId || ''}
-        doc_type={docType || ''}
-      />
     </>
   );
 };
