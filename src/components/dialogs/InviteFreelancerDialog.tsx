@@ -12,6 +12,8 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 
+import { ProjectTypeDialog } from './ProjectTypeDialog';
+
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -70,6 +72,7 @@ export default function InviteFreelancerDialog({
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
   const [isConnectsDialogOpen, setIsConnectsDialogOpen] = useState(false);
+  const [, setModalOpen] = useState(false);
 
   const hireCost = parseInt(
     process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '10',
@@ -306,12 +309,10 @@ export default function InviteFreelancerDialog({
                         invite freelancers to.
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => onOpenChange(false)}
-                    >
-                      Create New Project
-                    </Button>
+                    <ProjectTypeDialog
+                      onOpenChange={setModalOpen}
+                      trigger={<Button size="sm">Create New Project</Button>}
+                    />
                   </div>
                 ) : (
                   <Tabs defaultValue="all" className="w-full">
