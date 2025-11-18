@@ -58,17 +58,27 @@ const profileFormSchema = z.object({
     .optional()
     .refine(
       (val) => {
+        // No validation if field is empty or has 200+ words
         if (!val || val.trim() === '') return true;
         const wordCount = val
           .trim()
           .split(/\s+/)
           .filter((word) => word.length > 0).length;
-        return wordCount >= 500;
+        return wordCount >= 200;
       },
       {
-        message: 'Cover letter must contain at least 500 words when provided.',
+        message: 'Cover letter must contain at least 200 words when provided.',
       },
-    ),
+    )
+    .transform((val) => {
+      // Remove any error if word count is 200+
+      if (!val) return val;
+      const wordCount = val
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0).length;
+      return wordCount >= 200 ? val : val;
+    }),
   description: z.string().max(500, {
     message: 'Description cannot exceed 500 characters.',
   }),
