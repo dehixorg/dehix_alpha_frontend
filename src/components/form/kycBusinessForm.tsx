@@ -115,7 +115,6 @@ export function KYCForm({ user_id }: { user_id: string }) {
       const response = await axiosInstance.get(`/business/${user_id}`);
       const kycData = response.data?.kyc;
       setKycStatus(kycData?.status || 'PENDING');
-      console.log('kycData', response.data.kyc);
       setRejectionReason(kycData?.rejectionReason);
       reset({
         businessProof: kycData?.businessProof || '',
