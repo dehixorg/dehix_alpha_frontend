@@ -1,12 +1,9 @@
 'use client';
 import * as React from 'react';
-import { useSelector } from 'react-redux';
 
 import InterviewProfile from '@/components/freelancer/interviewProfile/interviewProfile';
-import { RootState } from '@/lib/store';
 
 export default function ProfileComponent() {
-  const user = useSelector((state: RootState) => state.user);
   return (
     <>
       <div className="ml-5 md:ml-10 mr-5 md:mr-10">
@@ -20,7 +17,7 @@ export default function ProfileComponent() {
           </p>
         </div>
       </div>
-      <InterviewProfile freelancerId={user?.uid} />
+      <InterviewProfile />
     </>
   );
 }
