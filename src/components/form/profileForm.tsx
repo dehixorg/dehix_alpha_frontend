@@ -336,8 +336,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         skills: completeSkillsArray,
       });
 
-      console.log('TEST@', completeSkillsArray);
-
       if (response.status === 200) {
         notifySuccess('Skills added successfully to your profile.');
         return response.data.data;

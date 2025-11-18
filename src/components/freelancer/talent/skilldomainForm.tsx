@@ -121,7 +121,6 @@ const SkillDomainForm: React.FC = () => {
           activeStatus: t.talentActiveStatus === 'ACTIVE',
           originalTalentId: t.talentId ?? t.type_id ?? '',
         }));
-        console.log('TEST:', formatted);
         setRows(formatted);
         setVisibility(formatted.map((r) => r.activeStatus));
       } catch (err: any) {
