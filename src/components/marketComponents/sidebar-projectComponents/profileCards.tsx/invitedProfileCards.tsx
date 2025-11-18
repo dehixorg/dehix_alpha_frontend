@@ -32,6 +32,7 @@ interface Talent {
   profilePic: string;
   domainName: string;
   professionalInfo: ProfessionalExperience[];
+  freelancerId: string;
   skills: Skill[];
 }
 interface ProfileCardsProps {
@@ -48,7 +49,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
   const router = useRouter();
 
   const handleViewProfile = (talentId: string) => {
-    router.push(`/profiles?id=${talentId}`);
+    router.replace(`/business/freelancerProfile/${talentId}`);
   };
 
   const SkeletonCard = () => (
@@ -147,7 +148,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                   size="sm"
                   variant="outline"
                   className="flex items-center gap-1"
-                  onClick={() => handleViewProfile(talent._id)}
+                  onClick={() => handleViewProfile(talent.freelancerId)}
                 >
                   <ExternalLink className="h-3 w-3" />
                   View Profile

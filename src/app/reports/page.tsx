@@ -116,7 +116,7 @@ export default function NewReportPage() {
             </div>
 
             {/* Main Content */}
-            <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+            <div className="card rounded-xl border shadow-sm overflow-hidden mb-6">
               <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Award, Gauge, Clock, FileText } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,9 +27,9 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Slider } from '@/components/ui/slider';
 
 interface Skill {
   _id: string;
@@ -40,6 +40,7 @@ interface SkillDomainData {
   uid: string;
   skillId: string;
   label: string;
+  level: string;
   experience: string;
   description: string;
   visible: boolean;
@@ -54,6 +55,7 @@ interface SkillDialogProps {
 const skillSchema = z.object({
   label: z.string().nonempty('Please select a skill'),
   skillId: z.string().nonempty('Skill ID is required'),
+  level: z.string().nonempty('Please select a level'),
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -80,6 +82,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
     defaultValues: {
       skillId: '',
       label: '',
+      level: '',
       experience: '',
       description: '',
       visible: false,
@@ -96,6 +99,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
         skillId: data.skillId,
         skillName: data.label,
         businessId: user.uid,
+        level: data.level,
         experience: data.experience,
         description: data.description,
         status: data.status,
@@ -141,12 +145,20 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
           Add Skill
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl">Add New Skill</DialogTitle>
-          <DialogDescription>
-            Select a skill and provide details about your experience
-          </DialogDescription>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="flex items-start gap-3">
+            <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/40 px-2">
+              <Award className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl">Add Dehix Skill</DialogTitle>
+              <DialogDescription className="mt-1 text-sm">
+                Select a skill from your shortlist and describe the experience
+                you expect for this role.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
@@ -183,18 +195,76 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                 )}
               />
 
+              {/* Level slider */}
+              <FormField
+                control={control}
+                name="level"
+                render={({ field }) => {
+                  const levels = [
+                    'BEGINNER',
+                    'INTERMEDIATE',
+                    'ADVANCED',
+                    'EXPERT',
+                  ];
+                  const currentIndex = (() => {
+                    const idx = levels.indexOf(field.value || '');
+                    return idx >= 0 ? idx : 0;
+                  })();
+
+                  return (
+                    <FormItem>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            <Gauge className="h-3 w-3" />
+                            <span>Seniority level</span>
+                          </div>
+                          {field.value && (
+                            <span className="text-[11px] font-medium text-muted-foreground">
+                              {field.value}
+                            </span>
+                          )}
+                        </div>
+                        <FormControl>
+                          <Slider
+                            min={0}
+                            max={3}
+                            step={1}
+                            value={[currentIndex]}
+                            onValueChange={([val]) => {
+                              const next = levels[val] ?? levels[0];
+                              field.onChange(next);
+                            }}
+                          />
+                        </FormControl>
+                        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                          <span>Beginner</span>
+                          <span>Intermediate</span>
+                          <span>Advanced</span>
+                          <span>Expert</span>
+                        </div>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
               {/* Experience */}
               <FormField
                 control={control}
                 name="experience"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Experience (Years)</FormLabel>
+                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      <Clock className="h-3 w-3" />
+                      <span>Experience</span>
+                    </div>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type="number"
-                          placeholder="e.g. 5"
+                          placeholder="Years of experience"
                           min={0}
                           max={40}
                           step={0.1}
@@ -228,10 +298,13 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      <FileText className="h-3 w-3" />
+                      <span>Role description</span>
+                    </div>
                     <FormControl>
                       <Textarea
-                        placeholder="Describe your experience with this skill..."
+                        placeholder="Describe the kind of experience you expect with this skill..."
                         className="min-h-[100px]"
                         {...field}
                       />

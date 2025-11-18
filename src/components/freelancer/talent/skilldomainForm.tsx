@@ -3,7 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
-import { ArrowUpRight, Briefcase, Eye, Zap } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Award,
+  Briefcase,
+  Eye,
+  Zap,
+  VideoIcon,
+} from 'lucide-react';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -24,30 +31,42 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
-import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import {
+  getBadgeColor,
+  statusOutlineClasses,
+} from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
 
 interface Skill {
   _id: string;
-  label: string;
+  type_id: string;
+  name: string;
 }
 
 interface Domain {
   _id: string;
-  label: string;
+  type_id: string;
+  name: string;
 }
 
 interface SkillDomainData {
   uid: string;
   label: string;
+  level: string;
   experience: string;
   monthlyPay: string;
   type: 'SKILL' | 'DOMAIN';
@@ -67,86 +86,85 @@ const SkillDomainForm: React.FC = () => {
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
     const fetch = async () => {
       setLoading(true);
       try {
-        const [skRes, domRes, talRes] = await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'),
-          user?.uid
-            ? axiosInstance.get(`/freelancer/${user.uid}/dehix-talent`)
-            : Promise.resolve({ data: { data: [] } }),
-        ]);
+        const result = await axiosInstance.get(
+          `/freelancer/${user.uid}/dehix-talent/status`,
+        );
 
-        if (cancelled) return;
+        const talentData = result.data?.data ?? {};
+        setSkills(talentData.NOT_APPLIED?.SKILL ?? []);
+        setDomains(talentData.NOT_APPLIED?.DOMAIN ?? []);
 
-        const skillArr: Skill[] = (skRes.data?.data ?? []).map((s: any) => ({
-          _id: s._id,
-          label: s.label,
-        }));
-        const domainArr: Domain[] = (domRes.data?.data ?? []).map((d: any) => ({
-          _id: d._id,
-          label: d.label,
-        }));
+        const statusEntries = Object.entries(talentData ?? {});
 
-        const rawTalent = Array.isArray(talRes.data?.data)
-          ? talRes.data.data
-          : Object.values(talRes.data?.data ?? {});
-        const talentFlat = rawTalent.flat();
+        const nonNotAppliedGroups = statusEntries
+          .filter(([statusKey]) => statusKey !== 'NOT_APPLIED')
+          .map(([, group]) => group);
+
+        const talentFlat = nonNotAppliedGroups.flatMap((group: any) => {
+          if (!group || typeof group !== 'object') return [];
+          const skillsGroup = Array.isArray(group.SKILL) ? group.SKILL : [];
+          const domainsGroup = Array.isArray(group.DOMAIN) ? group.DOMAIN : [];
+          return [...skillsGroup, ...domainsGroup];
+        });
 
         const formatted: SkillDomainData[] = talentFlat.map((t: any) => ({
           uid: t._id,
-          label: t.talentName ?? '—',
+          label: t.talentName ?? t.name ?? '—',
+          level: t.level ?? '—',
           experience: t.experience ?? '—',
-          monthlyPay: t.monthlyPay ?? '—',
+          monthlyPay: t.talentMonthlyPay ?? '—',
           type: t.type,
-          status: t.status,
-          activeStatus: t.activeStatus ?? false,
-          originalTalentId: t.talentId,
+          status: (t.status ?? t.dehixTalentStatus) as StatusEnum,
+          activeStatus: t.talentActiveStatus === 'ACTIVE',
+          originalTalentId: t.talentId ?? t.type_id ?? '',
         }));
-
         setRows(formatted);
         setVisibility(formatted.map((r) => r.activeStatus));
-
-        const used = new Set(
-          formatted.map((i) => i.originalTalentId).filter(Boolean),
-        );
-        setSkills(skillArr.filter((s) => !used.has(s._id)));
-        setDomains(domainArr.filter((d) => !used.has(d._id)));
       } catch (err: any) {
         if (err?.code !== 'ERR_CANCELED') {
           console.error(err);
           notifyError('Failed to load data. Please try again.', 'Error');
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     };
 
     fetch();
     return () => {
-      cancelled = true;
       cancelAllRequests();
     };
   }, [user?.uid, refresh]);
 
   const toggleVisibility = useCallback(
-    async (idx: number, checked: boolean, id: string) => {
+    async (idx: number, checked: boolean, id: string, previous: boolean) => {
+      // Optimistically update UI
+      setVisibility((v) => {
+        const copy = [...v];
+        copy[idx] = checked;
+        return copy;
+      });
+
       try {
         const { status } = await axiosInstance.put(
           `/freelancer/dehix-talent/${id}`,
-          { activeStatus: checked },
+          { talentActiveStatus: checked ? 'ACTIVE' : 'INACTIVE' },
         );
-        if (status === 200) {
-          setVisibility((v) => {
-            const copy = [...v];
-            copy[idx] = checked;
-            return copy;
-          });
+
+        if (status !== 200) {
+          throw new Error('Failed to update visibility');
         }
       } catch (e) {
         console.error(e);
+        // Revert UI on failure
+        setVisibility((v) => {
+          const copy = [...v];
+          copy[idx] = previous;
+          return copy;
+        });
         notifyError('Could not update visibility.', 'Error');
       }
     },
@@ -161,7 +179,7 @@ const SkillDomainForm: React.FC = () => {
         size="sm"
         className="bg-white text-black hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-gray-300"
       >
-        <Briefcase className="h-4 w-4 mr-1" />
+        <Award className="h-4 w-4 mr-1" />
         Add Skill
       </Button>
     </SkillDialog>
@@ -177,7 +195,7 @@ const SkillDomainForm: React.FC = () => {
   );
 
   return (
-    <section className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
+    <section className="min-h-screen py-4 px-4 sm:px-6 lg:px-8">
       <Card className="w-full shadow-lg">
         <CardHeader className="border-b bg-card/50">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -314,11 +332,12 @@ const SkillDomainForm: React.FC = () => {
                 <TableRow>
                   <TableHead className="w-20">Type</TableHead>
                   <TableHead className="min-w-[140px]">Label</TableHead>
+                  <TableHead className="w-28 text-center">Level</TableHead>
                   <TableHead className="w-28 text-center">Exp.</TableHead>
                   <TableHead className="w-32 text-center">Pay</TableHead>
                   <TableHead className="w-28 text-center">Status</TableHead>
                   <TableHead className="w-28 text-center">Visible</TableHead>
-                  <TableHead className="w-28 text-center">Manage</TableHead>
+                  <TableHead className="w-32 text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -445,8 +464,28 @@ const SkillDomainForm: React.FC = () => {
                       <TableCell className="font-medium">{r.label}</TableCell>
 
                       <TableCell className="text-center">
+                        <Badge
+                          variant="outline"
+                          className={statusOutlineClasses(r.level)}
+                        >
+                          {r.level}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-center">
+                        {r.experience} yrs
+                      </TableCell>
+
+                      <TableCell className="text-center">
+                        {formatCurrency(r.monthlyPay)}
+                      </TableCell>
+
+                      <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Badge className={getBadgeColor(r.status)}>
+                          <Badge
+                            variant="outline"
+                            className={statusOutlineClasses(r.status)}
+                          >
                             {r.status?.toUpperCase()}
                           </Badge>
                           {r.status === StatusEnum.PENDING && r.uid && (
@@ -464,44 +503,76 @@ const SkillDomainForm: React.FC = () => {
                         <Switch
                           checked={visibility[idx]}
                           onCheckedChange={(v) =>
-                            toggleVisibility(idx, v, r.uid)
+                            toggleVisibility(idx, v, r.uid, visibility[idx])
                           }
                           aria-label={`Toggle visibility for ${r.label}`}
                         />
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {r.originalTalentId ? (
-                          <Button
-                            asChild
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Manage jobs for ${r.label}`}
-                          >
-                            <Link
-                              href={{
-                                pathname: `/freelancer/talent/manage/${r.type.toLowerCase()}/${r.originalTalentId}`,
-                                query: { label: r.label },
-                              }}
-                            >
-                              <ArrowUpRight className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                        ) : (
-                          <div className="flex items-center justify-center gap-2">
-                            <Badge className={getBadgeColor(r.status)}>
-                              {r.status?.toUpperCase()}
-                            </Badge>
-                            {r.status === StatusEnum.PENDING && r.uid && (
-                              <VerifyDialog
-                                talentType={r.type}
-                                _id={r.uid}
-                                userId={user.uid}
-                                originalTalentId={r.originalTalentId}
-                              />
-                            )}
-                          </div>
-                        )}
+                        <div className="flex items-center justify-center gap-2">
+                          {r.originalTalentId ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    asChild
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Manage jobs for ${r.label}`}
+                                  >
+                                    <Link
+                                      href={{
+                                        pathname: `/freelancer/talent/manage/${r.type.toLowerCase()}/${r.originalTalentId}`,
+                                        query: { label: r.label },
+                                      }}
+                                    >
+                                      <ArrowUpRight className="h-4 w-4" />
+                                    </Link>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Manage jobs</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <div className="flex items-center justify-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={statusOutlineClasses(r.status)}
+                              >
+                                {r.status?.toUpperCase()}
+                              </Badge>
+                              {r.status === StatusEnum.PENDING && r.uid && (
+                                <VerifyDialog
+                                  talentType={r.type}
+                                  _id={r.uid}
+                                  userId={user.uid}
+                                  originalTalentId={r.originalTalentId}
+                                />
+                              )}
+                            </div>
+                          )}
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Schedule interview for ${r.label}`}
+                                >
+                                  <VideoIcon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Schedule interview</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -590,7 +661,9 @@ const SkillDomainForm: React.FC = () => {
                     )}
                     <Switch
                       checked={visibility[idx]}
-                      onCheckedChange={(v) => toggleVisibility(idx, v, r.uid)}
+                      onCheckedChange={(v) =>
+                        toggleVisibility(idx, v, r.uid, visibility[idx])
+                      }
                       aria-label={`Toggle visibility for ${r.label}`}
                     />
                   </div>

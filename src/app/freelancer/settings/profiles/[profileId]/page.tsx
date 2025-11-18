@@ -18,6 +18,8 @@ import {
   Github,
   Award,
   UserCog,
+  Briefcase,
+  Calendar,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -534,7 +536,7 @@ export default function ProfileDetailPage() {
 
   if (isLoading || !skillsAndDomainsLoaded) {
     return (
-      <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <div className="flex min-h-screen w-full flex-col">
         <SidebarMenu
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -1376,11 +1378,12 @@ export default function ProfileDetailPage() {
                 )}
               </CardContent>
             </Card>
-            <Card className="bg-muted-foreground/20 dark:bg-black/20">
-              <CardHeader>
+            <Card className="border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background shadow-sm">
+              <CardHeader className="pb-3 border-b border-border/60">
                 <div className="flex justify-between items-center w-full">
-                  <div>
-                    <CardTitle className="text-xl font-semibold">
+                  <div className="space-y-1">
+                    <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-primary" />
                       Experience
                     </CardTitle>
                     <p className="text-sm text-muted-foreground hidden md:block">
@@ -1399,12 +1402,11 @@ export default function ProfileDetailPage() {
                 </div>
               </CardHeader>
 
-              <CardContent>
+              <CardContent className="pt-4">
                 {editingProfileData.experiences &&
                 editingProfileData.experiences.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {editingProfileData.experiences.map((experience: any) => {
-                      // Ensure dates are Date objects
                       const workFrom = new Date(experience.workFrom);
                       const workTo = experience.workTo
                         ? new Date(experience.workTo)
@@ -1413,34 +1415,37 @@ export default function ProfileDetailPage() {
                       return (
                         <Card
                           key={experience._id}
-                          className="relative p-3 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm aspect-square flex flex-col justify-between transition-all"
+                          className="relative flex flex-col justify-between h-full border border-border/70 bg-card/80 dark:bg-card/60 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
                         >
-                          {/* Delete Icon */}
-                          {isEditMode && (
-                            <div className="absolute top-2 right-2">
-                              <Trash2
-                                className="h-4 w-4 text-red-500 cursor-pointer hover:text-red-700"
-                                onClick={() =>
-                                  handleRemoveExperience(experience._id)
-                                }
-                              />
+                          <div className="p-3.5 pb-3 flex-1 flex flex-col gap-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="space-y-1">
+                                <h4 className="font-semibold text-sm md:text-base text-foreground line-clamp-2">
+                                  {experience.jobTitle || experience.title}
+                                </h4>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1 line-clamp-1">
+                                  <Briefcase className="h-3.5 w-3.5 text-muted-foreground/80" />
+                                  {experience.company ||
+                                    'Company not specified'}
+                                </p>
+                              </div>
+
+                              {isEditMode && (
+                                <button
+                                  type="button"
+                                  className="p-1 rounded-full hover:bg-destructive/10 text-destructive transition-colors"
+                                  onClick={() =>
+                                    handleRemoveExperience(experience._id)
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )}
                             </div>
-                          )}
 
-                          <div className="flex flex-col gap-1 h-full justify-between">
-                            <div>
-                              {/* Job Title */}
-                              <h4 className="font-semibold text-md text-gray-900 dark:text-gray-100 line-clamp-2">
-                                {experience.jobTitle || experience.title}
-                              </h4>
-
-                              {/* Company */}
-                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                                {experience.company}
-                              </p>
-
-                              {/* Duration */}
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>
                                 {workFrom.toLocaleDateString('en-US', {
                                   year: 'numeric',
                                   month: 'short',
@@ -1452,31 +1457,32 @@ export default function ProfileDetailPage() {
                                       month: 'short',
                                     })
                                   : 'Present'}
-                              </p>
-
-                              {/* Work Description */}
-                              {experience.workDescription && (
-                                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mt-1">
-                                  {experience.workDescription}
-                                </p>
-                              )}
-
-                              {/* Reference */}
-                              {experience.referencePersonName && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
-                                  Reference: {experience.referencePersonName}
-                                </p>
-                              )}
+                              </span>
                             </div>
+
+                            {experience.workDescription && (
+                              <p className="text-xs md:text-sm text-muted-foreground line-clamp-3 mt-1">
+                                {experience.workDescription}
+                              </p>
+                            )}
+
+                            {experience.referencePersonName && (
+                              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
+                                Reference: {experience.referencePersonName}
+                              </p>
+                            )}
                           </div>
                         </Card>
                       );
                     })}
                   </div>
                 ) : (
-                  <Card className="flex flex-col items-center justify-center py-12 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm">
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      No experience added to this profile yet
+                  <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-dashed border-border/70 bg-muted/40 text-center">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                      <Briefcase className="h-6 w-6 text-primary" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      No experience added to this profile yet.
                     </p>
                     {isEditMode && (
                       <Button
@@ -1487,7 +1493,7 @@ export default function ProfileDetailPage() {
                         <Plus className="h-4 w-4" /> Add Experience
                       </Button>
                     )}
-                  </Card>
+                  </div>
                 )}
               </CardContent>
             </Card>

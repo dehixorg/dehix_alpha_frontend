@@ -164,9 +164,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       // Save to freelancer profile
       const savedProfile = await saveSkillsToProfile([newSkill]);
       // Update state with the skill that includes the ID from backend
-      if (savedProfile && savedProfile.skills) {
-        const skillWithId = savedProfile.skills.find(
-          (s: any) => s.name === newSkill.name,
+      if (savedProfile && savedProfile.attributes) {
+        const skillWithId = savedProfile.attributes.find(
+          (attr: any) => attr.type === 'SKILL' && attr.name === newSkill.name,
         );
         if (skillWithId) {
           setCurrSkills((prev: any) =>
@@ -222,9 +222,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       // Save to freelancer profile
       const savedProfile = await saveDomainsToProfile([newDomain]);
       // Update state with the domain that includes the ID from backend
-      if (savedProfile && savedProfile.domain) {
-        const domainWithId = savedProfile.domain.find(
-          (d: any) => d.name === newDomain.name,
+      if (savedProfile && savedProfile.attributes) {
+        const domainWithId = savedProfile.attributes.find(
+          (attr: any) => attr.type === 'DOMAIN' && attr.name === newDomain.name,
         );
         if (domainWithId) {
           setCurrDomains((prev: any) =>
@@ -418,7 +418,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const handleAddSkillByValue = async (value: string) => {
     addSkill(value, skills, setSkills);
     if (value && !currSkills.some((skill: any) => skill.name === value)) {
+      const matchedSkill = skills.find(
+        (s: any) => s.name === value || s.label === value,
+      );
       const newSkill = {
+        type_id: matchedSkill?._id || '',
         name: value,
         level: '',
         experience: '',
@@ -428,36 +432,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         interviewPermission: InterviewPermission.NOT_VERIFIED,
       };
 
-      // Update local state immediately
-      const updatedSkills = [...currSkills, newSkill];
-      setCurrSkills(updatedSkills);
-      setLastAddedItems((prev) => ({
-        ...prev,
-        skills: [...prev.skills, { name: value }],
-      }));
-
       // Save to backend
       try {
         // Send ONLY the new skill, not the whole list
         const savedProfile = await saveSkillsToProfile([newSkill]);
         // Update state with the skill that includes the ID from backend
         if (savedProfile && savedProfile.skills) {
-          const skillWithId = savedProfile.skills.find(
-            (s: any) => s.name === value,
-          );
-          if (skillWithId) {
-            setCurrSkills((prev: any) =>
-              prev.map((s: any) => (s.name === value ? skillWithId : s)),
-            );
-          }
+          const skillWithIds = savedProfile.skills;
+          setCurrSkills((prev: any) => [...prev, ...skillWithIds]);
         }
       } catch (error) {
         // Revert local state if API call fails
         setCurrSkills(currSkills);
-        setLastAddedItems((prev) => ({
-          ...prev,
-          skills: prev.skills.filter((s) => s.name !== value),
-        }));
       }
     }
   };
@@ -465,7 +451,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const handleAddDomainByValue = async (value: string) => {
     addDomain(value, domains, setDomains);
     if (value && !currDomains.some((domain: any) => domain.name === value)) {
+      const matchedDomain = domains.find(
+        (d: any) => d.name === value || d.label === value,
+      );
       const newDomain = {
+        type_id: matchedDomain?._id || '',
         _id: '',
         name: value,
         level: '',
@@ -475,35 +465,17 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         interviewerRating: 0,
       };
 
-      // Update local state immediately
-      const updatedDomains = [...currDomains, newDomain];
-      setCurrDomains(updatedDomains);
-      setLastAddedItems((prev) => ({
-        ...prev,
-        domains: [...prev.domains, { name: value }],
-      }));
-
       // Save to backend
       try {
         const savedProfile = await saveDomainsToProfile([newDomain]);
-        // Update state with the domain that includes the ID from backend
+        // Update state with the domains that include IDs from backend
         if (savedProfile && savedProfile.domain) {
-          const domainWithId = savedProfile.domain.find(
-            (d: any) => d.name === value,
-          );
-          if (domainWithId) {
-            setCurrDomains((prev: any) =>
-              prev.map((d: any) => (d.name === value ? domainWithId : d)),
-            );
-          }
+          const domainWithIds = savedProfile.domain;
+          setCurrDomains((prev: any) => [...prev, ...domainWithIds]);
         }
       } catch (error) {
         // Revert local state if API call fails
         setCurrDomains(currDomains);
-        setLastAddedItems((prev) => ({
-          ...prev,
-          domains: prev.domains.filter((d) => d.name !== value),
-        }));
       }
     }
   };
@@ -698,13 +670,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
 
+        const tmpSkills: any[] = [],
+          tmpDomains: any[] = [];
+        userResponse.data.data.attributes.forEach((attr: any) => {
+          if (attr.type === 'SKILL') {
+            tmpSkills.push(attr);
+          } else if (attr.type === 'DOMAIN') {
+            tmpDomains.push(attr);
+          }
+        });
         // Set options for dropdowns
         setSkills(skillsResponse.data.data);
         setDomains(domainsResponse.data.data);
         setProjectDomains(projectDomainResponse.data.data);
 
-        setCurrSkills(userResponse.data.data.skills);
-        setCurrDomains(userResponse.data.data.domain);
+        setCurrSkills(tmpSkills);
+        setCurrDomains(tmpDomains);
         setCurrProjectDomains(userResponse.data.data.projectDomain);
 
         // Ensure cover letter is treated as text, not URL

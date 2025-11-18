@@ -198,7 +198,10 @@ export default function Dashboard() {
                   return (
                     <Progress
                       value={completionPercentage}
-                      className={cn('h-1 w-full', completionColor)}
+                      className={cn(
+                        'h-1 w-full bg-foreground/20',
+                        completionColor,
+                      )}
                     />
                   );
                 })()}

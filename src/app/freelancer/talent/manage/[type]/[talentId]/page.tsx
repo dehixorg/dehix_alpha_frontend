@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import type { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
+import EmptyState from '@/components/shared/EmptyState';
 
 export default function ManageTalentPage() {
   const params = useParams();
@@ -131,11 +132,21 @@ export default function ManageTalentPage() {
     );
 
     if (loading) {
-      return <p>Loading...</p>;
+      return (
+        <EmptyState
+          title="Loading applications"
+          description="Please wait while we fetch your job applications for this talent."
+        />
+      );
     }
 
     if (filteredApplications.length === 0) {
-      return <p>No applications found.</p>;
+      return (
+        <EmptyState
+          title="No applications found"
+          description="You don't have any job applications in this stage yet. Once you apply or are invited, they will show up here."
+        />
+      );
     }
 
     return (
