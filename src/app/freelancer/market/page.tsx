@@ -293,15 +293,16 @@ const Market: React.FC = () => {
     // Parse arrays by repeated params
     const sp = searchParams;
     if (!sp) return;
-    const getAll = (key: string) => sp.getAll(key);
+    const getAndSplit = (key: string) =>
+      sp.get(key)?.split(',').filter(Boolean) || [];
     const parseBool = (key: string) => sp.get(key) === 'true';
     const initial: FilterState = {
-      jobType: getAll('jobType') || [],
-      domain: getAll('domain') || [],
-      skills: getAll('skills') || [],
-      projects: getAll('projects') || [],
-      projectDomain: getAll('projectDomain') || [],
-      sorting: getAll('sorting') || [],
+      jobType: getAndSplit('jobType'),
+      domain: getAndSplit('domain'),
+      skills: getAndSplit('skills'),
+      projects: getAndSplit('projects'),
+      projectDomain: getAndSplit('projectDomain'),
+      sorting: getAndSplit('sorting'),
       minRate: sp.get('minRate') || '',
       maxRate: sp.get('maxRate') || '',
       favourites: parseBool('favourites') || false,
@@ -375,7 +376,6 @@ const Market: React.FC = () => {
     return () => {
       isMounted = false;
       clearTimeout(timer);
-      // Do not cancel globally here; avoid canceling unrelated in-flight requests
     };
   }, [filters, user?.uid, fetchJobs]);
 
@@ -388,11 +388,7 @@ const Market: React.FC = () => {
       if (Array.isArray(value)) {
         // Only process non-empty arrays
         if (value?.length > 0) {
-          value.forEach((v) => {
-            if (v !== undefined && v !== null) {
-              params.append(key, String(v));
-            }
-          });
+          params.append(key, value.join(','));
         }
       } else if (typeof value === 'string' && value.trim() !== '') {
         // Handle string parameters

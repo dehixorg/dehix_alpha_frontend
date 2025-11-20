@@ -647,7 +647,7 @@ const TalentMarketPage: React.FC = () => {
                 try {
                   setSubmitting(true);
                   const payload = {
-                    business_req_talent_id: selectedItem._id,
+                    hireId: selectedItem._id,
                     businessId: selectedItem.businessId,
                     freelancerId: user.uid,
                     freelancer_professional_profile_id: selectedProfileId,
