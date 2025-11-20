@@ -26,3 +26,5 @@ yarn-error.log*
 
 # Windows
 Thumbs.db
+// ...existing code...
+eslint.config.js

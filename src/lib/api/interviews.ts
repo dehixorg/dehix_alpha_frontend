@@ -59,6 +59,7 @@ export interface PendingBid extends PopulatedBid {
   fee: number;
   suggestedDateTime: string;
   meetingLink?: string;
+  status?: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
 }
 
 export async function fetchPendingBids(intervieweeId: string) {
@@ -66,6 +67,7 @@ export async function fetchPendingBids(intervieweeId: string) {
     const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
       params: {
         intervieweeId,
+        includeStatus: true, // Make sure backend includes status in the response
       },
     });
 
@@ -75,11 +77,16 @@ export async function fetchPendingBids(intervieweeId: string) {
     const pending: PendingBid[] = [];
 
     for (const interview of interviews) {
-      // Only process interviews with BIDDING status
-      if (interview.InterviewStatus !== 'BIDDING') continue;
+      // Process interviews with BIDDING or ACCEPTED status
+      if (
+        interview.InterviewStatus !== 'BIDDING' &&
+        interview.InterviewStatus !== 'ACCEPTED'
+      )
+        continue;
 
       const interviewId = interview._id;
       const bidsData = interview.interviewBids;
+      const interviewStatus = interview.InterviewStatus;
 
       if (!bidsData) continue;
 
@@ -95,7 +102,11 @@ export async function fetchPendingBids(intervieweeId: string) {
             interviewId,
             bidKey: bid._id,
             description: interview.description || bid.description || '',
-            InterviewStatus: interview.InterviewStatus || 'BIDDING',
+            InterviewStatus: interviewStatus,
+            status:
+              interviewStatus === 'ACCEPTED'
+                ? 'ACCEPTED'
+                : bid.status || 'PENDING',
           };
           pending.push(processedBid);
         }
@@ -128,7 +139,8 @@ export async function acceptBid(interviewId: string, bidId: string) {
   const { data } = await axios.post(
     `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
   );
-  return data;
+  // Return the bid with status
+  return { ...data, status: 'ACCEPTED' };
 }
 
 //for history interviews

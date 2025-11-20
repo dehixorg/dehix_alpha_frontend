@@ -155,15 +155,20 @@ export default function BidedInterviews() {
   const handleAccept = async (bid: PendingBid) => {
     try {
       setAcceptingId(getRowKey(bid));
-      await acceptBid(bid.interviewId, bid.bidKey);
+      const updatedBid = await acceptBid(bid.interviewId, bid.bidKey);
 
       notifySuccess(
         'Your interview has been scheduled successfully.',
         'Interview Scheduled!',
       );
 
-      setBids((prevBids) =>
-        prevBids.filter((b) => getRowKey(b) !== getRowKey(bid)),
+      // Update the bid with the response from the server
+      setBids(prevBids =>
+        prevBids.map(b => 
+          getRowKey(b) === getRowKey(bid) 
+            ? { ...b, status: updatedBid.status || 'ACCEPTED' }
+            : b
+        )
       );
     } catch (e: any) {
       notifyError(e.response?.data?.message || 'Failed to accept bid', 'Error');
@@ -341,18 +346,35 @@ export default function BidedInterviews() {
                     )}
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <Button
-                      size="sm"
-                      disabled={!!acceptingId}
-                      onClick={() => handleAccept(bid)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      {acceptingId === getRowKey(bid) ? (
-                        <Loader2 className="animate-spin h-4 w-4" />
+                    <div className="flex items-center justify-center gap-2">
+                      {bid.status === 'ACCEPTED' ? (
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 cursor-default"
+                          disabled
+                        >
+                          <span className="flex items-center gap-1 text-white">
+                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Accepted
+                          </span>
+                        </Button>
                       ) : (
-                        'Accept & Schedule'
+                        <Button
+                          size="sm"
+                          disabled={!!acceptingId}
+                          onClick={() => handleAccept(bid)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {acceptingId === getRowKey(bid) ? (
+                            <Loader2 className="animate-spin h-4 w-4" />
+                          ) : (
+                            'Accept & Schedule'
+                          )}
+                        </Button>
                       )}
-                    </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
