@@ -1,6 +1,6 @@
 // src/components/marketComponents/profileCards/acceptedProfileCards.tsx
 'use client';
-import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   User,
   MapPin,
@@ -42,6 +42,32 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
   loading,
   calculateExperience,
 }) => {
+  const router = useRouter();
+
+  const handleSendMessage = async (talent: any) => {
+    try {
+      // Store the talent data in session storage temporarily
+      const chatData = {
+        newChat: true,
+        userId: talent.uid || talent._id,
+        userName: `${talent.firstName} ${talent.lastName}`.trim() || talent.email,
+        userEmail: talent.email,
+        userPhoto: talent.profilePic || '',
+        userType: talent.userType || 'freelancer',
+      };
+      
+      // Generate a unique key for this chat session
+      const chatSessionKey = `chat_${Date.now()}`;
+      sessionStorage.setItem(chatSessionKey, JSON.stringify(chatData));
+      
+      // Navigate to chat with just the session key
+      router.push(`/chat?session=${chatSessionKey}`);
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      // Handle error appropriately (e.g., show error toast)
+    }
+  };
+
   const SkeletonCard = () => (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
@@ -162,10 +188,27 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
                   : 'N/A'}
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleSendMessage(talent)}
+                >
                   Send Message
                 </Button>
-                <Button size="sm" className="flex items-center gap-1">
+                <Button 
+                  size="sm" 
+                  className="flex items-center gap-1"
+                  onClick={() => {
+                    if (talent.email) {
+                      window.location.href = `mailto:${talent.email}`;
+                    } else if (talent.phone) {
+                      window.location.href = `tel:${talent.phone}`;
+                    } else {
+                      // Fallback to a message if no contact info is available
+                      alert('No contact information available for this talent');
+                    }
+                  }}
+                >
                   <ExternalLink className="h-3 w-3" />
                   Contact
                 </Button>
@@ -186,4 +229,4 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
   );
 };
 
-export default React.memo(AcceptedProfileCards);
+export default AcceptedProfileCards;

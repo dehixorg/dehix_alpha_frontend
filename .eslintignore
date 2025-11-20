@@ -1,8 +1,20 @@
-node_modules/
+*
+!src/**/*
+!*.config.js
+!*.config.ts
+!.eslintrc.json
+!.prettierrc
+!.prettierrc.js
+
+# Explicitly exclude build and generated files
 .next/
+node_modules/
 dist/
-public/
-src/components/ui/
-postcss.config.js
-*.config.js
-*.config.ts
+build/
+coverage/
+*.min.js
+*.min.js.map
+*.d.ts
+__tests__/
+*.test.*
+*.spec.*
