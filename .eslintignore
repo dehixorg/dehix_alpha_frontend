@@ -22,7 +22,10 @@ coverage/
 
 # Include other necessary files
 !*.md
-!*.json
+!.eslintrc.json
+!package.json
+!tsconfig.json
+!tsconfig.*.json
 *.min.js
 *.min.js.map
 *.d.ts
