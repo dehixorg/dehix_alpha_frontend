@@ -260,51 +260,53 @@ const HomePage = () => {
 
   // Handle URL parameters for opening specific chats or starting new ones
   useEffect(() => {
-    if (!searchParams || !user?.uid) return;
+    // Wait until user is known, initial conversations have loaded, and we have search params
+    if (!searchParams || !user?.uid || loading) return;
 
     const sessionKey = searchParams.get('session');
-    if (sessionKey) {
-      // Get the chat data from session storage
-      const chatDataStr = sessionStorage.getItem(sessionKey);
+    if (!sessionKey) return;
+
+    // Get the chat data from session storage
+    const chatDataStr = sessionStorage.getItem(sessionKey);
+    if (!chatDataStr) return;
+    
+    try {
+      const chatData = JSON.parse(chatDataStr);
       
-      if (chatDataStr) {
-        try {
-          const chatData = JSON.parse(chatDataStr);
-          
-          // Clear the session data after reading it
-          sessionStorage.removeItem(sessionKey);
-          
-          // Clear the URL parameter
-          const url = new URL(window.location.href);
-          url.searchParams.delete('session');
-          window.history.replaceState({}, '', url.toString());
-          
-          // If it's a new chat, find or create the conversation
-          if (chatData.newChat) {
-            const existingConversation = conversations.find(conv => 
-              conv.participants.includes(chatData.userId) && 
-              conv.type === 'individual'
-            );
-            
-            if (existingConversation) {
-              setActiveConversation(existingConversation);
-            } else {
-              // Create a new conversation
-              handleStartNewChat({
-                id: chatData.userId,
-                displayName: chatData.userName,
-                email: chatData.userEmail,
-                profilePic: chatData.userPhoto,
-                userType: chatData.userType
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error processing chat session:', error);
+      // Clear the session data after reading it
+      sessionStorage.removeItem(sessionKey);
+      
+      // Clear the URL parameter using Next.js router to maintain consistency
+      const url = new URL(window.location.href);
+      url.searchParams.delete('session');
+      window.history.replaceState({}, '', url.toString());
+      
+      // Only proceed if it's a new chat request with valid data
+      if (chatData.newChat && chatData.userId) {
+        // Check if conversation already exists
+        const existingConversation = conversations.find(conv => 
+          conv.type === 'individual' && 
+          conv.participants.includes(chatData.userId)
+        );
+        
+        if (existingConversation) {
+          setActiveConversation(existingConversation);
+          notifySuccess('Conversation already exists, switching to it.', 'Info');
+        } else {
+          // Create a new conversation with the provided user data
+          handleStartNewChat({
+            id: chatData.userId,
+            displayName: chatData.userName || 'User',
+            email: chatData.userEmail,
+            profilePic: chatData.userPhoto,
+            userType: chatData.userType || 'freelancer'
+          });
         }
       }
+    } catch (error) {
+      console.error('Error processing chat session:', error);
     }
-  }, [searchParams, user?.uid, conversations, handleStartNewChat]);
+  }, [searchParams, user?.uid, loading, conversations, handleStartNewChat]);
 
   // Load all conversations
   useEffect(() => {

@@ -46,25 +46,46 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
 
   const handleSendMessage = async (talent: any) => {
     try {
-      // Store the talent data in session storage temporarily
+      // Validate required fields and build name parts
+      const userId = talent.uid || talent._id;
+      const fullName = [talent.firstName, talent.lastName]
+        .filter(part => part && typeof part === 'string')
+        .join(' ')
+        .trim();
+
+      // Ensure we have a valid user ID
+      if (!userId) {
+        console.error('Cannot start chat: Missing user ID for talent', talent);
+        // Show error to user (you might want to use a toast notification here)
+        return;
+      }
+
+      // Prepare chat data with proper validation
       const chatData = {
         newChat: true,
-        userId: talent.uid || talent._id,
-        userName: `${talent.firstName} ${talent.lastName}`.trim() || talent.email,
-        userEmail: talent.email,
+        userId,
+        userName: fullName || talent.email || 'Unknown User',
+        userEmail: talent.email || '',
         userPhoto: talent.profilePic || '',
         userType: talent.userType || 'freelancer',
       };
       
       // Generate a unique key for this chat session
       const chatSessionKey = `chat_${Date.now()}`;
-      sessionStorage.setItem(chatSessionKey, JSON.stringify(chatData));
       
-      // Navigate to chat with just the session key
-      router.push(`/chat?session=${chatSessionKey}`);
+      try {
+        sessionStorage.setItem(chatSessionKey, JSON.stringify(chatData));
+        // Navigate to chat with just the session key
+        router.push(`/chat?session=${chatSessionKey}`);
+      } catch (storageError) {
+        console.error('Error storing chat session:', storageError);
+        // Handle storage error (e.g., quota exceeded)
+        // You might want to show an error message to the user
+      }
     } catch (error) {
       console.error('Error starting chat:', error);
-      // Handle error appropriately (e.g., show error toast)
+      // Consider using a toast notification here for better UX
+      // notifyError('Failed to start chat. Please try again.');
     }
   };
 

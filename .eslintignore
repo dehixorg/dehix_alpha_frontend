@@ -1,5 +1,11 @@
+# Ignore everything by default
 *
+
+# Include src directory and its contents
+!src
 !src/**/*
+
+# Include config files
 !*.config.js
 !*.config.ts
 !.eslintrc.json
