@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "prepare": "husky",
-    "lint": "eslint .",
-    "lint-fix": "eslint . --fix"
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint-fix": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
     "@emoji-mart/react": "^1.1.1",
