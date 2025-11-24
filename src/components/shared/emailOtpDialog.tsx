@@ -147,7 +147,7 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
     if (otp.length === 6) {
       verifyOtp();
     }
-  }, [otp, verifyOtp]);
+  }, [otp]);
 
   // Reset state when the dialog opens/closes to avoid stale values
   useEffect(() => {
