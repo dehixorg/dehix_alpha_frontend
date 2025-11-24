@@ -41,9 +41,9 @@ jobs:
           LINT_OUTPUT_FILE=$(mktemp)
           LINT_SUMMARY_FILE=$(mktemp)
 
-          # Run lint and save output to file
-          # Use --no-error-on-unmatched-pattern to prevent errors when no files match
-          npx eslint . --ext .ts,.tsx --format=json > "$LINT_OUTPUT_FILE" 2>/dev/null || true
+          # Run lint and save output to file using classic ESLint config (.eslintrc.json + .eslintignore)
+          # ESLINT_USE_FLAT_CONFIG=false ensures eslint.config.js is ignored and --ext is not needed
+          ESLINT_USE_FLAT_CONFIG=false npx eslint . --format=json > "$LINT_OUTPUT_FILE" 2>/dev/null || true
 
           # Initialize counters
           TOTAL_ERRORS=0
