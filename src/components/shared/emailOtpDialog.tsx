@@ -86,13 +86,24 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
     setSuccess('');
     setIsSending(true);
     try {
-      // indicate pending via explicit state
-      setResendCountdown(60);
-      await axiosInstance.post('/public/send-email-otp', { email });
-      setSuccess('OTP sent successfully to your email');
-      notifySuccess('OTP sent successfully to your email');
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          // indicate pending via explicit state for each attempt
+          setResendCountdown(60);
+          await axiosInstance.post('/public/send-email-otp', { email });
+          setSuccess('OTP sent successfully to your email');
+          notifySuccess('OTP sent successfully to your email');
+          break;
+        } catch (err: any) {
+          setResendCountdown(0);
+
+          // If this was the last allowed attempt, rethrow to be handled below
+          if (attempt === 3) {
+            throw err;
+          }
+        }
+      }
     } catch (err: any) {
-      setResendCountdown(0);
       const message =
         err?.response?.data?.message || err.message || 'Failed to send OTP';
       notifyError(message, 'Error');
