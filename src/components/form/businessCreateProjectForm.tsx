@@ -35,6 +35,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -69,8 +76,8 @@ const profileFormSchema = z.object({
       z.object({
         profileType: z.enum(['FREELANCER', 'CONSULTANT']),
         domain: z
-          .array(z.string().min(1, { message: 'Domain cannot be empty.' }))
-          .min(1, { message: 'At least one domain is required.' }),
+          .string({ required_error: 'Domain is required.' })
+          .min(1, { message: 'Domain cannot be empty.' }),
         description: z.string().optional(),
         freelancersRequired: z
           .string()
@@ -218,7 +225,7 @@ const defaultValues: Partial<ProfileFormValues> = {
   description: '',
   profiles: [
     {
-      domain: [],
+      domain: '',
       freelancersRequired: '',
       skills: [],
       experience: '',
@@ -248,7 +255,7 @@ export function CreateProjectBusinessForm() {
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<string[]>([]);
-  const [currDomains, setCurrDomains] = useState<string[][]>([]);
+
   const [loading, setLoading] = useState(false);
   const [, setProfileType] = useState<'Freelancer' | 'Consultant'>(
     'Freelancer',
@@ -288,14 +295,6 @@ export function CreateProjectBusinessForm() {
       rebuiltSkills[i] = Array.isArray(s) ? [...s] : [];
     }
     setCurrSkills(rebuiltSkills);
-
-    // Build fresh domains array aligned with current indices
-    const rebuiltDomains: string[][] = [];
-    for (let i = 0; i < profileCount; i += 1) {
-      const d = form.getValues(`profiles.${i}.domain` as const);
-      rebuiltDomains[i] = Array.isArray(d) ? [...d] : [];
-    }
-    setCurrDomains(rebuiltDomains);
   }, [form, formValues.profiles?.length]);
 
   // Update the current profile's data when it changes
@@ -416,7 +415,6 @@ export function CreateProjectBusinessForm() {
       (profile: any, index: number) => ({
         ...profile,
         skills: Array.isArray(currSkills[index]) ? currSkills[index] : [],
-        domain: Array.isArray(currDomains[index]) ? currDomains[index] : [],
       }),
     );
     const DraftData = { ...formValues, profiles: DraftProfile };
@@ -436,11 +434,7 @@ export function CreateProjectBusinessForm() {
             Array.isArray(profile.skills) ? profile.skills : [],
           ) || [],
         );
-        setCurrDomains(
-          parsedDraft.profiles?.map((profile: any) =>
-            Array.isArray(profile.domain) ? profile.domain : [],
-          ) || [],
-        );
+
         notifySuccess('Your saved draft has been loaded.', 'Draft loaded');
       } catch {
         notifyError(
@@ -481,10 +475,10 @@ export function CreateProjectBusinessForm() {
         new Set(Object.values(currSkills).flat().filter(Boolean)),
       );
       const profilesWithFormattedBudget = (data.profiles || []).map(
-        (profile, idx) => ({
+        (profile) => ({
           ...profile,
           budget: getBudgetForAPI(profile.budget),
-          domain: currDomains[idx] || [],
+          domain: [profile.domain],
         }),
       );
       const payload = {
@@ -532,7 +526,6 @@ export function CreateProjectBusinessForm() {
     form.reset(defaultValues);
     setCurrProjectDomains([]);
     setCurrSkills([]);
-    setCurrDomains([]);
   }
 
   const prevStep = () => {
@@ -595,7 +588,7 @@ export function CreateProjectBusinessForm() {
           size="icon"
           onClick={() =>
             appendProfile({
-              domain: [],
+              domain: '',
               freelancersRequired: '',
               skills: [],
               experience: '',
@@ -822,53 +815,39 @@ export function CreateProjectBusinessForm() {
               <FormField
                 control={form.control}
                 name={`profiles.${index}.domain`}
-                render={() => (
+                render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormLabel className="flex items-center gap-2">
                       <Tag className="h-4 w-4" /> Profile Domain
                     </FormLabel>
-                    <FormControl>
-                      <SelectTagPicker
-                        label=""
-                        options={domains.map((d: any) => ({
-                          label: d.label,
-                          _id: d.value,
-                        }))}
-                        selected={(currDomains[index] || []).map(
-                          (d: string) => ({ name: d }),
-                        )}
-                        onAdd={(val: string) => {
-                          if (!val) return;
-                          setCurrDomains((prev) => {
-                            const prevDomains = prev[index] || [];
-                            if (prevDomains.includes(val)) return prev; // avoid duplicates
-                            const updated = [...prevDomains, val];
-                            const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated, {
-                              shouldValidate: true,
-                            });
-                            return newDomains;
-                          });
-                        }}
-                        onRemove={(val: string) => {
-                          setCurrDomains((prev) => {
-                            const updated = (prev[index] || []).filter(
-                              (d) => d !== val,
-                            );
-                            const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated, {
-                              shouldValidate: true,
-                            });
-                            return newDomains;
-                          });
-                        }}
-                        className="w-full"
-                        optionLabelKey="label"
-                        selectedNameKey="name"
-                        selectPlaceholder="Select domain"
-                        searchPlaceholder="Search domains..."
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        const domainObj = domains.find(
+                          (d) => d.label === value,
+                        );
+                        if (domainObj) {
+                          form.setValue(
+                            `profiles.${index}.domain_id`,
+                            domainObj.domain_id,
+                          );
+                        }
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a domain" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {domains.map((d: any) => (
+                          <SelectItem key={d.domain_id} value={d.label}>
+                            {d.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
