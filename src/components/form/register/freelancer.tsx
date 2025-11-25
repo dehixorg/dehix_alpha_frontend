@@ -590,9 +590,11 @@ function FreelancerRegisterForm({
                               )}
                             </button>
                           </div>
-                          <PasswordStrength
-                            passwordStrength={passwordStrength}
-                          />
+                          {field.value && (
+                            <PasswordStrength
+                              passwordStrength={passwordStrength}
+                            />
+                          )}
                         </div>
                       </FormControl>
                       <FormMessage />
