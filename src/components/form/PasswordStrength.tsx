@@ -59,7 +59,10 @@ export function getPasswordStrength(password: string) {
 export default function PasswordStrength({
   passwordStrength,
 }: PasswordStrengthProps) {
-  const progressValue = (passwordStrength.level / 4) * 100;
+  const progressValue = Math.max(
+    0,
+    Math.min(100, (passwordStrength.level / 5) * 100),
+  );
 
   const strengthTone =
     passwordStrength.label === 'Weak'
