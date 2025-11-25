@@ -161,7 +161,6 @@ export default function ConnectsDialog({
           />
           <DialogContent
             className="sm:max-w-md bg-background"
-            onInteractOutside={(e) => e.preventDefault()}
             style={{
               position: 'fixed',
               top: '50%',
@@ -197,14 +196,10 @@ export default function ConnectsDialog({
                     <div className="font-semibold">{requiredConnects}</div>
                   </div>
                 </div>
-                <DialogFooter className="mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setOpenConfirm(false)}
-                  >
-                    Close
+                <DialogFooter className="mt-4 flex justify-end">
+                  <Button onClick={fetchMoreConnects} className="gap-2">
+                    Request connects
                   </Button>
-                  <Button onClick={fetchMoreConnects}>Request connects</Button>
                 </DialogFooter>
               </>
             ) : (

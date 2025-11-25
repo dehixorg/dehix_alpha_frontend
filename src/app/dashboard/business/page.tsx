@@ -162,7 +162,7 @@ export default function Dashboard() {
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={user?.photoURL || ''} alt={user?.name} />
                     <AvatarFallback>
-                      {user?.name?.charAt(0) || 'U'}
+                      {user?.displayName?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </div>
