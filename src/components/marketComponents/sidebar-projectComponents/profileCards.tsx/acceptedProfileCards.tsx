@@ -49,7 +49,7 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
       // Validate required fields and build name parts
       const userId = talent.uid || talent._id;
       const fullName = [talent.firstName, talent.lastName]
-        .filter(part => part && typeof part === 'string')
+        .filter((part) => part && typeof part === 'string')
         .join(' ')
         .trim();
 
@@ -69,10 +69,10 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
         userPhoto: talent.profilePic || '',
         userType: talent.userType || 'freelancer',
       };
-      
+
       // Generate a unique key for this chat session
       const chatSessionKey = `chat_${Date.now()}`;
-      
+
       try {
         sessionStorage.setItem(chatSessionKey, JSON.stringify(chatData));
         // Navigate to chat with just the session key
@@ -209,15 +209,15 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
                   : 'N/A'}
               </div>
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => handleSendMessage(talent)}
                 >
                   Send Message
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="flex items-center gap-1"
                   onClick={() => {
                     if (talent.email) {

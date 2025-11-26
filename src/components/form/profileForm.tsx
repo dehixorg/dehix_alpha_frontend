@@ -749,8 +749,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       await axiosInstance.put(`/freelancer`, {
         ...restData,
         coverLetter: data.coverLetter,
-        skills: updatedSkills,
-        domain: currDomains,
         projectDomain: currProjectDomains,
         description: data.description,
       });

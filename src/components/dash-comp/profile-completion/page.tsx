@@ -13,6 +13,8 @@ import {
   Award,
   ShieldCheck,
   Layers,
+  Camera,
+  Book,
 } from 'lucide-react';
 
 import StatItem from '../../shared/StatItem';
@@ -80,16 +82,21 @@ const fieldIcons: Record<string, React.ReactNode> = {
   username: <User className="h-3 w-3" />,
   email: <Mail className="h-3 w-3" />,
   phone: <Phone className="h-3 w-3" />,
-  profilepic: <User className="h-3 w-3" />,
+  'profile pic': <Camera className="h-3 w-3" />,
   description: <FileText className="h-3 w-3" />,
+  resume: <FileText className="h-3 w-3" />,
 
   // Professional Information
   skills: <Award className="h-3 w-3" />,
   domain: <Briefcase className="h-3 w-3" />,
-  projectdomain: <Layers className="h-3 w-3" />,
+  'project domain': <Layers className="h-3 w-3" />,
+  education: <Book className="h-3 w-3" />,
+  'professional experience': <Briefcase className="h-3 w-3" />,
+  projects: <Layers className="h-3 w-3" />,
+  'cover letter': <FileText className="h-3 w-3" />,
 
   // Verification
-  kyc: <ShieldCheck className="h-3 w-3" />,
+  'kyc verification': <ShieldCheck className="h-3 w-3" />,
 
   // Fallback
   default: <Circle className="h-3 w-3 text-muted-foreground/50" />,
@@ -115,13 +122,7 @@ const fieldNavigationMap: Record<string, string> = {
 
 // Helper function to get the appropriate icon for a field
 const getFieldIcon = (field: string) => {
-  const lowerField = field.toLowerCase();
-  for (const [key, icon] of Object.entries(fieldIcons)) {
-    if (lowerField.includes(key)) {
-      return icon;
-    }
-  }
-  return fieldIcons.default;
+  return fieldIcons[field.toLowerCase()] || fieldIcons.default;
 };
 
 const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {

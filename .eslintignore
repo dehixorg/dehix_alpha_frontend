@@ -4,21 +4,15 @@ node_modules/
 dist/
 build/
 coverage/
+public/
+src/components/ui/
 
-# Ignore all files by default
-*
+# Ignore all JavaScript files
+*.js
+**/*.js
 
-# Include TypeScript and JavaScript files in src
-!src/**/*.{ts,tsx,js,jsx}
-
-# Include root config files
-!*.config.{js,ts}
-!.eslintrc.json
-!.prettierrc
-!.prettierrc.js
-
-# Include public files if needed
-!public/**/*
+# Include TypeScript files in src
+!src/**/*.{ts,tsx}
 
 # Include other necessary files
 !*.md
