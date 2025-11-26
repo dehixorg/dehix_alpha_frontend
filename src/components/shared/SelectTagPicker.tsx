@@ -25,7 +25,7 @@ type Option = Record<string, any>;
 type SelectTagPickerProps = {
   label: string;
   options: Option[];
-  selected: { name: string }[];
+  selected: { name: string; interviewerStatus?: string }[];
   onAdd: (value: string) => void;
   onRemove: (name: string) => void;
   className?: string;
@@ -157,25 +157,28 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
       </div>
 
       <div className="flex flex-wrap gap-2 mt-5">
-        {(selected || []).map((item, index) => (
-          <Badge
-            className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white"
-            key={`${String((item as any)[selectedNameKey])}-${index}`}
-          >
-            {String((item as any)[selectedNameKey])}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                safeRemove(String((item as any)[selectedNameKey]));
-              }}
-              className="ml-2 text-red-500 hover:text-red-700"
-              aria-label={`Remove ${String((item as any)[selectedNameKey])}`}
+        {(selected || []).map((item, index) => {
+          const itemName = String((item as any)[selectedNameKey]);
+          const isNonDeletable = item.interviewerStatus === 'NOT_APPLIED' || item.interviewerStatus === 'REJECTED';
+          
+          return (
+            <Badge
+              className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 flex items-center px-2 py-1 text-black dark:text-white"
+              key={`${itemName}-${index}`}
             >
-              <X className="h-4 w-4" />
-            </button>
-          </Badge>
-        ))}
+              {itemName}
+              {!isNonDeletable && (
+                <X
+                  className="ml-1 h-3 w-3 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    safeRemove(itemName);
+                  }}
+                />
+              )}
+            </Badge>
+          );
+        })}
       </div>
     </div>
   );
