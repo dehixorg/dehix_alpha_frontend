@@ -165,7 +165,7 @@ export default function FreelancerProfileSettings() {
           ]}
         />
 
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 mb-6">
           <div className="w-full mx-auto mt-2">
             <div className="card rounded-xl border shadow-sm overflow-hidden">
               <Tabs
