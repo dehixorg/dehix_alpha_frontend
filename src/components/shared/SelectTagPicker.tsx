@@ -159,7 +159,6 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
       <div className="flex flex-wrap gap-2 mt-5">
         {(selected || []).map((item, index) => {
           const itemName = String((item as any)[selectedNameKey]);
-          const isNonDeletable = item.interviewerStatus === 'NOT_APPLIED' || item.interviewerStatus === 'REJECTED';
           
           return (
             <Badge
@@ -167,15 +166,6 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
               key={`${itemName}-${index}`}
             >
               {itemName}
-              {!isNonDeletable && (
-                <X
-                  className="ml-1 h-3 w-3 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    safeRemove(itemName);
-                  }}
-                />
-              )}
             </Badge>
           );
         })}
