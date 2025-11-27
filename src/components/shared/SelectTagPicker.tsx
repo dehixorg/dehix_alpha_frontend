@@ -25,15 +25,17 @@ type Option = Record<string, any>;
 type SelectTagPickerProps = {
   label: string;
   options: Option[];
-  selected: { name: string }[];
+  selected: { name: string; interviewerStatus?: string }[];
   onAdd: (value: string) => void;
-  onRemove: (name: string) => void;
+  onRemove?: (name: string) => void;
   className?: string;
   optionLabelKey?: string;
   selectedNameKey?: string;
   selectPlaceholder?: string;
   searchPlaceholder?: string;
   showOtherOption?: boolean;
+  showRemoveButton?: boolean;
+  hideRemoveButtonInSettings?: boolean;
   onOtherClick?: () => void;
 };
 
@@ -42,21 +44,26 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
   options = [],
   selected = [],
   onAdd = () => {},
-  onRemove = () => {},
+  onRemove,
   className,
   optionLabelKey = 'label',
   selectedNameKey = 'name',
   selectPlaceholder = 'Select',
   searchPlaceholder = 'Search',
   showOtherOption = false,
+  showRemoveButton = true,
+  hideRemoveButtonInSettings = false,
   onOtherClick,
 }) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const removeLockRef = useRef(false);
+  const isInSettingsSection =
+    typeof window !== 'undefined' &&
+    window.location.pathname.includes('/settings');
 
   const safeRemove = (value: string) => {
-    if (removeLockRef.current) return;
+    if (removeLockRef.current || !onRemove) return;
     removeLockRef.current = true;
     try {
       onRemove(value);
@@ -157,25 +164,36 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
       </div>
 
       <div className="flex flex-wrap gap-2 mt-5">
-        {(selected || []).map((item, index) => (
-          <Badge
-            className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white"
-            key={`${String((item as any)[selectedNameKey])}-${index}`}
-          >
-            {String((item as any)[selectedNameKey])}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                safeRemove(String((item as any)[selectedNameKey]));
-              }}
-              className="ml-2 text-red-500 hover:text-red-700"
-              aria-label={`Remove ${String((item as any)[selectedNameKey])}`}
+        {(selected || []).map((item, index) => {
+          const itemName = String((item as any)[selectedNameKey]);
+          const isNonDeletable =
+            item.interviewerStatus === 'NOT_APPLIED' ||
+            item.interviewerStatus === 'REJECTED';
+
+          return (
+            <Badge
+              className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 flex items-center gap-1 px-2 py-1 text-black dark:text-white"
+              key={`${itemName}-${index}`}
             >
-              <X className="h-4 w-4" />
-            </button>
-          </Badge>
-        ))}
+              {itemName}
+              {showRemoveButton &&
+                (!isInSettingsSection || !hideRemoveButtonInSettings) &&
+                onRemove &&
+                !isNonDeletable && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      safeRemove(itemName);
+                    }}
+                    className="ml-1 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+            </Badge>
+          );
+        })}
       </div>
     </div>
   );
