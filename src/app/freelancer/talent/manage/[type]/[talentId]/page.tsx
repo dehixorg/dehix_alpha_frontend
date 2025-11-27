@@ -25,6 +25,7 @@ import {
 import type { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import EmptyState from '@/components/shared/EmptyState';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ManageTalentPage() {
   const params = useParams();
@@ -36,6 +37,9 @@ export default function ManageTalentPage() {
   >([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeStatus, setActiveStatus] = useState<
+    'APPLIED' | 'SELECTED' | 'REJECTED' | 'INVITED' | 'LOBBY' | 'INTERVIEW'
+  >('APPLIED');
 
   const type = String(params?.type || '').toUpperCase();
   const talentId = String(params?.talentId || '');
@@ -59,7 +63,7 @@ export default function ManageTalentPage() {
       if (!user?.uid) return;
       try {
         const talentResponse = await axiosInstance.get(
-          `/freelancer/${user.uid}/dehix-talent`,
+          `/freelancer/dehix-talent/attributes/verified`,
         );
         const payload = Array.isArray(talentResponse.data?.data)
           ? talentResponse.data.data
@@ -96,21 +100,28 @@ export default function ManageTalentPage() {
 
   useEffect(() => {
     async function fetchApplications() {
-      if (!user?.uid || !talentId) return;
+      if (!user?.uid) return;
       setLoading(true);
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/dehix-talent/${talentId}/applications`,
+          `/freelancer/dehix-talent/applications`,
+          {
+            params: {
+              status: activeStatus,
+            },
+          },
         );
-        setApplications(response.data?.data || []);
+        const data = response.data || {};
+        setApplications(Array.isArray(data.applications) ? data.applications : []);
       } catch (error) {
         console.error('Failed to fetch applications', error);
+        setApplications([]);
       } finally {
         setLoading(false);
       }
     }
     fetchApplications();
-  }, [user?.uid, talentId]);
+  }, [user?.uid, activeStatus]);
 
   const selectedValue = `${type}:${talentId}`;
 
@@ -126,10 +137,11 @@ export default function ManageTalentPage() {
     );
   };
 
-  const renderApplicationCards = (status: string) => {
-    const filteredApplications = applications.filter(
-      (app) => app.status.toLowerCase() === status.toLowerCase(),
-    );
+  const renderApplicationCards = () => {
+    const filtered = applications.filter((app) => {
+      const appTalentId = app?.talent?.talentId;
+      return appTalentId && appTalentId === talentId;
+    });
 
     if (loading) {
       return (
@@ -140,7 +152,7 @@ export default function ManageTalentPage() {
       );
     }
 
-    if (filteredApplications.length === 0) {
+    if (!filtered || filtered.length === 0) {
       return (
         <EmptyState
           title="No applications found"
@@ -151,19 +163,107 @@ export default function ManageTalentPage() {
 
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredApplications.map((app, i) => (
-          <Card key={`${status}-${i}`} className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">{app.project_name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>Status: {app.status}</p>
-                <p>Updated: {new Date(app.updatedAt).toLocaleDateString()}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {filtered.map((app, i) => {
+          const companyName = app?.business?.companyName || 'Unknown company';
+          const contactName =
+            [app?.business?.firstName, app?.business?.lastName]
+              .filter(Boolean)
+              .join(' ');
+          const talentName = app?.talent?.talentName;
+          const experience = app?.talent?.experience;
+          const status = app?.application?.applicationStatus || 'NA';
+          const updatedAt = app?.application?.applicationUpdatedAt;
+          const postStatus = app?.talent?.postStatus;
+          const postUpdatedAt = app?.talent?.postUpdatedAt;
+          const coverLetter = app?.application?.coverLetter;
+          const profilePic = app?.business?.profilePic;
+
+          const initials = companyName
+            .split(' ')
+            .map((part: string) => part.charAt(0))
+            .join('')
+            .slice(0, 2)
+            .toUpperCase();
+
+          return (
+            <Card
+              key={`${app?.hireId || i}`}
+              className="shadow-sm h-full flex flex-col justify-between"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={profilePic} alt={companyName} />
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <CardTitle className="text-base truncate">
+                      {companyName}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {contactName || 'Business contact'}
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-2 text-sm text-muted-foreground">
+                {(talentName || experience) && (
+                  <p className="font-medium text-xs text-primary uppercase tracking-wide">
+                    {talentName}
+                    {experience ? ` · ${experience} yrs exp` : ''}
+                  </p>
+                )}
+
+                {app?.talent?.description && (
+                  <p className="line-clamp-2 text-xs">
+                    {app.talent.description}
+                  </p>
+                )}
+
+                {(postStatus || postUpdatedAt) && (
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground/90">
+                    {postStatus && (
+                      <span className="uppercase tracking-wide">
+                        Post: {postStatus}
+                      </span>
+                    )}
+                    {postUpdatedAt && (
+                      <span>
+                        {new Date(postUpdatedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                    {status}
+                  </span>
+                  <span>
+                    {updatedAt
+                      ? new Date(updatedAt).toLocaleDateString()
+                      : 'Updated: NA'}
+                  </span>
+                </div>
+
+                {coverLetter && (
+                  <div className="mt-2 border-t pt-2 text-xs">
+                    <p className="font-medium mb-0.5">Cover letter</p>
+                    <p className="line-clamp-3 whitespace-pre-line">
+                      {coverLetter}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-3 flex justify-end">
+                  <Button size="sm" variant="outline" type="button">
+                    View details
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     );
   };
@@ -226,33 +326,52 @@ export default function ManageTalentPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="applied" className="w-full">
+              <Tabs
+                value={activeStatus.toLowerCase()}
+                onValueChange={(value) =>
+                  setActiveStatus(
+                    value.toUpperCase() as
+                      | 'APPLIED'
+                      | 'SELECTED'
+                      | 'REJECTED'
+                      | 'INVITED'
+                      | 'LOBBY'
+                      | 'INTERVIEW',
+                  )
+                }
+                className="w-full"
+              >
                 <TabsList>
                   <TabsTrigger value="applied">Applied</TabsTrigger>
+                  <TabsTrigger value="selected">Selected</TabsTrigger>
                   <TabsTrigger value="invited">Invited</TabsTrigger>
+                  <TabsTrigger value="lobby">Lobby</TabsTrigger>
                   <TabsTrigger value="interview">Interview</TabsTrigger>
-                  <TabsTrigger value="accepted">Accepted</TabsTrigger>
                   <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="applied" className="mt-4">
-                  {renderApplicationCards('applied')}
+                  {renderApplicationCards()}
+                </TabsContent>
+
+                <TabsContent value="selected" className="mt-4">
+                  {renderApplicationCards()}
                 </TabsContent>
 
                 <TabsContent value="invited" className="mt-4">
-                  {renderApplicationCards('invited')}
+                  {renderApplicationCards()}
+                </TabsContent>
+
+                <TabsContent value="lobby" className="mt-4">
+                  {renderApplicationCards()}
                 </TabsContent>
 
                 <TabsContent value="interview" className="mt-4">
-                  {renderApplicationCards('interview')}
-                </TabsContent>
-
-                <TabsContent value="accepted" className="mt-4">
-                  {renderApplicationCards('accepted')}
+                  {renderApplicationCards()}
                 </TabsContent>
 
                 <TabsContent value="rejected" className="mt-4">
-                  {renderApplicationCards('rejected')}
+                  {renderApplicationCards()}
                 </TabsContent>
               </Tabs>
             </CardContent>
