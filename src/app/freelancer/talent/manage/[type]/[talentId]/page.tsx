@@ -112,7 +112,9 @@ export default function ManageTalentPage() {
           },
         );
         const data = response.data || {};
-        setApplications(Array.isArray(data.applications) ? data.applications : []);
+        setApplications(
+          Array.isArray(data.applications) ? data.applications : [],
+        );
       } catch (error) {
         console.error('Failed to fetch applications', error);
         setApplications([]);
@@ -165,10 +167,12 @@ export default function ManageTalentPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((app, i) => {
           const companyName = app?.business?.companyName || 'Unknown company';
-          const contactName =
-            [app?.business?.firstName, app?.business?.lastName]
-              .filter(Boolean)
-              .join(' ');
+          const contactName = [
+            app?.business?.firstName,
+            app?.business?.lastName,
+          ]
+            .filter(Boolean)
+            .join(' ');
           const talentName = app?.talent?.talentName;
           const experience = app?.talent?.experience;
           const status = app?.application?.applicationStatus || 'NA';
