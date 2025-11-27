@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import StoreProvider from './storeProvider';
 import { AuthProvider } from './AuthContext';
+import Web3Providers from './Web3Providers';
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -35,7 +36,9 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <TooltipProvider>
-                <NetworkProvider>{children}</NetworkProvider>
+                <Web3Providers>
+                  <NetworkProvider>{children}</NetworkProvider>
+                </Web3Providers>
               </TooltipProvider>
               <Toaster />
             </ThemeProvider>

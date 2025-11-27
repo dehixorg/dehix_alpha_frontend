@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Wallet } from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
 import { MenuItem } from '../menu/sidebarMenu';
@@ -138,7 +139,14 @@ const Header: React.FC<HeaderProps> = ({
         </div>
 
         {user?.uid ? (
-          <DisplayConnectsDialog userId={user.uid} connects={connects} />
+          <>
+            <DisplayConnectsDialog userId={user.uid} connects={connects} />
+            <ConnectButton
+              accountStatus="address"
+              chainStatus="icon"
+              showBalance={false}
+            />
+          </>
         ) : (
           <Button variant="ghost" size="sm">
             <Wallet className="h-4 w-4" />
