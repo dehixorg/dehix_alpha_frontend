@@ -93,7 +93,6 @@ export default function Dashboard() {
         // Your existing project data fetching code
         const response = await axiosInstance.get(`/project/${project_id}`);
         const projectData = response?.data?.data?.data || response?.data?.data;
-        console.log('The project data is : - ', projectData);
         if (projectData) {
           setProject(projectData);
         }
