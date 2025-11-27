@@ -9,7 +9,7 @@ export interface Project {
   isVerified?: string;
   companyName: string;
   companyId: string;
-  projectDomain: string[];
+  projectDomain: string;
   start?: Date;
   end?: Date;
   skillsRequired: string[];

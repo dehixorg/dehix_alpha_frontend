@@ -30,7 +30,7 @@ export interface ProjectDetailCardProps {
   status: string | undefined;
   startDate: Date | null | undefined;
   endDate: Date | null | undefined;
-  projectDomain: string[];
+  projectDomain: string;
   skills: string[];
   userRole?: 'Business' | 'Freelancer'; // Added role prop
   projectId: string; // Added project ID prop
@@ -120,15 +120,12 @@ function ProjectDetailCard({
               <p className="font-medium">Project Domains</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {projectDomain.map((domain, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="text-xs md:text-sm px-2.5 py-0.5 rounded-full"
-                >
-                  {domain}
-                </Badge>
-              ))}
+              <Badge
+                variant="secondary"
+                className="text-xs md:text-sm px-2.5 py-0.5 rounded-full"
+              >
+                {projectDomain}
+              </Badge>
             </div>
           </div>
 
@@ -184,12 +181,6 @@ function ProjectDetailCard({
               />
             </>
           )}
-          <StatItem
-            icon={<Tag className="h-4 w-4" />}
-            label="Domains"
-            value={String(projectDomain.length)}
-            color="amber"
-          />
           <StatItem
             icon={<Award className="h-4 w-4" />}
             label="Skills"
