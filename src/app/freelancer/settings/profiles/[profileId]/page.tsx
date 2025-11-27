@@ -135,6 +135,7 @@ export default function ProfileDetailPage() {
           selectedNameKey="name"
           selectPlaceholder={`Select ${title.toLowerCase().slice(0, -1)}`}
           searchPlaceholder={`Search ${title.toLowerCase()}...`}
+          hideRemoveButtonInSettings={true}
         />
       ) : null}
       <div className="flex flex-wrap gap-2 mt-5">

@@ -930,6 +930,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   selectPlaceholder="Select skill"
                   searchPlaceholder="Search skills"
                   showOtherOption
+                  hideRemoveButtonInSettings={true}
                   onOtherClick={() => {
                     setDialogType('skill');
                     setIsDialogOpen(true);
@@ -946,6 +947,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains"
                   showOtherOption
+                  hideRemoveButtonInSettings={true}
                   onOtherClick={() => {
                     setDialogType('domain');
                     setIsDialogOpen(true);
