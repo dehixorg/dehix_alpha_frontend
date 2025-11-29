@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 interface PastReport {
   id: string;
@@ -126,12 +127,12 @@ const MessagesSection = ({
       </div>
       <div className="border-t p-4 bg-muted/10">
         <div className="flex items-center space-x-2">
-          <input
+          <Input
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={isDisabled}
             onKeyDown={(e) => e.key === 'Enter' && !isDisabled && sendMessage()}
-            className="flex-1 rounded-md border border-input bg-background text-foreground px-3 py-2 disabled:opacity-60"
+            className="flex-1 disabled:opacity-60"
             placeholder={
               isDisabled ? 'Messaging disabled' : 'Type your message...'
             }
@@ -255,9 +256,9 @@ export default function PastReportsTab() {
   };
 
   return (
-    <div className="bg-transparent text-foreground px-4">
-      <div className="w-full">
-        <Card className="w-full">
+    <div className="bg-gradient-to-b from-background via-background to-muted/40 text-foreground px-4 py-4 sm:py-6">
+      <div className="w-full max-w-6xl mx-auto">
+        <Card className="w-full border border-border/60 rounded-2xl shadow-sm bg-card/95 backdrop-blur-sm">
           <CardContent className="p-0">
             <AnimatePresence mode="wait">
               {/* Split Dialog */}
@@ -266,15 +267,17 @@ export default function PastReportsTab() {
                   open={!!viewingReport}
                   onOpenChange={(open) => !open && handleCloseDialog()}
                 >
-                  <DialogContent className="max-w-7xl w-[95vw] h-[90vh] p-0 overflow-hidden flex flex-col">
+                  <DialogContent className="max-w-7xl w-[95vw] h-[90vh] p-0 overflow-hidden flex flex-col gap-0">
                     {/* Header */}
                     <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <DialogTitle className="text-2xl font-bold">
-                            {viewingReport.subject}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2">
+                          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                            <span className="line-clamp-1">
+                              {viewingReport.subject}
+                            </span>
                           </DialogTitle>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
                               <span>
@@ -293,7 +296,7 @@ export default function PastReportsTab() {
                     {/* Split Content Area */}
                     <div className="flex-1 flex overflow-hidden min-h-0">
                       {/* Left Side: Report Details (1/3) */}
-                      <div className="w-1/3 border-r overflow-y-auto bg-muted/30">
+                      <div className="w-1/3 border-r overflow-y-auto bg-muted/30 dark:bg-muted/20">
                         <ScrollArea className="h-full">
                           <div className="p-6 space-y-6">
                             {detailsLoading ? (
@@ -334,6 +337,8 @@ export default function PastReportsTab() {
                                               <Image
                                                 src={screenshot}
                                                 alt={`Screenshot ${idx + 1}`}
+                                                width={100}
+                                                height={100}
                                                 className="w-full h-full object-cover"
                                               />
                                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center">
@@ -396,6 +401,8 @@ export default function PastReportsTab() {
                   <Image
                     src={selectedImage}
                     alt="Full size"
+                    width={100}
+                    height={100}
                     className="max-w-full max-h-full object-contain"
                   />
                 </div>
