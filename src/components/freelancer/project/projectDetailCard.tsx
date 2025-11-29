@@ -120,15 +120,12 @@ function ProjectDetailCard({
               <p className="font-medium">Project Domains</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {projectDomain.map((domain, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="text-xs md:text-sm px-2.5 py-0.5 rounded-full"
-                >
-                  {domain}
-                </Badge>
-              ))}
+              <Badge
+                variant="secondary"
+                className="text-xs md:text-sm px-2.5 py-0.5 rounded-full"
+              >
+                {projectDomain}
+              </Badge>
             </div>
           </div>
 

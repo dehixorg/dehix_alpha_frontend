@@ -430,7 +430,7 @@ const Page = () => {
                         >
                           {project?.projectType}
                         </Badge>{' '}
-                        • {project?.projectDomain.join(' • ')}
+                        • {project?.projectDomain}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-6">
