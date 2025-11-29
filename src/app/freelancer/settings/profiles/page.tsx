@@ -747,8 +747,6 @@ export default function ProfilesPage() {
                   options={skillsOptions}
                   selected={newProfileSkills.map((skill: any) => ({
                     name: skill?.label || skill?.name || '',
-                    interviewerStatus:
-                      skill?.interviewerStatus || 'NOT_APPLIED',
                   }))}
                   onAdd={(value: string) => {
                     const selectedSkill = skillsOptions.find(
@@ -760,13 +758,7 @@ export default function ProfilesPage() {
                         (s: any) => s._id === selectedSkill._id,
                       )
                     ) {
-                      setNewProfileSkills([
-                        ...newProfileSkills,
-                        {
-                          ...selectedSkill,
-                          interviewerStatus: 'NOT_APPLIED',
-                        },
-                      ]);
+                      setNewProfileSkills([...newProfileSkills, selectedSkill]);
                     }
                   }}
                   onRemove={(name: string) => {
@@ -791,8 +783,6 @@ export default function ProfilesPage() {
                   options={domainsOptions}
                   selected={newProfileDomains.map((domain: any) => ({
                     name: domain?.label || domain?.name || '',
-                    interviewerStatus:
-                      domain?.interviewerStatus || 'NOT_APPLIED',
                   }))}
                   onAdd={(value: string) => {
                     const selectedDomain = domainsOptions.find(
@@ -806,10 +796,7 @@ export default function ProfilesPage() {
                     ) {
                       setNewProfileDomains([
                         ...newProfileDomains,
-                        {
-                          ...selectedDomain,
-                          interviewerStatus: 'NOT_APPLIED',
-                        },
+                        selectedDomain,
                       ]);
                     }
                   }}
