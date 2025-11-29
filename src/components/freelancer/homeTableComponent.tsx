@@ -133,7 +133,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                 )}
               </TableCell>
               <TableCell className="text-center">
-                <Link href={`/freelancer/market/project/${project._id}/apply/`}>
+                <Link href={`/project/${project._id}`}>
                   <Button size="sm" variant="outline">
                     View Details
                   </Button>
