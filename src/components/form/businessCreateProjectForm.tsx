@@ -57,9 +57,7 @@ const profileFormSchema = z.object({
   email: z
     .string({ required_error: 'Email is required.' })
     .email({ message: 'Please enter a valid email address.' }),
-  projectDomain: z
-    .array(z.string().min(1, { message: 'Project domain cannot be empty.' }))
-    .min(1, { message: 'At least one project domain is required.' }),
+  projectDomain: z.string({ required_error: 'Project domain is required.' }),
   urls: z
     .array(
       z.object({
@@ -97,7 +95,7 @@ const profileFormSchema = z.object({
               parseInt(val, 10) <= 40,
             { message: 'Experience must be a number between 0 and 40.' },
           ),
-        domain_id: z.string().optional(),
+        domain_id: z.string().min(1, { message: 'Domain ID is required.' }),
         minConnect: z
           .string()
           .refine((val) => /^\d+$/.test(val) && parseInt(val, 10) > 0, {
@@ -220,7 +218,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
   email: '',
-  projectDomain: [],
+  projectDomain: '',
   urls: [],
   description: '',
   profiles: [
@@ -254,7 +252,6 @@ export function CreateProjectBusinessForm() {
   const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
-  const [currProjectDomains, setCurrProjectDomains] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [, setProfileType] = useState<'Freelancer' | 'Consultant'>(
@@ -274,7 +271,6 @@ export function CreateProjectBusinessForm() {
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       ...defaultValues,
-      projectDomain: [],
     },
     mode: 'onChange',
   });
@@ -370,15 +366,14 @@ export function CreateProjectBusinessForm() {
         ]);
         setProjectDomains(
           projectDomainRes.data.data.map((d: any) => ({
-            value: d.label,
+            value: d._id,
             label: d.label,
           })),
         );
         setDomains(
           domainRes.data.data.map((d: any) => ({
-            value: d.label,
+            value: d._id,
             label: d.label,
-            domain_id: d._id,
           })),
         );
         setSkills(
@@ -393,14 +388,6 @@ export function CreateProjectBusinessForm() {
     };
     fetchData();
   }, []);
-
-  const handleRemoveProjectDomain = (val: string) => {
-    const updatedDomains = currProjectDomains.filter(
-      (domain) => domain !== val,
-    );
-    setCurrProjectDomains(updatedDomains);
-    form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
-  };
 
   // Draft save/load/discard
   const saveDraft = () => {
@@ -428,7 +415,6 @@ export function CreateProjectBusinessForm() {
       try {
         const parsedDraft = JSON.parse(savedDraft);
         form.reset(parsedDraft);
-        setCurrProjectDomains(parsedDraft.projectDomain || []);
         setCurrSkills(
           parsedDraft.profiles?.map((profile: any) =>
             Array.isArray(profile.skills) ? profile.skills : [],
@@ -478,7 +464,6 @@ export function CreateProjectBusinessForm() {
         (profile) => ({
           ...profile,
           budget: getBudgetForAPI(profile.budget),
-          domain: [profile.domain],
         }),
       );
       const payload = {
@@ -488,7 +473,9 @@ export function CreateProjectBusinessForm() {
         companyId: user.uid,
         companyName: user.displayName,
         skillsRequired: uniqueSkills,
-        projectDomain: currProjectDomains,
+        projectDomain:
+          projectDomains.find((d) => d.value === data.projectDomain)?.label ||
+          '',
         role: '',
         projectType: 'FREELANCE',
         url: data.urls,
@@ -524,7 +511,6 @@ export function CreateProjectBusinessForm() {
       setLoading(false);
     }
     form.reset(defaultValues);
-    setCurrProjectDomains([]);
     setCurrSkills([]);
   }
 
@@ -641,37 +627,23 @@ export function CreateProjectBusinessForm() {
       <FormField
         control={form.control}
         name="projectDomain"
-        render={() => (
+        render={({ field }) => (
           <FormItem className="col-span-2">
             <FormLabel className="text-foreground">Project Domain</FormLabel>
-            <FormControl>
-              <div>
-                <SelectTagPicker
-                  label=""
-                  options={projectDomains.map((d) => ({
-                    ...d,
-                    value: d.label,
-                  }))}
-                  selected={currProjectDomains.map((domain) => ({
-                    name: domain,
-                  }))}
-                  onAdd={(value: string) => {
-                    if (value && !currProjectDomains.includes(value)) {
-                      const updatedDomains = [...currProjectDomains, value];
-                      setCurrProjectDomains(updatedDomains);
-                      form.setValue('projectDomain', updatedDomains, {
-                        shouldValidate: true,
-                      });
-                    }
-                  }}
-                  onRemove={(name) => handleRemoveProjectDomain(name)}
-                  selectPlaceholder="Select project domain"
-                  searchPlaceholder="Search domains..."
-                  className="w-full"
-                  optionLabelKey="label"
-                />
-              </div>
-            </FormControl>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project domain" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {projectDomains.map((d: any) => (
+                  <SelectItem key={d.value} value={d.value}>
+                    {d.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
@@ -814,7 +786,7 @@ export function CreateProjectBusinessForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               <FormField
                 control={form.control}
-                name={`profiles.${index}.domain`}
+                name={`profiles.${index}.domain_id`}
                 render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormLabel className="flex items-center gap-2">
@@ -822,14 +794,14 @@ export function CreateProjectBusinessForm() {
                     </FormLabel>
                     <Select
                       onValueChange={(value) => {
-                        field.onChange(value);
+                        field.onChange(value); // sets domain_id
                         const domainObj = domains.find(
-                          (d) => d.label === value,
+                          (d) => d.value === value,
                         );
                         if (domainObj) {
                           form.setValue(
-                            `profiles.${index}.domain_id`,
-                            domainObj.domain_id,
+                            `profiles.${index}.domain`,
+                            domainObj.label,
                           );
                         }
                       }}
@@ -842,7 +814,7 @@ export function CreateProjectBusinessForm() {
                       </FormControl>
                       <SelectContent>
                         {domains.map((d: any) => (
-                          <SelectItem key={d.domain_id} value={d.label}>
+                          <SelectItem key={d.value} value={d.value}>
                             {d.label}
                           </SelectItem>
                         ))}
