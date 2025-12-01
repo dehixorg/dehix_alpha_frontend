@@ -30,7 +30,7 @@ export interface ProjectDetailCardProps {
   status: string | undefined;
   startDate: Date | null | undefined;
   endDate: Date | null | undefined;
-  projectDomain: string;
+  projectDomain: string | string[];
   skills: string[];
   userRole?: 'Business' | 'Freelancer'; // Added role prop
   projectId: string; // Added project ID prop
@@ -87,6 +87,10 @@ function ProjectDetailCard({
       ? computeMilestoneProgress(milestones)
       : computeProgress(startDate, endDate);
 
+  const projectDomainsArray = Array.isArray(projectDomain)
+    ? projectDomain
+    : [projectDomain];
+
   return (
     <Card className="rounded-xl border border-border/60 shadow-sm hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
@@ -120,12 +124,15 @@ function ProjectDetailCard({
               <p className="font-medium">Project Domains</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge
-                variant="secondary"
-                className="text-xs md:text-sm px-2.5 py-0.5 rounded-full"
-              >
-                {projectDomain}
-              </Badge>
+              {projectDomainsArray.map((domain, index) => (
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="text-xs md:text-sm px-2.5 py-0.5 rounded-full"
+                >
+                  {domain}
+                </Badge>
+              ))}
             </div>
           </div>
 
