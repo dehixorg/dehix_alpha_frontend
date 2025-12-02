@@ -26,5 +26,18 @@ yarn-error.log*
 
 # Windows
 Thumbs.db
-// ...existing code...
+
+# Foundry / onchain Solidity project
+# Build output and cache
+onchain/out/
+onchain/cache/
+onchain/broadcast/
+
+# Vendored Solidity dependencies (forge install)
+onchain/lib/
+
+# Root-level vendored Solidity dependencies (duplicated by IDE/commands)
+lib/forge-std/
+lib/openzeppelin-contracts/
+
 eslint.config.js
