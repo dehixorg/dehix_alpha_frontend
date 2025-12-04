@@ -832,7 +832,7 @@ export function CreateProjectBusinessForm() {
                         label=""
                         options={domains.map((d: any) => ({
                           label: d.label,
-                          _id: d.value,
+                          _id: d._id,
                         }))}
                         selected={(currDomains[index] || []).map(
                           (d: string) => ({ name: d }),
