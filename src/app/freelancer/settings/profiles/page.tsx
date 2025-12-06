@@ -259,11 +259,6 @@ export default function ProfilesPage() {
         availability: newProfileAvailability,
       };
 
-      console.log(
-        'Sending profile payload:',
-        JSON.stringify(profilePayload, null, 2),
-      );
-
       const response = await axiosInstance.post(
         `/freelancer/profile`,
         profilePayload,
