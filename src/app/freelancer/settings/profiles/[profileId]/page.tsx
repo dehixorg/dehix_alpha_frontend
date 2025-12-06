@@ -126,9 +126,14 @@ export default function ProfileDetailPage() {
           className="mt-2"
           label=""
           options={options}
-          selected={(selectedIds || []).map((id: string) => ({
-            name: getNameById(id),
-          }))}
+          selected={(selectedIds || [])
+            .map((id: string) => ({
+              name: getNameById(id),
+            }))
+            .filter(
+              (item, index, self) =>
+                self.findIndex((i) => i.name === item.name) === index,
+            )}
           onAdd={onAdd}
           onRemove={onRemove}
           optionLabelKey="label"
@@ -141,7 +146,7 @@ export default function ProfileDetailPage() {
       <div className="flex flex-wrap gap-2 mt-5">
         {selectedIds?.length > 0 &&
           !isEditMode &&
-          selectedIds.map((id: string, index: number) => (
+          Array.from(new Set(selectedIds)).map((id: string, index: number) => (
             <Badge
               key={index}
               className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white"

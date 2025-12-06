@@ -167,8 +167,8 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
         {(selected || []).map((item, index) => {
           const itemName = String((item as any)[selectedNameKey]);
           const isNonDeletable =
-            item.interviewerStatus === 'NOT_APPLIED' ||
-            item.interviewerStatus === 'REJECTED';
+            item.interviewerStatus !== 'NOT_APPLIED' &&
+            item.interviewerStatus !== 'REJECTED';
 
           return (
             <Badge
