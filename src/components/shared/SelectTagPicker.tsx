@@ -25,7 +25,7 @@ type Option = Record<string, any>;
 type SelectTagPickerProps = {
   label: string;
   options: Option[];
-  selected: { name: string; interviewerStatus?: string }[];
+  selected: { name: string }[];
   onAdd: (value: string) => void;
   onRemove?: (name: string) => void;
   className?: string;

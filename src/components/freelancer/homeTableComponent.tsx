@@ -27,7 +27,7 @@ import { getStatusBadge } from '@/utils/statusBadge';
 interface Project {
   _id: string;
   projectName: string;
-  projectDomain: string[];
+  projectDomain: string;
   description: string;
   companyId: string;
   email: string;
@@ -133,7 +133,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                 )}
               </TableCell>
               <TableCell className="text-center">
-                <Link href={`/freelancer/market/project/${project._id}/apply/`}>
+                <Link href={`/project/${project._id}`}>
                   <Button size="sm" variant="outline">
                     View Details
                   </Button>

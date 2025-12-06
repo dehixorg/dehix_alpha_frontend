@@ -35,6 +35,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -50,9 +57,7 @@ const profileFormSchema = z.object({
   email: z
     .string({ required_error: 'Email is required.' })
     .email({ message: 'Please enter a valid email address.' }),
-  projectDomain: z
-    .array(z.string().min(1, { message: 'Project domain cannot be empty.' }))
-    .min(1, { message: 'At least one project domain is required.' }),
+  projectDomain: z.string({ required_error: 'Project domain is required.' }),
   urls: z
     .array(
       z.object({
@@ -69,8 +74,8 @@ const profileFormSchema = z.object({
       z.object({
         profileType: z.enum(['FREELANCER', 'CONSULTANT']),
         domain: z
-          .array(z.string().min(1, { message: 'Domain cannot be empty.' }))
-          .min(1, { message: 'At least one domain is required.' }),
+          .string({ required_error: 'Domain is required.' })
+          .min(1, { message: 'Domain cannot be empty.' }),
         description: z.string().optional(),
         freelancersRequired: z
           .string()
@@ -90,7 +95,7 @@ const profileFormSchema = z.object({
               parseInt(val, 10) <= 40,
             { message: 'Experience must be a number between 0 and 40.' },
           ),
-        domain_id: z.string().optional(),
+        domain_id: z.string().min(1, { message: 'Domain ID is required.' }),
         minConnect: z
           .string()
           .refine((val) => /^\d+$/.test(val) && parseInt(val, 10) > 0, {
@@ -213,12 +218,12 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
   email: '',
-  projectDomain: [],
+  projectDomain: '',
   urls: [],
   description: '',
   profiles: [
     {
-      domain: [],
+      domain: '',
       freelancersRequired: '',
       skills: [],
       experience: '',
@@ -247,8 +252,7 @@ export function CreateProjectBusinessForm() {
   const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
-  const [currProjectDomains, setCurrProjectDomains] = useState<string[]>([]);
-  const [currDomains, setCurrDomains] = useState<string[][]>([]);
+
   const [loading, setLoading] = useState(false);
   const [, setProfileType] = useState<'Freelancer' | 'Consultant'>(
     'Freelancer',
@@ -267,7 +271,6 @@ export function CreateProjectBusinessForm() {
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       ...defaultValues,
-      projectDomain: [],
     },
     mode: 'onChange',
   });
@@ -288,14 +291,6 @@ export function CreateProjectBusinessForm() {
       rebuiltSkills[i] = Array.isArray(s) ? [...s] : [];
     }
     setCurrSkills(rebuiltSkills);
-
-    // Build fresh domains array aligned with current indices
-    const rebuiltDomains: string[][] = [];
-    for (let i = 0; i < profileCount; i += 1) {
-      const d = form.getValues(`profiles.${i}.domain` as const);
-      rebuiltDomains[i] = Array.isArray(d) ? [...d] : [];
-    }
-    setCurrDomains(rebuiltDomains);
   }, [form, formValues.profiles?.length]);
 
   // Update the current profile's data when it changes
@@ -371,15 +366,14 @@ export function CreateProjectBusinessForm() {
         ]);
         setProjectDomains(
           projectDomainRes.data.data.map((d: any) => ({
-            value: d.label,
+            value: d._id,
             label: d.label,
           })),
         );
         setDomains(
           domainRes.data.data.map((d: any) => ({
-            value: d.label,
+            value: d._id,
             label: d.label,
-            domain_id: d._id,
           })),
         );
         setSkills(
@@ -395,14 +389,6 @@ export function CreateProjectBusinessForm() {
     fetchData();
   }, []);
 
-  const handleRemoveProjectDomain = (val: string) => {
-    const updatedDomains = currProjectDomains.filter(
-      (domain) => domain !== val,
-    );
-    setCurrProjectDomains(updatedDomains);
-    form.setValue('projectDomain', updatedDomains, { shouldValidate: true });
-  };
-
   // Draft save/load/discard
   const saveDraft = () => {
     const formValues = form.getValues();
@@ -416,7 +402,6 @@ export function CreateProjectBusinessForm() {
       (profile: any, index: number) => ({
         ...profile,
         skills: Array.isArray(currSkills[index]) ? currSkills[index] : [],
-        domain: Array.isArray(currDomains[index]) ? currDomains[index] : [],
       }),
     );
     const DraftData = { ...formValues, profiles: DraftProfile };
@@ -430,17 +415,12 @@ export function CreateProjectBusinessForm() {
       try {
         const parsedDraft = JSON.parse(savedDraft);
         form.reset(parsedDraft);
-        setCurrProjectDomains(parsedDraft.projectDomain || []);
         setCurrSkills(
           parsedDraft.profiles?.map((profile: any) =>
             Array.isArray(profile.skills) ? profile.skills : [],
           ) || [],
         );
-        setCurrDomains(
-          parsedDraft.profiles?.map((profile: any) =>
-            Array.isArray(profile.domain) ? profile.domain : [],
-          ) || [],
-        );
+
         notifySuccess('Your saved draft has been loaded.', 'Draft loaded');
       } catch {
         notifyError(
@@ -481,10 +461,9 @@ export function CreateProjectBusinessForm() {
         new Set(Object.values(currSkills).flat().filter(Boolean)),
       );
       const profilesWithFormattedBudget = (data.profiles || []).map(
-        (profile, idx) => ({
+        (profile) => ({
           ...profile,
           budget: getBudgetForAPI(profile.budget),
-          domain: currDomains[idx] || [],
         }),
       );
       const payload = {
@@ -494,7 +473,9 @@ export function CreateProjectBusinessForm() {
         companyId: user.uid,
         companyName: user.displayName,
         skillsRequired: uniqueSkills,
-        projectDomain: currProjectDomains,
+        projectDomain:
+          projectDomains.find((d) => d.value === data.projectDomain)?.label ||
+          '',
         role: '',
         projectType: 'FREELANCE',
         url: data.urls,
@@ -530,9 +511,7 @@ export function CreateProjectBusinessForm() {
       setLoading(false);
     }
     form.reset(defaultValues);
-    setCurrProjectDomains([]);
     setCurrSkills([]);
-    setCurrDomains([]);
   }
 
   const prevStep = () => {
@@ -595,7 +574,7 @@ export function CreateProjectBusinessForm() {
           size="icon"
           onClick={() =>
             appendProfile({
-              domain: [],
+              domain: '',
               freelancersRequired: '',
               skills: [],
               experience: '',
@@ -648,37 +627,23 @@ export function CreateProjectBusinessForm() {
       <FormField
         control={form.control}
         name="projectDomain"
-        render={() => (
+        render={({ field }) => (
           <FormItem className="col-span-2">
             <FormLabel className="text-foreground">Project Domain</FormLabel>
-            <FormControl>
-              <div>
-                <SelectTagPicker
-                  label=""
-                  options={projectDomains.map((d) => ({
-                    ...d,
-                    value: d.label,
-                  }))}
-                  selected={currProjectDomains.map((domain) => ({
-                    name: domain,
-                  }))}
-                  onAdd={(value: string) => {
-                    if (value && !currProjectDomains.includes(value)) {
-                      const updatedDomains = [...currProjectDomains, value];
-                      setCurrProjectDomains(updatedDomains);
-                      form.setValue('projectDomain', updatedDomains, {
-                        shouldValidate: true,
-                      });
-                    }
-                  }}
-                  onRemove={(name) => handleRemoveProjectDomain(name)}
-                  selectPlaceholder="Select project domain"
-                  searchPlaceholder="Search domains..."
-                  className="w-full"
-                  optionLabelKey="label"
-                />
-              </div>
-            </FormControl>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project domain" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {projectDomains.map((d: any) => (
+                  <SelectItem key={d.value} value={d.value}>
+                    {d.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
@@ -821,54 +786,40 @@ export function CreateProjectBusinessForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               <FormField
                 control={form.control}
-                name={`profiles.${index}.domain`}
-                render={() => (
+                name={`profiles.${index}.domain_id`}
+                render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormLabel className="flex items-center gap-2">
                       <Tag className="h-4 w-4" /> Profile Domain
                     </FormLabel>
-                    <FormControl>
-                      <SelectTagPicker
-                        label=""
-                        options={domains.map((d: any) => ({
-                          label: d.label,
-                          _id: d.value,
-                        }))}
-                        selected={(currDomains[index] || []).map(
-                          (d: string) => ({ name: d }),
-                        )}
-                        onAdd={(val: string) => {
-                          if (!val) return;
-                          setCurrDomains((prev) => {
-                            const prevDomains = prev[index] || [];
-                            if (prevDomains.includes(val)) return prev; // avoid duplicates
-                            const updated = [...prevDomains, val];
-                            const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated, {
-                              shouldValidate: true,
-                            });
-                            return newDomains;
-                          });
-                        }}
-                        onRemove={(val: string) => {
-                          setCurrDomains((prev) => {
-                            const updated = (prev[index] || []).filter(
-                              (d) => d !== val,
-                            );
-                            const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated, {
-                              shouldValidate: true,
-                            });
-                            return newDomains;
-                          });
-                        }}
-                        className="w-full"
-                        optionLabelKey="label"
-                        selectedNameKey="name"
-                        selectPlaceholder="Select domain"
-                        searchPlaceholder="Search domains..."
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value); // sets domain_id
+                        const domainObj = domains.find(
+                          (d) => d.value === value,
+                        );
+                        if (domainObj) {
+                          form.setValue(
+                            `profiles.${index}.domain`,
+                            domainObj.label,
+                          );
+                        }
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a domain" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {domains.map((d: any) => (
+                          <SelectItem key={d.value} value={d.value}>
+                            {d.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

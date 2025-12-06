@@ -9,13 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import Header from '@/components/header/header';
 import TalentMarketCard from '@/components/shared/TalentMarketCard';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import FilterComponent from '@/components/marketComponents/FilterComponent';
 import { FilterSheet } from '@/components/market/FilterSheet';
 import {
@@ -99,12 +93,8 @@ interface FilterState {
 }
 
 const getActiveFilterCount = (filters: FilterState) => {
-  return Object.values(filters).reduce((count, value) => {
-    if (Array.isArray(value)) return count + (value?.length || 0);
-    if (typeof value === 'string' && value) return count + 1;
-    if (typeof value === 'boolean' && value) return count + 1;
-    return count;
-  }, 0);
+  // For Talent Market, only domain and skills filters are relevant
+  return (filters.domain?.length || 0) + (filters.skills?.length || 0);
 };
 
 // API types
@@ -140,7 +130,7 @@ interface TalentMarketItem {
   }>;
 }
 
-const TalentMarketPage: React.FC = () => {
+const TalentMarketTab: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
 
   const [isLargeScreen, setIsLargeScreen] = useState(() => {
@@ -326,6 +316,7 @@ const TalentMarketPage: React.FC = () => {
   const handleResize = () => {
     setIsLargeScreen(window.innerWidth >= 1024);
   };
+
   useEffect(() => {
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -354,177 +345,154 @@ const TalentMarketPage: React.FC = () => {
   }, [selectedItem]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Talent Market"
-      />
-      <div className="flex flex-col sm:gap-4 sm:pb-4 sm:pl-14">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Talent Market"
-          breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/freelancer' },
-            { label: 'Talent Market', link: '#' },
-          ]}
-        />
-        <div className="p-4 sm:px-8">
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col space-y-2">
-                <h2 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
-                  Explore Talent Market Opportunities
-                </h2>
-                <p className="hidden md:block text-muted-foreground">
-                  Browse open skill/domain opportunities and apply directly
-                </p>
-              </div>
-              <div className="flex items-center justify-between px-1">
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
-                  {visibleJobs.length}{' '}
-                  {visibleJobs.length === 1 ? 'result' : 'results'}
-                </span>
-              </div>
-              {!isLargeScreen && (
-                <div className="ml-auto flex items-center gap-2">
-                  <FilterSheet
-                    filters={filters}
-                    setFilters={setFilters}
-                    handleReset={handleReset}
-                    activeFilterCount={activeFilterCount}
-                    skills={skills}
-                    domains={domains}
-                    projectDomains={projectDomains}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    domainSearchQuery={domainSearchQuery}
-                    setDomainSearchQuery={setDomainSearchQuery}
-                    projectDomainSearchQuery={projectDomainSearchQuery}
-                    setProjectDomainSearchQuery={setProjectDomainSearchQuery}
+    <div className="flex flex-col space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-2">
+          <h2 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
+            Explore Talent Market Opportunities
+          </h2>
+          <p className="hidden md:block text-muted-foreground">
+            Browse open skill/domain opportunities and apply directly
+          </p>
+        </div>
+        <div className="flex items-center justify-between px-1">
+          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+            {visibleJobs.length}{' '}
+            {visibleJobs.length === 1 ? 'result' : 'results'}
+          </span>
+        </div>
+        {!isLargeScreen && (
+          <div className="ml-auto flex items-center gap-2">
+            <FilterSheet
+              filters={filters}
+              setFilters={setFilters}
+              handleReset={handleReset}
+              activeFilterCount={activeFilterCount}
+              skills={skills}
+              domains={domains}
+              projectDomains={projectDomains}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              domainSearchQuery={domainSearchQuery}
+              setDomainSearchQuery={setDomainSearchQuery}
+              projectDomainSearchQuery={projectDomainSearchQuery}
+              setProjectDomainSearchQuery={setProjectDomainSearchQuery}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-1">
+        {isLargeScreen && (
+          <aside className="w-80 flex-shrink-0 pr-6 sticky top-20">
+            <FilterComponent
+              filters={filters}
+              setFilters={setFilters}
+              handleReset={handleReset}
+              activeFilterCount={activeFilterCount}
+              skills={skills}
+              domains={domains}
+              projectDomains={projectDomains}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              domainSearchQuery={domainSearchQuery}
+              setDomainSearchQuery={setDomainSearchQuery}
+              projectDomainSearchQuery={projectDomainSearchQuery}
+              setProjectDomainSearchQuery={setProjectDomainSearchQuery}
+            />
+          </aside>
+        )}
+
+        <div className="flex-1">
+          {isAnyLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <Card
+                  key={i}
+                  className="overflow-hidden hover:shadow-md transition-shadow"
+                >
+                  <CardContent className="p-6">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </div>
+                      <Skeleton className="h-4 w-1/2" />
+                      <div className="flex flex-wrap gap-2">
+                        {[...Array(3)].map((_, i) => (
+                          <Skeleton key={i} className="h-6 w-20 rounded-full" />
+                        ))}
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-2/3" />
+                      </div>
+                      <div className="flex justify-between items-center pt-4">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-9 w-28" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : visibleJobs.length > 0 ? (
+            <div className="grid gap-4">
+              {visibleJobs.map((job) => {
+                const item = items.find((i) => i._id === job._id);
+                if (!item) return null;
+                return (
+                  <TalentMarketCard
+                    key={item._id}
+                    item={item}
+                    onNotInterested={() => handleRemoveJob(item._id)}
+                    onToggleBookmark={(it, next) =>
+                      setItems((prev) =>
+                        prev.map((p) =>
+                          p._id === it._id ? { ...p, bookmarked: next } : p,
+                        ),
+                      )
+                    }
+                    onApply={(it) =>
+                      openApplyDialog({
+                        _id: it._id,
+                        projectName: job.projectName,
+                        projectDomain: job.projectDomain,
+                        description: job.description,
+                        profiles: job.profiles,
+                        createdAt: it.createdAt,
+                        updatedAt: it.updatedAt,
+                        status: it.status,
+                      } as any)
+                    }
                   />
-                </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-xl bg-muted/30">
+              <div className="w-48 h-48 bg-muted/20 rounded-full flex items-center justify-center mb-6">
+                <Search className="h-16 w-16 text-muted-foreground/50" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">
+                No opportunities found
+              </h3>
+              <p className="text-muted-foreground max-w-md mb-6">
+                {activeFilterCount > 0
+                  ? "We couldn't find any items matching your current filters."
+                  : 'There are currently no items available. Check back later!'}
+              </p>
+              {activeFilterCount > 0 ? (
+                <Button variant="outline" onClick={handleReset}>
+                  Clear all filters
+                </Button>
+              ) : (
+                <Button onClick={() => window.location.reload()}>
+                  Refresh page
+                </Button>
               )}
             </div>
-          </div>
-        </div>
-
-        <div className="flex flex-1 px-4 sm:px-8 pb-8">
-          {isLargeScreen && (
-            <aside className="w-80 flex-shrink-0 pr-6 sticky top-20">
-              <FilterComponent
-                filters={filters}
-                setFilters={setFilters}
-                handleReset={handleReset}
-                activeFilterCount={activeFilterCount}
-                skills={skills}
-                domains={domains}
-                projectDomains={projectDomains}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                domainSearchQuery={domainSearchQuery}
-                setDomainSearchQuery={setDomainSearchQuery}
-                projectDomainSearchQuery={projectDomainSearchQuery}
-                setProjectDomainSearchQuery={setProjectDomainSearchQuery}
-              />
-            </aside>
           )}
-
-          <div className="flex-1">
-            {isAnyLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <Card
-                    key={i}
-                    className="overflow-hidden hover:shadow-md transition-shadow"
-                  >
-                    <CardContent className="p-6">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <Skeleton className="h-6 w-3/4" />
-                          <Skeleton className="h-5 w-16 rounded-full" />
-                        </div>
-                        <Skeleton className="h-4 w-1/2" />
-                        <div className="flex flex-wrap gap-2">
-                          {[...Array(3)].map((_, i) => (
-                            <Skeleton
-                              key={i}
-                              className="h-6 w-20 rounded-full"
-                            />
-                          ))}
-                        </div>
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-2/3" />
-                        </div>
-                        <div className="flex justify-between items-center pt-4">
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-9 w-28" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : visibleJobs.length > 0 ? (
-              <div className="grid gap-4">
-                {visibleJobs.map((job) => {
-                  const item = items.find((i) => i._id === job._id);
-                  if (!item) return null;
-                  return (
-                    <TalentMarketCard
-                      key={item._id}
-                      item={item}
-                      onNotInterested={() => handleRemoveJob(item._id)}
-                      onToggleBookmark={(it, next) =>
-                        setItems((prev) =>
-                          prev.map((p) =>
-                            p._id === it._id ? { ...p, bookmarked: next } : p,
-                          ),
-                        )
-                      }
-                      onApply={(it) =>
-                        openApplyDialog({
-                          _id: it._id,
-                          projectName: job.projectName,
-                          projectDomain: job.projectDomain,
-                          description: job.description,
-                          profiles: job.profiles,
-                          createdAt: it.createdAt,
-                          updatedAt: it.updatedAt,
-                          status: it.status,
-                        } as any)
-                      }
-                    />
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-xl bg-muted/30">
-                <div className="w-48 h-48 bg-muted/20 rounded-full flex items-center justify-center mb-6">
-                  <Search className="h-16 w-16 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">
-                  No opportunities found
-                </h3>
-                <p className="text-muted-foreground max-w-md mb-6">
-                  {activeFilterCount > 0
-                    ? "We couldn't find any items matching your current filters."
-                    : 'There are currently no items available. Check back later!'}
-                </p>
-                {activeFilterCount > 0 ? (
-                  <Button variant="outline" onClick={handleReset}>
-                    Clear all filters
-                  </Button>
-                ) : (
-                  <Button onClick={() => window.location.reload()}>
-                    Refresh page
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -681,4 +649,4 @@ const TalentMarketPage: React.FC = () => {
   );
 };
 
-export default TalentMarketPage;
+export default TalentMarketTab;
