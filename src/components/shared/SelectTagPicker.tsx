@@ -210,7 +210,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
 
       <div className="flex flex-wrap gap-2 mt-5">
         {(selected || []).map((item, index) => {
-          const rawValue = String((item as any)[selectedNameKey]);
+          const rawValue = String((item as any)[selectedNameKey] ?? '');
           // Prefer a label already present on the selected item itself
           const directLabel = (item as any)[optionLabelKey];
 
