@@ -86,6 +86,10 @@ export default function ProfileDetailPage() {
   const [editingProfileData, setEditingProfileData] = useState<any>({});
   const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
   const [domainsOptions, setDomainsOptions] = useState<any[]>([]);
+  // eslint-disable-next-line prettier/prettier
+  const [freelancerSkillsOptions, setFreelancerSkillsOptions] = useState<any[]>([]);
+  // eslint-disable-next-line prettier/prettier
+  const [freelancerDomainsOptions, setFreelancerDomainsOptions] = useState<any[]>([]);
   const [skillsAndDomainsLoaded, setSkillsAndDomainsLoaded] = useState(false);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showExperienceDialog, setShowExperienceDialog] = useState(false);
@@ -108,6 +112,7 @@ export default function ProfileDetailPage() {
     getNameById,
     onAdd,
     onRemove,
+    editOptions,
   }: {
     title: string;
     Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -116,6 +121,7 @@ export default function ProfileDetailPage() {
     getNameById: (id: string) => string;
     onAdd: (value: string) => void;
     onRemove: (name: string) => void;
+    editOptions?: any[];
   }) => (
     <div className="space-y-2">
       <Label className="flex items-center gap-2">
@@ -125,7 +131,7 @@ export default function ProfileDetailPage() {
         <SelectTagPicker
           className="mt-2"
           label=""
-          options={options}
+          options={editOptions || options}
           selected={(selectedIds || []).map((id: string) => ({
             name: getNameById(id),
           }))}
@@ -135,6 +141,7 @@ export default function ProfileDetailPage() {
           selectedNameKey="name"
           selectPlaceholder={`Select ${title.toLowerCase().slice(0, -1)}`}
           searchPlaceholder={`Search ${title.toLowerCase()}...`}
+          hideRemoveButtonInSettings={true}
         />
       ) : null}
       <div className="flex flex-wrap gap-2 mt-5">
@@ -207,6 +214,11 @@ export default function ProfileDetailPage() {
         .map((d: any) => d.name || d.label)
         .filter(Boolean);
 
+      // Use all available skills and domains for proper name resolution
+      setSkillsOptions(allSkills);
+      setDomainsOptions(allDomains);
+
+      // Filter skills and domains for the freelancer (for editing)
       const skillsForOptions = allSkills.filter((s: any) =>
         freelancerSkillNames.includes(s.label || s.name),
       );
@@ -214,14 +226,14 @@ export default function ProfileDetailPage() {
         freelancerDomainNames.includes(d.label || d.name),
       );
 
-      setSkillsOptions(skillsForOptions);
-      setDomainsOptions(domainsForOptions);
+      setFreelancerSkillsOptions(skillsForOptions);
+      setFreelancerDomainsOptions(domainsForOptions);
 
       setSkillsAndDomainsLoaded(true);
     } catch (error) {
       console.error('Error fetching skills and domains:', error);
       notifyError(
-        'Could not load skills and domains. Please ensure you have added skills to your main profile.',
+        'Could not load skills and domains. Please try again later.',
         'Error',
       );
     }
@@ -1032,10 +1044,11 @@ export default function ProfileDetailPage() {
                     title="Skills"
                     Icon={Award}
                     options={skillsOptions}
+                    editOptions={freelancerSkillsOptions}
                     selectedIds={editingProfileData.skills || []}
                     getNameById={getSkillNameById}
                     onAdd={(value: string) => {
-                      const selectedSkill = skillsOptions.find(
+                      const selectedSkill = freelancerSkillsOptions.find(
                         (s: any) => (s.label || s.name) === value,
                       );
                       if (!selectedSkill) return;
@@ -1048,7 +1061,7 @@ export default function ProfileDetailPage() {
                       }));
                     }}
                     onRemove={(name: string) => {
-                      const skill = skillsOptions.find(
+                      const skill = freelancerSkillsOptions.find(
                         (s: any) => (s.label || s.name) === name,
                       );
                       const id = skill?._id;
@@ -1065,10 +1078,11 @@ export default function ProfileDetailPage() {
                     title="Domains"
                     Icon={Layers}
                     options={domainsOptions}
+                    editOptions={freelancerDomainsOptions}
                     selectedIds={editingProfileData.domains || []}
                     getNameById={getDomainNameById}
                     onAdd={(value: string) => {
-                      const selectedDomain = domainsOptions.find(
+                      const selectedDomain = freelancerDomainsOptions.find(
                         (d: any) => (d.label || d.name) === value,
                       );
                       if (!selectedDomain) return;
@@ -1081,7 +1095,7 @@ export default function ProfileDetailPage() {
                       }));
                     }}
                     onRemove={(name: string) => {
-                      const domain = domainsOptions.find(
+                      const domain = freelancerDomainsOptions.find(
                         (d: any) => (d.label || d.name) === name,
                       );
                       const id = domain?._id;
