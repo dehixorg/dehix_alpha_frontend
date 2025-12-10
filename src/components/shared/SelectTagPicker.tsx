@@ -210,34 +210,10 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
 
       <div className="flex flex-wrap gap-2 mt-5">
         {(selected || []).map((item, index) => {
-          const rawValue = String((item as any)[selectedNameKey] ?? '');
-          // Prefer a label already present on the selected item itself
-          const directLabel = (item as any)[optionLabelKey];
-
-          const matchedOption = (options || []).find((opt) => {
-            const optName = String(opt?.[selectedNameKey] ?? '');
-            const optLabel = String(opt?.[optionLabelKey] ?? '');
-            const optId = String((opt as any)?._id ?? '');
-            // Match either by id/name, label, or _id, so we can resolve labels even when selected value is a backend id
-            return (
-              optName === rawValue ||
-              optLabel === rawValue ||
-              optId === rawValue
-            );
-          });
-
-          const itemName =
-            // 1) label stored directly on the selected item (e.g. domain.label)
-            (typeof directLabel === 'string' && directLabel) ||
-            // 2) label resolved from options using id/name/label matching
-            (matchedOption &&
-              String(matchedOption[optionLabelKey] ?? rawValue)) ||
-            // 3) last resort: show the raw underlying value (may be an id)
-            rawValue;
+          const itemName = String((item as any)[selectedNameKey]);
           const isNonDeletable =
-            (item as any).interviewerStatus &&
-            (item as any).interviewerStatus !== 'NOT_APPLIED' &&
-            (item as any).interviewerStatus !== 'REJECTED';
+            item.interviewerStatus !== 'NOT_APPLIED' &&
+            item.interviewerStatus !== 'REJECTED';
 
           return (
             <Badge
@@ -253,8 +229,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Use the underlying value (id/name) for remove, not the label
-                      safeRemove(rawValue);
+                      safeRemove(itemName);
                     }}
                     className="ml-1 rounded-full hover:bg-muted-foreground/20 p-0.5"
                   >
