@@ -792,34 +792,48 @@ export function CreateProjectBusinessForm() {
                     <FormLabel className="flex items-center gap-2">
                       <Tag className="h-4 w-4" /> Profile Domain
                     </FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value); // sets domain_id
-                        const domainObj = domains.find(
-                          (d) => d.value === value,
-                        );
-                        if (domainObj) {
-                          form.setValue(
-                            `profiles.${index}.domain`,
-                            domainObj.label,
-                          );
-                        }
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a domain" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {domains.map((d: any) => (
-                          <SelectItem key={d.value} value={d.value}>
-                            {d.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SelectTagPicker
+                        label=""
+                        options={domains.map((d: any) => ({
+                          label: d.label,
+                          _id: d._id,
+                        }))}
+                        selected={(currDomains[index] || []).map(
+                          (d: string) => ({ name: d }),
+                        )}
+                        onAdd={(val: string) => {
+                          if (!val) return;
+                          setCurrDomains((prev) => {
+                            const prevDomains = prev[index] || [];
+                            if (prevDomains.includes(val)) return prev; // avoid duplicates
+                            const updated = [...prevDomains, val];
+                            const newDomains = { ...prev, [index]: updated };
+                            form.setValue(`profiles.${index}.domain`, updated, {
+                              shouldValidate: true,
+                            });
+                            return newDomains;
+                          });
+                        }}
+                        onRemove={(val: string) => {
+                          setCurrDomains((prev) => {
+                            const updated = (prev[index] || []).filter(
+                              (d) => d !== val,
+                            );
+                            const newDomains = { ...prev, [index]: updated };
+                            form.setValue(`profiles.${index}.domain`, updated, {
+                              shouldValidate: true,
+                            });
+                            return newDomains;
+                          });
+                        }}
+                        className="w-full"
+                        optionLabelKey="label"
+                        selectedNameKey="name"
+                        selectPlaceholder="Select domain"
+                        searchPlaceholder="Search domains..."
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

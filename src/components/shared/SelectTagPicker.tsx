@@ -25,7 +25,7 @@ type Option = Record<string, any>;
 type SelectTagPickerProps = {
   label: string;
   options: Option[];
-  selected: { name: string }[];
+  selected: Option[];
   onAdd: (value: string) => void;
   onRemove?: (name: string) => void;
   className?: string;
@@ -83,15 +83,52 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
     });
   }, [options, selected, optionLabelKey, selectedNameKey, searchQuery]);
 
-  const isSelected = (value: string) =>
-    (selected || []).some((s) => String((s as any)[selectedNameKey]) === value);
+  const isSelected = (value: string) => {
+    return (selected || []).some((s) => {
+      if (!s) return false;
+      const selectedValue = String((s as any)[selectedNameKey] || s.name || s);
+      const option = options.find(
+        (opt) =>
+          String(opt?.[optionLabelKey]) === value ||
+          String(opt?.[selectedNameKey]) === value ||
+          opt?._id === value,
+      );
+      const optionValue = option
+        ? String(
+            option[optionLabelKey] || option[selectedNameKey] || option._id,
+          )
+        : value;
+
+      return selectedValue === value || selectedValue === optionValue;
+    });
+  };
 
   const toggleValue = (value: string) => {
-    if (isSelected(value)) {
-      safeRemove(value);
+    // Find the actual option to get the correct value
+    const option = options.find(
+      (opt) =>
+        String(opt?.[optionLabelKey]) === value ||
+        String(opt?.[selectedNameKey]) === value ||
+        opt?._id === value,
+    );
+
+    // Use the actual ID if available, otherwise fall back to the display value
+    const actualValue = option?._id || value;
+    const displayValue = option
+      ? String(
+          option[optionLabelKey] ||
+            option[selectedNameKey] ||
+            option._id ||
+            value,
+        )
+      : value;
+
+    if (isSelected(displayValue) || isSelected(actualValue)) {
+      safeRemove(displayValue);
     } else {
-      onAdd(value);
+      onAdd(displayValue);
     }
+    setSearchQuery(''); // Clear search after selection
   };
 
   return (
@@ -123,21 +160,29 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
               <CommandList>
                 <ScrollArea className="h-60">
                   <CommandGroup>
-                    {(filteredOptions || []).map((opt, idx) => {
-                      const val = String(opt?.[optionLabelKey]);
-                      const checked = isSelected(val);
+                    {filteredOptions.map((opt, idx) => {
+                      const val = String(
+                        opt?.[optionLabelKey] || opt?.name || opt?._id || '',
+                      );
+                      const displayValue =
+                        opt?.[optionLabelKey] || opt?.name || opt?._id || '';
+                      // eslint-disable-next-line prettier/prettier
+                      const checked =
+                        isSelected(val) || isSelected(displayValue);
+
                       return (
                         <CommandItem
-                          key={`${val}-${idx}`}
+                          key={`${opt?._id || val}-${idx}`}
                           value={val}
-                          onSelect={() => toggleValue(val)}
+                          onSelect={() => toggleValue(opt?._id || val)}
                           className="flex items-center gap-2"
                         >
                           <Checkbox
                             checked={checked}
+                            onCheckedChange={() => toggleValue(opt?._id || val)}
                             className="pointer-events-none"
                           />
-                          <span className="flex-1">{val}</span>
+                          <span className="flex-1">{displayValue}</span>
                         </CommandItem>
                       );
                     })}
