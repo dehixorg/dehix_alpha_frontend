@@ -237,6 +237,7 @@ const FreelancerTaskActions: React.FC<FreelancerTaskActionsProps> = ({
               onActionStart?.();
               try {
                 await onAcceptTask(task._id);
+                window.dispatchEvent(new CustomEvent('taskAssignmentUpdated'));
               } finally {
                 onActionEnd?.();
               }
@@ -251,6 +252,7 @@ const FreelancerTaskActions: React.FC<FreelancerTaskActionsProps> = ({
               onActionStart?.();
               try {
                 await onRejectTask(task._id);
+                window.dispatchEvent(new CustomEvent('taskAssignmentUpdated'));
               } finally {
                 onActionEnd?.();
               }
@@ -326,8 +328,7 @@ const BusinessTaskActions: React.FC<BusinessTaskActionsProps> = ({
   <div className="p-3 pt-0">
     <div className="space-y-3">
       {!task.freelancers?.[0]?.updatePermissionBusiness &&
-        task.freelancers?.[0]?.updatePermissionFreelancer &&
-        !task.freelancers?.[0]?.acceptanceBusiness && (
+        task.freelancers?.[0]?.updatePermissionFreelancer && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md">
               <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />

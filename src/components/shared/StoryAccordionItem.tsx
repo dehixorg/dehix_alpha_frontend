@@ -124,12 +124,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       freelancerData.acceptanceFreelancer ||
       freelancerData.rejectionFreelancer
     ) {
-      // Add to actedUponTasks to ensure consistency
-      setActedUponTasks((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(task._id);
-        return newSet;
-      });
       return false;
     }
     return true;
@@ -162,6 +156,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
 
       notifySuccess('Task accepted!');
       fetchMilestones(); // Refresh milestones
+      window.dispatchEvent(new CustomEvent('taskAssignmentUpdated'));
     } catch (error) {
       console.error('Error accepting task:', error);
       notifyError('Failed to accept task.', 'Error');
@@ -201,6 +196,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
 
       notifySuccess('Task rejected and update requests removed!');
       fetchMilestones(); // Refresh milestones
+      window.dispatchEvent(new CustomEvent('taskAssignmentUpdated'));
     } catch (error) {
       console.error('Error rejecting task:', error);
       notifyError('Failed to reject task.', 'Error');
@@ -239,7 +235,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionFreelancer: true,
           updatePermissionBusiness: true,
           rejectionFreelancer: false,
-          acceptanceBusiness: true,
         };
       }
 
@@ -283,7 +278,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionFreelancer: false,
           updatePermissionBusiness: false,
           rejectionFreelancer: false,
-          acceptanceBusiness: false,
         };
       }
 
@@ -362,10 +356,9 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           </div>
           <span className="text-sm flex items-center gap-3">
             {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
-              ? !story?.tasks[0]?.freelancers[0]?.acceptanceFreelancer &&
-                story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
-                !story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
-                story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
+              ? story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
+                !story?.tasks[0]?.freelancers[0]
+                  ?.updatePermissionFreelancer && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -377,12 +370,10 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                     </Tooltip>
                   </TooltipProvider>
                 )
-              : !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceBusiness &&
-                story?.tasks?.[0]?.freelancers?.[0]
-                  ?.updatePermissionFreelancer &&
-                !story?.tasks?.[0]?.freelancers?.[0]
+              : !story?.tasks?.[0]?.freelancers?.[0]
                   ?.updatePermissionBusiness &&
-                story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
+                story?.tasks?.[0]?.freelancers?.[0]
+                  ?.updatePermissionFreelancer && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -396,8 +387,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 )}
             {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
               ? story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
-                story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
-                !story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
+                story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -411,8 +401,8 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 )
               : story?.tasks?.[0]?.freelancers?.[0]
                   ?.updatePermissionFreelancer &&
-                story?.tasks?.[0]?.freelancers?.[0]?.updatePermissionBusiness &&
-                !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
+                story?.tasks?.[0]?.freelancers?.[0]
+                  ?.updatePermissionBusiness && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>

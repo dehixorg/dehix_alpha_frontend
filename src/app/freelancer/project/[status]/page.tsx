@@ -239,6 +239,24 @@ export default function ProjectPage() {
   >(null);
   const [projectsRefreshTrigger, setProjectsRefreshTrigger] = useState(0);
 
+  // Listen for task assignment updates
+  useEffect(() => {
+    const handleTaskAssignmentUpdate = () => {
+      setProjectsRefreshTrigger((prev) => prev + 1);
+    };
+
+    window.addEventListener(
+      'taskAssignmentUpdated',
+      handleTaskAssignmentUpdate,
+    );
+    return () => {
+      window.removeEventListener(
+        'taskAssignmentUpdated',
+        handleTaskAssignmentUpdate,
+      );
+    };
+  }, []);
+
   // Fetch invitations
   const fetchInvitations = async () => {
     setInvitationsLoading(true);
