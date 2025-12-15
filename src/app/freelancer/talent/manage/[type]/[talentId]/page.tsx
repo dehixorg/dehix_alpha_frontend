@@ -67,8 +67,12 @@ export default function ManageTalentPage() {
         );
 
         const applied = talentResponse.data?.data?.APPLIED || {};
-        const appliedSkills = Array.isArray(applied?.SKILL) ? applied.SKILL : [];
-        const appliedDomains = Array.isArray(applied?.DOMAIN) ? applied.DOMAIN : [];
+        const appliedSkills = Array.isArray(applied?.SKILL)
+          ? applied.SKILL
+          : [];
+        const appliedDomains = Array.isArray(applied?.DOMAIN)
+          ? applied.DOMAIN
+          : [];
 
         const mapped = [...appliedSkills, ...appliedDomains]
           .filter(
