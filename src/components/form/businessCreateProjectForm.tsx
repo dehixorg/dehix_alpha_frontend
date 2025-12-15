@@ -250,6 +250,7 @@ export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any[]>([]);
   const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
+  const [currDomains, setCurrDomains] = useState<{ [key: number]: string[] }>({});
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
 
@@ -787,7 +788,7 @@ export function CreateProjectBusinessForm() {
               <FormField
                 control={form.control}
                 name={`profiles.${index}.domain_id`}
-                render={({ field }) => (
+                render={({ field: _field }) => (
                   <FormItem className="mb-4">
                     <FormLabel className="flex items-center gap-2">
                       <Tag className="h-4 w-4" /> Profile Domain
@@ -809,7 +810,7 @@ export function CreateProjectBusinessForm() {
                             if (prevDomains.includes(val)) return prev; // avoid duplicates
                             const updated = [...prevDomains, val];
                             const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated, {
+                            form.setValue(`profiles.${index}.domain`, updated as any, {
                               shouldValidate: true,
                             });
                             return newDomains;
@@ -818,10 +819,10 @@ export function CreateProjectBusinessForm() {
                         onRemove={(val: string) => {
                           setCurrDomains((prev) => {
                             const updated = (prev[index] || []).filter(
-                              (d) => d !== val,
+                              (d: string) => d !== val,
                             );
                             const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated, {
+                            form.setValue(`profiles.${index}.domain`, updated as any, {
                               shouldValidate: true,
                             });
                             return newDomains;

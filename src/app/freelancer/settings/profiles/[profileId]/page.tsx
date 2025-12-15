@@ -112,7 +112,7 @@ export default function ProfileDetailPage() {
     getNameById,
     onAdd,
     onRemove,
-    editOptions,
+    editOptions: _editOptions,
   }: {
     title: string;
     Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
