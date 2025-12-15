@@ -250,7 +250,9 @@ export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any[]>([]);
   const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
-  const [currDomains, setCurrDomains] = useState<{ [key: number]: string[] }>({});
+  const [currDomains, setCurrDomains] = useState<{ [key: number]: string[] }>(
+    {},
+  );
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
 
@@ -810,9 +812,13 @@ export function CreateProjectBusinessForm() {
                             if (prevDomains.includes(val)) return prev; // avoid duplicates
                             const updated = [...prevDomains, val];
                             const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated as any, {
-                              shouldValidate: true,
-                            });
+                            form.setValue(
+                              `profiles.${index}.domain`,
+                              updated as any,
+                              {
+                                shouldValidate: true,
+                              },
+                            );
                             return newDomains;
                           });
                         }}
@@ -822,9 +828,13 @@ export function CreateProjectBusinessForm() {
                               (d: string) => d !== val,
                             );
                             const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated as any, {
-                              shouldValidate: true,
-                            });
+                            form.setValue(
+                              `profiles.${index}.domain`,
+                              updated as any,
+                              {
+                                shouldValidate: true,
+                              },
+                            );
                             return newDomains;
                           });
                         }}
