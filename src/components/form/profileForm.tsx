@@ -685,7 +685,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setProjectDomains(projectDomainResponse.data.data);
 
         setCurrSkills(tmpSkills);
-        setCurrDomains(tmpDomains);
+        // Transform domains so that type_id holds the backend domain _id
+        // and name holds the human-readable label when available
+        const transformedDomains = tmpDomains.map((domain: any) => {
+          const matchingDomain = domainsResponse.data.data.find(
+            (d: any) => d._id === domain.type_id || d.label === domain.name,
+          );
+          return {
+            ...domain,
+            type_id: matchingDomain?._id ?? domain.type_id ?? domain.name,
+            name: matchingDomain?.label ?? domain.name,
+          };
+        });
+        setCurrDomains(transformedDomains);
         setCurrProjectDomains(userResponse.data.data.projectDomain);
 
         // Ensure cover letter is treated as text, not URL
@@ -749,8 +761,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       await axiosInstance.put(`/freelancer`, {
         ...restData,
         coverLetter: data.coverLetter,
-        skills: updatedSkills,
-        domain: currDomains,
         projectDomain: currProjectDomains,
         description: data.description,
       });
@@ -932,6 +942,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   selectPlaceholder="Select skill"
                   searchPlaceholder="Search skills"
                   showOtherOption
+                  hideRemoveButtonInSettings={true}
                   onOtherClick={() => {
                     setDialogType('skill');
                     setIsDialogOpen(true);
@@ -945,9 +956,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   selected={currDomains}
                   onAdd={handleAddDomainByValue}
                   onRemove={handleDeleteDomain}
+                  optionLabelKey="label"
+                  selectedNameKey="type_id"
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains"
                   showOtherOption
+                  hideRemoveButtonInSettings={true}
                   onOtherClick={() => {
                     setDialogType('domain');
                     setIsDialogOpen(true);
@@ -961,6 +975,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   selected={currProjectDomains}
                   onAdd={handleAddProjectDomainByValue}
                   onRemove={handleDeleteProjDomain}
+                  optionLabelKey="label"
+                  selectedNameKey="type_id"
                   selectPlaceholder="Select project domain"
                   searchPlaceholder="Search project domains"
                   showOtherOption

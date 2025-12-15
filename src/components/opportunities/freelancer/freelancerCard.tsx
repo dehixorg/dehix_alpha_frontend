@@ -33,8 +33,7 @@ import InviteFreelancerDialog from '@/components/dialogs/InviteFreelancerDialog'
 
 interface FreelancerCardProps {
   name: string;
-  skills: { name: string }[];
-  domains: { name: string }[];
+  attributes?: { type?: string; name?: string }[];
   experience: number | string;
   profile: string;
   userName: string;
@@ -48,8 +47,7 @@ interface FreelancerCardProps {
 
 const FreelancerCard: React.FC<FreelancerCardProps> = ({
   name,
-  skills = [],
-  domains = [],
+  attributes = [],
   experience,
   profile,
   userName,
@@ -60,6 +58,12 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   freelancer_id,
   freelancer_professional_profile_id,
 }) => {
+  const skills = attributes.filter(
+    (attr) => attr?.type === 'SKILL' && attr?.name,
+  );
+  const domains = attributes.filter(
+    (attr) => attr?.type === 'DOMAIN' && attr?.name,
+  );
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);

@@ -1,4 +1,7 @@
-import { Check, X } from 'lucide-react';
+import { Check, CircleAlert } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface PasswordStrengthProps {
   passwordStrength: {
@@ -56,54 +59,45 @@ export function getPasswordStrength(password: string) {
 export default function PasswordStrength({
   passwordStrength,
 }: PasswordStrengthProps) {
+  const progressValue = Math.max(
+    0,
+    Math.min(100, (passwordStrength.level / 5) * 100),
+  );
+
+  const strengthTone =
+    passwordStrength.label === 'Weak'
+      ? 'text-red-500'
+      : passwordStrength.label === 'Medium'
+        ? 'text-yellow-500'
+        : passwordStrength.label === 'Good'
+          ? 'text-blue-500'
+          : 'text-green-600';
+
   return (
-    <div className="flex flex-col gap-2 mt-2">
+    <div className="mt-2 space-y-2">
       {/* Progress Bar */}
-      <div className="flex w-40 h-2 rounded overflow-hidden">
-        <div
-          className={`flex-1 ${
-            passwordStrength.level >= 1 ? passwordStrength.color : 'bg-gray-200'
-          } transition-all`}
-        ></div>
-        <div
-          className={`flex-1 ${
-            passwordStrength.level >= 2 ? passwordStrength.color : 'bg-gray-200'
-          } transition-all`}
-        ></div>
-        <div
-          className={`flex-1 ${
-            passwordStrength.level >= 3 ? passwordStrength.color : 'bg-gray-200'
-          } transition-all`}
-        ></div>
-        <div
-          className={`flex-1 ${
-            passwordStrength.level >= 4 ? passwordStrength.color : 'bg-gray-200'
-          } transition-all`}
-        ></div>
+      <div className="flex items-center gap-2 mt-2">
+        <Progress value={progressValue} className="h-1.5 flex-1 bg-muted" />
+        <Badge
+          variant="outline"
+          className={`border-0 bg-muted text-[10px] font-medium px-2 py-0.5 ${strengthTone}`}
+        >
+          {passwordStrength.label || 'Password'}
+        </Badge>
       </div>
-      <span
-        className={`text-xs font-semibold ${
-          passwordStrength.label === 'Weak'
-            ? 'text-red-500'
-            : passwordStrength.label === 'Medium'
-              ? 'text-yellow-500'
-              : passwordStrength.label === 'Good'
-                ? 'text-blue-500'
-                : 'text-green-600'
-        }`}
-      >
-        {passwordStrength.label}
-      </span>
       {/* Checklist */}
       <ul className="mt-1 space-y-1">
         {passwordStrength.rules.map((rule, idx) => (
-          <li key={idx} className="flex items-center gap-2 text-xs">
+          <li
+            key={idx}
+            className="flex items-center gap-2 text-[11px] text-muted-foreground"
+          >
             {rule.passed ? (
-              <Check className="text-green-500 w-4 h-4" />
+              <Check className="text-green-500 w-3.5 h-3.5" />
             ) : (
-              <X className="text-red-500 w-4 h-4" />
+              <CircleAlert className="text-red-500 w-3.5 h-3.5" />
             )}
-            <span className={rule.passed ? 'text-green-600' : 'text-red-500'}>
+            <span className={rule.passed ? 'text-emerald-600' : 'text-red-500'}>
               {rule.label}
             </span>
           </li>

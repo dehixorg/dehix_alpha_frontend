@@ -66,6 +66,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
 import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
 
+// URL validation functions
+const isValidLinkedInUrl = (url: string) => {
+  const linkedInRegex =
+    /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
+  return linkedInRegex.test(url.trim());
+};
+
+const isValidWebsiteUrl = (url: string) => {
+  const websiteRegex =
+    /^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})?(\/.*)?$/;
+  return websiteRegex.test(url.trim());
+};
+
 export default function ProfilesPage() {
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
@@ -164,6 +177,21 @@ export default function ProfilesPage() {
     fetchSkillsAndDomains();
   }, [fetchProfiles, fetchSkillsAndDomains]);
 
+  const resetForm = () => {
+    setNewProfileName('');
+    setNewProfileDescription('');
+    setNewProfileHourlyRate(0);
+    setNewProfileGithubLink('');
+    setNewProfileLinkedinLink('');
+    setNewProfilePersonalWebsite('');
+    setNewProfileAvailability('FREELANCE');
+    setNewProfileSkills([]);
+    setNewProfileDomains([]);
+    setNewProfileProjects([]);
+    setNewProfileExperiences([]);
+    setIsCreateDialogOpen(false);
+  };
+
   const handleCreateProfile = async () => {
     if (!newProfileName.trim()) {
       notifyError('Profile name is required');
@@ -178,16 +206,41 @@ export default function ProfilesPage() {
       return;
     }
 
+    // URL validation
+    if (!newProfileLinkedinLink.trim()) {
+      notifyError('LinkedIn profile URL is required');
+      return;
+    }
+
+    if (!isValidLinkedInUrl(newProfileLinkedinLink)) {
+      notifyError(
+        'Please enter a valid LinkedIn profile URL (e.g., https://linkedin.com/in/username)',
+      );
+      return;
+    }
+
+    if (!newProfilePersonalWebsite.trim()) {
+      notifyError('Personal website URL is required');
+      return;
+    }
+
+    if (!isValidWebsiteUrl(newProfilePersonalWebsite)) {
+      notifyError(
+        'Please enter a valid website URL (e.g., https://example.com)',
+      );
+      return;
+    }
+
     try {
       // Map selected skill/domain option objects to {_id, label} for the API payload
       const skillsPayload = newProfileSkills.map((skill: any) => ({
         _id: skill?.type_id || '',
-        label: skill?.name || '',
+        label: skill?.name || skill?.label || '',
       }));
 
       const domainsPayload = newProfileDomains.map((domain: any) => ({
         _id: domain?.type_id || '',
-        label: domain?.name || '',
+        label: domain?.name || domain?.label || '',
       }));
 
       const profilePayload = {
@@ -209,46 +262,61 @@ export default function ProfilesPage() {
       const response = await axiosInstance.post(
         `/freelancer/profile`,
         profilePayload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
       );
 
-      const newProfile = response.data.data;
+      if (response.data && response.data.success) {
+        const newProfile = response.data.data;
 
-      // Use our selected objects directly for immediate display
-      const localProfile = {
-        ...newProfile,
-        profileType: newProfileType,
-        skills: newProfileSkills,
-        domains: newProfileDomains,
-        projects: newProfileProjects,
-        experiences: newProfileExperiences,
-      } as FreelancerProfile;
+        // Use our selected objects directly for immediate display
+        const localProfile = {
+          ...newProfile,
+          profileType: newProfileType,
+          skills: newProfileSkills,
+          domains: newProfileDomains,
+          projects: newProfileProjects,
+          experiences: newProfileExperiences,
+        } as FreelancerProfile;
 
-      // Add new profile at the beginning (newest first)
-      setProfiles((prev) => [localProfile, ...prev]);
+        // Add new profile at the beginning (newest first)
+        setProfiles((prev) => [localProfile, ...prev]);
 
-      // Reset all form fields
-      setNewProfileName('');
-      setNewProfileDescription('');
-      setNewProfileHourlyRate(0);
-      setNewProfileGithubLink('');
-      setNewProfileLinkedinLink('');
-      setNewProfilePersonalWebsite('');
-      setNewProfileAvailability('FREELANCE');
-      setNewProfileSkills([]);
-      setNewProfileDomains([]);
-      setNewProfileProjects([]);
-      setNewProfileExperiences([]);
-      setIsCreateDialogOpen(false);
+        // Reset form
+        resetForm();
 
-      // Switch to the relevant tab so the newly created profile is visible immediately
-      setActiveTab(
-        newProfileType === 'Consultant' ? 'consultant' : 'freelancer',
-      );
+        // Switch to the relevant tab so the newly created profile is visible immediately
+        setActiveTab(
+          newProfileType === 'Consultant' ? 'consultant' : 'freelancer',
+        );
 
-      notifySuccess('Profile created successfully', 'Success');
-    } catch (error) {
+        notifySuccess('Profile created successfully', 'Success');
+      } else {
+        throw new Error(response.data?.message || 'Failed to create profile');
+      }
+    } catch (error: any) {
       console.error('Error creating profile:', error);
-      notifyError('Failed to create profile');
+
+      let errorMessage = 'Failed to create profile';
+      if (error.response) {
+        // Server responded with error status
+        errorMessage =
+          error.response.data?.message ||
+          error.response.statusText ||
+          errorMessage;
+        console.error('Error details:', error.response.data);
+      } else if (error.request) {
+        // Request was made but no response
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        // Other errors
+        errorMessage = error.message || errorMessage;
+      }
+
+      notifyError(errorMessage);
     }
   };
 
@@ -747,6 +815,8 @@ export default function ProfilesPage() {
                   options={skillsOptions}
                   selected={newProfileSkills.map((skill: any) => ({
                     name: skill?.label || skill?.name || '',
+                    interviewerStatus:
+                      skill?.interviewerStatus || 'NOT_APPLIED',
                   }))}
                   onAdd={(value: string) => {
                     const selectedSkill = skillsOptions.find(
@@ -758,20 +828,20 @@ export default function ProfilesPage() {
                         (s: any) => s._id === selectedSkill._id,
                       )
                     ) {
-                      setNewProfileSkills([...newProfileSkills, selectedSkill]);
+                      setNewProfileSkills([
+                        ...newProfileSkills,
+                        {
+                          ...selectedSkill,
+                          interviewerStatus: 'NOT_APPLIED',
+                        },
+                      ]);
                     }
-                  }}
-                  onRemove={(name: string) => {
-                    setNewProfileSkills(
-                      newProfileSkills.filter(
-                        (s: any) => (s.label || s.name) !== name,
-                      ),
-                    );
                   }}
                   optionLabelKey="label"
                   selectedNameKey="name"
                   selectPlaceholder="Select skill"
                   searchPlaceholder="Search skills..."
+                  hideRemoveButtonInSettings={true}
                 />
               </div>
               <div className="space-y-2">
@@ -783,6 +853,8 @@ export default function ProfilesPage() {
                   options={domainsOptions}
                   selected={newProfileDomains.map((domain: any) => ({
                     name: domain?.label || domain?.name || '',
+                    interviewerStatus:
+                      domain?.interviewerStatus || 'NOT_APPLIED',
                   }))}
                   onAdd={(value: string) => {
                     const selectedDomain = domainsOptions.find(
@@ -796,21 +868,18 @@ export default function ProfilesPage() {
                     ) {
                       setNewProfileDomains([
                         ...newProfileDomains,
-                        selectedDomain,
+                        {
+                          ...selectedDomain,
+                          interviewerStatus: 'NOT_APPLIED',
+                        },
                       ]);
                     }
-                  }}
-                  onRemove={(name: string) => {
-                    setNewProfileDomains(
-                      newProfileDomains.filter(
-                        (d: any) => (d.label || d.name) !== name,
-                      ),
-                    );
                   }}
                   optionLabelKey="label"
                   selectedNameKey="name"
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains..."
+                  hideRemoveButtonInSettings={true}
                 />
               </div>
             </div>
