@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, CheckCircle, Briefcase } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -171,25 +172,39 @@ export default function ExperienceSelectionDialog({
           <>
             <div className="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2">
               {experiences.map((exp) => {
+                const isAlreadyInProfile = existingExperienceIds.includes(
+                  exp._id,
+                );
                 const isSelected = selectedExperiences.includes(exp._id);
                 return (
                   <Card
                     key={exp._id}
-                    onClick={() => handleToggle(exp._id)}
-                    className={`cursor-pointer p-3 border rounded-lg shadow-md transition-all
+                    onClick={() => !isAlreadyInProfile && handleToggle(exp._id)}
+                    className={`cursor-pointer p-3 border rounded-lg shadow-md transition-all relative
+          ${isAlreadyInProfile ? 'opacity-60 pointer-events-none' : ''}
           ${
             isSelected
               ? 'border-primary bg-primary/10 dark:bg-primary/20'
               : 'border-gray-300 bg-white dark:bg-black dark:border-gray-700'
           }`}
                   >
+                    {/* Visual Indicator */}
+                    <div className="absolute top-2 right-2 z-10">
+                      {isAlreadyInProfile ? (
+                        <Badge className="bg-green-600 hover:bg-green-600 text-xs">
+                          Already Added
+                        </Badge>
+                      ) : isSelected ? (
+                        <div className="bg-green-500 rounded-full p-1">
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                      ) : null}
+                    </div>
+
                     <CardHeader className="pb-1">
-                      <CardTitle className="text-md flex items-center gap-2 text-gray-900 dark:text-white">
+                      <CardTitle className="text-md flex items-center gap-2 text-gray-900 dark:text-white pr-24">
                         <Briefcase className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                         {exp.jobTitle}
-                        {isSelected && (
-                          <CheckCircle className="text-primary h-4 w-4" />
-                        )}
                       </CardTitle>
                       <p className="text-gray-700 dark:text-gray-300 font-medium text-sm">
                         {exp.company}
