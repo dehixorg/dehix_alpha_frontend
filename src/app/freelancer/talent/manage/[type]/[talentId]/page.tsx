@@ -63,22 +63,23 @@ export default function ManageTalentPage() {
       if (!user?.uid) return;
       try {
         const talentResponse = await axiosInstance.get(
-          `/freelancer/dehix-talent/attributes/verified`,
+          `/freelancer/${user.uid}/dehix-talent/status`,
         );
-        const payload = Array.isArray(talentResponse.data?.data)
-          ? talentResponse.data.data
-          : Object.values(talentResponse.data?.data || {});
-        const flattened = (payload as any[]).flat();
-        const mapped = flattened
+
+        const applied = talentResponse.data?.data?.APPLIED || {};
+        const appliedSkills = Array.isArray(applied?.SKILL) ? applied.SKILL : [];
+        const appliedDomains = Array.isArray(applied?.DOMAIN) ? applied.DOMAIN : [];
+
+        const mapped = [...appliedSkills, ...appliedDomains]
           .filter(
             (t: any) =>
-              t?.talentId &&
-              t?.talentName &&
+              t?.type_id &&
+              t?.name &&
               (t?.type === 'SKILL' || t?.type === 'DOMAIN'),
           )
           .map((t: any) => ({
-            id: t.talentId as string,
-            label: t.talentName as string,
+            id: t.type_id as string,
+            label: t.name as string,
             type: t.type as 'SKILL' | 'DOMAIN',
           }));
         // Deduplicate by id+type
@@ -101,10 +102,11 @@ export default function ManageTalentPage() {
   useEffect(() => {
     async function fetchApplications() {
       if (!user?.uid) return;
+      if (!talentId) return;
       setLoading(true);
       try {
         const response = await axiosInstance.get(
-          `/freelancer/dehix-talent/applications`,
+          `/freelancer/dehix-talent/${talentId}/applications`,
           {
             params: {
               status: activeStatus,
@@ -123,7 +125,7 @@ export default function ManageTalentPage() {
       }
     }
     fetchApplications();
-  }, [user?.uid, activeStatus]);
+  }, [user?.uid, activeStatus, talentId]);
 
   const selectedValue = `${type}:${talentId}`;
 

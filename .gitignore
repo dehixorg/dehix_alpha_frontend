@@ -1,5 +1,7 @@
 # Dependency directories
 node_modules/
+lib/
+onchain/
 
 # Next.js build output
 /.next/
