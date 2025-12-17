@@ -235,6 +235,7 @@ const Page = () => {
                     fetchMilestones={fetchMilestones}
                     handleStorySubmit={handleStorySubmit}
                     isFreelancer={true}
+                    freelancerId={user?.uid}
                   />
                 )}
               </div>

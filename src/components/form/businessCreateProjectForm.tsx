@@ -254,6 +254,9 @@ export function CreateProjectBusinessForm() {
     {},
   );
   const [domains, setDomains] = useState<any[]>([]);
+  const [currDomains, setCurrDomains] = useState<{ [key: number]: string[] }>(
+    {},
+  );
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -294,6 +297,14 @@ export function CreateProjectBusinessForm() {
       rebuiltSkills[i] = Array.isArray(s) ? [...s] : [];
     }
     setCurrSkills(rebuiltSkills);
+
+    // Build fresh domains map keyed by current indices
+    const rebuiltDomains: { [key: number]: string[] } = {};
+    for (let i = 0; i < profileCount; i += 1) {
+      const d = form.getValues(`profiles.${i}.domain` as const);
+      rebuiltDomains[i] = Array.isArray(d) ? [...d] : [];
+    }
+    setCurrDomains(rebuiltDomains);
   }, [form, formValues.profiles?.length]);
 
   // Update the current profile's data when it changes
