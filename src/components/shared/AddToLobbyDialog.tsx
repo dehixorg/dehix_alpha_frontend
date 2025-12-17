@@ -38,12 +38,12 @@ const AddToLobbyDialog = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Skills to Lobby</DialogTitle>
+          <DialogTitle>Invite Freelancer</DialogTitle>
         </DialogHeader>
 
         <div className="mt-2 space-y-4">
           <SelectTagPicker
-            label="Select skills"
+            label="Select hires"
             options={skillDomainData}
             selected={currSkills}
             onAdd={(value: string) => {
@@ -53,8 +53,8 @@ const AddToLobbyDialog = ({
             onRemove={(name: string) => handleDeleteSkill(name)}
             optionLabelKey="label"
             selectedNameKey="name"
-            selectPlaceholder="Search and select skills"
-            searchPlaceholder="Filter skills..."
+            selectPlaceholder="Search and select hires"
+            searchPlaceholder="Filter hires..."
           />
         </div>
 

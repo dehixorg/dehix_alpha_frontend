@@ -33,8 +33,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import type { RootState } from '@/lib/store';
 import AddToLobbyDialog from '@/components/shared/AddToLobbyDialog';
+import type { RootState } from '@/lib/store';
 
 interface Education {
   _id: string;
@@ -108,6 +108,7 @@ interface DomainOption {
 interface TalentCardProps {
   skillFilter: string | null;
   domainFilter: string | null;
+  skillDomainData?: SkillDomainData[];
   setFilterSkill?: (skills: SkillOption[]) => void;
   setFilterDomain?: (domains: DomainOption[]) => void;
 }
@@ -118,32 +119,40 @@ interface SkillDomainData {
   description: string;
   status: string;
   visible: boolean;
+  talentId?: string;
 }
 
 const SHEET_SIDES = ['left'] as const;
+
+let cachedHireData:
+  | {
+      skillDomainData: SkillDomainData[];
+      filterSkills: SkillOption[];
+      filterDomains: DomainOption[];
+    }
+  | null = null;
 
 // type SheetSide = (typeof SHEET_SIDES)[number];
 
 const TalentCard: React.FC<TalentCardProps> = ({
   skillFilter,
   domainFilter,
+  skillDomainData: skillDomainDataProp,
   setFilterSkill,
   setFilterDomain,
 }) => {
+  const user = useSelector((state: RootState) => state.user);
   const [talents, setTalents] = useState<Talent[]>([]);
   const skipRef = useRef(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [skills, setSkills] = useState<SkillOption[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [domains, setDomains] = useState<DomainOption[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const user = useSelector((state: RootState) => state.user);
-  const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
-  const [, setStatusVisibility] = useState<boolean[]>([]);
-  const [invitedTalents] = useState<Set<string>>(new Set());
+  const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>(
+    skillDomainDataProp || [],
+  );
+  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(
+    new Set(),
+  );
   const [selectedTalent, setSelectedTalent] = useState<any>();
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
@@ -151,6 +160,74 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [isLoading, setIsLoading] = useState<any>(false);
   const [openSheetId, setOpenSheetId] = useState<string | null>(null);
   const isSheetClosingRef = useRef(false);
+
+  // Keep local state in sync when parent provides skillDomainData
+  useEffect(() => {
+    if (Array.isArray(skillDomainDataProp)) {
+      setSkillDomainData(skillDomainDataProp);
+    }
+  }, [skillDomainDataProp]);
+
+  // Backward compatible: if parent does not provide hire list, fetch it once here.
+  useEffect(() => {
+    if (Array.isArray(skillDomainDataProp)) return;
+
+    if (cachedHireData) {
+      setSkillDomainData(cachedHireData.skillDomainData);
+      setFilterSkill?.(cachedHireData.filterSkills);
+      setFilterDomain?.(cachedHireData.filterDomains);
+      return;
+    }
+
+    const run = async () => {
+      try {
+        const res = await axiosInstance.get('/business/hire-dehixtalent');
+        const hireTalentData = res?.data?.data || [];
+
+        const filterSkills: SkillOption[] = (hireTalentData || [])
+          .filter((item: any) => item?.type === 'SKILL' && item?.visible)
+          .map((item: any) => ({
+            _id: item?.talentId || item?._id,
+            label: item?.talentName || '',
+          }))
+          .filter((s: any) => Boolean(s?._id) && Boolean(s?.label));
+
+        const filterDomains: DomainOption[] = (hireTalentData || [])
+          .filter((item: any) => item?.type === 'DOMAIN' && item?.visible)
+          .map((item: any) => ({
+            _id: item?.talentId || item?._id,
+            label: item?.talentName || '',
+          }))
+          .filter((d: any) => Boolean(d?._id) && Boolean(d?.label));
+
+        const formatted: SkillDomainData[] = (hireTalentData || [])
+          .map((item: any) => ({
+            uid: item?._id,
+            label: item?.talentName || 'N/A',
+            experience: item?.experience || 'N/A',
+            description: item?.description || 'N/A',
+            status: item?.status,
+            visible: Boolean(item?.visible),
+            talentId: item?.talentId,
+          }))
+          .filter((i: any) => Boolean(i?.uid) && i?.label !== 'N/A');
+
+        cachedHireData = {
+          skillDomainData: formatted,
+          filterSkills,
+          filterDomains,
+        };
+
+        setSkillDomainData(formatted);
+        setFilterSkill?.(filterSkills);
+        setFilterDomain?.(filterDomains);
+      } catch (e) {
+        // keep UI usable even if this fails
+      }
+    };
+
+    void run();
+  }, [skillDomainDataProp, setFilterDomain, setFilterSkill]);
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
@@ -173,138 +250,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
       currSkills.filter((skill: any) => skill.name !== skillToDelete),
     );
   };
-  useEffect(() => {
-    const fetchSkillsAndDomains = async () => {
-      try {
-        const [skillsResponse, domainsResponse] = await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'),
-        ]);
-
-        setSkills(skillsResponse.data?.data || []);
-        setDomains(domainsResponse.data?.data || []);
-      } catch (error) {
-        console.error('Error fetching skills and domains:', error);
-        notifyError(
-          'Failed to load skills and domains. Please try again.',
-          'Error',
-        );
-      }
-    };
-
-    fetchSkillsAndDomains();
-  }, []);
-  const fetchUserData = useCallback(async () => {
-    try {
-      const skillsResponse = await axiosInstance.get('/skills');
-      if (skillsResponse?.data?.data) {
-        setSkills(skillsResponse.data.data);
-      } else {
-        throw new Error('Skills response is null or invalid');
-      }
-      const domainsResponse = await axiosInstance.get('/domain');
-      if (domainsResponse?.data?.data) {
-        setDomains(domainsResponse.data.data);
-      } else {
-        throw new Error('Domains response is null or invalid');
-      }
-
-      // Fetch the skill/domain data for the specific freelancer
-      if (user?.uid) {
-        const hireTalentResponse = await axiosInstance.get(
-          `/business/hire-dehixtalent`,
-        );
-        const hireTalentData = hireTalentResponse.data?.data || {};
-
-        // Filter and map user data
-        const fetchedFilterSkills = hireTalentData
-          .filter((item: any) => item.skillName && item.visible)
-          .map((item: any) => ({
-            _id: item.skillId,
-            label: item.skillName,
-          }));
-
-        const fetchedFilterDomains = hireTalentData
-          .filter((item: any) => item.domainName && item.visible)
-          .map((item: any) => ({
-            _id: item.domainId,
-            label: item.domainName,
-          }));
-        // Send the filtered skills and domains back to the parent via setters
-        setFilterSkill?.(fetchedFilterSkills);
-        setFilterDomain?.(fetchedFilterDomains);
-
-        // Convert the talent object into an array
-        const formattedHireTalentData = Object.values(hireTalentData).map(
-          (item: any) => ({
-            uid: item._id,
-            label: item.skillName || item.domainName || 'N/A',
-            experience: item.experience || 'N/A',
-            description: item.description || 'N/A',
-            status: item.status,
-            visible: item.visible,
-            talentId: item.skillId || item.domainId,
-          }),
-        );
-
-        setSkillDomainData(formattedHireTalentData);
-        setStatusVisibility(
-          formattedHireTalentData.map((item) => item.visible),
-        );
-
-        const filterSkills = hireTalentData
-          .filter((item: any) => item.skillName)
-          .map((item: any) => ({
-            _id: item.skillId,
-            label: item.skillName,
-          }));
-
-        const filterDomains = hireTalentData
-          .filter((item: any) => item.domainName)
-          .map((item: any) => ({
-            _id: item.domainId,
-            label: item.domainName,
-          }));
-
-        // fetch skills and domains data
-        const skillsResponse = await axiosInstance.get('/skills');
-        if (skillsResponse?.data?.data) {
-          const uniqueSkills = skillsResponse.data.data.filter(
-            (skill: any) =>
-              !filterSkills.some(
-                (filterSkill: any) => filterSkill._id === skill._id,
-              ),
-          );
-          setSkills(uniqueSkills);
-        } else {
-          throw new Error('Skills response is null or invalid');
-        }
-        const domainsResponse = await axiosInstance.get('/domain');
-        if (domainsResponse?.data?.data) {
-          const uniqueDomain = domainsResponse.data.data.filter(
-            (domain: any) =>
-              !filterDomains.some(
-                (filterDomain: any) => filterDomain._id === domain._id,
-              ),
-          );
-          setDomains(uniqueDomain);
-        } else {
-          throw new Error('Domains response is null or invalid');
-        }
-      }
-    } catch (error: any) {
-      console.error('Error fetching user data:', error);
-      if (error.response && error.response.status === 404) {
-        // Do Nothing
-      } else {
-        notifyError('Something went wrong. Please try again.', 'Error');
-      }
-    }
-  }, [user?.uid, setFilterSkill, setFilterDomain]);
-
-  useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
 
   const fetchTalentData = useCallback(
     async (newSkip = skipRef.current, reset = false) => {
@@ -377,40 +322,48 @@ const TalentCard: React.FC<TalentCardProps> = ({
   }, [skillFilter, domainFilter]); // Trigger reset when filters change
 
   const handleAddToLobby = async (freelancerId: string): Promise<boolean> => {
-    const matchedTalentIds: string[] = [];
-    const matchedTalentUids: string[] = [];
+    const businessId = user?.uid;
+    const hires = (currSkills || [])
+      .map((skill: any) => {
+        const matched = (skillDomainData || []).find(
+          (item: SkillDomainData) => item.label === skill.name,
+        );
+        if (!matched?.uid || !matched?.talentId) return null;
+        return {
+          hireId: matched.uid,
+          attributeId: matched.talentId,
+          attributeName: matched.label,
+        };
+      })
+      .filter(Boolean) as {
+      hireId: string;
+      attributeId: string;
+      attributeName?: string;
+    }[];
 
-    currSkills.forEach((skill: any) => {
-      const matched: any = skillDomainData.find(
-        (item: any) => item.label === skill.name,
-      );
-      if (matched?.talentId && matched?.uid) {
-        matchedTalentIds.push(matched.talentId);
-        matchedTalentUids.push(matched.uid);
-      }
-    });
-
-    if (matchedTalentIds.length === 0 || matchedTalentUids.length === 0) {
-      notifyError(
-        'Please add some skills before adding to lobby.',
-        'No Skills Selected',
-      );
+    if (!hires.length) {
+      notifyError('Please select at least one hire.', 'No Hires Selected');
       return false;
     }
+
     setIsLoading(true);
     try {
-      const response = await axiosInstance.put(
-        `business/hire-dehixtalent/add_into_lobby`,
-        {
-          freelancerId,
-          dehixTalentId: matchedTalentIds,
-          hireDehixTalent_id: matchedTalentUids,
-        },
-      );
+      const response = await axiosInstance.post(`/business/hire/invite`, {
+        businessId,
+        freelancerId,
+        hires,
+      });
 
       if (response.status === 200) {
-        notifySuccess('Freelancer added to lobby', 'Success');
+        notifySuccess('Invitation sent successfully', 'Success');
         setCurrSkills([]);
+        if (selectedTalent?.dehixTalent?._id) {
+          setInvitedTalents((prev) => {
+            const next = new Set(prev);
+            next.add(selectedTalent.dehixTalent._id);
+            return next;
+          });
+        }
         return true;
       }
     } catch (error: any) {

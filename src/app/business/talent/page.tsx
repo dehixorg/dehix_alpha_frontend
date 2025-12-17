@@ -7,7 +7,7 @@ import {
   XCircle,
   FileText,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -17,6 +17,7 @@ import {
 import { CardTitle } from '@/components/ui/card';
 import SkillDomainForm from '@/components/business/hireTalent.tsx/skillDomainForm';
 import TalentCard from '@/components/business/hireTalent.tsx/talentCard';
+import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Select,
   SelectContent,
@@ -36,6 +37,35 @@ interface Domain {
   label: string;
 }
 
+interface HireTalentItem {
+  _id: string;
+  type?: string;
+  visible?: boolean;
+  talentId?: string;
+  talentName?: string;
+  description?: string;
+  experience?: string;
+  status?: string;
+}
+
+interface SkillDomainData {
+  uid: string;
+  label: string;
+  experience: string;
+  description: string;
+  status: string;
+  visible: boolean;
+  talentId?: string;
+}
+
+let cachedBusinessTalentBootstrap:
+  | {
+      skills: Skill[];
+      domains: Domain[];
+      hires: HireTalentItem[];
+    }
+  | null = null;
+
 export default function Talent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -44,6 +74,123 @@ export default function Talent() {
 
   const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
+
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [hireItems, setHireItems] = useState<HireTalentItem[]>([]);
+  const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
+  const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
+  const [bootstrapLoading, setBootstrapLoading] = useState<boolean>(true);
+  const bootstrapInFlightRef = useRef(false);
+
+  const refreshBootstrap = useCallback(async () => {
+    if (bootstrapInFlightRef.current) return;
+    bootstrapInFlightRef.current = true;
+    setBootstrapLoading(true);
+    try {
+      const [skillsRes, domainsRes, hiresRes] = await Promise.all([
+        axiosInstance.get('/skills'),
+        axiosInstance.get('/domain'),
+        axiosInstance.get('/business/hire-dehixtalent'),
+      ]);
+
+      const nextSkills: Skill[] = skillsRes?.data?.data || [];
+      const nextDomains: Domain[] = domainsRes?.data?.data || [];
+      const nextHires: HireTalentItem[] = hiresRes?.data?.data || [];
+
+      cachedBusinessTalentBootstrap = {
+        skills: nextSkills,
+        domains: nextDomains,
+        hires: nextHires,
+      };
+
+      setSkills(nextSkills);
+      setDomains(nextDomains);
+      setHireItems(nextHires);
+
+      const fetchedFilterSkills: Skill[] = (nextHires || [])
+        .filter((item) => item?.type === 'SKILL' && item?.visible)
+        .map((item) => ({
+          _id: item?.talentId || item?._id,
+          label: item?.talentName || '',
+        }))
+        .filter((s) => Boolean(s._id) && Boolean(s.label));
+
+      const fetchedFilterDomains: Domain[] = (nextHires || [])
+        .filter((item) => item?.type === 'DOMAIN' && item?.visible)
+        .map((item) => ({
+          _id: item?.talentId || item?._id,
+          label: item?.talentName || '',
+        }))
+        .filter((d) => Boolean(d._id) && Boolean(d.label));
+
+      setFilterSkill(fetchedFilterSkills);
+      setFilterDomain(fetchedFilterDomains);
+
+      const formatted: SkillDomainData[] = (nextHires || [])
+        .map((item) => ({
+          uid: item?._id,
+          label: item?.talentName || 'N/A',
+          experience: item?.experience || 'N/A',
+          description: item?.description || 'N/A',
+          status: item?.status || 'N/A',
+          visible: Boolean(item?.visible),
+          talentId: item?.talentId,
+        }))
+        .filter((i) => Boolean(i.uid) && i.label !== 'N/A');
+
+      setSkillDomainData(formatted);
+      setStatusVisibility(formatted.map((i) => i.visible));
+    } finally {
+      setBootstrapLoading(false);
+      bootstrapInFlightRef.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    // Avoid double-fetching in React 18 dev StrictMode by using a module cache.
+    if (cachedBusinessTalentBootstrap) {
+      setSkills(cachedBusinessTalentBootstrap.skills);
+      setDomains(cachedBusinessTalentBootstrap.domains);
+      setHireItems(cachedBusinessTalentBootstrap.hires);
+
+      const hires = cachedBusinessTalentBootstrap.hires || [];
+      const fetchedFilterSkills: Skill[] = hires
+        .filter((item) => item?.type === 'SKILL' && item?.visible)
+        .map((item) => ({
+          _id: item?.talentId || item?._id,
+          label: item?.talentName || '',
+        }))
+        .filter((s) => Boolean(s._id) && Boolean(s.label));
+      const fetchedFilterDomains: Domain[] = hires
+        .filter((item) => item?.type === 'DOMAIN' && item?.visible)
+        .map((item) => ({
+          _id: item?.talentId || item?._id,
+          label: item?.talentName || '',
+        }))
+        .filter((d) => Boolean(d._id) && Boolean(d.label));
+      setFilterSkill(fetchedFilterSkills);
+      setFilterDomain(fetchedFilterDomains);
+
+      const formatted: SkillDomainData[] = hires
+        .map((item) => ({
+          uid: item?._id,
+          label: item?.talentName || 'N/A',
+          experience: item?.experience || 'N/A',
+          description: item?.description || 'N/A',
+          status: item?.status || 'N/A',
+          visible: Boolean(item?.visible),
+          talentId: item?.talentId,
+        }))
+        .filter((i) => Boolean(i.uid) && i.label !== 'N/A');
+      setSkillDomainData(formatted);
+      setStatusVisibility(formatted.map((i) => i.visible));
+      setBootstrapLoading(false);
+      return;
+    }
+
+    void refreshBootstrap();
+  }, [refreshBootstrap]);
 
   const handleTabChange = (value: string) => {
     const path = value ? `/business/talent/${value}` : '/business/talent';
@@ -126,6 +273,15 @@ export default function Talent() {
             <SkillDomainForm
               setFilterSkill={setFilterSkill}
               setFilterDomain={setFilterDomain}
+              skills={skills}
+              domains={domains}
+              hireItems={hireItems}
+              skillDomainData={skillDomainData}
+              setSkillDomainData={setSkillDomainData}
+              statusVisibility={statusVisibility}
+              setStatusVisibility={setStatusVisibility}
+              isLoading={bootstrapLoading}
+              refreshData={refreshBootstrap}
             />
           </div>
 
@@ -169,6 +325,7 @@ export default function Talent() {
               <TalentCard
                 skillFilter={skillFilter}
                 domainFilter={domainFilter}
+                skillDomainData={skillDomainData}
               />
             </div>
           </div>

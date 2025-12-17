@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -16,10 +16,10 @@ import {
 } from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
-import { RootState } from '@/lib/store';
 import { notifyError } from '@/utils/toastMessage';
 import { Badge } from '@/components/ui/badge';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import { RootState } from '@/lib/store';
 
 interface Skill {
   _id: string;
@@ -43,88 +43,118 @@ interface SkillDomainData {
 interface SkillDomainFormProps {
   setFilterSkill: (skills: Skill[]) => void;
   setFilterDomain: (domains: Domain[]) => void;
+  skills?: Skill[];
+  domains?: Domain[];
+  hireItems?: any[];
+  skillDomainData?: SkillDomainData[];
+  setSkillDomainData?: (next: SkillDomainData[]) => void;
+  statusVisibility?: boolean[];
+  setStatusVisibility?: (next: boolean[]) => void;
+  isLoading?: boolean;
+  refreshData?: () => Promise<void>;
 }
 
 const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   setFilterSkill,
   setFilterDomain,
+  skills: skillsProp,
+  domains: domainsProp,
+  skillDomainData: skillDomainDataProp,
+  setSkillDomainData: setSkillDomainDataProp,
+  statusVisibility: statusVisibilityProp,
+  setStatusVisibility: setStatusVisibilityProp,
+  isLoading: isLoadingProp,
+  refreshData: refreshDataProp,
 }) => {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [domains, setDomains] = useState<Domain[]>([]);
-  const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
-  const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Get the user data from Redux store
   const user = useSelector((state: RootState) => state.user);
 
-  // Fetch skills and domains once on component mount
-  useEffect(() => {
-    const fetchSkillsAndDomains = async () => {
-      try {
-        const [skillsResponse, domainsResponse] = await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'),
-        ]);
+  const isControlled = useMemo(() => {
+    return (
+      Array.isArray(skillsProp) &&
+      Array.isArray(domainsProp) &&
+      Array.isArray(skillDomainDataProp) &&
+      Array.isArray(statusVisibilityProp) &&
+      typeof setSkillDomainDataProp === 'function' &&
+      typeof setStatusVisibilityProp === 'function' &&
+      typeof refreshDataProp === 'function'
+    );
+  }, [
+    skillsProp,
+    domainsProp,
+    skillDomainDataProp,
+    statusVisibilityProp,
+    setSkillDomainDataProp,
+    setStatusVisibilityProp,
+    refreshDataProp,
+  ]);
 
-        setSkills(skillsResponse.data?.data || []);
-        setDomains(domainsResponse.data?.data || []);
-      } catch (error) {
-        console.error('Error fetching skills and domains:', error);
-        notifyError(
-          'Failed to load skills and domains. Please try again.',
-          'Error',
-        );
-      }
-    };
+  // Backward-compatible internal state (used only when parent doesn't control data)
+  const [skillsState, setSkillsState] = useState<Skill[]>([]);
+  const [domainsState, setDomainsState] = useState<Domain[]>([]);
+  const [skillDomainDataState, setSkillDomainDataState] = useState<
+    SkillDomainData[]
+  >([]);
+  const [statusVisibilityState, setStatusVisibilityState] = useState<boolean[]>(
+    [],
+  );
+  const [isLoadingState, setIsLoadingState] = useState(true);
 
-    fetchSkillsAndDomains();
-  }, []); // Empty dependency array ensures this runs only once
+  const skills = isControlled ? (skillsProp as Skill[]) : skillsState;
+  const domains = isControlled ? (domainsProp as Domain[]) : domainsState;
+  const skillDomainData = isControlled
+    ? (skillDomainDataProp as SkillDomainData[])
+    : skillDomainDataState;
+  const statusVisibility = isControlled
+    ? (statusVisibilityProp as boolean[])
+    : statusVisibilityState;
+  const setSkillDomainData = isControlled
+    ? (setSkillDomainDataProp as (next: SkillDomainData[]) => void)
+    : setSkillDomainDataState;
+  const setStatusVisibility = isControlled
+    ? (setStatusVisibilityProp as (next: boolean[]) => void)
+    : setStatusVisibilityState;
+  const isLoading = isControlled ? Boolean(isLoadingProp) : isLoadingState;
+  const refreshData = isControlled
+    ? (refreshDataProp as () => Promise<void>)
+    : async () => {
+        // legacy refresh = refetch
+        await fetchUserData();
+      };
 
-  // Fetch user's skill/domain data
   const fetchUserData = useCallback(async () => {
     try {
-      const skillsResponse = await axiosInstance.get('/skills');
-      if (skillsResponse?.data?.data) {
-        setSkills(skillsResponse.data.data);
-      } else {
-        throw new Error('Skills response is null or invalid');
-      }
-      const domainsResponse = await axiosInstance.get('/domain');
-      if (domainsResponse?.data?.data) {
-        setDomains(domainsResponse.data.data);
-      } else {
-        throw new Error('Domains response is null or invalid');
-      }
+      // fetch skills/domains for dialogs
+      const [skillsResponse, domainsResponse] = await Promise.all([
+        axiosInstance.get('/skills'),
+        axiosInstance.get('/domain'),
+      ]);
+      setSkillsState(skillsResponse.data?.data || []);
+      setDomainsState(domainsResponse.data?.data || []);
 
-      // Fetch the skill/domain data for the specific freelancer
       if (user?.uid) {
         const hireTalentResponse = await axiosInstance.get(
           `/business/hire-dehixtalent`,
         );
-        const hireTalentData = hireTalentResponse.data?.data || {};
+        const hireTalentData = hireTalentResponse.data?.data || [];
 
-        // Filter and map user data
-        const fetchedFilterSkills = hireTalentData
+        const fetchedFilterSkills = (hireTalentData || [])
           .filter((item: any) => item.type === 'SKILL' && item.visible)
           .map((item: any) => ({
-            _id: item._id,
+            _id: item.talentId || item._id,
             label: item.talentName,
           }));
 
-        const fetchedFilterDomains = hireTalentData
+        const fetchedFilterDomains = (hireTalentData || [])
           .filter((item: any) => item.type === 'DOMAIN' && item.visible)
           .map((item: any) => ({
-            _id: item._id,
+            _id: item.talentId || item._id,
             label: item.talentName,
           }));
 
-        // Send the filtered skills and domains back to the parent
         setFilterSkill(fetchedFilterSkills);
         setFilterDomain(fetchedFilterDomains);
 
-        // Convert the talent object into an array
-        const formattedHireTalentData = Object.values(hireTalentData).map(
+        const formattedHireTalentData = (hireTalentData || []).map(
           (item: any) => ({
             uid: item._id,
             label: item.talentName || 'N/A',
@@ -135,69 +165,29 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           }),
         );
 
-        setSkillDomainData(formattedHireTalentData);
-        setStatusVisibility(
-          formattedHireTalentData.map((item) => item.visible),
+        setSkillDomainDataState(formattedHireTalentData);
+        setStatusVisibilityState(
+          formattedHireTalentData.map((item: any) => Boolean(item.visible)),
         );
-
-        const filterSkills = hireTalentData
-          .filter((item: any) => item.skillName)
-          .map((item: any) => ({
-            _id: item.skillId,
-            label: item.skillName,
-          }));
-
-        const filterDomains = hireTalentData
-          .filter((item: any) => item.domainName)
-          .map((item: any) => ({
-            _id: item.domainId,
-            label: item.domainName,
-          }));
-
-        // fetch skills and domains data
-        const skillsResponse = await axiosInstance.get('/skills');
-        if (skillsResponse?.data?.data) {
-          const uniqueSkills = skillsResponse.data.data.filter(
-            (skill: any) =>
-              !filterSkills.some(
-                (filterSkill: any) => filterSkill._id === skill._id,
-              ),
-          );
-          setSkills(uniqueSkills);
-        } else {
-          throw new Error('Skills response is null or invalid');
-        }
-        const domainsResponse = await axiosInstance.get('/domain');
-        if (domainsResponse?.data?.data) {
-          const uniqueDomain = domainsResponse.data.data.filter(
-            (domain: any) =>
-              !filterDomains.some(
-                (filterDomain: any) => filterDomain._id === domain._id,
-              ),
-          );
-          setDomains(uniqueDomain);
-        } else {
-          throw new Error('Domains response is null or invalid');
-        }
       }
     } catch (error: any) {
       console.error('Error fetching user data:', error);
       notifyError('Something went wrong. Please try again.', 'Error');
     }
-  }, [user?.uid, setFilterSkill, setFilterDomain]);
+  }, [setFilterSkill, setFilterDomain, user?.uid]);
 
-  // Fetch user data on mount
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
+    if (isControlled) return;
+    const run = async () => {
+      setIsLoadingState(true);
       try {
         await fetchUserData();
       } finally {
-        setIsLoading(false);
+        setIsLoadingState(false);
       }
     };
-    fetchData();
-  }, [fetchUserData]);
+    void run();
+  }, [fetchUserData, isControlled]);
 
   // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {
@@ -234,7 +224,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         setStatusVisibility(updatedVisibility);
 
         // Callback to refetch data after visibility update
-        await fetchUserData();
+        await refreshData();
       }
     } catch (error) {
       console.error('Error updating visibility:', error);

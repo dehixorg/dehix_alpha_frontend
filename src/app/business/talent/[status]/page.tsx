@@ -125,12 +125,20 @@ export default function Page({ params }: { params: { status: string } }) {
               lastName: profile?.lastName || '',
               email: profile?.email || 'Email not provided',
               profilePic: profile?.profilePic || '',
-              domainName: item.domainName || item.skillName || 'General',
-              role: item.domainName || item.skillName || 'Developer',
+              domainName: item.talentName || item.domainName || item.skillName || 'General',
+              role: item.talentName || item.domainName || item.skillName || 'Developer',
               professionalInfo: [],
-              skills: item.skillName
-                ? [{ _id: item.skillId || '', name: item.skillName }]
-                : [],
+              skills:
+                (item.type || '').toUpperCase() === 'SKILL' && item.talentName
+                  ? [
+                      {
+                        _id: item.talentId || item.skillId || '',
+                        name: item.talentName || item.skillName,
+                      },
+                    ]
+                  : item.skillName
+                    ? [{ _id: item.skillId || '', name: item.skillName }]
+                    : [],
             } as any;
 
             const existing = aggregateMap.get(freelancer.freelancerId);
