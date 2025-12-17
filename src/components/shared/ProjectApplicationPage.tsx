@@ -133,7 +133,6 @@ const ProjectApplicationForm = ({
     useState<FreelancerProfile | null>(null);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [appliedProfileIds, setAppliedProfileIds] = useState<string[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const user = useSelector((state: RootState) => state.user);
   const fetchFreelancerProfiles = useCallback(async () => {
@@ -203,7 +202,6 @@ const ProjectApplicationForm = ({
               bid.project_id === project._id && bid.bidder_id === user.uid,
           )
           ?.map((bid: any) => bid.profile_id) || [];
-      setAppliedProfileIds(profilesUserAppliedFor);
       return profilesUserAppliedFor;
     } catch (error: any) {
       console.error('API Error fetching applied data:', error);
@@ -308,9 +306,6 @@ const ProjectApplicationForm = ({
         window.dispatchEvent(new Event('connectsUpdated'));
       }
 
-      // Update applied profile IDs to prevent duplicate submissions
-      setAppliedProfileIds((prev) => [...prev, selectedProfile._id]);
-
       // Reset form state
       setBidAmount(0);
       setDialogOpen(false);
@@ -371,9 +366,7 @@ const ProjectApplicationForm = ({
     }
   };
 
-  const hasAppliedToSelectedProfile = selectedProfile
-    ? appliedProfileIds.includes(selectedProfile._id)
-    : false;
+  const hasAppliedToSelectedProfile = !selectedFreelancerProfile;
 
   if (isLoading) {
     return (
