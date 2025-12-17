@@ -251,6 +251,9 @@ export function CreateProjectBusinessForm() {
   const [skills, setSkills] = useState<any[]>([]);
   const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
   const [domains, setDomains] = useState<any[]>([]);
+  const [currDomains, setCurrDomains] = useState<{ [key: number]: string[] }>(
+    {},
+  );
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -291,6 +294,14 @@ export function CreateProjectBusinessForm() {
       rebuiltSkills[i] = Array.isArray(s) ? [...s] : [];
     }
     setCurrSkills(rebuiltSkills);
+
+    // Build fresh domains map keyed by current indices
+    const rebuiltDomains: { [key: number]: string[] } = {};
+    for (let i = 0; i < profileCount; i += 1) {
+      const d = form.getValues(`profiles.${i}.domain` as const);
+      rebuiltDomains[i] = Array.isArray(d) ? [...d] : [];
+    }
+    setCurrDomains(rebuiltDomains);
   }, [form, formValues.profiles?.length]);
 
   // Update the current profile's data when it changes
@@ -787,7 +798,7 @@ export function CreateProjectBusinessForm() {
               <FormField
                 control={form.control}
                 name={`profiles.${index}.domain_id`}
-                render={({ field }) => (
+                render={() => (
                   <FormItem className="mb-4">
                     <FormLabel className="flex items-center gap-2">
                       <Tag className="h-4 w-4" /> Profile Domain
@@ -809,9 +820,13 @@ export function CreateProjectBusinessForm() {
                             if (prevDomains.includes(val)) return prev; // avoid duplicates
                             const updated = [...prevDomains, val];
                             const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated, {
-                              shouldValidate: true,
-                            });
+                            form.setValue(
+                              `profiles.${index}.domain`,
+                              updated[0] || '',
+                              {
+                                shouldValidate: true,
+                              },
+                            );
                             return newDomains;
                           });
                         }}
@@ -821,9 +836,13 @@ export function CreateProjectBusinessForm() {
                               (d) => d !== val,
                             );
                             const newDomains = { ...prev, [index]: updated };
-                            form.setValue(`profiles.${index}.domain`, updated, {
-                              shouldValidate: true,
-                            });
+                            form.setValue(
+                              `profiles.${index}.domain`,
+                              updated[0] || '',
+                              {
+                                shouldValidate: true,
+                              },
+                            );
                             return newDomains;
                           });
                         }}

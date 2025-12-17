@@ -698,7 +698,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           };
         });
         setCurrDomains(transformedDomains);
-        setCurrProjectDomains(userResponse.data.data.projectDomain);
+        // Transform project domains to ensure proper names
+        const transformedProjectDomains = (
+          userResponse.data.data.projectDomain || []
+        ).map((pd: any) => {
+          const matchingProjectDomain = projectDomainResponse.data.data.find(
+            (p: any) => p._id === pd.type_id || p.label === pd.name,
+          );
+          return {
+            ...pd,
+            name: matchingProjectDomain?.label ?? pd.name,
+          };
+        });
+        setCurrProjectDomains(transformedProjectDomains);
 
         // Ensure cover letter is treated as text, not URL
         const coverLetterValue = userResponse.data.data.coverLetter;
@@ -957,7 +969,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onAdd={handleAddDomainByValue}
                   onRemove={handleDeleteDomain}
                   optionLabelKey="label"
-                  selectedNameKey="type_id"
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains"
                   showOtherOption
@@ -976,7 +987,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onAdd={handleAddProjectDomainByValue}
                   onRemove={handleDeleteProjDomain}
                   optionLabelKey="label"
-                  selectedNameKey="type_id"
                   selectPlaceholder="Select project domain"
                   searchPlaceholder="Search project domains"
                   showOtherOption

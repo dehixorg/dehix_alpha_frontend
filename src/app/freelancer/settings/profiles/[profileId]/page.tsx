@@ -86,10 +86,12 @@ export default function ProfileDetailPage() {
   const [editingProfileData, setEditingProfileData] = useState<any>({});
   const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
   const [domainsOptions, setDomainsOptions] = useState<any[]>([]);
-  // eslint-disable-next-line prettier/prettier
-  const [freelancerSkillsOptions, setFreelancerSkillsOptions] = useState<any[]>([]);
-  // eslint-disable-next-line prettier/prettier
-  const [freelancerDomainsOptions, setFreelancerDomainsOptions] = useState<any[]>([]);
+  const [freelancerSkillsOptions, setFreelancerSkillsOptions] = useState<any[]>(
+    [],
+  );
+  const [freelancerDomainsOptions, setFreelancerDomainsOptions] = useState<
+    any[]
+  >([]);
   const [skillsAndDomainsLoaded, setSkillsAndDomainsLoaded] = useState(false);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showExperienceDialog, setShowExperienceDialog] = useState(false);
@@ -112,7 +114,6 @@ export default function ProfileDetailPage() {
     getNameById,
     onAdd,
     onRemove,
-    editOptions,
   }: {
     title: string;
     Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -200,39 +201,32 @@ export default function ProfileDetailPage() {
     if (!user.uid) return;
 
     try {
-      const [skillsResponse, domainsResponse, freelancerResponse] =
-        await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'), // Corrected endpoint
-          axiosInstance.get(`/freelancer/${user.uid}`),
-        ]);
-
-      const allSkills = skillsResponse.data.data || [];
-      const allDomains = domainsResponse.data.data || [];
+      const freelancerResponse = await axiosInstance.get(
+        `/freelancer/${user.uid}`,
+      );
       const freelancerData = freelancerResponse.data.data || {};
+      const freelancerAttributes = freelancerData.attributes || [];
 
-      const freelancerSkillNames = (freelancerData.skills || [])
-        .map((s: any) => s.name || s.label)
-        .filter(Boolean);
+      const skills = freelancerAttributes
+        .filter((attr: any) => attr.type === 'SKILL')
+        .map((attr: any) => ({
+          _id: attr.type_id,
+          label: attr.name,
+          name: attr.name,
+        }));
 
-      const freelancerDomainNames = (freelancerData.domain || [])
-        .map((d: any) => d.name || d.label)
-        .filter(Boolean);
+      const domains = freelancerAttributes
+        .filter((attr: any) => attr.type === 'DOMAIN')
+        .map((attr: any) => ({
+          _id: attr.type_id,
+          label: attr.name,
+          name: attr.name,
+        }));
 
-      // Use all available skills and domains for proper name resolution
-      setSkillsOptions(allSkills);
-      setDomainsOptions(allDomains);
-
-      // Filter skills and domains for the freelancer (for editing)
-      const skillsForOptions = allSkills.filter((s: any) =>
-        freelancerSkillNames.includes(s.label || s.name),
-      );
-      const domainsForOptions = allDomains.filter((d: any) =>
-        freelancerDomainNames.includes(d.label || d.name),
-      );
-
-      setFreelancerSkillsOptions(skillsForOptions);
-      setFreelancerDomainsOptions(domainsForOptions);
+      setSkillsOptions(skills);
+      setDomainsOptions(domains);
+      setFreelancerSkillsOptions(skills);
+      setFreelancerDomainsOptions(domains);
 
       setSkillsAndDomainsLoaded(true);
     } catch (error) {
@@ -1048,7 +1042,7 @@ export default function ProfileDetailPage() {
                   <TagSection
                     title="Skills"
                     Icon={Award}
-                    options={skillsOptions}
+                    options={freelancerSkillsOptions}
                     editOptions={freelancerSkillsOptions}
                     selectedIds={editingProfileData.skills || []}
                     getNameById={getSkillNameById}
@@ -1082,7 +1076,7 @@ export default function ProfileDetailPage() {
                   <TagSection
                     title="Domains"
                     Icon={Layers}
-                    options={domainsOptions}
+                    options={freelancerDomainsOptions}
                     editOptions={freelancerDomainsOptions}
                     selectedIds={editingProfileData.domains || []}
                     getNameById={getDomainNameById}
