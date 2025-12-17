@@ -254,9 +254,6 @@ export function CreateProjectBusinessForm() {
     {},
   );
   const [domains, setDomains] = useState<any[]>([]);
-  const [currDomains, setCurrDomains] = useState<{ [key: number]: string[] }>(
-    {},
-  );
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
