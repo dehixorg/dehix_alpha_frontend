@@ -124,13 +124,11 @@ interface SkillDomainData {
 
 const SHEET_SIDES = ['left'] as const;
 
-let cachedHireData:
-  | {
-      skillDomainData: SkillDomainData[];
-      filterSkills: SkillOption[];
-      filterDomains: DomainOption[];
-    }
-  | null = null;
+let cachedHireData: {
+  skillDomainData: SkillDomainData[];
+  filterSkills: SkillOption[];
+  filterDomains: DomainOption[];
+} | null = null;
 
 // type SheetSide = (typeof SHEET_SIDES)[number];
 
@@ -150,9 +148,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>(
     skillDomainDataProp || [],
   );
-  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(
-    new Set(),
-  );
+  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(new Set());
   const [selectedTalent, setSelectedTalent] = useState<any>();
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');

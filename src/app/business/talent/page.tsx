@@ -58,13 +58,11 @@ interface SkillDomainData {
   talentId?: string;
 }
 
-let cachedBusinessTalentBootstrap:
-  | {
-      skills: Skill[];
-      domains: Domain[];
-      hires: HireTalentItem[];
-    }
-  | null = null;
+let cachedBusinessTalentBootstrap: {
+  skills: Skill[];
+  domains: Domain[];
+  hires: HireTalentItem[];
+} | null = null;
 
 export default function Talent() {
   const router = useRouter();

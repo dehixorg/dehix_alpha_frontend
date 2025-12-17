@@ -125,8 +125,16 @@ export default function Page({ params }: { params: { status: string } }) {
               lastName: profile?.lastName || '',
               email: profile?.email || 'Email not provided',
               profilePic: profile?.profilePic || '',
-              domainName: item.talentName || item.domainName || item.skillName || 'General',
-              role: item.talentName || item.domainName || item.skillName || 'Developer',
+              domainName:
+                item.talentName ||
+                item.domainName ||
+                item.skillName ||
+                'General',
+              role:
+                item.talentName ||
+                item.domainName ||
+                item.skillName ||
+                'Developer',
               professionalInfo: [],
               skills:
                 (item.type || '').toUpperCase() === 'SKILL' && item.talentName
