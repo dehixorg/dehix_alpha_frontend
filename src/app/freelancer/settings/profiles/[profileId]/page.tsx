@@ -114,7 +114,6 @@ export default function ProfileDetailPage() {
     getNameById,
     onAdd,
     onRemove,
-    editOptions: _editOptions,
   }: {
     title: string;
     Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -123,7 +122,6 @@ export default function ProfileDetailPage() {
     getNameById: (id: string) => string;
     onAdd: (value: string) => void;
     onRemove: (name: string) => void;
-    editOptions?: any[];
   }) => (
     <div className="space-y-2">
       <Label className="flex items-center gap-2">

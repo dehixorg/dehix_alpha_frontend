@@ -798,7 +798,7 @@ export function CreateProjectBusinessForm() {
               <FormField
                 control={form.control}
                 name={`profiles.${index}.domain_id`}
-                render={({ field: _field }) => (
+                render={() => (
                   <FormItem className="mb-4">
                     <FormLabel className="flex items-center gap-2">
                       <Tag className="h-4 w-4" /> Profile Domain
