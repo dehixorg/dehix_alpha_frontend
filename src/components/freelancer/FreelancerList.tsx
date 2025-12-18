@@ -400,11 +400,9 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
               title={
                 searchTerm
                   ? 'No freelancers match your search'
-                  : isBusinessUser
-                    ? 'No freelancers found for this project'
-                    : 'No other freelancers found for this project'
+                  : 'No freelancers found'
               }
-              className="py-8 border-0 bg-transparent"
+              className="py-8 border-0 bg-transparent mt-6"
             />
           ) : (
             <div className="space-y-3">

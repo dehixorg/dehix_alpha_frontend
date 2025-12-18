@@ -434,22 +434,6 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
     }
   };
 
-  const showRedDot = isFreelancer
-    ? task?.freelancers[0]?.updatePermissionBusiness &&
-      task?.freelancers[0]?.updatePermissionFreelancer &&
-      !task?.freelancers[0]?.rejectionFreelancer
-    : task?.freelancers[0]?.updatePermissionBusiness &&
-      task?.freelancers[0]?.updatePermissionFreelancer &&
-      !task.freelancers[0]?.acceptanceFreelancer;
-
-  const showYellowDot = isFreelancer
-    ? task?.freelancers[0]?.updatePermissionBusiness &&
-      !task?.freelancers[0]?.updatePermissionFreelancer &&
-      task?.freelancers[0]?.rejectionFreelancer
-    : !task?.freelancers[0]?.updatePermissionBusiness &&
-      task?.freelancers[0]?.updatePermissionFreelancer &&
-      task.freelancers[0]?.acceptanceFreelancer;
-
   const isUpdateDisabled = isFreelancer
     ? task?.freelancers[0]?.rejectionFreelancer ||
       !task?.freelancers[0]?.acceptanceFreelancer ||
@@ -462,12 +446,6 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger className="p-1 rounded-md hover:bg-accent">
           <MoreVertical className="w-4 h-4" />
-          {showRedDot && (
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-          )}
-          {showYellowDot && (
-            <span className="absolute top-0 right-0 w-2 h-2 bg-yellow-500 rounded-full"></span>
-          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
