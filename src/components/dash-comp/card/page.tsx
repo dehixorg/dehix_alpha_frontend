@@ -15,40 +15,34 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   buttonText,
 }) => {
   return (
-    <div className="flex justify-center p-4 rounded-md">
-      <Card className="w-full md:max-w-lg rounded-lg shadow-md bg-white">
-        <CardHeader className="px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center space-x-2 p=10 m-10">
-            <CardTitle className="text-lg font-medium text-gray-900 flex-grow">
-              {title}
-            </CardTitle>
-            <div className="pl-5">
-              <CustomIcon
-                width={24}
-                height={24}
-                viewBox="0 0 24 24"
-                className="w-6 h-6 text-gray-500"
-                path="
-                M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2
-                M12 11h4
-                M12 16h4
-                M8 11h.01
-                M8 16h.01
-              "
-              />
-            </div>
-          </div>
-          <div className="m-6 p-6">
-            <Button variant="outline" className="text-sm">
-              {buttonText}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="px-4 py-3">
-          <p className="text-black">{content}</p>
-        </CardContent>
-      </Card>
-    </div>
+    <div className="flex justify-center py-2">
+    <Card className="w-full max-w-md rounded-lg shadow-md bg-white">
+      <CardHeader className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center space-x-2">
+          <CardTitle className="text-base sm:text-lg font-medium text-gray-900">
+            {title}
+          </CardTitle>
+  
+          <CustomIcon
+            width={20}
+            height={20}
+            viewBox="0 0 24 24"
+            className="w-5 h-5 text-gray-500"
+            path="..."
+          />
+        </div>
+  
+        <Button variant="outline" className="text-xs sm:text-sm">
+          {buttonText}
+        </Button>
+      </CardHeader>
+  
+      <CardContent className="px-4 py-3">
+        <p className="text-sm text-black">{content}</p>
+      </CardContent>
+    </Card>
+  </div>
+  
   );
 };
 

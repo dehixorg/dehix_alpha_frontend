@@ -476,7 +476,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex h-screen w-full overflow-hidden">
       <SidebarMenu
         menuItemsTop={
           user.type === 'business'
@@ -512,7 +512,7 @@ const HomePage = () => {
           ]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[93vh]">
+        <main className="flex-1 overflow-hidden">
           <ChatLayout
             chatListComponent={chatListComponentContent}
             chatWindowComponent={chatWindowComponentContent}
