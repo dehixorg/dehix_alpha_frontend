@@ -44,7 +44,7 @@ export function Navbar({ items }: NavbarProps) {
             ))}
           </NavigationMenuList>
         </NavigationMenu>
-        </div>
-        </header>
+      </div>
+    </header>
   );
 }

@@ -88,7 +88,7 @@ export default function Dashboard() {
         menuItemsBottom={menuItemsBottom}
         active="Dashboard"
       />
-   <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -97,14 +97,13 @@ export default function Dashboard() {
             { label: 'Freelancer', link: '/dashboard/freelancer' },
           ]}
         />
-<main className="grid flex-1 items-start gap-4 px-4 pt-20 sm:pt-2 sm:px-6 md:gap-6 lg:grid-cols-3 xl:grid-cols-3">
-<div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-<Card className="bg-gradient shadow-sm overflow-hidden mt-2 sm:mt-6">
-
+        <main className="grid flex-1 items-start gap-4 px-4 pt-20 sm:pt-2 sm:px-6 md:gap-6 lg:grid-cols-3 xl:grid-cols-3">
+          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+            <Card className="bg-gradient shadow-sm overflow-hidden mt-2 sm:mt-6">
               <CardHeader className="py-4">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                   <div>
-                  <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">
+                    <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">
                       Welcome Back,{' '}
                       {user?.displayName
                         ? user.displayName
