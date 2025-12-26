@@ -21,9 +21,11 @@ import {
   SelectValue,
 } from '../ui/select';
 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { TaskStatus } from '@/utils/types/Milestone';
 
 interface TaskUpdateDetailDialogProps {
   task: any;
@@ -55,14 +57,14 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
   const [taskData, setTaskData] = useState({
     title: task?.title || '',
     summary: task?.summary || '',
-    taskStatus: task?.taskStatus || 'NOT_STARTED',
+    taskStatus: task?.taskStatus || TaskStatus.NOT_STARTED,
   });
 
   // Initial task data for comparison
   const initialTaskData = {
     title: task?.title || '',
     summary: task?.summary || '',
-    taskStatus: task?.taskStatus || 'NOT_STARTED',
+    taskStatus: task?.taskStatus || TaskStatus.NOT_STARTED,
   };
 
   const updatePermissionFreelancer =
@@ -133,7 +135,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
       return;
     }
 
-    const url = `/milestones/update/milestone/${milestoneId}/story/${storyId}/task/${task._id}`;
+    const url = `/milestones/${milestoneId}/story/${storyId}/task/${task._id}`;
 
     try {
       await axiosInstance.patch(url, {
@@ -163,20 +165,17 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
   return (
     <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
       <DialogTrigger className="hidden">Trigger</DialogTrigger>
-      <DialogContent className="w-full max-w-2xl">
+      <DialogContent className="w-full sm:max-w-[560px]">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            <DialogTitle className="text-xl font-semibold">
-              Update Task Details
-            </DialogTitle>
-          </div>
+          <DialogTitle className="text-lg font-semibold">
+            Update task
+          </DialogTitle>
           <p className="text-sm text-muted-foreground">
             {isUpdatePermissionAllowed
-              ? 'Update the task details below.'
+              ? 'Make quick edits and save.'
               : isPermissionSent
-                ? 'Your update request has been sent and is pending approval.'
-                : 'Update task information and request permission if needed.'}
+                ? 'Request sent. Waiting for approval.'
+                : 'Request permission before you can edit.'}
           </p>
         </DialogHeader>
 
@@ -189,98 +188,89 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
               handleSendRequest();
             }
           }}
-          className="space-y-6"
+          className="space-y-5"
         >
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              {/* Task Title */}
-              <div className="space-y-2">
-                <Label htmlFor="title" className="flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-muted-foreground" />
-                  Task Title
-                </Label>
+          {!isUpdatePermissionAllowed && !isPermissionSent && (
+            <Alert className="border-amber-500/30 text-amber-700 dark:text-amber-200 bg-amber-50/60 dark:bg-amber-900/10">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Permission required</AlertTitle>
+              <AlertDescription>
+                Request permission to update this task.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {isPermissionSent && (
+            <Alert className="border-blue-500/30 text-blue-700 dark:text-blue-200 bg-blue-50/60 dark:bg-blue-900/10">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Request sent</AlertTitle>
+              <AlertDescription>
+                Waiting for business approval.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Title</Label>
+              <div className="relative">
+                <Tag className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="title"
                   value={taskData.title}
                   onChange={(e) => handleTaskChange('title', e.target.value)}
                   disabled={isDisabled}
-                  className={cn('w-full', isDisabled && 'bg-muted/50')}
-                  placeholder="e.g., Update Homepage Design"
+                  className={cn('pl-9', isDisabled && 'bg-muted/50')}
+                  placeholder="Add a short title"
                 />
               </div>
+            </div>
 
-              {/* Task Description */}
-              <div className="space-y-2">
-                <Label htmlFor="summary" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  Description
-                </Label>
+            <div className="grid gap-2">
+              <Label htmlFor="summary">Description</Label>
+              <div className="relative">
+                <FileText className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Textarea
                   id="summary"
                   value={taskData.summary}
                   onChange={(e) => handleTaskChange('summary', e.target.value)}
                   disabled={isDisabled}
-                  className={cn('min-h-[100px]', isDisabled && 'bg-muted/50')}
-                  placeholder="Describe the task in detail..."
+                  className={cn(
+                    'min-h-[120px] pl-9',
+                    isDisabled && 'bg-muted/50',
+                  )}
+                  placeholder="Add details (optional)"
                 />
-              </div>
-
-              {/* Task Status */}
-              <div className="space-y-2">
-                <Label htmlFor="status" className="flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-muted-foreground" />
-                  Status
-                </Label>
-                <Select
-                  value={taskData.taskStatus}
-                  onValueChange={(value) =>
-                    handleTaskChange('taskStatus', value)
-                  }
-                  disabled={isDisabled}
-                >
-                  <SelectTrigger
-                    className={cn('w-full', isDisabled && 'bg-muted/50')}
-                  >
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NOT_STARTED">Not Started</SelectItem>
-                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
-            {/* Status Messages */}
-            {!isUpdatePermissionAllowed && !isPermissionSent && (
-              <div className="flex items-start gap-2 p-3 text-sm text-amber-600 bg-amber-50 rounded-md">
-                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium">Permission Required</p>
-                  <p>
-                    You need permission to update this task. Click &quot;Request
-                    Update Permission&quot; to continue.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {isPermissionSent && (
-              <div className="flex items-start gap-2 p-3 text-blue-600 bg-blue-50 rounded-md">
-                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium">Request Sent</p>
-                  <p>
-                    Your update request has been sent and is pending approval.
-                  </p>
-                </div>
-              </div>
-            )}
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={taskData.taskStatus}
+                onValueChange={(value) => handleTaskChange('taskStatus', value)}
+                disabled={isDisabled}
+              >
+                <SelectTrigger
+                  className={cn('w-full', isDisabled && 'bg-muted/50')}
+                >
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TaskStatus.NOT_STARTED}>
+                    Not started
+                  </SelectItem>
+                  <SelectItem value={TaskStatus.ONGOING}>Ongoing</SelectItem>
+                  <SelectItem value={TaskStatus.COMPLETED}>
+                    Completed
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <DialogFooter>
-            <div className="flex justify-end gap-3 w-full">
+            <div className="flex justify-end gap-2 w-full">
               <Button
                 variant="outline"
                 onClick={() => setShowPermissionDialog(false)}
@@ -295,7 +285,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
                   disabled={!hasChanges || !taskData.title.trim()}
                   className="min-w-[120px]"
                 >
-                  Save Changes
+                  Save
                 </Button>
               ) : (
                 <Button

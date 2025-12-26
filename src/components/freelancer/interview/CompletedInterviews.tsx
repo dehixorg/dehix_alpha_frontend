@@ -15,6 +15,8 @@ import { RootState } from '@/lib/store';
 import { fetchCompletedInterviews } from '@/lib/api/interviews';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/shared/EmptyState';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Table,
   TableBody,
@@ -279,131 +281,134 @@ export default function HistoryInterviews() {
 
   if (interviews.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground text-sm">
-          No completed interviews found.
-        </p>
-      </div>
+      <EmptyState
+        className="my-2"
+        title="No completed interviews"
+        description="Once you complete interviews, they will show up here."
+        icon={<CheckCircle className="h-12 w-12 text-muted-foreground" />}
+      />
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="w-full bg-card mx-auto px-5 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
-        <Table>
-          <TableHeader>
-            <TableRow className="dark:hover:bg-[#09090B]">
-              <TableHead className="w-[200px] text-center font-medium">
-                Interviewer
-              </TableHead>
-              <TableHead className="w-[150px] text-center font-medium">
-                Date
-              </TableHead>
-              <TableHead className="w-[150px] text-center font-medium">
-                Time
-              </TableHead>
-              <TableHead className="w-[150px] text-center font-medium">
-                Status
-              </TableHead>
-              <TableHead className="w-[150px] text-center font-medium">
-                Rating
-              </TableHead>
-              <TableHead className="w-[300px] text-center font-medium">
-                Feedback
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayedInterviews.map((interview, index) => {
-              const { date, time } = formatDateTime(interview.interviewDate);
-              const interviewerName = getAcceptedInterviewerName(interview);
+      <ScrollArea className="w-full">
+        <div className="w-full bg-card mx-auto px-5 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+          <Table>
+            <TableHeader>
+              <TableRow className="dark:hover:bg-[#09090B]">
+                <TableHead className="w-[200px] text-center font-medium">
+                  Interviewer
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Date
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Time
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Status
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Rating
+                </TableHead>
+                <TableHead className="w-[300px] text-center font-medium">
+                  Feedback
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {displayedInterviews.map((interview, index) => {
+                const { date, time } = formatDateTime(interview.interviewDate);
+                const interviewerName = getAcceptedInterviewerName(interview);
 
-              return (
-                <TableRow key={interview._id} className="transition">
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {interviewerName}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Calendar className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {date}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Clock className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {time}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      {getStatusIcon(interview.InterviewStatus)}
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {getStatusText(interview.InterviewStatus)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    {interview.interviewerRating ? (
-                      <div className="flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {interview.interviewerRating}/5
+                return (
+                  <TableRow key={interview._id} className="transition">
+                    <TableCell className="py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {interviewerName}
                         </span>
                       </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">No rating</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-3 text-center relative">
-                    <button
-                      onClick={() =>
-                        setOpenDescIdx(openDescIdx === index ? null : index)
-                      }
-                      className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
-                    >
-                      <Info size={16} color="white" />
-                    </button>
-                    {openDescIdx === index && (
-                      <div
-                        className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"
-                        style={{
-                          top: '50%',
-                          right: '50%',
-                          transform: 'translateY(-50%)',
-                          marginRight: '8px',
-                        }}
-                      >
-                        <div className="text-sm leading-relaxed">
-                          {interview.interviewerFeedback ||
-                            'No description available'}
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Calendar className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {date}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Clock className="h-4 w-4 text-green-500" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {time}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        {getStatusIcon(interview.InterviewStatus)}
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {getStatusText(interview.InterviewStatus)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      {interview.interviewerRating ? (
+                        <div className="flex items-center justify-center">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            {interview.interviewerRating}/5
+                          </span>
                         </div>
-                        {/* Arrow pointing to the button */}
+                      ) : (
+                        <span className="text-sm text-gray-400">No rating</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3 text-center relative">
+                      <button
+                        onClick={() =>
+                          setOpenDescIdx(openDescIdx === index ? null : index)
+                        }
+                        className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
+                      >
+                        <Info size={16} color="white" />
+                      </button>
+                      {openDescIdx === index && (
                         <div
-                          className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
+                          className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"
                           style={{
                             top: '50%',
-                            right: '-8px',
+                            right: '50%',
                             transform: 'translateY(-50%)',
+                            marginRight: '8px',
                           }}
-                        ></div>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+                        >
+                          <div className="text-sm leading-relaxed">
+                            {interview.interviewerFeedback ||
+                              'No description available'}
+                          </div>
+                          <div
+                            className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
+                            style={{
+                              top: '50%',
+                              right: '-8px',
+                              transform: 'translateY(-50%)',
+                            }}
+                          ></div>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
 
       {hasMoreInterviews && (
         <div className="flex justify-center">

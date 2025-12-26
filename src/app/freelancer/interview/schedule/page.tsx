@@ -30,9 +30,11 @@ export default function ScheduleInterviewPage() {
   // Ensure URL always has /current if missing
   React.useEffect(() => {
     if (!tabFromUrl) {
-      router.replace('/freelancer/scheduleInterview?tab=upskill/current');
+      router.replace('/freelancer/interview/schedule?tab=upskill/current');
     } else if (!tabFromUrl.includes('/')) {
-      router.replace(`/freelancer/scheduleInterview?tab=${tabFromUrl}/current`);
+      router.replace(
+        `/freelancer/interview/schedule?tab=${tabFromUrl}/current`,
+      );
     }
   }, [tabFromUrl, router]);
 
@@ -41,7 +43,7 @@ export default function ScheduleInterviewPage() {
 
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
-    router.push(`/freelancer/scheduleInterview?tab=${newTab}`);
+    router.push(`/freelancer/interview/schedule?tab=${newTab}`);
   };
 
   const { menuItemsTop, menuItemsBottom } =
@@ -115,7 +117,7 @@ export default function ScheduleInterviewPage() {
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             {
               label: 'Schedule Interview',
-              link: '/freelancer/scheduleInterview',
+              link: '/freelancer/interview/schedule',
             },
           ]}
         />

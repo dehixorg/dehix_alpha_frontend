@@ -3,13 +3,11 @@ import {
   Check,
   X,
   AlertCircle,
-  MoreVertical,
   Loader2,
   AlertTriangle,
   CheckCircle2,
   XCircle,
-  Edit,
-  UserCheck,
+  Pencil,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -21,17 +19,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
 import { Task } from '@/utils/types/Milestone';
-import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 
 interface TaskCardProps {
   task: Task;
@@ -61,6 +52,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
   storyId,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isFreelancerDialogOpen, setFreelancerDialogOpen] = useState(false);
+  const [selectedFreelancer, setSelectedFreelancer] = useState<string | null>(
+    null,
+  );
 
   const freelancer = task?.freelancers?.[0];
   const isAssigned = !!freelancer?.freelancerName;
@@ -69,47 +64,51 @@ const TaskCard: React.FC<TaskCardProps> = ({
     <div className="p-1 md:p-2">
       <Card
         className={cn(
-          'w-full cursor-pointer border border-border/50 hover:border-primary/30 transition-colors duration-200 overflow-hidden',
+          'bg-foreground group w-full cursor-pointer overflow-hidden border border-border/90 backdrop-blur-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/30 hover:shadow-sm z-10',
         )}
       >
-        <CardHeader className="p-4 pb-2 space-y-2">
-          <div className="flex justify-between items-start gap-3">
-            <div className="flex items-start gap-3 min-w-0">
-              <div className="space-y-1 overflow-hidden">
-                <div className="flex items-center gap-2">
-                  <h4
-                    className="text-sm font-semibold leading-tight text-foreground line-clamp-2"
-                    title={task.title}
+        <CardHeader className="p-4 pb-2">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 space-y-2">
+              <h4
+                className="text-sm font-semibold leading-snug text-foreground line-clamp-2"
+                title={task.title}
+              >
+                {task.title}
+              </h4>
+
+              {isAssigned ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+                  <div
+                    className="flex items-center gap-1.5 min-w-0"
+                    onClick={() => {
+                      setSelectedFreelancer(task?.freelancers[0]?.freelancerId);
+                      setFreelancerDialogOpen(true);
+                    }}
                   >
-                    {task.title}
-                  </h4>
+                    <Avatar className="h-5 w-5">
+                      <AvatarImage src={freelancer?.profilePic} />
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                        {freelancer.freelancerName?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="truncate">
+                      {freelancer.freelancerName}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {isAssigned ? (
-                    <div className="flex items-center gap-1.5">
-                      <Avatar className="h-4 w-4">
-                        <AvatarImage src={freelancer?.profilePicture} />
-                        <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                          {freelancer.freelancerName?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="truncate">
-                        {freelancer.freelancerName}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 text-amber-500">
-                      <AlertCircle className="h-3.5 w-3.5" />
-                      <span>Unassigned</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              ) : (
+                <Badge
+                  variant="secondary"
+                  className="bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+                >
+                  <AlertCircle className="mr-1 h-3.5 w-3.5" />
+                  Unassigned
+                </Badge>
+              )}
             </div>
+
             <div className="flex items-start gap-2">
-              <Badge className={statusOutlineClasses(task.taskStatus)}>
-                {task.taskStatus.replace('_', ' ')}
-              </Badge>
               <TaskActionsDropdown
                 task={task}
                 milestoneId={milestoneId}
@@ -147,6 +146,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         </CardFooter>
       </Card>
+
+      {isFreelancerDialogOpen && selectedFreelancer && (
+        <FreelancerDetailsDialog
+          freelancerId={selectedFreelancer}
+          onClose={() => {
+            setSelectedFreelancer(null);
+            setFreelancerDialogOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -390,11 +399,6 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
   const user = useSelector(
     (state: { user: { type: string; uid: string } }) => state.user,
   ) || { type: '', uid: '' };
-  const [isDialogOpen, setDialogOpen] = useState(false);
-  const [selectedFreelancer, setSelectedFreelancer] = useState<string | null>(
-    null,
-  );
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const { type } = user;
 
@@ -443,71 +447,27 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
 
   return (
     <>
-      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger className="p-1 rounded-md hover:bg-accent">
-          <MoreVertical className="w-4 h-4" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-56 p-2 border rounded-md shadow-md"
-        >
-          {isFreelancer && task?.freelancers[0]?.freelancerId === user?.uid ? (
-            <DropdownMenuItem
-              className="flex items-center gap-2"
-              onClick={handleRequestPermission}
-              disabled={isUpdateDisabled}
-            >
-              <Edit className="w-4 h-4 text-blue-500" />
-              Update
-              {isUpdateDisabled && (
-                <span className="ml-2 text-xs text-gray-500">
-                  {task?.freelancers[0]?.rejectionFreelancer
-                    ? '(Disabled - Task Rejected)'
-                    : !task?.freelancers[0]?.acceptanceFreelancer
-                      ? '(Disabled - Task Not Accepted)'
-                      : '(Disabled - Waiting for Business Approval)'}
-                </span>
-              )}
-            </DropdownMenuItem>
-          ) : !isFreelancer ? (
-            <>
-              {task.freelancers.length > 0 && (
-                <DropdownMenuItem
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    setSelectedFreelancer(task?.freelancers[0]?.freelancerId);
-                    setDialogOpen(true);
-                  }}
-                >
-                  <UserCheck className="w-4 h-4 text-gray-500" />
-                  View assignee
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem
-                className="flex items-center gap-2"
-                onClick={() => setShowPermissionDialog(true)}
-              >
-                <Edit className="w-4 h-4 text-blue-500" />
-                Update
-              </DropdownMenuItem>
-            </>
-          ) : (
-            <DropdownMenuItem disabled className="text-gray-400">
-              This task is not assigned to you.
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {isDialogOpen && selectedFreelancer && (
-        <FreelancerDetailsDialog
-          freelancerId={selectedFreelancer}
-          onClose={() => {
-            setSelectedFreelancer(null);
-            setDialogOpen(false);
-          }}
-        />
-      )}
+      <Button
+        type="button"
+        variant="link"
+        size="icon"
+        className="rounded-md text-muted-foreground hover:text-foreground justify-center"
+        disabled={
+          isFreelancer
+            ? task?.freelancers[0]?.freelancerId !== user?.uid ||
+              isUpdateDisabled
+            : false
+        }
+        onClick={() => {
+          if (isFreelancer) {
+            handleRequestPermission();
+            return;
+          }
+          setShowPermissionDialog(true);
+        }}
+      >
+        <Pencil />
+      </Button>
 
       <TaskUpdateDeatilDialog
         fetchMilestones={fetchMilestones}

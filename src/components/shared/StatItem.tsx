@@ -104,7 +104,15 @@ const StatItem: React.FC<StatItemProps> = ({
               <p className={cn('text-sm text-muted-foreground', label_class)}>
                 {label}
               </p>
-              <p className={cn(text_class, value_class)}>{value}</p>
+              <div
+                className={cn(
+                  'no-scrollbar w-full max-w-full overflow-x-auto whitespace-nowrap',
+                  text_class,
+                  value_class,
+                )}
+              >
+                {value}
+              </div>
             </div>
           </div>
         </div>
@@ -122,11 +130,18 @@ const StatItem: React.FC<StatItemProps> = ({
       )}
     >
       {icon && <div className="shrink-0">{icon}</div>}
-      <div className={cn(content_class)}>
+      <div className={cn('min-w-0 flex-1', content_class)}>
         <p className={cn('text-xs text-muted-foreground', label_class)}>
           {label}
         </p>
-        <p className={cn('text-sm font-medium', value_class)}>{value}</p>
+        <div
+          className={cn(
+            'no-scrollbar w-full max-w-full overflow-x-auto whitespace-nowrap text-sm font-medium',
+            value_class,
+          )}
+        >
+          {value}
+        </div>
       </div>
     </div>
   );

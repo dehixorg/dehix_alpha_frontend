@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -11,9 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import BidsComponent from '@/components/freelancer/interview/Bids';
 import CurrentComponent from '@/components/freelancer/interview/Current';
-import HistoryComponent from '@/components/freelancer/interview/History';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -21,10 +20,14 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import InterviewProfile from '@/components/freelancer/interview/interviewProfile';
+import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
+import Bids from '@/components/freelancer/interview/Bids';
+import { RootState } from '@/lib/store';
 
 export default function InterviewPage() {
   const params = useParams();
   const router = useRouter();
+  const user = useSelector((state: RootState) => state.user);
 
   // slug will be [] or ["profile"], ["current"], ["bids"], ["history"]
   const slug = Array.isArray(params?.slug) ? params.slug : [];
@@ -50,14 +53,13 @@ export default function InterviewPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Interviews"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Interview', link: '/freelancer/interview/profile' },
           ]}
         />
         <main className="flex-1 px-4 sm:px-6 sm:py-2">
           <div className="mx-auto w-full max-w-7xl">
             <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-b from-muted/60 to-background">
+              <CardHeader className="bg-gradient">
                 <CardTitle className="text-2xl font-bold tracking-tight">
                   Interviews
                 </CardTitle>
@@ -115,10 +117,10 @@ export default function InterviewPage() {
                       <CurrentComponent />
                     </TabsContent>
                     <TabsContent value="bids" className="m-0">
-                      <BidsComponent />
+                      <Bids userId={user.uid} />
                     </TabsContent>
                     <TabsContent value="history" className="m-0">
-                      <HistoryComponent />
+                      <CompletedInterviews />
                     </TabsContent>
                   </div>
                 </Tabs>
