@@ -1042,7 +1042,6 @@ export default function ProfileDetailPage() {
                     title="Skills"
                     Icon={Award}
                     options={freelancerSkillsOptions}
-                    editOptions={freelancerSkillsOptions}
                     selectedIds={editingProfileData.skills || []}
                     getNameById={getSkillNameById}
                     onAdd={(value: string) => {
@@ -1076,7 +1075,6 @@ export default function ProfileDetailPage() {
                     title="Domains"
                     Icon={Layers}
                     options={freelancerDomainsOptions}
-                    editOptions={freelancerDomainsOptions}
                     selectedIds={editingProfileData.domains || []}
                     getNameById={getDomainNameById}
                     onAdd={(value: string) => {
