@@ -32,7 +32,7 @@ export function CreateMilestoneDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="default" size="sm">
-          <Plus size={15} className="mr-2" />
+          <Plus size={15} />
           Milestone
         </Button>
       </DialogTrigger>

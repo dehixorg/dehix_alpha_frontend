@@ -113,10 +113,8 @@ const StoriesAccordion = ({
   };
 
   return (
-    <div className="w-full px-0 md:px-0 lg:px-0 py-3 md:py-6 max-w-5xl mx-auto rounded-lg">
-      <div
-        className={`${openAccordion ? 'mx-0' : 'mx-4'} md:mx-6 card border rounded-lg`}
-      >
+    <div className="w-full px-0 md:px-0 lg:px-0 rounded-lg">
+      <div className="card border rounded-lg">
         {(milestone.stories ?? []).length > 0 && (
           <div className="flex p-4 justify-between items-center border-b bg-gradient">
             <div className="flex items-center gap-3">
