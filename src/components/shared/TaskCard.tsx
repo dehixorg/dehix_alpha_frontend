@@ -237,7 +237,7 @@ const FreelancerTaskActions: React.FC<FreelancerTaskActionsProps> = ({
   onActionEnd,
 }) => (
   <div className="p-3 pt-0">
-    <Separator className="mb-3" />
+    {shouldShowAcceptRejectButtons(task) && <Separator className="mb-3" />}
     <div className="space-y-2">
       {shouldShowAcceptRejectButtons(task) && (
         <div className="grid grid-cols-2 gap-2">
