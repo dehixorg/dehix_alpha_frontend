@@ -22,6 +22,7 @@ interface NavItem {
 
 const ScheduleInterviewNavbar: React.FC = () => {
   const pathname = usePathname();
+  console.log('PATH:', pathname);
   const navItems: NavItem[] = [
     {
       id: 'home',
@@ -41,21 +42,21 @@ const ScheduleInterviewNavbar: React.FC = () => {
       id: 'project',
       label: 'Project Interview',
       icon: <Briefcase className="h-5 w-5" />,
-      href: '/freelancer/scheduleInterview/project',
+      href: '/freelancer/interview/schedule/project',
       description: 'Project-based interviews',
     },
     {
       id: 'talent',
       label: 'Dehix Talent Interview',
       icon: <Users className="h-5 w-5" />,
-      href: '/freelancer/scheduleInterview/talent',
+      href: '/freelancer/interview/schedule/talent',
       description: 'Talent assessment interviews',
     },
     {
       id: 'dehix',
       label: 'Dehix Interview',
       icon: <UserCheck className="h-5 w-5" />,
-      href: '/freelancer/scheduleInterview/dehix',
+      href: '/freelancer/interview/schedule/dehix',
       description: 'Platform verification interviews',
     },
   ];
@@ -66,6 +67,8 @@ const ScheduleInterviewNavbar: React.FC = () => {
     }
     return pathname.startsWith(href);
   };
+
+  // console.log('ACTIVE:', isActive(item.href));
 
   return (
     <div className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 min-h-screen p-4">

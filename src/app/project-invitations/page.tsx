@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 import {
   Search,
   LayoutGrid,
@@ -13,6 +14,7 @@ import {
   ArrowDownNarrowWide,
   ArrowUpNarrowWide,
   Trash2,
+  CircleX,
 } from 'lucide-react';
 
 import {
@@ -58,16 +60,36 @@ import {
   menuItemsTop,
   menuItemsBottom,
 } from '@/config/menuItems/business/dashboardMenuItems';
+import {
+  menuItemsTop as freelancerMenuItemsTop,
+  menuItemsBottom as freelancerMenuItemsBottom,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import EmptyState from '@/components/shared/EmptyState';
+import { useAppSelector } from '@/lib/hooks';
 
 const ProjectInvitationsPage: React.FC = () => {
   const router = useRouter();
+  const userTypeFromStore = useAppSelector((s) => s.user.type);
+  const userType = userTypeFromStore || (Cookies.get('userType') as any);
+  const isBusiness = userType === 'business';
+  const isFreelancer = userType === 'freelancer';
+
+  const sidebarMenuItemsTop = isFreelancer
+    ? freelancerMenuItemsTop
+    : menuItemsTop;
+  const sidebarMenuItemsBottom = isFreelancer
+    ? freelancerMenuItemsBottom
+    : menuItemsBottom;
+
   const [loading, setLoading] = useState(false);
   const [invitations, setInvitations] = useState<ProjectInvitation[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [inviteToDelete, setInviteToDelete] =
     useState<ProjectInvitation | null>(null);
   const [deletingInviteId, setDeletingInviteId] = useState<string | null>(null);
+  const [rejectingInviteId, setRejectingInviteId] = useState<string | null>(
+    null,
+  );
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] =
     useState<InvitationStatusFilter>('ALL');
@@ -80,7 +102,10 @@ const ProjectInvitationsPage: React.FC = () => {
     const load = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get('/business/invite');
+        const endpoint = isFreelancer
+          ? '/freelancer/invite'
+          : '/business/invite';
+        const res = await axiosInstance.get(endpoint);
         const rows = res?.data?.data || [];
 
         const mapped: ProjectInvitation[] = (rows as any[]).map((row: any) => {
@@ -102,12 +127,23 @@ const ProjectInvitationsPage: React.FC = () => {
             projectStatus: row?.projectStatus,
             profileId: row?.profileId,
             profileDomain: row?.profileName || row?.profileDomain,
-            freelancerId: row?.freelancerId,
-            freelancerName: row?.freelancerName || 'Unknown',
-            freelancerProfilePic: row?.freelancerProfilePic,
+            freelancerId:
+              row?.freelancerId || row?.businessId || row?.companyId,
+            freelancerName:
+              row?.freelancerName ||
+              row?.businessName ||
+              row?.companyName ||
+              'Unknown',
+            freelancerProfilePic:
+              row?.freelancerProfilePic || row?.businessProfilePic,
             status,
             invitedAt: row?.invitedAt || new Date().toISOString(),
             respondedAt: row?.respondedAt,
+            hireId: row?.hireId || row?.hire_id,
+            freelancerEntryId:
+              row?.freelancerEntryId ||
+              row?.freelancer_entry_id ||
+              row?.freelancer_professional_profile_id,
           };
         });
 
@@ -121,7 +157,7 @@ const ProjectInvitationsPage: React.FC = () => {
     };
 
     load();
-  }, []);
+  }, [isFreelancer]);
 
   const filtered = useMemo(() => {
     let arr = invitations.slice();
@@ -153,6 +189,7 @@ const ProjectInvitationsPage: React.FC = () => {
   }, [invitations, search, statusFilter, sortBy, sortDir]);
 
   const handleDeleteInvite = async () => {
+    if (!isBusiness) return;
     if (!inviteToDelete?._id) return;
     const inviteId = inviteToDelete._id;
 
@@ -172,23 +209,53 @@ const ProjectInvitationsPage: React.FC = () => {
     }
   };
 
+  const handleRejectInvite = async (inv: ProjectInvitation) => {
+    if (!isFreelancer) return;
+    if (!inv) return;
+
+    const inviteId = inv._id;
+    if (!inviteId) {
+      notifyError('Missing inviteId. Please refresh and try again.');
+      return;
+    }
+
+    setRejectingInviteId(inv._id);
+    try {
+      await axiosInstance.patch(`/freelancer/invite/${inviteId}/reject`);
+      notifySuccess('Invitation rejected successfully');
+
+      setInvitations((prev) => prev.filter((x) => x._id !== inv._id));
+    } catch (error: any) {
+      notifyError(
+        error?.response?.data?.message || 'Failed to reject invitation',
+      );
+    } finally {
+      setRejectingInviteId(null);
+    }
+  };
+
   return (
     <div className="flex min-h-screen w-full">
       <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
+        menuItemsTop={sidebarMenuItemsTop}
+        menuItemsBottom={sidebarMenuItemsBottom}
         active="Project Invitations"
       />
       <div className="w-full flex flex-col sm:gap-4 sm:py-4 md:py-0 sm:pl-14 mb-8">
         <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
+          menuItemsTop={sidebarMenuItemsTop}
+          menuItemsBottom={sidebarMenuItemsBottom}
           activeMenu="Project Invitations"
           breadcrumbItems={[
-            { label: 'Business', link: '/dashboard/business' },
+            {
+              label: isFreelancer ? 'Freelancer' : 'Business',
+              link: isFreelancer
+                ? '/dashboard/freelancer'
+                : '/dashboard/business',
+            },
             {
               label: 'Project Invitations',
-              link: '/business/project-invitations',
+              link: '/project-invitations',
             },
           ]}
         />
@@ -205,41 +272,42 @@ const ProjectInvitationsPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <Tabs
-                defaultValue={statusFilter}
-                onValueChange={(value: string) =>
-                  setStatusFilter(value as InvitationStatusFilter)
-                }
-                className="w-full sm:w-auto"
-              >
-                <TabsList className="grid w-full grid-cols-4 sm:w-auto">
-                  <TabsTrigger value="ALL" className="text-xs">
-                    All
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value={InvitationStatus.PENDING}
-                    className="text-xs"
-                  >
-                    <Clock4 className="h-3 w-3 mr-1.5" />
-                    Pending
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value={InvitationStatus.ACCEPTED}
-                    className="text-xs"
-                  >
-                    <CheckCircle2 className="h-3 w-3 mr-1.5 text-green-500" />
-                    Accepted
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value={InvitationStatus.REJECTED}
-                    className="text-xs"
-                  >
-                    <XCircle className="h-3 w-3 mr-1.5 text-red-500" />
-                    Rejected
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-
+              {!isFreelancer && (
+                <Tabs
+                  defaultValue={statusFilter}
+                  onValueChange={(value: string) =>
+                    setStatusFilter(value as InvitationStatusFilter)
+                  }
+                  className="w-full sm:w-auto"
+                >
+                  <TabsList className="grid w-full grid-cols-4 sm:w-auto">
+                    <TabsTrigger value="ALL" className="text-xs">
+                      All
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value={InvitationStatus.PENDING}
+                      className="text-xs"
+                    >
+                      <Clock4 className="h-3 w-3 mr-1.5" />
+                      Pending
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value={InvitationStatus.ACCEPTED}
+                      className="text-xs"
+                    >
+                      <CheckCircle2 className="h-3 w-3 mr-1.5 text-green-500" />
+                      Accepted
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value={InvitationStatus.REJECTED}
+                      className="text-xs"
+                    >
+                      <XCircle className="h-3 w-3 mr-1.5 text-red-500" />
+                      Rejected
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-2">
                   <Select
@@ -265,7 +333,9 @@ const ProjectInvitationsPage: React.FC = () => {
                       <SelectItem value="freelancerName">
                         <div className="flex items-center">
                           <User className="h-4 w-4 mr-2" />
-                          <span>Freelancer Name</span>
+                          <span>
+                            {isFreelancer ? 'Business Name' : 'Freelancer Name'}
+                          </span>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -410,13 +480,21 @@ const ProjectInvitationsPage: React.FC = () => {
                     <div
                       className="group rounded-lg border bg-gradient p-4 cursor-pointer transition-colors hover:bg-muted/20"
                       onClick={() =>
-                        router.push(`/business/project/${inv.projectId}`)
+                        router.push(
+                          isFreelancer
+                            ? `/freelancer/project/${inv.projectId}`
+                            : `/business/project/${inv.projectId}`,
+                        )
                       }
                       role="button"
                       tabIndex={0}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
-                          router.push(`/business/project/${inv.projectId}`);
+                          router.push(
+                            isFreelancer
+                              ? `/freelancer/project/${inv.projectId}`
+                              : `/business/project/${inv.projectId}`,
+                          );
                         }
                       }}
                     >
@@ -475,17 +553,33 @@ const ProjectInvitationsPage: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          setInviteToDelete(inv);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </Button>
+                      {isFreelancer &&
+                        inv.status === InvitationStatus.PENDING && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={rejectingInviteId === inv._id}
+                            onClick={() => handleRejectInvite(inv)}
+                          >
+                            <CircleX className="h-4 w-4" />
+                            {rejectingInviteId === inv._id
+                              ? 'Rejecting...'
+                              : 'Reject'}
+                          </Button>
+                        )}
+                      {isBusiness && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setInviteToDelete(inv);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </CardFooter>
                 </Card>
@@ -495,50 +589,53 @@ const ProjectInvitationsPage: React.FC = () => {
         </main>
       </div>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onOpenChange={(open) => {
-          setDeleteDialogOpen(open);
-          if (!open) setInviteToDelete(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-[480px]">
-          <DialogHeader>
-            <DialogTitle>Delete invitation?</DialogTitle>
-            <DialogDescription>
-              This will permanently delete the invitation for{' '}
-              <span className="font-medium text-foreground">
-                {inviteToDelete?.freelancerName || 'this freelancer'}
-              </span>{' '}
-              on project{' '}
-              <span className="font-medium text-foreground">
-                {inviteToDelete?.projectName || 'this project'}
-              </span>
-              .
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={!!deletingInviteId}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteInvite}
-              disabled={
-                !inviteToDelete?._id || deletingInviteId === inviteToDelete?._id
-              }
-            >
-              {deletingInviteId === inviteToDelete?._id
-                ? 'Deleting...'
-                : 'Delete'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isBusiness && (
+        <Dialog
+          open={deleteDialogOpen}
+          onOpenChange={(open) => {
+            setDeleteDialogOpen(open);
+            if (!open) setInviteToDelete(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <DialogTitle>Delete invitation?</DialogTitle>
+              <DialogDescription>
+                This will permanently delete the invitation for{' '}
+                <span className="font-medium text-foreground">
+                  {inviteToDelete?.freelancerName || 'this freelancer'}
+                </span>{' '}
+                on project{' '}
+                <span className="font-medium text-foreground">
+                  {inviteToDelete?.projectName || 'this project'}
+                </span>
+                .
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={!!deletingInviteId}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteInvite}
+                disabled={
+                  !inviteToDelete?._id ||
+                  deletingInviteId === inviteToDelete?._id
+                }
+              >
+                {deletingInviteId === inviteToDelete?._id
+                  ? 'Deleting...'
+                  : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

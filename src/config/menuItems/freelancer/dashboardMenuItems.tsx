@@ -12,6 +12,7 @@ import {
   Archive,
   StickyNote,
   Trash2,
+  SendHorizontal,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -42,6 +43,11 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Market',
   },
   {
+    href: '/project-invitations',
+    icon: <SendHorizontal className="h-5 w-5" />,
+    label: 'Project Invitations',
+  },
+  {
     href: '/freelancer/project/current',
     icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
@@ -57,7 +63,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Interviews',
   },
   {
-    href: '/freelancer/scheduleInterview',
+    href: '/freelancer/interview/schedule',
     icon: <CalendarClock className="h-5 w-5" />,
     label: 'Schedule Interviews',
   },

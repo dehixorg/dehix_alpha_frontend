@@ -1,10 +1,10 @@
 export const getReportTypeFromPath = (path: string): string => {
   // Freelancer paths
+  if (path.includes('/freelancer/interview/schedule'))
+    return 'Freelancer Schedule Interview';
   if (path.includes('/freelancer/interview')) return 'Freelancer Interview';
   if (path.includes('/freelancer/market')) return 'Freelancer Marketplace';
   if (path.includes('/freelancer/project')) return 'Freelancer Project';
-  if (path.includes('/freelancer/scheduleInterview'))
-    return 'Freelancer Schedule Interview';
   if (path.includes('/freelancer/settings')) return 'Freelancer Settings';
   if (path.includes('/freelancer/talent')) return 'Freelancer Talent';
   if (path.includes('/freelancer/businessProfile'))

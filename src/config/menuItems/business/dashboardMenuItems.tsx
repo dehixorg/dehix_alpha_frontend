@@ -44,7 +44,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Projects',
   },
   {
-    href: '/business/project-invitations',
+    href: '/project-invitations',
     icon: <SendHorizontal className="h-5 w-5" />,
     label: 'Project Invitations',
   },
