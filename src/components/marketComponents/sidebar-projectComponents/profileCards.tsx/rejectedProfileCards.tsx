@@ -39,7 +39,6 @@ interface RejectedProfileCardsProps {
 const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
   talents,
   loading,
-  calculateExperience: _calculateExperience,
 }) => {
   const SkeletonCard = () => (
     <Card className="overflow-hidden">

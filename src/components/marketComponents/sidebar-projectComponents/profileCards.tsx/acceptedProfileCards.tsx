@@ -38,7 +38,6 @@ interface AcceptedProfileCardsProps {
 const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
   talents,
   loading,
-  calculateExperience: _calculateExperience,
 }) => {
   const SkeletonCard = () => (
     <Card className="overflow-hidden">

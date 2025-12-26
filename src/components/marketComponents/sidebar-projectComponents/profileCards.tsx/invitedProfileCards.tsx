@@ -62,7 +62,6 @@ interface ProfileCardsProps {
 const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
   talents,
   loading,
-  calculateExperience: _calculateExperience,
   showDecisionActions = false,
   onDecision,
 }) => {
