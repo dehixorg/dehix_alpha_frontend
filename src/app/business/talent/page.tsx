@@ -67,8 +67,7 @@ let cachedBusinessTalentBootstrap: {
 export default function Talent() {
   const router = useRouter();
   const pathname = usePathname();
-  const [skillFilter, setSkillFilter] = useState<string>('all');
-  const [domainFilter, setDomainFilter] = useState<string>('all');
+  const [talentFilter, setTalentFilter] = useState<string>('all');
 
   const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
@@ -290,30 +289,27 @@ export default function Talent() {
             </CardTitle>
 
             {/* Skill and Domain Filter */}
-            <div className="flex space-x-4">
-              <Select onValueChange={setSkillFilter} value={skillFilter}>
+            <div className="flex">
+              <Select onValueChange={setTalentFilter} value={talentFilter}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Skill" />
+                  <SelectValue placeholder="Select Skill or Domain" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Skills</SelectItem>
+                  <SelectItem value="all">All Talent</SelectItem>
                   {filterSkill?.map((skill) => (
-                    <SelectItem key={skill._id} value={skill.label}>
-                      {skill.label}
+                    <SelectItem
+                      key={`skill-${skill._id}`}
+                      value={`SKILL|${skill.label}`}
+                    >
+                      Skill: {skill.label}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-
-              <Select onValueChange={setDomainFilter} value={domainFilter}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Domain" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Domains</SelectItem>
                   {filterDomain?.map((domain) => (
-                    <SelectItem key={domain._id} value={domain.label}>
-                      {domain.label}
+                    <SelectItem
+                      key={`domain-${domain._id}`}
+                      value={`DOMAIN|${domain.label}`}
+                    >
+                      Domain: {domain.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -321,8 +317,7 @@ export default function Talent() {
             </div>
             <div className="lg:h-[75vh] h-[59vh] rounded-lg  overflow-y-scroll no-scrollbar">
               <TalentCard
-                skillFilter={skillFilter}
-                domainFilter={domainFilter}
+                talentFilter={talentFilter}
                 skillDomainData={skillDomainData}
               />
             </div>

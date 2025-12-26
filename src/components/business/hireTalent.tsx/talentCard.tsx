@@ -49,8 +49,26 @@ interface Projects {
   _id: string;
   projectName: string;
   githubLink: string;
+  description?: string;
+  start?: string;
+  end?: string;
+  verified?: boolean;
+  verificationStatus?: string;
   techUsed: string[];
   role: string;
+}
+
+interface ProfessionalInfo {
+  _id: string;
+  company?: string;
+  jobTitle?: string;
+  workDescription?: string;
+  workFrom?: string;
+  workTo?: string;
+  githubRepoLink?: string;
+  referencePersonName?: string;
+  referencePersonContact?: string;
+  verificationStatus?: string;
 }
 
 interface Education {
@@ -72,26 +90,26 @@ interface Projects {
 
 interface DehixTalent {
   freelancer_id: any;
-  _id: string;
   type: string;
-  skillName?: string;
   talentName?: string;
-  domainName?: string;
-  experience: string;
-  talentMonthlyPay: string;
-  status: HireDehixTalentStatusEnum;
-  activeStatus: boolean;
+  experience: number;
+  level?: string;
+  status?: HireDehixTalentStatusEnum;
+  activeStatus?: string;
+  talentMonthlyPay?: number;
 }
 
 interface Talent {
   freelancer_id: string;
   Name: string;
   userName: string;
-  profilePic: string;
-  talent: DehixTalent;
+  profilePic: string | null;
+  talents: DehixTalent[];
+  dehixTalent?: any[];
   Github: any;
   LinkedIn: any;
   education?: Record<string, Education>;
+  professionalInfo?: Record<string, ProfessionalInfo>;
   projects?: Record<string, Projects>;
 }
 
@@ -106,8 +124,9 @@ interface DomainOption {
 }
 
 interface TalentCardProps {
-  skillFilter: string | null;
-  domainFilter: string | null;
+  talentFilter?: string | null;
+  skillFilter?: string | null;
+  domainFilter?: string | null;
   skillDomainData?: SkillDomainData[];
   setFilterSkill?: (skills: SkillOption[]) => void;
   setFilterDomain?: (domains: DomainOption[]) => void;
@@ -133,6 +152,7 @@ let cachedHireData: {
 // type SheetSide = (typeof SHEET_SIDES)[number];
 
 const TalentCard: React.FC<TalentCardProps> = ({
+  talentFilter,
   skillFilter,
   domainFilter,
   skillDomainData: skillDomainDataProp,
@@ -259,13 +279,29 @@ const TalentCard: React.FC<TalentCardProps> = ({
           skip: newSkip,
         };
 
-        // If a skill is selected, set the type to SKILL and pass the name
-        if (skillFilter && skillFilter !== 'all') {
+        const parsedFilter = (() => {
+          const raw = (talentFilter ?? '').trim();
+          if (!raw || raw === 'all') return null;
+          const idx = raw.indexOf('|');
+          if (idx > 0) {
+            const type = raw.slice(0, idx);
+            const name = raw.slice(idx + 1);
+            if ((type === 'SKILL' || type === 'DOMAIN') && name) {
+              return { type, name };
+            }
+          }
+          return null;
+        })();
+
+        if (parsedFilter) {
+          params.talentType = parsedFilter.type;
+          params.talentName = parsedFilter.name;
+        } else if (skillFilter && skillFilter !== 'all') {
+          // Backward compatible path
           params.talentType = 'SKILL';
           params.talentName = skillFilter;
-        }
-        // Otherwise, if a domain is selected, set the type to DOMAIN and pass the name
-        else if (domainFilter && domainFilter !== 'all') {
+        } else if (domainFilter && domainFilter !== 'all') {
+          // Backward compatible path
           params.talentType = 'DOMAIN';
           params.talentName = domainFilter;
         }
@@ -274,13 +310,18 @@ const TalentCard: React.FC<TalentCardProps> = ({
           params, // Pass the dynamic params object
         });
 
-        const fetchedData = response?.data?.data || [];
+        const rawData = response?.data?.data;
+        const fetchedData: Talent[] = Array.isArray(rawData)
+          ? rawData
+          : rawData && typeof rawData === 'object'
+            ? (Object.values(rawData) as Talent[])
+            : [];
 
         if (fetchedData.length < Dehix_Talent_Card_Pagination.BATCH) {
           setHasMore(false);
         }
 
-        if (response?.data?.data) {
+        if (rawData) {
           setTalents((prev) =>
             reset ? fetchedData : [...prev, ...fetchedData],
           );
@@ -302,7 +343,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         isRequestInProgress.current = false;
       }
     },
-    [skillFilter, domainFilter], // Add filters to dependency array
+    [talentFilter, skillFilter, domainFilter],
   );
 
   const resetAndFetchData = useCallback(() => {
@@ -315,7 +356,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
   // This useEffect now triggers a new API call when filters change.
   useEffect(() => {
     resetAndFetchData();
-  }, [skillFilter, domainFilter]); // Trigger reset when filters change
+  }, [talentFilter, skillFilter, domainFilter]); // Trigger reset when filters change
 
   const handleAddToLobby = async (freelancerId: string): Promise<boolean> => {
     const businessId = user?.uid;
@@ -353,13 +394,55 @@ const TalentCard: React.FC<TalentCardProps> = ({
       if (response.status === 200) {
         notifySuccess('Invitation sent successfully', 'Success');
         setCurrSkills([]);
-        if (selectedTalent?.dehixTalent?._id) {
-          setInvitedTalents((prev) => {
-            const next = new Set(prev);
-            next.add(selectedTalent.dehixTalent._id);
-            return next;
-          });
-        }
+        setInvitedTalents((prev) => {
+          const next = new Set(prev);
+          next.add(freelancerId);
+          return next;
+        });
+
+        const nowIso = new Date().toISOString();
+        const nextInvites = hires.map((h) => ({
+          hireId: h.hireId,
+          attributeId: h.attributeId,
+          attributeName: h.attributeName,
+          status: 'INVITED',
+          updatedAt: nowIso,
+        }));
+
+        const mergeInvites = (existing: any[] = []) => {
+          const keyOf = (i: any) => `${i?.hireId || ''}:${i?.attributeId || ''}`;
+          const seen = new Set(existing.map(keyOf));
+          const merged = [...existing];
+          for (const inv of nextInvites) {
+            const k = keyOf(inv);
+            if (seen.has(k)) continue;
+            seen.add(k);
+            merged.push(inv);
+          }
+          return merged;
+        };
+
+        setTalents((prev) =>
+          prev.map((t) =>
+            t.freelancer_id === freelancerId
+              ? {
+                  ...t,
+                  dehixTalent: mergeInvites(Array.isArray(t.dehixTalent) ? t.dehixTalent : []),
+                }
+              : t,
+          ),
+        );
+
+        setSelectedTalent((prev: any) => {
+          if (!prev || prev.freelancer_id !== freelancerId) return prev;
+          return {
+            ...prev,
+            dehixTalent: mergeInvites(
+              Array.isArray(prev.dehixTalent) ? prev.dehixTalent : [],
+            ),
+          };
+        });
+
         return true;
       }
     } catch (error: any) {
@@ -373,25 +456,34 @@ const TalentCard: React.FC<TalentCardProps> = ({
   return (
     <TooltipProvider>
       <div className="flex flex-wrap mt-4 justify-center gap-4">
+        {!loading && talents.length === 0 && (
+          <div className="w-full text-center text-sm text-muted-foreground py-8">
+            No talents found.
+          </div>
+        )}
         {/* Map directly over 'talents' instead of 'filteredTalents' */}
         {talents.map((talent) => {
-          const talentEntry = talent.talent;
+          const talentEntries = Array.isArray(talent.talents) ? talent.talents : [];
+          const talentEntry = talentEntries[0];
           const education = talent.education;
+          const professionalInfo = talent.professionalInfo;
           const projects = talent.projects;
-          // const label = talentEntry.skillName ? 'Skill' : 'Domain';
-          const label = talentEntry.type === 'SKILL' ? 'Skill' : 'Domain';
-          // const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
-          const value = talentEntry.talentName || 'N/A';
-          const isInvited = invitedTalents.has(talentEntry._id);
+          const label = talentEntry?.type === 'SKILL' ? 'Skill' : 'Domain';
+          const value = talentEntry?.talentName || 'N/A';
+          const isInvited = invitedTalents.has(talent.freelancer_id);
+
+          if (!talentEntry) return null;
 
           return (
             <Card
-              key={talentEntry._id}
+              key={`${talent.freelancer_id}:${talentEntry.type}:${talentEntry.talentName}`}
               className="group relative w-full sm:w-[350px] lg:w-[450px] overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20"
               onClick={() => {
                 if (isSheetClosingRef.current) return;
                 if (isDialogOpen) return; // prevent opening while dialog is active
-                setOpenSheetId(talentEntry._id);
+                setOpenSheetId(
+                  `${talent.freelancer_id}:${talentEntry.type}:${talentEntry.talentName}`,
+                );
               }}
             >
               <CardHeader className="flex flex-row items-center gap-4 pb-3 pt-5 px-6">
@@ -410,35 +502,41 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   </Avatar>
                   <div className="flex flex-col min-w-0 flex-1">
                     <CardTitle className="text-lg font-bold truncate group-hover:text-primary transition-colors">
-                      {talent.Name || 'Unknown'}
+                      {talent.userName || 'N/A'}
                     </CardTitle>
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <span className="truncate">{talent.userName}</span>
-                      <Dot />
-                      <span className="truncate">{value}</span>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {talent.Name || 'Unknown'}
                     </div>
                   </div>
                 </Link>
               </CardHeader>
               <CardContent className="px-6 py-3">
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                        Experience
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {talentEntry.experience} years
-                      </p>
-                    </div>
-                    <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                        Monthly Pay
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        ${talentEntry.talentMonthlyPay}
-                      </p>
-                    </div>
+                  <div className="space-y-2">
+                    {talentEntries.map((t) => (
+                      <div
+                        key={`${talent.freelancer_id}:${t.type}:${t.talentName}`}
+                        className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Badge variant="outline" className="rounded-full text-[11px] px-2 py-0.5">
+                                {t.type}
+                              </Badge>
+                              <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                {t.talentName || 'N/A'}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-[11px] text-muted-foreground">
+                              Exp: {t.experience ?? 'N/A'}y
+                              {' '}| Level: {t.level || 'N/A'}
+                              {' '}| Pay: ${t.talentMonthlyPay ?? 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   {isInvited && (
@@ -454,10 +552,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     {SHEET_SIDES.map((View) => (
                       <Sheet
                         key={View}
-                        open={openSheetId === talentEntry._id}
+                        open={
+                          openSheetId ===
+                          `${talent.freelancer_id}:${talentEntry.type}:${talentEntry.talentName}`
+                        }
                         onOpenChange={(open) => {
                           if (open) {
-                            setOpenSheetId(talentEntry._id);
+                            setOpenSheetId(
+                              `${talent.freelancer_id}:${talentEntry.type}:${talentEntry.talentName}`,
+                            );
                           } else {
                             // Suppress the immediate next card click caused by backdrop/close click
                             isSheetClosingRef.current = true;
@@ -530,33 +633,33 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 </div>
                               </div>
                             </div>
-
-                            {/* Meta grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-                              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                                  {label}
-                                </p>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                  {value}
-                                </p>
-                              </div>
-                              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                                  Experience
-                                </p>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {talentEntry.experience} years
-                                </p>
-                              </div>
-                              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                                  Monthly Pay
-                                </p>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                  ${talentEntry.talentMonthlyPay}
-                                </p>
-                              </div>
+                            <div className="mt-4 space-y-2">
+                              {talentEntries.map((t) => (
+                                <div
+                                  key={`sheet-${talent.freelancer_id}:${t.type}:${t.talentName}`}
+                                  className="p-3 rounded-lg border border-border/60 bg-muted/30"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <Badge
+                                          variant="outline"
+                                          className="rounded-full text-[11px] px-2 py-0.5"
+                                        >
+                                          {t.type}
+                                        </Badge>
+                                        <span className="text-sm font-medium truncate">
+                                          {t.talentName || 'N/A'}
+                                        </span>
+                                      </div>
+                                      <div className="mt-1 text-[11px] text-muted-foreground">
+                                        Exp: {t.experience ?? 'N/A'}y | Level:{' '}
+                                        {t.level || 'N/A'} | Pay: ${t.talentMonthlyPay ?? 'N/A'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
 
@@ -567,41 +670,152 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 Education
                               </AccordionTrigger>
                               <AccordionContent className="p-4 transition-all duration-300">
-                                {education &&
-                                Object.values(education).length > 0 ? (
+                                {education && Object.values(education).length > 0 ? (
                                   Object.values(education).map((edu: any) => (
                                     <div
                                       key={edu._id}
-                                      className="mb-3 p-3 rounded-lg border border-border/60 bg-muted/30"
+                                      className="mb-3 rounded-xl border border-border/60 bg-muted/20 p-4"
                                     >
-                                      <p className="text-sm font-semibold">
-                                        {edu.degree}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {edu.universityName}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {edu.fieldOfStudy}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {new Date(
-                                          edu.startDate,
-                                        ).toLocaleDateString()}{' '}
-                                        -{' '}
-                                        {new Date(
-                                          edu.endDate,
-                                        ).toLocaleDateString()}
-                                      </p>
-                                      {edu.grade && (
-                                        <p className="text-xs text-muted-foreground">
-                                          Grade: {edu.grade}
-                                        </p>
-                                      )}
+                                      <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                          <p className="text-sm font-semibold truncate">
+                                            {edu.degree || 'N/A'}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground truncate">
+                                            {edu.universityName || 'N/A'}
+                                          </p>
+                                        </div>
+                                        {edu.verificationStatus && (
+                                          <Badge
+                                            variant="outline"
+                                            className="rounded-full text-[11px] px-2 py-0.5"
+                                          >
+                                            {edu.verificationStatus}
+                                          </Badge>
+                                        )}
+                                      </div>
+
+                                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Field of Study
+                                          </p>
+                                          <p className="text-xs font-medium">
+                                            {edu.fieldOfStudy || 'N/A'}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Grade
+                                          </p>
+                                          <p className="text-xs font-medium">
+                                            {edu.grade || 'N/A'}
+                                          </p>
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Duration
+                                          </p>
+                                          <p className="text-xs font-medium">
+                                            {(edu.startDate
+                                              ? new Date(edu.startDate).toLocaleDateString()
+                                              : 'N/A') +
+                                              ' - ' +
+                                              (edu.endDate
+                                                ? new Date(edu.endDate).toLocaleDateString()
+                                                : 'N/A')}
+                                          </p>
+                                        </div>
+                                      </div>
                                     </div>
                                   ))
                                 ) : (
                                   <p className="text-sm text-muted-foreground">
                                     No education details available.
+                                  </p>
+                                )}
+                              </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="professional">
+                              <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                                Professional Info
+                              </AccordionTrigger>
+                              <AccordionContent className="p-4 transition-all duration-300">
+                                {professionalInfo &&
+                                Object.values(professionalInfo).length > 0 ? (
+                                  Object.values(professionalInfo).map((info: any) => (
+                                    <div
+                                      key={info._id}
+                                      className="mb-3 rounded-xl border border-border/60 bg-muted/20 p-4"
+                                    >
+                                      <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                          <p className="text-sm font-semibold truncate">
+                                            {info.jobTitle || 'N/A'}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground truncate">
+                                            {info.company || 'N/A'}
+                                          </p>
+                                        </div>
+                                        {info.verificationStatus && (
+                                          <Badge
+                                            variant="outline"
+                                            className="rounded-full text-[11px] px-2 py-0.5"
+                                          >
+                                            {info.verificationStatus}
+                                          </Badge>
+                                        )}
+                                      </div>
+
+                                      {info.workDescription && (
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                          {info.workDescription}
+                                        </p>
+                                      )}
+
+                                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Work Period
+                                          </p>
+                                          <p className="text-xs font-medium">
+                                            {(info.workFrom
+                                              ? new Date(info.workFrom).toLocaleDateString()
+                                              : 'N/A') +
+                                              ' - ' +
+                                              (info.workTo
+                                                ? new Date(info.workTo).toLocaleDateString()
+                                                : 'N/A')}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Reference
+                                          </p>
+                                          <p className="text-xs font-medium">
+                                            {info.referencePersonName || 'N/A'}
+                                            {info.referencePersonContact
+                                              ? ` (${info.referencePersonContact})`
+                                              : ''}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {info.githubRepoLink && (
+                                        <a
+                                          href={info.githubRepoLink}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="mt-3 inline-flex text-xs text-primary hover:underline"
+                                        >
+                                          GitHub Repo Link
+                                        </a>
+                                      )}
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">
+                                    No professional info available.
                                   </p>
                                 )}
                               </AccordionContent>
@@ -617,20 +831,71 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                     (project: any) => (
                                       <div
                                         key={project._id}
-                                        className="mb-3 p-3 rounded-lg border border-border/60 bg-muted/30"
+                                        className="mb-3 rounded-xl border border-border/60 bg-muted/20 p-4"
                                       >
-                                        <p className="text-sm font-semibold">
-                                          {project.projectName}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                          Role: {project.role}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                          Tech Used:{' '}
-                                          {project.techUsed.length > 0
-                                            ? project.techUsed.join(', ')
-                                            : 'N/A'}
-                                        </p>
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="min-w-0">
+                                            <p className="text-sm font-semibold truncate">
+                                              {project.projectName || 'N/A'}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground truncate">
+                                              Role: {project.role || 'N/A'}
+                                            </p>
+                                          </div>
+                                          {project.verificationStatus && (
+                                            <Badge
+                                              variant="outline"
+                                              className="rounded-full text-[11px] px-2 py-0.5"
+                                            >
+                                              {project.verificationStatus}
+                                            </Badge>
+                                          )}
+                                        </div>
+
+                                        {project.description && (
+                                          <p className="text-xs text-muted-foreground mt-2">
+                                            {project.description}
+                                          </p>
+                                        )}
+
+                                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                          <div>
+                                            <p className="text-[11px] text-muted-foreground">
+                                              Timeline
+                                            </p>
+                                            <p className="text-xs font-medium">
+                                              {(project.start
+                                                ? new Date(project.start).toLocaleDateString()
+                                                : 'N/A') +
+                                                ' - ' +
+                                                (project.end
+                                                  ? new Date(project.end).toLocaleDateString()
+                                                  : 'N/A')}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="text-[11px] text-muted-foreground">
+                                              Tech Used
+                                            </p>
+                                            <p className="text-xs font-medium">
+                                              {Array.isArray(project.techUsed) &&
+                                              project.techUsed.length > 0
+                                                ? project.techUsed.join(', ')
+                                                : 'N/A'}
+                                            </p>
+                                          </div>
+                                          {typeof project.verified === 'boolean' && (
+                                            <div className="sm:col-span-2">
+                                              <p className="text-[11px] text-muted-foreground">
+                                                Verified
+                                              </p>
+                                              <p className="text-xs font-medium">
+                                                {project.verified ? 'Yes' : 'No'}
+                                              </p>
+                                            </div>
+                                          )}
+                                        </div>
+
                                         {project.githubLink && (
                                           <a
                                             href={project.githubLink}
@@ -652,42 +917,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 )}
                               </AccordionContent>
                             </AccordionItem>
-                            <AccordionItem value="skills">
-                              <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
-                                Skills
-                              </AccordionTrigger>
-                              <AccordionContent className="p-4 transition-all duration-300">
-                                <div className="p-3 rounded-lg border border-border/60 bg-muted/30 text-sm">
-                                  {talentEntry.type === 'SKILL'
-                                    ? talentEntry.talentName
-                                    : 'N/A'}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                            <AccordionItem value="domain">
-                              <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
-                                Domain
-                              </AccordionTrigger>
-                              <AccordionContent className="p-4 transition-all duration-300">
-                                <div className="p-3 rounded-lg border border-border/60 bg-muted/30 text-sm">
-                                  {talentEntry.type === 'DOMAIN'
-                                    ? talentEntry.talentName
-                                    : 'N/A'}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                            <AccordionItem value="experience">
-                              <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
-                                Experience
-                              </AccordionTrigger>
-                              <AccordionContent className="p-4 transition-all duration-300">
-                                <div className="p-3 rounded-lg border border-border/60 bg-muted/30 text-sm">
-                                  {talentEntry.experience
-                                    ? `${talentEntry.experience} years`
-                                    : 'N/A'}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
                           </Accordion>
                           <div className="px-6 pb-6 pt-2">
                             <div className="flex flex-col sm:flex-row gap-3 justify-center space-between">
@@ -700,7 +929,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 }}
                               >
                                 <span>
-                                  {isInvited ? 'Invited' : 'Add to Lobby'}
+                                  {isInvited ? 'Invited' : 'Invite Talent'}
                                 </span>
                                 <ChevronRight className="ml-1.5 h-4 w-4" />
                               </Button>
@@ -734,7 +963,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                       setSelectedTalent(talent);
                     }}
                   >
-                    <span>{isInvited ? 'Invited' : 'Add to Lobby'}</span>
+                    <span>{isInvited ? 'Invited' : 'Invite Talent'}</span>
                     <ChevronRight className="ml-1.5 h-4 w-4" />
                   </Button>
                 </div>

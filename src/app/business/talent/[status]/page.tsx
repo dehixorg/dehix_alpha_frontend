@@ -5,6 +5,16 @@ import TalentLayout from '@/components/marketComponents/TalentLayout';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { FreelancerApplication } from '@/types/talent';
 
+const freelancerProfileCache = new Map<
+  string,
+  {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    profilePic?: string;
+  }
+>();
+
 interface HireTalentItem {
   _id: string;
   businessId: string;
@@ -36,18 +46,9 @@ export default function Page({ params }: { params: { status: string } }) {
   const allowed = new Set(['invited', 'accepted', 'rejected', 'applications']);
   const activeTab = allowed.has(status) ? status : 'invited';
 
-  const [invitedApplications, setInvitedApplications] = useState<
-    FreelancerApplication[]
-  >([]);
-  const [selectedApplications, setSelectedApplications] = useState<
-    FreelancerApplication[]
-  >([]);
-  const [rejectedApplications, setRejectedApplications] = useState<
-    FreelancerApplication[]
-  >([]);
-  const [appliedApplications, setAppliedApplications] = useState<
-    FreelancerApplication[]
-  >([]);
+  const [tabApplications, setTabApplications] = useState<FreelancerApplication[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -62,12 +63,31 @@ export default function Page({ params }: { params: { status: string } }) {
 
         const data: HireTalentItem[] = hireTalentResponse.data.data;
 
-        // Collect unique freelancer IDs to fetch profiles in bulk
-        const freelancerIds = new Set<string>();
+        type Status = 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
+        const desiredStatus: Status =
+          activeTab === 'accepted'
+            ? 'SELECTED'
+            : activeTab === 'rejected'
+              ? 'REJECTED'
+              : activeTab === 'applications'
+                ? 'APPLIED'
+                : 'INVITED';
+
+        // Filter down to only the freelancers relevant for the current tab.
+        const relevant: { item: HireTalentItem; freelancer: FreelancerApplication }[] =
+          [];
         data.forEach((item) => {
-          item.freelancers?.forEach((f) => {
-            if (f.freelancerId) freelancerIds.add(f.freelancerId);
+          item.freelancers?.forEach((freelancer) => {
+            if (!freelancer?.freelancerId) return;
+            if ((freelancer.status as Status) !== desiredStatus) return;
+            relevant.push({ item, freelancer });
           });
+        });
+
+        // Collect unique freelancer IDs to fetch profiles (only for this tab)
+        const freelancerIds = new Set<string>();
+        relevant.forEach(({ freelancer }) => {
+          if (freelancer.freelancerId) freelancerIds.add(freelancer.freelancerId);
         });
 
         // Fetch profiles and build a map for quick lookup
@@ -84,118 +104,80 @@ export default function Page({ params }: { params: { status: string } }) {
         await Promise.all(
           Array.from(freelancerIds).map(async (id) => {
             try {
+              if (freelancerProfileCache.has(id)) {
+                profileMap[id] = freelancerProfileCache.get(id) as any;
+                return;
+              }
               const res = await axiosInstance.get(`/public/freelancer/${id}`);
               const p = res?.data?.data || res?.data || {};
-              profileMap[id] = {
+              const cached = {
                 firstName: p.firstName || undefined,
                 lastName: p.lastName || undefined,
                 email: p.email || undefined,
                 profilePic: p.profilePic || undefined,
               };
+              freelancerProfileCache.set(id, cached);
+              profileMap[id] = cached;
             } catch (e) {
               // Ignore individual failures; deterministic fallbacks will be applied below
             }
           }),
         );
 
-        // Deduplicate freelancers across all hire items using a Map
-        type Status = 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
-        const statusRank: Record<Status, number> = {
-          SELECTED: 4,
-          INVITED: 3,
-          APPLIED: 2,
-          REJECTED: 1,
-        } as const;
+        // Deduplicate freelancers for this tab using a Map
+        const aggregateMap = new Map<string, FreelancerApplication & { status: Status }>();
+        relevant.forEach(({ item, freelancer }) => {
+          const profile = profileMap[freelancer.freelancerId];
+          const current: FreelancerApplication & { status: Status } = {
+            ...freelancer,
+            status: freelancer.status as Status,
+            firstName: profile?.firstName || freelancer.firstName || 'Name unavailable',
+            lastName: profile?.lastName || freelancer.lastName || '',
+            email: profile?.email || freelancer.email || 'Email not provided',
+            profilePic: profile?.profilePic || freelancer.profilePic || '',
+            domainName:
+              item.talentName || item.domainName || item.skillName || 'General',
+            role: item.talentName || item.domainName || item.skillName || 'Developer',
+            professionalInfo: [],
+            skills:
+              (item.type || '').toUpperCase() === 'SKILL' && item.talentName
+                ? [
+                    {
+                      _id: item.talentId || item.skillId || '',
+                      name: item.talentName || item.skillName,
+                    },
+                  ]
+                : item.skillName
+                  ? [{ _id: item.skillId || '', name: item.skillName }]
+                  : [],
+          } as any;
 
-        const aggregateMap = new Map<
-          string,
-          FreelancerApplication & { status: Status }
-        >();
+          const existing = aggregateMap.get(freelancer.freelancerId);
+          if (!existing) {
+            aggregateMap.set(freelancer.freelancerId, current);
+            return;
+          }
 
-        data.forEach((item) => {
-          item.freelancers?.forEach((freelancer) => {
-            if (!freelancer.freelancerId) return;
-            const profile = profileMap[freelancer.freelancerId];
+          const merged: FreelancerApplication & { status: Status } = {
+            ...existing,
+            ...current,
+            firstName: existing.firstName || current.firstName,
+            lastName: existing.lastName || current.lastName,
+            email: existing.email || current.email,
+            profilePic: existing.profilePic || current.profilePic,
+            domainName: existing.domainName || current.domainName,
+            role: existing.role || current.role,
+            professionalInfo: existing.professionalInfo?.length
+              ? existing.professionalInfo
+              : current.professionalInfo,
+            skills: existing.skills?.length ? existing.skills : current.skills,
+            status: desiredStatus,
+          } as any;
 
-            // Build enriched object for this occurrence
-            const current: FreelancerApplication & { status: Status } = {
-              ...freelancer,
-              status: freelancer.status as Status,
-              firstName: profile?.firstName || 'Name unavailable',
-              lastName: profile?.lastName || '',
-              email: profile?.email || 'Email not provided',
-              profilePic: profile?.profilePic || '',
-              domainName:
-                item.talentName ||
-                item.domainName ||
-                item.skillName ||
-                'General',
-              role:
-                item.talentName ||
-                item.domainName ||
-                item.skillName ||
-                'Developer',
-              professionalInfo: [],
-              skills:
-                (item.type || '').toUpperCase() === 'SKILL' && item.talentName
-                  ? [
-                      {
-                        _id: item.talentId || item.skillId || '',
-                        name: item.talentName || item.skillName,
-                      },
-                    ]
-                  : item.skillName
-                    ? [{ _id: item.skillId || '', name: item.skillName }]
-                    : [],
-            } as any;
-
-            const existing = aggregateMap.get(freelancer.freelancerId);
-            if (!existing) {
-              aggregateMap.set(freelancer.freelancerId, current);
-            } else {
-              // Merge: prefer non-empty fields and higher-precedence status
-              const merged: FreelancerApplication & { status: Status } = {
-                ...existing,
-                ...current,
-                firstName: existing.firstName || current.firstName,
-                lastName: existing.lastName || current.lastName,
-                email: existing.email || current.email,
-                profilePic: existing.profilePic || current.profilePic,
-                domainName: existing.domainName || current.domainName,
-                role: existing.role || current.role,
-                professionalInfo: existing.professionalInfo?.length
-                  ? existing.professionalInfo
-                  : current.professionalInfo,
-                skills: existing.skills?.length
-                  ? existing.skills
-                  : current.skills,
-                status:
-                  statusRank[existing.status] >= statusRank[current.status]
-                    ? existing.status
-                    : current.status,
-              } as any;
-              aggregateMap.set(freelancer.freelancerId, merged);
-            }
-          });
+          aggregateMap.set(freelancer.freelancerId, merged);
         });
 
-        // Distribute unique freelancers into arrays based on resolved status
-        const invited: FreelancerApplication[] = [];
-        const selected: FreelancerApplication[] = [];
-        const rejected: FreelancerApplication[] = [];
-        const applied: FreelancerApplication[] = [];
-
-        aggregateMap.forEach((f) => {
-          if (f.status === 'SELECTED') selected.push(f);
-          else if (f.status === 'INVITED') invited.push(f);
-          else if (f.status === 'APPLIED') applied.push(f);
-          else if (f.status === 'REJECTED') rejected.push(f);
-        });
-
-        setInvitedApplications(invited);
-        setSelectedApplications(selected);
-        setRejectedApplications(rejected);
-        setAppliedApplications(applied);
+        setTabApplications(Array.from(aggregateMap.values()));
       } catch (error) {
         console.error('Error fetching hire talent data:', error);
         setErrorMessage(
@@ -207,16 +189,7 @@ export default function Page({ params }: { params: { status: string } }) {
     };
 
     fetchHireTalentData();
-  }, []);
-
-  // Get the appropriate data based on active tab
-  const getCurrentTabData = () => {
-    if (activeTab === 'invited') return invitedApplications;
-    if (activeTab === 'accepted') return selectedApplications;
-    if (activeTab === 'rejected') return rejectedApplications;
-    if (activeTab === 'applications') return appliedApplications;
-    return [];
-  };
+  }, [activeTab]);
 
   return (
     <>
@@ -231,7 +204,7 @@ export default function Page({ params }: { params: { status: string } }) {
         activeTab={
           activeTab as 'invited' | 'accepted' | 'rejected' | 'applications'
         }
-        talents={getCurrentTabData()}
+        talents={tabApplications}
         loading={loading}
       />
     </>
