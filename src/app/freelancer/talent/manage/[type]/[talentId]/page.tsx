@@ -26,6 +26,7 @@ import type { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import EmptyState from '@/components/shared/EmptyState';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
 export default function ManageTalentPage() {
   const params = useParams();
@@ -37,9 +38,13 @@ export default function ManageTalentPage() {
   >([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [activeStatus, setActiveStatus] = useState<
     'APPLIED' | 'SELECTED' | 'REJECTED' | 'INVITED' | 'LOBBY' | 'INTERVIEW'
   >('APPLIED');
+  const [applyingByHireId, setApplyingByHireId] = useState<
+    Record<string, boolean>
+  >({});
 
   const type = String(params?.type || '').toUpperCase();
   const talentId = String(params?.talentId || '');
@@ -129,7 +134,36 @@ export default function ManageTalentPage() {
       }
     }
     fetchApplications();
-  }, [user?.uid, activeStatus, talentId]);
+  }, [user?.uid, activeStatus, talentId, refreshKey]);
+
+  const handleApply = async (app: any) => {
+    const hireId = String(app?.hireId || app?.application?.hireId || '').trim();
+    const businessId = String(
+      app?.business?.businessId || app?.businessId || app?.business?._id || '',
+    ).trim();
+    const freelancerId = String(user?.uid || '').trim();
+
+    if (!hireId || !businessId || !freelancerId) {
+      notifyError('Missing required data to apply.', 'Error');
+      return;
+    }
+
+    setApplyingByHireId((prev) => ({ ...prev, [hireId]: true }));
+    try {
+      await axiosInstance.post('/freelancer/dehix-talent/apply', {
+        hireId,
+        businessId,
+        freelancerId,
+      });
+      notifySuccess('Applied successfully.', 'Success');
+      setRefreshKey((k) => k + 1);
+    } catch (error) {
+      console.error('Failed to apply', error);
+      notifyError('Failed to apply. Please try again.', 'Error');
+    } finally {
+      setApplyingByHireId((prev) => ({ ...prev, [hireId]: false }));
+    }
+  };
 
   const selectedValue = `${type}:${talentId}`;
 
@@ -172,6 +206,9 @@ export default function ManageTalentPage() {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((app, i) => {
+          const hireId = String(
+            app?.hireId || app?.application?.hireId || '',
+          ).trim();
           const companyName = app?.business?.companyName || 'Unknown company';
           const contactName = [
             app?.business?.firstName,
@@ -197,7 +234,7 @@ export default function ManageTalentPage() {
 
           return (
             <Card
-              key={`${app?.hireId || i}`}
+              key={`${hireId || i}`}
               className="shadow-sm h-full flex flex-col justify-between"
             >
               <CardHeader className="pb-3">
@@ -266,9 +303,21 @@ export default function ManageTalentPage() {
                 )}
 
                 <div className="mt-3 flex justify-end">
-                  <Button size="sm" variant="outline" type="button">
-                    View details
-                  </Button>
+                  {activeStatus === 'INVITED' ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      type="button"
+                      disabled={Boolean(applyingByHireId[hireId])}
+                      onClick={() => handleApply(app)}
+                    >
+                      {applyingByHireId[hireId] ? 'Applying...' : 'Apply'}
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" type="button">
+                      View details
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

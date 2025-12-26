@@ -1,7 +1,14 @@
 // src/components/marketComponents/profileCards/rejectedProfileCards.tsx
 'use client';
 import React from 'react';
-import { User, ExternalLink, XCircle, RefreshCw } from 'lucide-react';
+import {
+  User,
+  ExternalLink,
+  XCircle,
+  Github,
+  Linkedin,
+  Link2,
+} from 'lucide-react';
 
 import {
   Card,
@@ -32,7 +39,7 @@ interface RejectedProfileCardsProps {
 const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
   talents,
   loading,
-  calculateExperience,
+  calculateExperience: _calculateExperience,
 }) => {
   const SkeletonCard = () => (
     <Card className="overflow-hidden">
@@ -63,15 +70,17 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
   );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-6">
       {loading ? (
         Array.from({ length: 4 }).map((_, index) => (
           <SkeletonCard key={index} />
         ))
       ) : talents.length > 0 ? (
         talents.map((talent, index) => (
-          // FIX 1: Use a unique key by combining _id with index
-          <Card key={`${talent._id}-${index}`} className="overflow-hidden">
+          <Card
+            key={`${talent._id}-${index}`}
+            className="overflow-hidden border bg-card shadow-sm transition-shadow hover:shadow-md"
+          >
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div className="flex gap-4 items-center">
@@ -81,11 +90,22 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
                       {talent.lastName?.slice(0, 1).toUpperCase() || ''}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
+                  <div className="space-y-1">
                     <CardTitle>
-                      {talent.firstName} {talent.lastName}
+                      {talent.userName
+                        ? `@${talent.userName}`
+                        : `${talent.firstName} ${talent.lastName}`}
                     </CardTitle>
-                    <CardDescription>{talent.role || 'N/A'}</CardDescription>
+                    <CardDescription>
+                      {talent.userName
+                        ? `${talent.firstName} ${talent.lastName}`
+                        : talent.role || 'N/A'}
+                    </CardDescription>
+                    {talent.userName && (
+                      <div className="text-sm text-muted-foreground">
+                        {talent.role || 'N/A'}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Badge
@@ -99,12 +119,76 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
             </CardHeader>
             <CardContent className="pb-2">
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {calculateExperience(talent.professionalInfo)} of experience
-                  </span>
-                </div>
+                {typeof talent.workExperience === 'number' && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>{talent.workExperience} years work experience</span>
+                  </div>
+                )}
+                {talent.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span>{talent.email}</span>
+                  </div>
+                )}
+                {talent.userName && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs text-muted-foreground">
+                      @{talent.userName}
+                    </span>
+                  </div>
+                )}
+
+                {(talent.githubLink ||
+                  talent.linkedin ||
+                  talent.personalWebsite) && (
+                  <div className="flex flex-wrap gap-2">
+                    {talent.githubLink && (
+                      <a
+                        href={talent.githubLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+                      >
+                        <Github className="h-3 w-3" />
+                        GitHub
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {talent.linkedin && (
+                      <a
+                        href={talent.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+                      >
+                        <Linkedin className="h-3 w-3" />
+                        LinkedIn
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {talent.personalWebsite && (
+                      <a
+                        href={talent.personalWebsite}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+                      >
+                        <Link2 className="h-3 w-3" />
+                        Website
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {talent.description && (
+                  <div className="rounded-lg border bg-muted/20 p-3 text-sm text-foreground/90">
+                    <div className="text-xs font-medium text-muted-foreground mb-1">
+                      About
+                    </div>
+                    <div className="line-clamp-4">{talent.description}</div>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2 pt-2">
                   {talent.skills?.map((skill: Skill, skillIndex: number) => (
                     // FIX 2: Use a unique key for skills list
@@ -120,14 +204,6 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
             </CardContent>
             <CardFooter className="flex justify-between pt-2">
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex items-center gap-1"
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  Reconsider
-                </Button>
                 <Button
                   size="sm"
                   variant="ghost"

@@ -1,7 +1,5 @@
 import {
   Archive,
-  BookMarked,
-  CheckCircle2,
   FolderOpen,
   Home,
   MessageSquare,
@@ -10,7 +8,6 @@ import {
   StickyNote,
   Trash2,
   Users2,
-  XCircle,
   SendHorizontal,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -54,29 +51,7 @@ export const menuItemsTop: MenuItem[] = [
   {
     href: '/business/talent',
     icon: <Users2 className="h-5 w-5" />,
-    label: 'Dehix Talent',
-    subItems: [
-      {
-        label: 'Overview',
-        href: '/business/talent',
-        icon: <Users2 className="h-4 w-4" />,
-      },
-      {
-        label: 'Invites',
-        href: '/business/talent/invited',
-        icon: <BookMarked className="h-4 w-4" />,
-      },
-      {
-        label: 'Accepted',
-        href: '/business/talent/accepted',
-        icon: <CheckCircle2 className="h-4 w-4" />,
-      },
-      {
-        label: 'Rejected',
-        href: '/business/talent/rejected',
-        icon: <XCircle className="h-4 w-4" />,
-      },
-    ],
+    label: 'Talent',
   },
   {
     href: '/chat',

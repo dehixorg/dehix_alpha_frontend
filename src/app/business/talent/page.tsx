@@ -1,12 +1,6 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Users2,
-  BookMarked,
-  CheckCircle2,
-  XCircle,
-  FileText,
-} from 'lucide-react';
+import { Users2, FileText } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -190,8 +184,11 @@ export default function Talent() {
   }, [refreshBootstrap]);
 
   const handleTabChange = (value: string) => {
-    const path = value ? `/business/talent/${value}` : '/business/talent';
-    router.push(path);
+    if (value === 'overview') {
+      router.push('/business/talent');
+    } else {
+      router.push('/business/talent/applications');
+    }
   };
 
   // Derive current tab value from the pathname to keep Tabs in sync with routing
@@ -200,9 +197,7 @@ export default function Talent() {
     if (path === '/business/talent') return 'overview';
     const parts = path.split('/');
     const last = parts[parts.length - 1];
-    return ['applications', 'invited', 'accepted', 'rejected'].includes(last)
-      ? last
-      : 'overview';
+    return last === 'applications' ? 'applications' : 'overview';
   })();
 
   return (
@@ -210,56 +205,36 @@ export default function Talent() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Dehix Talent"
+        active="Talent"
       />
 
       <div className="flex flex-col sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="Dehix Talent"
+          activeMenu="Talent"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
-            { label: 'Hire Talent', link: '/business/talent' },
+            { label: 'Hire Talent', link: '#' },
             { label: 'Overview', link: '#' },
           ]}
         />
 
         {/* Tabs Header */}
-        <div className="container px-4 py-4">
-          <Tabs value={currentTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview" onClick={() => handleTabChange('')}>
-                <Users2 className="h-4 w-4 mr-1" />
+        <div className="container px-4 py-4 ">
+          <Tabs
+            value={currentTab}
+            onValueChange={handleTabChange}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="overview">
+                <Users2 className="h-4 w-4 mr-2" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger
-                value="applications"
-                onClick={() => handleTabChange('applications')}
-              >
-                <FileText className="h-4 w-4 mr-1" />
+              <TabsTrigger value="applications">
+                <FileText className="h-4 w-4 mr-2" />
                 Applications
-              </TabsTrigger>
-              <TabsTrigger
-                value="invited"
-                onClick={() => handleTabChange('invited')}
-              >
-                <BookMarked className="h-4 w-4 mr-1" />
-                Invites
-              </TabsTrigger>
-              <TabsTrigger
-                value="accepted"
-                onClick={() => handleTabChange('accepted')}
-              >
-                <CheckCircle2 className="h-4 w-4 mr-1" />
-                Accepted
-              </TabsTrigger>
-              <TabsTrigger
-                value="rejected"
-                onClick={() => handleTabChange('rejected')}
-              >
-                <XCircle className="h-4 w-4 mr-1" />
-                Rejected
               </TabsTrigger>
             </TabsList>
           </Tabs>
