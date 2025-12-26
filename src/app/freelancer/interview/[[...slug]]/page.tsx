@@ -53,14 +53,13 @@ export default function InterviewPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Interviews"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Interview', link: '/freelancer/interview/profile' },
           ]}
         />
         <main className="flex-1 px-4 sm:px-6 sm:py-2">
           <div className="mx-auto w-full max-w-7xl">
             <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-b from-muted/60 to-background">
+              <CardHeader className="bg-gradient">
                 <CardTitle className="text-2xl font-bold tracking-tight">
                   Interviews
                 </CardTitle>

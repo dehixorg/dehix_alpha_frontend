@@ -63,7 +63,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Interviews',
   },
   {
-    href: '/freelancer/scheduleInterview',
+    href: '/freelancer/interview/schedule',
     icon: <CalendarClock className="h-5 w-5" />,
     label: 'Schedule Interviews',
   },
