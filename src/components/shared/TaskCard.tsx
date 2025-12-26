@@ -69,47 +69,50 @@ const TaskCard: React.FC<TaskCardProps> = ({
     <div className="p-1 md:p-2">
       <Card
         className={cn(
-          'w-full cursor-pointer border border-border/50 hover:border-primary/30 transition-colors duration-200 overflow-hidden',
+          'group w-full cursor-pointer overflow-hidden border border-border/60 bg-card/60 backdrop-blur-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/30 hover:shadow-sm',
         )}
       >
-        <CardHeader className="p-4 pb-2 space-y-2">
-          <div className="flex justify-between items-start gap-3">
-            <div className="flex items-start gap-3 min-w-0">
-              <div className="space-y-1 overflow-hidden">
-                <div className="flex items-center gap-2">
-                  <h4
-                    className="text-sm font-semibold leading-tight text-foreground line-clamp-2"
-                    title={task.title}
+        <CardHeader className="p-4 pb-2">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge className={statusOutlineClasses(task.taskStatus)}>
+                  {task.taskStatus.replace('_', ' ')}
+                </Badge>
+                {!isAssigned && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
                   >
-                    {task.title}
-                  </h4>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {isAssigned ? (
-                    <div className="flex items-center gap-1.5">
-                      <Avatar className="h-4 w-4">
-                        <AvatarImage src={freelancer?.profilePicture} />
-                        <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                          {freelancer.freelancerName?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="truncate">
-                        {freelancer.freelancerName}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 text-amber-500">
-                      <AlertCircle className="h-3.5 w-3.5" />
-                      <span>Unassigned</span>
-                    </div>
-                  )}
-                </div>
+                    <AlertCircle className="mr-1 h-3.5 w-3.5" />
+                    Unassigned
+                  </Badge>
+                )}
               </div>
+
+              <h4
+                className="text-sm font-semibold leading-snug text-foreground line-clamp-2"
+                title={task.title}
+              >
+                {task.title}
+              </h4>
+
+              {isAssigned && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Avatar className="h-5 w-5">
+                      <AvatarImage src={freelancer?.profilePicture} />
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                        {freelancer.freelancerName?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="truncate">{freelancer.freelancerName}</span>
+                  </div>
+                </div>
+              )}
             </div>
+
             <div className="flex items-start gap-2">
-              <Badge className={statusOutlineClasses(task.taskStatus)}>
-                {task.taskStatus.replace('_', ' ')}
-              </Badge>
               <TaskActionsDropdown
                 task={task}
                 milestoneId={milestoneId}
@@ -444,8 +447,15 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
   return (
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger className="p-1 rounded-md hover:bg-accent">
-          <MoreVertical className="w-4 h-4" />
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"

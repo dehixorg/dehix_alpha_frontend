@@ -325,8 +325,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         </div>
       </AccordionTrigger>
       <AccordionContent className="w-full px-4 sm:px-6 md:px-8 lg:px-10">
-        <div className="p-2 bg-card text-card-foreground rounded-lg border border-border">
-          <div className="p-2">
             <div className="space-y-1">
               <Badge
                 className={`${profileTypeOutlineClasses(projectStatus)} block md:hidden text-xs md:text-sm rounded-full`}
@@ -337,24 +335,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
             </div>
             {story?.tasks?.length > 0 ? (
               <div className="bg-transparent">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <h4 className="text-lg md:text-xl font-semibold">Tasks</h4>
-                    <Badge variant="secondary" className="rounded-full">
-                      {taskCount}
-                    </Badge>
-                  </div>
-                  {!isFreelancer && (
-                    <Button
-                      className="md:px-3 px-2 py-0 md:py-1 text-sm sm:text-base rounded-full"
-                      onClick={() => setIsTaskDialogOpen(true)}
-                    >
-                      <Plus size={15} /> Add Task
-                    </Button>
-                  )}
-                </div>
-                <Separator className="my-3" />
-                <Carousel className="w-[85vw] md:w-full relative mt-4">
+                <Carousel className="w-[85vw] md:w-full relative mt-2">
                   <CarouselContent className="flex flex-nowrap gap-2 md:gap-0">
                     {story.tasks.map((task: any) => {
                       const { className: taskBadgeStyle } = getStatusBadge(
@@ -364,7 +345,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                       return (
                         <CarouselItem
                           key={task._id}
-                          className="min-w-0 mt-2 w-full md:basis-1/2 sm:w-full md:w-1/2 lg:w-1/3"
+                          className="min-w-0 w-full md:basis-1/2 sm:w-full md:w-1/2 lg:w-1/3"
                         >
                           <TaskCard
                             task={task}
@@ -404,6 +385,13 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                     )}
                   </div>
                 </Carousel>
+                            <Button
+                              variant="secondary"
+                              className="rounded-full w-full"
+                              onClick={() => setIsTaskDialogOpen(true)}
+                            >
+                              <Plus size={15} className="mr-1" /> Add Task
+                            </Button>
               </div>
             ) : (
               <div className="mt-8 p-6 rounded-xl border bg-muted/20 text-center">
@@ -444,8 +432,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 )}
               </div>
             )}
-          </div>
-        </div>
       </AccordionContent>
       <TaskDetailsDialog
         task={selectedTask}
