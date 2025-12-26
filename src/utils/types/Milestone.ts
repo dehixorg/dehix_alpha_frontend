@@ -4,6 +4,12 @@ export enum MilestoneStatus {
   COMPLETED = 'COMPLETED',
 }
 
+export enum TaskStatus {
+  NOT_STARTED = 'NOT_STARTED',
+  ONGOING = 'ONGOING',
+  COMPLETED = 'COMPLETED',
+}
+
 export enum PaymentStatus {
   PENDING = 'PENDING',
   PAID = 'PAID',

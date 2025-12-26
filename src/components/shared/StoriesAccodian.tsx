@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { ClipboardPlus, Plus } from 'lucide-react';
 
 import { Button } from '../ui/button';
-import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 
-import MilestoneHeader from './MilestoneHeader';
 import StoryAccordionItem from './StoryAccordionItem';
 import AddTaskDialog from './AddTaskDialog';
 import AddStoryDialog from './AddStoryDialog';
@@ -116,118 +114,109 @@ const StoriesAccordion = ({
 
   return (
     <div className="w-full px-0 md:px-0 lg:px-0 py-3 md:py-6 max-w-5xl mx-auto rounded-lg">
-      <Card className="pb-5 mx-3 border shadow-sm rounded-xl overflow-hidden">
-        <MilestoneHeader milestone={milestone} />
-
-        <div
-          className={`${openAccordion ? 'mx-0' : 'mx-4'} md:mx-6 card border rounded-lg`}
-        >
-          {(milestone.stories ?? []).length > 0 && (
-            <div className="flex p-4 justify-between items-center border-b">
-              <div className="flex items-center gap-3">
-                <h3 className="text-lg md:text-xl font-semibold">Stories</h3>
-                <Badge variant="secondary" className="rounded-full">
-                  {(milestone.stories ?? []).length} total
-                </Badge>
-              </div>
-              {!isFreelancer && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setIsStoryDialogOpen(true)}
-                        aria-label="Add a new story"
-                      >
-                        <Plus size={13} className="mr-1" /> Add Story
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="left">
-                      Create a new story
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
+      <div
+        className={`${openAccordion ? 'mx-0' : 'mx-4'} md:mx-6 card border rounded-lg`}
+      >
+        {(milestone.stories ?? []).length > 0 && (
+          <div className="flex p-4 justify-between items-center border-b bg-gradient">
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg md:text-xl font-semibold">Stories</h3>
+              <Badge variant="secondary" className="rounded-full">
+                {(milestone.stories ?? []).length} total
+              </Badge>
             </div>
-          )}
-          <Accordion
-            type="single"
-            collapsible
-            value={openAccordion}
-            onValueChange={(value) => setOpenAccordion(value)}
-            className="pt-4 px-0"
-          >
-            {(milestone.stories ?? []).length > 0 ? (
-              (milestone.stories ?? []).map((story: Story, idx: number) => (
-                <StoryAccordionItem
-                  fetchMilestones={fetchMilestones}
-                  isFreelancer={isFreelancer}
-                  freelancerId={freelancerId}
-                  milestoneId={milestone._id}
-                  key={idx}
-                  story={story}
-                  idx={idx}
-                  milestoneStoriesLength={(milestone.stories ?? []).length}
-                  setIsTaskDialogOpen={setIsTaskDialogOpen}
-                />
-              ))
-            ) : (
-              <div className="p-6 sm:p-8">
-                <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
-                  <div className="w-full md:w-auto order-2 md:order-1 text-center md:text-left">
-                    {isFreelancer ? (
-                      <>
-                        <h4 className="text-lg font-semibold">
-                          No stories yet
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          This &ldquo;{milestone.title}&rdquo; milestone
-                          doesn&apos;t have any stories yet. The business will
-                          add them soon.
-                        </p>
-                      </>
-                    ) : (
-                      <div className="mx-auto">
-                        <h4 className="text-lg font-semibold">
-                          Start by adding a story
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          This &ldquo;{milestone.title}&rdquo; milestone
-                          currently has no stories. Create one to track tasks
-                          and progress.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="order-1 md:order-2 sm:ml-auto">
-                    {!isFreelancer && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="secondary"
-                              className="rounded-full h-24 w-24 border-2 border-dashed flex flex-col items-center justify-center gap-1 hover:bg-primary/5 hover:border-primary/60 transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-primary"
-                              onClick={() => setIsStoryDialogOpen(true)}
-                              aria-label="Create the first story"
-                            >
-                              <ClipboardPlus className="h-8 w-8" />
-                              <span>Add Story</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" align="center">
-                            Create the first story
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </div>
+            {!isFreelancer && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      onClick={() => setIsStoryDialogOpen(true)}
+                      aria-label="Add a new story"
+                    >
+                      <Plus size={13} /> Add Story
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    Create a new story
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        )}
+        <Accordion
+          type="single"
+          collapsible
+          value={openAccordion}
+          onValueChange={(value) => setOpenAccordion(value)}
+        >
+          {(milestone.stories ?? []).length > 0 ? (
+            (milestone.stories ?? []).map((story: Story, idx: number) => (
+              <StoryAccordionItem
+                fetchMilestones={fetchMilestones}
+                isFreelancer={isFreelancer}
+                freelancerId={freelancerId}
+                milestoneId={milestone._id}
+                key={idx}
+                story={story}
+                idx={idx}
+                milestoneStoriesLength={(milestone.stories ?? []).length}
+                setIsTaskDialogOpen={setIsTaskDialogOpen}
+              />
+            ))
+          ) : (
+            <div className="p-6 sm:p-8">
+              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+                <div className="w-full md:w-auto order-2 md:order-1 text-center md:text-left">
+                  {isFreelancer ? (
+                    <>
+                      <h4 className="text-lg font-semibold">No stories yet</h4>
+                      <p className="text-sm text-muted-foreground">
+                        This &ldquo;{milestone.title}&rdquo; milestone
+                        doesn&apos;t have any stories yet. The business will add
+                        them soon.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="mx-auto">
+                      <h4 className="text-lg font-semibold">
+                        Start by adding a story
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        This &ldquo;{milestone.title}&rdquo; milestone currently
+                        has no stories. Create one to track tasks and progress.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="order-1 md:order-2 sm:ml-auto">
+                  {!isFreelancer && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            className="rounded-full h-24 w-24 border-2 border-dashed flex flex-col items-center justify-center gap-1 hover:bg-primary/5 hover:border-primary/60 transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-primary"
+                            onClick={() => setIsStoryDialogOpen(true)}
+                            aria-label="Create the first story"
+                          >
+                            <ClipboardPlus className="h-8 w-8" />
+                            <span>Add Story</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center">
+                          Create the first story
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                 </div>
               </div>
-            )}
-          </Accordion>
-        </div>
-      </Card>
+            </div>
+          )}
+        </Accordion>
+      </div>
 
       {isTaskDialogOpen && (
         <AddTaskDialog
