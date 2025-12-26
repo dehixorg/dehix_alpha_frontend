@@ -46,9 +46,9 @@ export default function Page({ params }: { params: { status: string } }) {
   const allowed = new Set(['invited', 'accepted', 'rejected', 'applications']);
   const activeTab = allowed.has(status) ? status : 'invited';
 
-  const [tabApplications, setTabApplications] = useState<FreelancerApplication[]>(
-    [],
-  );
+  const [tabApplications, setTabApplications] = useState<
+    FreelancerApplication[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -74,8 +74,10 @@ export default function Page({ params }: { params: { status: string } }) {
                 : 'INVITED';
 
         // Filter down to only the freelancers relevant for the current tab.
-        const relevant: { item: HireTalentItem; freelancer: FreelancerApplication }[] =
-          [];
+        const relevant: {
+          item: HireTalentItem;
+          freelancer: FreelancerApplication;
+        }[] = [];
         data.forEach((item) => {
           item.freelancers?.forEach((freelancer) => {
             if (!freelancer?.freelancerId) return;
@@ -87,7 +89,8 @@ export default function Page({ params }: { params: { status: string } }) {
         // Collect unique freelancer IDs to fetch profiles (only for this tab)
         const freelancerIds = new Set<string>();
         relevant.forEach(({ freelancer }) => {
-          if (freelancer.freelancerId) freelancerIds.add(freelancer.freelancerId);
+          if (freelancer.freelancerId)
+            freelancerIds.add(freelancer.freelancerId);
         });
 
         // Fetch profiles and build a map for quick lookup
@@ -125,19 +128,27 @@ export default function Page({ params }: { params: { status: string } }) {
         );
 
         // Deduplicate freelancers for this tab using a Map
-        const aggregateMap = new Map<string, FreelancerApplication & { status: Status }>();
+        const aggregateMap = new Map<
+          string,
+          FreelancerApplication & { status: Status }
+        >();
         relevant.forEach(({ item, freelancer }) => {
           const profile = profileMap[freelancer.freelancerId];
           const current: FreelancerApplication & { status: Status } = {
             ...freelancer,
             status: freelancer.status as Status,
-            firstName: profile?.firstName || freelancer.firstName || 'Name unavailable',
+            firstName:
+              profile?.firstName || freelancer.firstName || 'Name unavailable',
             lastName: profile?.lastName || freelancer.lastName || '',
             email: profile?.email || freelancer.email || 'Email not provided',
             profilePic: profile?.profilePic || freelancer.profilePic || '',
             domainName:
               item.talentName || item.domainName || item.skillName || 'General',
-            role: item.talentName || item.domainName || item.skillName || 'Developer',
+            role:
+              item.talentName ||
+              item.domainName ||
+              item.skillName ||
+              'Developer',
             professionalInfo: [],
             skills:
               (item.type || '').toUpperCase() === 'SKILL' && item.talentName

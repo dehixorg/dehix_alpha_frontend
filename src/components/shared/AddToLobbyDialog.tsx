@@ -33,7 +33,11 @@ const AddToLobbyDialog = ({
 
   const freelancerTalentNames = new Set(
     (Array.isArray(talent?.talents) ? talent.talents : [])
-      .map((t: any) => String(t?.talentName || '').trim().toLowerCase())
+      .map((t: any) =>
+        String(t?.talentName || '')
+          .trim()
+          .toLowerCase(),
+      )
       .filter((v: any) => Boolean(v)),
   );
 
@@ -50,14 +54,18 @@ const AddToLobbyDialog = ({
   });
 
   const inDeveloperProfileOptions = filteredOptions.filter((opt: any) => {
-    const label = String(opt?.label || '').trim().toLowerCase();
+    const label = String(opt?.label || '')
+      .trim()
+      .toLowerCase();
     if (!label) return false;
     return freelancerTalentNames.has(label);
   });
 
   const notInDeveloperProfileOptions = (skillDomainData || []).filter(
     (opt: any) => {
-      const label = String(opt?.label || '').trim().toLowerCase();
+      const label = String(opt?.label || '')
+        .trim()
+        .toLowerCase();
       if (!label) return false;
       return !freelancerTalentNames.has(label);
     },

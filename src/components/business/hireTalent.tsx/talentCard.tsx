@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Expand, Github, Linkedin, Dot, ChevronRight } from 'lucide-react';
+import { Expand, Github, Linkedin, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
@@ -410,7 +410,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
         }));
 
         const mergeInvites = (existing: any[] = []) => {
-          const keyOf = (i: any) => `${i?.hireId || ''}:${i?.attributeId || ''}`;
+          const keyOf = (i: any) =>
+            `${i?.hireId || ''}:${i?.attributeId || ''}`;
           const seen = new Set(existing.map(keyOf));
           const merged = [...existing];
           for (const inv of nextInvites) {
@@ -427,7 +428,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
             t.freelancer_id === freelancerId
               ? {
                   ...t,
-                  dehixTalent: mergeInvites(Array.isArray(t.dehixTalent) ? t.dehixTalent : []),
+                  dehixTalent: mergeInvites(
+                    Array.isArray(t.dehixTalent) ? t.dehixTalent : [],
+                  ),
                 }
               : t,
           ),
@@ -463,13 +466,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
         )}
         {/* Map directly over 'talents' instead of 'filteredTalents' */}
         {talents.map((talent) => {
-          const talentEntries = Array.isArray(talent.talents) ? talent.talents : [];
+          const talentEntries = Array.isArray(talent.talents)
+            ? talent.talents
+            : [];
           const talentEntry = talentEntries[0];
           const education = talent.education;
           const professionalInfo = talent.professionalInfo;
           const projects = talent.projects;
-          const label = talentEntry?.type === 'SKILL' ? 'Skill' : 'Domain';
-          const value = talentEntry?.talentName || 'N/A';
           const isInvited = invitedTalents.has(talent.freelancer_id);
 
           if (!talentEntry) return null;
@@ -521,7 +524,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 min-w-0">
-                              <Badge variant="outline" className="rounded-full text-[11px] px-2 py-0.5">
+                              <Badge
+                                variant="outline"
+                                className="rounded-full text-[11px] px-2 py-0.5"
+                              >
                                 {t.type}
                               </Badge>
                               <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -529,9 +535,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               </span>
                             </div>
                             <div className="mt-1 text-[11px] text-muted-foreground">
-                              Exp: {t.experience ?? 'N/A'}y
-                              {' '}| Level: {t.level || 'N/A'}
-                              {' '}| Pay: ${t.talentMonthlyPay ?? 'N/A'}
+                              Exp: {t.experience ?? 'N/A'}y | Level:{' '}
+                              {t.level || 'N/A'} | Pay: $
+                              {t.talentMonthlyPay ?? 'N/A'}
                             </div>
                           </div>
                         </div>
@@ -654,7 +660,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                       </div>
                                       <div className="mt-1 text-[11px] text-muted-foreground">
                                         Exp: {t.experience ?? 'N/A'}y | Level:{' '}
-                                        {t.level || 'N/A'} | Pay: ${t.talentMonthlyPay ?? 'N/A'}
+                                        {t.level || 'N/A'} | Pay: $
+                                        {t.talentMonthlyPay ?? 'N/A'}
                                       </div>
                                     </div>
                                   </div>
@@ -670,7 +677,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 Education
                               </AccordionTrigger>
                               <AccordionContent className="p-4 transition-all duration-300">
-                                {education && Object.values(education).length > 0 ? (
+                                {education &&
+                                Object.values(education).length > 0 ? (
                                   Object.values(education).map((edu: any) => (
                                     <div
                                       key={edu._id}
@@ -718,11 +726,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                           </p>
                                           <p className="text-xs font-medium">
                                             {(edu.startDate
-                                              ? new Date(edu.startDate).toLocaleDateString()
+                                              ? new Date(
+                                                  edu.startDate,
+                                                ).toLocaleDateString()
                                               : 'N/A') +
                                               ' - ' +
                                               (edu.endDate
-                                                ? new Date(edu.endDate).toLocaleDateString()
+                                                ? new Date(
+                                                    edu.endDate,
+                                                  ).toLocaleDateString()
                                                 : 'N/A')}
                                           </p>
                                         </div>
@@ -743,76 +755,83 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               <AccordionContent className="p-4 transition-all duration-300">
                                 {professionalInfo &&
                                 Object.values(professionalInfo).length > 0 ? (
-                                  Object.values(professionalInfo).map((info: any) => (
-                                    <div
-                                      key={info._id}
-                                      className="mb-3 rounded-xl border border-border/60 bg-muted/20 p-4"
-                                    >
-                                      <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                          <p className="text-sm font-semibold truncate">
-                                            {info.jobTitle || 'N/A'}
-                                          </p>
-                                          <p className="text-xs text-muted-foreground truncate">
-                                            {info.company || 'N/A'}
-                                          </p>
+                                  Object.values(professionalInfo).map(
+                                    (info: any) => (
+                                      <div
+                                        key={info._id}
+                                        className="mb-3 rounded-xl border border-border/60 bg-muted/20 p-4"
+                                      >
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="min-w-0">
+                                            <p className="text-sm font-semibold truncate">
+                                              {info.jobTitle || 'N/A'}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground truncate">
+                                              {info.company || 'N/A'}
+                                            </p>
+                                          </div>
+                                          {info.verificationStatus && (
+                                            <Badge
+                                              variant="outline"
+                                              className="rounded-full text-[11px] px-2 py-0.5"
+                                            >
+                                              {info.verificationStatus}
+                                            </Badge>
+                                          )}
                                         </div>
-                                        {info.verificationStatus && (
-                                          <Badge
-                                            variant="outline"
-                                            className="rounded-full text-[11px] px-2 py-0.5"
+
+                                        {info.workDescription && (
+                                          <p className="text-xs text-muted-foreground mt-2">
+                                            {info.workDescription}
+                                          </p>
+                                        )}
+
+                                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                          <div>
+                                            <p className="text-[11px] text-muted-foreground">
+                                              Work Period
+                                            </p>
+                                            <p className="text-xs font-medium">
+                                              {(info.workFrom
+                                                ? new Date(
+                                                    info.workFrom,
+                                                  ).toLocaleDateString()
+                                                : 'N/A') +
+                                                ' - ' +
+                                                (info.workTo
+                                                  ? new Date(
+                                                      info.workTo,
+                                                    ).toLocaleDateString()
+                                                  : 'N/A')}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="text-[11px] text-muted-foreground">
+                                              Reference
+                                            </p>
+                                            <p className="text-xs font-medium">
+                                              {info.referencePersonName ||
+                                                'N/A'}
+                                              {info.referencePersonContact
+                                                ? ` (${info.referencePersonContact})`
+                                                : ''}
+                                            </p>
+                                          </div>
+                                        </div>
+
+                                        {info.githubRepoLink && (
+                                          <a
+                                            href={info.githubRepoLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-3 inline-flex text-xs text-primary hover:underline"
                                           >
-                                            {info.verificationStatus}
-                                          </Badge>
+                                            GitHub Repo Link
+                                          </a>
                                         )}
                                       </div>
-
-                                      {info.workDescription && (
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                          {info.workDescription}
-                                        </p>
-                                      )}
-
-                                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div>
-                                          <p className="text-[11px] text-muted-foreground">
-                                            Work Period
-                                          </p>
-                                          <p className="text-xs font-medium">
-                                            {(info.workFrom
-                                              ? new Date(info.workFrom).toLocaleDateString()
-                                              : 'N/A') +
-                                              ' - ' +
-                                              (info.workTo
-                                                ? new Date(info.workTo).toLocaleDateString()
-                                                : 'N/A')}
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <p className="text-[11px] text-muted-foreground">
-                                            Reference
-                                          </p>
-                                          <p className="text-xs font-medium">
-                                            {info.referencePersonName || 'N/A'}
-                                            {info.referencePersonContact
-                                              ? ` (${info.referencePersonContact})`
-                                              : ''}
-                                          </p>
-                                        </div>
-                                      </div>
-
-                                      {info.githubRepoLink && (
-                                        <a
-                                          href={info.githubRepoLink}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="mt-3 inline-flex text-xs text-primary hover:underline"
-                                        >
-                                          GitHub Repo Link
-                                        </a>
-                                      )}
-                                    </div>
-                                  ))
+                                    ),
+                                  )
                                 ) : (
                                   <p className="text-sm text-muted-foreground">
                                     No professional info available.
@@ -865,11 +884,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                             </p>
                                             <p className="text-xs font-medium">
                                               {(project.start
-                                                ? new Date(project.start).toLocaleDateString()
+                                                ? new Date(
+                                                    project.start,
+                                                  ).toLocaleDateString()
                                                 : 'N/A') +
                                                 ' - ' +
                                                 (project.end
-                                                  ? new Date(project.end).toLocaleDateString()
+                                                  ? new Date(
+                                                      project.end,
+                                                    ).toLocaleDateString()
                                                   : 'N/A')}
                                             </p>
                                           </div>
@@ -878,19 +901,23 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                               Tech Used
                                             </p>
                                             <p className="text-xs font-medium">
-                                              {Array.isArray(project.techUsed) &&
-                                              project.techUsed.length > 0
+                                              {Array.isArray(
+                                                project.techUsed,
+                                              ) && project.techUsed.length > 0
                                                 ? project.techUsed.join(', ')
                                                 : 'N/A'}
                                             </p>
                                           </div>
-                                          {typeof project.verified === 'boolean' && (
+                                          {typeof project.verified ===
+                                            'boolean' && (
                                             <div className="sm:col-span-2">
                                               <p className="text-[11px] text-muted-foreground">
                                                 Verified
                                               </p>
                                               <p className="text-xs font-medium">
-                                                {project.verified ? 'Yes' : 'No'}
+                                                {project.verified
+                                                  ? 'Yes'
+                                                  : 'No'}
                                               </p>
                                             </div>
                                           )}
