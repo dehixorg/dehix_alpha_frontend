@@ -1,7 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PackageOpen } from 'lucide-react';
+import { Loader2, PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -17,6 +17,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Milestone, Story } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Page = () => {
   const { project_id } = useParams<{ project_id: string }>();
@@ -197,8 +198,25 @@ const Page = () => {
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center py-4">
-              <p>Loading milestones...</p>
+            <div className="w-full max-w-full">
+              <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading milestones...</span>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
+                <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
+
+                <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-[320px] w-full" />
+                </div>
+              </div>
             </div>
           ) : milestones.length > 0 ? (
             <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">

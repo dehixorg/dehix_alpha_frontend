@@ -168,7 +168,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
         {
           acceptanceFreelancer: true,
           rejectionFreelancer: false,
@@ -208,7 +208,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
         {
           acceptanceFreelancer: false,
           rejectionFreelancer: true,
