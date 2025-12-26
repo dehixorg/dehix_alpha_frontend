@@ -106,7 +106,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
                         {freelancer.freelancerName?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="truncate">{freelancer.freelancerName}</span>
+                    <span className="truncate">
+                      {freelancer.freelancerName}
+                    </span>
                   </div>
                 </div>
               )}
