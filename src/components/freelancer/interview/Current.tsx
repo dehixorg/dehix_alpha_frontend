@@ -1,26 +1,25 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { ListFilter, Search, Table } from 'lucide-react';
+import { Briefcase, GraduationCap, Search, Table } from 'lucide-react';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 import { useSelector } from 'react-redux';
 
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import DehixInterviews from '@/components/freelancer/dehix-talent-interview/DehixInterviews';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
@@ -118,149 +117,99 @@ export default function CurrentComponent() {
 
   return (
     <>
-      <Card className="border-none shadow-none">
-        <CardHeader className="px-0 pt-0">
-          <CardTitle className="text-xl sm:text-2xl">
-            Current Interviews
-          </CardTitle>
-          <CardDescription>
-            View and manage your current interviews, and update skills for
-            better matches.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-      <div className="flex flex-col flex-1 items-start gap-4 md:gap-6">
-        <div className="flex justify-between items-center w-full">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1  text-sm"
-              >
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only">Filter</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={filter === 'All'}
-                onSelect={() => setFilter('All')}
-              >
-                All
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Skills'}
-                onSelect={() => setFilter('Skills')}
-              >
-                Skills
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Domain'}
-                onSelect={() => setFilter('Domain')}
-              >
-                Domain
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <div className="flex justify-center gap-3 items-center">
-            <div className="relative flex-1 mr-2">
-              {!isFocused && (
-                <Search
-                  size="sm"
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 sm:block md:hidden ml-0.5 cursor-pointer"
-                  onClick={() => setIsFocused(true)}
-                />
-              )}
+      <div className="flex flex-col gap-4 md:gap-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="w-full sm:w-48">
+              <Select value={filter} onValueChange={(v) => setFilter(v as any)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All</SelectItem>
+                  <SelectItem value="Skills">Skills</SelectItem>
+                  <SelectItem value="Domain">Domain</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <Search
-                size="sm"
-                className={`absolute h-7 gap-1 text-sm left-2 top-1/2 transform -translate-y-1/2 w-5 text-gray-400 cursor-pointer 
-        ${isFocused ? 'sm:flex' : 'hidden md:flex'}`}
-              />
-
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search interview"
+                placeholder="Search interviews..."
                 value={searchQuery}
                 ref={inputRef}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                className={`pl-8 transition-all duration-300 ease-in-out
-          ${isFocused ? 'w-full sm:w-72' : 'w-0 sm:w-0 md:w-full'} sm:hidden `}
+                className="pl-9"
               />
-              <Input
-                placeholder="Search interview by..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                className="pl-8 hidden md:flex border focus-visible:ring-1  focus:ring-0 "
-              />
-            </div>
-
-            {!isFocused && (
-              <div className="gap-2 md:hidden flex">
-                <Button
-                  onClick={() => setIsTableView(true)}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 gap-1 text-sm"
-                >
-                  <Table className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  onClick={() => setIsTableView(false)}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 gap-1 text-sm"
-                >
-                  <BoxModelIcon className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            )}
-
-            <div className="gap-2 md:flex hidden">
-              <Button
-                onClick={() => setIsTableView(true)}
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1 text-sm"
-              >
-                <Table className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                onClick={() => setIsTableView(false)}
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1 text-sm"
-              >
-                <BoxModelIcon className="h-3.5 w-3.5" />
-              </Button>
             </div>
           </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setIsTableView(true)}
+              variant="outline"
+              size="sm"
+              className="h-9"
+            >
+              <Table className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => setIsTableView(false)}
+              variant="outline"
+              size="sm"
+              className="h-9"
+            >
+              <BoxModelIcon className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <div className="w-full flex justify-center items-center flex-col">
-          <div className="w-full space-y-8">
-            <div className="w-full">
-              <div className="mb-4">
-                <h2 className="text-2xl font-semibold ">
-                  Dehix Talent Interviews
-                </h2>
+
+        <Accordion type="single" collapsible defaultValue="dehix-talent">
+          <AccordionItem value="dehix-talent" className="border rounded-lg">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex w-full items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-9 w-9 place-items-center rounded-md bg-blue-500/10 text-blue-600">
+                    <GraduationCap className="h-5 w-5" />
+                  </div>
+                  <div className="text-left leading-tight">
+                    <div className="text-sm font-semibold">Dehix Talent</div>
+                    <div className="text-xs text-muted-foreground">
+                      Interviews from your Dehix Talent profile
+                    </div>
+                  </div>
+                </div>
               </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
               <DehixInterviews />
-            </div>
+            </AccordionContent>
+          </AccordionItem>
 
-            <div className="w-full">
-              <div className="mb-4">
-                <h2 className="text-2xl font-semibold ">Project Interviews</h2>
+          <AccordionItem value="projects" className="border rounded-lg mt-4">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex w-full items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-9 w-9 place-items-center rounded-md bg-emerald-500/10 text-emerald-600">
+                    <Briefcase className="h-5 w-5" />
+                  </div>
+                  <div className="text-left leading-tight">
+                    <div className="text-sm font-semibold">Projects</div>
+                    <div className="text-xs text-muted-foreground">
+                      Interviews scheduled for your projects
+                    </div>
+                  </div>
+                </div>
               </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
               <Projects />
-            </div>
-          </div>
-        </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </>
   );
