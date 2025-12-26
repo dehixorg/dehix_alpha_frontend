@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
+import { Briefcase } from 'lucide-react';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import {
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import EmptyState from '@/components/shared/EmptyState';
 
 type InterviewBid = {
   _id?: string;
@@ -333,91 +335,98 @@ const BidsPage = ({ userId }: { userId?: string }) => {
   };
 
   return (
-    <div className="w-[84vw] mx-auto ">
+    <div className="w-full">
       {loading ? (
         // Table skeleton
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Skill</TableHead>
-              <TableHead>Interviewee</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {[...Array(4)].map((_, idx) => (
-              <TableRow key={idx}>
-                <TableCell>
-                  <div className="h-4 w-28 bg-muted rounded" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-4 w-40 bg-muted rounded" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-4 w-24 bg-muted rounded" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-6 w-24 bg-muted rounded-full" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="h-8 w-8 bg-muted rounded-md inline-block" />
-                </TableCell>
+        <div className="w-full overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Skill</TableHead>
+                <TableHead>Interviewee</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      ) : bidsData?.length > 0 ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Skill</TableHead>
-              <TableHead>Interviewee</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {bidsData.map((interview) => (
-              <TableRow key={interview?._id}>
-                <TableCell className="font-medium">
-                  {interview?.skillName || 'Unknown Skill'}
-                </TableCell>
-                <TableCell>{interview?.intervieweeName || '-'}</TableCell>
-                <TableCell>
-                  {interview?.interviewDate
-                    ? new Date(interview.interviewDate).toLocaleDateString()
-                    : '-'}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">
-                    {interview?.InterviewStatus || 'BIDDING'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      setConfirmAction({
-                        interviewId: interview._id,
-                        action: 'PLACE_BID',
-                      })
-                    }
-                  >
-                    Place Bid
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      ) : (
-        <div className="text-center text-lg font-semibold mt-4">
-          No bids available
+            </TableHeader>
+            <TableBody>
+              {[...Array(4)].map((_, idx) => (
+                <TableRow key={idx}>
+                  <TableCell>
+                    <div className="h-4 w-28 bg-muted rounded" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-40 bg-muted rounded" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-24 bg-muted rounded" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-6 w-24 bg-muted rounded-full" />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="h-8 w-8 bg-muted rounded-md inline-block" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
+      ) : bidsData?.length > 0 ? (
+        <div className="w-full overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Skill</TableHead>
+                <TableHead>Interviewee</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bidsData.map((interview) => (
+                <TableRow key={interview?._id}>
+                  <TableCell className="font-medium">
+                    {interview?.skillName || 'Unknown Skill'}
+                  </TableCell>
+                  <TableCell>{interview?.intervieweeName || '-'}</TableCell>
+                  <TableCell>
+                    {interview?.interviewDate
+                      ? new Date(interview.interviewDate).toLocaleDateString()
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">
+                      {interview?.InterviewStatus || 'BIDDING'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setConfirmAction({
+                          interviewId: interview._id,
+                          action: 'PLACE_BID',
+                        })
+                      }
+                    >
+                      Place Bid
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <EmptyState
+          className="mt-6"
+          title="No interview bids yet"
+          description="When you have interviews open for bidding, they will show up here."
+          icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
+        />
       )}
 
       {confirmAction && (
