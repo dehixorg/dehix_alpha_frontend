@@ -10,12 +10,18 @@ import {
   CheckCircle2,
   XCircle,
   Clock4,
-  ChevronDown,
-  ChevronUp,
+  ArrowDownNarrowWide,
+  ArrowUpNarrowWide,
+  Trash2,
 } from 'lucide-react';
-import Image from 'next/image';
 
-import { Card } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,10 +33,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { notifyError } from '@/utils/toastMessage';
-import processInvitations from '@/utils/invitations/processInvitations';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import {
   ProjectInvitation,
@@ -49,6 +64,10 @@ const ProjectInvitationsPage: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [invitations, setInvitations] = useState<ProjectInvitation[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [inviteToDelete, setInviteToDelete] =
+    useState<ProjectInvitation | null>(null);
+  const [deletingInviteId, setDeletingInviteId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] =
     useState<InvitationStatusFilter>('ALL');
@@ -61,53 +80,38 @@ const ProjectInvitationsPage: React.FC = () => {
     const load = async () => {
       try {
         setLoading(true);
-        const [hiRes, pRes] = await Promise.all([
-          axiosInstance.get('/business/hire-dehixtalent'),
-          axiosInstance.get('/project/business'),
-        ]);
+        const res = await axiosInstance.get('/business/invite');
+        const rows = res?.data?.data || [];
 
-        const hires = hiRes?.data?.data || [];
-        const projects = pRes?.data?.data || [];
+        const mapped: ProjectInvitation[] = (rows as any[]).map((row: any) => {
+          const rawStatus = String(row?.status || 'PENDING').toUpperCase();
+          const status: InvitationStatus =
+            rawStatus === InvitationStatus.ACCEPTED
+              ? InvitationStatus.ACCEPTED
+              : rawStatus === InvitationStatus.REJECTED
+                ? InvitationStatus.REJECTED
+                : InvitationStatus.PENDING;
 
-        // Extract unique freelancer IDs from all hire documents
-        const freelancerIdsSet = new Set<string>();
-        for (const hire of hires) {
-          const freelancers = hire.freelancers || [];
-          for (const entry of freelancers) {
-            const freelancerId =
-              entry.freelancerId || entry.freelancer_id || entry.freelancer;
-            if (freelancerId) {
-              freelancerIdsSet.add(freelancerId);
-            }
-          }
-        }
+          return {
+            _id:
+              row?.inviteId ||
+              row?._id ||
+              `${row?.projectId}_${row?.freelancerId}_${row?.invitedAt}`,
+            projectId: row?.projectId,
+            projectName: row?.projectName || 'Untitled Project',
+            projectStatus: row?.projectStatus,
+            profileId: row?.profileId,
+            profileDomain: row?.profileName || row?.profileDomain,
+            freelancerId: row?.freelancerId,
+            freelancerName: row?.freelancerName || 'Unknown',
+            freelancerProfilePic: row?.freelancerProfilePic,
+            status,
+            invitedAt: row?.invitedAt || new Date().toISOString(),
+            respondedAt: row?.respondedAt,
+          };
+        });
 
-        // Fetch freelancer details using batch API
-        const freelancersMap: Record<string, any> = {};
-        const freelancerIds = Array.from(freelancerIdsSet);
-
-        if (freelancerIds.length > 0) {
-          try {
-            const idsParam = JSON.stringify(freelancerIds);
-            const freelancerRes = await axiosInstance.get('/public/user_id', {
-              params: { user_ids: idsParam },
-            });
-            const freelancersData = freelancerRes?.data?.data || [];
-
-            // Build freelancersMap
-            for (const freelancer of freelancersData) {
-              if (freelancer._id) {
-                freelancersMap[freelancer._id] = freelancer;
-              }
-            }
-          } catch (freelancerErr) {
-            console.warn('Failed to fetch freelancer details:', freelancerErr);
-            // Continue with empty map
-          }
-        }
-
-        const processed = processInvitations(hires, projects, freelancersMap);
-        setInvitations(processed);
+        setInvitations(mapped);
       } catch (err: any) {
         console.error('Failed to load invitations', err);
         notifyError(err?.message || 'Failed to load invitations', 'Error');
@@ -124,7 +128,7 @@ const ProjectInvitationsPage: React.FC = () => {
     if (search) {
       const q = search.toLowerCase();
       arr = arr.filter((inv) =>
-        [inv.projectName, inv.profileDomain, inv.freelancerName]
+        [inv.projectName, inv.profileDomain || '', inv.freelancerName]
           .join(' ')
           .toLowerCase()
           .includes(q),
@@ -147,6 +151,26 @@ const ProjectInvitationsPage: React.FC = () => {
     });
     return arr;
   }, [invitations, search, statusFilter, sortBy, sortDir]);
+
+  const handleDeleteInvite = async () => {
+    if (!inviteToDelete?._id) return;
+    const inviteId = inviteToDelete._id;
+
+    setDeletingInviteId(inviteId);
+    try {
+      await axiosInstance.delete(`/business/invite/${inviteId}`);
+      setInvitations((prev) => prev.filter((i) => i._id !== inviteId));
+      notifySuccess('Invitation deleted successfully');
+      setDeleteDialogOpen(false);
+      setInviteToDelete(null);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message || 'Failed to delete invitation';
+      notifyError(errorMessage);
+    } finally {
+      setDeletingInviteId(null);
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-full">
@@ -255,9 +279,9 @@ const ProjectInvitationsPage: React.FC = () => {
                     className="h-9 w-9"
                   >
                     {sortDir === 'asc' ? (
-                      <ChevronUp className="h-4 w-4" />
+                      <ArrowUpNarrowWide className="h-4 w-4" />
                     ) : (
-                      <ChevronDown className="h-4 w-4" />
+                      <ArrowDownNarrowWide className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
@@ -324,25 +348,27 @@ const ProjectInvitationsPage: React.FC = () => {
               {filtered.map((inv) => (
                 <Card
                   key={inv._id}
-                  className="overflow-hidden hover:shadow-md transition-shadow"
+                  className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5"
                 >
-                  <div className="p-5 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
+                  <CardHeader className="p-4 pb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="relative">
-                          {inv.freelancerProfilePic ? (
-                            <Image
-                              width={40}
-                              height={40}
-                              src={inv.freelancerProfilePic}
+                          <Avatar className="h-10 w-10 border">
+                            <AvatarImage
+                              src={inv.freelancerProfilePic || ''}
                               alt={inv.freelancerName}
-                              className="w-10 h-10 rounded-full object-cover border"
                             />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center">
-                              <User className="w-5 h-5 text-muted-foreground" />
-                            </div>
-                          )}
+                            <AvatarFallback>
+                              {(inv.freelancerName || 'U')
+                                .split(' ')
+                                .filter(Boolean)
+                                .slice(0, 2)
+                                .map((p) => p[0])
+                                .join('')
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
                           <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-background flex items-center justify-center">
                             {inv.status === InvitationStatus.ACCEPTED ? (
                               <CheckCircle2 className="w-3 h-3 text-green-500 fill-green-500/20" />
@@ -353,65 +379,166 @@ const ProjectInvitationsPage: React.FC = () => {
                             )}
                           </div>
                         </div>
-                        <div>
-                          <h3 className="font-medium">{inv.freelancerName}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {inv.profileDomain}
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CardTitle className="text-base truncate">
+                              {inv.freelancerName}
+                            </CardTitle>
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {inv.profileDomain || 'Profile'}
                           </p>
                         </div>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          statusOutlineClasses(inv.status),
-                          'text-xs h-6 px-2 py-0.5',
-                        )}
-                      >
-                        {inv.status}
-                      </Badge>
-                    </div>
 
-                    <div className="space-y-2">
-                      <h4 className="font-medium">{inv.projectName}</h4>
-                      {inv.projectStatus && (
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {inv.projectStatus.toLowerCase()}
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            statusOutlineClasses(inv.status),
+                            'text-xs h-6 px-2 py-0.5 whitespace-nowrap',
+                          )}
+                        >
+                          {inv.status}
                         </Badge>
-                      )}
-                      {inv.profileDescription && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {inv.profileDescription}
-                        </p>
-                      )}
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="p-4 pt-0">
+                    <div
+                      className="group rounded-lg border bg-gradient p-4 cursor-pointer transition-colors hover:bg-muted/20"
+                      onClick={() =>
+                        router.push(`/business/project/${inv.projectId}`)
+                      }
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          router.push(`/business/project/${inv.projectId}`);
+                        }
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                            Project
+                          </div>
+                          <div className="mt-0.5 text-sm leading-snug truncate">
+                            {inv.projectName}
+                          </div>
+                        </div>
+
+                        {inv.projectStatus && (
+                          <div className="flex items-center gap-2 whitespace-nowrap">
+                            <span
+                              className={cn(
+                                'h-2.5 w-2.5 rounded-full',
+                                inv.projectStatus?.toUpperCase() === 'ACTIVE' &&
+                                  'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]',
+                                inv.projectStatus?.toUpperCase() ===
+                                  'PENDING' &&
+                                  'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)]',
+                                inv.projectStatus?.toUpperCase() ===
+                                  'COMPLETED' &&
+                                  'bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]',
+                                !['ACTIVE', 'PENDING', 'COMPLETED'].includes(
+                                  inv.projectStatus?.toUpperCase() || '',
+                                ) &&
+                                  'bg-slate-400 shadow-[0_0_12px_rgba(148,163,184,0.7)]',
+                              )}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="w-4 h-4 mr-1.5" />
-                        <span>
-                          {new Date(inv.invitedAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </span>
-                      </div>
+                    {inv.profileDescription && (
+                      <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
+                        {inv.profileDescription}
+                      </p>
+                    )}
+                  </CardContent>
+
+                  <Separator />
+
+                  <CardFooter className="p-4 pt-3 justify-between">
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Calendar className="w-4 h-4 mr-1.5" />
+                      <span>
+                        {new Date(inv.invitedAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <Button
-                        variant="outline"
+                        variant="destructive"
                         size="sm"
-                        onClick={() =>
-                          router.push(`/business/project/${inv.projectId}`)
-                        }
+                        onClick={() => {
+                          setInviteToDelete(inv);
+                          setDeleteDialogOpen(true);
+                        }}
                       >
-                        View Project
+                        <Trash2 className="h-4 w-4" />
+                        Delete
                       </Button>
                     </div>
-                  </div>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
           )}
         </main>
       </div>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) setInviteToDelete(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Delete invitation?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete the invitation for{' '}
+              <span className="font-medium text-foreground">
+                {inviteToDelete?.freelancerName || 'this freelancer'}
+              </span>{' '}
+              on project{' '}
+              <span className="font-medium text-foreground">
+                {inviteToDelete?.projectName || 'this project'}
+              </span>
+              .
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={!!deletingInviteId}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteInvite}
+              disabled={
+                !inviteToDelete?._id || deletingInviteId === inviteToDelete?._id
+              }
+            >
+              {deletingInviteId === inviteToDelete?._id
+                ? 'Deleting...'
+                : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

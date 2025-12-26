@@ -78,7 +78,7 @@ interface DehixTalent {
   talentName?: string;
   domainName?: string;
   experience: string;
-  monthlyPay: string;
+  talentMonthlyPay: string;
   status: HireDehixTalentStatusEnum;
   activeStatus: boolean;
 }
@@ -88,7 +88,7 @@ interface Talent {
   Name: string;
   userName: string;
   profilePic: string;
-  dehixTalent: DehixTalent;
+  talent: DehixTalent;
   Github: any;
   LinkedIn: any;
   education?: Record<string, Education>;
@@ -375,7 +375,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
       <div className="flex flex-wrap mt-4 justify-center gap-4">
         {/* Map directly over 'talents' instead of 'filteredTalents' */}
         {talents.map((talent) => {
-          const talentEntry = talent.dehixTalent;
+          const talentEntry = talent.talent;
           const education = talent.education;
           const projects = talent.projects;
           // const label = talentEntry.skillName ? 'Skill' : 'Domain';
@@ -436,7 +436,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                         Monthly Pay
                       </p>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        ${talentEntry.monthlyPay}
+                        ${talentEntry.talentMonthlyPay}
                       </p>
                     </div>
                   </div>
@@ -554,7 +554,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                   Monthly Pay
                                 </p>
                                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                  ${talentEntry.monthlyPay}
+                                  ${talentEntry.talentMonthlyPay}
                                 </p>
                               </div>
                             </div>

@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Copy,
-  ChevronsUpDown,
-  Plus,
-  Info,
-  FileText,
-  Link as LinkIcon,
-} from 'lucide-react';
+import { Plus, Info, FileText } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -28,26 +21,12 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { getStatusBadge } from '@/utils/statusBadge';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import { Task } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
@@ -77,8 +56,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
 
   const taskCount = story?.tasks?.length || 0;
 
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState('');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [actedUponTasks, setActedUponTasks] = useState<Set<string>>(new Set());
 
@@ -295,20 +272,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     }
   };
 
-  const handleCopy = (url: string) => {
-    navigator.clipboard.writeText(url);
-    notifySuccess('URL copied!!');
-    setOpen(false);
-    setValue('');
-  };
-
-  const truncateDescription = (text: string, maxLength = 50) => {
-    if (text?.length > maxLength) {
-      return text.slice(0, maxLength) + '...';
-    }
-    return text;
-  };
-
   return (
     <AccordionItem
       key={story._id}
@@ -354,67 +317,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               </PopoverContent>
             </Popover>
           </div>
-          <span className="text-sm flex items-center gap-3">
-            {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
-              ? story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
-                !story?.tasks[0]?.freelancers[0]
-                  ?.updatePermissionFreelancer && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-yellow-500 rounded-full flex w-2 h-2 bg-yellow-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Update requested</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )
-              : !story?.tasks?.[0]?.freelancers?.[0]
-                  ?.updatePermissionBusiness &&
-                story?.tasks?.[0]?.freelancers?.[0]
-                  ?.updatePermissionFreelancer && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-yellow-500 rounded-full flex w-2 h-2 bg-yellow-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Update requested</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-            {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
-              ? story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
-                story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-green-500 rounded-full flex w-2 h-2 bg-green-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Request approved</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )
-              : story?.tasks?.[0]?.freelancers?.[0]
-                  ?.updatePermissionFreelancer &&
-                story?.tasks?.[0]?.freelancers?.[0]
-                  ?.updatePermissionBusiness && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-green-500 rounded-full flex w-2 h-2 bg-green-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Request approved</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-          </span>
           <Badge
             className={`${profileTypeOutlineClasses(projectStatus)} hidden md:flex rounded-full`}
           >
@@ -422,9 +324,9 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           </Badge>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="w-full px-4 py-4 sm:px-6 sm:py-4 md:px-8 md:py-6 lg:px-10 lg:py-8">
-        <div className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border border-border">
-          <div className="px-6 py-4 space-y-4">
+      <AccordionContent className="w-full px-4 sm:px-6 md:px-8 lg:px-10">
+        <div className="p-2 bg-card text-card-foreground rounded-lg border border-border">
+          <div className="p-2">
             <div className="space-y-1">
               <Badge
                 className={`${profileTypeOutlineClasses(projectStatus)} block md:hidden text-xs md:text-sm rounded-full`}
@@ -432,107 +334,10 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               >
                 {projectStatus}
               </Badge>
-              <div className="space-y-4 hidden md:flex justify-start items-center gap-4">
-                <h4 className="text-lg md:text-xl font-semibold mt-2">
-                  Important URLs:
-                </h4>
-                <Separator orientation="vertical" className="h-8" />
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={open}
-                      className="w-[300px] justify-between"
-                    >
-                      {truncateDescription(value, 23) ||
-                        'Select or search URL...'}
-                      <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[300px] p-0">
-                    <Command>
-                      <CommandInput
-                        placeholder="Search URL..."
-                        className="h-9"
-                      />
-                      <CommandList>
-                        <CommandEmpty>No URL found.</CommandEmpty>
-                        <CommandGroup>
-                          {story.importantUrls.map(
-                            (url: { urlName: string; url: string }) => (
-                              <CommandItem
-                                key={url.urlName}
-                                value={url.urlName}
-                                className="cursor-pointer"
-                                onSelect={() => {
-                                  setValue(url.urlName);
-                                  setOpen(false);
-                                }}
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <LinkIcon className="w-4 h-4 opacity-70" />
-                                  <span className="truncate">
-                                    {truncateDescription(url.urlName, 28)}
-                                  </span>
-                                </div>
-                                <div className="ml-auto flex items-center gap-1">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="cursor-pointer"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            window.open(
-                                              url.url,
-                                              '_blank',
-                                              'noopener,noreferrer',
-                                            );
-                                          }}
-                                          aria-label="Open link"
-                                        >
-                                          <FileText className="w-4 h-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Open link</TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="cursor-pointer"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleCopy(url.url);
-                                          }}
-                                          aria-label="Copy URL"
-                                        >
-                                          <Copy className="w-4 h-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Copy URL</TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              </CommandItem>
-                            ),
-                          )}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
             </div>
             {story?.tasks?.length > 0 ? (
               <div className="bg-transparent">
-                <div className="flex justify-between items-center px-3 mt-4">
+                <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <h4 className="text-lg md:text-xl font-semibold">Tasks</h4>
                     <Badge variant="secondary" className="rounded-full">

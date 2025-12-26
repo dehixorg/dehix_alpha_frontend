@@ -18,8 +18,8 @@ export interface ProjectInvitation {
   projectId: string;
   projectName: string;
   projectStatus?: string;
-  profileId: string;
-  profileDomain: string;
+  profileId?: string;
+  profileDomain?: string;
   profileDescription?: string;
   freelancerId: string;
   freelancerName: string;
@@ -28,6 +28,6 @@ export interface ProjectInvitation {
   status: InvitationStatus;
   invitedAt: string | Date;
   respondedAt?: string | Date;
-  hireId: string;
-  freelancerEntryId: string;
+  hireId?: string;
+  freelancerEntryId?: string;
 }

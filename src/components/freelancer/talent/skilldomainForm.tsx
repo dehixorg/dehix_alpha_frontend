@@ -372,7 +372,7 @@ const SkillDomainForm: React.FC = () => {
                   </>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-12 text-center">
+                    <TableCell colSpan={8} className="py-12 text-center">
                       <div className="flex flex-col items-center space-y-4">
                         <svg
                           width="120"
