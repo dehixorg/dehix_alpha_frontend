@@ -122,7 +122,6 @@ export default function ProfileDetailPage() {
     getNameById: (id: string) => string;
     onAdd: (value: string) => void;
     onRemove: (name: string) => void;
-    editOptions?: any[];
   }) => (
     <div className="space-y-2">
       <Label className="flex items-center gap-2">
@@ -1043,7 +1042,6 @@ export default function ProfileDetailPage() {
                     title="Skills"
                     Icon={Award}
                     options={freelancerSkillsOptions}
-                    editOptions={freelancerSkillsOptions}
                     selectedIds={editingProfileData.skills || []}
                     getNameById={getSkillNameById}
                     onAdd={(value: string) => {
@@ -1077,7 +1075,6 @@ export default function ProfileDetailPage() {
                     title="Domains"
                     Icon={Layers}
                     options={freelancerDomainsOptions}
-                    editOptions={freelancerDomainsOptions}
                     selectedIds={editingProfileData.domains || []}
                     getNameById={getDomainNameById}
                     onAdd={(value: string) => {
