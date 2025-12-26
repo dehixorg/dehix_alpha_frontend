@@ -5,6 +5,12 @@ import { BoxModelIcon } from '@radix-ui/react-icons';
 import { useSelector } from 'react-redux';
 
 import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -112,18 +118,18 @@ export default function CurrentComponent() {
 
   return (
     <>
-      <div className="ml-5 md:ml-10 mr-5 md:mr-10">
-        <div className="w-full rounded-xl p-5 md:p-6 border bg-transparent text-foreground">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+      <Card className="border-none shadow-none">
+        <CardHeader className="px-0 pt-0">
+          <CardTitle className="text-xl sm:text-2xl">
             Current Interviews
-          </h1>
-          <p className="mt-2 text-muted-foreground">
+          </CardTitle>
+          <CardDescription>
             View and manage your current interviews, and update skills for
             better matches.
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-col flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      <div className="flex flex-col flex-1 items-start gap-4 md:gap-6">
         <div className="flex justify-between items-center w-full">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

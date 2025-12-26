@@ -7,6 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import EmptyState from '@/components/shared/EmptyState';
 // import CurrentInterviews from '@/components/freelancer/scheduleInterview/CurrentInterviews';
 // import BidedInterviews from '@/components/freelancer/scheduleInterview/BidedInterviews';
 
@@ -30,9 +31,14 @@ export default function InterviewsPage() {
           </AccordionTrigger>
           <AccordionContent>
             <div className="text-center py-8">
-              <p className="text-gray-600 dark:text-gray-400">
-                No current interviews scheduled.
-              </p>
+              <EmptyState
+                title="No project interviews scheduled"
+                description="Once an interview is scheduled for a project, it will appear here."
+                icon={
+                  <GraduationCap className="h-12 w-12 text-muted-foreground" />
+                }
+                className="bg-transparent border-dashed"
+              />
             </div>
           </AccordionContent>
         </AccordionItem>
