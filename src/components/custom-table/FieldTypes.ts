@@ -117,9 +117,8 @@ export interface Params {
   }>;
 }
 
-export interface FieldComponentProps<
-  T,
-> extends CustomTableChildComponentsProps {
+export interface FieldComponentProps<T>
+  extends CustomTableChildComponentsProps {
   value: T;
   fieldData: Field;
   id: string;
