@@ -24,19 +24,17 @@ import CompletedInterviews from '@/components/freelancer/interview/CompletedInte
 import Bids from '@/components/freelancer/interview/Bids';
 import { RootState } from '@/lib/store';
 
-export default function InterviewPage() {
+export default function InterviewerPage() {
   const params = useParams();
   const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
 
-  // slug will be [] or ["profile"], ["current"], ["bids"], ["history"]
   const slug = Array.isArray(params?.slug) ? params.slug : [];
   const activeTab = slug[0] || 'profile';
 
-  // Redirect plain /interview → /interview/profile
   useEffect(() => {
     if (slug.length === 0) {
-      router.replace('/freelancer/interview/profile');
+      router.replace('/freelancer/interviewer/profile');
     }
   }, [slug, router]);
 
@@ -53,7 +51,7 @@ export default function InterviewPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Interviews"
           breadcrumbItems={[
-            { label: 'Interview', link: '/freelancer/interview/profile' },
+            { label: 'Interviewer', link: '/freelancer/interviewer/profile' },
           ]}
         />
         <main className="flex-1 px-4 sm:px-6 sm:py-2">
@@ -72,7 +70,7 @@ export default function InterviewPage() {
                 <Tabs
                   value={activeTab}
                   onValueChange={(val) =>
-                    router.push(`/freelancer/interview/${val}`)
+                    router.push(`/freelancer/interviewer/${val}`)
                   }
                   className="w-full"
                 >

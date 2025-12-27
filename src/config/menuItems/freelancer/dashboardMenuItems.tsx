@@ -58,12 +58,12 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Analytics',
   },
   {
-    href: '/freelancer/interview',
+    href: '/freelancer/interviewer',
     icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
   },
   {
-    href: '/freelancer/interview/schedule',
+    href: '/freelancer/interviewee/current',
     icon: <CalendarClock className="h-5 w-5" />,
     label: 'Schedule Interviews',
   },
