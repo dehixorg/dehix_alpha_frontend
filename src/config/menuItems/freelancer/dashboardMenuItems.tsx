@@ -12,6 +12,7 @@ import {
   Archive,
   StickyNote,
   Trash2,
+  Trophy,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -50,6 +51,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '#',
     icon: <LineChart className="h-5 w-5 cursor-not-allowed" />,
     label: 'Analytics',
+  },
+  {
+    href: '/freelancer/leaderboard',
+    icon: <Trophy className="h-5 w-5" />,
+    label: 'Leaderboard',
   },
   {
     href: '/freelancer/interview',
