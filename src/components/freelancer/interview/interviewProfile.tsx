@@ -85,9 +85,8 @@ const InterviewProfile: React.FC = () => {
   const [applyTab, setApplyTab] = useState<'skill' | 'domain'>('skill');
 
   const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
-  const [scheduleAttribute, setScheduleAttribute] = useState<VerifiedAttribute | null>(
-    null,
-  );
+  const [scheduleAttribute, setScheduleAttribute] =
+    useState<VerifiedAttribute | null>(null);
   const [interviewDateLocal, setInterviewDateLocal] = useState('');
   const [interviewDescription, setInterviewDescription] = useState('');
   const [scheduling, setScheduling] = useState(false);
