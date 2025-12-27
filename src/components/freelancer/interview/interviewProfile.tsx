@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, Sparkles } from 'lucide-react';
+import { CalendarPlus, CheckCircle, Clock, Plus, Sparkles } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import EmptyState from '@/components/shared/EmptyState';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -43,8 +45,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import type { RootState } from '@/lib/store';
 
 const InterviewProfile: React.FC = () => {
+  const user = useSelector((state: RootState) => state.user);
+
   interface VerifiedAttribute {
     _id: string;
     type: 'SKILL' | 'DOMAIN' | string;
@@ -79,6 +84,15 @@ const InterviewProfile: React.FC = () => {
   const [openApplyDialog, setOpenApplyDialog] = useState(false);
   const [applyTab, setApplyTab] = useState<'skill' | 'domain'>('skill');
 
+  const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
+  const [scheduleAttribute, setScheduleAttribute] = useState<VerifiedAttribute | null>(
+    null,
+  );
+  const [interviewDateLocal, setInterviewDateLocal] = useState('');
+  const [interviewDescription, setInterviewDescription] = useState('');
+  const [scheduling, setScheduling] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const visibleAttributes = useMemo(
     () =>
       verifiedAttributes.filter(
@@ -107,33 +121,34 @@ const InterviewProfile: React.FC = () => {
     [verifiedAttributes],
   );
 
-  useEffect(() => {
-    const fetchVerifiedAttributes = async () => {
-      setInterviewerLoading(true);
-      try {
-        const res = await axiosInstance.get(
-          `/freelancer/dehix-talent/attributes/verified`,
+  const fetchVerifiedAttributes = async () => {
+    setInterviewerLoading(true);
+    try {
+      const res = await axiosInstance.get(
+        `/freelancer/dehix-talent/attributes/verified`,
+      );
+
+      const items: VerifiedAttribute[] = res?.data?.data || [];
+      setVerifiedAttributes(items);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        setVerifiedAttributes([]);
+      } else {
+        console.error('Error fetching verified attributes:', error);
+        notifyError(
+          'Failed to fetch verified Dehix talent attributes. Please try again later.',
+          'Error',
         );
-
-        const items: VerifiedAttribute[] = res?.data?.data || [];
-        setVerifiedAttributes(items);
-      } catch (error: any) {
-        if (error?.response?.status === 404) {
-          setVerifiedAttributes([]);
-        } else {
-          console.error('Error fetching verified attributes:', error);
-          notifyError(
-            'Failed to fetch verified Dehix talent attributes. Please try again later.',
-            'Error',
-          );
-        }
-      } finally {
-        setInterviewerLoading(false);
       }
-    };
+    } finally {
+      setInterviewerLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchVerifiedAttributes();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   const handleApplyAsInterviewer = async (
     attributeId: string,
@@ -232,6 +247,87 @@ const InterviewProfile: React.FC = () => {
     setOpenApplyDialog(true);
   };
 
+  const openSchedule = (attribute: VerifiedAttribute) => {
+    setScheduleAttribute(attribute);
+    setInterviewDateLocal('');
+    setInterviewDescription('');
+    setOpenScheduleDialog(true);
+  };
+
+  const handleScheduleInterview = async () => {
+    const attribute = scheduleAttribute;
+    const intervieweeId = String(user?.uid || '').trim();
+    const creatorId = String(attribute?.freelancerProfileId || '').trim();
+    const talentType = String(attribute?.type || '').toUpperCase();
+
+    if (!attribute?._id) {
+      notifyError('Missing attribute data.', 'Error');
+      return;
+    }
+
+    if (!intervieweeId) {
+      notifyError('Please login to schedule an interview.', 'Error');
+      return;
+    }
+
+    if (!creatorId) {
+      notifyError('Missing creator id for scheduling.', 'Error');
+      return;
+    }
+
+    if (!attribute.type_id) {
+      notifyError('Missing talent id.', 'Error');
+      return;
+    }
+
+    if (talentType !== 'SKILL' && talentType !== 'DOMAIN') {
+      notifyError('Missing or invalid talent type.', 'Error');
+      return;
+    }
+
+    if (!interviewDateLocal) {
+      notifyError('Please select an interview date.', 'Error');
+      return;
+    }
+
+    const interviewDate = new Date(interviewDateLocal);
+    if (Number.isNaN(interviewDate.getTime())) {
+      notifyError('Invalid interview date.', 'Error');
+      return;
+    }
+
+    setScheduling(true);
+    try {
+      await axiosInstance.post('/interview', {
+        creatorId,
+        intervieweeId,
+        interviewType: 'INTERVIEWER',
+        talentType,
+        talentId: attribute.type_id,
+        interviewDate: interviewDate.toISOString(),
+        description: interviewDescription?.trim() || undefined,
+      });
+
+      setVerifiedAttributes((prev) =>
+        prev.map((a) =>
+          a._id === attribute._id ? { ...a, interviewerStatus: 'APPLIED' } : a,
+        ),
+      );
+
+      notifySuccess('Interview scheduled successfully.', 'Success');
+      setOpenScheduleDialog(false);
+      setRefreshKey((k) => k + 1);
+    } catch (error: any) {
+      console.error('Error scheduling interview:', error);
+      const message =
+        error?.response?.data?.message ||
+        'Failed to schedule interview. Please try again later.';
+      notifyError(message, 'Error');
+    } finally {
+      setScheduling(false);
+    }
+  };
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="gap-3 border-b">
@@ -261,6 +357,68 @@ const InterviewProfile: React.FC = () => {
       </CardHeader>
 
       <CardContent className="p-0">
+        <Dialog open={openScheduleDialog} onOpenChange={setOpenScheduleDialog}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Schedule interview</DialogTitle>
+              <DialogDescription>
+                Choose an interview date and optionally add a description.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label>Talent</Label>
+                <div className="text-sm text-muted-foreground">
+                  {scheduleAttribute
+                    ? `${scheduleAttribute.name} (${String(scheduleAttribute.type).toUpperCase()})`
+                    : '-'}
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="interviewDate">Interview date</Label>
+                <Input
+                  id="interviewDate"
+                  type="datetime-local"
+                  value={interviewDateLocal}
+                  onChange={(e) => setInterviewDateLocal(e.target.value)}
+                  disabled={scheduling}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description (optional)</Label>
+                <Textarea
+                  id="description"
+                  value={interviewDescription}
+                  onChange={(e) => setInterviewDescription(e.target.value)}
+                  placeholder="Add any notes for the interview (optional)"
+                  disabled={scheduling}
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setOpenScheduleDialog(false)}
+                disabled={scheduling}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleScheduleInterview}
+                disabled={scheduling || !interviewDateLocal}
+              >
+                {scheduling ? 'Submitting...' : 'Submit'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={openApplyDialog} onOpenChange={setOpenApplyDialog}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
@@ -491,6 +649,9 @@ const InterviewProfile: React.FC = () => {
                     <TableHead className="text-xs font-semibold">
                       Active
                     </TableHead>
+                    <TableHead className="text-xs font-semibold text-center">
+                      Interview
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -537,6 +698,40 @@ const InterviewProfile: React.FC = () => {
                           }
                           aria-label="Toggle interviewer active status"
                         />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {(() => {
+                          const s = String(a.interviewerStatus).toUpperCase();
+                          if (s === 'APPROVED') {
+                            return (
+                              <CheckCircle
+                                className="inline-block h-4 w-4 text-emerald-600"
+                                aria-label="Approved"
+                              />
+                            );
+                          }
+
+                          if (s === 'APPLIED') {
+                            return (
+                              <Clock
+                                className="inline-block h-4 w-4 text-amber-600"
+                                aria-label="Applied"
+                              />
+                            );
+                          }
+
+                          return (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => openSchedule(a)}
+                              aria-label="Schedule interview"
+                            >
+                              <CalendarPlus className="h-4 w-4" />
+                            </Button>
+                          );
+                        })()}
                       </TableCell>
                     </TableRow>
                   ))}
