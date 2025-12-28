@@ -241,11 +241,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
           />
         );
 
-      const FiltersPanel = ({
-        onReset,
-      }: {
-        onReset: () => void;
-      }) => (
+      const FiltersPanel = ({ onReset }: { onReset: () => void }) => (
         <div className="border rounded-lg flex flex-col">
           <div className="bg-gradient border-b p-4 rounded-t-lg">
             <div className="flex items-center justify-between mb-2">
@@ -273,7 +269,10 @@ const TalentContent: React.FC<TalentContentProps> = ({
               defaultValue={['status', 'talent']}
               className="space-y-4 pb-2"
             >
-              <AccordionItem value="status" className="border p-3 rounded-lg card">
+              <AccordionItem
+                value="status"
+                className="border p-3 rounded-lg card"
+              >
                 <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">Status</span>
@@ -363,7 +362,10 @@ const TalentContent: React.FC<TalentContentProps> = ({
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="talent" className="border p-3 rounded-lg card">
+              <AccordionItem
+                value="talent"
+                className="border p-3 rounded-lg card"
+              >
                 <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">Talent</span>
@@ -489,11 +491,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
     return null;
   };
 
-  return (
-    <>
-      {renderCards()}
-    </>
-  );
+  return <>{renderCards()}</>;
 };
 
 export default TalentContent;
