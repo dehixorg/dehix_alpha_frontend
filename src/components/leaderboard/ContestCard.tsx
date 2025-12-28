@@ -1,4 +1,6 @@
 import React from 'react';
+import { Calendar, Users, Trophy, Award, Crown, Medal } from 'lucide-react';
+
 import {
   Card,
   CardHeader,
@@ -8,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Trophy, Award, Crown, Medal } from 'lucide-react';
 import { FullLeaderboard } from '@/types/leaderboard';
 
 // Helper Functions
@@ -155,9 +156,9 @@ export function ContestCard({
         </div>
 
         {/* Participate Button */}
-        <Button 
-          className="w-full" 
-          variant={leaderboard.isJoined ? "outline" : "default"}
+        <Button
+          className="w-full"
+          variant={leaderboard.isJoined ? 'outline' : 'default'}
           onClick={() => onParticipate(leaderboard._id)}
         >
           {leaderboard.isJoined ? 'View Details' : 'Participate Now'}

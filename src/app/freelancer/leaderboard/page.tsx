@@ -8,11 +8,7 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
-import {
-  Card,
-  CardHeader,
-  CardContent,
-} from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -77,7 +73,7 @@ export default function LeaderboardPage() {
     setError(null);
     try {
       const response = await axiosInstance.get('/leaderboard/current');
-      
+
       // Data is now an array
       const data = response.data.data;
       if (Array.isArray(data)) {
@@ -85,7 +81,6 @@ export default function LeaderboardPage() {
       } else {
         setLeaderboards([]);
       }
-      
     } catch (err: any) {
       console.error('Error loading leaderboard:', err);
       const errorMessage =
@@ -172,7 +167,7 @@ export default function LeaderboardPage() {
                 <TabsTrigger value="biweekly">Bi-weekly</TabsTrigger>
                 <TabsTrigger value="monthly">Monthly</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="weekly">
                 {weeklyLeaderboards.length === 0 ? (
                   <EmptyState />
