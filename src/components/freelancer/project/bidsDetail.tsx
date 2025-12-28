@@ -13,6 +13,7 @@ import {
   UserCircle,
   Clock,
   DollarSign,
+  MoreVertical,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -32,11 +33,25 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CustomTable } from '@/components/custom-table/CustomTable';
-import { FieldType } from '@/components/custom-table/FieldTypes';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
 import StatItem from '@/components/shared/StatItem';
 import { formatCurrency } from '@/utils/format';
@@ -139,7 +154,7 @@ const BID_STATUS_FORMATS = [
     bgColor: '#2563EB',
     textColor: '#FFFFFF',
   },
-];
+] as const;
 
 // Memoized components
 const FreelancerAvatar = React.memo(
@@ -1141,178 +1156,242 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     [handleUpdateStatus],
   );
 
-  // Create table configuration
-  const createTableConfig = useCallback(
-    (status: BidStatus): any => ({
-      uniqueId: '_id',
-      data: bids.filter((bid) => bid.bid_status === status),
-      searchColumn: ['userName', 'current_price', 'description'],
-      searchPlaceholder: 'Search by username, bid amount etc...',
-      fields: [
-        {
-          textValue: 'Freelancer',
-          type: FieldType.CUSTOM,
-          className: 'text-left',
-          CustomComponent: ({ data }: { data: any }) => {
-            const freelancer = data?.freelancer;
-            const userName =
-              data?.userName || freelancer?.userName || 'Unknown';
-            const fullName =
-              freelancer?.firstName && freelancer?.lastName
-                ? `${freelancer.firstName} ${freelancer.lastName}`.trim()
-                : userName;
+  const statusFormatMap = useMemo(() => {
+    return BID_STATUS_FORMATS.reduce(
+      (acc, s) => {
+        acc[s.value] = s;
+        return acc;
+      },
+      {} as Record<BidStatus, (typeof BID_STATUS_FORMATS)[number]>,
+    );
+  }, []);
 
-            return (
-              <div className="flex items-center gap-3 justify-start">
-                <FreelancerAvatar
-                  profilePic={freelancer?.profilePic}
-                  userName={userName}
-                />
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                    {fullName}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    @{userName}
-                  </p>
-                </div>
-              </div>
-            );
-          },
-        },
-        {
-          textValue: 'Bid Amount',
-          type: FieldType.CUSTOM,
-          CustomComponent: ({ data }: { data: any }) => (
-            <div className="text-center">
-              <span className="font-medium text-green-400">
-                ${data?.current_price || 'N/A'}
-              </span>
+  const renderStatusBadge = (status: BidStatus) => {
+    const fmt = statusFormatMap[status];
+    if (!fmt) {
+      return (
+        <Badge variant="outline" className="text-xs">
+          {status}
+        </Badge>
+      );
+    }
+
+    return (
+      <Badge
+        className="text-xs"
+        style={{ backgroundColor: fmt.bgColor, color: fmt.textColor }}
+      >
+        {fmt.textValue}
+      </Badge>
+    );
+  };
+
+  const BidsTable = ({ status }: { status: BidStatus }) => {
+    const rows = bids.filter((bid) => bid.bid_status === status);
+
+    if (rows.length === 0) {
+      return (
+        <div className="py-10">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <PackageOpen className="h-10 w-10 text-muted-foreground" />
+            <div className="text-sm font-medium">No bids in this stage</div>
+            <div className="text-sm text-muted-foreground">
+              When bids move to {status.toLowerCase()}, they will show up here.
             </div>
-          ),
-        },
-        {
-          textValue: 'Profile Used',
-          type: FieldType.CUSTOM,
-          CustomComponent: ({ data }: { data: any }) => {
-            const freelancerProfile = data?.freelancer_profile_id;
+          </div>
+        </div>
+      );
+    }
 
-            if (!freelancerProfile) {
-              return (
-                <div className="text-center">
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">
-                    No profile selected
-                  </span>
-                </div>
-              );
-            }
-
-            return (
-              <div className="text-center">
-                <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                  {freelancerProfile.profileName}
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  {freelancerProfile.skills
-                    ?.slice(0, 2)
-                    .map((skill: any) => skill.label)
-                    .join(', ')}
-                  {freelancerProfile.skills?.length > 2 &&
-                    ` +${freelancerProfile.skills.length - 2}`}
-                </div>
-                {freelancerProfile.hourlyRate && (
-                  <div className="text-xs text-green-400 mt-1">
-                    ${freelancerProfile.hourlyRate}/hr
-                  </div>
-                )}
-              </div>
-            );
-          },
-        },
-        {
-          fieldName: 'bid_status',
-          textValue: 'Status',
-          type: FieldType.STATUS,
-          statusFormats: BID_STATUS_FORMATS,
-        },
-        {
-          textValue: 'Application',
-          type: FieldType.CUSTOM,
-          CustomComponent: ({ data }: { data: any }) => {
-            const freelancer = data?.freelancer;
-            const freelancerProfile = data?.freelancer_profile_id;
-
-            const handleViewProfile = () => {
-              // Get freelancer ID from bid data
-              const freelancerId = data?.bidder_id || freelancer?._id;
-
-              if (freelancerProfile) {
-                // If freelancer selected a profile, show the selected profile
-                handleOpenProfileDialog(
-                  freelancerProfile._id,
-                  freelancerId,
-                  true, // true = has profile, false = no profile
-                  data,
-                );
-              } else if (freelancerId) {
-                // If no profile selected, show general freelancer profile
-                handleOpenProfileDialog(
-                  freelancerId,
-                  freelancerId,
-                  false,
-                  data,
-                );
-              }
-            };
-
-            return (
-              <div className="flex justify-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleViewProfile}
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="w-4 h-4" />
-                  View
-                </Button>
-              </div>
-            );
-          },
-        },
-        {
-          textValue: 'Interview',
-          type: FieldType.CUSTOM,
-          CustomComponent: () => {
-            return (
-              <div className="flex justify-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenInterviewDialog}
-                  className="flex items-center gap-2"
-                >
-                  <Video className="w-4 h-4" />
+    return (
+      <ScrollArea className="w-full rounded-xl">
+        <div className="min-w-[980px] rounded-xl">
+          <Table className="rounded-xl">
+            <TableHeader className="rounded-xl">
+              <TableRow>
+                <TableHead className="text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Freelancer
+                </TableHead>
+                <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Bid Amount
+                </TableHead>
+                <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Profile Used
+                </TableHead>
+                <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Status
+                </TableHead>
+                <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Application
+                </TableHead>
+                <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Interview
-                </Button>
-              </div>
-            );
-          },
-        },
-        {
-          textValue: 'Actions',
-          type: FieldType.ACTION,
-          actions: { options: getActionOptions(status) },
-        },
-      ],
-    }),
-    [
-      bids,
-      getActionOptions,
-      handleOpenInterviewDialog,
-      handleOpenProfileDialog,
-    ],
-  );
+                </TableHead>
+                <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-muted-foreground w-16">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((data) => {
+                const freelancer = data?.freelancer;
+                const userName =
+                  data?.userName || freelancer?.userName || 'Unknown';
+                const fullName =
+                  freelancer?.firstName && freelancer?.lastName
+                    ? `${freelancer.firstName} ${freelancer.lastName}`.trim()
+                    : userName;
+                const freelancerProfile = data?.freelancer_profile_id;
+                const freelancerId = data?.bidder_id || freelancer?._id;
+
+                const handleViewProfile = () => {
+                  if (freelancerProfile && freelancerId) {
+                    handleOpenProfileDialog(
+                      freelancerProfile._id,
+                      freelancerId,
+                      true,
+                      data,
+                    );
+                  } else if (freelancerId) {
+                    handleOpenProfileDialog(
+                      freelancerId,
+                      freelancerId,
+                      false,
+                      data,
+                    );
+                  }
+                };
+
+                const actionOptions = getActionOptions(status);
+
+                return (
+                  <TableRow
+                    key={data._id}
+                    className="hover:bg-muted/10 transition-colors"
+                  >
+                    <TableCell className="text-left">
+                      <div className="flex items-center gap-3">
+                        <FreelancerAvatar
+                          profilePic={freelancer?.profilePic}
+                          userName={userName}
+                        />
+                        <div className="min-w-0">
+                          <div className="font-medium text-foreground line-clamp-1">
+                            {fullName}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            @{userName}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <span className="font-medium text-foreground">
+                        {data?.current_price
+                          ? formatUSD(Number(data.current_price))
+                          : 'N/A'}
+                      </span>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      {freelancerProfile ? (
+                        <div className="space-y-0.5">
+                          <div className="text-sm font-medium text-foreground">
+                            {freelancerProfile.profileName}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {freelancerProfile.skills
+                              ?.slice(0, 2)
+                              .map((skill: any) => skill.label)
+                              .join(', ')}
+                            {freelancerProfile.skills?.length > 2
+                              ? ` +${freelancerProfile.skills.length - 2}`
+                              : ''}
+                          </div>
+                          {freelancerProfile.hourlyRate && (
+                            <div className="text-xs text-muted-foreground">
+                              {formatUSD(freelancerProfile.hourlyRate)}/hr
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          No profile selected
+                        </span>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      {renderStatusBadge(data.bid_status)}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleViewProfile}
+                        className="h-8"
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        View
+                      </Button>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleOpenInterviewDialog}
+                        className="h-8"
+                      >
+                        <Video className="mr-2 h-4 w-4" />
+                        Interview
+                      </Button>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {actionOptions.length > 0 ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              aria-label="Bid actions"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {actionOptions.map((opt: any) => (
+                              <DropdownMenuItem
+                                key={opt.actionName}
+                                onClick={() => opt.handler({ id: data._id })}
+                                className="cursor-pointer flex items-center gap-2"
+                              >
+                                {opt.actionIcon}
+                                <span className="text-sm font-medium">
+                                  {opt.actionName}
+                                </span>
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    );
+  };
 
   // Format rate nicely in USD
   const formatUSD = (value?: number | string | null) => {
@@ -1371,11 +1450,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
               key={profile._id}
               value={profile._id || ''}
               onClick={() => setProfileId(profile._id)}
-              className="border rounded-lg mb-2 bg-muted-foreground/20 dark:bg-muted/20"
+              className="mb-3 overflow-hidden rounded-xl border bg-card shadow-sm"
             >
-              <AccordionTrigger className="px-4 hover:no-underline">
-                <div className="flex justify-between items-center w-full">
-                  <h4 className="text-lg font-semibold tracking-tight">
+              <AccordionTrigger className="px-5 py-4 hover:no-underline">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
+                  <h4 className="text-base sm:text-lg font-semibold tracking-tight">
                     {profile.domain ?? 'N/A'}
                   </h4>
                   <div className="flex items-center gap-3">
@@ -1425,10 +1504,22 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   </div>
 
                   <Tabs defaultValue="PENDING" className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 mb-4 sticky top-0 z-10">
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 rounded-md bg-muted/30 p-1 mb-4">
                       {BID_STATUSES.map((status) => (
-                        <TabsTrigger key={status} value={status}>
-                          {`${status.charAt(0) + status.slice(1).toLowerCase()} (${bidCounts[status] || 0})`}
+                        <TabsTrigger
+                          key={status}
+                          value={status}
+                          className="justify-between gap-2"
+                        >
+                          <span className="truncate">
+                            {status.charAt(0) + status.slice(1).toLowerCase()}
+                          </span>
+                          <Badge
+                            variant="secondary"
+                            className="h-5 px-2 text-[10px]"
+                          >
+                            {bidCounts[status] || 0}
+                          </Badge>
                         </TabsTrigger>
                       ))}
                     </TabsList>
@@ -1471,9 +1562,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                             </div>
                           </div>
                         ) : (
-                          <CustomTable
-                            {...createTableConfig(status as BidStatus)}
-                          />
+                          <Card className="border border-border/60 rounded-2xl shadow-sm bg-card/95">
+                            <CardContent className="p-0">
+                              <BidsTable status={status as BidStatus} />
+                            </CardContent>
+                          </Card>
                         )}
                       </TabsContent>
                     ))}
