@@ -88,8 +88,8 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
   };
 
   const SkeletonCard = () => (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-2">
+    <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl bg-muted-foreground/20 dark:bg-muted/20">
+      <CardHeader className="pb-2 px-6 pt-6">
         <div className="flex justify-between items-start">
           <div className="flex gap-4 items-center">
             <Skeleton className="h-12 w-12 rounded-full" />
@@ -101,7 +101,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
           <Skeleton className="h-6 w-16" />
         </div>
       </CardHeader>
-      <CardContent className="pb-2">
+      <CardContent className="px-6 py-3">
         <div className="space-y-3">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-full" />
@@ -112,6 +112,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
           </div>
         </div>
       </CardContent>
+      <div className="absolute inset-0 border-2 border-transparent rounded-xl pointer-events-none" />
     </Card>
   );
 
@@ -125,28 +126,28 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
         talents.map((talent, index) => (
           <Card
             key={`${talent._id}-${index}`}
-            className="overflow-hidden border bg-card shadow-sm transition-shadow hover:shadow-md"
+            className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20"
           >
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 px-6 pt-6">
               <div className="flex justify-between items-start">
                 <div className="flex gap-4 items-center">
-                  <Avatar className="h-12 w-12">
+                  <Avatar className="h-12 w-12 rounded-xl border border-gray-200 dark:border-gray-700">
                     <AvatarImage
                       src={talent.profilePic}
                       alt={`${talent.firstName} ${talent.lastName}`}
                     />
-                    <AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary rounded-xl text-base font-semibold">
                       {talent.firstName?.slice(0, 1).toUpperCase() || ''}
                       {talent.lastName?.slice(0, 1).toUpperCase() || ''}
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">
-                    <CardTitle>
+                    <CardTitle className="text-base font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">
                       {talent.userName
                         ? `@${talent.userName}`
                         : `${talent.firstName} ${talent.lastName}`}
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-sm text-muted-foreground">
                       {talent.userName
                         ? `${talent.firstName} ${talent.lastName}`
                         : talent.domainName}
@@ -158,13 +159,16 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                     )}
                   </div>
                 </div>
-                <Badge variant="outline" className="flex items-center gap-1">
+                <Badge
+                  variant="secondary"
+                  className="flex items-center gap-1 rounded-full text-xs font-medium px-3 py-1 bg-amber-500/10 text-amber-700 dark:text-amber-200 border border-amber-500/20"
+                >
                   <Clock className="h-3 w-3" />
                   Invited
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="pb-2">
+            <CardContent className="px-6 py-3">
               <div className="space-y-3">
                 {typeof talent.workExperience === 'number' && (
                   <div className="flex items-center gap-2 text-sm">
@@ -239,6 +243,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                     <Badge
                       key={skill._id ?? `${talent._id}-skill-${skillIndex}`}
                       variant="secondary"
+                      className="rounded-full text-xs font-medium px-3 py-1 bg-primary/5 hover:bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300 border border-primary/10 dark:border-primary/30 transition-all duration-200"
                     >
                       {skill.name}
                     </Badge>
@@ -246,8 +251,8 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                 </div>
               </div>
             </CardContent>
-            <div className="flex justify-between p-6 pt-2">
-              <div className="flex gap-2">
+            <div className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
                 {/* <Button size="sm" variant="ghost">
                   Cancel
                 </Button> */}
@@ -257,6 +262,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                       size="sm"
                       variant="default"
                       disabled={updatingFreelancerId === talent.freelancerId}
+                      className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg"
                       onClick={() =>
                         handleDecision(talent.freelancerId, 'SELECTED')
                       }
@@ -278,7 +284,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 rounded-lg"
                   onClick={() => handleViewProfile(talent.freelancerId)}
                 >
                   <ExternalLink className="h-3 w-3" />
@@ -286,6 +292,8 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                 </Button>
               </div>
             </div>
+
+            <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300" />
           </Card>
         ))
       ) : (

@@ -1,7 +1,7 @@
 // src/components/marketComponents/TalentContent.tsx
 'use client';
-import React, { useState } from 'react';
-import { Loader2, Search, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Loader2, Search, Sliders, X } from 'lucide-react';
 
 import InvitedProfileCards from './sidebar-projectComponents/profileCards.tsx/invitedProfileCards';
 import AcceptedProfileCards from './sidebar-projectComponents/profileCards.tsx/acceptedProfileCards';
@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface SkillOption {
   _id: string;
@@ -70,6 +71,24 @@ const TalentContent: React.FC<TalentContentProps> = ({
   talentOptions,
   onUpdateApplicationStatus,
 }) => {
+  const [isLargeScreen, setIsLargeScreen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return false;
+  });
+
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // State for overview tab filters
   const [skillFilter, setSkillFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
@@ -222,213 +241,247 @@ const TalentContent: React.FC<TalentContentProps> = ({
           />
         );
 
-      return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-3">
-            <div className="lg:sticky lg:top-20">
-              <div className="sticky top-[4rem] lg:h-[calc(100vh-6rem)] border rounded-lg flex flex-col">
-                <div className="bg-gradient border-b p-4 rounded-t-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-lg font-semibold">Filters</h2>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground self-center">
-                      {activeFilterCount} filter
-                      {activeFilterCount !== 1 ? 's' : ''} applied
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleReset}
-                      className="flex items-center gap-1 text-red-500 hover:text-red-500/80 transition-colors bg-red-500/10 hover:bg-red-500/20"
-                    >
-                      Clear all
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex-1 px-4 pb-2 pt-4 overflow-auto no-scrollbar">
-                  <Accordion
-                    type="multiple"
-                    defaultValue={['status', 'talent']}
-                    className="space-y-4 pb-2"
-                  >
-                    <AccordionItem
-                      value="status"
-                      className="border p-3 rounded-lg card"
-                    >
-                      <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">Status</span>
-                          {selected !== 'invited' && (
-                            <Badge
-                              variant="secondary"
-                              className="h-4 px-1.5 text-xs"
-                            >
-                              1
-                            </Badge>
-                          )}
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="py-2 px-1">
-                        <ScrollArea className="h-full w-full pr-2">
-                          <RadioGroup
-                            value={selected}
-                            onValueChange={(v) =>
-                              onStatusFilterChange?.(
-                                v as
-                                  | 'invited'
-                                  | 'accepted'
-                                  | 'rejected'
-                                  | 'applications',
-                              )
-                            }
-                            className="gap-2"
-                          >
-                            <Label
-                              htmlFor="talent-status-invited"
-                              className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
-                                selected === 'invited'
-                                  ? 'bg-muted/50 border-primary/30'
-                                  : ''
-                              }`}
-                            >
-                              <RadioGroupItem
-                                value="invited"
-                                id="talent-status-invited"
-                              />
-                              <span className="text-sm">Invited</span>
-                            </Label>
-
-                            <Label
-                              htmlFor="talent-status-accepted"
-                              className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
-                                selected === 'accepted'
-                                  ? 'bg-muted/50 border-primary/30'
-                                  : ''
-                              }`}
-                            >
-                              <RadioGroupItem
-                                value="accepted"
-                                id="talent-status-accepted"
-                              />
-                              <span className="text-sm">Accepted</span>
-                            </Label>
-
-                            <Label
-                              htmlFor="talent-status-rejected"
-                              className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
-                                selected === 'rejected'
-                                  ? 'bg-muted/50 border-primary/30'
-                                  : ''
-                              }`}
-                            >
-                              <RadioGroupItem
-                                value="rejected"
-                                id="talent-status-rejected"
-                              />
-                              <span className="text-sm">Rejected</span>
-                            </Label>
-
-                            <Label
-                              htmlFor="talent-status-applied"
-                              className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
-                                selected === 'applications'
-                                  ? 'bg-muted/50 border-primary/30'
-                                  : ''
-                              }`}
-                            >
-                              <RadioGroupItem
-                                value="applications"
-                                id="talent-status-applied"
-                              />
-                              <span className="text-sm">Applied</span>
-                            </Label>
-                          </RadioGroup>
-                        </ScrollArea>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem
-                      value="talent"
-                      className="border p-3 rounded-lg card"
-                    >
-                      <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">Talent</span>
-                          {talentFilter && (
-                            <Badge
-                              variant="secondary"
-                              className="h-4 px-1.5 text-xs"
-                            >
-                              1
-                            </Badge>
-                          )}
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="py-2 px-1">
-                        <div className="space-y-3">
-                          <SearchInput
-                            placeholder="Search talent..."
-                            value={talentSearchQuery}
-                            onChange={setTalentSearchQuery}
-                            onClear={() => setTalentSearchQuery('')}
-                          />
-                          <div className="h-60 overflow-hidden">
-                            <ScrollArea className="h-full w-full pr-2">
-                              <div className="space-y-1 py-1">
-                                {(talentOptions || [])
-                                  .filter((opt) =>
-                                    opt.label
-                                      .toLowerCase()
-                                      .includes(
-                                        talentSearchQuery.toLowerCase(),
-                                      ),
-                                  )
-                                  .map((opt) => {
-                                    const id = `talent-filter-${opt.value}`;
-                                    const checked = talentFilter === opt.value;
-                                    return (
-                                      <div
-                                        key={opt.value}
-                                        className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
-                                      >
-                                        <Checkbox
-                                          id={id}
-                                          checked={checked}
-                                          onCheckedChange={(next) => {
-                                            if (next === true)
-                                              onTalentFilterChange?.(opt.value);
-                                            else if (defaultTalentId)
-                                              onTalentFilterChange?.(
-                                                defaultTalentId,
-                                              );
-                                          }}
-                                          className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                        />
-                                        <label
-                                          htmlFor={id}
-                                          className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
-                                        >
-                                          {opt.label}
-                                        </label>
-                                      </div>
-                                    );
-                                  })}
-                              </div>
-                            </ScrollArea>
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-              </div>
+      const FiltersPanel = ({
+        onReset,
+      }: {
+        onReset: () => void;
+      }) => (
+        <div className="border rounded-lg flex flex-col">
+          <div className="bg-gradient border-b p-4 rounded-t-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-semibold">Filters</h2>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground self-center">
+                {activeFilterCount} filter
+                {activeFilterCount !== 1 ? 's' : ''} applied
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onReset}
+                className="flex items-center gap-1 text-red-500 hover:text-red-500/80 transition-colors bg-red-500/10 hover:bg-red-500/20"
+              >
+                Clear all
+              </Button>
             </div>
           </div>
 
-          <div className="lg:col-span-9 lg:h-[calc(100vh-11rem)] overflow-y-auto pr-1">
-            {cards}
+          <div className="flex-1 px-4 pb-2 pt-4 overflow-auto no-scrollbar">
+            <Accordion
+              type="multiple"
+              defaultValue={['status', 'talent']}
+              className="space-y-4 pb-2"
+            >
+              <AccordionItem value="status" className="border p-3 rounded-lg card">
+                <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Status</span>
+                    {selected !== 'invited' && (
+                      <Badge variant="secondary" className="h-4 px-1.5 text-xs">
+                        1
+                      </Badge>
+                    )}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="py-2 px-1">
+                  <ScrollArea className="h-full w-full pr-2">
+                    <RadioGroup
+                      value={selected}
+                      onValueChange={(v) =>
+                        onStatusFilterChange?.(
+                          v as
+                            | 'invited'
+                            | 'accepted'
+                            | 'rejected'
+                            | 'applications',
+                        )
+                      }
+                      className="gap-2"
+                    >
+                      <Label
+                        htmlFor="talent-status-invited"
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
+                          selected === 'invited'
+                            ? 'bg-muted/50 border-primary/30'
+                            : ''
+                        }`}
+                      >
+                        <RadioGroupItem
+                          value="invited"
+                          id="talent-status-invited"
+                        />
+                        <span className="text-sm">Invited</span>
+                      </Label>
+
+                      <Label
+                        htmlFor="talent-status-accepted"
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
+                          selected === 'accepted'
+                            ? 'bg-muted/50 border-primary/30'
+                            : ''
+                        }`}
+                      >
+                        <RadioGroupItem
+                          value="accepted"
+                          id="talent-status-accepted"
+                        />
+                        <span className="text-sm">Accepted</span>
+                      </Label>
+
+                      <Label
+                        htmlFor="talent-status-rejected"
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
+                          selected === 'rejected'
+                            ? 'bg-muted/50 border-primary/30'
+                            : ''
+                        }`}
+                      >
+                        <RadioGroupItem
+                          value="rejected"
+                          id="talent-status-rejected"
+                        />
+                        <span className="text-sm">Rejected</span>
+                      </Label>
+
+                      <Label
+                        htmlFor="talent-status-applied"
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
+                          selected === 'applications'
+                            ? 'bg-muted/50 border-primary/30'
+                            : ''
+                        }`}
+                      >
+                        <RadioGroupItem
+                          value="applications"
+                          id="talent-status-applied"
+                        />
+                        <span className="text-sm">Applied</span>
+                      </Label>
+                    </RadioGroup>
+                  </ScrollArea>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="talent" className="border p-3 rounded-lg card">
+                <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Talent</span>
+                    {talentFilter && (
+                      <Badge variant="secondary" className="h-4 px-1.5 text-xs">
+                        1
+                      </Badge>
+                    )}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="py-2 px-1">
+                  <div className="space-y-3">
+                    <SearchInput
+                      placeholder="Search talent..."
+                      value={talentSearchQuery}
+                      onChange={setTalentSearchQuery}
+                      onClear={() => setTalentSearchQuery('')}
+                    />
+                    <div className="h-60 overflow-hidden">
+                      <ScrollArea className="h-full w-full pr-2">
+                        <div className="space-y-1 py-1">
+                          {(talentOptions || [])
+                            .filter((opt) =>
+                              opt.label
+                                .toLowerCase()
+                                .includes(talentSearchQuery.toLowerCase()),
+                            )
+                            .map((opt) => {
+                              const id = `talent-filter-${opt.value}`;
+                              const checked = talentFilter === opt.value;
+                              return (
+                                <div
+                                  key={opt.value}
+                                  className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
+                                >
+                                  <Checkbox
+                                    id={id}
+                                    checked={checked}
+                                    onCheckedChange={(next) => {
+                                      if (next === true)
+                                        onTalentFilterChange?.(opt.value);
+                                      else if (defaultTalentId)
+                                        onTalentFilterChange?.(defaultTalentId);
+                                    }}
+                                    className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                  />
+                                  <label
+                                    htmlFor={id}
+                                    className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                                  >
+                                    {opt.label}
+                                  </label>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </div>
+      );
+
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold tracking-tight">Applications</h2>
+
+            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+              {loading
+                ? 'Loading'
+                : `${talents.length} ${talents.length === 1 ? 'result' : 'results'}`}
+            </span>
+
+            {!isLargeScreen && (
+              <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Sliders className="h-4 w-4" />
+                    <span>Filters</span>
+                    {activeFilterCount > 0 && (
+                      <Badge variant="secondary" className="px-1.5 py-0.5">
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-md">
+                  <ScrollArea className="h-full">
+                    <FiltersPanel
+                      onReset={() => {
+                        handleReset();
+                        setFiltersOpen(false);
+                      }}
+                    />
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
+
+          <div className="flex flex-1 flex-col lg:flex-row">
+            {isLargeScreen && (
+              <aside className="w-full lg:w-80 flex-shrink-0 lg:pr-6">
+                <div className="lg:sticky lg:top-20">
+                  <FiltersPanel onReset={handleReset} />
+                </div>
+              </aside>
+            )}
+
+            <div className="flex-1 overflow-y-auto pr-1">{cards}</div>
           </div>
         </div>
       );
@@ -438,26 +491,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
 
   return (
     <>
-      {activeTab === 'overview' ? (
-        renderCards()
-      ) : (
-        <>
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight">Applications</h2>
-            <span className="text-muted-foreground">
-              {loading ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Loading</span>
-                </span>
-              ) : (
-                `Showing ${talents.length} results`
-              )}
-            </span>
-          </div>
-          {renderCards()}
-        </>
-      )}
+      {renderCards()}
     </>
   );
 };
