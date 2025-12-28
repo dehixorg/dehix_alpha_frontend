@@ -83,9 +83,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
         <TableHeader>
           <TableRow>
             <TableHead className="text-start">Project Name</TableHead>
-            <TableHead className="text-center">
-              Start Date
-            </TableHead>
+            <TableHead className="text-center">Start Date</TableHead>
             <TableHead className="text-center">Status</TableHead>
           </TableRow>
         </TableHeader>

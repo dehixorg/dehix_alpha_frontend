@@ -367,7 +367,12 @@ const HomePage = () => {
       return;
     }
 
-    if (!isMobile && !loading && conversations.length > 0 && !activeConversation) {
+    if (
+      !isMobile &&
+      !loading &&
+      conversations.length > 0 &&
+      !activeConversation
+    ) {
       setActiveConversation(conversations[0]);
     }
 
@@ -556,7 +561,9 @@ const HomePage = () => {
         <main className="h-[96vh]">
           {isMobile ? (
             <div className="h-full">
-              {activeConversation ? chatWindowComponentContent : chatListComponentContent}
+              {activeConversation
+                ? chatWindowComponentContent
+                : chatListComponentContent}
             </div>
           ) : (
             <ChatLayout

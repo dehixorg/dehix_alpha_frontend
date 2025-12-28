@@ -84,7 +84,7 @@ const NotesContainer = ({
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
         {notes.map((note, index) => (
           <NoteCard
             key={note._id}

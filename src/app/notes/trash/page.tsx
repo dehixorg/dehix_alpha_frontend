@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Trash2 } from 'lucide-react';
 
 import NotesRender from '@/components/shared/NotesRender';
 import NotesHeader from '@/components/business/market/NotesHeader';
@@ -44,7 +45,14 @@ const TrashPage = () => {
         {/* Main content area */}
         <div className="px-4 mb-5">
           <Card className="overflow-hidden border">
-            <NotesHeader isTrash={true} setNotes={setTrash} notes={trash} />
+            <NotesHeader
+              isTrash={true}
+              setNotes={setTrash}
+              notes={trash}
+              title="Trash"
+              description="Deleted notes appear here before permanent removal"
+              icon={<Trash2 className="h-5 w-5 text-muted-foreground" />}
+            />
             <div className="p-4 sm:p-6">
               {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
