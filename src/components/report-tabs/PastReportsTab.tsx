@@ -130,7 +130,11 @@ const MessagesSection = ({
               return (
                 <div
                   key={i}
-                  className={isMe ? 'flex w-full justify-end' : 'flex w-full justify-start'}
+                  className={
+                    isMe
+                      ? 'flex w-full justify-end'
+                      : 'flex w-full justify-start'
+                  }
                 >
                   <div
                     className={
@@ -142,7 +146,9 @@ const MessagesSection = ({
                     <div className="text-[11px] font-medium opacity-80 mb-1">
                       {isMe ? 'you' : 'admin'}
                     </div>
-                    <div className="whitespace-pre-wrap break-words">{m.text}</div>
+                    <div className="whitespace-pre-wrap break-words">
+                      {m.text}
+                    </div>
                   </div>
                 </div>
               );
@@ -165,7 +171,9 @@ const MessagesSection = ({
               }
             }}
             className="flex-1 rounded-full disabled:opacity-60"
-            placeholder={isDisabled ? 'Messaging disabled' : 'Type a message...'}
+            placeholder={
+              isDisabled ? 'Messaging disabled' : 'Type a message...'
+            }
             ref={inputRef}
           />
           <Button
