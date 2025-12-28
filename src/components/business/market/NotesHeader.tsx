@@ -62,7 +62,7 @@ const NotesHeader = ({
 
   return (
     <>
-      <div className="px-4 py-4 border-b bg-gradient">
+      <div className="px-4 py-4 border-b bg-gradient text-foreground">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 hidden sm:flex h-9 w-9 items-center justify-center rounded-lg border bg-card">

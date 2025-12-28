@@ -48,7 +48,68 @@ const isDarkColor = (hex: string) => {
   if (!rgb) return false;
   const { r, g, b } = rgb;
   const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return luminance < 0.5;
+  return luminance < 0.6;
+};
+
+const NOTE_THEME_BY_BG: Record<
+  string,
+  {
+    titleClass: string;
+    bodyClass: string;
+    buttonClass: string;
+  }
+> = {
+  '#ffffff': {
+    titleClass: 'text-muted-foreground',
+    bodyClass: 'text-muted-foreground',
+    buttonClass:
+      'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+  },
+  '#f28b82': {
+    titleClass: 'text-red-950',
+    bodyClass: 'text-red-950/80',
+    buttonClass: 'text-red-950/80 hover:text-red-950 hover:bg-black/5',
+  },
+  '#fbbc04': {
+    titleClass: 'text-orange-950',
+    bodyClass: 'text-orange-950/80',
+    buttonClass: 'text-orange-950/80 hover:text-orange-950 hover:bg-black/5',
+  },
+  '#fff475': {
+    titleClass: 'text-amber-950',
+    bodyClass: 'text-amber-950/80',
+    buttonClass: 'text-amber-950/80 hover:text-amber-950 hover:bg-black/5',
+  },
+  '#ccff90': {
+    titleClass: 'text-lime-950',
+    bodyClass: 'text-lime-950/80',
+    buttonClass: 'text-lime-950/80 hover:text-lime-950 hover:bg-black/5',
+  },
+  '#a7ffeb': {
+    titleClass: 'text-teal-950',
+    bodyClass: 'text-teal-950/80',
+    buttonClass: 'text-teal-950/80 hover:text-teal-950 hover:bg-black/5',
+  },
+  '#cbf0f8': {
+    titleClass: 'text-sky-950',
+    bodyClass: 'text-sky-950/80',
+    buttonClass: 'text-sky-950/80 hover:text-sky-950 hover:bg-black/5',
+  },
+  '#aecbfa': {
+    titleClass: 'text-blue-950',
+    bodyClass: 'text-blue-950/80',
+    buttonClass: 'text-blue-950/80 hover:text-blue-950 hover:bg-black/5',
+  },
+  '#d7aefb': {
+    titleClass: 'text-purple-950',
+    bodyClass: 'text-purple-950/80',
+    buttonClass: 'text-purple-950/80 hover:text-purple-950 hover:bg-black/5',
+  },
+  '#fdcfe8': {
+    titleClass: 'text-pink-950',
+    bodyClass: 'text-pink-950/80',
+    buttonClass: 'text-pink-950/80 hover:text-pink-950 hover:bg-black/5',
+  },
 };
 
 interface NoteCardProps {
@@ -90,14 +151,39 @@ const NoteCard = ({
   onChangeBanner,
   navItems,
 }: NoteCardProps) => {
-  const baseBg = note.bgColor || '#ffffff';
-  const darkBg = !note.banner && isDarkColor(baseBg);
+  const baseBg = (note.bgColor || '#ffffff').toLowerCase();
 
-  const titleClass = darkBg ? 'text-white' : 'text-foreground';
-  const bodyClass = darkBg ? 'text-white/85' : 'text-muted-foreground';
-  const buttonClass = darkBg
-    ? 'text-white/85 hover:text-white hover:bg-white/10'
-    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50';
+  const hasBanner = Boolean(note.banner);
+
+  const paletteTheme = !hasBanner ? NOTE_THEME_BY_BG[baseBg] : undefined;
+  const darkBg = !hasBanner && !paletteTheme && isDarkColor(baseBg);
+
+  const bannerTheme = {
+    titleClass: 'text-white',
+    bodyClass: 'text-white/85',
+    buttonClass: 'text-white/85 hover:text-white hover:bg-white/10',
+  };
+
+  const resolvedTheme = hasBanner
+    ? bannerTheme
+    : paletteTheme
+      ? paletteTheme
+      : darkBg
+        ? {
+            titleClass: 'text-white',
+            bodyClass: 'text-white/85',
+            buttonClass: 'text-white/85 hover:text-white hover:bg-white/10',
+          }
+        : {
+            titleClass: 'text-foreground',
+            bodyClass: 'text-muted-foreground',
+            buttonClass:
+              'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+          };
+
+  const titleClass = resolvedTheme.titleClass;
+  const bodyClass = resolvedTheme.bodyClass;
+  const buttonClass = resolvedTheme.buttonClass;
 
   return (
     <div
@@ -108,9 +194,9 @@ const NoteCard = ({
       className="relative group w-full h-full"
     >
       <Card
-        className="font-sans cursor-pointer w-full h-full min-h-[240px] relative overflow-hidden border bg-card/80 shadow-sm hover:shadow-md transition-shadow"
+        className="font-sans cursor-pointer w-full h-full min-h-[240px] relative overflow-hidden border border-border/60 bg-card/80 shadow-sm transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
         style={
-          note.banner
+          hasBanner
             ? {
                 backgroundImage: `url(${note.banner})`,
                 backgroundSize: 'cover',
@@ -121,8 +207,11 @@ const NoteCard = ({
         }
         onClick={() => onEditNote(note)}
       >
-        {note.banner && (
-          <div className="pointer-events-none absolute inset-0 bg-background/70" />
+        {hasBanner && (
+          <>
+            <div className="pointer-events-none absolute inset-0 bg-black/45" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/55" />
+          </>
         )}
         <CardHeader>
           <div className="absolute top-2 left-2 flex items-center gap-2">
@@ -225,7 +314,7 @@ const NoteCard = ({
 
           {note.title && (
             <CardTitle
-              className={`font-semibold text-base sm:text-lg mt-6 leading-tight line-clamp-2 ${titleClass}`}
+              className={`font-semibold text-base sm:text-lg mt-6 leading-tight line-clamp-2 ${titleClass} ${hasBanner ? 'drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]' : ''}`}
             >
               {note.title}
             </CardTitle>
@@ -233,7 +322,7 @@ const NoteCard = ({
         </CardHeader>
         <CardContent className="max-h-[320px] overflow-hidden">
           <div
-            className={`text-sm whitespace-pre-wrap break-words font-normal leading-relaxed ${bodyClass}`}
+            className={`text-sm whitespace-pre-wrap break-words font-normal leading-relaxed ${bodyClass} ${hasBanner ? 'drop-shadow-[0_1px_1px_rgba(0,0,0,0.55)]' : ''}`}
           >
             {note.isHTML ? (
               <div
@@ -243,7 +332,7 @@ const NoteCard = ({
                 }}
               />
             ) : (
-              <div className={darkBg ? 'text-white/90' : 'text-foreground/90'}>
+              <div className="whitespace-pre-wrap break-words">
                 {truncateText(note.content, 30)}
               </div>
             )}
