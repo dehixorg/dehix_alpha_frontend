@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -31,6 +31,7 @@ import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 
 const HomePage = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const user = useSelector((state: RootState) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -39,6 +40,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   // State for ProfileSidebar
   const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
@@ -175,6 +177,15 @@ const HomePage = () => {
       setInitialLoad(false);
     }
   }, [searchParams, initialLoad]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(max-width: 639px)');
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   // Handle starting a new chat with a user
   const handleStartNewChat = useCallback(
@@ -322,13 +333,18 @@ const HomePage = () => {
         const typedData = data as Conversation[];
         setConversations(typedData);
 
-        // If no active conversation, set the first one as active
-        if (
-          typedData.length > 0 &&
-          !activeConversation &&
-          !searchParams?.get('userId')
-        ) {
-          setActiveConversation(typedData[0]);
+        const convId = searchParams?.get('c');
+        if (convId) {
+          const match = typedData.find((c) => c.id === convId) || null;
+          setActiveConversation(match);
+        } else if (!isMobile) {
+          // Desktop default behavior: auto-select first conversation.
+          if (typedData.length > 0 && !searchParams?.get('userId')) {
+            setActiveConversation((prev) => prev ?? typedData[0]);
+          }
+        } else {
+          // Mobile behavior: show list first (no active chat) unless URL explicitly selects one.
+          setActiveConversation(null);
         }
 
         setLoading(false);
@@ -339,13 +355,38 @@ const HomePage = () => {
       isMounted = false;
       if (unsubscribe) unsubscribe();
     };
-  }, [user?.uid, activeConversation, searchParams]);
+  }, [user?.uid, searchParams, isMobile]);
 
   useEffect(() => {
-    if (!loading && conversations.length > 0 && !activeConversation) {
+    const convId = searchParams?.get('c');
+    if (!conversations.length) return;
+
+    if (convId) {
+      const match = conversations.find((c) => c.id === convId) || null;
+      setActiveConversation(match);
+      return;
+    }
+
+    if (!isMobile && !loading && conversations.length > 0 && !activeConversation) {
       setActiveConversation(conversations[0]);
     }
-  }, [loading, conversations, activeConversation]);
+
+    if (isMobile && !convId) {
+      setActiveConversation(null);
+    }
+  }, [loading, conversations, activeConversation, searchParams, isMobile]);
+
+  const handleSelectConversation = useCallback(
+    (conv: Conversation) => {
+      setActiveConversation(conv);
+      if (isMobile) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('c', conv.id);
+        router.push(url.pathname + url.search, { scroll: false });
+      }
+    },
+    [isMobile, router],
+  );
 
   let chatListComponentContent;
   if (loading) {
@@ -376,7 +417,7 @@ const HomePage = () => {
       <ChatList
         conversations={conversations}
         active={activeConversation}
-        setConversation={setActiveConversation}
+        setConversation={handleSelectConversation}
         onOpenProfileSidebar={handleOpenProfileSidebar}
         onOpenNewChatDialog={() => setIsNewChatDialogOpen(true)}
       />
@@ -512,13 +553,19 @@ const HomePage = () => {
           ]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[93vh]">
-          <ChatLayout
-            chatListComponent={chatListComponentContent}
-            chatWindowComponent={chatWindowComponentContent}
-            isChatAreaExpanded={isChatExpanded}
-            onOpenProfileSidebar={handleOpenProfileSidebar}
-          />
+        <main className="h-[96vh]">
+          {isMobile ? (
+            <div className="h-full">
+              {activeConversation ? chatWindowComponentContent : chatListComponentContent}
+            </div>
+          ) : (
+            <ChatLayout
+              chatListComponent={chatListComponentContent}
+              chatWindowComponent={chatWindowComponentContent}
+              isChatAreaExpanded={isChatExpanded}
+              onOpenProfileSidebar={handleOpenProfileSidebar}
+            />
+          )}
         </main>
         <ProfileSidebar
           isOpen={isProfileSidebarOpen}

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { PackageOpen, ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -71,6 +70,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
   projects,
   loading,
 }) => {
+  const router = useRouter();
   const [currentTab, setCurrentTab] = useState<StatusEnum>(StatusEnum.ACTIVE);
   const getVisibleProjects = (tab: StatusEnum) =>
     projects.filter(
@@ -78,85 +78,92 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
     );
 
   const renderTable = (list: Project[]) => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="text-start">Project Name</TableHead>
-          <TableHead className="text-center">Start Date</TableHead>
-          <TableHead className="text-center">Status</TableHead>
-          <TableHead className="text-center">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {loading ? (
-          [...Array(3)].map((_, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <Skeleton className="h-4 w-32" />
-              </TableCell>
-              <TableCell className="text-center">
-                <Skeleton className="h-4 w-20" />
-              </TableCell>
-              <TableCell className="text-center">
-                <Skeleton className="h-4 w-16" />
-              </TableCell>
-              <TableCell className="text-center">
-                <Skeleton className="h-4 w-20" />
-              </TableCell>
-            </TableRow>
-          ))
-        ) : list.length > 0 ? (
-          list.map((project) => (
-            <TableRow key={project._id}>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{project.projectName}</span>
-                  {project.verified && (
-                    <ShieldCheck className="h-4 w-4 text-green-500" />
+    <div className="w-full overflow-x-auto">
+      <Table className="w-full">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-start">Project Name</TableHead>
+            <TableHead className="text-center">
+              Start Date
+            </TableHead>
+            <TableHead className="text-center">Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            [...Array(3)].map((_, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Skeleton className="h-4 w-32" />
+                </TableCell>
+                <TableCell className="text-center">
+                  <Skeleton className="h-4 w-20" />
+                </TableCell>
+                <TableCell className="text-center">
+                  <Skeleton className="h-4 w-16" />
+                </TableCell>
+              </TableRow>
+            ))
+          ) : list.length > 0 ? (
+            list.map((project) => (
+              <TableRow
+                key={project._id}
+                role="link"
+                tabIndex={0}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => router.push(`/project/${project._id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    router.push(`/project/${project._id}`);
+                  }
+                }}
+              >
+                <TableCell className="min-w-0">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="min-w-0 break-words font-medium">
+                      {project.projectName}
+                    </span>
+                    {project.verified && (
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-green-500" />
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  {project.start
+                    ? new Date(project.start).toLocaleDateString()
+                    : project.createdAt
+                      ? new Date(project.createdAt).toLocaleDateString()
+                      : 'N/A'}
+                </TableCell>
+                <TableCell className="text-center">
+                  {project.status ? (
+                    <Badge className={getStatusBadge(project.status).className}>
+                      {getStatusBadge(project.status).text}
+                    </Badge>
+                  ) : (
+                    'N/A'
                   )}
-                </div>
-              </TableCell>
-              <TableCell className="text-center">
-                {project.start
-                  ? new Date(project.start).toLocaleDateString()
-                  : project.createdAt
-                    ? new Date(project.createdAt).toLocaleDateString()
-                    : 'N/A'}
-              </TableCell>
-              <TableCell className="text-center">
-                {project.status ? (
-                  <Badge className={getStatusBadge(project.status).className}>
-                    {getStatusBadge(project.status).text}
-                  </Badge>
-                ) : (
-                  'N/A'
-                )}
-              </TableCell>
-              <TableCell className="text-center">
-                <Link href={`/project/${project._id}`}>
-                  <Button size="sm" variant="outline">
-                    View Details
-                  </Button>
-                </Link>
-              </TableCell>
-            </TableRow>
-          ))
-        ) : (
-          <tr>
-            <td colSpan={4} className="text-center py-10">
-              <PackageOpen className="mx-auto text-gray-500" size={100} />
-              <p className="text-gray-500">No projects available</p>
-            </td>
-          </tr>
-        )}
-      </TableBody>
-    </Table>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={3} className="text-center py-10">
+                <PackageOpen className="mx-auto text-gray-500" size={100} />
+                <p className="text-gray-500">No projects available</p>
+              </td>
+            </tr>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 
   return (
     <div className="min-h-screen">
       <Card>
-        <CardHeader className="px-7">
+        <CardHeader>
           <CardTitle>Projects</CardTitle>
           <CardDescription>Recent projects from your account.</CardDescription>
         </CardHeader>
