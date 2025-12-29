@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Check,
   X,
@@ -11,7 +12,6 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-import FreelancerDetailsDialog from './FreelancerDetailsDialog';
 import TaskUpdateDeatilDialog from './TaskUpdateDetailDialog';
 
 import { Card, CardFooter, CardHeader } from '@/components/ui/card';
@@ -23,6 +23,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
 import { Task } from '@/utils/types/Milestone';
+import { RootState } from '@/lib/store';
 
 interface TaskCardProps {
   task: Task;
@@ -51,11 +52,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   milestoneId,
   storyId,
 }) => {
+  const user = useSelector((state: RootState) => state.user);
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [isFreelancerDialogOpen, setFreelancerDialogOpen] = useState(false);
-  const [selectedFreelancer, setSelectedFreelancer] = useState<string | null>(
-    null,
-  );
 
   const freelancer = task?.freelancers?.[0];
   const isAssigned = !!freelancer?.freelancerName;
@@ -81,9 +80,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
                   <div
                     className="flex items-center gap-1.5 min-w-0"
-                    onClick={() => {
-                      setSelectedFreelancer(task?.freelancers[0]?.freelancerId);
-                      setFreelancerDialogOpen(true);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const freelancerId = task?.freelancers?.[0]?.freelancerId;
+                      console.log(freelancerId);
+                      if (!freelancerId || user.type !== 'business') return;
+                      router.push(
+                        `/business/freelancerProfile/${freelancerId}`,
+                      );
                     }}
                   >
                     <Avatar className="h-5 w-5">
@@ -146,16 +150,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         </CardFooter>
       </Card>
-
-      {isFreelancerDialogOpen && selectedFreelancer && (
-        <FreelancerDetailsDialog
-          freelancerId={selectedFreelancer}
-          onClose={() => {
-            setSelectedFreelancer(null);
-            setFreelancerDialogOpen(false);
-          }}
-        />
-      )}
     </div>
   );
 };

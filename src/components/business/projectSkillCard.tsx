@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, CheckCircle, Users } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 import {
   Card,
@@ -50,6 +51,7 @@ function ProjectSkillCard({
   onAddProfile,
   team = [],
 }: ProjectSkillCardProps) {
+  const router = useRouter();
   if (isLastCard) {
     return (
       <Card
@@ -68,7 +70,6 @@ function ProjectSkillCard({
     }
     return fileName;
   };
-
   const getInitials = (name: string | undefined) => {
     if (!name) return 'U';
     return name
@@ -130,7 +131,13 @@ function ProjectSkillCard({
             ) : (
               <>
                 {team.slice(0, 5).map((member, index) => (
-                  <div key={index} className="flex items-center">
+                  <div
+                    key={index}
+                    className="flex items-center cursor-pointer"
+                    onClick={() =>
+                      router.push(`/business/freelancerProfile/${member._id}`)
+                    }
+                  >
                     <div className="flex-shrink-0 mr-3">
                       <div className="flex-shrink-0 mr-3">
                         {member.profilePic ? (
@@ -175,7 +182,7 @@ function ProjectSkillCard({
         {/* Description */}
         <div className="flex-1 overflow-hidden">
           <p className="text-sm text-muted-foreground line-clamp-3">
-            {description || 'No description available.'}
+            {description}
           </p>
         </div>
       </CardContent>

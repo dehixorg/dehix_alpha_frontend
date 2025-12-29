@@ -4,13 +4,14 @@ import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
-import { Loader2 } from 'lucide-react';
+import { Inbox, Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import MilestoneTimeline from '@/components/shared/MilestoneTimeline';
 import StoriesSection from '@/components/shared/StoriesSection';
 import FreelancerList from '@/components/freelancer/FreelancerList';
+import EmptyState from '@/components/shared/EmptyState';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -216,8 +217,7 @@ const Page = () => {
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/business' },
-            { label: 'Project', link: '/dashboard/business' },
+            { label: 'Project', link: '/business/projects' },
             {
               label: project ? project.projectName : project_id,
               link: `/business/project/${project_id}`,
@@ -304,9 +304,12 @@ const Page = () => {
                 </div>
               </>
             ) : (
-              <div className="flex justify-center items-center h-[40vh]">
-                No milestones found.
-              </div>
+              <EmptyState
+                className="h-[40vh] border-0 bg-transparent py-0"
+                title="No milestones found"
+                description="Create your first milestone to start tracking progress for this project."
+                icon={<Inbox className="h-16 w-16 text-muted-foreground" />}
+              />
             )}
           </div>
         </div>

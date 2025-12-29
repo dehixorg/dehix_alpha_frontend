@@ -25,6 +25,7 @@ import Header from '@/components/header/header';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import EmptyState from '@/components/shared/EmptyState';
 import { RootState } from '@/lib/store';
@@ -241,11 +242,131 @@ const FreelancerProfile = () => {
   if (loading) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background">
-        <div className="flex justify-center items-center h-screen">
-          <div className="animate-pulse space-y-4">
-            <div className="h-12 w-48 bg-muted rounded"></div>
-            <div className="h-64 w-full max-w-2xl bg-muted rounded"></div>
-            <div className="h-32 w-full max-w-2xl bg-muted rounded"></div>
+        <SidebarMenu
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          active=""
+        />
+        <div className="flex flex-col sm:gap-4 mb-8 sm:pl-14">
+          <Header
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            activeMenu="Projects"
+            breadcrumbItems={[{ label: 'Freelancer', link: '#' }]}
+          />
+
+          <div className="flex p-3 md:px-14 relative flex-col sm:gap-8 sm:py-4 max-w-full overflow-x-hidden">
+            <main className="w-full max-w-4xl mx-auto space-y-6">
+              <Card className="shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 min-w-0">
+                      <Skeleton className="h-20 w-20 sm:h-24 sm:w-24 rounded-full" />
+                      <div className="space-y-3 min-w-0 w-full">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-7 w-44" />
+                          <Skeleton className="h-5 w-20 rounded-full" />
+                        </div>
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-full max-w-xl" />
+                          <Skeleton className="h-4 w-4/5 max-w-lg" />
+                        </div>
+                      </div>
+                    </div>
+                    <Skeleton className="h-10 w-full sm:w-32" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden border border-border shadow-md">
+                <CardHeader className="py-4">
+                  <Skeleton className="h-5 w-40" />
+                </CardHeader>
+                <CardContent className="p-4 space-y-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <div className="flex flex-wrap gap-2">
+                      {[...Array(6)].map((_, i) => (
+                        <Skeleton key={i} className="h-6 w-20 rounded-full" />
+                      ))}
+                    </div>
+                  </div>
+                  <Separator className="h-px bg-border" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <div className="flex flex-wrap gap-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Skeleton key={i} className="h-6 w-24 rounded-full" />
+                      ))}
+                    </div>
+                  </div>
+                  <Separator className="h-px bg-border" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <div className="flex flex-wrap gap-2">
+                      {[...Array(4)].map((_, i) => (
+                        <Skeleton key={i} className="h-6 w-28 rounded-full" />
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden border border-border shadow-md">
+                <CardHeader className="py-4">
+                  <Skeleton className="h-5 w-28" />
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                      <Skeleton key={i} className="h-40 w-full rounded-xl" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden border border-border shadow-md">
+                <CardHeader className="py-4">
+                  <Skeleton className="h-5 w-52" />
+                </CardHeader>
+                <CardContent className="p-4 space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex gap-4 p-3 bg-muted/50 border border-border rounded-md"
+                    >
+                      <Skeleton className="h-12 w-12 rounded-md flex-shrink-0" />
+                      <div className="space-y-2 w-full">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-4 w-56" />
+                        <Skeleton className="h-3 w-28" />
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden border border-border shadow-md">
+                <CardHeader className="py-4">
+                  <Skeleton className="h-5 w-24" />
+                </CardHeader>
+                <CardContent className="p-4 space-y-3">
+                  {[...Array(2)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 p-3 bg-muted/50 border border-border rounded-md"
+                    >
+                      <div className="space-y-2 w-full">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-4 w-56" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                      <Skeleton className="h-7 w-32 rounded-md" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </main>
           </div>
         </div>
       </div>
@@ -260,9 +381,9 @@ const FreelancerProfile = () => {
     onClose: () => void;
   }) => {
     return (
-      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-card text-card-foreground p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg border">
-          <div className="flex justify-between items-center mb-4">
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-3">
+        <div className="bg-card text-card-foreground p-4 sm:p-6 rounded-lg max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto shadow-lg border">
+          <div className="flex justify-between items-center gap-3 mb-4">
             <h2 className="text-xl font-bold">{project.projectName}</h2>
             <button
               onClick={onClose}
@@ -311,7 +432,7 @@ const FreelancerProfile = () => {
                   href={project.githubLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline"
+                  className="text-primary hover:underline break-all"
                 >
                   {project.githubLink}
                 </a>
@@ -343,23 +464,22 @@ const FreelancerProfile = () => {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Projects"
           breadcrumbItems={[
-            { label: 'Business', link: '/dashboard/business' },
-            { label: 'Freelancer', link: '/business/market' },
+            { label: 'Freelancer', link: '#' },
             {
               label: `${profileData?.firstName || ''} ${profileData?.lastName || ''}`,
-              link: `/dashboard/business/${freelancer_id}`,
+              link: '#',
             },
           ]}
         />
 
-        <div className="flex p-3 md:px-14 relative flex-col sm:gap-8 sm:py-4">
-          <main className="mt-8 max-w-4xl mx-auto">
+        <div className="flex p-3 md:px-14 relative flex-col sm:gap-8 sm:py-4 max-w-full overflow-x-hidden">
+          <main className="m:mt-8 w-full max-w-4xl mx-auto">
             {/* Profile Info */}
             <Card className="mb-8 shadow-md">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between gap-6">
-                  <div className="flex items-center gap-6">
-                    <div className="relative h-24 w-24 rounded-full overflow-hidden bg-muted border-2 border-border shadow-md">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 min-w-0">
+                    <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden bg-muted border-2 border-border shadow-md flex-shrink-0">
                       {profileData?.profilePic ? (
                         <Image
                           src={profileData.profilePic}
@@ -373,7 +493,7 @@ const FreelancerProfile = () => {
                         </div>
                       )}
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h1 className="text-2xl font-bold text-foreground">
                           {profileData?.firstName} {profileData?.lastName}
@@ -391,7 +511,7 @@ const FreelancerProfile = () => {
                       </p>
                     </div>
                   </div>
-                  <div>
+                  <div className="w-full sm:w-auto">
                     <ConnectsDialog
                       loading={hireLoading}
                       setLoading={setHireLoading}
@@ -598,8 +718,6 @@ const FreelancerProfile = () => {
               </CardContent>
             </Card>
 
-            <Separator className="h-px bg-border my-6" />
-
             {/* Education */}
             <Card className="mb-6 overflow-hidden border border-border shadow-md">
               <CardHeader className="bg-cyan-500/5 dark:bg-cyan-500/10 border-b border-border py-4">
@@ -614,9 +732,9 @@ const FreelancerProfile = () => {
                     {profileData.education.slice(0, 3).map((edu) => (
                       <div
                         key={edu._id}
-                        className="flex justify-between p-3 bg-muted/50 border border-border rounded-md shadow-sm"
+                        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 p-3 bg-muted/50 border border-border rounded-md shadow-sm"
                       >
-                        <div>
+                        <div className="min-w-0">
                           <p className="font-medium text-foreground">
                             {edu.degree}
                           </p>
@@ -627,7 +745,7 @@ const FreelancerProfile = () => {
                             Grade: {edu.grade}
                           </p>
                         </div>
-                        <div className="text-sm text-muted-foreground bg-cyan-500/5 dark:bg-cyan-500/10 px-3 py-1 rounded-md h-fit">
+                        <div className="text-sm text-muted-foreground bg-cyan-500/5 dark:bg-cyan-500/10 px-3 py-1 rounded-md h-fit w-fit">
                           {formatDate(edu.startDate)} -{' '}
                           {formatDate(edu.endDate)}
                         </div>

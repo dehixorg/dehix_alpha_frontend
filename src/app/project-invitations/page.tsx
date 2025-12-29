@@ -63,6 +63,7 @@ import {
   menuItemsBottom as freelancerMenuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import EmptyState from '@/components/shared/EmptyState';
+import StatusDot from '@/components/shared/StatusDot';
 import { useAppSelector } from '@/lib/hooks';
 import { projectInvitationService } from '@/services/projectInvitation';
 
@@ -316,7 +317,14 @@ const ProjectInvitationsPage: React.FC = () => {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="relative">
-                          <Avatar className="h-10 w-10 border">
+                          <Avatar
+                            className="h-10 w-10 border cursor-pointer"
+                            onClick={() =>
+                              router.push(
+                                `/business/freelancerProfile/${inv.freelancerId}`,
+                              )
+                            }
+                          >
                             <AvatarImage
                               src={inv.freelancerProfilePic || ''}
                               alt={inv.freelancerName}
@@ -400,27 +408,9 @@ const ProjectInvitationsPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {inv.projectStatus && (
-                          <div className="flex items-center gap-2 whitespace-nowrap">
-                            <span
-                              className={cn(
-                                'h-2.5 w-2.5 rounded-full',
-                                inv.projectStatus?.toUpperCase() === 'ACTIVE' &&
-                                  'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]',
-                                inv.projectStatus?.toUpperCase() ===
-                                  'PENDING' &&
-                                  'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)]',
-                                inv.projectStatus?.toUpperCase() ===
-                                  'COMPLETED' &&
-                                  'bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]',
-                                !['ACTIVE', 'PENDING', 'COMPLETED'].includes(
-                                  inv.projectStatus?.toUpperCase() || '',
-                                ) &&
-                                  'bg-slate-400 shadow-[0_0_12px_rgba(148,163,184,0.7)]',
-                              )}
-                            />
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <StatusDot status={inv.projectStatus} />
+                        </div>
                       </div>
                     </div>
 

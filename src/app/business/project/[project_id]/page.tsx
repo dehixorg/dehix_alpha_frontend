@@ -221,9 +221,7 @@ export default function Dashboard() {
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             activeMenu=""
-            breadcrumbItems={[
-              { label: 'Project', link: '/dashboard/business' },
-            ]}
+            breadcrumbItems={[{ label: 'Project', link: '/business/projects' }]}
           />
 
           {/* Main Content Skeleton in <main> */}
@@ -287,7 +285,7 @@ export default function Dashboard() {
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
-            { label: 'Project', link: '/dashboard/business' },
+            { label: 'Project', link: '/business/projects' },
             { label: project.projectName, link: '#' },
           ]}
         />
