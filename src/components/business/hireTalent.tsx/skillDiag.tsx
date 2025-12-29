@@ -140,7 +140,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="w-full sm:w-auto">
+        <Button size="sm" className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add Skill
         </Button>

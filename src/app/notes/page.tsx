@@ -94,6 +94,8 @@ const Notes = () => {
               setNotes={setNotes}
               notes={notes}
               onNoteCreate={handleCreateNote}
+              title="Notes"
+              description="Organize your thoughts and ideas"
             />
             <div className="p-4 sm:p-6">
               {isLoading ? (

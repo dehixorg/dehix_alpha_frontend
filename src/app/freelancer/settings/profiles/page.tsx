@@ -46,6 +46,7 @@ import ProfileSummaryCard from '@/components/cards/ProfileSummaryCard';
 import { FreelancerProfile } from '@/types/freelancer';
 import StatItem from '@/components/shared/StatItem';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
+import EmptyState from '@/components/shared/EmptyState';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -636,20 +637,25 @@ export default function ProfilesPage() {
                         ))}
                       </div>
                     ) : freelancerProfiles.length === 0 ? (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground mb-4">
-                          No Freelancer profiles found.
-                        </p>
-                        <Button
-                          onClick={() => {
-                            setNewProfileType('Freelancer');
-                            setIsCreateDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" /> Create Freelancer
-                          Profile
-                        </Button>
-                      </div>
+                      <EmptyState
+                        className="py-12 bg-transparent border-0"
+                        title="No Freelancer profiles found"
+                        description="Create your first Freelancer profile to start applying faster with a ready-to-use summary."
+                        icon={
+                          <User className="h-12 w-12 text-muted-foreground" />
+                        }
+                        actions={
+                          <Button
+                            onClick={() => {
+                              setNewProfileType('Freelancer');
+                              setIsCreateDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Create Freelancer
+                            Profile
+                          </Button>
+                        }
+                      />
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {freelancerProfiles.map((profile) => (
@@ -700,20 +706,25 @@ export default function ProfilesPage() {
                         ))}
                       </div>
                     ) : consultantProfiles.length === 0 ? (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground mb-4">
-                          No Consultant profiles found.
-                        </p>
-                        <Button
-                          onClick={() => {
-                            setNewProfileType('Consultant');
-                            setIsCreateDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" /> Create Consultant
-                          Profile
-                        </Button>
-                      </div>
+                      <EmptyState
+                        className="py-12 bg-transparent border-0"
+                        title="No Consultant profiles found"
+                        description="Create a Consultant profile to showcase your expertise and start getting matched to the right opportunities."
+                        icon={
+                          <UserCog className="h-12 w-12 text-muted-foreground" />
+                        }
+                        actions={
+                          <Button
+                            onClick={() => {
+                              setNewProfileType('Consultant');
+                              setIsCreateDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Create Consultant
+                            Profile
+                          </Button>
+                        }
+                      />
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {consultantProfiles.map((profile) => (

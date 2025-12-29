@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
-import { Briefcase } from 'lucide-react';
+import { BadgeDollarSign, Briefcase, CircleHelp } from 'lucide-react';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -434,35 +435,59 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           open={!!confirmAction}
           onOpenChange={() => setConfirmAction(null)}
         >
-          <DialogContent className="m-2 w-[80vw] md:max-w-lg ">
-            {confirmAction?.action === 'PLACE_BID' ? (
-              <div className="space-y-4">
-                <Label htmlFor="fee">Enter your bid fee</Label>
-                <Input
-                  id="fee"
-                  type="number"
-                  value={bidFee}
-                  onChange={(e) => setBidFee(e.target.value)}
-                  placeholder="e.g. 500"
-                />
+          <DialogContent className="w-[calc(100%-1rem)] sm:max-w-lg">
+            <DialogHeader>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-lg border bg-muted/30">
+                  {confirmAction?.action === 'PLACE_BID' ? (
+                    <BadgeDollarSign className="h-5 w-5 text-muted-foreground" />
+                  ) : (
+                    <CircleHelp className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <DialogTitle>
+                    {confirmAction?.action === 'PLACE_BID'
+                      ? 'Place your bid'
+                      : `Confirm ${confirmAction.action?.toLowerCase()}?`}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {confirmAction?.action === 'PLACE_BID'
+                      ? 'Enter your bid fee below. You can update it later if the interview is still open.'
+                      : 'Please confirm to continue. This action may affect your interview workflow.'}
+                  </DialogDescription>
+                </div>
               </div>
-            ) : (
-              <DialogHeader>
-                <DialogTitle>
-                  Confirm {confirmAction.action?.toLowerCase()} action?
-                </DialogTitle>
-              </DialogHeader>
+            </DialogHeader>
+
+            {confirmAction?.action === 'PLACE_BID' && (
+              <div className="space-y-3">
+                <Label htmlFor="fee">Bid fee</Label>
+                <div className="space-y-2">
+                  <Input
+                    id="fee"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={bidFee}
+                    onChange={(e) => setBidFee(e.target.value)}
+                    placeholder="e.g. 500"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Tip: use a clear number (e.g. 500). Avoid leaving it empty.
+                  </p>
+                </div>
+              </div>
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setConfirmAction(null)}>
                 Cancel
               </Button>
               <Button
-                className="mb-3"
                 disabled={confirmAction.action === 'PLACE_BID' && !bidFee}
                 onClick={handleActionConfirm}
               >
-                Confirm
+                {confirmAction.action === 'PLACE_BID' ? 'Submit bid' : 'Confirm'}
               </Button>
             </DialogFooter>
           </DialogContent>

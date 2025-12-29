@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import Header from '@/components/header/header';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface Skill {
@@ -276,7 +277,15 @@ export default function Talent() {
                       key={`skill-${skill._id}`}
                       value={`SKILL|${skill.label}`}
                     >
-                      Skill: {skill.label}
+                      <div className="flex w-full items-center justify-between gap-3">
+                        <span className="truncate">{skill.label}</span>
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0 rounded-full px-2 py-0 text-[10px] font-medium"
+                        >
+                          Skill
+                        </Badge>
+                      </div>
                     </SelectItem>
                   ))}
                   {filterDomain?.map((domain) => (
@@ -284,7 +293,15 @@ export default function Talent() {
                       key={`domain-${domain._id}`}
                       value={`DOMAIN|${domain.label}`}
                     >
-                      Domain: {domain.label}
+                      <div className="flex w-full items-center justify-between gap-3">
+                        <span className="truncate">{domain.label}</span>
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0 rounded-full px-2 py-0 text-[10px] font-medium"
+                        >
+                          Domain
+                        </Badge>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
