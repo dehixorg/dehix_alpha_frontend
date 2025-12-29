@@ -1,6 +1,5 @@
 import React from 'react';
 import { Plus, CheckCircle, Users } from 'lucide-react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -17,12 +16,10 @@ import {
 } from '../ui/hover-card';
 
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  statusOutlineClasses,
-  profileTypeOutlineClasses,
-} from '@/utils/common/getBadgeStatus';
+import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
 import DateHistory from '@/components/shared/DateHistory';
 
 export interface ProjectSkillCardProps {
@@ -43,7 +40,6 @@ export interface ProjectSkillCardProps {
 function ProjectSkillCard({
   domainName,
   description,
-  status,
   profileType,
   startDate,
   endDate,
@@ -55,10 +51,22 @@ function ProjectSkillCard({
   if (isLastCard) {
     return (
       <Card
-        className="flex bg-muted-foreground/20 dark:bg-muted/20 w-full items-center justify-center h-[400px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
+        className="group flex h-[400px] w-full cursor-pointer items-center justify-center rounded-xl border border-dashed bg-muted/20 transition-colors hover:bg-muted/30"
         onClick={onAddProfile}
       >
-        <Plus className="w-12 h-12 text-gray-400" />
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border bg-background shadow-sm transition-colors group-hover:border-primary/30">
+            <Plus className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <div className="space-y-1">
+            <div className="text-sm font-semibold text-foreground">
+              Add profile
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Create a new profile requirement
+            </div>
+          </div>
+        </div>
       </Card>
     );
   }
@@ -81,33 +89,29 @@ function ProjectSkillCard({
   };
 
   return (
-    <Card className="w-full h-[400px] bg-muted-foreground/20 dark:bg-muted/20 border rounded-lg shadow-sm flex flex-col">
+    <Card className="flex h-[400px] w-full flex-col rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <HoverCard>
-            <HoverCardTrigger>
-              <CardTitle className="text-lg cursor-pointer font-semibold tracking-tight">
-                {truncateFileName(domainName)}
-              </CardTitle>
-            </HoverCardTrigger>
-            <HoverCardContent className="py-2 w-auto">
-              {domainName}
-            </HoverCardContent>
-          </HoverCard>
-          <div className="flex gap-2">
-            <Badge
-              variant="outline"
-              className={`capitalize text-xs px-2 py-0.5 rounded-md ${profileTypeOutlineClasses(profileType)}`}
-            >
-              {profileType || 'FREELANCER'}
-            </Badge>
-            <Badge
-              variant="outline"
-              className={`capitalize text-xs px-2 py-0.5 rounded-md ${statusOutlineClasses(status)}`}
-            >
-              {status || 'ACTIVE'}
-            </Badge>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <CardTitle className="cursor-pointer truncate text-base font-semibold tracking-tight sm:text-lg">
+                  {truncateFileName(domainName)}
+                </CardTitle>
+              </HoverCardTrigger>
+              <HoverCardContent className="py-2 w-auto">
+                {domainName}
+              </HoverCardContent>
+            </HoverCard>
+            <div className="text-xs text-muted-foreground">Team & timeline</div>
           </div>
+
+          <Badge
+            variant="outline"
+            className={`shrink-0 capitalize text-xs px-2 py-0.5 ${profileTypeOutlineClasses(profileType)}`}
+          >
+            {profileType || 'FREELANCER'}
+          </Badge>
         </div>
       </CardHeader>
 
@@ -119,13 +123,18 @@ function ProjectSkillCard({
           className="dark:bg-background"
         />
         {/* Team members */}
-        <ScrollArea className="flex-1 rounded-md border card p-3">
-          <div className="space-y-3">
+        <ScrollArea className="flex-1 rounded-lg border bg-muted/20 p-3">
+          <div className="space-y-2">
             {team.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center text-muted-foreground gap-2">
-                <Users className="h-8 w-8" />
-                <div className="flex items-center gap-2 text-sm">
-                  No team members yet
+              <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-muted-foreground">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border bg-background">
+                  <Users className="h-6 w-6" />
+                </div>
+                <div className="text-sm font-medium text-foreground">
+                  No team members
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Add members to start collaborating
                 </div>
               </div>
             ) : (
@@ -133,44 +142,30 @@ function ProjectSkillCard({
                 {team.slice(0, 5).map((member, index) => (
                   <div
                     key={index}
-                    className="flex items-center cursor-pointer"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-background/60"
                     onClick={() =>
                       router.push(`/business/freelancerProfile/${member._id}`)
                     }
                   >
-                    <div className="flex-shrink-0 mr-3">
-                      <div className="flex-shrink-0 mr-3">
-                        {member.profilePic ? (
-                          <Image
-                            src={member.profilePic}
-                            alt={member.name || 'Team member'}
-                            width={32}
-                            height={32}
-                            className="h-8 w-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div
-                            className={`h-8 w-8 rounded-full flex items-center justify-center ${member.color || 'bg-gray-200'} ${member.textColor || 'text-gray-700'}`}
-                          >
-                            <span className="text-xs font-medium">
-                              {getInitials(member.name)}
-                            </span>
-                          </div>
-                        )}
-                      </div>{' '}
-                    </div>
-                    <div className="flex-1 flex justify-between items-center min-w-0">
-                      <span className="text-sm font-medium truncate mr-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={member.profilePic} />
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                        {getInitials(member.name)}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-foreground">
                         {member.name}
-                      </span>
-                      <span className="text-xs text-gray-500 truncate">
+                      </div>
+                      <div className="truncate text-xs text-muted-foreground">
                         {member.email}
-                      </span>
+                      </div>
                     </div>
                   </div>
                 ))}
                 {team.length > 5 && (
-                  <div className="text-sm text-gray-500 pl-11">
+                  <div className="px-2 text-xs text-muted-foreground">
                     +{team.length - 5} more members
                   </div>
                 )}
@@ -188,11 +183,7 @@ function ProjectSkillCard({
       </CardContent>
 
       <CardFooter className="pt-0">
-        <Button
-          size="sm"
-          variant="outline"
-          className="ml-auto gap-2 border-green-700/40 text-green-600 hover:text-green-600 bg-green-100 hover:bg-green-300 dark:bg-green-900/20 dark:hover:bg-green-900/60"
-        >
+        <Button size="sm" variant="outline" className="ml-auto gap-2">
           <CheckCircle className="w-4 h-4" />
           Mark as completed
         </Button>

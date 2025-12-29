@@ -75,11 +75,22 @@ function ProjectDetailCard({
 
   const computeMilestoneProgress = (items?: Milestone[]) => {
     if (!items || items.length === 0) return 0;
-    const total = items.length;
-    const completed = items.filter(
+
+    const allTasks = (items || []).flatMap((m) =>
+      (m.stories || []).flatMap((s) => s.tasks || []),
+    );
+    if (allTasks.length > 0) {
+      const completedTasks = allTasks.filter(
+        (t) => (t.taskStatus || '').toUpperCase() === 'COMPLETED',
+      ).length;
+      return Math.round((completedTasks / allTasks.length) * 100);
+    }
+
+    const totalMilestones = items.length;
+    const completedMilestones = items.filter(
       (m) => (m.status || '').toUpperCase() === 'COMPLETED',
     ).length;
-    return Math.round((completed / total) * 100);
+    return Math.round((completedMilestones / totalMilestones) * 100);
   };
 
   const progress =

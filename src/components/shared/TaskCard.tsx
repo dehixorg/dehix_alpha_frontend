@@ -83,7 +83,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       const freelancerId = task?.freelancers?.[0]?.freelancerId;
-                      console.log(freelancerId);
                       if (!freelancerId || user.type !== 'business') return;
                       router.push(
                         `/business/freelancerProfile/${freelancerId}`,

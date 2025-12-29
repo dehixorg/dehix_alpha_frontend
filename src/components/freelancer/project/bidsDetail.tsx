@@ -1517,7 +1517,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
               key={profile._id}
               value={profile._id || ''}
               onClick={() => setProfileId(profile._id)}
-              className="mb-3 overflow-hidden rounded-xl border bg-card shadow-sm"
+              className="mb-3 overflow-hidden rounded-xl border card shadow-sm"
             >
               <AccordionTrigger className="px-5 py-4 hover:no-underline">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
