@@ -303,19 +303,50 @@ export default function CurrentComponent({
     const rows = getAllItems();
 
     const getStatusBadge = (statusRaw: string) => {
-      const status = String(statusRaw || '').toUpperCase().trim();
-      const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
-      if (status === 'APPROVED') return { label: status, className: `${base} bg-emerald-500/10 text-emerald-600` };
-      if (status === 'APPLIED') return { label: status, className: `${base} bg-amber-500/10 text-amber-700` };
-      if (status === 'PENDING') return { label: status, className: `${base} bg-slate-500/10 text-slate-700` };
-      if (status === 'REJECTED') return { label: status, className: `${base} bg-red-500/10 text-red-600` };
-      if (status === 'CANCELLED') return { label: status, className: `${base} bg-red-500/10 text-red-600` };
-      if (status === 'COMPLETED') return { label: status, className: `${base} bg-blue-500/10 text-blue-600` };
-      return { label: status || '-', className: `${base} bg-muted text-muted-foreground` };
+      const status = String(statusRaw || '')
+        .toUpperCase()
+        .trim();
+      const base =
+        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
+      if (status === 'APPROVED')
+        return {
+          label: status,
+          className: `${base} bg-emerald-500/10 text-emerald-600`,
+        };
+      if (status === 'APPLIED')
+        return {
+          label: status,
+          className: `${base} bg-amber-500/10 text-amber-700`,
+        };
+      if (status === 'PENDING')
+        return {
+          label: status,
+          className: `${base} bg-slate-500/10 text-slate-700`,
+        };
+      if (status === 'REJECTED')
+        return {
+          label: status,
+          className: `${base} bg-red-500/10 text-red-600`,
+        };
+      if (status === 'CANCELLED')
+        return {
+          label: status,
+          className: `${base} bg-red-500/10 text-red-600`,
+        };
+      if (status === 'COMPLETED')
+        return {
+          label: status,
+          className: `${base} bg-blue-500/10 text-blue-600`,
+        };
+      return {
+        label: status || '-',
+        className: `${base} bg-muted text-muted-foreground`,
+      };
     };
 
     const getTypeBadgeClassName = (iconClassName: string) => {
-      const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
+      const base =
+        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
       return `${base} ${iconClassName}`;
     };
 
@@ -325,7 +356,9 @@ export default function CurrentComponent({
 
     if (rows.length === 0) {
       return (
-        <div className="text-sm text-muted-foreground">No interviews found.</div>
+        <div className="text-sm text-muted-foreground">
+          No interviews found.
+        </div>
       );
     }
 
@@ -373,12 +406,16 @@ export default function CurrentComponent({
               const rowTalentTypeLabel = String(item?.talentType || '-')
                 .toUpperCase()
                 .trim();
-              const statusBadge = getStatusBadge(String(item?.interviewStatus || ''));
+              const statusBadge = getStatusBadge(
+                String(item?.interviewStatus || ''),
+              );
 
               return (
                 <tr key={item._id} className="border-t">
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={getTypeBadgeClassName(section.iconClassName)}>
+                    <span
+                      className={getTypeBadgeClassName(section.iconClassName)}
+                    >
                       {section.title}
                     </span>
                   </td>
@@ -389,7 +426,9 @@ export default function CurrentComponent({
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">{dateLabel}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={statusBadge.className}>{statusBadge.label}</span>
+                    <span className={statusBadge.className}>
+                      {statusBadge.label}
+                    </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {meetingLink ? (
@@ -481,115 +520,119 @@ export default function CurrentComponent({
           </div>
         </div>
 
-        {showTodaySummary ? (
-          (() => {
-            const todayItems = sections
-              .flatMap((s) => normalizeList(grouped[s.key]))
-              .filter((item) => isToday(item.interviewDate))
-              .sort((a, b) =>
-                String(a.interviewDate || '').localeCompare(
-                  String(b.interviewDate || ''),
-                ),
-              );
+        {showTodaySummary
+          ? (() => {
+              const todayItems = sections
+                .flatMap((s) => normalizeList(grouped[s.key]))
+                .filter((item) => isToday(item.interviewDate))
+                .sort((a, b) =>
+                  String(a.interviewDate || '').localeCompare(
+                    String(b.interviewDate || ''),
+                  ),
+                );
 
-            const preview = todayItems.slice(0, 3);
+              const preview = todayItems.slice(0, 3);
 
-            return (
-              <Card className="overflow-hidden">
-                <CardHeader className="gap-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <CardTitle className="text-base">Today</CardTitle>
-                      <CardDescription className="text-xs">
-                        {new Date().toLocaleDateString(undefined, {
-                          weekday: 'long',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </CardDescription>
+              return (
+                <Card className="overflow-hidden">
+                  <CardHeader className="gap-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <CardTitle className="text-base">Today</CardTitle>
+                        <CardDescription className="text-xs">
+                          {new Date().toLocaleDateString(undefined, {
+                            weekday: 'long',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </CardDescription>
+                      </div>
+                      <div className="shrink-0 rounded-md border px-2 py-1 text-xs font-medium text-muted-foreground">
+                        {todayItems.length}
+                      </div>
                     </div>
-                    <div className="shrink-0 rounded-md border px-2 py-1 text-xs font-medium text-muted-foreground">
-                      {todayItems.length}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {isLoading ? (
-                    <div className="text-sm text-muted-foreground">
-                      Loading...
-                    </div>
-                  ) : todayItems.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">
-                      No interviews today.
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {preview.map((item) => {
-                        const d = item?.interviewDate
-                          ? new Date(item.interviewDate)
-                          : undefined;
-                        const timeLabel = d
-                          ? d.toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '-';
-                        const meetingLink = String(item?.meetingLink || '').trim();
-                        const talentName = String(
-                          item?.name || item?.talentName || '',
-                        ).trim();
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {isLoading ? (
+                      <div className="text-sm text-muted-foreground">
+                        Loading...
+                      </div>
+                    ) : todayItems.length === 0 ? (
+                      <div className="text-sm text-muted-foreground">
+                        No interviews today.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {preview.map((item) => {
+                          const d = item?.interviewDate
+                            ? new Date(item.interviewDate)
+                            : undefined;
+                          const timeLabel = d
+                            ? d.toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '-';
+                          const meetingLink = String(
+                            item?.meetingLink || '',
+                          ).trim();
+                          const talentName = String(
+                            item?.name || item?.talentName || '',
+                          ).trim();
 
-                        return (
-                          <div
-                            key={item._id}
-                            className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
-                          >
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium">
-                                {timeLabel} •{' '}
-                                {String(
-                                  item?.interviewType || 'INTERVIEW',
-                                ).toUpperCase()}
+                          return (
+                            <div
+                              key={item._id}
+                              className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium">
+                                  {timeLabel} •{' '}
+                                  {String(
+                                    item?.interviewType || 'INTERVIEW',
+                                  ).toUpperCase()}
+                                </div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {talentName
+                                    ? talentName
+                                    : String(
+                                        item?.talentType || '-',
+                                      ).toUpperCase()}
+                                </div>
                               </div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {talentName
-                                  ? talentName
-                                  : String(item?.talentType || '-').toUpperCase()}
-                              </div>
+                              {meetingLink ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="sm:shrink-0"
+                                  onClick={() =>
+                                    window.open(
+                                      meetingLink,
+                                      '_blank',
+                                      'noopener,noreferrer',
+                                    )
+                                  }
+                                >
+                                  Open meeting
+                                </Button>
+                              ) : null}
                             </div>
-                            {meetingLink ? (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="sm:shrink-0"
-                                onClick={() =>
-                                  window.open(
-                                    meetingLink,
-                                    '_blank',
-                                    'noopener,noreferrer',
-                                  )
-                                }
-                              >
-                                Open meeting
-                              </Button>
-                            ) : null}
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
 
-                      {todayItems.length > preview.length ? (
-                        <div className="text-xs text-muted-foreground">
-                          Showing {preview.length} of {todayItems.length}.
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })()
-        ) : null}
+                        {todayItems.length > preview.length ? (
+                          <div className="text-xs text-muted-foreground">
+                            Showing {preview.length} of {todayItems.length}.
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()
+          : null}
 
         {!enableViewToggle || view === 'cards' ? (
           <Accordion type="single" collapsible defaultValue={sections[0].key}>
