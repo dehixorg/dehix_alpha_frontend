@@ -101,13 +101,22 @@ export default function IntervieweePage() {
 
                   <div className="px-4 py-4 sm:px-6">
                     <TabsContent value="current" className="m-0">
-                      <CurrentComponent />
+                      <CurrentComponent
+                        apiRole="interviewee"
+                        hideIds
+                        showTodaySummary
+                        enableViewToggle
+                      />
                     </TabsContent>
                     <TabsContent value="bids" className="m-0">
                       <Bids userId={user.uid} />
                     </TabsContent>
                     <TabsContent value="history" className="m-0">
-                      <CompletedInterviews />
+                      <CompletedInterviews
+                        apiRole="interviewee"
+                        enableViewToggle
+                        hideIds
+                      />
                     </TabsContent>
                   </div>
                 </Tabs>

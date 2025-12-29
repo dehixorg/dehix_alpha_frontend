@@ -112,13 +112,13 @@ export default function InterviewerPage() {
                       <InterviewProfile />
                     </TabsContent>
                     <TabsContent value="current" className="m-0">
-                      <CurrentComponent />
+                      <CurrentComponent enableViewToggle />
                     </TabsContent>
                     <TabsContent value="bids" className="m-0">
                       <Bids userId={user.uid} />
                     </TabsContent>
                     <TabsContent value="history" className="m-0">
-                      <CompletedInterviews />
+                      <CompletedInterviews enableViewToggle />
                     </TabsContent>
                   </div>
                 </Tabs>
