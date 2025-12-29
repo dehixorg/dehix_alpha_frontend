@@ -6,11 +6,9 @@ import {
   Pointer,
   FileCheck,
   CircleX,
-  Inbox,
-  Search,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +16,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { notifyError } from '@/utils/toastMessage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -27,18 +25,15 @@ import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/business/dashboardMenuItems';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import FreelancerInvitationCard from '@/components/freelancer/invitations/FreelancerInvitationCard';
 import EmptyState from '@/components/shared/EmptyState';
 import {
-  FreelancerInvitation,
-  FreelancerInvitationsResponse,
-} from '@/types/freelancerInvitation';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 // Section header component
 function SectionHeader({
@@ -51,10 +46,12 @@ function SectionHeader({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8 px-4 sm:px-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
-        <p className="text-gray-400 mt-2 text-sm sm:text-base">{subtitle}</p>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="space-y-1">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
+          {title}
+        </h2>
+        <p className="text-sm text-muted-foreground sm:text-base">{subtitle}</p>
       </div>
       {right}
     </div>
@@ -72,8 +69,10 @@ function FilterToggle({
   id?: string;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <Badge className="font-medium">FREELANCER</Badge>
+    <div className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2">
+      <Badge variant={projectType === 'FREELANCER' ? 'default' : 'outline'}>
+        FREELANCER
+      </Badge>
       <Switch
         id={id}
         checked={projectType === 'FREELANCER'}
@@ -81,7 +80,9 @@ function FilterToggle({
           onChange(checked ? 'FREELANCER' : 'CONSULTANT')
         }
       />
-      <Badge className="font-medium">CONSULTANT</Badge>
+      <Badge variant={projectType === 'CONSULTANT' ? 'default' : 'outline'}>
+        CONSULTANT
+      </Badge>
     </div>
   );
 }
@@ -190,7 +191,7 @@ const ProjectList = ({
             ))}
           </div>
         ) : (
-          <main className="grid grid-cols-1 flex-1 items-start gap-4 px-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+          <main className="grid grid-cols-1 flex-1 items-start gap-4 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
             {projects.length === 0 ? (
               <div className="col-span-full w-full">
                 <EmptyState
@@ -223,20 +224,6 @@ export default function ProjectPage() {
   const pathname = usePathname();
   const [projectType, setProjectType] = useState('FREELANCER');
   const [activeTab, setActiveTab] = useState('current');
-
-  // Invitation state
-  const [invitations, setInvitations] = useState<FreelancerInvitationsResponse>(
-    {
-      pending: [],
-      accepted: [],
-      rejected: [],
-    },
-  );
-  const [invitationsLoading, setInvitationsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [processingInvitation, setProcessingInvitation] = useState<
-    string | null
-  >(null);
   const [projectsRefreshTrigger, setProjectsRefreshTrigger] = useState(0);
 
   // Listen for task assignment updates
@@ -257,123 +244,17 @@ export default function ProjectPage() {
     };
   }, []);
 
-  // Fetch invitations
-  const fetchInvitations = async () => {
-    setInvitationsLoading(true);
-    try {
-      const response = await axiosInstance.get('/freelancer/invitations');
-      const data = response?.data?.data;
-
-      setInvitations({
-        pending: data?.pending || [],
-        accepted: data?.accepted || [],
-        rejected: data?.rejected || [],
-      });
-    } catch (error: any) {
-      console.error('Failed to fetch invitations:', error);
-      notifyError('Failed to load invitations', 'Error');
-      setInvitations({
-        pending: [],
-        accepted: [],
-        rejected: [],
-      });
-    } finally {
-      setInvitationsLoading(false);
-    }
-  };
-
-  // Handle accept invitation
-  const handleAcceptInvitation = async (invitation: FreelancerInvitation) => {
-    setProcessingInvitation(invitation.hireId);
-    try {
-      await axiosInstance.post('/freelancer/respond-invite', {
-        hireId: invitation.hireId,
-        freelancer_professional_profile_id: invitation.freelancerEntryId,
-        projectId: invitation.projectId,
-        profileId: invitation.profileId,
-        action: 'ACCEPT',
-      });
-      notifySuccess('Invitation accepted successfully', 'Success');
-      await fetchInvitations();
-      setProjectsRefreshTrigger((prev) => prev + 1);
-    } catch (error: any) {
-      console.error('Failed to accept invitation:', error);
-      notifyError(
-        error?.response?.data?.message || 'Failed to accept invitation',
-        'Error',
-      );
-    } finally {
-      setProcessingInvitation(null);
-    }
-  };
-
-  // Handle reject invitation
-  const handleRejectInvitation = async (invitation: FreelancerInvitation) => {
-    setProcessingInvitation(invitation.hireId);
-    try {
-      await axiosInstance.post('/freelancer/respond-invite', {
-        hireId: invitation.hireId,
-        freelancer_professional_profile_id: invitation.freelancerEntryId,
-        projectId: invitation.projectId,
-        profileId: invitation.profileId,
-        action: 'REJECT',
-      });
-      notifySuccess('Invitation rejected successfully', 'Success');
-      await fetchInvitations();
-      setProjectsRefreshTrigger((prev) => prev + 1);
-    } catch (error: any) {
-      console.error('Failed to reject invitation:', error);
-      notifyError(
-        error?.response?.data?.message || 'Failed to reject invitation',
-        'Error',
-      );
-    } finally {
-      setProcessingInvitation(null);
-    }
-  };
-
-  // Handle view invitation details
-  const handleViewInvitationDetails = (projectId: string) => {
-    router.push(`/freelancer/project/${projectId}`);
-  };
-
-  // Filter pending invitations based on search
-  const filteredInvitations = useMemo(() => {
-    const pendingInvitations = invitations.pending;
-
-    if (!searchQuery) return pendingInvitations;
-
-    const query = searchQuery.toLowerCase();
-    return pendingInvitations.filter(
-      (inv) =>
-        inv.projectName.toLowerCase().includes(query) ||
-        inv.companyName.toLowerCase().includes(query) ||
-        inv.profileDomain.toLowerCase().includes(query),
-    );
-  }, [invitations.pending, searchQuery]);
-
   // Sync tab with URL
   useEffect(() => {
     const parts = pathname.split('/');
     const tabFromUrl = parts[parts.length - 1];
-    if (
-      ['current', 'applied', 'invitations', 'completed', 'rejected'].includes(
-        tabFromUrl,
-      )
-    ) {
+    if (['current', 'applied', 'completed', 'rejected'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     } else {
       setActiveTab('current');
       router.replace('/freelancer/project/current'); // default
     }
   }, [pathname, router]);
-
-  // Fetch invitations when invitations tab is active
-  useEffect(() => {
-    if (activeTab === 'invitations') {
-      fetchInvitations();
-    }
-  }, [activeTab]);
 
   // Handle tab change
   const handleTabChange = (tab: string) => {
@@ -390,8 +271,8 @@ export default function ProjectPage() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
+          menuItemsTop={freelancerMenuItemsTop}
+          menuItemsBottom={freelancerMenuItemsBottom}
           activeMenu="Dashboard"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
@@ -400,168 +281,123 @@ export default function ProjectPage() {
         />
 
         <div className="flex-1">
-          <div className="w-full px-4 sm:px-6 py-2">
-            <Tabs
-              value={activeTab}
-              onValueChange={handleTabChange}
-              className="w-full flex flex-col gap-4"
-            >
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 overflow-x-auto no-scrollbar">
-                <TabsTrigger
-                  value="current"
-                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
+          <div className="w-full p-4 sm:px-6 sm:py-2">
+            <Card className="w-full">
+              <CardHeader className="space-y-1 bg-gradient">
+                <CardTitle className="text-2xl font-bold tracking-tight">
+                  Projects
+                </CardTitle>
+                <CardDescription>
+                  Track your projects by status and respond to invitations.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 px-0">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={handleTabChange}
+                  className="w-full flex flex-col gap-4"
                 >
-                  <FolderDot className="h-4 w-4" /> Current
-                </TabsTrigger>
-                <TabsTrigger
-                  value="applied"
-                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
-                >
-                  <Pointer className="h-4 w-4" /> Applied
-                </TabsTrigger>
-                <TabsTrigger
-                  value="invitations"
-                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
-                >
-                  <Inbox className="h-4 w-4" /> Invitations
-                </TabsTrigger>
-                <TabsTrigger
-                  value="completed"
-                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
-                >
-                  <FileCheck className="h-4 w-4" /> Completed
-                </TabsTrigger>
-                <TabsTrigger
-                  value="rejected"
-                  className="flex items-center justify-center gap-2 whitespace-nowrap text-sm"
-                >
-                  <CircleX className="h-4 w-4" /> Rejected
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="current">
-                <SectionHeader
-                  title="Current Projects"
-                  subtitle="Browse and manage your active freelance projects"
-                  right={
-                    <FilterToggle
-                      id="project-type"
-                      projectType={projectType}
-                      onChange={setProjectType}
-                    />
-                  }
-                />
-                <ProjectList
-                  status="ACTIVE"
-                  projectType={projectType}
-                  refreshTrigger={projectsRefreshTrigger}
-                />
-              </TabsContent>
-
-              <TabsContent value="applied">
-                <SectionHeader
-                  title="Projects Under Verification"
-                  subtitle="Track the status of your projects currently undergoing verification before final approval."
-                  right={
-                    <FilterToggle
-                      id="project-type-applied"
-                      projectType={projectType}
-                      onChange={setProjectType}
-                    />
-                  }
-                />
-                <ProjectList status="PENDING" projectType={projectType} />
-              </TabsContent>
-
-              <TabsContent value="invitations">
-                <SectionHeader
-                  title="Project Invitations"
-                  subtitle="Review and respond to pending project invitations. Accepted invitations appear in Current tab, rejected ones in Rejected tab."
-                />
-
-                {/* Search bar */}
-                <div className="px-4 sm:px-6 mb-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search by project, company, or profile..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
+                  <div className="border-b px-4 sm:px-6">
+                    <div className="max-w-full overflow-x-auto no-scrollbar">
+                      <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                        <TabsTrigger
+                          value="current"
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <FolderDot className="mr-2 h-4 w-4" /> Current
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="applied"
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <Pointer className="mr-2 h-4 w-4" /> Applied
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="completed"
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <FileCheck className="mr-2 h-4 w-4" /> Completed
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="rejected"
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <CircleX className="mr-2 h-4 w-4" /> Rejected
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
                   </div>
-                </div>
 
-                {/* Pending invitations list */}
-                <div className="px-4 sm:px-6">
-                  {invitationsLoading ? (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {[...Array(6)].map((_, i) => (
-                        <Skeleton key={i} className="h-48" />
-                      ))}
-                    </div>
-                  ) : filteredInvitations.length === 0 ? (
-                    <EmptyState
-                      icon={
-                        <Inbox className="h-12 w-12 text-muted-foreground" />
-                      }
-                      title="No pending invitations"
-                      description="New invitations will appear here. Accepted invitations move to Current tab, rejected ones to Rejected tab."
-                      className="py-12"
-                    />
-                  ) : (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {filteredInvitations.map((invitation) => (
-                        <FreelancerInvitationCard
-                          key={invitation.hireId}
-                          invitation={invitation}
-                          onAccept={handleAcceptInvitation}
-                          onReject={handleRejectInvitation}
-                          onViewDetails={handleViewInvitationDetails}
-                          isProcessing={
-                            processingInvitation === invitation.hireId
-                          }
+                  <TabsContent value="current" className="space-y-4 px-6">
+                    <SectionHeader
+                      title="Current Projects"
+                      subtitle="Browse and manage your active freelance projects"
+                      right={
+                        <FilterToggle
+                          id="project-type"
+                          projectType={projectType}
+                          onChange={setProjectType}
                         />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="completed">
-                <SectionHeader
-                  title="Completed Projects"
-                  subtitle="Explore and manage your successfully completed freelance projects."
-                  right={
-                    <FilterToggle
-                      id="project-type-completed"
-                      projectType={projectType}
-                      onChange={setProjectType}
+                      }
                     />
-                  }
-                />
-                <ProjectList status="COMPLETED" projectType={projectType} />
-              </TabsContent>
-
-              <TabsContent value="rejected">
-                <SectionHeader
-                  title="Rejected Projects"
-                  subtitle="Explore and Review projects that were not selected and gain insights for future submissions."
-                  right={
-                    <FilterToggle
-                      id="project-type-rejected"
+                    <ProjectList
+                      status="ACTIVE"
                       projectType={projectType}
-                      onChange={setProjectType}
+                      refreshTrigger={projectsRefreshTrigger}
                     />
-                  }
-                />
-                <ProjectList
-                  status="REJECTED"
-                  projectType={projectType}
-                  refreshTrigger={projectsRefreshTrigger}
-                />
-              </TabsContent>
-            </Tabs>
+                  </TabsContent>
+
+                  <TabsContent value="applied" className="space-y-4 px-6">
+                    <SectionHeader
+                      title="Projects Under Verification"
+                      subtitle="Track the status of your projects currently undergoing verification before final approval."
+                      right={
+                        <FilterToggle
+                          id="project-type-applied"
+                          projectType={projectType}
+                          onChange={setProjectType}
+                        />
+                      }
+                    />
+                    <ProjectList status="PENDING" projectType={projectType} />
+                  </TabsContent>
+
+                  <TabsContent value="completed" className="space-y-4 px-6">
+                    <SectionHeader
+                      title="Completed Projects"
+                      subtitle="Explore and manage your successfully completed freelance projects."
+                      right={
+                        <FilterToggle
+                          id="project-type-completed"
+                          projectType={projectType}
+                          onChange={setProjectType}
+                        />
+                      }
+                    />
+                    <ProjectList status="COMPLETED" projectType={projectType} />
+                  </TabsContent>
+
+                  <TabsContent value="rejected" className="space-y-4 px-6">
+                    <SectionHeader
+                      title="Rejected Projects"
+                      subtitle="Explore and Review projects that were not selected and gain insights for future submissions."
+                      right={
+                        <FilterToggle
+                          id="project-type-rejected"
+                          projectType={projectType}
+                          onChange={setProjectType}
+                        />
+                      }
+                    />
+                    <ProjectList
+                      status="REJECTED"
+                      projectType={projectType}
+                      refreshTrigger={projectsRefreshTrigger}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

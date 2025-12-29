@@ -195,8 +195,8 @@ export default function BidedInterviews() {
   if (loading && bids.length === 0) {
     return (
       <div className="space-y-4">
-        <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
-          <Table>
+        <div className="w-full max-w-full overflow-x-auto bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+          <Table className="min-w-[860px]">
             <TableHeader>
               <TableRow className="hover:bg-[#09090B]">
                 {['Talent', 'Type', 'Date', 'Time', 'Bid', 'Actions'].map(
@@ -267,8 +267,8 @@ export default function BidedInterviews() {
 
   return (
     <div className="space-y-4">
-      <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
-        <Table>
+      <div className="w-full max-w-full overflow-x-auto bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+        <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow className="hover:bg-[#09090B]">
               <TableHead className="w-[200px] text-center font-medium">

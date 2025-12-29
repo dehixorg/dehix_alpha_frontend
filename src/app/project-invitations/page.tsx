@@ -33,7 +33,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -253,7 +252,7 @@ const ProjectInvitationsPage: React.FC = () => {
         <CardContent>
           {loading ? (
             <div className="space-y-4 mt-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
                   <Card key={i} className="overflow-hidden">
                     <div className="p-4 space-y-4">
@@ -307,7 +306,7 @@ const ProjectInvitationsPage: React.FC = () => {
               />
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-6">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-6">
               {filtered.map((inv) => (
                 <Card
                   key={inv._id}
@@ -434,7 +433,7 @@ const ProjectInvitationsPage: React.FC = () => {
 
                   <Separator />
 
-                  <CardFooter className="p-4 pt-3 justify-between">
+                  <CardFooter className="p-4 pt-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Calendar className="w-4 h-4 mr-1.5" />
                       <span>
@@ -445,7 +444,7 @@ const ProjectInvitationsPage: React.FC = () => {
                         })}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
                       {isFreelancer &&
                         inv.status === InvitationStatus.PENDING && (
                           <Button
@@ -511,7 +510,7 @@ const ProjectInvitationsPage: React.FC = () => {
         />
 
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
-          <div className="w-full mx-auto max-w-6xl">
+          <div className="w-full mx-auto">
             <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-bold tracking-tight">
@@ -522,13 +521,32 @@ const ProjectInvitationsPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center justify-end gap-2">
+              <div className="flex w-full items-center justify-start gap-2 sm:w-auto">
                 <Select
                   value={sortBy}
                   onValueChange={(value) => setSortBy(value as any)}
                 >
-                  <SelectTrigger className="w-[180px] h-9">
-                    <SelectValue placeholder="Sort by" />
+                  <SelectTrigger className="h-9 w-14 px-2 sm:w-auto sm:px-3">
+                    <div className="flex w-full items-center justify-center gap-2 min-w-0 sm:justify-start">
+                      <span className="shrink-0">
+                        {sortBy === 'createdAt' ? (
+                          <Calendar className="h-4 w-4" />
+                        ) : sortBy === 'projectName' ? (
+                          <LayoutGrid className="h-4 w-4" />
+                        ) : (
+                          <User className="h-4 w-4" />
+                        )}
+                      </span>
+                      <span className="hidden sm:inline truncate">
+                        {sortBy === 'createdAt'
+                          ? 'Invitation Date'
+                          : sortBy === 'projectName'
+                            ? 'Project Name'
+                            : isFreelancer
+                              ? 'Business Name'
+                              : 'Freelancer Name'}
+                      </span>
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="createdAt">
@@ -569,7 +587,7 @@ const ProjectInvitationsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="card rounded-xl border shadow-sm overflow-hidden mb-6">
+            <div className="card rounded-xl border shadow-sm mb-6 max-w-full">
               {isFreelancer ? (
                 <>
                   <InvitationsContent />
@@ -580,39 +598,41 @@ const ProjectInvitationsPage: React.FC = () => {
                   onValueChange={(value: string) =>
                     setStatusFilter(value as InvitationStatusFilter)
                   }
-                  className="w-full"
+                  className="max-w-[92vw]"
                 >
-                  <div className="border-b px-6">
-                    <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
-                      <TabsTrigger
-                        value="ALL"
-                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                      >
-                        <LayoutGrid className="mr-2 h-4 w-4" />
-                        All
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value={InvitationStatus.PENDING}
-                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                      >
-                        <Clock4 className="mr-2 h-4 w-4" />
-                        Pending
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value={InvitationStatus.ACCEPTED}
-                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                      >
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Accepted
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value={InvitationStatus.REJECTED}
-                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                      >
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Rejected
-                      </TabsTrigger>
-                    </TabsList>
+                  <div className="border-b px-4 sm:px-6">
+                    <div className="max-w-full overflow-x-auto">
+                      <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                        <TabsTrigger
+                          value="ALL"
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <LayoutGrid className="mr-2 h-4 w-4" />
+                          All
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value={InvitationStatus.PENDING}
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <Clock4 className="mr-2 h-4 w-4" />
+                          Pending
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value={InvitationStatus.ACCEPTED}
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Accepted
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value={InvitationStatus.REJECTED}
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Rejected
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
                   </div>
 
                   <TabsContent value="ALL" className="m-0">

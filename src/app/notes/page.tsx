@@ -81,10 +81,7 @@ const Notes = () => {
           menuItemsTop={notesMenu}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Notes"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Notes', link: '/notes' },
-          ]}
+          breadcrumbItems={[{ label: 'Notes', link: '/notes' }]}
         />
         {/* Main content area */}
         <div className="px-4 mb-5">

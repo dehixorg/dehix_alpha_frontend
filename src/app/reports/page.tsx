@@ -47,16 +47,6 @@ export default function NewReportPage() {
     ? businessMenuItemsBottom
     : freelancerMenuItemsBottom;
 
-  const breadcrumbItems = isBusinessRole
-    ? [
-        { label: 'Business', link: '/dashboard/business' },
-        { label: 'Reports', link: '#' },
-      ]
-    : [
-        { label: 'Freelancer', link: '/dashboard/freelancer' },
-        { label: 'Reports', link: '#' },
-      ];
-
   const reportType = getReportTypeFromPath(pathname);
   const type = searchParams.get('type');
   const reportInfo: ReportInfo = {
@@ -100,7 +90,10 @@ export default function NewReportPage() {
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Reports"
-          breadcrumbItems={breadcrumbItems}
+          breadcrumbItems={[
+            { label: 'Settings', link: '#' },
+            { label: 'Reports', link: '#' },
+          ]}
         />
 
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">

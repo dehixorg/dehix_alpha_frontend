@@ -438,7 +438,7 @@ const HomePage = () => {
             Start a Chat
           </Button>
         }
-        className="h-full border-0 bg-transparent py-8"
+        className="h-[80vh] border-0 bg-transparent py-8 m-2"
       />
     );
   }
@@ -549,13 +549,7 @@ const HomePage = () => {
               : freelancerMenuItemsBottom
           }
           activeMenu="Chats"
-          breadcrumbItems={[
-            {
-              label: user.type === 'business' ? 'Business' : 'Freelancer',
-              link: '/dashboard',
-            },
-            { label: 'Chats', link: '/chat' },
-          ]}
+          breadcrumbItems={[{ label: 'Chats', link: '/chat' }]}
           searchPlaceholder="Search chats..."
         />
         <main className="h-[96vh]">

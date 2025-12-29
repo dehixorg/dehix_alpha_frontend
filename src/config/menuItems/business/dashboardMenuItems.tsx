@@ -9,6 +9,7 @@ import {
   Trash2,
   Users2,
   SendHorizontal,
+  ArrowLeft,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -89,8 +90,8 @@ export const notesMenu: MenuItem[] = [
   },
   {
     href: '/dashboard/business',
-    icon: <Home className="h-5 w-5" />,
-    label: 'Home',
+    icon: <ArrowLeft className="h-5 w-5" />,
+    label: 'Back',
   },
   {
     href: '/notes',
