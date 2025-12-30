@@ -62,8 +62,8 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Resume',
   },
   {
-    href: '/reports', // Link to your new Reports page
-    icon: <FileWarning className="h-5 w-5" />, // You can change icon
+    href: '/reports',
+    icon: <FileWarning className="h-5 w-5" />,
     label: 'Reports',
   },
 ];
