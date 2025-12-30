@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -22,12 +21,10 @@ import {
 import InterviewProfile from '@/components/freelancer/interview/interviewProfile';
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
 import InterviewerBids from '@/components/freelancer/interview/InterviewerBids';
-import { RootState } from '@/lib/store';
 
 export default function InterviewerPage() {
   const params = useParams();
   const router = useRouter();
-  const user = useSelector((state: RootState) => state.user);
 
   const slug = Array.isArray(params?.slug) ? params.slug : [];
   const activeTab = slug[0] || 'profile';
@@ -117,7 +114,7 @@ export default function InterviewerPage() {
                       <CurrentComponent enableViewToggle />
                     </TabsContent>
                     <TabsContent value="bids" className="m-0">
-                      <InterviewerBids userId={user.uid} />
+                      <InterviewerBids />
                     </TabsContent>
                     <TabsContent value="history" className="m-0">
                       <CompletedInterviews enableViewToggle />

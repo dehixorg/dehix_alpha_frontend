@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 'use client';
 import React, { useEffect, useState } from 'react';
-import { BadgeDollarSign, Briefcase, CircleHelp } from 'lucide-react';
+import { Briefcase } from 'lucide-react';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,6 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';

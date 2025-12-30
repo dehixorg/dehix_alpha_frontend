@@ -91,11 +91,7 @@ const hasMeaningfulBid = (bid?: MyBid) => {
   );
 };
 
-export default function InterviewerBids({
-  userId,
-}: {
-  userId?: string;
-}) {
+export default function InterviewerBids() {
   const router = useRouter();
   const [attributes, setAttributes] = useState<VerifiedAttribute[]>([]);
   const [attributesLoading, setAttributesLoading] = useState(false);
