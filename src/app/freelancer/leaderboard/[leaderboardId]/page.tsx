@@ -30,18 +30,24 @@ interface PageProps {
 export default function LeaderboardDetailsPage({ params }: PageProps) {
   const router = useRouter();
   const { leaderboardId } = params;
-  const currentUserId = useAppSelector((state) => state.user.uid);
 
   const [isLoading, setIsLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState<FullLeaderboard | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
 
+  const currentUserId = useAppSelector((state) => state.user.uid);
+
   useEffect(() => {
+    if (!currentUserId) {
+      setError('User not authenticated');
+      setIsLoading(false);
+      return;
+    }
     if (leaderboardId) {
       loadLeaderboardDetails();
     }
-  }, [leaderboardId]);
+  }, [leaderboardId, currentUserId]);
 
   const loadLeaderboardDetails = async () => {
     setIsLoading(true);
