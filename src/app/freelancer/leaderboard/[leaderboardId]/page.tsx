@@ -2,23 +2,46 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Users, Target, Info } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  Users,
+  Target,
+  Info,
+  Sparkles,
+  Award,
+  CheckCircle,
+} from 'lucide-react';
 
 import { useAppSelector } from '@/lib/hooks';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   menuItemsTop,
   menuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { FullLeaderboard } from '@/types/leaderboard';
 import { LeaderboardTable } from '@/components/leaderboard/LeaderboardTable';
+import StatItem from '@/components/shared/StatItem';
 
 // types for params
 interface PageProps {
@@ -165,9 +188,17 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
               { label: 'Details', link: '#' },
             ]}
           />
-          <main className="p-8 space-y-6">
+          <main className="p-4 sm:px-8 space-y-8">
             <Skeleton className="h-12 w-1/3" />
-            <Skeleton className="h-64 w-full" />
+            <Card className="h-96">
+              <CardHeader className="pb-4">
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-64 w-full" />
+              </CardContent>
+            </Card>
           </main>
         </div>
       </div>
@@ -192,17 +223,20 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
               { label: 'Leaderboard', link: '/freelancer/leaderboard' },
             ]}
           />
-          <main className="p-8">
-            <Card>
+          <main className="p-4 sm:px-8">
+            <Card className="relative overflow-hidden">
               <CardContent className="py-16 flex flex-col items-center">
-                <Info className="h-16 w-16 text-destructive/50 mb-4" />
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-destructive/20 to-destructive/10 rounded-full blur-2xl" />
+                  <Info className="relative h-16 w-16 text-destructive mb-4" />
+                </div>
                 <h3 className="text-xl font-semibold mb-2">Error</h3>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-center max-w-md">
                   {error || 'Leaderboard not found'}
                 </p>
                 <Button
                   variant="outline"
-                  className="mt-4"
+                  className="mt-6"
                   onClick={() => router.back()}
                 >
                   Go Back
@@ -218,6 +252,7 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
   // Scoring Weights Display Helper
   const renderScoringWeights = (weights: any) => {
     if (!weights) return null;
+
     const entries = Object.entries(weights)
       .filter(
         ([key]) => key !== 'verifiedProfileBonus' && key !== 'oracleBonus',
@@ -230,37 +265,74 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
         weight: value.weight,
       }));
 
+    const getColorForMetric = (
+      name: string,
+    ): 'blue' | 'green' | 'amber' | 'default' => {
+      const lowerName = name.toLowerCase();
+      if (lowerName.includes('completion')) return 'green';
+      if (lowerName.includes('rating')) return 'amber';
+      if (lowerName.includes('earnings')) return 'blue';
+      return 'default';
+    };
+
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {entries.map((item) => (
-            <div
-              key={item.name}
-              className="flex justify-between items-center p-3 bg-muted/30 rounded-lg border"
-            >
-              <span className="font-medium text-sm">{item.name}</span>
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">
-                  Min: {item.min}
+          {entries.map((item, index) => (
+            <StatItem
+              key={index}
+              variant="card"
+              color={getColorForMetric(item.name)}
+              label={item.name}
+              value={
+                <div className="text-left">
+                  <div className="text-lg font-bold text-primary">
+                    {item.weight} pts
+                  </div>
+                  {item.min > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      Min: {item.min}
+                    </div>
+                  )}
                 </div>
-                <div className="font-bold text-primary">{item.weight} pts</div>
-              </div>
-            </div>
+              }
+              text_class="text-lg"
+              value_class="justify-end"
+            />
           ))}
         </div>
-        {/* Bonuses */}
-        <div className="flex gap-4 mt-2">
-          {weights.verifiedProfileBonus > 0 && (
-            <Badge variant="secondary" className="px-3 py-1">
-              Verified Profile: +{weights.verifiedProfileBonus} pts
-            </Badge>
-          )}
-          {weights.oracleBonus > 0 && (
-            <Badge variant="secondary" className="px-3 py-1">
-              Oracle Badge: +{weights.oracleBonus} pts
-            </Badge>
-          )}
-        </div>
+
+        {/* Bonus Points Section */}
+        {(weights.verifiedProfileBonus > 0 || weights.oracleBonus > 0) && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+              <Sparkles className="h-4 w-4" />
+              Bonus Points
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {weights.verifiedProfileBonus > 0 && (
+                <StatItem
+                  variant="default"
+                  color="green"
+                  icon={<CheckCircle className="h-4 w-4" />}
+                  label="Verified Profile"
+                  value={`+${weights.verifiedProfileBonus} pts`}
+                  text_class="text-sm font-semibold"
+                />
+              )}
+              {weights.oracleBonus > 0 && (
+                <StatItem
+                  variant="default"
+                  color="blue"
+                  icon={<Award className="h-4 w-4" />}
+                  label="Oracle Badge"
+                  value={`+${weights.oracleBonus} pts`}
+                  text_class="text-sm font-semibold"
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -284,130 +356,145 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
           ]}
         />
         <main className="p-4 sm:px-8 space-y-8">
-          {/* Top Navigation */}
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="gap-2 pl-0 hover:pl-2 transition-all"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to All Contests
-          </Button>
+          {/* Header Card */}
+          <Card className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-2xl" />
+            <CardHeader className="relative pb-6">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => router.back()}
+                    className="gap-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                  </Button>
+                  <div className="h-4 w-px bg-border" />
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
+                      {leaderboard.frequency}
+                    </Badge>
+                    <Badge
+                      variant={
+                        leaderboard.status === 'ACTIVE'
+                          ? 'default'
+                          : 'secondary'
+                      }
+                    >
+                      {leaderboard.status}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  {(() => {
+                    const userEntry = leaderboard?.rankings?.find(
+                      (r) => r.freelancerId === currentUserId,
+                    );
+                    const userRank = userEntry?.rank;
+                    const hasClaimedReward = userEntry?.reward;
+                    const isClaimable =
+                      leaderboard?.status === 'PUBLISHED' &&
+                      userRank !== undefined &&
+                      userRank <= 3 &&
+                      !hasClaimedReward;
+                    const isPublished = leaderboard?.status === 'PUBLISHED';
 
-          {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
-                  {leaderboard.frequency}
-                </Badge>
-                <Badge
-                  variant={
-                    leaderboard.status === 'ACTIVE' ? 'default' : 'secondary'
-                  }
-                >
-                  {leaderboard.status}
-                </Badge>
-              </div>
-              <h1 className="text-4xl font-bold tracking-tight mb-2">
-                {leaderboard.name}
-              </h1>
-              {leaderboard.description && (
-                <p className="text-lg text-muted-foreground max-w-3xl">
-                  {leaderboard.description}
-                </p>
-              )}
-              <div className="flex items-center gap-4 mt-4 text-sm font-medium text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {formatDate(leaderboard.periodStart)} -{' '}
-                  {formatDate(leaderboard.periodEnd)}
+                    if (hasClaimedReward) {
+                      return (
+                        <Button
+                          variant="default"
+                          className="bg-gradient-to-r from-green-500 to-emerald-600"
+                          disabled
+                        >
+                          Reward Claimed
+                        </Button>
+                      );
+                    } else if (isClaimable) {
+                      return (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                className="shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                                onClick={handleClaim}
+                                disabled={isClaiming}
+                              >
+                                {isClaiming ? 'Claiming...' : 'Claim Rewards'}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>You ranked in the top 3! Claim your reward.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    } else if (leaderboard.isJoined) {
+                      return (
+                        <Button
+                          variant="secondary"
+                          className="w-full lg:w-auto"
+                          disabled
+                        >
+                          Joined
+                        </Button>
+                      );
+                    } else if (isPublished && !leaderboard.isJoined) {
+                      return (
+                        <Button
+                          variant="secondary"
+                          className="w-full lg:w-auto"
+                          disabled
+                        >
+                          Participate Now
+                        </Button>
+                      );
+                    } else {
+                      return (
+                        <Button
+                          className="shadow-lg shadow-primary/20"
+                          onClick={handleParticipate}
+                        >
+                          Participate Now
+                        </Button>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
-            </div>
+              <div className="space-y-4">
+                <CardTitle className="text-3xl lg:text-4xl font-bold tracking-tight">
+                  {leaderboard.name}
+                </CardTitle>
+                {leaderboard.description && (
+                  <CardDescription className="text-base lg:text-lg max-w-3xl">
+                    {leaderboard.description}
+                  </CardDescription>
+                )}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    {formatDate(leaderboard.periodStart)} -{' '}
+                    {formatDate(leaderboard.periodEnd)}
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
 
-            {(() => {
-              const userEntry = leaderboard?.rankings?.find(
-                (r) => r.freelancerId === currentUserId,
-              );
-              const userRank = userEntry?.rank;
-              const hasClaimedReward = userEntry?.reward;
-              const isClaimable =
-                leaderboard?.status === 'PUBLISHED' &&
-                userRank !== undefined &&
-                userRank <= 3 &&
-                !hasClaimedReward;
-              const isPublished = leaderboard?.status === 'PUBLISHED';
-
-              if (hasClaimedReward) {
-                return (
-                  <Button
-                    size="lg"
-                    variant="default"
-                    className="w-full md:w-auto bg-gradient-to-r from-green-500 to-emerald-600"
-                    disabled
-                  >
-                    Reward Claimed
-                  </Button>
-                );
-              } else if (isClaimable) {
-                return (
-                  <Button
-                    size="lg"
-                    className="w-full md:w-auto shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                    onClick={handleClaim}
-                    disabled={isClaiming}
-                  >
-                    {isClaiming ? 'Claiming...' : 'Claim Rewards'}
-                  </Button>
-                );
-              } else if (leaderboard.isJoined) {
-                return (
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    className="w-full md:w-auto"
-                    disabled
-                  >
-                    Joined
-                  </Button>
-                );
-              } else if (isPublished && !leaderboard.isJoined) {
-                return (
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    className="w-full md:w-auto"
-                    disabled
-                  >
-                    Participate Now
-                  </Button>
-                );
-              } else {
-                return (
-                  <Button
-                    size="lg"
-                    className="w-full md:w-auto shadow-lg shadow-primary/20"
-                    onClick={handleParticipate}
-                  >
-                    Participate Now
-                  </Button>
-                );
-              }
-            })()}
-          </div>
-
-          {/* Info Grid */}
+          {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content: Rankings */}
-            <div className="lg:col-span-2 space-y-8">
+            {/* Rankings */}
+            <div className="lg:col-span-2">
               <LeaderboardTable
                 data={leaderboard.rankings}
                 rewardConfig={leaderboard.rewardConfig}
               />
             </div>
 
-            {/* Sidebar: Rules & Config */}
+            {/* Sidebar */}
             <div className="space-y-6">
               {/* Eligibility Card */}
               <Card>
@@ -438,6 +525,7 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
                       )}
                     </div>
                   </div>
+                  <Separator />
                   <div>
                     <h4 className="text-sm font-semibold mb-2">
                       Allowed Levels
@@ -473,6 +561,7 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
                       <Target className="h-5 w-5 text-green-500" />
                       Scoring Rules
                     </CardTitle>
+                    <CardDescription>How points are calculated</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {renderScoringWeights(leaderboard.scoringWeights)}
