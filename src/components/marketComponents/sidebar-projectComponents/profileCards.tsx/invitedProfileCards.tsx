@@ -71,7 +71,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
   >(null);
 
   const handleViewProfile = (talentId: string) => {
-    router.replace(`/business/freelancerProfile/${talentId}`);
+    router.replace(`/freelancer-profile/${talentId}`);
   };
 
   const handleDecision = async (

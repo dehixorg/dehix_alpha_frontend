@@ -84,9 +84,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       e.stopPropagation();
                       const freelancerId = task?.freelancers?.[0]?.freelancerId;
                       if (!freelancerId || user.type !== 'business') return;
-                      router.push(
-                        `/business/freelancerProfile/${freelancerId}`,
-                      );
+                      router.push(`/freelancer-profile/${freelancerId}`);
                     }}
                   >
                     <Avatar className="h-5 w-5">

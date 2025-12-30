@@ -321,7 +321,7 @@ const ProjectInvitationsPage: React.FC = () => {
                             className="h-10 w-10 border cursor-pointer"
                             onClick={() =>
                               router.push(
-                                `/business/freelancerProfile/${inv.freelancerId}`,
+                                `/freelancer-profile/${inv.freelancerId}`,
                               )
                             }
                           >
