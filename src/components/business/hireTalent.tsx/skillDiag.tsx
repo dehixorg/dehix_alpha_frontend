@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Award, Gauge, Clock, FileText } from 'lucide-react';
+import { Award, Gauge, Clock, FileText } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -140,8 +140,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
+        <Button size="sm" className="w-full sm:w-auto">
+          <Award className="mr-2 h-4 w-4" />
           Add Skill
         </Button>
       </DialogTrigger>

@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Note, NoteType } from '@/utils/types/note';
 
 type Props = {
@@ -84,15 +85,17 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
             onChange={(e) => setContent(e.target.value)}
             className="min-h-[100px] resize-none"
           />
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="render-html"
               checked={isHTML}
-              onChange={(e) => setIsHTML(e.target.checked)}
-              className="cursor-pointer size-3 text-xs"
+              onCheckedChange={(checked) => setIsHTML(checked === true)}
+              className="cursor-pointer"
             />
-            <span className="text-xs">Render content as HTML</span>
-          </label>
+            <label htmlFor="render-html" className="text-xs cursor-pointer">
+              Render content as HTML
+            </label>
+          </div>
           <div>
             <p className="text-sm font-medium mb-2">
               Select a color or banner:

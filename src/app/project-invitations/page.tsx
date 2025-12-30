@@ -27,13 +27,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -46,7 +45,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import {
@@ -65,7 +63,9 @@ import {
   menuItemsBottom as freelancerMenuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import EmptyState from '@/components/shared/EmptyState';
+import StatusDot from '@/components/shared/StatusDot';
 import { useAppSelector } from '@/lib/hooks';
+import { projectInvitationService } from '@/services/projectInvitation';
 
 const ProjectInvitationsPage: React.FC = () => {
   const router = useRouter();
@@ -102,10 +102,7 @@ const ProjectInvitationsPage: React.FC = () => {
     const load = async () => {
       try {
         setLoading(true);
-        const endpoint = isFreelancer
-          ? '/freelancer/invite'
-          : '/business/invite';
-        const res = await axiosInstance.get(endpoint);
+        const res = await projectInvitationService.getInvitations(isFreelancer);
         const rows = res?.data?.data || [];
 
         const mapped: ProjectInvitation[] = (rows as any[]).map((row: any) => {
@@ -195,7 +192,15 @@ const ProjectInvitationsPage: React.FC = () => {
 
     setDeletingInviteId(inviteId);
     try {
-      await axiosInstance.delete(`/business/invite/${inviteId}`);
+      const res = await projectInvitationService.deleteInvitation(inviteId);
+      if (!res?.success) {
+        const errorMessage =
+          res?.data?.message ||
+          res?.data?.error ||
+          'Failed to delete invitation';
+        notifyError(errorMessage);
+        return;
+      }
       setInvitations((prev) => prev.filter((i) => i._id !== inviteId));
       notifySuccess('Invitation deleted successfully');
       setDeleteDialogOpen(false);
@@ -221,7 +226,15 @@ const ProjectInvitationsPage: React.FC = () => {
 
     setRejectingInviteId(inv._id);
     try {
-      await axiosInstance.patch(`/freelancer/invite/${inviteId}/reject`);
+      const res = await projectInvitationService.rejectInvitation(inviteId);
+      if (!res?.success) {
+        const errorMessage =
+          res?.data?.message ||
+          res?.data?.error ||
+          'Failed to reject invitation';
+        notifyError(errorMessage);
+        return;
+      }
       notifySuccess('Invitation rejected successfully');
 
       setInvitations((prev) => prev.filter((x) => x._id !== inv._id));
@@ -234,133 +247,13 @@ const ProjectInvitationsPage: React.FC = () => {
     }
   };
 
-  return (
-    <div className="flex min-h-screen w-full">
-      <SidebarMenu
-        menuItemsTop={sidebarMenuItemsTop}
-        menuItemsBottom={sidebarMenuItemsBottom}
-        active="Project Invitations"
-      />
-      <div className="w-full flex flex-col sm:gap-4 sm:py-4 md:py-0 sm:pl-14 mb-8">
-        <Header
-          menuItemsTop={sidebarMenuItemsTop}
-          menuItemsBottom={sidebarMenuItemsBottom}
-          activeMenu="Project Invitations"
-          breadcrumbItems={[
-            {
-              label: isFreelancer ? 'Freelancer' : 'Business',
-              link: isFreelancer
-                ? '/dashboard/freelancer'
-                : '/dashboard/business',
-            },
-            {
-              label: 'Project Invitations',
-              link: '/project-invitations',
-            },
-          ]}
-        />
-
-        <main className="gap-4 p-4 sm:px-6 sm:py-3 md:gap-8">
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight">
-                Project Invitations
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Manage and track all your project invitations in one place
-              </p>
-            </div>
-
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              {!isFreelancer && (
-                <Tabs
-                  defaultValue={statusFilter}
-                  onValueChange={(value: string) =>
-                    setStatusFilter(value as InvitationStatusFilter)
-                  }
-                  className="w-full sm:w-auto"
-                >
-                  <TabsList className="grid w-full grid-cols-4 sm:w-auto">
-                    <TabsTrigger value="ALL" className="text-xs">
-                      All
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value={InvitationStatus.PENDING}
-                      className="text-xs"
-                    >
-                      <Clock4 className="h-3 w-3 mr-1.5" />
-                      Pending
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value={InvitationStatus.ACCEPTED}
-                      className="text-xs"
-                    >
-                      <CheckCircle2 className="h-3 w-3 mr-1.5 text-green-500" />
-                      Accepted
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value={InvitationStatus.REJECTED}
-                      className="text-xs"
-                    >
-                      <XCircle className="h-3 w-3 mr-1.5 text-red-500" />
-                      Rejected
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              )}
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-2">
-                  <Select
-                    value={sortBy}
-                    onValueChange={(value) => setSortBy(value as any)}
-                  >
-                    <SelectTrigger className="w-[180px] h-9">
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="createdAt">
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          <span>Invitation Date</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="projectName">
-                        <div className="flex items-center">
-                          <LayoutGrid className="h-4 w-4 mr-2" />
-                          <span>Project Name</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="freelancerName">
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 mr-2" />
-                          <span>
-                            {isFreelancer ? 'Business Name' : 'Freelancer Name'}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() =>
-                      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
-                    }
-                    className="h-9 w-9"
-                  >
-                    {sortDir === 'asc' ? (
-                      <ArrowUpNarrowWide className="h-4 w-4" />
-                    ) : (
-                      <ArrowDownNarrowWide className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+  const InvitationsContent = () => {
+    return (
+      <>
+        <CardContent>
           {loading ? (
             <div className="space-y-4 mt-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
                   <Card key={i} className="overflow-hidden">
                     <div className="p-4 space-y-4">
@@ -414,7 +307,7 @@ const ProjectInvitationsPage: React.FC = () => {
               />
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-6">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-6">
               {filtered.map((inv) => (
                 <Card
                   key={inv._id}
@@ -424,7 +317,14 @@ const ProjectInvitationsPage: React.FC = () => {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="relative">
-                          <Avatar className="h-10 w-10 border">
+                          <Avatar
+                            className="h-10 w-10 border cursor-pointer"
+                            onClick={() =>
+                              router.push(
+                                `/business/freelancerProfile/${inv.freelancerId}`,
+                              )
+                            }
+                          >
                             <AvatarImage
                               src={inv.freelancerProfilePic || ''}
                               alt={inv.freelancerName}
@@ -508,27 +408,9 @@ const ProjectInvitationsPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {inv.projectStatus && (
-                          <div className="flex items-center gap-2 whitespace-nowrap">
-                            <span
-                              className={cn(
-                                'h-2.5 w-2.5 rounded-full',
-                                inv.projectStatus?.toUpperCase() === 'ACTIVE' &&
-                                  'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]',
-                                inv.projectStatus?.toUpperCase() ===
-                                  'PENDING' &&
-                                  'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)]',
-                                inv.projectStatus?.toUpperCase() ===
-                                  'COMPLETED' &&
-                                  'bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]',
-                                !['ACTIVE', 'PENDING', 'COMPLETED'].includes(
-                                  inv.projectStatus?.toUpperCase() || '',
-                                ) &&
-                                  'bg-slate-400 shadow-[0_0_12px_rgba(148,163,184,0.7)]',
-                              )}
-                            />
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <StatusDot status={inv.projectStatus} />
+                        </div>
                       </div>
                     </div>
 
@@ -541,7 +423,7 @@ const ProjectInvitationsPage: React.FC = () => {
 
                   <Separator />
 
-                  <CardFooter className="p-4 pt-3 justify-between">
+                  <CardFooter className="p-4 pt-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Calendar className="w-4 h-4 mr-1.5" />
                       <span>
@@ -552,7 +434,7 @@ const ProjectInvitationsPage: React.FC = () => {
                         })}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
                       {isFreelancer &&
                         inv.status === InvitationStatus.PENDING && (
                           <Button
@@ -586,6 +468,185 @@ const ProjectInvitationsPage: React.FC = () => {
               ))}
             </div>
           )}
+        </CardContent>
+      </>
+    );
+  };
+
+  return (
+    <div className="flex min-h-screen w-full flex-col">
+      <SidebarMenu
+        menuItemsTop={sidebarMenuItemsTop}
+        menuItemsBottom={sidebarMenuItemsBottom}
+        active="Project Invitations"
+      />
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
+        <Header
+          menuItemsTop={sidebarMenuItemsTop}
+          menuItemsBottom={sidebarMenuItemsBottom}
+          activeMenu="Project Invitations"
+          breadcrumbItems={[
+            {
+              label: isFreelancer ? 'Freelancer' : 'Business',
+              link: isFreelancer
+                ? '/dashboard/freelancer'
+                : '/dashboard/business',
+            },
+            {
+              label: 'Project Invitations',
+              link: '/project-invitations',
+            },
+          ]}
+        />
+
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
+          <div className="w-full mx-auto">
+            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-2">
+                <h1 className="text-2xl font-bold tracking-tight">
+                  Project Invitations
+                </h1>
+                <p className="text-muted-foreground">
+                  Manage and track all your project invitations in one place
+                </p>
+              </div>
+
+              <div className="flex w-full items-center justify-start gap-2 sm:w-auto">
+                <Select
+                  value={sortBy}
+                  onValueChange={(value) => setSortBy(value as any)}
+                >
+                  <SelectTrigger className="h-9 w-14 px-2 sm:w-auto sm:px-3">
+                    <div className="flex w-full items-center justify-center gap-2 min-w-0 sm:justify-start">
+                      <span className="shrink-0">
+                        {sortBy === 'createdAt' ? (
+                          <Calendar className="h-4 w-4" />
+                        ) : sortBy === 'projectName' ? (
+                          <LayoutGrid className="h-4 w-4" />
+                        ) : (
+                          <User className="h-4 w-4" />
+                        )}
+                      </span>
+                      <span className="hidden sm:inline truncate">
+                        {sortBy === 'createdAt'
+                          ? 'Invitation Date'
+                          : sortBy === 'projectName'
+                            ? 'Project Name'
+                            : isFreelancer
+                              ? 'Business Name'
+                              : 'Freelancer Name'}
+                      </span>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="createdAt">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        <span>Invitation Date</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="projectName">
+                      <div className="flex items-center">
+                        <LayoutGrid className="h-4 w-4 mr-2" />
+                        <span>Project Name</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="freelancerName">
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        <span>
+                          {isFreelancer ? 'Business Name' : 'Freelancer Name'}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setSortDir(sortDir === 'asc' ? 'desc' : 'asc')}
+                  className="h-9 w-9"
+                >
+                  {sortDir === 'asc' ? (
+                    <ArrowUpNarrowWide className="h-4 w-4" />
+                  ) : (
+                    <ArrowDownNarrowWide className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="card rounded-xl border shadow-sm mb-6 max-w-full">
+              {isFreelancer ? (
+                <>
+                  <InvitationsContent />
+                </>
+              ) : (
+                <Tabs
+                  value={statusFilter}
+                  onValueChange={(value: string) =>
+                    setStatusFilter(value as InvitationStatusFilter)
+                  }
+                  className="max-w-[92vw]"
+                >
+                  <div className="border-b px-4 sm:px-6">
+                    <div className="max-w-full overflow-x-auto">
+                      <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                        <TabsTrigger
+                          value="ALL"
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <LayoutGrid className="mr-2 h-4 w-4" />
+                          All
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value={InvitationStatus.PENDING}
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <Clock4 className="mr-2 h-4 w-4" />
+                          Pending
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value={InvitationStatus.ACCEPTED}
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Accepted
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value={InvitationStatus.REJECTED}
+                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Rejected
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
+                  </div>
+
+                  <TabsContent value="ALL" className="m-0">
+                    <InvitationsContent />
+                  </TabsContent>
+                  <TabsContent value={InvitationStatus.PENDING} className="m-0">
+                    <InvitationsContent />
+                  </TabsContent>
+                  <TabsContent
+                    value={InvitationStatus.ACCEPTED}
+                    className="m-0"
+                  >
+                    <InvitationsContent />
+                  </TabsContent>
+                  <TabsContent
+                    value={InvitationStatus.REJECTED}
+                    className="m-0"
+                  >
+                    <InvitationsContent />
+                  </TabsContent>
+                </Tabs>
+              )}
+            </div>
+          </div>
         </main>
       </div>
 

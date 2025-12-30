@@ -1,7 +1,6 @@
 import {
   FileText,
   FileWarning,
-  HomeIcon,
   UserCog,
   ShieldCheck,
   User,
@@ -28,8 +27,8 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/dashboard/freelancer',
-    icon: <HomeIcon className="h-5 w-5" />,
-    label: 'Home',
+    icon: <ArrowLeft className="h-5 w-5" />,
+    label: 'Back',
   },
   {
     href: '/freelancer/settings/personal-info',
@@ -57,13 +56,18 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Profiles',
   },
   {
+    href: '/freelancer/settings/leaderboard-history',
+    icon: <Trophy className="h-5 w-5" />,
+    label: 'Leaderboard History',
+  },
+  {
     href: '/freelancer/settings/resume',
     icon: <FileText className="h-5 w-5" />,
     label: 'Resume',
   },
   {
-    href: '/reports', // Link to your new Reports page
-    icon: <FileWarning className="h-5 w-5" />, // You can change icon
+    href: '/reports',
+    icon: <FileWarning className="h-5 w-5" />,
     label: 'Reports',
   },
 ];

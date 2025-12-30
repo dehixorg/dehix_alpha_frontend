@@ -9,7 +9,7 @@ import {
   XCircle,
 } from 'lucide-react';
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,18 +41,27 @@ const FreelancerInvitationCard: React.FC<FreelancerInvitationCardProps> = ({
 }) => {
   return (
     <Card
-      className="hover:shadow-md transition-all duration-200 cursor-pointer"
+      className="hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
       onClick={() => onViewDetails(invitation.projectId)}
     >
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold">{invitation.projectName}</h3>
-          <p className="text-sm text-muted-foreground mt-1">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-3">
+        <div className="min-w-0 flex-1">
+          <CardTitle className="text-base sm:text-lg truncate">
+            {invitation.projectName}
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1 truncate">
             {invitation.companyName}
           </p>
-          <Badge className={`${statusOutlineClasses(invitation.status)} mt-2`}>
-            {invitation.status}
-          </Badge>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge className={statusOutlineClasses(invitation.status)}>
+              {invitation.status}
+            </Badge>
+            {invitation.projectStatus && (
+              <Badge variant="outline" className="uppercase">
+                {invitation.projectStatus}
+              </Badge>
+            )}
+          </div>
         </div>
         {invitation.status === FreelancerInvitationStatus.PENDING && (
           <div onClick={(e) => e.stopPropagation()}>
@@ -100,9 +109,32 @@ const FreelancerInvitationCard: React.FC<FreelancerInvitationCardProps> = ({
             Invited: {new Date(invitation.invitedAt).toLocaleDateString()}
           </span>
         </div>
-        <Badge variant="outline" className="mt-2">
-          {invitation.projectStatus}
-        </Badge>
+        {invitation.status === FreelancerInvitationStatus.PENDING && (
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isProcessing}
+              onClick={(e) => {
+                e.stopPropagation();
+                onReject(invitation);
+              }}
+              className="text-destructive hover:text-destructive"
+            >
+              <XCircle className="mr-2 h-4 w-4" /> Reject
+            </Button>
+            <Button
+              size="sm"
+              disabled={isProcessing}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAccept(invitation);
+              }}
+            >
+              <CheckCircle className="mr-2 h-4 w-4" /> Accept
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

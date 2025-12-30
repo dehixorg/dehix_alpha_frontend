@@ -39,6 +39,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -46,6 +47,7 @@ import ProfileSummaryCard from '@/components/cards/ProfileSummaryCard';
 import { FreelancerProfile } from '@/types/freelancer';
 import StatItem from '@/components/shared/StatItem';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
+import EmptyState from '@/components/shared/EmptyState';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -380,13 +382,12 @@ export default function ProfilesPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Profiles"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'Profiles', link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
-          <div className="w-full mx-auto max-w-6xl">
+        <main className="grid flex-1 items-start p-4 sm:px-6 sm:py-0 md:gap-8">
+          <div className="w-full mx-auto max-w-[92vw]">
             <div className="flex flex-col gap-2 mb-6">
               <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" /> Profiles Center
@@ -403,26 +404,38 @@ export default function ProfilesPage() {
                 className="w-full"
               >
                 <div className="border-b px-6">
-                  <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
-                    <TabsTrigger
-                      value="overview"
-                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                    >
-                      <BarChart3 className="mr-2 h-4 w-4" /> Overview
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="freelancer"
-                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                    >
-                      Freelancer ({freelancerProfiles.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="consultant"
-                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                    >
-                      Consultant ({consultantProfiles.length})
-                    </TabsTrigger>
-                  </TabsList>
+                  <div className="max-w-full overflow-x-auto no-scrollbar">
+                    <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                      <TabsTrigger
+                        value="overview"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <BarChart3 className="mr-2 h-4 w-4" /> Overview
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="freelancer"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <span className="flex items-center gap-2">
+                          Freelancer
+                          <Badge variant="secondary" className="h-5 px-2">
+                            {freelancerProfiles.length}
+                          </Badge>
+                        </span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="consultant"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <span className="flex items-center gap-2">
+                          Consultant
+                          <Badge variant="secondary" className="h-5 px-2">
+                            {consultantProfiles.length}
+                          </Badge>
+                        </span>
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
                 </div>
 
                 <div className="p-6">
@@ -636,20 +649,25 @@ export default function ProfilesPage() {
                         ))}
                       </div>
                     ) : freelancerProfiles.length === 0 ? (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground mb-4">
-                          No Freelancer profiles found.
-                        </p>
-                        <Button
-                          onClick={() => {
-                            setNewProfileType('Freelancer');
-                            setIsCreateDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" /> Create Freelancer
-                          Profile
-                        </Button>
-                      </div>
+                      <EmptyState
+                        className="py-12 bg-transparent border-0"
+                        title="No Freelancer profiles found"
+                        description="Create your first Freelancer profile to start applying faster with a ready-to-use summary."
+                        icon={
+                          <User className="h-12 w-12 text-muted-foreground" />
+                        }
+                        actions={
+                          <Button
+                            onClick={() => {
+                              setNewProfileType('Freelancer');
+                              setIsCreateDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Create Freelancer
+                            Profile
+                          </Button>
+                        }
+                      />
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {freelancerProfiles.map((profile) => (
@@ -700,20 +718,25 @@ export default function ProfilesPage() {
                         ))}
                       </div>
                     ) : consultantProfiles.length === 0 ? (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground mb-4">
-                          No Consultant profiles found.
-                        </p>
-                        <Button
-                          onClick={() => {
-                            setNewProfileType('Consultant');
-                            setIsCreateDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" /> Create Consultant
-                          Profile
-                        </Button>
-                      </div>
+                      <EmptyState
+                        className="py-12 bg-transparent border-0"
+                        title="No Consultant profiles found"
+                        description="Create a Consultant profile to showcase your expertise and start getting matched to the right opportunities."
+                        icon={
+                          <UserCog className="h-12 w-12 text-muted-foreground" />
+                        }
+                        actions={
+                          <Button
+                            onClick={() => {
+                              setNewProfileType('Consultant');
+                              setIsCreateDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Create Consultant
+                            Profile
+                          </Button>
+                        }
+                      />
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {consultantProfiles.map((profile) => (
@@ -750,7 +773,7 @@ export default function ProfilesPage() {
 
       {/* Create Profile Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New {newProfileType} Profile</DialogTitle>
             <DialogDescription>

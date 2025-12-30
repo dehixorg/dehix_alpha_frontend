@@ -1,17 +1,16 @@
 import React from 'react';
-import { Eye, Trash2, User, Briefcase, MoreVertical } from 'lucide-react';
+import { Briefcase, DollarSign, Trash2, User } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export type ProfileSummary = {
   _id?: string;
@@ -71,28 +70,20 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
       .map((item) => getItemLabel(item))
       .filter((label) => label && label.trim() !== '');
     if (labels.length === 0) {
-      return (
-        <div>
-          <p className="text-sm font-medium mb-2">Skills:</p>
-          <p className="text-xs text-muted-foreground">No skills added</p>
-        </div>
-      );
+      return <p className="text-xs text-muted-foreground">No skills added</p>;
     }
     return (
-      <div>
-        <p className="text-sm font-medium mb-2">Skills:</p>
-        <div className="flex flex-wrap gap-1">
-          {labels.slice(0, 3).map((label: string, index: number) => (
-            <Badge key={index} variant="secondary" className="text-xs">
-              {String(label)}
-            </Badge>
-          ))}
-          {labels.length > 3 && (
-            <Badge variant="outline" className="text-xs">
-              +{labels.length - 3} more
-            </Badge>
-          )}
-        </div>
+      <div className="flex flex-wrap gap-1.5">
+        {labels.slice(0, 3).map((label: string, index: number) => (
+          <Badge key={index} variant="secondary" className="text-[11px]">
+            {String(label)}
+          </Badge>
+        ))}
+        {labels.length > 3 && (
+          <Badge variant="outline" className="text-[11px]">
+            +{labels.length - 3}
+          </Badge>
+        )}
       </div>
     );
   };
@@ -102,150 +93,134 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
       .map((item) => getItemLabel(item))
       .filter((label) => label && label.trim() !== '');
     if (labels.length === 0) {
-      return (
-        <div>
-          <p className="text-sm font-medium mb-2">Domains:</p>
-          <p className="text-xs text-muted-foreground">No domains added</p>
-        </div>
-      );
+      return <p className="text-xs text-muted-foreground">No domains added</p>;
     }
     return (
-      <div>
-        <p className="text-sm font-medium mb-2">Domains:</p>
-        <div className="flex flex-wrap gap-1">
-          {labels.slice(0, 2).map((label: string, index: number) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {label}
-            </Badge>
-          ))}
-          {labels.length > 2 && (
-            <Badge variant="outline" className="text-xs">
-              +{labels.length - 2} more
-            </Badge>
-          )}
-        </div>
+      <div className="flex flex-wrap gap-1.5">
+        {labels.slice(0, 2).map((label: string, index: number) => (
+          <Badge key={index} variant="outline" className="text-[11px]">
+            {label}
+          </Badge>
+        ))}
+        {labels.length > 2 && (
+          <Badge variant="outline" className="text-[11px]">
+            +{labels.length - 2}
+          </Badge>
+        )}
       </div>
     );
   };
 
   return (
-    <TooltipProvider>
-      <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-black/20 flex flex-col h-full">
-        <CardHeader className="pb-2 px-6 pt-6">
-          <div className="flex items-start gap-4">
-            <Avatar className="h-12 w-12 rounded-xl border border-gray-200 dark:border-gray-700">
-              <AvatarImage
-                src="/placeholder-avatar.svg"
-                alt={profileName || 'Profile'}
-              />
-              <AvatarFallback className="bg-primary/10 text-primary rounded-xl text-base font-bold">
-                {(profileName || 'P').charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-3">
-                <CardTitle className="text-lg font-bold truncate group-hover:text-primary transition-colors">
-                  {profileName || 'Untitled Profile'}
-                </CardTitle>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {profile.typeLabel && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs px-2 py-1 border-border/60 bg-background/80"
-                    >
-                      {profile.typeLabel}
-                    </Badge>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+    <Card
+      role="button"
+      tabIndex={0}
+      onClick={onView}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onView();
+        }
+      }}
+      className="group relative flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:shadow-md cursor-pointer"
+    >
+      <CardHeader className="px-5 pb-3 pt-5">
+        <div className="flex items-start gap-4">
+          <Avatar className="h-11 w-11 rounded-xl border">
+            <AvatarImage
+              src="/placeholder-avatar.svg"
+              alt={profileName || 'Profile'}
+            />
+            <AvatarFallback className="rounded-xl bg-primary/10 text-sm font-semibold text-primary">
+              {(profileName || 'P').charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <CardTitle className="truncate text-base font-semibold transition-colors group-hover:text-primary">
+                {profileName || 'Untitled Profile'}
+              </CardTitle>
+
+              <div className="flex shrink-0 items-center gap-2">
+                {profile.typeLabel && (
+                  <Badge
+                    variant="outline"
+                    className="rounded-full text-[10px] font-semibold uppercase tracking-wide"
+                  >
+                    {profile.typeLabel}
+                  </Badge>
+                )}
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-full hover:bg-muted/70"
+                        className="h-8 w-8 rounded-full text-destructive opacity-70 transition-opacity group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-destructive/30"
+                        aria-label="Delete profile"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete();
+                        }}
                       >
-                        <MoreVertical className="h-4 w-4" />
-                        <span className="sr-only">Open actions</span>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuItem
-                        onClick={onView}
-                        className="cursor-pointer"
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        <span>View</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={onDelete}
-                        className="text-red-600 focus:text-red-700 cursor-pointer"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2 min-h-[40px]">
-                {description && description.length > 140
-                  ? `${description.substring(0, 140)}...`
-                  : description || 'No description available'}
-              </p>
             </div>
+
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+              {description && description.length > 140
+                ? `${description.substring(0, 140)}...`
+                : description || 'No description available'}
+            </p>
           </div>
-        </CardHeader>
+        </div>
+      </CardHeader>
 
-        <CardContent className="px-6 py-4 flex flex-col h-[320px]">
-          <div className="space-y-3 flex-1">
-            <div className="h-[70px] overflow-hidden">
-              {renderSkillBadges(skills)}
-            </div>
-            <div className="h-[70px] overflow-hidden">
-              {renderDomainBadges(domains)}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-sm h-[60px]">
-              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50 flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30">
-                  <Briefcase className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Projects</p>
-                  <p className="text-sm font-medium">{projects?.length || 0}</p>
-                </div>
-              </div>
-              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50 flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/30">
-                  <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Experience</p>
-                  <p className="text-sm font-medium">
-                    {experiences?.length || 0}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-sm h-[24px] flex items-center">
-              {hourlyRate ? (
-                <>
-                  <span className="font-medium">Rate: </span>
-                  <span className="text-green-600">${hourlyRate}/hr</span>
-                </>
-              ) : (
-                <span className="text-muted-foreground text-xs">
-                  No rate set
-                </span>
-              )}
-            </div>
+      <CardContent className="flex flex-col gap-4 px-5 pb-5 pt-0">
+        <div className="space-y-2">
+          <div className="text-xs font-medium text-muted-foreground">
+            Skills
           </div>
-        </CardContent>
+          {renderSkillBadges(skills)}
+        </div>
 
-        {/* Hover effect border */}
-        <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>
-      </Card>
-    </TooltipProvider>
+        <div className="space-y-2">
+          <div className="text-xs font-medium text-muted-foreground">
+            Domains
+          </div>
+          {renderDomainBadges(domains)}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary" className="text-[11px]">
+            <Briefcase className="mr-1 h-3.5 w-3.5" />
+            {projects?.length || 0} projects
+          </Badge>
+          <Badge variant="secondary" className="text-[11px]">
+            <User className="mr-1 h-3.5 w-3.5" />
+            {experiences?.length || 0} experiences
+          </Badge>
+          {hourlyRate ? (
+            <Badge variant="outline" className="text-[11px]">
+              <DollarSign className="mr-1 h-3.5 w-3.5" />
+              {hourlyRate}/hr
+            </Badge>
+          ) : (
+            <span className="text-xs text-muted-foreground">No rate set</span>
+          )}
+        </div>
+      </CardContent>
+
+      {/* Hover effect border */}
+      <div className="pointer-events-none absolute inset-0 rounded-xl border-2 border-transparent transition-all duration-300 group-hover:border-primary/20 dark:group-hover:border-primary/30" />
+    </Card>
   );
 };
 

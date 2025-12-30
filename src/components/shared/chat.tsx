@@ -992,8 +992,8 @@ export function CardsChat({
         </Card>
       ) : (
         <>
-          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-xl">
-            <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
+          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-none sm:rounded-xl">
+            <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-t-xl">
               <button
                 onClick={handleHeaderClick}
                 className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
@@ -1039,9 +1039,9 @@ export function CardsChat({
               </button>
               {/* create a search bar input here to take input from user to search conversation */}
               <div className="flex items-center space-x-0.5 sm:space-x-1">
-                {/* Search Toggle */}
+                {/* Desktop controls */}
                 {isSearchVisible ? (
-                  <div className="flex items-center space-x-2">
+                  <div className="hidden sm:flex items-center space-x-2">
                     <Input
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
@@ -1054,7 +1054,7 @@ export function CardsChat({
                       aria-label="Close search"
                       onClick={() => {
                         setIsSearchVisible(false);
-                        setSearchValue('');
+                        setSearchValue("");
                       }}
                       className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                     >
@@ -1067,39 +1067,36 @@ export function CardsChat({
                     size="icon"
                     aria-label="Search in chat"
                     onClick={() => setIsSearchVisible(true)}
-                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                   >
                     <Search className="h-5 w-5" />
                   </Button>
                 )}
-                {/* --- HIGHLIGHT: ADD THIS BUTTON --- */}
+
                 <Button
                   variant="ghost"
                   size="icon"
                   aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
                   onClick={handleToggleArchive}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                 >
                   {isArchived ? (
-                    <ArchiveRestore className="h-5 w-5" /> // Icon for unarchiving
+                    <ArchiveRestore className="h-5 w-5" />
                   ) : (
-                    <Archive className="h-5 w-5" /> // Icon for archiving
+                    <Archive className="h-5 w-5" />
                   )}
                 </Button>
-                {/* --- END HIGHLIGHT --- */}
 
-                {/* Video call */}
                 <Button
                   variant="ghost"
                   size="icon"
                   aria-label="Video call"
                   onClick={handleCreateMeet}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                 >
                   <Video className="h-5 w-5" />
                 </Button>
 
-                {/* Expand/collapse */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1111,7 +1108,7 @@ export function CardsChat({
                       console.error('[CardsChat] onToggleExpand is undefined!');
                     }
                   }}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                 >
                   {isChatExpanded ? (
                     <Minimize2 className="h-5 w-5" />
@@ -1120,14 +1117,87 @@ export function CardsChat({
                   )}
                 </Button>
 
-                {/* More options */}
+                {/* Mobile: everything in the three-dot menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       aria-label="More options"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    >
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={5}
+                    className="w-52 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+                  >
+                    <DropdownMenuItem
+                      onClick={() => setIsSearchVisible((v) => !v)}
+                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      <Search className="h-4 w-4" />
+                      <span className="text-sm font-medium">Search</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleToggleArchive}
+                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      {isArchived ? (
+                        <ArchiveRestore className="h-4 w-4" />
+                      ) : (
+                        <Archive className="h-4 w-4" />
+                      )}
+                      <span className="text-sm font-medium">
+                        {isArchived ? 'Unarchive' : 'Archive'}
+                      </span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleCreateMeet}
+                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      <Video className="h-4 w-4" />
+                      <span className="text-sm font-medium">Video call</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (onToggleExpand) {
+                          onToggleExpand();
+                        } else {
+                          console.error('[CardsChat] onToggleExpand is undefined!');
+                        }
+                      }}
+                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      {isChatExpanded ? (
+                        <Minimize2 className="h-4 w-4" />
+                      ) : (
+                        <Maximize2 className="h-4 w-4" />
+                      )}
+                      <span className="text-sm font-medium">
+                        {isChatExpanded ? 'Collapse' : 'Expand'}
+                      </span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setOpenReport(true)}
+                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      <Flag className="h-4 w-4" />
+                      <span className="text-sm font-medium">Report</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Desktop: existing more options menu (report) */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="More options"
+                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                     >
                       <MoreVertical className="h-5 w-5" />
                     </Button>
@@ -1171,7 +1241,7 @@ export function CardsChat({
                 ))}
               </ScrollArea>
             </CardContent>
-            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-b-xl">
+            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-b-xl">
               {isBlocked ? (
                 // If blocked, show this message
                 <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">

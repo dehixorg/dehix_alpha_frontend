@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Briefcase, Gauge } from 'lucide-react';
+import { Briefcase, Gauge } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -133,8 +133,12 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
+        <Button
+          onClick={() => setOpen(true)}
+          size="sm"
+          className="w-full sm:w-auto"
+        >
+          <Briefcase className="mr-2 h-4 w-4" />
           Add Domain
         </Button>
       </DialogTrigger>
