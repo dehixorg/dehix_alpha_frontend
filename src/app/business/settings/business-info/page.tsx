@@ -37,7 +37,6 @@ export default function BusinessInfoPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Business Info"
           breadcrumbItems={[
-            { label: 'Business', link: '/dashboard/business' },
             { label: 'Settings', link: '#' },
             { label: 'Business Info', link: '#' },
           ]}

@@ -9,6 +9,7 @@ import {
   Award,
   UserPlus,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -100,6 +101,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
       if (!isClosing) setIsDialogOpen(true);
     }
   };
+  const router = useRouter();
 
   return (
     <>
@@ -357,7 +359,14 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 
                     <div className="space-y-6 py-2">
                       {/* Top profile summary */}
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div
+                        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 cursor-pointer"
+                        onClick={() =>
+                          router.push(
+                            `/business/freelancerProfile/${freelancer_id}`,
+                          )
+                        }
+                      >
                         <div className="flex items-center gap-4">
                           <Avatar className="h-16 w-16 ring-2 ring-primary/10">
                             <AvatarImage

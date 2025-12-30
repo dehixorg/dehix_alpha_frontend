@@ -27,6 +27,7 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import Header from '@/components/header/header';
 import AddProfileDialog from '@/components/dialogs/addProfileDialog';
+import type { Milestone } from '@/utils/types/Milestone';
 
 interface ProjectProfile {
   _id?: string;
@@ -76,6 +77,7 @@ interface Project {
   role?: string;
   projectType?: string;
   profiles?: ProjectProfile[];
+  milestones?: Milestone[];
   status?: StatusEnum; // enum
   team?: string[];
   createdAt?: Date;
@@ -157,7 +159,6 @@ export default function Dashboard() {
         notifyError('An error occurred while starting the project.', 'Error');
       });
   };
-
   // Handle project mark as incomplete
   const handleIncompleteProject = (): void => {
     if (!project_id) {
@@ -221,9 +222,7 @@ export default function Dashboard() {
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             activeMenu=""
-            breadcrumbItems={[
-              { label: 'Project', link: '/dashboard/business' },
-            ]}
+            breadcrumbItems={[{ label: 'Project', link: '/business/projects' }]}
           />
 
           {/* Main Content Skeleton in <main> */}
@@ -287,7 +286,7 @@ export default function Dashboard() {
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
-            { label: 'Project', link: '/dashboard/business' },
+            { label: 'Project', link: '/business/projects' },
             { label: project.projectName, link: '#' },
           ]}
         />
@@ -315,6 +314,7 @@ export default function Dashboard() {
                       handleStartProject={handleStartProject}
                       handleIncompleteProject={handleIncompleteProject}
                       userRole="Business"
+                      milestones={project.milestones}
                     />
                   </div>
                   <div>
@@ -326,13 +326,12 @@ export default function Dashboard() {
                         {project.profiles?.map((profile, index) => (
                           <CarouselItem
                             key={index}
-                            className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3 pl-2"
+                            className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3"
                           >
                             <ProjectSkillCard
                               domainName={profile.domain}
                               description={profile.description}
                               email={project.email}
-                              status={project.status}
                               profileType={profile.profileType}
                               startDate={project.createdAt}
                               endDate={project.end}

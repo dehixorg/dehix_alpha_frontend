@@ -402,7 +402,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
                   ? 'No freelancers match your search'
                   : 'No freelancers found'
               }
-              className="py-8 border-0 bg-transparent mt-6"
+              className="p-6 border-0 bg-transparent mt-6"
             />
           ) : (
             <div className="space-y-3">

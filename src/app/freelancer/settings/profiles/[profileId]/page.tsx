@@ -659,7 +659,6 @@ export default function ProfileDetailPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Profiles"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'Profiles', link: '/freelancer/settings/profiles' },
             { label: editingProfileData.profileName, link: '#' },

@@ -1,6 +1,7 @@
 import React from 'react';
 
 import FreelancerCard from '@/components/opportunities/freelancer/freelancerCard';
+import EmptyState from '@/components/shared/EmptyState';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -77,9 +78,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
           </Card>
         ))
       ) : freelancers.length === 0 ? (
-        <p className="text-center text-xl flex justify-center items-center h-[55vh] font-semibold">
-          No talent found
-        </p>
+        <EmptyState title="No talent found" className="h-[55vh]" />
       ) : (
         freelancers.map((freelancer: any, index: number) => {
           // Extract active dehixTalent profile id (supports object, Map, or array shapes)

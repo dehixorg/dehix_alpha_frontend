@@ -27,7 +27,6 @@ export default function PersonalInfo() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="KYC"
           breadcrumbItems={[
-            { label: 'Business', link: '/dashboard/business' },
             { label: 'Settings', link: '#' },
             { label: 'KYC', link: '#' },
           ]}
