@@ -12,10 +12,12 @@ import {
 
 interface BannerChangerPopoverProps {
   handleChangeBanner: (banner: string) => void;
+  buttonClassName?: string;
 }
 
 const BannerChangerPopover: React.FC<BannerChangerPopoverProps> = ({
   handleChangeBanner,
+  buttonClassName,
 }) => {
   const banners = [
     '/banner1.svg',
@@ -30,7 +32,11 @@ const BannerChangerPopover: React.FC<BannerChangerPopoverProps> = ({
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`h-8 w-8 ${buttonClassName ?? 'text-muted'}`}
+        >
           <Palette className="h-4 w-4" />
         </Button>
       </HoverCardTrigger>

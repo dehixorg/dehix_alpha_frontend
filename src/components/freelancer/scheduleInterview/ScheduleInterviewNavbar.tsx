@@ -22,7 +22,6 @@ interface NavItem {
 
 const ScheduleInterviewNavbar: React.FC = () => {
   const pathname = usePathname();
-  console.log('PATH:', pathname);
   const navItems: NavItem[] = [
     {
       id: 'home',
@@ -67,8 +66,6 @@ const ScheduleInterviewNavbar: React.FC = () => {
     }
     return pathname.startsWith(href);
   };
-
-  // console.log('ACTIVE:', isActive(item.href));
 
   return (
     <div className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 min-h-screen p-4">

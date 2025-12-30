@@ -43,22 +43,27 @@ const NotesContainer = ({
     handleUpdateNoteLabel,
   } = useNotes(fetchNotes, notes);
 
-  const { handleDragStart, handleDragOver, handleDrop } = useDragAndDrop(
-    notes,
-    setNotes,
-  );
+  const {
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    isTouchDragging,
+  } = useDragAndDrop(notes, setNotes);
 
   const navItems = [
     {
       label: 'Edit',
-      icon: <EditIcon size={15} className="text-white-500" />,
+      icon: <EditIcon size={15} className="text-muted-foreground" />,
       onClick: (noteId: string | undefined, notes: Note[]) => {
         setSelectedNote(notes.find((note) => note._id === noteId) || null);
       },
     },
     {
       label: 'Delete',
-      icon: <Trash2Icon size={15} className="text-white-500" />,
+      icon: <Trash2Icon size={15} className="text-muted-foreground" />,
       onClick: (noteId: string | undefined, notes: Note[]) => {
         setIsDeleting(true);
         setSelectedDeleteNote(
@@ -68,14 +73,14 @@ const NotesContainer = ({
     },
     {
       label: 'Recycle',
-      icon: <RecycleIcon size={15} className="text-white-500" />,
+      icon: <RecycleIcon size={15} className="text-muted-foreground" />,
       onClick: (noteId: string | undefined) => {
         handleUpdateNoteType(noteId, NoteType.TRASH);
       },
     },
     {
       label: 'Label',
-      icon: <TagIcon size={15} className="text-white-500" />,
+      icon: <TagIcon size={15} className="text-muted-foreground" />,
       onClick: (noteId: string | undefined, notes: Note[]) => {
         setSelectedTypeNote(notes.find((note) => note._id === noteId) || null);
       },
@@ -84,33 +89,65 @@ const NotesContainer = ({
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+        {/* Drop zone for moving to first */}
+        <div
+          className="col-span-full h-2"
+          onDragOver={(e) => {
+            e.preventDefault();
+            handleDragOver(0);
+          }}
+          onDrop={handleDrop}
+        />
+
         {notes.map((note, index) => (
-          <NoteCard
+          <div
             key={note._id}
-            note={note}
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={(e) => {
+            data-note-index={index}
+            onTouchStart={() => handleTouchStart(index)}
+            onTouchMove={(e) => {
+              if (!isTouchDragging) return;
               e.preventDefault();
-              handleDragOver(index);
+              handleTouchMove(e);
             }}
-            onDrop={handleDrop}
-            notes={notes}
-            setNotes={setNotes}
-            isTrash={!!isTrash}
-            isArchive={isArchive}
-            onEditNote={setSelectedNote}
-            onUpdateNoteType={handleUpdateNoteType}
-            onDeleteClick={(noteId: string | undefined) => {
-              setIsDeleting(true);
-              setSelectedDeleteNote(
-                notes.find((note) => note._id === noteId) || null,
-              );
-            }}
-            onChangeBanner={handleChangeBanner}
-            navItems={navItems}
-          />
+            onTouchEnd={handleTouchEnd}
+            className="touch-none"
+          >
+            <NoteCard
+              note={note}
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                handleDragOver(index + 1);
+              }}
+              onDrop={handleDrop}
+              notes={notes}
+              setNotes={setNotes}
+              isTrash={!!isTrash}
+              isArchive={isArchive}
+              onEditNote={setSelectedNote}
+              onUpdateNoteType={handleUpdateNoteType}
+              onDeleteClick={(noteId: string | undefined) => {
+                setIsDeleting(true);
+                setSelectedDeleteNote(
+                  notes.find((note) => note._id === noteId) || null,
+                );
+              }}
+              onChangeBanner={handleChangeBanner}
+              navItems={navItems}
+            />
+          </div>
         ))}
+
+        {/* Drop zone for moving to last */}
+        <div
+          className="col-span-full h-2"
+          onDragOver={(e) => {
+            e.preventDefault();
+            handleDragOver(notes.length);
+          }}
+          onDrop={handleDrop}
+        />
       </div>
       {isDeleting && (
         <DialogConfirmation

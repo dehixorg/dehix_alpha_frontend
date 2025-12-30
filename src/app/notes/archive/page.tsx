@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Archive } from 'lucide-react';
 
 import NotesRender from '@/components/shared/NotesRender';
 import NotesHeader from '@/components/business/market/NotesHeader';
@@ -39,7 +40,6 @@ const Page = () => {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Archive"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Notes', link: '/notes' },
             { label: 'Archive', link: '#' },
           ]}
@@ -51,6 +51,9 @@ const Page = () => {
               isTrash={false}
               setNotes={setArchive}
               notes={archive}
+              title="Archive"
+              description="Your archived notes live here"
+              icon={<Archive className="h-5 w-5 text-muted-foreground" />}
             />
             <div className="p-4 sm:p-6">
               {isLoading ? (

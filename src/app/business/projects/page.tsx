@@ -252,11 +252,11 @@ const BusinessProjectsPage: React.FC = () => {
 
         {/* Content container */}
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
-          <Card className="p-6">
+          <Card className="p-6 max-w-[92vw]">
             {/* Header section */}
             <div className="flex items-center justify-between">
               <div className="flex flex-col space-y-2">
-                <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                   Projects
                 </h1>
                 <p className="hidden md:block text-muted-foreground">
@@ -332,23 +332,25 @@ const BusinessProjectsPage: React.FC = () => {
                           onValueChange={(v) => setStatusFilter(v)}
                           className="w-full"
                         >
-                          <TabsList className="bg-transparent h-12 w-full sm:w-auto p-0">
-                            <TabsTrigger
-                              value="ALL"
-                              className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                            >
-                              All
-                            </TabsTrigger>
-                            {PROJECT_STATUS_FORMATS.map((s) => (
+                          <div className="max-w-full overflow-x-auto">
+                            <TabsList className="bg-transparent h-12 w-max min-w-max sm:w-auto p-0 whitespace-nowrap">
                               <TabsTrigger
-                                key={s.value}
-                                value={s.value}
+                                value="ALL"
                                 className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
                               >
-                                {s.textValue}
+                                All
                               </TabsTrigger>
-                            ))}
-                          </TabsList>
+                              {PROJECT_STATUS_FORMATS.map((s) => (
+                                <TabsTrigger
+                                  key={s.value}
+                                  value={s.value}
+                                  className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                                >
+                                  {s.textValue}
+                                </TabsTrigger>
+                              ))}
+                            </TabsList>
+                          </div>
                         </Tabs>
                         <div className="hidden sm:flex items-center gap-2">
                           <div className="sm:max-w-xs w-64">
@@ -540,8 +542,8 @@ const BusinessProjectsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="rounded-lg border shadow-sm">
-                      <Table className="">
+                    <div className="rounded-lg border shadow-sm max-w-full overflow-x-auto">
+                      <Table className="min-w-[720px]">
                         <TableHeader>
                           <TableRow className="bg-muted/40">
                             <TableHead className="sticky top-0 z-10">

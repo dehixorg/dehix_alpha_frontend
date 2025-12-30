@@ -54,8 +54,8 @@ export default function InterviewerPage() {
             { label: 'Interviewer', link: '/freelancer/interviewer/profile' },
           ]}
         />
-        <main className="flex-1 px-4 sm:px-6 sm:py-2">
-          <div className="mx-auto w-full max-w-7xl">
+        <main className="flex-1 p-4 sm:px-6 sm:py-2">
+          <div className="mx-auto w-full max-w-[92vw]">
             <Card className="overflow-hidden">
               <CardHeader className="bg-gradient">
                 <CardTitle className="text-2xl font-bold tracking-tight">
@@ -75,36 +75,38 @@ export default function InterviewerPage() {
                   className="w-full"
                 >
                   <div className="border-b px-2 sm:px-6">
-                    <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
-                      <TabsTrigger
-                        value="profile"
-                        className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                      >
-                        <Users2 className="h-4 w-4" />
-                        <span>Profile</span>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="current"
-                        className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                      >
-                        <ListVideo className="h-4 w-4" />
-                        <span>Current</span>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="bids"
-                        className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                      >
-                        <Briefcase className="h-4 w-4" />
-                        <span>Bids</span>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="history"
-                        className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                      >
-                        <History className="h-4 w-4" />
-                        <span>History</span>
-                      </TabsTrigger>
-                    </TabsList>
+                    <div className="max-w-full overflow-x-auto no-scrollbar">
+                      <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                        <TabsTrigger
+                          value="profile"
+                          className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <Users2 className="h-4 w-4" />
+                          <span>Profile</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="current"
+                          className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <ListVideo className="h-4 w-4" />
+                          <span>Current</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="bids"
+                          className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <Briefcase className="h-4 w-4" />
+                          <span>Bids</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="history"
+                          className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                        >
+                          <History className="h-4 w-4" />
+                          <span>History</span>
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
                   </div>
 
                   <div className="px-4 py-4 sm:px-6">
