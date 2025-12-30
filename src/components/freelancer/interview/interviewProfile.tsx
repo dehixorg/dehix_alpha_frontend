@@ -296,13 +296,27 @@ const InterviewProfile: React.FC = () => {
       const timezone = detectTimezone() || availability.timezone || 'UTC';
 
       const weekly: InterviewerAvailability['weekly'] = {
-        MON: Array.isArray(availability.weekly?.MON) ? availability.weekly.MON : [],
-        TUE: Array.isArray(availability.weekly?.TUE) ? availability.weekly.TUE : [],
-        WED: Array.isArray(availability.weekly?.WED) ? availability.weekly.WED : [],
-        THU: Array.isArray(availability.weekly?.THU) ? availability.weekly.THU : [],
-        FRI: Array.isArray(availability.weekly?.FRI) ? availability.weekly.FRI : [],
-        SAT: Array.isArray(availability.weekly?.SAT) ? availability.weekly.SAT : [],
-        SUN: Array.isArray(availability.weekly?.SUN) ? availability.weekly.SUN : [],
+        MON: Array.isArray(availability.weekly?.MON)
+          ? availability.weekly.MON
+          : [],
+        TUE: Array.isArray(availability.weekly?.TUE)
+          ? availability.weekly.TUE
+          : [],
+        WED: Array.isArray(availability.weekly?.WED)
+          ? availability.weekly.WED
+          : [],
+        THU: Array.isArray(availability.weekly?.THU)
+          ? availability.weekly.THU
+          : [],
+        FRI: Array.isArray(availability.weekly?.FRI)
+          ? availability.weekly.FRI
+          : [],
+        SAT: Array.isArray(availability.weekly?.SAT)
+          ? availability.weekly.SAT
+          : [],
+        SUN: Array.isArray(availability.weekly?.SUN)
+          ? availability.weekly.SUN
+          : [],
       };
 
       const payload: InterviewerAvailability = {
