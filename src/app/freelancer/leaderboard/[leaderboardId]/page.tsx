@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Users, Target, Trophy, Info } from 'lucide-react';
-import { useAppSelector } from '@/lib/hooks';
+import { ArrowLeft, Calendar, Users, Target, Info } from 'lucide-react';
 
+import { useAppSelector } from '@/lib/hooks';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -13,14 +13,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
 import {
   menuItemsTop,
   menuItemsBottom,
@@ -102,9 +94,31 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
 
       if (response.data.success) {
         notifySuccess(
-          `Congratulations! You've claimed your reward of ${response.data.data.baseAmount}`,
+          `Congratulations! You've claimed your reward of ${response.data.data.baseAmount} connects!`,
           'Reward Claimed',
         );
+
+        // Fetch fresh connects balance from backend
+        try {
+          const userResponse = await axiosInstance.get(
+            `/freelancer/${currentUserId}`,
+          );
+          const freshConnects =
+            userResponse.data?.data?.connects ??
+            userResponse.data?.connects ??
+            0;
+          localStorage.setItem('DHX_CONNECTS', freshConnects.toString());
+          window.dispatchEvent(new Event('connectsUpdated'));
+        } catch (error) {
+          console.error('Error fetching updated connects:', error);
+          // Fallback to calculating from response if user fetch fails
+          const currentConnects = localStorage.getItem('DHX_CONNECTS') || '0';
+          const newConnects =
+            parseInt(currentConnects) + response.data.data.finalAmount;
+          localStorage.setItem('DHX_CONNECTS', newConnects.toString());
+          window.dispatchEvent(new Event('connectsUpdated'));
+        }
+
         // Reload leaderboard details to show updated reward status
         await loadLeaderboardDetails();
       }

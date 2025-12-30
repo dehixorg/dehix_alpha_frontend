@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trophy } from 'lucide-react';
+
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -47,7 +48,7 @@ function EmptyState() {
         <Trophy className="h-16 w-16 text-muted-foreground/50 mb-4" />
         <h3 className="text-xl font-semibold mb-2">No Leaderboard History</h3>
         <p className="text-muted-foreground text-center max-w-sm">
-          You haven't participated in any leaderboards yet. Visit the
+          You haven&apos;t participated in any leaderboards yet. Visit the
           Leaderboard page to join contests!
         </p>
       </CardContent>
@@ -125,7 +126,7 @@ export default function LeaderboardHistoryPage() {
               <div>
                 <h1 className="text-3xl font-bold">Leaderboard History</h1>
                 <p className="text-muted-foreground">
-                  View all the contests you've participated in
+                  View all the contests you&apos;ve participated in
                 </p>
               </div>
             </div>

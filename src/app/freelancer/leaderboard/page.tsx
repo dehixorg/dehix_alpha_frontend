@@ -17,7 +17,6 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { FullLeaderboard } from '@/types/leaderboard';
 import { ContestCard } from '@/components/leaderboard/ContestCard';
-
 import {
   Select,
   SelectContent,
@@ -54,9 +53,12 @@ function EmptyState({ filter }: { filter: string }) {
       <CardContent className="py-16">
         <div className="flex flex-col items-center justify-center">
           <Trophy className="h-16 w-16 text-muted-foreground/50 mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No {filter === 'ALL' ? '' : filter.toLowerCase()} Contests</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            No {filter === 'ALL' ? '' : filter.toLowerCase()} Contests
+          </h3>
           <p className="text-muted-foreground text-center max-w-md">
-            No {filter === 'ALL' ? '' : filter.toLowerCase()} contests found. Try changing your filter.
+            No {filter === 'ALL' ? '' : filter.toLowerCase()} contests found.
+            Try changing your filter.
           </p>
         </div>
       </CardContent>
