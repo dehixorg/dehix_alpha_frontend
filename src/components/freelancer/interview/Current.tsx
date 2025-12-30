@@ -1,17 +1,34 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { Briefcase, GraduationCap, Search, Table } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  Briefcase,
+  GraduationCap,
+  Handshake,
+  Search,
+  Table,
+  TrendingUp,
+  Users2,
+  UserRoundCheck,
+} from 'lucide-react';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import DehixInterviews from '@/components/freelancer/dehix-talent-interview/DehixInterviews';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -22,24 +39,61 @@ import {
 } from '@/components/ui/select';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
-import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
 import { notifyError } from '@/utils/toastMessage';
 
-export default function CurrentComponent() {
+type InterviewApiRole = 'interviewer' | 'interviewee';
+
+type CurrentComponentProps = {
+  apiRole?: InterviewApiRole;
+  hideIds?: boolean;
+  showTodaySummary?: boolean;
+  enableViewToggle?: boolean;
+};
+
+export default function CurrentComponent({
+  apiRole = 'interviewer',
+  hideIds = false,
+  showTodaySummary = false,
+  enableViewToggle = false,
+}: CurrentComponentProps) {
   const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
     'All',
   );
-  const [, setIsTableView] = useState(true);
+  const [view, setView] = useState<'cards' | 'table'>('cards');
+  const [tableSort, setTableSort] = useState<'dateAsc' | 'dateDesc'>('dateAsc');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const user = useSelector((state: RootState) => state.user);
-  const [, setSkillData] = useState<any>([]);
-  const [, setDomainData] = useState<any>([]);
-  const [, setProjectSkill] = useState<any>([]);
-  const [, setProjectDomain] = useState<any>([]);
 
-  const [, setIsloading] = useState(false);
+  interface InterviewItem {
+    _id: string;
+    interviewerId?: string;
+    intervieweeId?: string;
+    creatorId?: string;
+    interviewType?: string;
+    interviewStatus?: string;
+    talentType?: string;
+    talentId?: string;
+    name?: string;
+    talentName?: string;
+    interviewDate?: string;
+    description?: string;
+    meetingLink?: string;
+    intervieweeDateTimeAgreement?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+    transaction?: {
+      transactionId?: string;
+      status?: string;
+      fee?: string;
+    };
+  }
+
+  type GroupedInterviews = Record<string, InterviewItem[]>;
+
+  const [grouped, setGrouped] = useState<GroupedInterviews>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isFocused && inputRef.current) {
@@ -50,70 +104,360 @@ export default function CurrentComponent() {
   useEffect(() => {
     const fetchInterviews = async () => {
       try {
-        setIsloading(true);
-        const response = await axiosInstance.get(
-          '/interview/current-interview',
-          {
-            params: {
-              intervieweeId: user.uid,
-            },
+        if (!user?.uid) return;
+
+        setIsLoading(true);
+        const response = await axiosInstance.get(`/interview/${apiRole}`, {
+          params: {
+            interviewStatus: 'current',
           },
-        );
+        });
 
-        const interviewData = response.data?.data.dehixTalent ?? [];
-        const projectData = response.data?.data.projects ?? [];
-
-        const normalizedInterviewData = Array.isArray(interviewData)
-          ? interviewData
-          : [interviewData];
-
-        const normalizedProjectData = Array.isArray(projectData)
-          ? projectData
-          : [projectData];
-
-        const skillArray = normalizedInterviewData.filter(
-          (item: any) => item?.talentType === 'SKILL',
-        );
-        const domainArray = normalizedInterviewData.filter(
-          (item: any) => item?.talentType === 'DOMAIN',
-        );
-
-        const projectSkillArray = normalizedProjectData.filter(
-          (item: any) => item?.talentType === 'SKILL',
-        );
-        const projectDomainArray = normalizedProjectData.filter(
-          (item: any) => item?.talentType === 'DOMAIN',
-        );
-
-        setSkillData(skillArray ?? []);
-        setDomainData(domainArray ?? []);
-        setProjectSkill(projectSkillArray ?? []);
-        setProjectDomain(projectDomainArray ?? []);
+        const data: GroupedInterviews = response?.data?.data || {};
+        setGrouped(data);
       } catch (err: any) {
         if (
-          err.response?.status === 404 &&
-          (err.response?.data?.message === 'Current Interview not found' ||
-            err.response?.data?.code === 'NOT_FOUND')
+          err.response?.status === 404 ||
+          err.response?.data?.code === 'NOT_FOUND'
         ) {
-          setSkillData([]);
-          setDomainData([]);
-          setProjectSkill([]);
-          setProjectDomain([]);
+          setGrouped({});
         } else {
           notifyError('Something went wrong. Please try again.', 'Error');
           console.error('Failed to load data. Please try again.', err);
-          setSkillData([]);
-          setDomainData([]);
-          setProjectSkill([]);
-          setProjectDomain([]);
+          setGrouped({});
         }
       } finally {
-        setIsloading(false);
+        setIsLoading(false);
       }
     };
 
     fetchInterviews();
-  }, [user?.uid]);
+  }, [user?.uid, apiRole]);
+
+  const matchesFilter = (item: InterviewItem) => {
+    const t = String(item?.talentType || '').toUpperCase();
+    if (filter === 'All') return true;
+    if (filter === 'Skills') return t === 'SKILL';
+    if (filter === 'Domain') return t === 'DOMAIN';
+    return true;
+  };
+
+  const matchesSearch = (item: InterviewItem) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    const haystack = [
+      item?._id,
+      item?.interviewType,
+      item?.interviewStatus,
+      item?.talentType,
+      item?.talentId,
+      item?.name,
+      item?.talentName,
+      item?.description,
+      item?.meetingLink,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(q);
+  };
+
+  const normalizeList = (list: InterviewItem[] | undefined) => {
+    const items = Array.isArray(list) ? list : [];
+    return items.filter(matchesFilter).filter(matchesSearch);
+  };
+
+  const isToday = (iso: string | undefined) => {
+    if (!iso) return false;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return false;
+    const now = new Date();
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
+    );
+  };
+
+  const sections = [
+    {
+      key: 'TALENT',
+      title: 'Talent',
+      description: 'Interviews from your Dehix Talent profile',
+      icon: GraduationCap,
+      iconClassName: 'bg-blue-500/10 text-blue-600',
+    },
+    {
+      key: 'INTERVIEWER',
+      title: 'Interviewer',
+      description: 'Interviews related to your interviewer profile',
+      icon: UserRoundCheck,
+      iconClassName: 'bg-violet-500/10 text-violet-600',
+    },
+    {
+      key: 'PROJECT',
+      title: 'Projects',
+      description: 'Interviews scheduled for your projects',
+      icon: Briefcase,
+      iconClassName: 'bg-emerald-500/10 text-emerald-600',
+    },
+    {
+      key: 'PEERTOPEER',
+      title: 'Peer to Peer',
+      description: 'Peer-to-peer interviews and mock sessions',
+      icon: Users2,
+      iconClassName: 'bg-sky-500/10 text-sky-600',
+    },
+    {
+      key: 'HIRE',
+      title: 'Hire',
+      description: 'Hiring interviews and related processes',
+      icon: Handshake,
+      iconClassName: 'bg-amber-500/10 text-amber-600',
+    },
+    {
+      key: 'GROWTH',
+      title: 'Growth',
+      description: 'Growth interviews and mentorship sessions',
+      icon: TrendingUp,
+      iconClassName: 'bg-pink-500/10 text-pink-600',
+    },
+  ] as const;
+
+  const renderInterviewCard = (item: InterviewItem) => {
+    const interviewDate = item?.interviewDate
+      ? new Date(item.interviewDate)
+      : undefined;
+    const meetingLink = String(item?.meetingLink || '').trim();
+    const talentName = String(item?.name || item?.talentName || '').trim();
+    const talentTypeLabel = String(item?.talentType || '-').toUpperCase();
+
+    return (
+      <Card key={item._id} className="overflow-hidden">
+        <CardHeader className="gap-1">
+          <CardTitle className="text-base">
+            {String(item?.interviewType || 'INTERVIEW').toUpperCase()}
+          </CardTitle>
+          <CardDescription className="text-xs">
+            {String(item?.interviewStatus || '-').toUpperCase()}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="text-sm">
+            <span className="font-medium">Talent:</span>{' '}
+            {hideIds
+              ? `${talentTypeLabel}${talentName ? ` - ${talentName}` : ''}`
+              : `${talentTypeLabel} / ${item?.talentId || '-'}${talentName ? ` (${talentName})` : ''}`}
+          </div>
+          <div className="text-sm">
+            <span className="font-medium">Date:</span>{' '}
+            {interviewDate ? interviewDate.toLocaleString() : '-'}
+          </div>
+          {item?.description ? (
+            <div className="text-sm text-muted-foreground line-clamp-2">
+              {item.description}
+            </div>
+          ) : null}
+          {meetingLink ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() =>
+                window.open(meetingLink, '_blank', 'noopener,noreferrer')
+              }
+            >
+              Open meeting
+            </Button>
+          ) : null}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const getAllItems = () => {
+    const getTime = (iso: string | undefined) => {
+      if (!iso) return Number.POSITIVE_INFINITY;
+      const d = new Date(iso);
+      const t = d.getTime();
+      return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
+    };
+
+    const direction = tableSort === 'dateAsc' ? 1 : -1;
+
+    const rows = sections.flatMap((s) =>
+      normalizeList(grouped[s.key]).map((item) => ({ item, section: s })),
+    );
+
+    return rows
+      .slice()
+      .sort(
+        (a, b) =>
+          (getTime(a.item?.interviewDate) - getTime(b.item?.interviewDate)) *
+          direction,
+      );
+  };
+
+  const renderTable = () => {
+    const rows = getAllItems();
+
+    const getStatusBadge = (statusRaw: string) => {
+      const status = String(statusRaw || '')
+        .toUpperCase()
+        .trim();
+      const base =
+        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
+      if (status === 'APPROVED')
+        return {
+          label: status,
+          className: `${base} bg-emerald-500/10 text-emerald-600`,
+        };
+      if (status === 'APPLIED')
+        return {
+          label: status,
+          className: `${base} bg-amber-500/10 text-amber-700`,
+        };
+      if (status === 'PENDING')
+        return {
+          label: status,
+          className: `${base} bg-slate-500/10 text-slate-700`,
+        };
+      if (status === 'REJECTED')
+        return {
+          label: status,
+          className: `${base} bg-red-500/10 text-red-600`,
+        };
+      if (status === 'CANCELLED')
+        return {
+          label: status,
+          className: `${base} bg-red-500/10 text-red-600`,
+        };
+      if (status === 'COMPLETED')
+        return {
+          label: status,
+          className: `${base} bg-blue-500/10 text-blue-600`,
+        };
+      return {
+        label: status || '-',
+        className: `${base} bg-muted text-muted-foreground`,
+      };
+    };
+
+    const getTypeBadgeClassName = (iconClassName: string) => {
+      const base =
+        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
+      return `${base} ${iconClassName}`;
+    };
+
+    if (isLoading) {
+      return <div className="text-sm text-muted-foreground">Loading...</div>;
+    }
+
+    if (rows.length === 0) {
+      return (
+        <div className="text-sm text-muted-foreground">
+          No interviews found.
+        </div>
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50">
+            <tr className="text-left">
+              <th className="px-4 py-3 font-medium">Type</th>
+              <th className="px-4 py-3 font-medium">Talent</th>
+              <th className="px-4 py-3 font-medium">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTableSort((prev) =>
+                      prev === 'dateAsc' ? 'dateDesc' : 'dateAsc',
+                    )
+                  }
+                  className="inline-flex items-center gap-1 hover:underline"
+                  aria-label="Sort by date and time"
+                >
+                  Date
+                  {tableSort === 'dateAsc' ? (
+                    <ArrowUp className="h-4 w-4" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4" />
+                  )}
+                </button>
+              </th>
+              <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">Meeting</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ item, section }) => {
+              const d = item?.interviewDate
+                ? new Date(item.interviewDate)
+                : undefined;
+              const dateLabel =
+                d && !Number.isNaN(d.getTime()) ? d.toLocaleString() : '-';
+              const meetingLink = String(item?.meetingLink || '').trim();
+              const rowTalentName = String(
+                item?.name || item?.talentName || '',
+              ).trim();
+              const rowTalentTypeLabel = String(item?.talentType || '-')
+                .toUpperCase()
+                .trim();
+              const statusBadge = getStatusBadge(
+                String(item?.interviewStatus || ''),
+              );
+
+              return (
+                <tr key={item._id} className="border-t">
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span
+                      className={getTypeBadgeClassName(section.iconClassName)}
+                    >
+                      {section.title}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 min-w-[220px]">
+                    {hideIds
+                      ? `${rowTalentTypeLabel}${rowTalentName ? ` - ${rowTalentName}` : ''}`
+                      : `${rowTalentTypeLabel} / ${item?.talentId || '-'}${rowTalentName ? ` (${rowTalentName})` : ''}`}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">{dateLabel}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={statusBadge.className}>
+                      {statusBadge.label}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {meetingLink ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          window.open(
+                            meetingLink,
+                            '_blank',
+                            'noopener,noreferrer',
+                          )
+                        }
+                      >
+                        Open
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -148,68 +492,205 @@ export default function CurrentComponent() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setIsTableView(true)}
-              variant="outline"
-              size="sm"
-              className="h-9"
-            >
-              <Table className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={() => setIsTableView(false)}
-              variant="outline"
-              size="sm"
-              className="h-9"
-            >
-              <BoxModelIcon className="h-4 w-4" />
-            </Button>
+            {enableViewToggle ? (
+              <>
+                <span className="text-xs text-muted-foreground">View</span>
+                <Button
+                  onClick={() => setView('table')}
+                  variant={view === 'table' ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-9 gap-2"
+                  type="button"
+                >
+                  <Table className="h-4 w-4" />
+                  Table
+                </Button>
+                <Button
+                  onClick={() => setView('cards')}
+                  variant={view === 'cards' ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-9 gap-2"
+                  type="button"
+                >
+                  <BoxModelIcon className="h-4 w-4" />
+                  Cards
+                </Button>
+              </>
+            ) : null}
           </div>
         </div>
 
-        <Accordion type="single" collapsible defaultValue="dehix-talent">
-          <AccordionItem value="dehix-talent" className="border rounded-lg">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <div className="flex w-full items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-9 w-9 place-items-center rounded-md bg-blue-500/10 text-blue-600">
-                    <GraduationCap className="h-5 w-5" />
-                  </div>
-                  <div className="text-left leading-tight">
-                    <div className="text-sm font-semibold">Dehix Talent</div>
-                    <div className="text-xs text-muted-foreground">
-                      Interviews from your Dehix Talent profile
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <DehixInterviews />
-            </AccordionContent>
-          </AccordionItem>
+        {showTodaySummary
+          ? (() => {
+              const todayItems = sections
+                .flatMap((s) => normalizeList(grouped[s.key]))
+                .filter((item) => isToday(item.interviewDate))
+                .sort((a, b) =>
+                  String(a.interviewDate || '').localeCompare(
+                    String(b.interviewDate || ''),
+                  ),
+                );
 
-          <AccordionItem value="projects" className="border rounded-lg mt-4">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <div className="flex w-full items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-9 w-9 place-items-center rounded-md bg-emerald-500/10 text-emerald-600">
-                    <Briefcase className="h-5 w-5" />
-                  </div>
-                  <div className="text-left leading-tight">
-                    <div className="text-sm font-semibold">Projects</div>
-                    <div className="text-xs text-muted-foreground">
-                      Interviews scheduled for your projects
+              const preview = todayItems.slice(0, 3);
+
+              return (
+                <Card className="overflow-hidden">
+                  <CardHeader className="gap-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <CardTitle className="text-base">Today</CardTitle>
+                        <CardDescription className="text-xs">
+                          {new Date().toLocaleDateString(undefined, {
+                            weekday: 'long',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </CardDescription>
+                      </div>
+                      <div className="shrink-0 rounded-md border px-2 py-1 text-xs font-medium text-muted-foreground">
+                        {todayItems.length}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <Projects />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {isLoading ? (
+                      <div className="text-sm text-muted-foreground">
+                        Loading...
+                      </div>
+                    ) : todayItems.length === 0 ? (
+                      <div className="text-sm text-muted-foreground">
+                        No interviews today.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {preview.map((item) => {
+                          const d = item?.interviewDate
+                            ? new Date(item.interviewDate)
+                            : undefined;
+                          const timeLabel = d
+                            ? d.toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '-';
+                          const meetingLink = String(
+                            item?.meetingLink || '',
+                          ).trim();
+                          const talentName = String(
+                            item?.name || item?.talentName || '',
+                          ).trim();
+
+                          return (
+                            <div
+                              key={item._id}
+                              className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium">
+                                  {timeLabel} •{' '}
+                                  {String(
+                                    item?.interviewType || 'INTERVIEW',
+                                  ).toUpperCase()}
+                                </div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {talentName
+                                    ? talentName
+                                    : String(
+                                        item?.talentType || '-',
+                                      ).toUpperCase()}
+                                </div>
+                              </div>
+                              {meetingLink ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="sm:shrink-0"
+                                  onClick={() =>
+                                    window.open(
+                                      meetingLink,
+                                      '_blank',
+                                      'noopener,noreferrer',
+                                    )
+                                  }
+                                >
+                                  Open meeting
+                                </Button>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+
+                        {todayItems.length > preview.length ? (
+                          <div className="text-xs text-muted-foreground">
+                            Showing {preview.length} of {todayItems.length}.
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()
+          : null}
+
+        {!enableViewToggle || view === 'cards' ? (
+          <Accordion type="single" collapsible defaultValue={sections[0].key}>
+            {sections.map((section, idx) => {
+              const items = normalizeList(grouped[section.key]);
+              const Icon = section.icon;
+
+              return (
+                <AccordionItem
+                  key={section.key}
+                  value={section.key}
+                  className={`border rounded-lg${idx === 0 ? '' : ' mt-4'}`}
+                >
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex w-full items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`grid h-9 w-9 place-items-center rounded-md ${section.iconClassName}`}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="text-left leading-tight">
+                          <div className="text-sm font-semibold">
+                            {section.title}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {section.description}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 rounded-md border px-2 py-1 text-xs font-medium text-muted-foreground">
+                        {items.length}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    {isLoading ? (
+                      <div className="text-sm text-muted-foreground">
+                        Loading...
+                      </div>
+                    ) : items.length === 0 ? (
+                      <div className="text-sm text-muted-foreground">
+                        No interviews found.
+                      </div>
+                    ) : (
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {items.map(renderInterviewCard)}
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
+        ) : (
+          renderTable()
+        )}
       </div>
     </>
   );

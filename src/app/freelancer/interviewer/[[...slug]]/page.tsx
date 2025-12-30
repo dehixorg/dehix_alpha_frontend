@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -21,22 +20,18 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import InterviewProfile from '@/components/freelancer/interview/interviewProfile';
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
-import Bids from '@/components/freelancer/interview/Bids';
-import { RootState } from '@/lib/store';
+import InterviewerBids from '@/components/freelancer/interview/InterviewerBids';
 
-export default function InterviewPage() {
+export default function InterviewerPage() {
   const params = useParams();
   const router = useRouter();
-  const user = useSelector((state: RootState) => state.user);
 
-  // slug will be [] or ["profile"], ["current"], ["bids"], ["history"]
   const slug = Array.isArray(params?.slug) ? params.slug : [];
   const activeTab = slug[0] || 'profile';
 
-  // Redirect plain /interview → /interview/profile
   useEffect(() => {
     if (slug.length === 0) {
-      router.replace('/freelancer/interview/profile');
+      router.replace('/freelancer/interviewer/profile');
     }
   }, [slug, router]);
 
@@ -53,7 +48,7 @@ export default function InterviewPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Interviews"
           breadcrumbItems={[
-            { label: 'Interview', link: '/freelancer/interview/profile' },
+            { label: 'Interviewer', link: '/freelancer/interviewer/profile' },
           ]}
         />
         <main className="flex-1 p-4 sm:px-6 sm:py-2">
@@ -72,7 +67,7 @@ export default function InterviewPage() {
                 <Tabs
                   value={activeTab}
                   onValueChange={(val) =>
-                    router.push(`/freelancer/interview/${val}`)
+                    router.push(`/freelancer/interviewer/${val}`)
                   }
                   className="w-full"
                 >
@@ -116,13 +111,13 @@ export default function InterviewPage() {
                       <InterviewProfile />
                     </TabsContent>
                     <TabsContent value="current" className="m-0">
-                      <CurrentComponent />
+                      <CurrentComponent enableViewToggle />
                     </TabsContent>
                     <TabsContent value="bids" className="m-0">
-                      <Bids userId={user.uid} />
+                      <InterviewerBids />
                     </TabsContent>
                     <TabsContent value="history" className="m-0">
-                      <CompletedInterviews />
+                      <CompletedInterviews enableViewToggle />
                     </TabsContent>
                   </div>
                 </Tabs>
