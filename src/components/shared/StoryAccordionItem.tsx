@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Info, FileText } from 'lucide-react';
+import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '../ui/carousel';
 
 import TaskDetailsDialog from './TaskDetailsDialog';
 import TaskCard from './TaskCard';
@@ -20,7 +14,6 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion';
-import { Separator } from '@/components/ui/separator';
 import { getStatusBadge } from '@/utils/statusBadge';
 import {
   Popover,
@@ -30,6 +23,7 @@ import {
 import { Task } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
+import { ScrollBar } from '@/components/ui/scroll-area';
 
 interface StoryAccordionItemProps {
   milestoneId: string | undefined;
@@ -52,9 +46,68 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   freelancerId,
   fetchMilestones,
 }) => {
-  const { text: projectStatus } = getStatusBadge(story.storyStatus);
+  const HorizontalScrollArea: React.FC<{
+    className?: string;
+    children: React.ReactNode;
+  }> = ({ className, children }) => (
+    <ScrollAreaPrimitive.Root className={className}>
+      <ScrollAreaPrimitive.Viewport className="w-full rounded-[inherit]">
+        {children}
+      </ScrollAreaPrimitive.Viewport>
+      <ScrollBar orientation="horizontal" />
+      <ScrollAreaPrimitive.Corner />
+    </ScrollAreaPrimitive.Root>
+  );
 
-  const taskCount = story?.tasks?.length || 0;
+  const { text: projectStatus } = getStatusBadge(story.storyStatus);
+  const taskCount = story?.tasks?.length ?? 0;
+  const normalizedTaskStatuses: string[] = (story?.tasks ?? [])
+    .map((task: any) => (task?.taskStatus ?? '').toString().toUpperCase())
+    .filter((status: string) => Boolean(status));
+
+  const taskStatusSet: Set<string> = new Set(normalizedTaskStatuses);
+
+  const taskColumns: Array<{ key: string; title: string }> = [
+    { key: 'NOT_STARTED', title: 'Not started' },
+    { key: 'ONGOING', title: 'Ongoing' },
+    { key: 'COMPLETED', title: 'Completed' },
+    ...Array.from(taskStatusSet)
+      .filter(
+        (status: string) =>
+          status !== 'NOT_STARTED' &&
+          status !== 'ONGOING' &&
+          status !== 'COMPLETED',
+      )
+      .map((status: string) => ({
+        key: status,
+        title: status.replaceAll('_', ' ').toLowerCase(),
+      })),
+  ];
+
+  const getKanbanAccentClasses = (statusKey: string) => {
+    switch (statusKey) {
+      case 'NOT_STARTED':
+        return {
+          border: 'border-amber-500/40',
+          headerBg: 'bg-amber-50/70 dark:bg-amber-900/10',
+        };
+      case 'ONGOING':
+        return {
+          border: 'border-blue-500/40',
+          headerBg: 'bg-blue-50/70 dark:bg-blue-900/10',
+        };
+      case 'COMPLETED':
+        return {
+          border: 'border-emerald-500/40',
+          headerBg: 'bg-emerald-50/70 dark:bg-emerald-900/10',
+        };
+      default:
+        return {
+          border: 'border-violet-500/40',
+          headerBg: 'bg-violet-50/70 dark:bg-violet-900/10',
+        };
+    }
+  };
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [actedUponTasks, setActedUponTasks] = useState<Set<string>>(new Set());
@@ -115,7 +168,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
         {
           acceptanceFreelancer: true,
           rejectionFreelancer: false,
@@ -155,7 +208,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
         {
           acceptanceFreelancer: false,
           rejectionFreelancer: true,
@@ -279,9 +332,9 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       className={`${idx === milestoneStoriesLength - 1 ? 'border-b-0' : 'border-b'} transition-colors`}
     >
       <AccordionTrigger
-        className={`flex hover:no-underline items-center px-2 md:px-4 w-full`}
+        className={`flex hover:no-underline items-center px-3 w-full`}
       >
-        <div className="flex justify-between items-center w-full px-3 md:px-5 py-2 md:py-3 rounded-xl transition-colors">
+        <div className="flex justify-between items-center w-full px-2 rounded-xl transition-colors">
           <div className="flex items-center gap-2 min-w-0">
             <h3
               className="text-base md:text-lg font-semibold truncate"
@@ -317,6 +370,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               </PopoverContent>
             </Popover>
           </div>
+
           <Badge
             className={`${profileTypeOutlineClasses(projectStatus)} hidden md:flex rounded-full`}
           >
@@ -324,129 +378,143 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           </Badge>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="w-full px-4 sm:px-6 md:px-8 lg:px-10">
-        <div className="p-2 bg-card text-card-foreground rounded-lg border border-border">
-          <div className="p-2">
-            <div className="space-y-1">
-              <Badge
-                className={`${profileTypeOutlineClasses(projectStatus)} block md:hidden text-xs md:text-sm rounded-full`}
-                style={{ width: 'fit-content' }}
-              >
-                {projectStatus}
-              </Badge>
-            </div>
-            {story?.tasks?.length > 0 ? (
-              <div className="bg-transparent">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <h4 className="text-lg md:text-xl font-semibold">Tasks</h4>
-                    <Badge variant="secondary" className="rounded-full">
-                      {taskCount}
-                    </Badge>
-                  </div>
-                  {!isFreelancer && (
-                    <Button
-                      className="md:px-3 px-2 py-0 md:py-1 text-sm sm:text-base rounded-full"
-                      onClick={() => setIsTaskDialogOpen(true)}
-                    >
-                      <Plus size={15} /> Add Task
-                    </Button>
-                  )}
-                </div>
-                <Separator className="my-3" />
-                <Carousel className="w-[85vw] md:w-full relative mt-4">
-                  <CarouselContent className="flex flex-nowrap gap-2 md:gap-0">
-                    {story.tasks.map((task: any) => {
-                      const { className: taskBadgeStyle } = getStatusBadge(
-                        task.taskStatus,
-                      );
 
-                      return (
-                        <CarouselItem
-                          key={task._id}
-                          className="min-w-0 mt-2 w-full md:basis-1/2 sm:w-full md:w-1/2 lg:w-1/3"
-                        >
-                          <TaskCard
-                            task={task}
-                            isFreelancer={isFreelancer}
-                            onTaskClick={setSelectedTask}
-                            onAcceptTask={handleAcceptTask}
-                            onRejectTask={handleRejectTask}
-                            onApproveUpdatePermission={
-                              handleApproveUpdatePermission
-                            }
-                            onRejectUpdatePermission={
-                              handleRejectUpdatePermission
-                            }
-                            shouldShowAcceptRejectButtons={
-                              shouldShowAcceptRejectButtons
-                            }
-                            fetchMilestones={fetchMilestones}
-                            milestoneId={milestoneId}
-                            storyId={story._id}
-                            taskBadgeStyle={taskBadgeStyle}
-                          />
-                        </CarouselItem>
-                      );
-                    })}
-                  </CarouselContent>
+      <AccordionContent className="w-full px-4">
+        {story?.tasks?.length > 0 ? (
+          <HorizontalScrollArea className="relative -mx-2 overflow-hidden">
+            <div className="flex gap-3 min-w-max px-2 pb-1">
+              {taskColumns.map((column) => {
+                const tasksInColumn = (story?.tasks ?? []).filter(
+                  (task: any) =>
+                    (task?.taskStatus ?? '').toString().toUpperCase() ===
+                    column.key,
+                );
+                const accent = getKanbanAccentClasses(column.key);
+
+                return (
                   <div
-                    className={`${story?.tasks?.length > (typeof window !== 'undefined' && window.innerWidth > 768 ? 2 : 1) ? 'block' : 'hidden'}`}
+                    key={column.key}
+                    className="w-[280px] shrink-0 sm:w-[320px] lg:w-[340px]"
                   >
-                    {story?.tasks?.length >
-                      (typeof window !== 'undefined' && window.innerWidth >= 768
-                        ? 2
-                        : 1) && (
-                      <>
-                        <CarouselPrevious className="absolute top-1 md:top-2 left-2 transform -translate-y-1/2 shadow rounded-full p-2" />
-                        <CarouselNext className="absolute top-1 md:top-2  right-2 transform -translate-y-1/2 shadow rounded-full p-2" />
-                      </>
-                    )}
-                  </div>
-                </Carousel>
-              </div>
-            ) : (
-              <div className="mt-8 p-6 rounded-xl border bg-muted/20 text-center">
-                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                  <FileText className="h-5 w-5" />
-                </div>
-                {!isFreelancer ? (
-                  <>
-                    <h4 className="text-base md:text-lg font-semibold">
-                      No tasks yet
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      This “{story.title}” currently has no tasks. Create tasks
-                      to track progress.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h4 className="text-base md:text-lg font-semibold">
-                      No tasks assigned
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      This “{story.title}” currently has no tasks assigned.
-                      Please check back later.
-                    </p>
-                  </>
-                )}
-                {!isFreelancer && (
-                  <div className="mt-4">
-                    <Button
-                      variant="secondary"
-                      className="px-3 py-1.5 rounded-full"
-                      onClick={() => setIsTaskDialogOpen(true)}
+                    <div
+                      className={`rounded-xl border border-border/60 pb-1 ${accent.border} ${accent.headerBg}`}
                     >
-                      <Plus size={15} className="mr-1" /> Add Task
-                    </Button>
+                      <div
+                        className={`flex items-center justify-between gap-2 px-3 py-2`}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm truncate capitalize">
+                              {column.title.toUpperCase()}
+                            </h4>
+                            <Badge
+                              variant="secondary"
+                              className="rounded-full px-2 py-0.5 text-xs"
+                            >
+                              {tasksInColumn.length}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="px-1 pb-2">
+                        {tasksInColumn.length > 0 ? (
+                          tasksInColumn.map((task: any) => {
+                            const { className: taskBadgeStyle } =
+                              getStatusBadge(task.taskStatus);
+
+                            return (
+                              <TaskCard
+                                key={task._id}
+                                task={task}
+                                isFreelancer={isFreelancer}
+                                onTaskClick={(t) => setSelectedTask(t)}
+                                onAcceptTask={handleAcceptTask}
+                                onRejectTask={handleRejectTask}
+                                onApproveUpdatePermission={
+                                  handleApproveUpdatePermission
+                                }
+                                onRejectUpdatePermission={
+                                  handleRejectUpdatePermission
+                                }
+                                shouldShowAcceptRejectButtons={
+                                  shouldShowAcceptRejectButtons
+                                }
+                                fetchMilestones={fetchMilestones}
+                                milestoneId={milestoneId}
+                                storyId={story._id}
+                                taskBadgeStyle={taskBadgeStyle}
+                              />
+                            );
+                          })
+                        ) : (
+                          <div className="px-3 pb-2 text-xs text-muted-foreground">
+                            No tasks
+                          </div>
+                        )}
+
+                        {!isFreelancer && (
+                          <div className="px-2 pt-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="w-full justify-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsTaskDialogOpen(true);
+                              }}
+                            >
+                              <Plus className="mr-1 h-4 w-4" /> Add
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
+                );
+              })}
+            </div>
+          </HorizontalScrollArea>
+        ) : (
+          <div className="p-6 rounded-xl border bg-muted/20 text-center">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <FileText className="h-5 w-5" />
+            </div>
+            {!isFreelancer ? (
+              <>
+                <h4 className="text-base md:text-lg font-semibold">
+                  No tasks yet
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  Create tasks for “{story.title}” to track progress.
+                </p>
+              </>
+            ) : (
+              <>
+                <h4 className="text-base md:text-lg font-semibold">
+                  No tasks assigned
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  There are no tasks assigned to you in “{story.title}”.
+                </p>
+              </>
+            )}
+            {!isFreelancer && (
+              <div className="mt-4">
+                <Button
+                  variant="secondary"
+                  className="px-3 py-1.5 rounded-full"
+                  onClick={() => setIsTaskDialogOpen(true)}
+                >
+                  <Plus className="mr-1 h-4 w-4" /> Add Task
+                </Button>
               </div>
             )}
           </div>
-        </div>
+        )}
       </AccordionContent>
+
       <TaskDetailsDialog
         task={selectedTask}
         open={!!selectedTask}

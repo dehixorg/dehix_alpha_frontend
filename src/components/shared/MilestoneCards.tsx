@@ -1,6 +1,7 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 
+import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,25 +36,31 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
 
   return (
     <div
-      className={`flex flex-col group-hover:bg-card rounded-md items-center gap-2 relative ${
-        isMobile ? 'w-64' : 'w-48'
-      } ${position === 'top' ? 'mt-[132px]' : position === 'bottom' ? '-mt-32' : ''} 
-          ${isSelected ? 'bg-card shadow-md' : 'dynamic-card'}
-        `}
+      className={cn(
+        'relative flex flex-col items-center',
+        isMobile ? 'w-64' : 'w-48',
+        position === 'top' ? 'mt-32' : position === 'bottom' ? '-mt-28' : '',
+      )}
       style={{
-        width: '200px',
         visibility: title === 'dummy' ? 'hidden' : 'visible',
       }}
     >
-      {/* Milestone Content */}
       <Card
-        className={`relative w-full h-full rounded-md p-3 md:p-4 hover:shadow-md ${isSelected ? 'border' : ''}`}
+        className={cn(
+          'group relative w-full rounded-xl border bg-card/80 p-3 backdrop-blur-sm transition-all',
+          'hover:-translate-y-[1px] hover:shadow-md',
+          isSelected
+            ? 'border-primary/40 ring-2 ring-primary/30 shadow-md'
+            : 'border-border/60',
+        )}
       >
-        {/* Date chip + Title + Action */}
-        <div className="flex flex-col items-center justify-between gap-2 mb-2">
-          <div className="flex flex-row items-center justify-between w-full px-2">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start justify-between gap-2">
             <h3
-              className={`font-semibold truncate ${isMobile ? 'text-lg' : 'text-sm'}`}
+              className={cn(
+                'min-w-0 font-semibold leading-snug truncate',
+                isMobile ? 'text-base md:text-lg' : 'text-sm',
+              )}
               title={title}
             >
               {truncateDescription(title, 10)}
@@ -64,7 +71,7 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="rounded-full"
+                    className="h-8 w-8 rounded-full"
                     onClick={(e) => e.stopPropagation()}
                     aria-label="View description"
                   >
@@ -72,13 +79,16 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-72 text-sm whitespace-pre-wrap leading-relaxed">
-                  <h2 className="font-semibold">{title}</h2>
-                  <p>{summary}</p>
+                  <div className="space-y-1">
+                    <h2 className="font-semibold">{title}</h2>
+                    <p>{summary}</p>
+                  </div>
                 </PopoverContent>
               </Popover>
             )}
           </div>
-          <span className="inline-block px-2 py-0.5 rounded-full bg-muted text-[10px] md:text-xs text-muted-foreground">
+
+          <span className="inline-flex w-fit items-center rounded-full bg-muted px-2 py-0.5 text-[10px] md:text-xs text-muted-foreground">
             {new Date(date).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',

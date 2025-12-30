@@ -250,10 +250,10 @@ export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any[]>([]);
   const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
-  const [domains, setDomains] = useState<any[]>([]);
   const [currDomains, setCurrDomains] = useState<{ [key: number]: string[] }>(
     {},
   );
+  const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -822,7 +822,7 @@ export function CreateProjectBusinessForm() {
                             const newDomains = { ...prev, [index]: updated };
                             form.setValue(
                               `profiles.${index}.domain`,
-                              updated[0] || '',
+                              updated as any,
                               {
                                 shouldValidate: true,
                               },
@@ -833,12 +833,12 @@ export function CreateProjectBusinessForm() {
                         onRemove={(val: string) => {
                           setCurrDomains((prev) => {
                             const updated = (prev[index] || []).filter(
-                              (d) => d !== val,
+                              (d: string) => d !== val,
                             );
                             const newDomains = { ...prev, [index]: updated };
                             form.setValue(
                               `profiles.${index}.domain`,
-                              updated[0] || '',
+                              updated as any,
                               {
                                 shouldValidate: true,
                               },

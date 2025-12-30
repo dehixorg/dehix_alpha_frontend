@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 
-import { Card } from '@/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableHeader,
@@ -14,12 +14,13 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
-import { RootState } from '@/lib/store';
 import { notifyError } from '@/utils/toastMessage';
 import { Badge } from '@/components/ui/badge';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import { RootState } from '@/lib/store';
 
 interface Skill {
   _id: string;
@@ -43,88 +44,118 @@ interface SkillDomainData {
 interface SkillDomainFormProps {
   setFilterSkill: (skills: Skill[]) => void;
   setFilterDomain: (domains: Domain[]) => void;
+  skills?: Skill[];
+  domains?: Domain[];
+  hireItems?: any[];
+  skillDomainData?: SkillDomainData[];
+  setSkillDomainData?: (next: SkillDomainData[]) => void;
+  statusVisibility?: boolean[];
+  setStatusVisibility?: (next: boolean[]) => void;
+  isLoading?: boolean;
+  refreshData?: () => Promise<void>;
 }
 
 const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   setFilterSkill,
   setFilterDomain,
+  skills: skillsProp,
+  domains: domainsProp,
+  skillDomainData: skillDomainDataProp,
+  setSkillDomainData: setSkillDomainDataProp,
+  statusVisibility: statusVisibilityProp,
+  setStatusVisibility: setStatusVisibilityProp,
+  isLoading: isLoadingProp,
+  refreshData: refreshDataProp,
 }) => {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [domains, setDomains] = useState<Domain[]>([]);
-  const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
-  const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Get the user data from Redux store
   const user = useSelector((state: RootState) => state.user);
 
-  // Fetch skills and domains once on component mount
-  useEffect(() => {
-    const fetchSkillsAndDomains = async () => {
-      try {
-        const [skillsResponse, domainsResponse] = await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'),
-        ]);
+  const isControlled = useMemo(() => {
+    return (
+      Array.isArray(skillsProp) &&
+      Array.isArray(domainsProp) &&
+      Array.isArray(skillDomainDataProp) &&
+      Array.isArray(statusVisibilityProp) &&
+      typeof setSkillDomainDataProp === 'function' &&
+      typeof setStatusVisibilityProp === 'function' &&
+      typeof refreshDataProp === 'function'
+    );
+  }, [
+    skillsProp,
+    domainsProp,
+    skillDomainDataProp,
+    statusVisibilityProp,
+    setSkillDomainDataProp,
+    setStatusVisibilityProp,
+    refreshDataProp,
+  ]);
 
-        setSkills(skillsResponse.data?.data || []);
-        setDomains(domainsResponse.data?.data || []);
-      } catch (error) {
-        console.error('Error fetching skills and domains:', error);
-        notifyError(
-          'Failed to load skills and domains. Please try again.',
-          'Error',
-        );
-      }
-    };
+  // Backward-compatible internal state (used only when parent doesn't control data)
+  const [skillsState, setSkillsState] = useState<Skill[]>([]);
+  const [domainsState, setDomainsState] = useState<Domain[]>([]);
+  const [skillDomainDataState, setSkillDomainDataState] = useState<
+    SkillDomainData[]
+  >([]);
+  const [statusVisibilityState, setStatusVisibilityState] = useState<boolean[]>(
+    [],
+  );
+  const [isLoadingState, setIsLoadingState] = useState(true);
 
-    fetchSkillsAndDomains();
-  }, []); // Empty dependency array ensures this runs only once
+  const skills = isControlled ? (skillsProp as Skill[]) : skillsState;
+  const domains = isControlled ? (domainsProp as Domain[]) : domainsState;
+  const skillDomainData = isControlled
+    ? (skillDomainDataProp as SkillDomainData[])
+    : skillDomainDataState;
+  const statusVisibility = isControlled
+    ? (statusVisibilityProp as boolean[])
+    : statusVisibilityState;
+  const setSkillDomainData = isControlled
+    ? (setSkillDomainDataProp as (next: SkillDomainData[]) => void)
+    : setSkillDomainDataState;
+  const setStatusVisibility = isControlled
+    ? (setStatusVisibilityProp as (next: boolean[]) => void)
+    : setStatusVisibilityState;
+  const isLoading = isControlled ? Boolean(isLoadingProp) : isLoadingState;
+  const refreshData = isControlled
+    ? (refreshDataProp as () => Promise<void>)
+    : async () => {
+        // legacy refresh = refetch
+        await fetchUserData();
+      };
 
-  // Fetch user's skill/domain data
   const fetchUserData = useCallback(async () => {
     try {
-      const skillsResponse = await axiosInstance.get('/skills');
-      if (skillsResponse?.data?.data) {
-        setSkills(skillsResponse.data.data);
-      } else {
-        throw new Error('Skills response is null or invalid');
-      }
-      const domainsResponse = await axiosInstance.get('/domain');
-      if (domainsResponse?.data?.data) {
-        setDomains(domainsResponse.data.data);
-      } else {
-        throw new Error('Domains response is null or invalid');
-      }
+      // fetch skills/domains for dialogs
+      const [skillsResponse, domainsResponse] = await Promise.all([
+        axiosInstance.get('/skills'),
+        axiosInstance.get('/domain'),
+      ]);
+      setSkillsState(skillsResponse.data?.data || []);
+      setDomainsState(domainsResponse.data?.data || []);
 
-      // Fetch the skill/domain data for the specific freelancer
       if (user?.uid) {
         const hireTalentResponse = await axiosInstance.get(
           `/business/hire-dehixtalent`,
         );
-        const hireTalentData = hireTalentResponse.data?.data || {};
+        const hireTalentData = hireTalentResponse.data?.data || [];
 
-        // Filter and map user data
-        const fetchedFilterSkills = hireTalentData
+        const fetchedFilterSkills = (hireTalentData || [])
           .filter((item: any) => item.type === 'SKILL' && item.visible)
           .map((item: any) => ({
-            _id: item._id,
+            _id: item.talentId || item._id,
             label: item.talentName,
           }));
 
-        const fetchedFilterDomains = hireTalentData
+        const fetchedFilterDomains = (hireTalentData || [])
           .filter((item: any) => item.type === 'DOMAIN' && item.visible)
           .map((item: any) => ({
-            _id: item._id,
+            _id: item.talentId || item._id,
             label: item.talentName,
           }));
 
-        // Send the filtered skills and domains back to the parent
         setFilterSkill(fetchedFilterSkills);
         setFilterDomain(fetchedFilterDomains);
 
-        // Convert the talent object into an array
-        const formattedHireTalentData = Object.values(hireTalentData).map(
+        const formattedHireTalentData = (hireTalentData || []).map(
           (item: any) => ({
             uid: item._id,
             label: item.talentName || 'N/A',
@@ -135,69 +166,29 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           }),
         );
 
-        setSkillDomainData(formattedHireTalentData);
-        setStatusVisibility(
-          formattedHireTalentData.map((item) => item.visible),
+        setSkillDomainDataState(formattedHireTalentData);
+        setStatusVisibilityState(
+          formattedHireTalentData.map((item: any) => Boolean(item.visible)),
         );
-
-        const filterSkills = hireTalentData
-          .filter((item: any) => item.skillName)
-          .map((item: any) => ({
-            _id: item.skillId,
-            label: item.skillName,
-          }));
-
-        const filterDomains = hireTalentData
-          .filter((item: any) => item.domainName)
-          .map((item: any) => ({
-            _id: item.domainId,
-            label: item.domainName,
-          }));
-
-        // fetch skills and domains data
-        const skillsResponse = await axiosInstance.get('/skills');
-        if (skillsResponse?.data?.data) {
-          const uniqueSkills = skillsResponse.data.data.filter(
-            (skill: any) =>
-              !filterSkills.some(
-                (filterSkill: any) => filterSkill._id === skill._id,
-              ),
-          );
-          setSkills(uniqueSkills);
-        } else {
-          throw new Error('Skills response is null or invalid');
-        }
-        const domainsResponse = await axiosInstance.get('/domain');
-        if (domainsResponse?.data?.data) {
-          const uniqueDomain = domainsResponse.data.data.filter(
-            (domain: any) =>
-              !filterDomains.some(
-                (filterDomain: any) => filterDomain._id === domain._id,
-              ),
-          );
-          setDomains(uniqueDomain);
-        } else {
-          throw new Error('Domains response is null or invalid');
-        }
       }
     } catch (error: any) {
       console.error('Error fetching user data:', error);
       notifyError('Something went wrong. Please try again.', 'Error');
     }
-  }, [user?.uid, setFilterSkill, setFilterDomain]);
+  }, [setFilterSkill, setFilterDomain, user?.uid]);
 
-  // Fetch user data on mount
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
+    if (isControlled) return;
+    const run = async () => {
+      setIsLoadingState(true);
       try {
         await fetchUserData();
       } finally {
-        setIsLoading(false);
+        setIsLoadingState(false);
       }
     };
-    fetchData();
-  }, [fetchUserData]);
+    void run();
+  }, [fetchUserData, isControlled]);
 
   // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {
@@ -234,7 +225,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         setStatusVisibility(updatedVisibility);
 
         // Callback to refetch data after visibility update
-        await fetchUserData();
+        await refreshData();
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
@@ -243,69 +234,80 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   };
 
   return (
-    <div className="ml-4">
-      <div className="mb-8 ">
-        <h1 className="text-3xl font-bold"> Hire Talent </h1>
-        <p className="text-gray-400 mt-2">
+    <div className="w-full mx-auto max-w-6xl">
+      <div className="flex flex-col gap-2 mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Hire Talent</h1>
+        <p className="text-muted-foreground">
           Help us understand the skills and domain you are looking for in
-          potential hires.Enter the required experience and a short description
+          potential hires. Enter the required experience and a short description
           to refine your talent search.
         </p>
       </div>
 
-      <div className="">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex space-x-4">
+      <div className="card rounded-xl border shadow-sm overflow-hidden">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <CardTitle className="text-lg">Requirements</CardTitle>
+
+            <div className="flex items-center gap-3">
               <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
               <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
             </div>
           </div>
-          <Card className="h-[65.4vh] overflow-auto no-scrollbar">
+        </CardHeader>
+
+        <CardContent className="p-0">
+          <div className="overflow-x-auto no-scrollbar">
             <Table className="w-full">
-              <TableHeader className="sticky top-0 z-10">
+              <TableHeader className="sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <TableRow>
                   <TableHead>Label</TableHead>
                   <TableHead>Experience</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="text-right">Visible</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   // Skeleton loader
-                  [...Array(5)].map((_, index) => (
+                  [...Array(6)].map((_, index) => (
                     <TableRow key={`skeleton-${index}`}>
                       <TableCell>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
+                        <Skeleton className="h-4 w-40" />
                       </TableCell>
                       <TableCell>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
+                        <Skeleton className="h-4 w-24" />
                       </TableCell>
                       <TableCell>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse"></div>
+                        <Skeleton className="h-4 w-[28rem] max-w-full" />
                       </TableCell>
                       <TableCell>
-                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+                        <Skeleton className="h-6 w-24 rounded-full" />
                       </TableCell>
-                      <TableCell>
-                        <div className="h-6 w-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                      <TableCell className="text-right">
+                        <Skeleton className="h-6 w-10 rounded-full ml-auto" />
                       </TableCell>
                     </TableRow>
                   ))
                 ) : skillDomainData.length > 0 ? (
                   skillDomainData.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell>{item.label}</TableCell>
+                      <TableCell className="font-medium">
+                        {item.label}
+                      </TableCell>
                       <TableCell>{item.experience} years</TableCell>
-                      <TableCell>{item.description}</TableCell>
+                      <TableCell className="max-w-[36rem]">
+                        <div className="line-clamp-2 text-muted-foreground">
+                          {item.description}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <Badge className={getBadgeColor(item.status)}>
                           {item.status.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">
                         <Switch
                           checked={statusVisibility[index]}
                           onCheckedChange={
@@ -319,26 +321,32 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
                     </TableRow>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan={5} className="text-center py-10">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size="100"
-                      />
-                      <p className="text-gray-500">
-                        No data available.
-                        <br /> This feature will be available soon.
-                        <br />
-                        Here you can directly hire freelancer for different
-                        roles.
-                      </p>
-                    </td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-14">
+                      <div className="flex flex-col items-center text-center gap-3">
+                        <div className="rounded-full border bg-muted/30 p-4">
+                          <PackageOpen
+                            className="text-muted-foreground"
+                            size={48}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">
+                            No requirements added yet
+                          </p>
+                          <p className="text-sm text-muted-foreground max-w-md">
+                            This feature will be available soon. Here you can
+                            directly hire freelancer for different roles.
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
-          </Card>
-        </div>
+          </div>
+        </CardContent>
       </div>
     </div>
   );

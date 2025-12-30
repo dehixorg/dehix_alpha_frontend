@@ -163,7 +163,7 @@ export default function NewReportPage() {
                       View and manage your previously generated reports
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-0">
                     <PastReportsTab key={refreshKey} />
                   </CardContent>
                 </TabsContent>

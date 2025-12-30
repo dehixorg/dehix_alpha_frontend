@@ -2,22 +2,32 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ProfileComponent from '@/components/freelancer/interview/Profile';
-import BidsComponent from '@/components/freelancer/interview/Bids';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import CurrentComponent from '@/components/freelancer/interview/Current';
-import HistoryComponent from '@/components/freelancer/interview/History';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import InterviewProfile from '@/components/freelancer/interview/interviewProfile';
+import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
+import Bids from '@/components/freelancer/interview/Bids';
+import { RootState } from '@/lib/store';
 
 export default function InterviewPage() {
   const params = useParams();
   const router = useRouter();
+  const user = useSelector((state: RootState) => state.user);
 
   // slug will be [] or ["profile"], ["current"], ["bids"], ["history"]
   const slug = Array.isArray(params?.slug) ? params.slug : [];
@@ -43,64 +53,79 @@ export default function InterviewPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Interviews"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Interview', link: '/freelancer/interview/profile' },
           ]}
         />
-        <main className="flex-1 px-4 md:px-6 py-0 md:py-2">
-          <div className="w-full">
-            <Tabs
-              value={activeTab}
-              onValueChange={(val) =>
-                router.push(`/freelancer/interview/${val}`)
-              }
-            >
-              <div className="border-b px-2 sm:px-6">
-                <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
-                  <TabsTrigger
-                    value="profile"
-                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                  >
-                    <Users2 className="h-4 w-4" />
-                    <span>Profile</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="current"
-                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                  >
-                    <ListVideo className="h-4 w-4" />
-                    <span>Current</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="bids"
-                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                  >
-                    <Briefcase className="h-4 w-4" />
-                    <span>Bids</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="history"
-                    className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                  >
-                    <History className="h-4 w-4" />
-                    <span>History</span>
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+        <main className="flex-1 px-4 sm:px-6 sm:py-2">
+          <div className="mx-auto w-full max-w-7xl">
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-gradient">
+                <CardTitle className="text-2xl font-bold tracking-tight">
+                  Interviews
+                </CardTitle>
+                <CardDescription>
+                  Manage your interview profile, active interviews, bids, and
+                  history.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={(val) =>
+                    router.push(`/freelancer/interview/${val}`)
+                  }
+                  className="w-full"
+                >
+                  <div className="border-b px-2 sm:px-6">
+                    <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
+                      <TabsTrigger
+                        value="profile"
+                        className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <Users2 className="h-4 w-4" />
+                        <span>Profile</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="current"
+                        className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <ListVideo className="h-4 w-4" />
+                        <span>Current</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="bids"
+                        className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <Briefcase className="h-4 w-4" />
+                        <span>Bids</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="history"
+                        className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <History className="h-4 w-4" />
+                        <span>History</span>
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
 
-              <TabsContent value="profile" className="m-0 pt-4">
-                <ProfileComponent />
-              </TabsContent>
-              <TabsContent value="current" className="m-0 pt-4">
-                <CurrentComponent />
-              </TabsContent>
-              <TabsContent value="bids" className="m-0 pt-4">
-                <BidsComponent />
-              </TabsContent>
-              <TabsContent value="history" className="m-0 pt-4">
-                <HistoryComponent />
-              </TabsContent>
-            </Tabs>
+                  <div className="px-4 py-4 sm:px-6">
+                    <TabsContent value="profile" className="m-0">
+                      <InterviewProfile />
+                    </TabsContent>
+                    <TabsContent value="current" className="m-0">
+                      <CurrentComponent />
+                    </TabsContent>
+                    <TabsContent value="bids" className="m-0">
+                      <Bids userId={user.uid} />
+                    </TabsContent>
+                    <TabsContent value="history" className="m-0">
+                      <CompletedInterviews />
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>

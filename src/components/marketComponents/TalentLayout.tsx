@@ -2,13 +2,7 @@
 'use client';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  BookMarked,
-  CheckCircle2,
-  Users2,
-  XCircle,
-  FileText,
-} from 'lucide-react';
+import { Users2, FileText } from 'lucide-react';
 
 import Header from '../header/header';
 
@@ -29,9 +23,20 @@ interface ProfessionalExperience {
 }
 
 interface TalentLayoutProps {
-  activeTab: 'invited' | 'accepted' | 'rejected' | 'applications' | 'overview';
+  activeTab: 'applications' | 'overview';
   talents?: FreelancerApplication[];
   loading?: boolean;
+  statusFilter?: 'invited' | 'accepted' | 'rejected' | 'applications';
+  onStatusFilterChange?: (
+    value: 'invited' | 'accepted' | 'rejected' | 'applications',
+  ) => void;
+  talentFilter?: string;
+  onTalentFilterChange?: (value: string) => void;
+  talentOptions?: { label: string; value: string }[];
+  onUpdateApplicationStatus?: (
+    freelancerId: string,
+    status: 'SELECTED' | 'REJECTED',
+  ) => Promise<void>;
 }
 
 export const calculateExperience = (
@@ -72,6 +77,12 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
   activeTab,
   talents = [],
   loading = false,
+  statusFilter,
+  onStatusFilterChange,
+  talentFilter,
+  onTalentFilterChange,
+  talentOptions,
+  onUpdateApplicationStatus,
 }) => {
   const router = useRouter();
 
@@ -79,7 +90,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
     if (value === 'overview') {
       router.push('/business/talent');
     } else {
-      router.push(`/business/talent/${value}`);
+      router.push('/business/talent/applications');
     }
   };
 
@@ -111,7 +122,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
             onValueChange={handleTabChange}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="overview">
                 <Users2 className="h-4 w-4 mr-2" />
                 Overview
@@ -120,29 +131,23 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
                 <FileText className="h-4 w-4 mr-2" />
                 Applications
               </TabsTrigger>
-              <TabsTrigger value="invited">
-                <BookMarked className="h-4 w-4 mr-2" />
-                Invites
-              </TabsTrigger>
-              <TabsTrigger value="accepted">
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Accepted
-              </TabsTrigger>
-              <TabsTrigger value="rejected">
-                <XCircle className="h-4 w-4 mr-2" />
-                Rejected
-              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
-        <div className="container flex-1 items-start px-4 py-6">
+        <div className="container flex-1 items-start px-4">
           <div className="grid grid-cols-12">
             <div className="col-span-12">
               <TalentContent
                 activeTab={activeTab}
                 talents={activeTab === 'overview' ? [] : talents}
                 loading={loading}
+                statusFilter={statusFilter}
+                onStatusFilterChange={onStatusFilterChange}
+                talentFilter={talentFilter}
+                onTalentFilterChange={onTalentFilterChange}
+                talentOptions={talentOptions}
+                onUpdateApplicationStatus={onUpdateApplicationStatus}
               />
             </div>
           </div>

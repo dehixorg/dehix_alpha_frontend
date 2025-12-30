@@ -62,7 +62,6 @@ export default function InviteFreelancerDialog({
   open,
   onOpenChange,
   freelancerId,
-  freelancer_professional_profile_id,
   onSuccess,
 }: InviteFreelancerDialogProps) {
   const [step, setStep] = useState(1);
@@ -142,14 +141,18 @@ export default function InviteFreelancerDialog({
 
     setSubmitting(true);
     try {
+      const selectedProfile = getSelectedProfile();
+      const profileName =
+        selectedProfile?.title || selectedProfile?.domain || 'Untitled Profile';
+
       const payload = {
-        freelancerId: freelancerId,
-        freelancer_professional_profile_id: freelancer_professional_profile_id,
         projectId: selectedProjectId,
+        freelancerId: freelancerId,
+        profileName,
         profileId: selectedProfileId,
       };
 
-      await axiosInstance.post('/business/hire-dehixtalent/hire-now', payload);
+      await axiosInstance.post('/business/invite', payload);
 
       // Dispatch wallet update events
       window.dispatchEvent(new Event('refreshWallet'));
