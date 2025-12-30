@@ -12,14 +12,19 @@ import {
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
+import Cookies from 'js-cookie';
 
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
-  menuItemsBottom,
   menuItemsTop,
+  menuItemsBottom,
 } from '@/config/menuItems/business/dashboardMenuItems';
+import {
+  menuItemsTop as freelancerMenuItemsTop,
+  menuItemsBottom as freelancerMenuItemsBottom,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { Separator } from '@/components/ui/separator';
@@ -28,7 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import EmptyState from '@/components/shared/EmptyState';
-import { RootState } from '@/lib/store';
+import { RootState, useAppSelector } from '@/lib/store';
 
 interface Skill {
   _id: string;
@@ -95,6 +100,16 @@ interface FreelancerProfile {
 }
 
 const FreelancerProfile = () => {
+  const userTypeFromStore = useAppSelector((s) => s.user.type);
+  const userType = userTypeFromStore || (Cookies.get('userType') as any);
+  const isFreelancer = userType === 'freelancer';
+
+  const sidebarMenuItemsTop = isFreelancer
+    ? freelancerMenuItemsTop
+    : menuItemsTop;
+  const sidebarMenuItemsBottom = isFreelancer
+    ? freelancerMenuItemsBottom
+    : menuItemsBottom;
   const { freelancer_id } = useParams<{ freelancer_id: string }>();
   const [profileData, setProfileData] = useState<FreelancerProfile | null>(
     null,
@@ -243,14 +258,14 @@ const FreelancerProfile = () => {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background">
         <SidebarMenu
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
+          menuItemsTop={sidebarMenuItemsTop}
+          menuItemsBottom={sidebarMenuItemsBottom}
           active=""
         />
         <div className="flex flex-col sm:gap-4 mb-8 sm:pl-14">
           <Header
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
+            menuItemsTop={sidebarMenuItemsTop}
+            menuItemsBottom={sidebarMenuItemsBottom}
             activeMenu="Projects"
             breadcrumbItems={[{ label: 'Freelancer', link: '#' }]}
           />
@@ -454,14 +469,14 @@ const FreelancerProfile = () => {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
+        menuItemsTop={sidebarMenuItemsTop}
+        menuItemsBottom={sidebarMenuItemsBottom}
         active=""
       />
       <div className="flex flex-col sm:gap-4 mb-8 sm:pl-14">
         <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
+          menuItemsTop={sidebarMenuItemsTop}
+          menuItemsBottom={sidebarMenuItemsBottom}
           activeMenu="Projects"
           breadcrumbItems={[
             { label: 'Freelancer', link: '#' },
@@ -511,22 +526,24 @@ const FreelancerProfile = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="w-full sm:w-auto">
-                    <ConnectsDialog
-                      loading={hireLoading}
-                      setLoading={setHireLoading}
-                      onSubmit={handleHireNow}
-                      isValidCheck={noopValidate}
-                      userId={user?.uid}
-                      buttonText="Hire Now"
-                      userType="BUSINESS"
-                      requiredConnects={parseInt(
-                        process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-                        10,
-                      )}
-                      skipRedirect
-                    />
-                  </div>
+                  {!isFreelancer && (
+                    <div className="w-full sm:w-auto">
+                      <ConnectsDialog
+                        loading={hireLoading}
+                        setLoading={setHireLoading}
+                        onSubmit={handleHireNow}
+                        isValidCheck={noopValidate}
+                        userId={user?.uid}
+                        buttonText="Hire Now"
+                        userType="BUSINESS"
+                        requiredConnects={parseInt(
+                          process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+                          10,
+                        )}
+                        skipRedirect
+                      />
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

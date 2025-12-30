@@ -362,9 +362,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                       <div
                         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 cursor-pointer"
                         onClick={() =>
-                          router.push(
-                            `/business/freelancerProfile/${freelancer_id}`,
-                          )
+                          router.push(`/freelancer-profile/${freelancer_id}`)
                         }
                       >
                         <div className="flex items-center gap-4">

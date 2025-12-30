@@ -84,6 +84,11 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Talent',
   },
   {
+    href: '/freelancer/leaderboard',
+    icon: <Trophy className="h-5 w-5" />,
+    label: 'Leaderboard',
+  },
+  {
     href: '/chat',
     icon: <MessageSquare className="h-5 w-5" />,
     label: 'Chats',
@@ -93,7 +98,6 @@ export const menuItemsTop: MenuItem[] = [
     icon: <StickyNote className="h-5 w-5" />,
     label: 'Notes',
   },
-  //   <ReportMenuItem key="report" />
 ];
 
 export const menuItemsBottom: MenuItem[] = [
