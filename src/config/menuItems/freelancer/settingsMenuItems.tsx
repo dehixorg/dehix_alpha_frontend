@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   User,
   UserCheck,
+  Award,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -44,6 +45,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/settings/kyc',
     icon: <ShieldCheck className="h-5 w-5" />,
     label: 'KYC',
+  },
+  {
+    href: '/freelancer/settings/levels-badges',
+    icon: <Award className="h-5 w-5" />,
+    label: 'Levels & Badges',
   },
   {
     href: '/freelancer/settings/profiles',
