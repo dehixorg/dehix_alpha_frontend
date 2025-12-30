@@ -80,7 +80,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
 
         const allInterviews: any[] = Array.isArray(interviewRes)
           ? interviewRes
-          : interviewRes?.data ?? [];
+          : (interviewRes?.data ?? []);
 
         const dehixTalentObj = freelancerRes?.data?.dehixTalent ?? {};
 
