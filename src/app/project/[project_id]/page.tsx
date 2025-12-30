@@ -14,6 +14,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import type { Milestone } from '@/utils/types/Milestone';
 import { toast } from '@/components/ui/use-toast';
 
 interface Project {
@@ -54,13 +55,13 @@ interface Project {
   team?: string[];
   createdAt?: Date;
   updatedAt?: Date;
+  milestones?: Milestone[];
 }
 
 export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true); // Add loading state
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -132,6 +133,7 @@ export default function Dashboard() {
                 projectDomain={project.projectDomain}
                 projectId={project._id}
                 skills={project.skillsRequired}
+                milestones={project.milestones}
                 userRole="Freelancer"
               />
             </div>

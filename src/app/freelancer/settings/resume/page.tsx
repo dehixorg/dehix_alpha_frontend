@@ -89,7 +89,6 @@ export default function Resume() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Resume"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'Resume Building', link: '#' },
           ]}

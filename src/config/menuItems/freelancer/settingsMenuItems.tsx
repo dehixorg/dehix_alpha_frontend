@@ -1,12 +1,12 @@
 import {
   FileText,
   FileWarning,
-  HomeIcon,
   UserCog,
   ShieldCheck,
   User,
   UserCheck,
   Trophy,
+  ArrowLeft,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -28,8 +28,8 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/dashboard/freelancer',
-    icon: <HomeIcon className="h-5 w-5" />,
-    label: 'Home',
+    icon: <ArrowLeft className="h-5 w-5" />,
+    label: 'Back',
   },
   {
     href: '/freelancer/settings/personal-info',

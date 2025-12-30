@@ -14,8 +14,10 @@ import {
   Clock,
   DollarSign,
   MoreVertical,
+  File,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import {
@@ -33,7 +35,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +51,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -184,7 +187,6 @@ const FreelancerAvatar = React.memo(
   ),
 );
 FreelancerAvatar.displayName = 'FreelancerAvatar';
-
 // Profile Dialog Component
 const ProfileDialog = React.memo(
   ({
@@ -192,17 +194,17 @@ const ProfileDialog = React.memo(
     onClose,
     profileData,
     loading,
-    isFreelancerProfile,
     bidData,
+    isFreelancerProfile,
   }: {
     isOpen: boolean;
     onClose: () => void;
     profileData: any;
     loading: boolean;
+    bidData: any;
     isFreelancerProfile: boolean;
-    bidData?: any;
   }) => {
-    if (!profileData && !loading) return null;
+    const router = useRouter();
 
     const getProfileDisplayName = (
       profileData: any,
@@ -252,457 +254,514 @@ const ProfileDialog = React.memo(
 
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {profileData?.profilePic ||
-                profileData?.freelancerId?.profilePic ? (
-                  <Image
-                    src={
-                      profileData?.profilePic ||
-                      profileData?.freelancerId?.profilePic
-                    }
-                    alt="Profile"
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                    <UserCircle className="w-8 h-8 text-white" />
-                  </div>
-                )}
-                <div>
-                  <h2 className="text-xl font-bold">
-                    {getProfileDisplayName(
-                      profileData,
-                      bidData,
-                      isFreelancerProfile,
-                    )}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    @
-                    {getProfileUsername(
-                      profileData,
-                      bidData,
-                      isFreelancerProfile,
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* View Profile Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // Placeholder function - no action for now
-                }}
-                className="flex items-center gap-2"
-              >
-                <UserCircle className="w-4 h-4" />
-                View Profile
-              </Button>
-            </DialogTitle>
+        <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] p-0 overflow-hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Profile Details</DialogTitle>
           </DialogHeader>
 
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-muted-foreground">
-                Loading profile...
-              </span>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Profile Header Info */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-lg">
-                <div className="flex flex-wrap gap-4 text-sm">
-                  {(profileData?.hourlyRate || profileData?.perHourPrice) && (
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-green-600" />
-                      <span className="font-medium">
-                        ${profileData?.hourlyRate || profileData?.perHourPrice}
-                        /hr
-                      </span>
+          <div className="sticky top-0 border-b bg-gradient">
+            <div className="p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div
+                  className="flex items-center gap-3 min-w-0 cursor-pointer"
+                  onClick={() => {
+                    const freelancerId =
+                      profileData?.freelancerId?._id ||
+                      bidData?.bidder_id ||
+                      bidData?.freelancer?._id;
+                    if (freelancerId)
+                      router.push(
+                        `/business/freelancerProfile/${freelancerId}`,
+                      );
+                  }}
+                >
+                  {profileData?.profilePic ||
+                  profileData?.freelancerId?.profilePic ? (
+                    <Image
+                      src={
+                        profileData?.profilePic ||
+                        profileData?.freelancerId?.profilePic
+                      }
+                      alt="Profile"
+                      className="h-11 w-11 rounded-full object-cover"
+                      width={44}
+                      height={44}
+                    />
+                  ) : (
+                    <div className="h-11 w-11 rounded-full bg-muted flex items-center justify-center border">
+                      <UserCircle className="h-7 w-7 text-muted-foreground" />
                     </div>
                   )}
-                  {profileData?.availability && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      <span className="font-medium">
-                        {profileData.availability}
-                      </span>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className="font-semibold leading-none truncate">
+                        {getProfileDisplayName(
+                          profileData,
+                          bidData,
+                          isFreelancerProfile,
+                        )}
+                      </p>
                     </div>
-                  )}
-                  {profileData?.workExperience && (
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="w-4 h-4 text-purple-600" />
-                      <span className="font-medium">
-                        {profileData.workExperience} years experience
-                      </span>
-                    </div>
-                  )}
-                  {/* Show role if available for freelancer profile */}
-                  {isFreelancerProfile && profileData?.role && (
-                    <div className="flex items-center gap-2">
-                      <UserCircle className="w-4 h-4 text-indigo-600" />
-                      <span className="font-medium">{profileData.role}</span>
-                    </div>
-                  )}
+                    <p className="text-sm text-muted-foreground truncate">
+                      @
+                      {getProfileUsername(
+                        profileData,
+                        bidData,
+                        isFreelancerProfile,
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* Description */}
-              {profileData?.description && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" />
-                    About
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {profileData.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Cover Letter - show bid description as cover letter */}
-              {bidData?.description && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" />
-                    Cover Letter
-                  </h3>
-                  <div className="bg-muted/50 p-4 rounded-lg border border-border">
-                    <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                      {bidData.description}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Skills */}
-              {profileData?.skills && profileData.skills.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <Code className="w-5 h-5" />
-                    Skills
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {profileData.skills.map((skill: any, index: number) => (
-                      <Badge
-                        key={index}
-                        className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
-                        variant="outline"
-                      >
-                        {skill.label || skill.name}
-                        {skill.level && ` (${skill.level})`}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Domains */}
-              {profileData?.domains && profileData.domains.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <Layers className="w-5 h-5" />
-                    Domains
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {profileData.domains.map((domain: any, index: number) => (
-                      <Badge
-                        key={index}
-                        className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
-                        variant="outline"
-                      >
-                        {domain.label || domain.name}
-                        {domain.level && ` (${domain.level})`}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Domain for freelancer profile */}
-              {isFreelancerProfile &&
-                profileData?.domain &&
-                profileData.domain.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Layers className="w-5 h-5" />
-                      Domain Expertise
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {profileData.domain.map((domain: any, index: number) => (
-                        <Badge
-                          key={index}
-                          className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
-                          variant="outline"
-                        >
-                          {domain.name}
-                          {domain.level && ` (${domain.level})`}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Skills for freelancer profile */}
-              {isFreelancerProfile &&
-                profileData?.skills &&
-                profileData.skills.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Code className="w-5 h-5" />
-                      Skills
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {profileData.skills.map((skill: any) => (
-                        <Badge
-                          key={
-                            skill._id ||
-                            skill.id ||
-                            `skill-${skill.name}-${skill.level}`
-                          }
-                          className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
-                          variant="outline"
-                        >
-                          {skill.name}
-                          {skill.level && ` (${skill.level})`}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Projects */}
-              {profileData?.projects && profileData.projects.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <Briefcase className="w-5 h-5" />
-                    Projects ({profileData.projects.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {profileData.projects
-                      .slice(0, 4)
-                      .map((project: any, index: number) => {
-                        return (
-                          <ProjectCard
-                            key={project._id || index}
-                            {...project}
-                            isViewOnly={true}
-                          />
-                        );
-                      })}
-                  </div>
-                  {profileData.projects.length > 4 && (
-                    <p className="text-sm text-muted-foreground text-center mt-4">
-                      And {profileData.projects.length - 4} more projects...
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Work Experience */}
-              {profileData?.experiences &&
-                profileData.experiences.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Briefcase className="w-5 h-5" />
-                      Work Experience ({profileData.experiences.length})
-                    </h3>
-                    <div className="space-y-4">
-                      {profileData.experiences
-                        .slice(0, 3)
-                        .map((experience: any, index: number) => (
-                          <div
-                            key={index}
-                            className="bg-muted/50 p-4 rounded-lg border border-border"
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-foreground text-base">
-                                  {experience.jobTitle}
-                                </h4>
-                                <p className="text-blue-600 dark:text-blue-400 font-medium text-sm mt-1">
-                                  {experience.company}
-                                </p>
-                              </div>
-                              {experience.workFrom && experience.workTo && (
-                                <span className="text-sm text-muted-foreground font-medium ml-4 whitespace-nowrap">
-                                  {new Date(
-                                    experience.workFrom,
-                                  ).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                  })}{' '}
-                                  -{' '}
-                                  {new Date(
-                                    experience.workTo,
-                                  ).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                  })}
-                                </span>
-                              )}
-                            </div>
-                            {experience.workDescription && (
-                              <div className="mt-3">
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                  {experience.workDescription}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      {profileData.experiences.length > 3 && (
-                        <p className="text-sm text-muted-foreground text-center mt-4">
-                          And {profileData.experiences.length - 3} more
-                          experiences...
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-              {/* Professional Info for freelancer profile */}
-              {isFreelancerProfile &&
-                profileData?.professionalInfo &&
-                profileData.professionalInfo.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Briefcase className="w-5 h-5" />
-                      Professional Experience
-                    </h3>
-                    <div className="space-y-4">
-                      {profileData.professionalInfo
-                        .slice(0, 3)
-                        .map((exp: any, index: number) => (
-                          <div
-                            key={index}
-                            className="bg-muted/50 p-4 rounded-lg border border-border"
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-foreground text-base">
-                                  {exp.jobTitle}
-                                </h4>
-                                <p className="text-blue-600 dark:text-blue-400 font-medium text-sm mt-1">
-                                  {exp.company}
-                                </p>
-                              </div>
-                              {exp.workFrom && exp.workTo && (
-                                <span className="text-sm text-muted-foreground font-medium ml-4 whitespace-nowrap">
-                                  {new Date(exp.workFrom).toLocaleDateString(
-                                    'en-US',
-                                    {
-                                      year: 'numeric',
-                                      month: 'short',
-                                    },
-                                  )}{' '}
-                                  -{' '}
-                                  {new Date(exp.workTo).toLocaleDateString(
-                                    'en-US',
-                                    {
-                                      year: 'numeric',
-                                      month: 'short',
-                                    },
-                                  )}
-                                </span>
-                              )}
-                            </div>
-                            {exp.workDescription && (
-                              <div className="mt-3">
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                  {exp.workDescription}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Work Experience for freelancer profile */}
-              {isFreelancerProfile &&
-                profileData?.workExperience &&
-                profileData.workExperience > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Briefcase className="w-5 h-5" />
-                      Work Experience
-                    </h3>
-                    <div className="bg-muted/50 p-4 rounded-lg border border-border">
-                      <p className="text-foreground leading-relaxed">
-                        {profileData.workExperience} years of professional
-                        experience
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-              {/* Contact & Links */}
-              <div className="border-t pt-4">
-                <h3 className="text-lg font-semibold mb-3">
-                  Contact Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-muted-foreground">
-                      Email:
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(profileData?.hourlyRate || profileData?.perHourPrice) && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1.5"
+                  >
+                    <DollarSign className="h-3.5 w-3.5" />
+                    <span>
+                      ${profileData?.hourlyRate || profileData?.perHourPrice}/hr
                     </span>
-                    <p>
-                      {profileData?.freelancerId?.email ||
-                        profileData?.email ||
-                        'Not provided'}
-                    </p>
-                  </div>
-                  {(profileData?.githubLink ||
-                    profileData?.linkedinLink ||
-                    profileData?.personalWebsite) && (
+                  </Badge>
+                )}
+                {profileData?.availability && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1.5"
+                  >
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{profileData.availability}</span>
+                  </Badge>
+                )}
+                {profileData?.workExperience && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1.5"
+                  >
+                    <Briefcase className="h-3.5 w-3.5" />
+                    <span>{profileData.workExperience} yrs</span>
+                  </Badge>
+                )}
+                {isFreelancerProfile && profileData?.role && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1.5"
+                  >
+                    <UserCircle className="h-3.5 w-3.5" />
+                    <span className="truncate max-w-[240px]">
+                      {profileData.role}
+                    </span>
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="p-4 sm:p-5">
+              <div className="space-y-4">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-28 w-full" />
+                <Skeleton className="h-10 w-1/2" />
+                <Skeleton className="h-10 w-2/3" />
+              </div>
+            </div>
+          ) : (
+            <ScrollArea className="max-h-[calc(90vh-120px)]">
+              <div className="p-4 sm:p-5 pt-0 sm:pt-0 space-y-5">
+                {profileData?.description && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        About
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {profileData.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {bidData?.description && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <File className="h-4 w-4" />
+                        Cover letter
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                        {bidData.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {(profileData?.skills?.length > 0 ||
+                  profileData?.domains?.length > 0 ||
+                  (isFreelancerProfile && profileData?.domain?.length > 0)) && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Expertise</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {profileData?.skills?.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Skills
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {profileData.skills.map(
+                              (skill: any, index: number) => (
+                                <Badge key={index} variant="secondary">
+                                  {skill.label || skill.name}
+                                  {skill.level && ` (${skill.level})`}
+                                </Badge>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {profileData?.domains?.length > 0 && (
+                        <>
+                          {profileData?.skills?.length > 0 && <Separator />}
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Domains
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {profileData.domains.map(
+                                (domain: any, index: number) => (
+                                  <Badge key={index} variant="secondary">
+                                    {domain.label || domain.name}
+                                    {domain.level && ` (${domain.level})`}
+                                  </Badge>
+                                ),
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {isFreelancerProfile &&
+                        profileData?.domain?.length > 0 && (
+                          <>
+                            {(profileData?.skills?.length > 0 ||
+                              profileData?.domains?.length > 0) && (
+                              <Separator />
+                            )}
+                            <div className="space-y-2">
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                Domain expertise
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {profileData.domain.map(
+                                  (domain: any, index: number) => (
+                                    <Badge key={index} variant="secondary">
+                                      {domain.name}
+                                      {domain.level && ` (${domain.level})`}
+                                    </Badge>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Domain for freelancer profile */}
+                {isFreelancerProfile &&
+                  profileData?.domain &&
+                  profileData.domain.length > 0 && (
                     <div>
-                      <span className="font-medium text-muted-foreground">
-                        Links:
-                      </span>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {profileData?.githubLink && (
-                          <a
-                            href={profileData.githubLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            GitHub ↗
-                          </a>
-                        )}
-                        {profileData?.linkedinLink && (
-                          <a
-                            href={profileData.linkedinLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            LinkedIn ↗
-                          </a>
-                        )}
-                        {profileData?.personalWebsite && (
-                          <a
-                            href={profileData.personalWebsite}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            Portfolio ↗
-                          </a>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <Layers className="w-5 h-5" />
+                        Domain Expertise
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {profileData.domain.map(
+                          (domain: any, index: number) => (
+                            <Badge
+                              key={index}
+                              className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
+                              variant="outline"
+                            >
+                              {domain.name}
+                              {domain.level && ` (${domain.level})`}
+                            </Badge>
+                          ),
                         )}
                       </div>
                     </div>
                   )}
+
+                {/* Skills for freelancer profile */}
+                {isFreelancerProfile &&
+                  profileData?.skills &&
+                  profileData.skills.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <Code className="w-5 h-5" />
+                        Skills
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {profileData.skills.map((skill: any) => (
+                          <Badge
+                            key={
+                              skill._id ||
+                              skill.id ||
+                              `skill-${skill.name}-${skill.level}`
+                            }
+                            className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
+                            variant="outline"
+                          >
+                            {skill.name}
+                            {skill.level && ` (${skill.level})`}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Projects */}
+                {profileData?.projects && profileData.projects.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <Briefcase className="w-5 h-5" />
+                      Projects <Badge>{profileData.projects.length}</Badge>
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {profileData.projects
+                        .slice(0, 4)
+                        .map((project: any, index: number) => {
+                          return (
+                            <ProjectCard
+                              key={project._id || index}
+                              {...project}
+                              isViewOnly={true}
+                            />
+                          );
+                        })}
+                    </div>
+                    {profileData.projects.length > 4 && (
+                      <p className="text-sm text-muted-foreground text-center mt-4">
+                        And {profileData.projects.length - 4} more projects...
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Work Experience */}
+                {profileData?.experiences &&
+                  profileData.experiences.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <Briefcase className="w-5 h-5" />
+                        Work Experience ({profileData.experiences.length})
+                      </h3>
+                      <div className="space-y-4">
+                        {profileData.experiences
+                          .slice(0, 3)
+                          .map((experience: any, index: number) => (
+                            <div
+                              key={index}
+                              className="bg-muted/50 p-4 rounded-lg border border-border"
+                            >
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-foreground text-base">
+                                    {experience.jobTitle}
+                                  </h4>
+                                  <p className="text-blue-600 dark:text-blue-400 font-medium text-sm mt-1">
+                                    {experience.company}
+                                  </p>
+                                </div>
+                                {experience.workFrom && experience.workTo && (
+                                  <span className="text-sm text-muted-foreground font-medium ml-4 whitespace-nowrap">
+                                    {new Date(
+                                      experience.workFrom,
+                                    ).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                    })}{' '}
+                                    -{' '}
+                                    {new Date(
+                                      experience.workTo,
+                                    ).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                    })}
+                                  </span>
+                                )}
+                              </div>
+                              {experience.workDescription && (
+                                <div className="mt-3">
+                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                    {experience.workDescription}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        {profileData.experiences.length > 3 && (
+                          <p className="text-sm text-muted-foreground text-center mt-4">
+                            And {profileData.experiences.length - 3} more
+                            experiences...
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Professional Info for freelancer profile */}
+                {isFreelancerProfile &&
+                  profileData?.professionalInfo &&
+                  profileData.professionalInfo.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <Briefcase className="w-5 h-5" />
+                        Professional Experience
+                      </h3>
+                      <div className="space-y-4">
+                        {profileData.professionalInfo
+                          .slice(0, 3)
+                          .map((exp: any, index: number) => (
+                            <div
+                              key={index}
+                              className="bg-muted/50 p-4 rounded-lg border border-border"
+                            >
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-foreground text-base">
+                                    {exp.jobTitle}
+                                  </h4>
+                                  <p className="text-blue-600 dark:text-blue-400 font-medium text-sm mt-1">
+                                    {exp.company}
+                                  </p>
+                                </div>
+                                {exp.workFrom && exp.workTo && (
+                                  <span className="text-sm text-muted-foreground font-medium ml-4 whitespace-nowrap">
+                                    {new Date(exp.workFrom).toLocaleDateString(
+                                      'en-US',
+                                      {
+                                        year: 'numeric',
+                                        month: 'short',
+                                      },
+                                    )}{' '}
+                                    -{' '}
+                                    {new Date(exp.workTo).toLocaleDateString(
+                                      'en-US',
+                                      {
+                                        year: 'numeric',
+                                        month: 'short',
+                                      },
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                              {exp.workDescription && (
+                                <div className="mt-3">
+                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                    {exp.workDescription}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Work Experience for freelancer profile */}
+                {isFreelancerProfile &&
+                  profileData?.workExperience &&
+                  profileData.workExperience > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <Briefcase className="w-5 h-5" />
+                        Work Experience
+                      </h3>
+                      <div className="bg-muted/50 p-4 rounded-lg border border-border">
+                        <p className="text-foreground leading-relaxed">
+                          {profileData.workExperience} years of professional
+                          experience
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Contact & Links */}
+                <div className="border-t pt-4">
+                  <h3 className="text-lg font-semibold mb-3">
+                    Contact Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-muted-foreground">
+                        Email:
+                      </span>
+                      <p>
+                        {profileData?.freelancerId?.email ||
+                          profileData?.email ||
+                          'Not provided'}
+                      </p>
+                    </div>
+                    {(profileData?.githubLink ||
+                      profileData?.linkedinLink ||
+                      profileData?.personalWebsite) && (
+                      <div>
+                        <span className="font-medium text-muted-foreground">
+                          Links:
+                        </span>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {profileData?.githubLink && (
+                            <a
+                              href={profileData.githubLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              GitHub ↗
+                            </a>
+                          )}
+                          {profileData?.linkedinLink && (
+                            <a
+                              href={profileData.linkedinLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              LinkedIn ↗
+                            </a>
+                          )}
+                          {profileData?.personalWebsite && (
+                            <a
+                              href={profileData.personalWebsite}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              Portfolio ↗
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+              <ScrollBar orientation="vertical" />
+            </ScrollArea>
           )}
         </DialogContent>
       </Dialog>
@@ -1188,6 +1247,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
   const BidsTable = ({ status }: { status: BidStatus }) => {
     const rows = bids.filter((bid) => bid.bid_status === status);
+    const router = useRouter();
 
     if (rows.length === 0) {
       return (
@@ -1269,7 +1329,14 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     key={data._id}
                     className="hover:bg-muted/10 transition-colors"
                   >
-                    <TableCell className="text-left">
+                    <TableCell
+                      className="text-left cursor-pointer"
+                      onClick={() =>
+                        router.push(
+                          `/business/freelancerProfile/${freelancerId}`,
+                        )
+                      }
+                    >
                       <div className="flex items-center gap-3">
                         <FreelancerAvatar
                           profilePic={freelancer?.profilePic}
@@ -1379,7 +1446,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <></>
                       )}
                     </TableCell>
                   </TableRow>
@@ -1450,7 +1517,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
               key={profile._id}
               value={profile._id || ''}
               onClick={() => setProfileId(profile._id)}
-              className="mb-3 overflow-hidden rounded-xl border bg-card shadow-sm"
+              className="mb-3 overflow-hidden rounded-xl border card shadow-sm"
             >
               <AccordionTrigger className="px-5 py-4 hover:no-underline">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">

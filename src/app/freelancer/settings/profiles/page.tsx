@@ -39,6 +39,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -381,13 +382,12 @@ export default function ProfilesPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Profiles"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'Profiles', link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
-          <div className="w-full mx-auto max-w-6xl">
+        <main className="grid flex-1 items-start p-4 sm:px-6 sm:py-0 md:gap-8">
+          <div className="w-full mx-auto max-w-[92vw]">
             <div className="flex flex-col gap-2 mb-6">
               <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" /> Profiles Center
@@ -404,26 +404,38 @@ export default function ProfilesPage() {
                 className="w-full"
               >
                 <div className="border-b px-6">
-                  <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
-                    <TabsTrigger
-                      value="overview"
-                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                    >
-                      <BarChart3 className="mr-2 h-4 w-4" /> Overview
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="freelancer"
-                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                    >
-                      Freelancer ({freelancerProfiles.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="consultant"
-                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                    >
-                      Consultant ({consultantProfiles.length})
-                    </TabsTrigger>
-                  </TabsList>
+                  <div className="max-w-full overflow-x-auto no-scrollbar">
+                    <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                      <TabsTrigger
+                        value="overview"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <BarChart3 className="mr-2 h-4 w-4" /> Overview
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="freelancer"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <span className="flex items-center gap-2">
+                          Freelancer
+                          <Badge variant="secondary" className="h-5 px-2">
+                            {freelancerProfiles.length}
+                          </Badge>
+                        </span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="consultant"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <span className="flex items-center gap-2">
+                          Consultant
+                          <Badge variant="secondary" className="h-5 px-2">
+                            {consultantProfiles.length}
+                          </Badge>
+                        </span>
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
                 </div>
 
                 <div className="p-6">
@@ -761,7 +773,7 @@ export default function ProfilesPage() {
 
       {/* Create Profile Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New {newProfileType} Profile</DialogTitle>
             <DialogDescription>

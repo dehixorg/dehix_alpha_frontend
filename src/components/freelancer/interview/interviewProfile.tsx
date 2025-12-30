@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -233,7 +233,7 @@ const InterviewProfile: React.FC = () => {
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="w-full">
       <CardHeader className="gap-3 border-b">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
@@ -393,8 +393,8 @@ const InterviewProfile: React.FC = () => {
         </Dialog>
 
         {interviewerLoading ? (
-          <div className="w-full overflow-x-auto">
-            <Table>
+          <div className="w-full max-w-full overflow-x-auto">
+            <Table className="min-w-[860px]">
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60">
                   <TableHead className="text-xs font-semibold">Type</TableHead>
@@ -466,8 +466,8 @@ const InterviewProfile: React.FC = () => {
           />
         ) : (
           <ScrollArea className="w-full">
-            <div className="w-full overflow-x-auto">
-              <Table>
+            <div className="w-full max-w-full overflow-x-auto">
+              <Table className="min-w-[860px]">
                 <TableHeader>
                   <TableRow className="bg-muted/60 hover:bg-muted/60">
                     <TableHead className="text-xs font-semibold">
@@ -543,6 +543,7 @@ const InterviewProfile: React.FC = () => {
                 </TableBody>
               </Table>
             </div>
+            <ScrollBar orientation="horizontal" />
           </ScrollArea>
         )}
       </CardContent>
