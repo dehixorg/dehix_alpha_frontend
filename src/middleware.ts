@@ -8,7 +8,10 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const url = request.nextUrl.clone();
 
-  const allowCrossRolePaths = new Set<string>(['/project-invitations']);
+  const allowCrossRolePaths = new Set<string>([
+    '/project-invitations',
+    '/freelancer-profile',
+  ]);
 
   // Skip middleware for static files, API routes, and auth pages
   if (

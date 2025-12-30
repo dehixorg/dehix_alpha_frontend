@@ -491,7 +491,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
             >
               <CardHeader className="flex flex-row items-center gap-4 pb-3 pt-5 px-6">
                 <Link
-                  href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                  href={`/freelancer-profile/${talent.freelancer_id}`}
                   onClick={(e) => e.stopPropagation()}
                   className="flex items-center gap-4 max-w-full"
                 >
@@ -961,7 +961,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 <ChevronRight className="ml-1.5 h-4 w-4" />
                               </Button>
                               <Link
-                                href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                                href={`/freelancer-profile/${talent.freelancer_id}`}
                               >
                                 <Button
                                   variant="outline"

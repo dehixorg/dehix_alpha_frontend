@@ -270,9 +270,7 @@ const ProfileDialog = React.memo(
                       bidData?.bidder_id ||
                       bidData?.freelancer?._id;
                     if (freelancerId)
-                      router.push(
-                        `/business/freelancerProfile/${freelancerId}`,
-                      );
+                      router.push(`/freelancer-profile/${freelancerId}`);
                   }}
                 >
                   {profileData?.profilePic ||
@@ -1332,9 +1330,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     <TableCell
                       className="text-left cursor-pointer"
                       onClick={() =>
-                        router.push(
-                          `/business/freelancerProfile/${freelancerId}`,
-                        )
+                        router.push(`/freelancer-profile/${freelancerId}`)
                       }
                     >
                       <div className="flex items-center gap-3">

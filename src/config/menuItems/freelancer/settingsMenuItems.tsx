@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   User,
   UserCheck,
-  Trophy,
   ArrowLeft,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -50,11 +49,6 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/settings/profiles',
     icon: <UserCheck className="h-5 w-5" />,
     label: 'Profiles',
-  },
-  {
-    href: '/freelancer/settings/leaderboard-history',
-    icon: <Trophy className="h-5 w-5" />,
-    label: 'Leaderboard History',
   },
   {
     href: '/freelancer/settings/resume',

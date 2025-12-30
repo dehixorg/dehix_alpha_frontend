@@ -144,7 +144,7 @@ function ProjectSkillCard({
                     key={index}
                     className="flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-background/60"
                     onClick={() =>
-                      router.push(`/business/freelancerProfile/${member._id}`)
+                      router.push(`/freelancer-profile/${member._id}`)
                     }
                   >
                     <Avatar className="h-8 w-8">
