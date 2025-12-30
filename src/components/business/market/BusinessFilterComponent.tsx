@@ -150,7 +150,9 @@ export default function BusinessFilterComponent({
                 onClear={onClear}
               />
             )}
-            <div className="h-60">
+            <div
+              className={`${title.toLowerCase() === 'skills' || title.toLowerCase() === 'domains' ? ' h-60 overflow-hidden' : 'h-auto'}`}
+            >
               <ScrollArea className="h-full w-full pr-2">
                 <div className="space-y-1 py-1">
                   {items.filter((item) =>

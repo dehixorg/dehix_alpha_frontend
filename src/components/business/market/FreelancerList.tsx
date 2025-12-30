@@ -1,6 +1,7 @@
 import React from 'react';
 
 import FreelancerCard from '@/components/opportunities/freelancer/freelancerCard';
+import EmptyState from '@/components/shared/EmptyState';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -77,25 +78,42 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
           </Card>
         ))
       ) : freelancers.length === 0 ? (
-        <p className="text-center text-xl flex justify-center items-center h-[55vh] font-semibold">
-          No talent found
-        </p>
+        <EmptyState title="No talent found" className="h-[55vh]" />
       ) : (
-        freelancers.map((freelancer: any, index: number) => (
-          <FreelancerCard
-            key={index}
-            name={freelancer.firstName + ' ' + freelancer.lastName}
-            skills={freelancer.skills}
-            domains={freelancer.domain}
-            experience={freelancer.workExperience}
-            profile={freelancer.profilePic}
-            userName={freelancer.userName}
-            monthlyPay={freelancer.monthlyPay}
-            githubUrl={freelancer.github || freelancer.githubLink}
-            linkedInUrl={freelancer.linkedin}
-            websiteUrl={freelancer.personalWebsite}
-          />
-        ))
+        freelancers.map((freelancer: any, index: number) => {
+          // Extract active dehixTalent profile id (supports object, Map, or array shapes)
+          const getActiveDehixTalentId = (f: any) => {
+            if (!f?.dehixTalent) return undefined;
+            let entries: any[] = [];
+            if (Array.isArray(f.dehixTalent)) entries = f.dehixTalent;
+            else if (f.dehixTalent instanceof Map)
+              entries = Array.from(f.dehixTalent.values());
+            else entries = Object.values(f.dehixTalent || {});
+            const active = entries.find(
+              (entry: any) => entry?.activeStatus === true,
+            );
+            return active?._id;
+          };
+
+          const profId = getActiveDehixTalentId(freelancer);
+
+          return (
+            <FreelancerCard
+              key={index}
+              name={freelancer.firstName + ' ' + freelancer.lastName}
+              attributes={freelancer.attributes || []}
+              experience={freelancer.workExperience}
+              profile={freelancer.profilePic}
+              userName={freelancer.userName}
+              monthlyPay={freelancer.monthlyPay}
+              githubUrl={freelancer.github || freelancer.githubLink}
+              linkedInUrl={freelancer.linkedin}
+              websiteUrl={freelancer.personalWebsite}
+              freelancer_id={freelancer._id}
+              freelancer_professional_profile_id={profId}
+            />
+          );
+        })
       )}
     </div>
   );

@@ -107,8 +107,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
                 </Badge>
               )}
             </div>
-
-            {workFrom && <DateHistory startDate={workFrom} endDate={workTo} />}
           </div>
           <div className="flex items-center gap-2">
             <StatusBadge
@@ -132,6 +130,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
             )}
           </div>
         </div>
+
+        {workFrom && <DateHistory startDate={workFrom} endDate={workTo} />}
       </CardHeader>
 
       <Separator className="group-hover:bg-primary/30 transition-colors" />

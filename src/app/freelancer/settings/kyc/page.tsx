@@ -21,19 +21,20 @@ export default function PersonalInfo() {
         active="KYC"
         isKycCheck={true}
       />
-      <div className="flex flex-col sm:gap-6 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="KYC"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'KYC', link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start px-6">
-          <KYCForm user_id={user.uid} />
+        <main className="flex-1 p-4 sm:p-8 md:p-12">
+          <div className="mx-auto w-full max-w-6xl">
+            <KYCForm user_id={user.uid} />
+          </div>
         </main>
       </div>
     </div>

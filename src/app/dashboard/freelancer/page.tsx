@@ -97,7 +97,7 @@ export default function Dashboard() {
             { label: 'Freelancer', link: '/dashboard/freelancer' },
           ]}
         />
-        <main className="grid flex-1 items-start gap-4 px-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <Card className="bg-gradient shadow-sm overflow-hidden">
               <CardHeader className="py4">
@@ -125,7 +125,7 @@ export default function Dashboard() {
                   <Avatar className="h-12 w-12 flex-shrink-0">
                     <AvatarImage src={user?.photoURL || ''} alt={user?.name} />
                     <AvatarFallback>
-                      {user?.name?.charAt(0) || 'U'}
+                      {user?.displayName?.charAt(0).toUpperCase() || 'X'}
                     </AvatarFallback>
                   </Avatar>
                 </div>

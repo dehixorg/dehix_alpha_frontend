@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ListFilter, Palette, Clock, History } from 'lucide-react';
+import { ListFilter, Palette, Clock, History, StickyNote } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -21,11 +21,17 @@ const NotesHeader = ({
   notes,
   setNotes,
   isTrash,
+  title,
+  description,
+  icon = <StickyNote className="h-5 w-5 text-muted-foreground" />,
 }: {
   onNoteCreate?: (note: Note) => void;
   notes: Note[];
   setNotes: React.Dispatch<React.SetStateAction<Note[]>>;
   isTrash: boolean;
+  title?: string;
+  description?: string;
+  icon?: React.ReactNode;
 }) => {
   const [selectedSortOption, setSelectedSortOption] = useState<string>('');
 
@@ -56,18 +62,20 @@ const NotesHeader = ({
 
   return (
     <>
-      <div className="bg-gradient px-4 py-4 rounded-t-lg border-b">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Notes</h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:hidden">
-              Organize your thoughts and ideas
-            </p>
-
-            <p className="text-muted-foreground mt-2 hidden sm:block">
-              Organize your thoughts and ideas. Add, view, and manage your
-              personal notes with ease.
-            </p>
+      <div className="px-4 py-4 border-b bg-gradient text-foreground">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 hidden sm:flex h-9 w-9 items-center justify-center rounded-lg border bg-card">
+              {icon}
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
+                {title || 'Notes'}
+              </h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {description || 'Organize your thoughts and ideas'}
+              </p>
+            </div>
           </div>
           {!isTrash && (
             <div className="flex items-center gap-2 sm:gap-3">

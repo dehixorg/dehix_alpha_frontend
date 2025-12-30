@@ -19,15 +19,15 @@ import {
   StopCircle,
   Trash2,
   X,
-  Archive,
   ArchiveRestore,
+  Archive,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { doc, DocumentData, updateDoc } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import DOMPurify from 'dompurify';
+import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
 import {
@@ -37,7 +37,7 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip';
 import {
-  DropdownMenu, 
+  DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -64,10 +64,8 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { toast } from '@/hooks/use-toast';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
-import { db } from '@/config/firebaseConfig';
 import {
   Dialog,
   DialogContent,
@@ -76,23 +74,22 @@ import {
   DialogOverlay,
 } from '@/components/ui/dialog';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import { db } from '@/config/firebaseConfig';
 
+function useDebounce<T>(value: T, delay: number = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler); // cleanup on value change or unmount
+    };
+  }, [value, delay]); // Add [value, delay] as dependencies
 
-  function useDebounce<T> (value: T, delay: number = 500): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-      return () => {
-        clearTimeout(handler); // cleanup on value change or unmount
-      };
-    }, [value, delay]) // Add [value, delay] as dependencies
-
-    return debouncedValue;
-  }
+  return debouncedValue;
+}
 
 type User = {
   userName: string;
@@ -126,7 +123,7 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
-  onConversationUpdate?: (conv: Conversation | null) => void;
+  onConversationUpdate?: (updatedConversation: Conversation) => void;
 }
 
 export function CardsChat({
@@ -144,7 +141,7 @@ export function CardsChat({
 
   const [searchValue, setSearchValue] = useState<string>('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const debouncedSearch = useDebounce(searchValue, 500) /* wait for .5 sec */
+  const debouncedSearch = useDebounce(searchValue, 500); /* wait for .5 sec */
   const [messages, setMessages] = useState<DocumentData[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -157,15 +154,9 @@ export function CardsChat({
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
 
-  // Formatting active states (for visual active toggles)
-  const [boldActive, setBoldActive] = useState<boolean>(false);
-  const [italicActive, setItalicActive] = useState<boolean>(false);
-  const [underlineActive, setUnderlineActive] = useState<boolean>(false);
-
   const prevMessagesLength = useRef(messages.length);
   const [, setOpenDrawer] = useState(false);
 
-  
   // States for voice recording
   type RecordingStatus =
     | 'idle'
@@ -251,16 +242,24 @@ export function CardsChat({
 
     if (conversation.type === 'group') {
       onOpenProfileSidebar(conversation.id, 'group', {
-        userName: conversation.displayName,
+        userName: conversation.groupName,
+        email: '',
         profilePic: conversation.avatar,
       });
     } else {
-      const otherParticipantUid = conversation.participants.find(
-        (p) => p !== user.uid,
+      // For 1:1 chats, pass the other user's details
+      const otherParticipantUid = conversation.participants?.find(
+        (p: string) => p !== user.uid,
       );
       if (otherParticipantUid) {
         const participantDetails =
           conversation.participantDetails?.[otherParticipantUid];
+        onOpenProfileSidebar(otherParticipantUid, 'user', {
+          userName: participantDetails?.userName || '',
+          email: participantDetails?.email || '',
+          profilePic: participantDetails?.profilePic || '',
+        });
+        conversation.participantDetails?.[otherParticipantUid];
         const initialUserData = {
           userName: participantDetails?.userName || primaryUser.userName,
           email: participantDetails?.email || primaryUser.email,
@@ -276,20 +275,20 @@ export function CardsChat({
   };
 
   useEffect(() => {
-    if(debouncedSearch.trim() && messages){
+    if (debouncedSearch.trim() && messages) {
       /* logic to filter out the conversation/message of the chat */
       const searchTerm = debouncedSearch.toLowerCase();
 
       const filteredConversations = messages.filter((message) =>
-        (message.content ?? "").toLowerCase().includes(searchTerm)
+        (message.content ?? '').toLowerCase().includes(searchTerm),
       );
 
-      if(filteredConversations.length > 0) {
+      if (filteredConversations.length > 0) {
         const firstMatchId = `message-${filteredConversations[0].id}`;
         const element = document.getElementById(firstMatchId);
-        if(element){
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-        
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
           /* add temporary style here to highlight the message */
           element.classList.add('message-highlight');
 
@@ -300,7 +299,7 @@ export function CardsChat({
         }
       }
     }
-  }, [debouncedSearch])
+  }, [debouncedSearch]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -313,30 +312,6 @@ export function CardsChat({
     handleResize();
 
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Keep formatting button state in sync with the caret/selection
-  useEffect(() => {
-    const updateFormattingState = () => {
-      try {
-        // queryCommandState returns true/false for the current selection
-        const b = document.queryCommandState('bold');
-        const i = document.queryCommandState('italic');
-        const u = document.queryCommandState('underline');
-        setBoldActive(Boolean(b));
-        setItalicActive(Boolean(i));
-        setUnderlineActive(Boolean(u));
-      } catch (err) {
-        // Some environments may not support queryCommandState - ignore
-      }
-    };
-
-    document.addEventListener('selectionchange', updateFormattingState);
-    // also run once to initialize when the component mounts
-    updateFormattingState();
-    return () => {
-      document.removeEventListener('selectionchange', updateFormattingState);
-    };
   }, []);
 
   // Subscribe to messages for this conversation and manage loading state
@@ -376,7 +351,7 @@ export function CardsChat({
       profilePic: participantDetails?.profilePic || '',
     });
   }, [conversation, user.uid]);
- 
+
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -389,15 +364,16 @@ export function CardsChat({
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
+    // --- ADD THIS CHECK ---
     if (conversation.blocked?.status === true) {
       toast({
         variant: 'destructive',
         title: 'Action Denied',
         description: 'You cannot send messages to a blocked conversation.',
       });
-      return;
+      return; // Stop the function
     }
-
+    // --- END OF CHECK ---
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
@@ -449,7 +425,11 @@ export function CardsChat({
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        notifyError('File size should not exceed 10MB', 'File too large');
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: 'File size should not exceed 10MB',
+        });
         return;
       }
 
@@ -466,10 +446,11 @@ export function CardsChat({
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        notifyError(
-          'Please upload an image, PDF, Word, or PowerPoint file',
-          'Invalid file type',
-        );
+        toast({
+          variant: 'destructive',
+          title: 'Invalid file type',
+          description: 'Please upload an image, PDF, Word, or PowerPoint file',
+        });
         return;
       }
 
@@ -519,7 +500,10 @@ export function CardsChat({
 
         await sendMessage(conversation, message, setInput);
 
-        notifySuccess('File uploaded successfully', 'Success');
+        toast({
+          title: 'Success',
+          description: 'File uploaded successfully',
+        });
       } catch (error: any) {
         console.error('Error uploading file:', {
           error: error.message,
@@ -538,7 +522,11 @@ export function CardsChat({
           errorMessage = error.response.data.message;
         }
 
-        notifyError(errorMessage, 'Upload failed');
+        toast({
+          variant: 'destructive',
+          title: 'Upload failed',
+          description: errorMessage,
+        });
       } finally {
         setIsSending(false);
       }
@@ -571,17 +559,7 @@ export function CardsChat({
    */
   function handleBold() {
     composerRef.current?.focus();
-    try {
-      document.execCommand('bold');
-    } catch (err) {
-      // ignore
-    }
-    // update visual state
-    try {
-      setBoldActive(Boolean(document.queryCommandState('bold')));
-    } catch (err) {
-      console.error('Error applying bold style:');
-    }
+    document.execCommand('bold');
   }
 
   /**
@@ -589,16 +567,7 @@ export function CardsChat({
    */
   const handleUnderline = () => {
     composerRef.current?.focus();
-    try {
-      document.execCommand('underline');
-    } catch (err) {
-      // ignore
-    }
-    try {
-      setUnderlineActive(Boolean(document.queryCommandState('underline')));
-    } catch (err) {
-      console.error('Error applying UnderLine style:');
-    }
+    document.execCommand('underline');
   };
 
   /**
@@ -606,16 +575,7 @@ export function CardsChat({
    */
   function handleitalics() {
     composerRef.current?.focus();
-    try {
-      document.execCommand('italic');
-    } catch (err) {
-      // ignore
-    }
-    try {
-      setItalicActive(Boolean(document.queryCommandState('italic')));
-    } catch (err) {
-      console.error('Error applying italic style:');
-    }
+    document.execCommand('italic');
   }
 
   const toggleFormattingOptions = () => {
@@ -671,13 +631,17 @@ export function CardsChat({
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
       setRecordingStatus('recording');
-      notifySuccess('Speak into your microphone.', 'Recording started');
+      toast({
+        title: 'Recording started',
+        description: 'Speak into your microphone.',
+      });
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      notifyError(
-        'Could not access microphone. Please check permissions.',
-        'Microphone Error',
-      );
+      toast({
+        variant: 'destructive',
+        title: 'Microphone Error',
+        description: 'Could not access microphone. Please check permissions.',
+      });
       setRecordingStatus('idle');
     }
   };
@@ -721,15 +685,16 @@ export function CardsChat({
     if (recordingDurationIntervalRef.current) {
       clearInterval(recordingDurationIntervalRef.current);
     }
-    notifySuccess('Recording discarded');
+    toast({ title: 'Recording discarded' });
   };
 
   const handleSendVoiceMessage = async () => {
     if (!audioBlob || !user || !conversation) {
-      notifyError(
-        'No audio recorded or user/conversation not found.',
-        'Error',
-      );
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No audio recorded or user/conversation not found.',
+      });
       return;
     }
 
@@ -795,7 +760,7 @@ export function CardsChat({
       // Step 6: Send message using the same working sendMessage function
       await sendMessage(conversation, message, setInput);
 
-      notifySuccess('Voice message sent!', 'Success');
+      toast({ title: 'Success', description: 'Voice message sent!' });
     } catch (error: any) {
       console.error('Error sending voice message:', error);
       console.error('Error details:', {
@@ -832,7 +797,11 @@ export function CardsChat({
         errorMessage = `Error: ${error.message}`;
       }
 
-      notifyError(errorMessage, 'Upload Failed');
+      toast({
+        variant: 'destructive',
+        title: 'Upload Failed',
+        description: errorMessage,
+      });
     } finally {
       discardRecording(); // Clean up states regardless of success/failure
       setRecordingStatus('idle');
@@ -885,10 +854,12 @@ export function CardsChat({
     );
   }
 
+  // --- ADD THIS LOGIC ---
+  // 1. Determine if the current conversation is blocked
   const isBlocked = conversation?.blocked?.status === true;
   const isArchived =
     conversation?.participantDetails?.[user.uid]?.viewState === 'archived';
-
+  // 2. Create a dynamic message to show the user
   let blockMessage = '';
   if (isBlocked) {
     if (conversation.blocked?.by === user.uid) {
@@ -899,18 +870,26 @@ export function CardsChat({
     }
   }
 
+  // Inside your CardsChat component in chat.tsx
+
+  // --- HIGHLIGHT: ADD THIS ENTIRE FUNCTION ---
   async function handleToggleArchive() {
     if (!user?.uid || !conversation?.id) return;
 
+    // 1. Determine the current and new state
     const currentState = conversation.participantDetails?.[user.uid]?.viewState;
+
     const newState = currentState === 'archived' ? 'inbox' : 'archived';
 
+    // 2. Prepare the update for Firestore
     const conversationDocRef = doc(db, 'conversations', conversation.id);
     const fieldToUpdate = `participantDetails.${user.uid}.viewState`;
 
     try {
+      // 3. Update the document in Firestore
       await updateDoc(conversationDocRef, { [fieldToUpdate]: newState });
 
+      // 4. Create the updated conversation object for the local state
       const updatedConversation = {
         ...conversation,
         participantDetails: {
@@ -922,6 +901,7 @@ export function CardsChat({
         },
       };
 
+      // 5. Call the prop to update the parent's state instantly
       onConversationUpdate?.(updatedConversation as Conversation);
 
       toast({
@@ -936,7 +916,6 @@ export function CardsChat({
       });
     }
   }
-
   return (
     <>
       {/* Image Modal */}
@@ -1013,8 +992,8 @@ export function CardsChat({
         </Card>
       ) : (
         <>
-          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-xl">
-            <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
+          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-none sm:rounded-xl">
+            <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-t-xl">
               <button
                 onClick={handleHeaderClick}
                 className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
@@ -1045,13 +1024,13 @@ export function CardsChat({
                       : 'P'}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))]">
+                <div className="cursor-pointer">
+                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))] hover:underline">
                     {conversation.type === 'group'
                       ? conversation.groupName
                       : primaryUser.userName || 'Chat'}
                   </p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] hover:underline">
                     {conversation.type === 'group'
                       ? `${Object.keys(conversation.participantDetails || {}).length} members`
                       : primaryUser.email || 'Click to view profile'}
@@ -1060,114 +1039,184 @@ export function CardsChat({
               </button>
               {/* create a search bar input here to take input from user to search conversation */}
               <div className="flex items-center space-x-0.5 sm:space-x-1">
-              {/* Search Toggle */}
-              {isSearchVisible ? (
-                <div className="flex items-center space-x-2">
-                  <Input
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder="Search in conversation..."
-                    className="w-40 sm:w-56 rounded-full text-sm"
-                  />
+                {/* Desktop controls */}
+                {isSearchVisible ? (
+                  <div className="hidden sm:flex items-center space-x-2">
+                    <Input
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                      placeholder="Search in conversation..."
+                      className="w-40 sm:w-56 rounded-full text-sm"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Close search"
+                      onClick={() => {
+                        setIsSearchVisible(false);
+                        setSearchValue("");
+                      }}
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                ) : (
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label="Close search"
-                    onClick={() => {
-                      setIsSearchVisible(false);
-                      setSearchValue("");
-                    }}
-                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    aria-label="Search in chat"
+                    onClick={() => setIsSearchVisible(true)}
+                    className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                   >
-                    ✕
+                    <Search className="h-5 w-5" />
                   </Button>
-                </div>
-              ) : (
+                )}
+
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="Search in chat"
-                  onClick={() => setIsSearchVisible(true)}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
+                  onClick={handleToggleArchive}
+                  className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                 >
-                  <Search className="h-5 w-5" />
+                  {isArchived ? (
+                    <ArchiveRestore className="h-5 w-5" />
+                  ) : (
+                    <Archive className="h-5 w-5" />
+                  )}
                 </Button>
-              )}
 
-              {/* Archive/Unarchive button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
-                onClick={handleToggleArchive}
-                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                {isArchived ? (
-                  <ArchiveRestore className="h-5 w-5" />
-                ) : (
-                  <Archive className="h-5 w-5" />
-                )}
-              </Button>
-
-              {/* Video call */}
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Video call"
-                onClick={handleCreateMeet}
-                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                <Video className="h-5 w-5" />
-              </Button>
-
-              {/* Expand/collapse */}
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"}
-                onClick={() => {
-                  if (onToggleExpand) {
-                    onToggleExpand();
-                  } else {
-                    console.error("[CardsChat] onToggleExpand is undefined!");
-                  }
-                }}
-                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                {isChatExpanded ? (
-                  <Minimize2 className="h-5 w-5" />
-                ) : (
-                  <Maximize2 className="h-5 w-5" />
-                )}
-              </Button>
-
-              {/* More options */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="More options"
-                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                  >
-                    <MoreVertical className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  sideOffset={5}
-                  className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Video call"
+                  onClick={handleCreateMeet}
+                  className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                 >
-                  <DropdownMenuItem
-                    onClick={() => setOpenReport(true)}
-                    className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                  <Video className="h-5 w-5" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
+                  onClick={() => {
+                    if (onToggleExpand) {
+                      onToggleExpand();
+                    } else {
+                      console.error('[CardsChat] onToggleExpand is undefined!');
+                    }
+                  }}
+                  className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                >
+                  {isChatExpanded ? (
+                    <Minimize2 className="h-5 w-5" />
+                  ) : (
+                    <Maximize2 className="h-5 w-5" />
+                  )}
+                </Button>
+
+                {/* Mobile: everything in the three-dot menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="More options"
+                      className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    >
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={5}
+                    className="w-52 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
                   >
-                    <Flag className="h-4 w-4" />
-                    <span className="text-sm font-medium">Report</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                    <DropdownMenuItem
+                      onClick={() => setIsSearchVisible((v) => !v)}
+                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      <Search className="h-4 w-4" />
+                      <span className="text-sm font-medium">Search</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleToggleArchive}
+                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      {isArchived ? (
+                        <ArchiveRestore className="h-4 w-4" />
+                      ) : (
+                        <Archive className="h-4 w-4" />
+                      )}
+                      <span className="text-sm font-medium">
+                        {isArchived ? 'Unarchive' : 'Archive'}
+                      </span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleCreateMeet}
+                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      <Video className="h-4 w-4" />
+                      <span className="text-sm font-medium">Video call</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (onToggleExpand) {
+                          onToggleExpand();
+                        } else {
+                          console.error('[CardsChat] onToggleExpand is undefined!');
+                        }
+                      }}
+                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      {isChatExpanded ? (
+                        <Minimize2 className="h-4 w-4" />
+                      ) : (
+                        <Maximize2 className="h-4 w-4" />
+                      )}
+                      <span className="text-sm font-medium">
+                        {isChatExpanded ? 'Collapse' : 'Expand'}
+                      </span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setOpenReport(true)}
+                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      <Flag className="h-4 w-4" />
+                      <span className="text-sm font-medium">Report</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Desktop: existing more options menu (report) */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="More options"
+                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    >
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={5}
+                    className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+                  >
+                    <DropdownMenuItem
+                      onClick={() => setOpenReport(true)}
+                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      <Flag className="h-4 w-4" />
+                      <span className="text-sm font-medium">Report</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
               <ScrollArea className="flex flex-col space-y-3">
@@ -1179,7 +1228,7 @@ export function CardsChat({
                     messages={messages as any}
                     userId={user.uid}
                     conversation={conversation}
-                    onHoverChange={setHoveredMessageId}
+                    onHoverChange={(id) => setHoveredMessageId(id)}
                     setModalImage={setModalImage}
                     audioRefs={audioRefs}
                     handleLoadedMetadata={handleLoadedMetadata}
@@ -1187,331 +1236,205 @@ export function CardsChat({
                     toggleReaction={toggleReaction}
                     setReplyToMessageId={setReplyToMessageId}
                     messagesEndRef={messagesEndRef}
+                    onOpenProfileSidebar={onOpenProfileSidebar}
                   />
                 ))}
               </ScrollArea>
             </CardContent>
-            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-b-xl">
+            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-b-xl">
               {isBlocked ? (
+                // If blocked, show this message
                 <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                   <p>{blockMessage}</p>
                 </div>
               ) : (
                 <form
                   onSubmit={(event) => {
-                  event.preventDefault();
-                  if (input.trim().length === 0) return;
-                  const newMessage = {
-                    senderId: user.uid,
-                    content: input,
-                    timestamp: new Date().toISOString(),
-                    replyTo: replyToMessageId || null,
-                  };
-                  sendMessage(conversation, newMessage, setInput);
-                  setReplyToMessageId('');
-                }}
-                className="flex flex-col w-full space-y-2"
-                aria-label="Message input form"
-              >
-                {replyToMessageId && (
-                  <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
-                    <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
-                      Replying to:{' '}
-                      <span className="font-semibold">
-                        {messages
-                          .find((msg) => msg.id === replyToMessageId)
-                          ?.content.replace(/\*|__/g, '')
-                          .substring(0, 50) || 'Message'}
-                        ...
-                      </span>
-                    </div>
-                    <Button
-                      onClick={() => setReplyToMessageId('')}
-                      variant="ghost"
-                      size="icon"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
-                      aria-label="Cancel reply"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <div
-                      className="absolute inset-y-0 flex items-center justify-center 
-                    pl-0.1 z-10"
-                    >
-                      <EmojiPicker
-                        aria-label="Insert emoji"
-                        onSelect={handleInsertEmoji}
-                      />
-                    </div>
-                    <div
-                      ref={composerRef}
-                      contentEditable
-                      aria-label="Type a message"
-                      aria-placeholder="Type a message..."
-                      data-placeholder="Type a message..."
-                      className="pl-12 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
-                      onInput={(e) => {
-                        const html = (e.currentTarget as HTMLElement).innerHTML;
-                        setInput(html);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey && !isSending) {
-                          e.preventDefault();
-                          const html = composerRef.current?.innerHTML || '';
-                          const textContent =
-                            composerRef.current?.innerText || '';
-                          if (textContent.trim().length > 0) {
-                            const sanitized = DOMPurify.sanitize(html, {
-                              ALLOWED_TAGS: [
-                                'b',
-                                'strong',
-                                'i',
-                                'em',
-                                'u',
-                                'br',
-                                'div',
-                                'span',
-                                'a',
-                              ],
-                              ALLOWED_ATTR: [
-                                'href',
-                                'target',
-                                'rel',
-                                'style',
-                                'class',
-                              ],
-                            });
-                            const newMessage = {
-                              senderId: user.uid,
-                              content: sanitized,
-                              timestamp: new Date().toISOString(),
-                              replyTo: replyToMessageId || null,
-                            };
-                            sendMessage(conversation, newMessage, setInput);
-                            setReplyToMessageId('');
-                            composerRef.current!.innerHTML = '';
-                            setInput('');
-                          }
-                        }
-                      }}
-                      suppressContentEditableWarning
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="rounded-full bg-[#96c] hover:bg-[#96c]/90 text-white disabled:bg-[#96c]/50"
-                    disabled={!input.trim().length || isSending}
-                    aria-label="Send message"
-                    onClick={() => {
-                      const html = composerRef.current?.innerHTML || '';
-                      const textContent = composerRef.current?.innerText || '';
-                      if (textContent.trim().length === 0) return;
-                      const sanitized = DOMPurify.sanitize(html, {
-                        ALLOWED_TAGS: [
-                          'b',
-                          'strong',
-                          'i',
-                          'em',
-                          'u',
-                          'br',
-                          'div',
-                          'span',
-                          'a',
-                        ],
-                      });
-                      const newMessage = {
-                        senderId: user.uid,
-                        content: sanitized,
-                        timestamp: new Date().toISOString(),
-                        replyTo: replyToMessageId || null,
-                      };
-                      sendMessage(conversation, newMessage, setInput);
-                      setReplyToMessageId('');
-                      composerRef.current!.innerHTML = '';
-                      setInput('');
-                    }}
-                  >
-                    {isSending ? (
-                      <LoaderCircle className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <Send className="h-5 w-5" />
-                    )}
-                  </Button>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleBold}
-                    title="Bold"
-                    aria-label="Bold"
-                    aria-pressed={boldActive}
-                    className={
-                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                      (boldActive
-                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                    }
-                  >
-                    {' '}
-                    <Bold className="h-4 w-4" />{' '}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleitalics}
-                    title="Italic"
-                    aria-label="Italic"
-                    aria-pressed={italicActive}
-                    className={
-                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                      (italicActive
-                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                    }
-                  >
-                    {' '}
-                    <Italic className="h-4 w-4" />{' '}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleUnderline}
-                    title="Underline"
-                    aria-label="Underline"
-                    aria-pressed={underlineActive}
-                    className={
-                      `md:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                      (underlineActive
-                        ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                        : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                    }
-                  >
-                    {' '}
-                    <Underline className="h-4 w-4" />{' '}
-                  </Button>
-
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={toggleFormattingOptions}
-                          title="Formatting options"
-                          aria-label="Formatting options"
-                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
-                        >
-                          {' '}
-                          <Text className="h-4 w-4" />{' '}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p>Formatting</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-
-                  {showFormattingOptions && (
-                    <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] rounded-md">
+                    event.preventDefault();
+                    if (input.trim().length === 0) return;
+                    const newMessage = {
+                      senderId: user.uid,
+                      content: input,
+                      timestamp: new Date().toISOString(),
+                      replyTo: replyToMessageId || null,
+                    };
+                    sendMessage(conversation, newMessage, setInput);
+                    setReplyToMessageId('');
+                  }}
+                  className="flex flex-col w-full space-y-2"
+                  aria-label="Message input form"
+                >
+                  {replyToMessageId && (
+                    <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
+                      <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
+                        Replying to:{' '}
+                        <span className="font-semibold">
+                          {messages
+                            .find((msg) => msg.id === replyToMessageId)
+                            ?.content.replace(/\*|__/g, '')
+                            .substring(0, 50) || 'Message'}
+                          ...
+                        </span>
+                      </div>
                       <Button
-                        type="button"
+                        onClick={() => setReplyToMessageId('')}
                         variant="ghost"
                         size="icon"
-                        onClick={handleBold}
-                        title="Bold"
-                        aria-label="Bold"
-                        aria-pressed={boldActive}
-                        className={
-                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                          (boldActive
-                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                        }
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
+                        aria-label="Cancel reply"
                       >
-                        {' '}
-                        <Bold className="h-4 w-4" />{' '}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleitalics}
-                        title="Italic"
-                        aria-label="Italic"
-                        aria-pressed={italicActive}
-                        className={
-                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                          (italicActive
-                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                        }
-                      >
-                        {' '}
-                        <Italic className="h-4 w-4" />{' '}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleUnderline}
-                        title="Underline"
-                        aria-label="Underline"
-                        aria-pressed={underlineActive}
-                        className={
-                          `h-8 w-8 flex items-center justify-center rounded-full transition-colors ` +
-                          (underlineActive
-                            ? 'bg-gray-200 text-[hsl(var(--foreground))] dark:bg-[hsl(var(--accent))]'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]')
-                        }
-                      >
-                        {' '}
-                        <Underline className="h-4 w-4" />{' '}
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   )}
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleFileUpload}
-                          title="Upload file"
-                          aria-label="Upload file"
-                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                        >
-                          {' '}
-                          <Upload className="h-4 w-4" />{' '}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p>Upload file</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      {/* <TooltipTrigger asChild>
-                             <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Video className="h-4 w-4" /> </Button>
-                        </TooltipTrigger> */}
-                      <TooltipContent side="top">
-                        <p>Create Google Meet</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  {recordingStatus === 'idle' && (
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <div
+                        className="absolute inset-y-0 flex items-center justify-center 
+                    pl-0.1 z-10"
+                      >
+                        <EmojiPicker
+                          aria-label="Insert emoji"
+                          onSelect={handleInsertEmoji}
+                        />
+                      </div>
+                      <div
+                        ref={composerRef}
+                        contentEditable
+                        aria-label="Type a message"
+                        aria-placeholder="Type a message..."
+                        data-placeholder="Type a message..."
+                        className="pl-12 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                        onInput={(e) => {
+                          const html = (e.currentTarget as HTMLElement)
+                            .innerHTML;
+                          setInput(html);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey && !isSending) {
+                            e.preventDefault();
+                            const html = composerRef.current?.innerHTML || '';
+                            const textContent =
+                              composerRef.current?.innerText || '';
+                            if (textContent.trim().length > 0) {
+                              const sanitized = DOMPurify.sanitize(html, {
+                                ALLOWED_TAGS: [
+                                  'b',
+                                  'strong',
+                                  'i',
+                                  'em',
+                                  'u',
+                                  'br',
+                                  'div',
+                                  'span',
+                                  'a',
+                                ],
+                                ALLOWED_ATTR: [
+                                  'href',
+                                  'target',
+                                  'rel',
+                                  'style',
+                                  'class',
+                                ],
+                              });
+                              const newMessage = {
+                                senderId: user.uid,
+                                content: sanitized,
+                                timestamp: new Date().toISOString(),
+                                replyTo: replyToMessageId || null,
+                              };
+                              sendMessage(conversation, newMessage, setInput);
+                              setReplyToMessageId('');
+                              composerRef.current!.innerHTML = '';
+                              setInput('');
+                            }
+                          }
+                        }}
+                        suppressContentEditableWarning
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="rounded-full bg-[#96c] hover:bg-[#96c]/90 text-white disabled:bg-[#96c]/50"
+                      disabled={!input.trim().length || isSending}
+                      aria-label="Send message"
+                      onClick={() => {
+                        const html = composerRef.current?.innerHTML || '';
+                        const textContent =
+                          composerRef.current?.innerText || '';
+                        if (textContent.trim().length === 0) return;
+                        const sanitized = DOMPurify.sanitize(html, {
+                          ALLOWED_TAGS: [
+                            'b',
+                            'strong',
+                            'i',
+                            'em',
+                            'u',
+                            'br',
+                            'div',
+                            'span',
+                            'a',
+                          ],
+                        });
+                        const newMessage = {
+                          senderId: user.uid,
+                          content: sanitized,
+                          timestamp: new Date().toISOString(),
+                          replyTo: replyToMessageId || null,
+                        };
+                        sendMessage(conversation, newMessage, setInput);
+                        setReplyToMessageId('');
+                        composerRef.current!.innerHTML = '';
+                        setInput('');
+                      }}
+                    >
+                      {isSending ? (
+                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleBold}
+                      title="Bold"
+                      aria-label="Bold"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                    >
+                      {' '}
+                      <Bold className="h-4 w-4" />{' '}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleitalics}
+                      title="Italic"
+                      aria-label="Italic"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                    >
+                      {' '}
+                      <Italic className="h-4 w-4" />{' '}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleUnderline}
+                      title="Underline"
+                      aria-label="Underline"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                    >
+                      {' '}
+                      <Underline className="h-4 w-4" />{' '}
+                    </Button>
+
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -1519,96 +1442,190 @@ export function CardsChat({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={startRecording}
-                            title="Record voice message"
-                            aria-label="Record voice message"
-                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                            onClick={toggleFormattingOptions}
+                            title="Formatting options"
+                            aria-label="Formatting options"
+                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
                           >
-                            <Mic className="h-4 w-4" />
+                            {' '}
+                            <Text className="h-4 w-4" />{' '}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent side="top">
-                          <p>Record voice</p>
+                          <p>Formatting</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  )}
-                  <div className="ml-auto md:hidden"></div>
-                </div>
 
-                {/* Voice Recording UI */}
-                {recordingStatus !== 'idle' &&
-                  recordingStatus !== 'uploading' && ( // Hide this part during uploading too
-                    <div className="p-2 border-t border-[hsl(var(--border))]">
-                      {recordingStatus === 'permission_pending' && (
-                        <div className="flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))]">
-                          <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
-                          Requesting microphone permission...
-                        </div>
-                      )}
-                      {recordingStatus === 'recording' && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center text-sm text-red-500">
-                            <Mic className="w-4 h-4 mr-2 animate-pulse" />
-                            Recording... {formatDuration(recordingDuration)}
-                          </div>
+                    {showFormattingOptions && (
+                      <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] rounded-md">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleBold}
+                          title="Bold"
+                          aria-label="Bold"
+                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        >
+                          {' '}
+                          <Bold className="h-4 w-4" />{' '}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleitalics}
+                          title="Italic"
+                          aria-label="Italic"
+                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        >
+                          {' '}
+                          <Italic className="h-4 w-4" />{' '}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleUnderline}
+                          title="Underline"
+                          aria-label="Underline"
+                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        >
+                          {' '}
+                          <Underline className="h-4 w-4" />{' '}
+                        </Button>
+                      </div>
+                    )}
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={stopRecording}
-                            title="Stop recording"
-                            className="text-red-500 hover:text-red-700"
+                            onClick={handleFileUpload}
+                            title="Upload file"
+                            aria-label="Upload file"
+                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                           >
-                            <StopCircle className="h-6 w-6" />
+                            {' '}
+                            <Upload className="h-4 w-4" />{' '}
                           </Button>
-                        </div>
-                      )}
-                      {recordingStatus === 'recorded' && audioUrl && (
-                        <div className="flex flex-col space-y-2">
-                          <div className="text-sm font-medium">
-                            Recording complete (
-                            {formatDuration(recordingDuration)})
-                          </div>
-                          <audio
-                            ref={audioPreviewRef}
-                            src={audioUrl}
-                            controls
-                            className="w-full h-10"
-                          />
-                          <div className="flex items-center justify-end space-x-2">
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p>Upload file</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        {/* <TooltipTrigger asChild>
+                             <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Video className="h-4 w-4" /> </Button>
+                        </TooltipTrigger> */}
+                        <TooltipContent side="top">
+                          <p>Create Google Meet</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    {recordingStatus === 'idle' && (
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <Button
                               type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={discardRecording}
-                              title="Discard recording"
+                              variant="ghost"
+                              size="icon"
+                              onClick={startRecording}
+                              title="Record voice message"
+                              aria-label="Record voice message"
+                              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                             >
-                              <Trash2 className="h-4 w-4 mr-1" /> Discard
+                              <Mic className="h-4 w-4" />
                             </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Record voice</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    <div className="ml-auto md:hidden"></div>
+                  </div>
+
+                  {/* Voice Recording UI */}
+                  {recordingStatus !== 'idle' &&
+                    recordingStatus !== 'uploading' && ( // Hide this part during uploading too
+                      <div className="p-2 border-t border-[hsl(var(--border))]">
+                        {recordingStatus === 'permission_pending' && (
+                          <div className="flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))]">
+                            <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                            Requesting microphone permission...
+                          </div>
+                        )}
+                        {recordingStatus === 'recording' && (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center text-sm text-red-500">
+                              <Mic className="w-4 h-4 mr-2 animate-pulse" />
+                              Recording... {formatDuration(recordingDuration)}
+                            </div>
                             <Button
                               type="button"
-                              variant="default"
-                              size="sm"
-                              onClick={handleSendVoiceMessage}
-                              title="Send voice message"
+                              variant="ghost"
+                              size="icon"
+                              onClick={stopRecording}
+                              title="Stop recording"
+                              className="text-red-500 hover:text-red-700"
                             >
-                              <Send className="h-4 w-4 mr-1" /> Send
+                              <StopCircle className="h-6 w-6" />
                             </Button>
                           </div>
-                        </div>
-                      )}
-                      {/* Uploading indicator was here, moved below */}
+                        )}
+                        {recordingStatus === 'recorded' && audioUrl && (
+                          <div className="flex flex-col space-y-2">
+                            <div className="text-sm font-medium">
+                              Recording complete (
+                              {formatDuration(recordingDuration)})
+                            </div>
+                            <audio
+                              ref={audioPreviewRef}
+                              src={audioUrl}
+                              controls
+                              className="w-full h-10"
+                            />
+                            <div className="flex items-center justify-end space-x-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={discardRecording}
+                                title="Discard recording"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" /> Discard
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={handleSendVoiceMessage}
+                                title="Send voice message"
+                              >
+                                <Send className="h-4 w-4 mr-1" /> Send
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        {/* Uploading indicator was here, moved below */}
+                      </div>
+                    )}
+                  {/* Separate block for uploading indicator to ensure it's visible */}
+                  {recordingStatus === 'uploading' && (
+                    <div className="p-2 flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))] border-t border-[hsl(var(--border))]">
+                      <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading voice message...
                     </div>
                   )}
-                {/* Separate block for uploading indicator to ensure it's visible */}
-                {recordingStatus === 'uploading' && (
-                  <div className="p-2 flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))] border-t border-[hsl(var(--border))]">
-                    <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
-                    Uploading voice message...
-                  </div>
-                )}
-              </form>
+                </form>
               )}
             </CardFooter>
           </Card>
@@ -1623,13 +1640,7 @@ export function CardsChat({
              transition-transform duration-300 animate-in fade-in zoom-in-95"
               >
                 <DialogHeader></DialogHeader>
-                <NewReportTab 
-                  reportData={reportData} 
-                  onSubmitted={() => {
-                    setOpenReport(false);
-                    return true;
-                  }}
-                />
+                <NewReportTab reportData={reportData} />
               </DialogContent>
             </DialogPortal>
           </Dialog>

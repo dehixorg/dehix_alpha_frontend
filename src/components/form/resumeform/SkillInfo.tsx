@@ -79,6 +79,8 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
           selected={selectedTags}
           onAdd={handleAddByValue}
           onRemove={handleRemoveByName}
+          optionLabelKey="name"
+          selectedNameKey="name"
           selectPlaceholder="Select skill"
           searchPlaceholder="Search skills"
         />

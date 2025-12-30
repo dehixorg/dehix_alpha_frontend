@@ -17,11 +17,11 @@ import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
 import { Button } from '@/components/ui/button';
 import { RootState } from '@/lib/store';
-import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import StatItem from '@/components/shared/StatItem';
 import { DateHistory } from '@/components/shared/DateHistory';
 import { Progress } from '@/components/ui/progress';
 import type { Milestone } from '@/utils/types/Milestone';
+import StatusDot from '@/components/shared/StatusDot';
 
 export interface ProjectDetailCardProps {
   projectName: string;
@@ -30,7 +30,7 @@ export interface ProjectDetailCardProps {
   status: string | undefined;
   startDate: Date | null | undefined;
   endDate: Date | null | undefined;
-  projectDomain: string[];
+  projectDomain: string | string[];
   skills: string[];
   userRole?: 'Business' | 'Freelancer'; // Added role prop
   projectId: string; // Added project ID prop
@@ -75,17 +75,32 @@ function ProjectDetailCard({
 
   const computeMilestoneProgress = (items?: Milestone[]) => {
     if (!items || items.length === 0) return 0;
-    const total = items.length;
-    const completed = items.filter(
+
+    const allTasks = (items || []).flatMap((m) =>
+      (m.stories || []).flatMap((s) => s.tasks || []),
+    );
+    if (allTasks.length > 0) {
+      const completedTasks = allTasks.filter(
+        (t) => (t.taskStatus || '').toUpperCase() === 'COMPLETED',
+      ).length;
+      return Math.round((completedTasks / allTasks.length) * 100);
+    }
+
+    const totalMilestones = items.length;
+    const completedMilestones = items.filter(
       (m) => (m.status || '').toUpperCase() === 'COMPLETED',
     ).length;
-    return Math.round((completed / total) * 100);
+    return Math.round((completedMilestones / totalMilestones) * 100);
   };
 
   const progress =
     milestones && milestones.length > 0
       ? computeMilestoneProgress(milestones)
       : computeProgress(startDate, endDate);
+
+  const projectDomainsArray = Array.isArray(projectDomain)
+    ? projectDomain
+    : [projectDomain];
 
   return (
     <Card className="rounded-xl border border-border/60 shadow-sm hover:shadow-lg transition-shadow">
@@ -94,12 +109,7 @@ function ProjectDetailCard({
           <CardTitle className="text-xl md:text-2xl font-semibold tracking-tight">
             {projectName}
           </CardTitle>
-          <Badge
-            variant="outline"
-            className={`px-2 py-0.5 text-xs md:text-sm rounded-md ${statusOutlineClasses(projectStatus)}`}
-          >
-            {projectStatus}
-          </Badge>
+          <StatusDot status={projectStatus} className="mb-auto" />
         </div>
       </CardHeader>
 
@@ -120,7 +130,7 @@ function ProjectDetailCard({
               <p className="font-medium">Project Domains</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {projectDomain.map((domain, index) => (
+              {projectDomainsArray.map((domain, index) => (
                 <Badge
                   key={index}
                   variant="secondary"
@@ -184,12 +194,6 @@ function ProjectDetailCard({
               />
             </>
           )}
-          <StatItem
-            icon={<Tag className="h-4 w-4" />}
-            label="Domains"
-            value={String(projectDomain.length)}
-            color="amber"
-          />
           <StatItem
             icon={<Award className="h-4 w-4" />}
             label="Skills"

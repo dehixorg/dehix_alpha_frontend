@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
   VolumeX,
@@ -141,6 +141,10 @@ export function ProfileSidebar({
   const [showAllMedia, setShowAllMedia] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
+
+  // State for inline editing
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editedValue, setEditedValue] = useState('');
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
@@ -149,6 +153,106 @@ export function ProfileSidebar({
     isBlocked: boolean;
     blockedBy: string | null;
   }>({ isBlocked: false, blockedBy: null });
+
+  // Guard to avoid duplicate saves from overlapping events
+  const isSavingRef = useRef(false);
+
+  // Handle field edit start
+  const handleFieldClick = (field: string, currentValue: string = '') => {
+    setEditingField(field);
+    setEditedValue(currentValue);
+  };
+
+  // Handle saving the edited field
+  const handleSaveField = async () => {
+    if (!editingField || !profileData) return;
+
+    // Only allow editing own profile
+    if (profileType === 'user' && user?.uid !== profileData.id) {
+      toast({
+        title: 'Unauthorized',
+        description: 'You can only edit your own profile.',
+        variant: 'destructive',
+      });
+      setEditingField(null);
+      return;
+    }
+
+    // Validate input
+    const trimmedValue = editedValue.trim();
+    if (!trimmedValue && editingField === 'displayName') {
+      toast({
+        title: 'Validation Error',
+        description: 'Display name cannot be empty.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (
+      editingField === 'email' &&
+      trimmedValue &&
+      !trimmedValue.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+    ) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Store original value for revert
+    const originalValue = (profileData as any)[editingField];
+
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
+
+    try {
+      // Update the profile data in the state
+      setProfileData({
+        ...profileData,
+        [editingField]: trimmedValue,
+      });
+
+      // Send update to the server
+      await axiosInstance.patch(`/freelancer/${profileData.id}`, {
+        [editingField]: trimmedValue,
+      });
+
+      toast({
+        title: 'Profile updated',
+        description: 'Your changes have been saved successfully.',
+      });
+
+      setEditingField(null);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update profile. Please try again.',
+        variant: 'destructive',
+      });
+
+      // Revert the changes in the UI if the API call fails
+      setProfileData({
+        ...profileData,
+        [editingField]: originalValue,
+      });
+    } finally {
+      isSavingRef.current = false;
+    }
+  };
+
+  // Handle key down events (Enter to save, Escape to cancel)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSaveField();
+    } else if (e.key === 'Escape') {
+      setEditingField(null);
+    }
+  };
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
@@ -892,15 +996,52 @@ export function ProfileSidebar({
                         {getFallbackName(profileData)}
                       </AvatarFallback>
                     </Avatar>
-                    <CardTitle className="text-xl mt-2">
-                      {profileData.displayName}
-                    </CardTitle>
+                    {editingField === 'displayName' ? (
+                      <input
+                        type="text"
+                        className="text-xl font-semibold bg-transparent border-b border-primary focus:outline-none focus:border-primary w-full text-center"
+                        value={editedValue}
+                        onChange={(e) => setEditedValue(e.target.value)}
+                        onBlur={handleSaveField}
+                        onKeyDown={handleKeyDown}
+                      />
+                    ) : (
+                      <CardTitle
+                        className="text-xl mt-2 cursor-pointer hover:bg-accent/50 px-2 py-1 rounded"
+                        onClick={() =>
+                          handleFieldClick(
+                            'displayName',
+                            profileData.displayName,
+                          )
+                        }
+                      >
+                        {profileData.displayName}
+                      </CardTitle>
+                    )}
                     {profileType === 'user' &&
-                      (profileData as ProfileUser).email && (
-                        <CardDescription>
+                      (profileData as ProfileUser).email &&
+                      (editingField === 'email' ? (
+                        <input
+                          type="email"
+                          className="text-sm text-muted-foreground bg-transparent border-b border-primary focus:outline-none focus:border-primary w-full text-center"
+                          value={editedValue}
+                          onChange={(e) => setEditedValue(e.target.value)}
+                          onBlur={handleSaveField}
+                          onKeyDown={handleKeyDown}
+                        />
+                      ) : (
+                        <CardDescription
+                          className="cursor-pointer hover:bg-accent/50 px-2 py-1 rounded inline-block"
+                          onClick={() =>
+                            handleFieldClick(
+                              'email',
+                              (profileData as ProfileUser).email || '',
+                            )
+                          }
+                        >
                           {(profileData as ProfileUser).email}
                         </CardDescription>
-                      )}
+                      ))}
                     {profileType === 'group' && (
                       <CardDescription>
                         {(profileData as ProfileGroup).description || (
@@ -945,10 +1086,40 @@ export function ProfileSidebar({
                           <span className="text-xs text-muted-foreground">
                             Bio
                           </span>
-                          <p className="text-sm text-[hsl(var(--foreground))] whitespace-pre-wrap">
-                            {(profileData as ProfileUser).bio ||
-                              'No bio available.'}
-                          </p>
+                          {editingField === 'bio' ? (
+                            <textarea
+                              className="w-full p-2 text-sm text-foreground bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                              value={editedValue}
+                              onChange={(e) => setEditedValue(e.target.value)}
+                              onBlur={() => {
+                                if (isSavingRef.current) return;
+                                handleSaveField();
+                              }}
+                              onKeyDown={(e) => {
+                                if (isSavingRef.current) return;
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  handleSaveField();
+                                } else if (e.key === 'Escape') {
+                                  setEditingField(null);
+                                }
+                              }}
+                              rows={3}
+                            />
+                          ) : (
+                            <p
+                              className="text-sm text-[hsl(var(--foreground))] whitespace-pre-wrap cursor-pointer hover:bg-accent/50 p-2 rounded"
+                              onClick={() =>
+                                handleFieldClick(
+                                  'bio',
+                                  (profileData as ProfileUser).bio || '',
+                                )
+                              }
+                            >
+                              {(profileData as ProfileUser).bio ||
+                                'Click to add a bio...'}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <div className="flex justify-between items-center mt-4 mb-2">

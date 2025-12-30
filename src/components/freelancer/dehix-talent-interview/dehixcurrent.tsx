@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { Calendar, Clock, Video, Info, Star } from 'lucide-react';
 
 import { RootState } from '@/lib/store';
+import EmptyState from '@/components/shared/EmptyState';
 import {
   fetchScheduledInterviews,
   completeBid,
@@ -280,11 +281,12 @@ export default function CurrentInterviews() {
   // ---------- Empty State ----------
   if (interviews.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground text-sm">
-          No scheduled interviews found.
-        </p>
-      </div>
+      <EmptyState
+        title="No Dehix Talent interviews yet"
+        description="When an interview is scheduled for your Dehix Talent profile, it will appear here."
+        icon={<Calendar className="h-12 w-12 text-muted-foreground" />}
+        className="bg-transparent"
+      />
     );
   }
 

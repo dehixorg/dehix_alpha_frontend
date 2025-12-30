@@ -39,6 +39,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -46,6 +47,7 @@ import ProfileSummaryCard from '@/components/cards/ProfileSummaryCard';
 import { FreelancerProfile } from '@/types/freelancer';
 import StatItem from '@/components/shared/StatItem';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
+import EmptyState from '@/components/shared/EmptyState';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -66,6 +68,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
 import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
 
+// URL validation functions
+const isValidLinkedInUrl = (url: string) => {
+  const linkedInRegex =
+    /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
+  return linkedInRegex.test(url.trim());
+};
+
+const isValidWebsiteUrl = (url: string) => {
+  const websiteRegex =
+    /^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})?(\/.*)?$/;
+  return websiteRegex.test(url.trim());
+};
+
 export default function ProfilesPage() {
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
@@ -81,8 +96,9 @@ export default function ProfilesPage() {
     useState('');
   const [newProfileAvailability, setNewProfileAvailability] =
     useState('FREELANCE');
-  const [newProfileSkills, setNewProfileSkills] = useState<string[]>([]);
-  const [newProfileDomains, setNewProfileDomains] = useState<string[]>([]);
+  // Store full selected option objects for skills/domains
+  const [newProfileSkills, setNewProfileSkills] = useState<any[]>([]);
+  const [newProfileDomains, setNewProfileDomains] = useState<any[]>([]);
   const [newProfileProjects, setNewProfileProjects] = useState<any[]>([]);
   const [newProfileExperiences, setNewProfileExperiences] = useState<any[]>([]);
   const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
@@ -127,31 +143,29 @@ export default function ProfilesPage() {
     if (!user.uid) return;
 
     try {
-      const [skillsResponse, domainsResponse, freelancerResponse] =
-        await Promise.all([
-          axiosInstance.get('/skills'),
-          axiosInstance.get('/domain'),
-          axiosInstance.get(`/freelancer/${user.uid}`),
-        ]);
+      const freelancerResponse = await axiosInstance.get(
+        `/freelancer/${user.uid}`,
+      );
 
-      const allSkills = skillsResponse.data.data || [];
-      const allDomains = domainsResponse.data.data || [];
       const freelancerData = freelancerResponse.data.data || {};
 
-      const freelancerSkillNames = (freelancerData.skills || [])
-        .map((s: any) => s.name || s.label)
-        .filter(Boolean);
+      const attributes: any[] = Array.isArray(freelancerData.attributes)
+        ? freelancerData.attributes
+        : [];
 
-      const freelancerDomainNames = (freelancerData.domain || [])
-        .map((d: any) => d.name || d.label)
-        .filter(Boolean);
+      const skillsForOptions = attributes
+        .filter((item: any) => item?.type === 'SKILL')
+        .map((item: any) => ({
+          ...item,
+          label: item.label || item.name || '',
+        }));
 
-      const skillsForOptions = allSkills.filter((s: any) =>
-        freelancerSkillNames.includes(s.label || s.name),
-      );
-      const domainsForOptions = allDomains.filter((d: any) =>
-        freelancerDomainNames.includes(d.label || d.name),
-      );
+      const domainsForOptions = attributes
+        .filter((item: any) => item?.type === 'DOMAIN')
+        .map((item: any) => ({
+          ...item,
+          label: item.label || item.name || '',
+        }));
 
       setSkillsOptions(skillsForOptions);
       setDomainsOptions(domainsForOptions);
@@ -160,17 +174,25 @@ export default function ProfilesPage() {
     }
   }, [user.uid]);
 
-  const fetchFreelancerProjectsAndExperiences = async () => {
-    // This function is called but the data is not currently used
-    // The projects and experiences are fetched directly in the dialogs
-    // Keeping this for potential future use
-  };
-
   useEffect(() => {
     fetchProfiles();
     fetchSkillsAndDomains();
-    fetchFreelancerProjectsAndExperiences();
   }, [fetchProfiles, fetchSkillsAndDomains]);
+
+  const resetForm = () => {
+    setNewProfileName('');
+    setNewProfileDescription('');
+    setNewProfileHourlyRate(0);
+    setNewProfileGithubLink('');
+    setNewProfileLinkedinLink('');
+    setNewProfilePersonalWebsite('');
+    setNewProfileAvailability('FREELANCE');
+    setNewProfileSkills([]);
+    setNewProfileDomains([]);
+    setNewProfileProjects([]);
+    setNewProfileExperiences([]);
+    setIsCreateDialogOpen(false);
+  };
 
   const handleCreateProfile = async () => {
     if (!newProfileName.trim()) {
@@ -186,14 +208,50 @@ export default function ProfilesPage() {
       return;
     }
 
+    // URL validation
+    if (!newProfileLinkedinLink.trim()) {
+      notifyError('LinkedIn profile URL is required');
+      return;
+    }
+
+    if (!isValidLinkedInUrl(newProfileLinkedinLink)) {
+      notifyError(
+        'Please enter a valid LinkedIn profile URL (e.g., https://linkedin.com/in/username)',
+      );
+      return;
+    }
+
+    if (!newProfilePersonalWebsite.trim()) {
+      notifyError('Personal website URL is required');
+      return;
+    }
+
+    if (!isValidWebsiteUrl(newProfilePersonalWebsite)) {
+      notifyError(
+        'Please enter a valid website URL (e.g., https://example.com)',
+      );
+      return;
+    }
+
     try {
+      // Map selected skill/domain option objects to {_id, label} for the API payload
+      const skillsPayload = newProfileSkills.map((skill: any) => ({
+        _id: skill?.type_id || '',
+        label: skill?.name || skill?.label || '',
+      }));
+
+      const domainsPayload = newProfileDomains.map((domain: any) => ({
+        _id: domain?.type_id || '',
+        label: domain?.name || domain?.label || '',
+      }));
+
       const profilePayload = {
         profileName: newProfileName.trim(),
         description: newProfileDescription.trim(),
         profileType: newProfileType,
         hourlyRate: newProfileHourlyRate || 0,
-        skills: newProfileSkills,
-        domains: newProfileDomains,
+        skills: skillsPayload,
+        domains: domainsPayload,
         projects: newProfileProjects,
         experiences: newProfileExperiences,
         portfolioLinks: [],
@@ -206,59 +264,61 @@ export default function ProfilesPage() {
       const response = await axiosInstance.post(
         `/freelancer/profile`,
         profilePayload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
       );
 
-      const newProfile = response.data.data;
+      if (response.data && response.data.success) {
+        const newProfile = response.data.data;
 
-      // Use the skills/domains we sent in the request since backend might not return them
-      // Enrich with full objects from our options for immediate display
-      const enrichedSkills = newProfileSkills.map((skillId: string) => {
-        const foundSkill = skillsOptions.find((s: any) => s._id === skillId);
-        return foundSkill || { _id: skillId, label: skillId, name: skillId };
-      });
+        // Use our selected objects directly for immediate display
+        const localProfile = {
+          ...newProfile,
+          profileType: newProfileType,
+          skills: newProfileSkills,
+          domains: newProfileDomains,
+          projects: newProfileProjects,
+          experiences: newProfileExperiences,
+        } as FreelancerProfile;
 
-      const enrichedDomains = newProfileDomains.map((domainId: string) => {
-        const foundDomain = domainsOptions.find((d: any) => d._id === domainId);
-        return (
-          foundDomain || { _id: domainId, label: domainId, name: domainId }
+        // Add new profile at the beginning (newest first)
+        setProfiles((prev) => [localProfile, ...prev]);
+
+        // Reset form
+        resetForm();
+
+        // Switch to the relevant tab so the newly created profile is visible immediately
+        setActiveTab(
+          newProfileType === 'Consultant' ? 'consultant' : 'freelancer',
         );
-      });
 
-      const localProfile = {
-        ...newProfile,
-        profileType: newProfileType,
-        skills: enrichedSkills,
-        domains: enrichedDomains,
-        projects: newProfileProjects,
-        experiences: newProfileExperiences,
-      } as FreelancerProfile;
-
-      // Add new profile at the beginning (newest first)
-      setProfiles((prev) => [localProfile, ...prev]);
-
-      // Reset all form fields
-      setNewProfileName('');
-      setNewProfileDescription('');
-      setNewProfileHourlyRate(0);
-      setNewProfileGithubLink('');
-      setNewProfileLinkedinLink('');
-      setNewProfilePersonalWebsite('');
-      setNewProfileAvailability('FREELANCE');
-      setNewProfileSkills([]);
-      setNewProfileDomains([]);
-      setNewProfileProjects([]);
-      setNewProfileExperiences([]);
-      setIsCreateDialogOpen(false);
-
-      // Switch to the relevant tab so the newly created profile is visible immediately
-      setActiveTab(
-        newProfileType === 'Consultant' ? 'consultant' : 'freelancer',
-      );
-
-      notifySuccess('Profile created successfully', 'Success');
-    } catch (error) {
+        notifySuccess('Profile created successfully', 'Success');
+      } else {
+        throw new Error(response.data?.message || 'Failed to create profile');
+      }
+    } catch (error: any) {
       console.error('Error creating profile:', error);
-      notifyError('Failed to create profile');
+
+      let errorMessage = 'Failed to create profile';
+      if (error.response) {
+        // Server responded with error status
+        errorMessage =
+          error.response.data?.message ||
+          error.response.statusText ||
+          errorMessage;
+        console.error('Error details:', error.response.data);
+      } else if (error.request) {
+        // Request was made but no response
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        // Other errors
+        errorMessage = error.message || errorMessage;
+      }
+
+      notifyError(errorMessage);
     }
   };
 
@@ -322,13 +382,12 @@ export default function ProfilesPage() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Profiles"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'Profiles', link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
-          <div className="w-full mx-auto max-w-6xl">
+        <main className="grid flex-1 items-start p-4 sm:px-6 sm:py-0 md:gap-8">
+          <div className="w-full mx-auto max-w-[92vw]">
             <div className="flex flex-col gap-2 mb-6">
               <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" /> Profiles Center
@@ -338,33 +397,45 @@ export default function ProfilesPage() {
               </p>
             </div>
 
-            <div className="bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+            <div className="bg-muted/20 rounded-xl border shadow-sm overflow-hidden mb-6">
               <Tabs
                 value={activeTab}
                 onValueChange={(v) => setActiveTab(v as any)}
                 className="w-full"
               >
                 <div className="border-b px-6">
-                  <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
-                    <TabsTrigger
-                      value="overview"
-                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                    >
-                      <BarChart3 className="mr-2 h-4 w-4" /> Overview
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="freelancer"
-                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                    >
-                      Freelancer ({freelancerProfiles.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="consultant"
-                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                    >
-                      Consultant ({consultantProfiles.length})
-                    </TabsTrigger>
-                  </TabsList>
+                  <div className="max-w-full overflow-x-auto no-scrollbar">
+                    <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                      <TabsTrigger
+                        value="overview"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <BarChart3 className="mr-2 h-4 w-4" /> Overview
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="freelancer"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <span className="flex items-center gap-2">
+                          Freelancer
+                          <Badge variant="secondary" className="h-5 px-2">
+                            {freelancerProfiles.length}
+                          </Badge>
+                        </span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="consultant"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <span className="flex items-center gap-2">
+                          Consultant
+                          <Badge variant="secondary" className="h-5 px-2">
+                            {consultantProfiles.length}
+                          </Badge>
+                        </span>
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
                 </div>
 
                 <div className="p-6">
@@ -578,20 +649,25 @@ export default function ProfilesPage() {
                         ))}
                       </div>
                     ) : freelancerProfiles.length === 0 ? (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground mb-4">
-                          No Freelancer profiles found.
-                        </p>
-                        <Button
-                          onClick={() => {
-                            setNewProfileType('Freelancer');
-                            setIsCreateDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" /> Create Freelancer
-                          Profile
-                        </Button>
-                      </div>
+                      <EmptyState
+                        className="py-12 bg-transparent border-0"
+                        title="No Freelancer profiles found"
+                        description="Create your first Freelancer profile to start applying faster with a ready-to-use summary."
+                        icon={
+                          <User className="h-12 w-12 text-muted-foreground" />
+                        }
+                        actions={
+                          <Button
+                            onClick={() => {
+                              setNewProfileType('Freelancer');
+                              setIsCreateDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Create Freelancer
+                            Profile
+                          </Button>
+                        }
+                      />
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {freelancerProfiles.map((profile) => (
@@ -642,20 +718,25 @@ export default function ProfilesPage() {
                         ))}
                       </div>
                     ) : consultantProfiles.length === 0 ? (
-                      <div className="text-center py-12">
-                        <p className="text-muted-foreground mb-4">
-                          No Consultant profiles found.
-                        </p>
-                        <Button
-                          onClick={() => {
-                            setNewProfileType('Consultant');
-                            setIsCreateDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" /> Create Consultant
-                          Profile
-                        </Button>
-                      </div>
+                      <EmptyState
+                        className="py-12 bg-transparent border-0"
+                        title="No Consultant profiles found"
+                        description="Create a Consultant profile to showcase your expertise and start getting matched to the right opportunities."
+                        icon={
+                          <UserCog className="h-12 w-12 text-muted-foreground" />
+                        }
+                        actions={
+                          <Button
+                            onClick={() => {
+                              setNewProfileType('Consultant');
+                              setIsCreateDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Create Consultant
+                            Profile
+                          </Button>
+                        }
+                      />
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {consultantProfiles.map((profile) => (
@@ -692,7 +773,7 @@ export default function ProfilesPage() {
 
       {/* Create Profile Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New {newProfileType} Profile</DialogTitle>
             <DialogDescription>
@@ -755,9 +836,10 @@ export default function ProfilesPage() {
                 <SelectTagPicker
                   label=""
                   options={skillsOptions}
-                  selected={newProfileSkills.map((id: string) => ({
-                    name:
-                      skillsOptions.find((s: any) => s._id === id)?.label || id,
+                  selected={newProfileSkills.map((skill: any) => ({
+                    name: skill?.label || skill?.name || '',
+                    interviewerStatus:
+                      skill?.interviewerStatus || 'NOT_APPLIED',
                   }))}
                   onAdd={(value: string) => {
                     const selectedSkill = skillsOptions.find(
@@ -765,28 +847,24 @@ export default function ProfilesPage() {
                     );
                     if (
                       selectedSkill &&
-                      !newProfileSkills.includes(selectedSkill._id)
+                      !newProfileSkills.some(
+                        (s: any) => s._id === selectedSkill._id,
+                      )
                     ) {
                       setNewProfileSkills([
                         ...newProfileSkills,
-                        selectedSkill._id,
+                        {
+                          ...selectedSkill,
+                          interviewerStatus: 'NOT_APPLIED',
+                        },
                       ]);
-                    }
-                  }}
-                  onRemove={(name: string) => {
-                    const skill = skillsOptions.find(
-                      (s: any) => (s.label || s.name) === name,
-                    );
-                    if (skill) {
-                      setNewProfileSkills(
-                        newProfileSkills.filter((id) => id !== skill._id),
-                      );
                     }
                   }}
                   optionLabelKey="label"
                   selectedNameKey="name"
                   selectPlaceholder="Select skill"
                   searchPlaceholder="Search skills..."
+                  hideRemoveButtonInSettings={true}
                 />
               </div>
               <div className="space-y-2">
@@ -796,10 +874,10 @@ export default function ProfilesPage() {
                 <SelectTagPicker
                   label=""
                   options={domainsOptions}
-                  selected={newProfileDomains.map((id: string) => ({
-                    name:
-                      domainsOptions.find((d: any) => d._id === id)?.label ||
-                      id,
+                  selected={newProfileDomains.map((domain: any) => ({
+                    name: domain?.label || domain?.name || '',
+                    interviewerStatus:
+                      domain?.interviewerStatus || 'NOT_APPLIED',
                   }))}
                   onAdd={(value: string) => {
                     const selectedDomain = domainsOptions.find(
@@ -807,28 +885,24 @@ export default function ProfilesPage() {
                     );
                     if (
                       selectedDomain &&
-                      !newProfileDomains.includes(selectedDomain._id)
+                      !newProfileDomains.some(
+                        (d: any) => d._id === selectedDomain._id,
+                      )
                     ) {
                       setNewProfileDomains([
                         ...newProfileDomains,
-                        selectedDomain._id,
+                        {
+                          ...selectedDomain,
+                          interviewerStatus: 'NOT_APPLIED',
+                        },
                       ]);
-                    }
-                  }}
-                  onRemove={(name: string) => {
-                    const domain = domainsOptions.find(
-                      (d: any) => (d.label || d.name) === name,
-                    );
-                    if (domain) {
-                      setNewProfileDomains(
-                        newProfileDomains.filter((id) => id !== domain._id),
-                      );
                     }
                   }}
                   optionLabelKey="label"
                   selectedNameKey="name"
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains..."
+                  hideRemoveButtonInSettings={true}
                 />
               </div>
             </div>

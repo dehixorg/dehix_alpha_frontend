@@ -57,6 +57,23 @@ const STATUS_STYLE_MAP: Record<string, StatusStyle> = {
       'border-blue-700/40 text-blue-600 bg-blue-100 hover:bg-blue-300 dark:bg-blue-900/20 dark:hover:bg-blue-900/60',
   },
 
+  // Dehix talent expertise levels
+  intermediate: {
+    solid: 'bg-sky-500 text-white',
+    outline:
+      'border-sky-700/40 text-sky-600 bg-sky-100 hover:bg-sky-300 dark:bg-sky-900/20 dark:hover:bg-sky-900/60',
+  },
+  advanced: {
+    solid: 'bg-indigo-500 text-white',
+    outline:
+      'border-indigo-700/40 text-indigo-600 bg-indigo-100 hover:bg-indigo-300 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/60',
+  },
+  expert: {
+    solid: 'bg-purple-700 text-white',
+    outline:
+      'border-purple-800/40 text-purple-700 bg-purple-100 hover:bg-purple-300 dark:bg-purple-900/30 dark:hover:bg-purple-900/70',
+  },
+
   // Green-light family
   beginner: {
     solid: 'bg-green-400 text-white',
@@ -100,6 +117,9 @@ const STATUS_ALIASES: Record<string, string> = {
   MASTERY: 'mastery',
   PROFICIENT: 'proficient',
   BEGINNER: 'beginner',
+  INTERMEDIATE: 'intermediate',
+  ADVANCED: 'advanced',
+  EXPERT: 'expert',
   COMPLETED: 'completed',
   FREELANCER: 'freelancer',
   CONSULTANT: 'consultant',

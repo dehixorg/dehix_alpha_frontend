@@ -103,7 +103,11 @@ export default function Login() {
         `/public/user_email?user=${email}`,
       );
       setPhone(response.data.phone);
-      if (!response.data.phoneVerify) {
+      const hasPhoneVerify = Object.prototype.hasOwnProperty.call(
+        response.data,
+        'phoneVerify',
+      );
+      if (hasPhoneVerify && response.data.phoneVerify === false) {
         setIsModalOpen(true);
       } else {
         try {

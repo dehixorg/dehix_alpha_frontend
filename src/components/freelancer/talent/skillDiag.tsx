@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Gauge, Wallet, Clock, Award } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -16,19 +18,28 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import {
+  Select,
+  SelectTrigger,
+  SelectItem,
+  SelectValue,
+  SelectContent,
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 
 interface Skill {
   _id: string;
-  label: string;
+  type_id: string;
+  name: string;
 }
 
 interface SkillDomainData {
   skillId: string;
   label: string;
+  level: string;
   experience: string;
   monthlyPay: string;
   activeStatus: boolean;
@@ -39,11 +50,13 @@ interface SkillDomainData {
 interface SkillDialogProps {
   skills: Skill[];
   onSuccess: () => void;
+  children: React.ReactNode;
 }
 
 const skillSchema = z.object({
   skillId: z.string(),
   label: z.string().nonempty('Please select at least one skill'),
+  level: z.string().nonempty('Please select a level'),
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -56,10 +69,13 @@ const skillSchema = z.object({
   status: z.string(),
 });
 
-const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
+const SkillDialog: React.FC<SkillDialogProps> = ({
+  skills,
+  onSuccess,
+  children,
+}) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
 
   const {
     control,
@@ -72,6 +88,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
     defaultValues: {
       skillId: '',
       label: '',
+      level: '',
       experience: '',
       monthlyPay: '',
       activeStatus: false,
@@ -80,32 +97,25 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   });
 
   const onSubmit = async (data: SkillDomainData) => {
-    if (selectedSkills.length === 0) {
-      notifyError('Please select at least one skill', 'Error');
-      return;
-    }
-
     setLoading(true);
     try {
-      for (const skill of selectedSkills) {
-        await axiosInstance.post(`/freelancer/dehix-talent`, {
-          talentId: skill._id,
-          talentName: skill.label,
-          experience: data.experience,
-          monthlyPay: data.monthlyPay,
-          activeStatus: data.activeStatus,
-          status: data.status,
-          type: 'SKILL',
-        });
-      }
+      await axiosInstance.post(`/freelancer/dehix-talent`, {
+        talentId: data.skillId,
+        talentName: data.label,
+        level: data.level,
+        experience: data.experience,
+        monthlyPay: data.monthlyPay,
+        activeStatus: data.activeStatus,
+        status: data.status,
+        type: 'SKILL',
+      });
       reset();
-      setSelectedSkills([]);
       setOpen(false);
-      notifySuccess('Skills added successfully', 'Success');
+      notifySuccess('The skill has been successfully added.', 'Skill Added');
       onSuccess();
     } catch (error) {
       console.error(error);
-      notifyError('Failed to add skills. Please try again.', 'Error');
+      notifyError('Failed to add skill. Please try again.', 'Error');
     } finally {
       setLoading(false);
     }
@@ -113,53 +123,71 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">Add Skill</Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Skill</DialogTitle>
-          <DialogDescription>
-            Select skills, enter your experience and monthly pay.
-          </DialogDescription>
+          <div className="flex items-start gap-3">
+            <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/40 px-2">
+              <Award className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl">Add Dehix Skill</DialogTitle>
+              <DialogDescription className="mt-1 text-sm">
+                Choose one of your profile skills, set your seniority level, and
+                define your expected monthly pay. This helps clients understand
+                where you shine.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="mb-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
+          <div>
+            <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Skill
+            </p>
             <Controller
               control={control}
               name="label"
-              render={() => (
-                <SelectTagPicker
-                  label="Skills"
-                  options={skills.map((s) => ({ label: s.label, _id: s._id }))}
-                  selected={selectedSkills.map((s) => ({ name: s.label }))}
-                  onAdd={(val) => {
-                    const skill = skills.find((s) => s.label === val);
-                    if (
-                      skill &&
-                      !selectedSkills.find((s) => s._id === skill._id)
-                    ) {
-                      setSelectedSkills((prev) => [...prev, skill]);
-                      setValue('label', val);
-                    }
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(selectedLabel) => {
+                    const selectedSkill = skills.find(
+                      (skill) => skill.name === selectedLabel,
+                    );
+                    field.onChange(selectedLabel);
+                    setValue(
+                      'skillId',
+                      (selectedSkill?.type_id as string | undefined) ??
+                        selectedSkill?._id ??
+                        '',
+                    );
                   }}
-                  onRemove={(val) => {
-                    const skill = skills.find((s) => s.label === val);
-                    if (skill) {
-                      setSelectedSkills((prev) =>
-                        prev.filter((s) => s._id !== skill._id),
-                      );
-                      if (selectedSkills.length === 1) setValue('label', '');
-                    }
-                  }}
-                  className="w-full"
-                  optionLabelKey="label"
-                  selectedNameKey="name"
-                  selectPlaceholder="Select skills"
-                  searchPlaceholder="Search skills..."
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a skill" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {skills.length > 0 ? (
+                      skills.map((skill) => (
+                        <SelectItem key={skill._id} value={skill.name}>
+                          {skill.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <Link href="/freelancer/settings/personal-info">
+                        <p className="p-4 flex justify-center items-center">
+                          No skills to add -{' '}
+                          <span className="text-blue-500 ml-2">
+                            Add some
+                          </span>{' '}
+                        </p>
+                      </Link>
+                    )}
+                  </SelectContent>
+                </Select>
               )}
             />
             {errors.label && (
@@ -169,44 +197,116 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
             )}
           </div>
 
-          <div className="mb-3">
+          <div>
             <Controller
               control={control}
-              name="experience"
-              render={({ field }) => (
-                <Input
-                  type="number"
-                  placeholder="Experience (years)"
-                  min={0}
-                  max={50}
-                  step={0.1}
-                  {...field}
-                />
-              )}
+              name="level"
+              render={({ field }) => {
+                const levels = [
+                  'BEGINNER',
+                  'INTERMEDIATE',
+                  'ADVANCED',
+                  'EXPERT',
+                ];
+                const currentIndex = (() => {
+                  const idx = levels.indexOf(field.value || '');
+                  return idx >= 0 ? idx : 0;
+                })();
+
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        <Gauge className="h-3 w-3" />
+                        <span>Seniority level</span>
+                      </div>
+                      {field.value && (
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                          {field.value}
+                        </span>
+                      )}
+                    </div>
+                    <Slider
+                      min={0}
+                      max={3}
+                      step={1}
+                      value={[currentIndex]}
+                      onValueChange={([val]) => {
+                        const next = levels[val] ?? levels[0];
+                        field.onChange(next);
+                      }}
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                      <span>Beginner</span>
+                      <span>Intermediate</span>
+                      <span>Advanced</span>
+                      <span>Expert</span>
+                    </div>
+                  </div>
+                );
+              }}
             />
-            {errors.experience && (
-              <p className="text-red-600">{errors.experience.message}</p>
+            {errors.level && (
+              <p className="text-red-600 text-sm mt-1">
+                {errors.level.message}
+              </p>
             )}
           </div>
 
-          <div className="mb-3">
-            <Controller
-              control={control}
-              name="monthlyPay"
-              render={({ field }) => (
-                <Input
-                  type="number"
-                  placeholder="$ Monthly Pay"
-                  min={0}
-                  {...field}
-                />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <Clock className="h-3 w-3" />
+                <span>Experience</span>
+              </div>
+              <Controller
+                control={control}
+                name="experience"
+                render={({ field }) => (
+                  <Input
+                    type="number"
+                    placeholder="Years of experience"
+                    min={0}
+                    max={50}
+                    step={0.1}
+                    {...field}
+                  />
+                )}
+              />
+              {errors.experience && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.experience.message}
+                </p>
               )}
-            />
-            {errors.monthlyPay && (
-              <p className="text-red-600">{errors.monthlyPay.message}</p>
-            )}
-          </div>
+            </div>
 
+            <div>
+              <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <Wallet className="h-3 w-3" />
+                <span>Monthly pay</span>
+              </div>
+              <Controller
+                control={control}
+                name="monthlyPay"
+                render={({ field }) => (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">$</span>
+                    <Input
+                      type="number"
+                      placeholder="Expected monthly pay"
+                      min={0}
+                      {...field}
+                    />
+                  </div>
+                )}
+              />
+              {errors.monthlyPay && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.monthlyPay.message}
+                </p>
+              )}
+            </div>
+          </div>
           <DialogFooter className="mt-8">
             <Button type="submit" disabled={loading}>
               {loading ? 'Loading...' : 'Submit'}

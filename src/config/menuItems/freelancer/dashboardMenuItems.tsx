@@ -12,6 +12,8 @@ import {
   Archive,
   StickyNote,
   Trash2,
+  Trophy,
+  SendHorizontal,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -42,6 +44,11 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Market',
   },
   {
+    href: '/project-invitations',
+    icon: <SendHorizontal className="h-5 w-5" />,
+    label: 'Project Invitations',
+  },
+  {
     href: '/freelancer/project/current',
     icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
@@ -52,12 +59,12 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Analytics',
   },
   {
-    href: '/freelancer/interview',
+    href: '/freelancer/interviewer',
     icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
   },
   {
-    href: '/freelancer/scheduleInterview',
+    href: '/freelancer/interviewee/current',
     icon: <CalendarClock className="h-5 w-5" />,
     label: 'Schedule Interviews',
   },
@@ -72,6 +79,11 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Talent',
   },
   {
+    href: '/freelancer/leaderboard',
+    icon: <Trophy className="h-5 w-5" />,
+    label: 'Leaderboard',
+  },
+  {
     href: '/chat',
     icon: <MessageSquare className="h-5 w-5" />,
     label: 'Chats',
@@ -81,7 +93,6 @@ export const menuItemsTop: MenuItem[] = [
     icon: <StickyNote className="h-5 w-5" />,
     label: 'Notes',
   },
-  //   <ReportMenuItem key="report" />
 ];
 
 export const menuItemsBottom: MenuItem[] = [

@@ -44,9 +44,22 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 
+const profileBootstrapCache = new Map<
+  string,
+  {
+    referralCode: string;
+    connects: number;
+  }
+>();
+const profileBootstrapInFlight = new Map<
+  string,
+  Promise<{ referralCode: string; connects: number }>
+>();
+
 interface DropdownProfileProps {
   setConnects?: (value: number) => void;
 }
+
 export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
@@ -74,22 +87,40 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
-        const fetchCode = response.data?.referral?.referralCode || '';
-
-        const connects =
-          response.data?.data?.connects ?? response.data?.connects ?? 0;
-
-        localStorage.setItem('DHX_CONNECTS', connects.toString());
-
-        if (setConnects) {
-          setConnects(connects);
+        const cacheKey = `${user?.type || ''}:${user?.uid || ''}`;
+        if (profileBootstrapCache.has(cacheKey)) {
+          const cached = profileBootstrapCache.get(cacheKey)!;
+          localStorage.setItem('DHX_CONNECTS', String(cached.connects));
+          setConnects?.(cached.connects);
+          setReferralCode(cached.referralCode);
+          return;
         }
-        setReferralCode(fetchCode);
+
+        let promise = profileBootstrapInFlight.get(cacheKey);
+        if (!promise) {
+          promise = (async () => {
+            const response = await axiosInstance.get(
+              `/${user.type}/${user?.uid}`,
+            );
+            const fetchCode = response.data?.referral?.referralCode || '';
+            const connects =
+              response.data?.data?.connects ?? response.data?.connects ?? 0;
+            return { referralCode: fetchCode, connects };
+          })();
+          profileBootstrapInFlight.set(cacheKey, promise);
+        }
+
+        const resolved = await promise;
+        profileBootstrapCache.set(cacheKey, resolved);
+        localStorage.setItem('DHX_CONNECTS', String(resolved.connects));
+        setConnects?.(resolved.connects);
+        setReferralCode(resolved.referralCode);
       } catch (error) {
         console.error('API Error:', error);
         notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
+        const cacheKey = `${user?.type || ''}:${user?.uid || ''}`;
+        profileBootstrapInFlight.delete(cacheKey);
         setLoading(false);
       }
     };

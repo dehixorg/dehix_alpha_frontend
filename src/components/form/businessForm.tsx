@@ -78,44 +78,53 @@ export function BusinessForm({ user_id }: { user_id: string }) {
     mode: 'all',
   });
 
+  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
+      if (!user_id) return;
+
       try {
         const response = await axiosInstance.get(`/business/${user_id}`);
-        setUserInfo(response.data);
+        const data = response.data;
+
+        // Update form with the latest data
+        form.reset({
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          companyName: data.companyName || '',
+          companySize: data.companySize || '',
+          position: data.position || '',
+          linkedin: data.linkedin || '',
+          website: data.personalWebsite || data.website || '',
+        });
+
+        // Update local state
+        setUserInfo({
+          ...data,
+          personalWebsite: data.personalWebsite || data.website || '',
+        });
       } catch (error) {
-        console.error('API Error:', error);
-        notifyError('Something went wrong. Please try again.');
+        console.error('Failed to fetch business data:', error);
+        notifyError('Failed to load business data. Please refresh the page.');
       }
     };
 
     fetchData();
-    return () => {};
-  }, [user_id]);
-
-  useEffect(() => {
-    form.reset({
-      firstName: userInfo?.firstName || '',
-      lastName: userInfo?.lastName || '',
-      email: userInfo?.email || '',
-      phone: userInfo?.phone || '',
-      companyName: userInfo?.companyName || '',
-      companySize: userInfo?.companySize || '',
-      position: userInfo?.position || '',
-      linkedin: userInfo?.linkedin || '',
-      website: userInfo?.personalWebsite || '',
-    });
-  }, [userInfo, form]);
+  }, [user_id, form]); // Add form to dependencies since we're using reset
 
   async function onSubmit(data: ProfileFormValues) {
+    if (!user_id) {
+      const errorMsg = 'User ID is missing. Please refresh the page.';
+      console.error(errorMsg);
+      notifyError(errorMsg);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await axiosInstance.put(`/business`, {
-        ...data,
-      });
-
-      setUserInfo({
-        ...userInfo,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -125,25 +134,37 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         position: data.position,
         linkedin: data.linkedin,
         personalWebsite: data.website,
+        userId: user_id,
       });
 
-      if (res.status === 200) {
-        const updatedUser = {
-          ...userInfo,
+      if (res.status >= 200 && res.status < 300) {
+        // Refetch the updated data from the server
+        const updatedResponse = await axiosInstance.get(`/business/${user_id}`);
+        const updatedData = updatedResponse.data;
+
+        // Update local state and Redux
+        const userInfoData = {
+          ...updatedData,
+          personalWebsite:
+            updatedData.personalWebsite || updatedData.website || '',
+          website: updatedData.personalWebsite || updatedData.website || '',
+          uid: user_id,
         };
 
-        updatedUser.uid = userInfo._id;
+        setUserInfo(userInfoData);
+        dispatch(setUser(userInfoData));
 
-        dispatch(setUser(updatedUser));
-        setUserInfo(updatedUser);
-
+        // Show success message
         notifySuccess(
           'Your profile has been successfully updated.',
           'Profile Updated',
         );
       } else {
-        console.error('Unexpected status code:', res.status);
-        notifyError('Failed to update profile. Unexpected server response.');
+        // Handle non-2xx responses
+        console.error('Unexpected response status:', res.status);
+        notifyError(
+          `Failed to update profile. Server returned status ${res.status}.`,
+        );
       }
     } catch (error) {
       console.error('API Error:', error);

@@ -4,12 +4,14 @@ import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
+import { Inbox, Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import MilestoneTimeline from '@/components/shared/MilestoneTimeline';
 import StoriesSection from '@/components/shared/StoriesSection';
 import FreelancerList from '@/components/freelancer/FreelancerList';
+import EmptyState from '@/components/shared/EmptyState';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -20,6 +22,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { Milestone, Story } from '@/utils/types/Milestone';
 import type { RootState } from '@/lib/store';
 import { CreateProjectGroupDialog } from '@/components/shared/CreateProjectGroupDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Project {
   _id: string;
@@ -214,8 +217,7 @@ const Page = () => {
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/business' },
-            { label: 'Project', link: '/dashboard/business' },
+            { label: 'Project', link: '/business/projects' },
             {
               label: project ? project.projectName : project_id,
               link: `/business/project/${project_id}`,
@@ -226,7 +228,7 @@ const Page = () => {
         <div className="px-2 md:px-4 w-full max-w-full overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl md:text-2xl font-bold">
-              Project Milestones
+              {project?.projectName} Milestones
             </h1>
 
             <div className="flex gap-2">
@@ -240,8 +242,25 @@ const Page = () => {
           {/* Main content area */}
           <div className="mt-4 w-full max-w-full">
             {loading ? (
-              <div className="flex justify-center items-center py-4">
-                <p>Loading milestones...</p>
+              <div className="w-full max-w-full">
+                <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading milestones...</span>
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
+                  <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full space-y-3">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                  </div>
+
+                  <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-[320px] w-full" />
+                  </div>
+                </div>
               </div>
             ) : milestones.length > 0 ? (
               <>
@@ -285,9 +304,12 @@ const Page = () => {
                 </div>
               </>
             ) : (
-              <div className="flex justify-center items-center h-[40vh]">
-                No milestones found.
-              </div>
+              <EmptyState
+                className="h-[40vh] border-0 bg-transparent py-0"
+                title="No milestones found"
+                description="Create your first milestone to start tracking progress for this project."
+                icon={<Inbox className="h-16 w-16 text-muted-foreground" />}
+              />
             )}
           </div>
         </div>

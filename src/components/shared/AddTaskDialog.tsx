@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import {
+  Loader2,
+  Plus,
+  User,
+  X,
+  Calendar,
+  FileText,
+  Tag,
+  AlertCircle,
+  ChevronDown,
+} from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { format } from 'date-fns';
 
 import {
   Dialog,
@@ -11,33 +22,25 @@ import {
 } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Avatar, AvatarFallback } from '../ui/avatar';
-
-import { truncateDescription } from './MilestoneTimeline';
-
-import { freelancers } from '@/utils/types/freeelancers';
-import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Label } from '../ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
+  CommandItem,
   CommandList,
-} from '@/components/ui/command';
-import { Button } from '@/components/ui/button';
+} from '../ui/command';
+import { Calendar as CalendarComponent } from '../ui/calendar';
+import { Avatar, AvatarFallback } from '../ui/avatar';
+
+import { freelancers } from '@/utils/types/freeelancers';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
+import { cn } from '@/lib/utils';
 
 interface AddTaskDialogProps {
   isDialogOpen: boolean;
@@ -47,6 +50,7 @@ interface AddTaskDialogProps {
     summary: string;
     taskStatus: string;
     freelancers: object;
+    dueDate?: string;
   };
   handleFreelancerSelect: (freelancer: {
     _id: string;
@@ -54,7 +58,9 @@ interface AddTaskDialogProps {
     perHourPrice: number;
   }) => void;
   handleInputChange: (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string,
+    event:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | { target: { name: string; value: any } },
   ) => void;
   handelSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }
@@ -90,7 +96,7 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
       title: !formData.title.trim(),
       summary: !formData.summary.trim(),
       taskStatus: !formData.taskStatus,
-      freelancer: !formData.freelancers,
+      freelancer: !selectedFreelancer,
     };
     setErrors(newErrors);
     return !Object.values(newErrors).some((error) => error);
@@ -108,9 +114,9 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
       setIsLoading(true);
       try {
         const response = await axiosInstance.get(
-          `/project/get-freelancer/${project_id}/`,
+          `/project/get-freelancer/${project_id}/FREELANCER`,
         );
-        const freelancerData = response.data.freelancers.freelancerData || [];
+        const freelancerData = response.data.freelancers.data || [];
 
         if (freelancerData.length === 0) {
           notifyError(
@@ -136,240 +142,316 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
 
   const handleSearch = (query: string) => {
     const lowerCaseQuery = query.toLowerCase();
-
     const filtered = freelancersData.filter(
       (freelancer) =>
         freelancer.userName.toLowerCase().includes(lowerCaseQuery) ||
         freelancer.email.toLowerCase().includes(lowerCaseQuery),
     );
-
     setFilteredFreelancers(filtered);
   };
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="w-full max-w-lg">
+      <DialogContent className="w-full max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add New Task</DialogTitle>
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <DialogTitle className="text-xl font-semibold">
+              Create New Task
+            </DialogTitle>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Add details about the task to assign to a freelancer
+          </p>
         </DialogHeader>
+
         {isLoading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+            <p className="text-sm text-muted-foreground">
+              Loading available freelancers...
+            </p>
           </div>
         ) : (
-          <form onSubmit={handleFormSubmit}>
-            <div className="space-y-4 p-4">
-              {/* Task Title */}
-              <div>
-                <label
-                  htmlFor="title"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Task Title
-                </label>
-                <Input
-                  id="title"
-                  name="title"
-                  placeholder="Task Title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  className={`${errors.title ? 'border-red-500' : ''}`}
-                />
-                {errors.title && (
-                  <p className="text-red-500 text-xs mt-1">
-                    Task title is required.
-                  </p>
-                )}
-              </div>
+          <form onSubmit={handleFormSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Task Title */}
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-muted-foreground" />
+                    Task Title
+                  </Label>
+                  <Input
+                    id="title"
+                    name="title"
+                    placeholder="e.g., Design Homepage Mockup"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    className={cn(
+                      'w-full',
+                      errors.title && 'border-destructive',
+                    )}
+                  />
+                  {errors.title && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      Task title is required
+                    </p>
+                  )}
+                </div>
 
-              {/* Task Summary */}
-              <div>
-                <label
-                  htmlFor="summary"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Task Summary
-                </label>
+                {/* Due Date */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    Due Date
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !formData.dueDate && 'text-muted-foreground',
+                        )}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {formData.dueDate ? (
+                          format(new Date(formData.dueDate), 'PPP')
+                        ) : (
+                          <span>Pick a due date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={
+                          formData.dueDate
+                            ? new Date(formData.dueDate)
+                            : undefined
+                        }
+                        onSelect={(date) =>
+                          handleInputChange({
+                            target: {
+                              name: 'dueDate',
+                              value: date?.toISOString(),
+                            },
+                          } as any)
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              {/* Task Description */}
+              <div className="space-y-2">
+                <Label htmlFor="summary" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  Task Description
+                </Label>
                 <Textarea
                   id="summary"
                   name="summary"
-                  placeholder="Task Summary"
+                  placeholder="Describe the task in detail..."
                   value={formData.summary}
                   onChange={handleInputChange}
-                  required
-                  className={`${errors.summary ? 'border-red-500' : ''}`}
+                  className={cn(
+                    'min-h-[120px]',
+                    errors.summary && 'border-destructive',
+                  )}
                 />
                 {errors.summary && (
-                  <p className="text-red-500 text-xs mt-1">
-                    Task summary is required.
+                  <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                    <AlertCircle className="h-4 w-4" />
+                    Task description is required
                   </p>
                 )}
               </div>
 
-              {/* Task Status Dropdown */}
-              <div className="flex items-center gap-3">
-                <label
-                  htmlFor="taskStatus"
-                  className="w-1/3 text-sm font-medium mb-1"
-                >
-                  Task Status
-                </label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={`w-full border rounded-md text-left ${errors.taskStatus ? 'border-red-500' : ''}`}
-                    >
-                      {formData.taskStatus
-                        ? {
-                            NOT_STARTED: 'Not Started',
-                            ONGOING: 'On Going',
-                            COMPLETED: 'Completed',
-                          }[formData.taskStatus]
-                        : 'Select Status'}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem
-                      onSelect={() => handleInputChange('NOT_STARTED')}
-                    >
-                      Not Started
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => handleInputChange('ONGOING')}
-                    >
-                      On Going
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => handleInputChange('COMPLETED')}
-                    >
-                      Completed
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              {errors.taskStatus && (
-                <p className="text-red-500 text-xs mt-1">
-                  Task status is required.
-                </p>
-              )}
-
               {/* Freelancer Selection */}
-              {freelancersData.length === 0 && (
-                <div className="col-span-2 mb-2">
-                  <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded-md border border-amber-200">
-                    ⚠️ No freelancers with accepted bids found for this project.
-                    You need to accept some bids before you can assign tasks.
-                  </p>
-                </div>
-              )}
-              <div className="flex items-center gap-3">
-                <label
-                  htmlFor="freelancer"
-                  className="w-1/3 text-sm font-medium mb-1"
-                >
-                  Freelancer
-                </label>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  Assignee
+                </Label>
                 <Popover
                   open={isFreelancerPopoverOpen}
                   onOpenChange={setIsFreelancerPopoverOpen}
                 >
-                  <PopoverTrigger className="overscroll-y-none" asChild>
+                  <PopoverTrigger asChild>
                     <Button
-                      variant="ghost"
-                      className={`w-full border rounded-md text-left ${errors.freelancer ? 'border-red-500' : ''}`}
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isFreelancerPopoverOpen}
+                      className="w-full justify-between"
                     >
-                      {selectedFreelancer || 'Select Freelancer'}
+                      {selectedFreelancer ? (
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-5 w-5">
+                            <AvatarFallback>
+                              {freelancersData
+                                .find((f) => f._id === selectedFreelancer)
+                                ?.userName?.charAt(0)
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {
+                            freelancersData.find(
+                              (f) => f._id === selectedFreelancer,
+                            )?.userName
+                          }
+                        </div>
+                      ) : (
+                        'Select freelancer...'
+                      )}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
+                  <PopoverContent className="w-full p-0" align="start">
                     <Command>
                       <CommandInput
-                        placeholder="Search freelancer by username or email..."
-                        onValueChange={(value: string) => handleSearch(value)}
+                        placeholder="Search freelancers..."
+                        onValueChange={handleSearch}
                       />
-                      <CommandList className=" overflow-x-visible max-h-[300px]">
-                        {filteredFreelancers.length === 0 ? (
-                          <CommandEmpty>
-                            {freelancersData.length === 0
-                              ? 'No freelancers with accepted bids found. Please accept some bids first.'
-                              : 'No freelancers match your search.'}
-                          </CommandEmpty>
-                        ) : (
-                          <CommandGroup className=" block overflow-auto">
-                            <div className="space-y-2 px-4 py-2">
-                              {filteredFreelancers.map((freelancer) => {
-                                return (
-                                  <div
-                                    key={freelancer._id}
-                                    className="flex items-center justify-between gap-1 p-3 rounded-lg border shadow-sm hover:shadow-md cursor-pointer"
-                                    onClick={() => {
-                                      setSelectedFreelancer(
-                                        freelancer.userName,
-                                      );
-                                      handleFreelancerSelect(freelancer);
-                                      setIsFreelancerPopoverOpen(false); // Close the popover
-                                    }}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <Avatar className="h-9 w-9">
-                                        <AvatarFallback>
-                                          {freelancer.userName
-                                            .charAt(0)
-                                            .toUpperCase()}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                        <div className="text-sm font-medium">
-                                          {freelancer.userName}
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                          {truncateDescription(
-                                            freelancer.email,
-                                            20,
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <Badge>{`${freelancer.role || 'N/A'}`}</Badge>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </CommandGroup>
-                        )}
+                      <CommandEmpty>No freelancer found.</CommandEmpty>
+                      <CommandList>
+                        <CommandGroup>
+                          {filteredFreelancers.map((freelancer) => (
+                            <CommandItem
+                              key={freelancer._id}
+                              value={freelancer._id}
+                              onSelect={() => {
+                                setSelectedFreelancer(freelancer._id);
+                                handleFreelancerSelect({
+                                  _id: freelancer._id,
+                                  userName: freelancer.userName,
+                                  perHourPrice: freelancer.perHourPrice || 0,
+                                });
+                                setIsFreelancerPopoverOpen(false);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback>
+                                    {freelancer.userName
+                                      ?.charAt(0)
+                                      .toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium">
+                                    {freelancer.userName}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {freelancer.email}
+                                  </p>
+                                </div>
+                                {freelancer.perHourPrice && (
+                                  <Badge variant="outline" className="ml-2">
+                                    ${freelancer.perHourPrice}/hr
+                                  </Badge>
+                                )}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
                       </CommandList>
                     </Command>
                   </PopoverContent>
                 </Popover>
+                {errors.freelancer && (
+                  <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                    <AlertCircle className="h-4 w-4" />
+                    Please select a freelancer
+                  </p>
+                )}
               </div>
-              {errors.freelancer && (
-                <p className="text-red-500 text-xs mt-1">
-                  Freelancer selection is required.
-                </p>
+
+              {selectedFreelancer && (
+                <div className="p-4 bg-muted/20 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Avatar>
+                        <AvatarFallback>
+                          {freelancersData
+                            .find((f) => f._id === selectedFreelancer)
+                            ?.userName?.charAt(0)
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">
+                          {
+                            freelancersData.find(
+                              (f) => f._id === selectedFreelancer,
+                            )?.userName
+                          }
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {
+                            freelancersData.find(
+                              (f) => f._id === selectedFreelancer,
+                            )?.email
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedFreelancer(null);
+                        handleFreelancerSelect({
+                          _id: '',
+                          userName: '',
+                          perHourPrice: 0,
+                        });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {freelancersData.find((f) => f._id === selectedFreelancer)
+                    ?.perHourPrice && (
+                    <div className="flex items-center text-sm">
+                      <span className="text-muted-foreground">Rate:</span>
+                      <span className="font-medium ml-1">
+                        $
+                        {
+                          freelancersData.find(
+                            (f) => f._id === selectedFreelancer,
+                          )?.perHourPrice
+                        }
+                        /hr
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
-            <DialogFooter>
-              <Button
-                type="submit"
-                disabled={freelancersData.length === 0}
-                title={
-                  freelancersData.length === 0
-                    ? 'No freelancers available to assign tasks to'
-                    : ''
-                }
-              >
-                Add Task
-              </Button>
+            <DialogFooter className="mt-6">
               <Button
                 type="button"
-                variant="secondary"
-                className="mb-3"
+                variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
                 Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  !formData.title || !formData.summary || !selectedFreelancer
+                }
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Task
               </Button>
             </DialogFooter>
           </form>

@@ -1,5 +1,7 @@
 # Dependency directories
 node_modules/
+lib/
+onchain/
 
 # Next.js build output
 /.next/
@@ -26,3 +28,5 @@ yarn-error.log*
 
 # Windows
 Thumbs.db
+// ...existing code...
+eslint.config.js

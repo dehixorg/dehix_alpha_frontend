@@ -159,13 +159,12 @@ export default function FreelancerProfileSettings() {
           menuItemsBottom={freelancerMenuItemsBottom}
           activeMenu="Profile Settings"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'Profile', link: '#' },
           ]}
         />
 
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 mb-6">
           <div className="w-full mx-auto mt-2">
             <div className="card rounded-xl border shadow-sm overflow-hidden">
               <Tabs
@@ -255,7 +254,7 @@ export default function FreelancerProfileSettings() {
                               if (!id) return;
                               try {
                                 await axiosInstance.delete(
-                                  `/freelancer/experience/${id}`,
+                                  `/freelancer/${user.uid}/experience/${id}`,
                                 );
                                 notifySuccess('Experience deleted.');
                                 setExpRefreshKey((v) => v + 1);

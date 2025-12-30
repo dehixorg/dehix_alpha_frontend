@@ -25,11 +25,10 @@ export default function PersonalInfo() {
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="Personal Info"
+          activeMenu="KYC"
           breadcrumbItems={[
-            { label: 'Business', link: '/dashboard/business' },
             { label: 'Settings', link: '#' },
-            { label: 'kyc', link: '#' },
+            { label: 'KYC', link: '#' },
           ]}
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">

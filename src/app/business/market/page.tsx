@@ -33,6 +33,12 @@ const Market: React.FC = () => {
   const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance'];
   const locations = ['Remote', 'On-site', 'Hybrid'];
   const experiences = ['Entry', 'Intermediate', 'Senior', 'Lead'];
+  const experienceMapping: Record<string, { from: number; to: number }> = {
+    Entry: { from: 0, to: 2 },
+    Intermediate: { from: 2, to: 5 },
+    Senior: { from: 5, to: 10 },
+    Lead: { from: 10, to: 100 },
+  };
   const [freelancers, setFreelancers] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -88,14 +94,18 @@ const Market: React.FC = () => {
     const queryParts: string[] = [];
 
     if (Array.isArray(filters.experience) && filters.experience.length > 0) {
-      const sortedExperience = filters.experience
-        .map(Number)
-        .sort((a, b) => a - b);
-      const from = sortedExperience[0];
-      const to = sortedExperience[sortedExperience.length - 1];
+      // Map experience labels to numeric ranges
+      const experienceRanges = filters.experience
+        .map((label) => experienceMapping[label])
+        .filter((range) => range !== undefined);
 
-      if (from !== undefined) queryParts.push(`workExperienceFrom=${from}`);
-      if (to !== undefined) queryParts.push(`workExperienceTo=${to}`);
+      if (experienceRanges.length > 0) {
+        const from = Math.min(...experienceRanges.map((range) => range.from));
+        const to = Math.max(...experienceRanges.map((range) => range.to));
+
+        queryParts.push(`workExperienceFrom=${from}`);
+        queryParts.push(`workExperienceTo=${to}`);
+      }
     }
 
     Object.entries(filters).forEach(([key, value]) => {

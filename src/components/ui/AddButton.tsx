@@ -13,17 +13,14 @@ export const AddButton: React.FC<AddButtonProps> = ({
   ...props
 }) => {
   return (
-      <Button
-        onClick={onClick}
-        variant="outline"
-        size="icon"
-        className={cn(
-          'w-full mt-4 text-center justify-center',
-          className,
-        )}
-        {...props}
-      >
-        <Plus />
-      </Button>
+    <Button
+      onClick={onClick}
+      variant="outline"
+      size="icon"
+      className={cn('w-full mt-4 text-center justify-center', className)}
+      {...props}
+    >
+      <Plus />
+    </Button>
   );
 };

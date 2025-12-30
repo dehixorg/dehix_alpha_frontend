@@ -1,4 +1,4 @@
-import { FileWarning, HomeIcon, ShieldCheck, User } from 'lucide-react';
+import { ArrowLeft, FileWarning, ShieldCheck, User } from 'lucide-react';
 import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -19,8 +19,8 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/dashboard/business',
-    icon: <HomeIcon className="h-5 w-5" />,
-    label: 'Home',
+    icon: <ArrowLeft className="h-5 w-5" />,
+    label: 'Back',
   },
   {
     href: '/business/settings/business-info',

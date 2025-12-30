@@ -2,9 +2,11 @@
 
 import { useSearchParams } from 'next/navigation';
 
-import { CustomComponentProps } from '../custom-table/FieldTypes';
-
 import { ReportForm } from '@/components/form/ReportForm';
+
+type CustomComponentProps = {
+  data?: unknown;
+};
 
 export const ReportDetails = ({ data }: CustomComponentProps) => {
   const searchParams = useSearchParams();

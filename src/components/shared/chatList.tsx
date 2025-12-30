@@ -20,6 +20,7 @@ import type { CombinedUser } from '@/hooks/useAllUsers';
 import { useAllUsers } from '@/hooks/useAllUsers';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import EmptyState from '@/components/shared/EmptyState';
 
 export interface Conversation extends DocumentData {
   id: string;
@@ -481,19 +482,22 @@ export function ChatList({
                   );
                 })
               ) : (
-                <div className="flex flex-col items-center justify-center h-full px-4 py-16 text-center text-[hsl(var(--muted-foreground))]">
-                  <MessageSquare className="w-10 h-10 mb-2" />
-                  <p className="text-lg font-medium">
-                    {searchTerm
+                <EmptyState
+                  icon={
+                    <MessageSquare className="w-10 h-10 text-muted-foreground/80" />
+                  }
+                  title={
+                    searchTerm
                       ? 'No matching conversations'
-                      : 'No conversations found'}
-                  </p>
-                  {!searchTerm && (
-                    <p className="text-sm">
-                      Start a new chat or wait for others to connect!
-                    </p>
-                  )}
-                </div>
+                      : 'No conversations found'
+                  }
+                  description={
+                    !searchTerm
+                      ? 'Start a new chat or wait for others to connect!'
+                      : undefined
+                  }
+                  className="h-full px-4 py-12 border-0 bg-transparent"
+                />
               )}
             </>
           )}

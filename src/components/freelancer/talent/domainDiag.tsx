@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Gauge, Wallet, Clock, Briefcase } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,6 +25,7 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -32,13 +33,15 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Domain {
   _id: string;
-  label: string;
+  type_id: string;
+  name: string;
 }
 
 interface SkillDomainData {
   uid: string;
   domainId: string;
   label: string;
+  level: string;
   experience: string;
   monthlyPay: string;
   activeStatus: boolean;
@@ -49,11 +52,13 @@ interface SkillDomainData {
 interface DomainDialogProps {
   domains: Domain[];
   onSuccess: () => void;
+  children: React.ReactNode;
 }
 
 const domainSchema = z.object({
   domainId: z.string(),
   label: z.string().nonempty('Please select a domain'),
+  level: z.string().nonempty('Please select a level'),
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -66,7 +71,11 @@ const domainSchema = z.object({
   status: z.string(),
 });
 
-const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
+const DomainDialog: React.FC<DomainDialogProps> = ({
+  domains,
+  onSuccess,
+  children,
+}) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
@@ -80,6 +89,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
     defaultValues: {
       domainId: '',
       label: '',
+      level: '',
       experience: '',
       monthlyPay: '',
       activeStatus: false,
@@ -94,6 +104,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
       const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
         talentId: data.domainId,
         talentName: data.label,
+        level: data.level,
         experience: data.experience,
         monthlyPay: data.monthlyPay,
         activeStatus: data.activeStatus,
@@ -121,19 +132,28 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="h-4 w-4" /> Add Domain
-        </Button>
+        <div onClick={() => setOpen(true)}>{children}</div>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Domain</DialogTitle>
-          <DialogDescription>
-            Select a domain, enter your experience and monthly pay.
-          </DialogDescription>
+          <div className="flex items-start gap-3">
+            <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-950/40 px-2">
+              <Briefcase className="h-5 w-5 text-purple-600 dark:text-purple-300" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl">Add Dehix Domain</DialogTitle>
+              <DialogDescription className="mt-1 text-sm">
+                Select one of your profile domains, set your seniority level,
+                and define your expected monthly pay for domain-based work.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="mb-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
+          <div>
+            <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Domain
+            </p>
             <Controller
               control={control}
               name="label"
@@ -142,10 +162,10 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
                   value={field.value}
                   onValueChange={(selectedLabel) => {
                     const selectedDomain = domains.find(
-                      (domain) => domain.label === selectedLabel,
+                      (domain) => domain.name === selectedLabel,
                     );
                     field.onChange(selectedLabel);
-                    setValue('domainId', selectedDomain?._id || '');
+                    setValue('domainId', selectedDomain?.type_id || '');
                   }}
                 >
                   <SelectTrigger>
@@ -154,8 +174,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
                   <SelectContent>
                     {domains.length > 0 ? (
                       domains.map((domain) => (
-                        <SelectItem key={domain._id} value={domain.label}>
-                          {domain.label}
+                        <SelectItem key={domain._id} value={domain.name}>
+                          {domain.name}
                         </SelectItem>
                       ))
                     ) : (
@@ -178,43 +198,115 @@ const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
               </p>
             )}
           </div>
-
-          <div className="mb-3">
+          <div>
             <Controller
               control={control}
-              name="experience"
-              render={({ field }) => (
-                <Input
-                  type="number"
-                  placeholder="Experience (years)"
-                  min={0}
-                  max={50}
-                  step={0.1}
-                  {...field}
-                />
-              )}
+              name="level"
+              render={({ field }) => {
+                const levels = [
+                  'BEGINNER',
+                  'INTERMEDIATE',
+                  'ADVANCED',
+                  'EXPERT',
+                ];
+                const currentIndex = (() => {
+                  const idx = levels.indexOf(field.value || '');
+                  return idx >= 0 ? idx : 0;
+                })();
+
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        <Gauge className="h-3 w-3" />
+                        <span>Seniority level</span>
+                      </div>
+                      {field.value && (
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                          {field.value}
+                        </span>
+                      )}
+                    </div>
+                    <Slider
+                      min={0}
+                      max={3}
+                      step={1}
+                      value={[currentIndex]}
+                      onValueChange={([val]) => {
+                        const next = levels[val] ?? levels[0];
+                        field.onChange(next);
+                      }}
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                      <span>Beginner</span>
+                      <span>Intermediate</span>
+                      <span>Advanced</span>
+                      <span>Expert</span>
+                    </div>
+                  </div>
+                );
+              }}
             />
-            {errors.experience && (
-              <p className="text-red-600">{errors.experience.message}</p>
+            {errors.level && (
+              <p className="text-red-600 text-sm mt-1">
+                {errors.level.message}
+              </p>
             )}
           </div>
 
-          <div className="mb-3">
-            <Controller
-              control={control}
-              name="monthlyPay"
-              render={({ field }) => (
-                <Input
-                  type="number"
-                  placeholder="$ Monthly Pay"
-                  min={0}
-                  {...field}
-                />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <Clock className="h-3 w-3" />
+                <span>Experience</span>
+              </div>
+              <Controller
+                control={control}
+                name="experience"
+                render={({ field }) => (
+                  <Input
+                    type="number"
+                    placeholder="Experience (years)"
+                    min={0}
+                    max={50}
+                    step={0.1}
+                    {...field}
+                  />
+                )}
+              />
+              {errors.experience && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.experience.message}
+                </p>
               )}
-            />
-            {errors.monthlyPay && (
-              <p className="text-red-600">{errors.monthlyPay.message}</p>
-            )}
+            </div>
+
+            <div>
+              <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <Wallet className="h-3 w-3" />
+                <span>Monthly pay</span>
+              </div>
+              <Controller
+                control={control}
+                name="monthlyPay"
+                render={({ field }) => (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">$</span>
+                    <Input
+                      type="number"
+                      placeholder="$ Monthly Pay"
+                      min={0}
+                      {...field}
+                    />
+                  </div>
+                )}
+              />
+              {errors.monthlyPay && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.monthlyPay.message}
+                </p>
+              )}
+            </div>
           </div>
 
           <DialogFooter className="mt-8">

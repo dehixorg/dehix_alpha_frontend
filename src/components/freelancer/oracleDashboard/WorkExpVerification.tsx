@@ -9,6 +9,8 @@ import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpV
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import { VerificationStatus } from '@/utils/verificationStatus';
+import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
+import EmptyState from '@/components/shared/EmptyState';
 
 type FilterOption = 'all' | 'pending' | 'verified' | 'rejected';
 
@@ -134,16 +136,10 @@ const WorkExpVerification = () => {
   };
 
   return (
-    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-      <div className="flex flex-col gap-2 p-6 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Experience Verification
-        </h1>
-        <p className="text-muted-foreground">
-          Monitor and manage work experience verification requests.
-        </p>
-      </div>
-
+    <OracleVerificationLayout
+      title="Experience Verification"
+      description="Monitor and manage work experience verification requests."
+    >
       <Tabs
         value={filter}
         defaultValue="all"
@@ -267,14 +263,18 @@ const WorkExpVerification = () => {
                       />
                     ))
                   ) : (
-                    <div className="text-center w-full col-span-full mt-10 py-10">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size={64}
+                    <div className="w-full col-span-full mt-10">
+                      <EmptyState
+                        icon={
+                          <PackageOpen
+                            className="mx-auto text-muted-foreground"
+                            size={64}
+                          />
+                        }
+                        title="No work experience verification records found"
+                        description="Work experience verification requests will appear here once available."
+                        className="py-10"
                       />
-                      <p className="text-sm text-muted-foreground">
-                        No work experience verification records found.
-                      </p>
                     </div>
                   )}
                 </div>
@@ -283,7 +283,7 @@ const WorkExpVerification = () => {
           ),
         )}
       </Tabs>
-    </div>
+    </OracleVerificationLayout>
   );
 };
 

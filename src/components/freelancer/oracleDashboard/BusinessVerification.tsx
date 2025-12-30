@@ -8,6 +8,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 import { VerificationStatus } from '@/utils/verificationStatus';
+import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
+import EmptyState from '@/components/shared/EmptyState';
 
 type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 
@@ -107,16 +109,10 @@ export default function BusinessVerification() {
   };
 
   return (
-    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-      <div className="flex flex-col gap-2 p-6 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Business Verification
-        </h1>
-        <p className="text-muted-foreground">
-          Monitor and manage business verification requests.
-        </p>
-      </div>
-
+    <OracleVerificationLayout
+      title="Business Verification"
+      description="Monitor and manage business verification requests."
+    >
       <Tabs
         value={filter}
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
@@ -199,10 +195,12 @@ export default function BusinessVerification() {
                       />
                     ))
                   ) : (
-                    <div className="text-center w-full col-span-full mt-10 py-10">
-                      <p className="text-sm text-muted-foreground">
-                        No business verification records found.
-                      </p>
+                    <div className="w-full col-span-full mt-10">
+                      <EmptyState
+                        title="No business verification records found"
+                        description="Once there are business verification requests, they will appear here."
+                        className="py-10"
+                      />
                     </div>
                   )}
                 </div>
@@ -211,6 +209,6 @@ export default function BusinessVerification() {
           ),
         )}
       </Tabs>
-    </div>
+    </OracleVerificationLayout>
   );
 }

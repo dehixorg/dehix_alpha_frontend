@@ -13,6 +13,8 @@ import {
   Award,
   ShieldCheck,
   Layers,
+  Camera,
+  Book,
 } from 'lucide-react';
 
 import StatItem from '../../shared/StatItem';
@@ -42,9 +44,19 @@ export interface UserProfile {
   phone: string;
   profilePic: string;
   description: string;
-  skills: any[];
-  domain: any[];
-  projectDomain: any[];
+  resume?: string;
+  coverLetter?: string;
+  githubLink?: string;
+  linkedin?: string;
+  personalWebsite?: string;
+  // Legacy top-level collections (still present in some responses)
+  skills?: any[];
+  domain?: any[];
+  projectDomain?: any[];
+  // New normalized attributes structure from /freelancer/{id}
+  attributes?: any[];
+  education?: Record<string, any>;
+  projects?: Record<string, any>;
   kyc?: {
     status: string;
     frontImageUrl?: string;
@@ -70,16 +82,21 @@ const fieldIcons: Record<string, React.ReactNode> = {
   username: <User className="h-3 w-3" />,
   email: <Mail className="h-3 w-3" />,
   phone: <Phone className="h-3 w-3" />,
-  profilepic: <User className="h-3 w-3" />,
+  'profile pic': <Camera className="h-3 w-3" />,
   description: <FileText className="h-3 w-3" />,
+  resume: <FileText className="h-3 w-3" />,
 
   // Professional Information
   skills: <Award className="h-3 w-3" />,
   domain: <Briefcase className="h-3 w-3" />,
-  projectdomain: <Layers className="h-3 w-3" />,
+  'project domain': <Layers className="h-3 w-3" />,
+  education: <Book className="h-3 w-3" />,
+  'professional experience': <Briefcase className="h-3 w-3" />,
+  projects: <Layers className="h-3 w-3" />,
+  'cover letter': <FileText className="h-3 w-3" />,
 
   // Verification
-  kyc: <ShieldCheck className="h-3 w-3" />,
+  'kyc verification': <ShieldCheck className="h-3 w-3" />,
 
   // Fallback
   default: <Circle className="h-3 w-3 text-muted-foreground/50" />,
@@ -105,13 +122,7 @@ const fieldNavigationMap: Record<string, string> = {
 
 // Helper function to get the appropriate icon for a field
 const getFieldIcon = (field: string) => {
-  const lowerField = field.toLowerCase();
-  for (const [key, icon] of Object.entries(fieldIcons)) {
-    if (lowerField.includes(key)) {
-      return icon;
-    }
-  }
-  return fieldIcons.default;
+  return fieldIcons[field.toLowerCase()] || fieldIcons.default;
 };
 
 const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
@@ -145,6 +156,29 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
   }, [userId]);
 
   const calculateCompletionPercentage = (profile: UserProfile) => {
+    const attrs = Array.isArray(profile.attributes) ? profile.attributes : [];
+
+    const hasSkillsFromAttributes = attrs.some(
+      (attr: any) => attr?.type === 'SKILL',
+    );
+    const hasDomainsFromAttributes = attrs.some(
+      (attr: any) => attr?.type === 'DOMAIN',
+    );
+    const hasProjectDomainsFromAttributes = attrs.some(
+      (attr: any) => attr?.type === 'PROJECT_DOMAIN',
+    );
+
+    const hasEducation = !!(
+      profile.education && Object.keys(profile.education).length > 0
+    );
+    const hasProjects = !!(
+      profile.projects && Object.keys(profile.projects).length > 0
+    );
+    const hasProfessionalExperience = !!(
+      profile.professionalInfo &&
+      Object.keys(profile.professionalInfo || {}).length > 0
+    );
+
     // Define the fields we want to check and their validation criteria
     const fieldsToCheck = {
       firstName: Boolean(profile.firstName?.trim()),
@@ -154,11 +188,25 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
       phone: Boolean(profile.phone?.trim()),
       profilePic: Boolean(profile.profilePic?.trim()),
       description: Boolean(profile.description?.trim()),
-      skills: Array.isArray(profile.skills) && profile.skills.length > 0,
-      domain: Array.isArray(profile.domain) && profile.domain.length > 0,
+      resume: Boolean(profile.resume?.trim()),
+      coverLetter: Boolean(profile.coverLetter?.trim()),
+      githubLink: Boolean(profile.githubLink?.trim()),
+      linkedin: Boolean(profile.linkedin?.trim()),
+      personalWebsite: Boolean(profile.personalWebsite?.trim()),
+      // Prefer new attributes-based structure, fall back to legacy arrays
+      skills:
+        hasSkillsFromAttributes ||
+        (Array.isArray(profile.skills) && profile.skills.length > 0),
+      domain:
+        hasDomainsFromAttributes ||
+        (Array.isArray(profile.domain) && profile.domain.length > 0),
       projectDomain:
-        Array.isArray(profile.projectDomain) &&
-        profile.projectDomain.length > 0,
+        hasProjectDomainsFromAttributes ||
+        (Array.isArray(profile.projectDomain) &&
+          profile.projectDomain.length > 0),
+      education: hasEducation,
+      projects: hasProjects,
+      professionalExperience: hasProfessionalExperience,
       kycApplied: Boolean(profile.kyc && profile.kyc.status !== 'NOT_APPLIED'),
       kycVerified: Boolean(profile.kyc && profile.kyc.status === 'VERIFIED'),
     };
@@ -290,7 +338,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
             </div>
             <Progress
               value={completionPercentage}
-              className={cn('h-1', completionColor)}
+              className={cn('h-1 bg-foreground/20', completionColor)}
             />
           </div>
 

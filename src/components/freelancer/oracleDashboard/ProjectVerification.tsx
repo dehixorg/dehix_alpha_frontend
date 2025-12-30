@@ -8,6 +8,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import { notifyError } from '@/utils/toastMessage';
 import { VerificationStatus } from '@/utils/verificationStatus';
+import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
+import EmptyState from '@/components/shared/EmptyState';
 
 type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 interface ProjectData {
@@ -58,30 +60,13 @@ const ProjectVerification = () => {
       );
       const result = response.data.data;
 
-      const isValidVerificationStatus = (
-        value: any,
-      ): value is VerificationStatus =>
-        Object.values(VerificationStatus).includes(value as VerificationStatus);
-
       const flattenedData: ProjectData[] = result.flatMap((entry: any) =>
         entry.result?.projects
           ? (Object.values(entry.result.projects) as any[]).map(
               (project: any) => {
-                const rawStatus = project.verificationStatus;
-                const validatedStatus = isValidVerificationStatus(rawStatus)
-                  ? rawStatus
-                  : (() => {
-                      console.warn(
-                        'Invalid verificationStatus encountered, defaulting to PENDING:',
-                        rawStatus,
-                      );
-                      return VerificationStatus.PENDING;
-                    })();
                 return {
                   ...project,
-                  verification_status: validatedStatus,
-                  verifier_id: entry.verifier_id,
-                  verifier_username: entry.verifier_username,
+                  ...entry,
                 } as ProjectData;
               },
             )
@@ -123,15 +108,10 @@ const ProjectVerification = () => {
   );
 
   return (
-    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-      <div className="flex flex-col gap-2 p-6 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Project Verification
-        </h1>
-        <p className="text-muted-foreground">
-          Monitor the status of your project verifications.
-        </p>
-      </div>
+    <OracleVerificationLayout
+      title="Project Verification"
+      description="Monitor the status of your project verifications."
+    >
       <Tabs
         value={filter}
         defaultValue="all"
@@ -270,10 +250,12 @@ const ProjectVerification = () => {
                       />
                     ))
                   ) : (
-                    <div className="text-center w-full col-span-full mt-10 py-10">
-                      <p className="text-sm text-muted-foreground">
-                        No Project verification found.
-                      </p>
+                    <div className="w-full col-span-full mt-10">
+                      <EmptyState
+                        title="No project verifications found"
+                        description="When there are project verification requests, they will be listed here."
+                        className="py-10"
+                      />
                     </div>
                   )}
                 </div>
@@ -282,7 +264,7 @@ const ProjectVerification = () => {
           ),
         )}
       </Tabs>
-    </div>
+    </OracleVerificationLayout>
   );
 };
 

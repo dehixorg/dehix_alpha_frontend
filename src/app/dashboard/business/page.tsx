@@ -3,24 +3,24 @@ import {
   CheckCircle,
   PackageOpen,
   Plus,
-  BarChart3,
-  Activity,
-  CalendarDays,
+  FolderOpen,
+  SendHorizontal,
+  // CalendarDays,
   Clock3,
   CalendarX2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from 'recharts';
+// import {
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   Tooltip,
+//   CartesianGrid,
+//   ResponsiveContainer,
+// } from 'recharts';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { Button } from '@/components/ui/button';
@@ -50,12 +50,12 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 // Define the activity type
-type Activity = {
-  id: number;
-  title: string;
-  time: string;
-  description: string;
-};
+// type Activity = {
+//   id: number;
+//   title: string;
+//   time: string;
+//   description: string;
+// };
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
@@ -86,36 +86,36 @@ export default function Dashboard() {
   );
 
   // Sample data for the chart
-  const chartData = [
-    { name: 'Jan', value: 65 },
-    { name: 'Feb', value: 59 },
-    { name: 'Mar', value: 80 },
-    { name: 'Apr', value: 81 },
-    { name: 'May', value: 56 },
-    { name: 'Jun', value: 55 },
-  ];
+  // const chartData = [
+  //   { name: 'Jan', value: 65 },
+  //   { name: 'Feb', value: 59 },
+  //   { name: 'Mar', value: 80 },
+  //   { name: 'Apr', value: 81 },
+  //   { name: 'May', value: 56 },
+  //   { name: 'Jun', value: 55 },
+  // ];
 
   // Sample activity data
-  const activities: Activity[] = [
-    {
-      id: 1,
-      title: 'Project Review',
-      time: '10:30 AM',
-      description: 'Review design mockups with the team',
-    },
-    {
-      id: 2,
-      title: 'Client Meeting',
-      time: '2:00 PM',
-      description: 'Weekly sync with ABC Corp',
-    },
-    {
-      id: 3,
-      title: 'Project Delivery',
-      time: '4:45 PM',
-      description: 'Deliver final assets to client',
-    },
-  ];
+  // const activities: Activity[] = [
+  //   {
+  //     id: 1,
+  //     title: 'Project Review',
+  //     time: '10:30 AM',
+  //     description: 'Review design mockups with the team',
+  //   },
+  //   {
+  //     id: 2,
+  //     title: 'Client Meeting',
+  //     time: '2:00 PM',
+  //     description: 'Weekly sync with ABC Corp',
+  //   },
+  //   {
+  //     id: 3,
+  //     title: 'Project Delivery',
+  //     time: '4:45 PM',
+  //     description: 'Deliver final assets to client',
+  //   },
+  // ];
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -162,7 +162,7 @@ export default function Dashboard() {
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={user?.photoURL || ''} alt={user?.name} />
                     <AvatarFallback>
-                      {user?.name?.charAt(0) || 'U'}
+                      {user?.displayName?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </div>
@@ -198,7 +198,10 @@ export default function Dashboard() {
                   return (
                     <Progress
                       value={completionPercentage}
-                      className={cn('h-1 w-full', completionColor)}
+                      className={cn(
+                        'h-1 w-full bg-foreground/20',
+                        completionColor,
+                      )}
                     />
                   );
                 })()}
@@ -233,7 +236,7 @@ export default function Dashboard() {
             </div>
 
             {/* Project Performance Chart */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Project Performance</CardTitle>
@@ -279,7 +282,7 @@ export default function Dashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
-            </Card>
+            </Card> */}
             {/* Projects Section */}
             <Tabs defaultValue="current" className="w-full">
               <div className="flex items-center justify-between">
@@ -393,26 +396,30 @@ export default function Dashboard() {
                   }
                 />
                 <Button
+                  asChild
                   variant="outline"
                   className="w-full justify-start"
-                  disabled
                 >
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  View Reports
+                  <Link href="/business/projects">
+                    <FolderOpen className="mr-2 h-4 w-4" />
+                    Projects
+                  </Link>
                 </Button>
                 <Button
+                  asChild
                   variant="outline"
                   className="w-full justify-start"
-                  disabled
                 >
-                  <Activity className="mr-2 h-4 w-4" />
-                  Activity Log
+                  <Link href="/project-invitations">
+                    <SendHorizontal className="mr-2 h-4 w-4" />
+                    Project Invitations
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
 
             {/* Upcoming Tasks */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Upcoming Tasks</CardTitle>
@@ -441,7 +448,7 @@ export default function Dashboard() {
                   ))}
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
             <div className="text-center py-10 w-full">
               <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
               <p className="text-gray-500">No interviews scheduled</p>

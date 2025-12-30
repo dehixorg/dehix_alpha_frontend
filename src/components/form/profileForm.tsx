@@ -26,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Type } from '@/utils/enum';
-import { StatusEnum } from '@/utils/freelancer/enum';
+import { InterviewPermission, StatusEnum } from '@/utils/freelancer/enum';
 import { addSkill } from '@/utils/skillUtils';
 import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
@@ -66,7 +66,7 @@ const profileFormSchema = z.object({
         return wordCount >= 500;
       },
       {
-        message: 'Cover letter must contain at least 200 words when provided.',
+        message: 'Cover letter must contain at least 500 words when provided.',
       },
     ),
   description: z.string().max(500, {
@@ -108,9 +108,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     label: '',
     description: '',
   });
-  const [dialogType] = useState<'skill' | 'domain' | 'projectDomain' | null>(
-    null,
-  );
+  const [dialogType, setDialogType] = useState<
+    'skill' | 'domain' | 'projectDomain' | null
+  >(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -136,31 +136,48 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     const customSkillData = {
       label: customSkill.label,
       interviewInfo: customSkill.description,
+      status: 'INACTIVE',
       createdBy: Type.FREELANCER,
       createdById: user_id,
-      status: StatusEnum.ACTIVE,
     };
 
     try {
+      // Create the new skill in master table
       await axiosInstance.post('/skills', customSkillData);
 
       const updatedSkills = [...skills, { label: customSkill.label }];
-      setDomains(updatedSkills);
+      setSkills(updatedSkills);
 
-      setCurrSkills([
-        ...currSkills,
-        {
-          name: customSkill.label,
-          level: '',
-          experience: '',
-          interviewStatus: 'PENDING',
-          interviewInfo: customSkill.description,
-          interviewerRating: 0,
-        },
-      ]);
+      const newSkill = {
+        name: customSkill.label,
+        level: '',
+        experience: '',
+        interviewStatus: 'PENDING',
+        interviewInfo: customSkill.description,
+        interviewerRating: 0,
+        interviewPermission: InterviewPermission.NOT_VERIFIED,
+      };
+
+      const updatedCurrSkills = [...currSkills, newSkill];
+      setCurrSkills(updatedCurrSkills);
+
+      // Save to freelancer profile
+      const savedProfile = await saveSkillsToProfile([newSkill]);
+      // Update state with the skill that includes the ID from backend
+      if (savedProfile && savedProfile.attributes) {
+        const skillWithId = savedProfile.attributes.find(
+          (attr: any) => attr.type === 'SKILL' && attr.name === newSkill.name,
+        );
+        if (skillWithId) {
+          setCurrSkills((prev: any) =>
+            prev.map((s: any) => (s.name === newSkill.name ? skillWithId : s)),
+          );
+        }
+      }
 
       setCustomSkill({ label: '', description: '' });
       setIsDialogOpen(false);
+      notifySuccess('New skill added to your profile successfully.');
     } catch (error: any) {
       console.error(
         'Failed to add skill:',
@@ -179,10 +196,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     const customDomainData = {
       label: customDomain.label,
-      interviewInfo: customSkill.description,
+      interviewInfo: customDomain.description,
       createdBy: Type.FREELANCER,
       createdById: user_id,
-      status: StatusEnum.ACTIVE,
     };
 
     try {
@@ -191,20 +207,37 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       const updatedDomains = [...domains, { label: customDomain.label }];
       setDomains(updatedDomains);
 
-      setCurrDomains([
-        ...currDomains,
-        {
-          name: customDomain.label,
-          level: '',
-          experience: '',
-          interviewStatus: 'PENDING',
-          interviewInfo: customDomain.description,
-          interviewerRating: 0,
-        },
-      ]);
+      const newDomain = {
+        name: customDomain.label,
+        level: '',
+        experience: '',
+        interviewStatus: 'PENDING',
+        interviewInfo: customDomain.description,
+        interviewerRating: 0,
+      };
+
+      const updatedCurrDomains = [...currDomains, newDomain];
+      setCurrDomains(updatedCurrDomains);
+
+      // Save to freelancer profile
+      const savedProfile = await saveDomainsToProfile([newDomain]);
+      // Update state with the domain that includes the ID from backend
+      if (savedProfile && savedProfile.attributes) {
+        const domainWithId = savedProfile.attributes.find(
+          (attr: any) => attr.type === 'DOMAIN' && attr.name === newDomain.name,
+        );
+        if (domainWithId) {
+          setCurrDomains((prev: any) =>
+            prev.map((d: any) =>
+              d.name === newDomain.name ? domainWithId : d,
+            ),
+          );
+        }
+      }
 
       setCustomDomain({ label: '', description: '' });
       setIsDialogOpen(false);
+      notifySuccess('New domain added to your profile successfully.');
     } catch (error: any) {
       console.error(
         'Failed to add domain:',
@@ -225,7 +258,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       label: customProjectDomain.label,
       createdBy: Type.FREELANCER,
       createdById: user_id,
-      status: StatusEnum.ACTIVE,
     };
 
     try {
@@ -237,17 +269,38 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       ];
       setProjectDomains(updatedProjectDomains);
 
-      setCurrProjectDomains([
+      const newProjectDomain = {
+        name: customProjectDomain.label,
+        level: '',
+        experience: '',
+        interviewStatus: 'PENDING',
+        interviewInfo: customProjectDomain.description,
+        interviewerRating: 0,
+      };
+
+      const updatedCurrProjectDomains = [
         ...currProjectDomains,
-        {
-          name: customProjectDomain.label,
-          level: '',
-          experience: '',
-          interviewStatus: 'PENDING',
-          interviewInfo: customProjectDomain.description,
-          interviewerRating: 0,
-        },
+        newProjectDomain,
+      ];
+      setCurrProjectDomains(updatedCurrProjectDomains);
+
+      // Save to freelancer profile
+      const savedProfile = await saveProjectDomainsToProfile([
+        newProjectDomain,
       ]);
+      // Update state with the project domain that includes the ID from backend
+      if (savedProfile && savedProfile.projectDomain) {
+        const projectDomainWithId = savedProfile.projectDomain.find(
+          (pd: any) => pd.name === newProjectDomain.name,
+        );
+        if (projectDomainWithId) {
+          setCurrProjectDomains((prev: any) =>
+            prev.map((pd: any) =>
+              pd.name === newProjectDomain.name ? projectDomainWithId : pd,
+            ),
+          );
+        }
+      }
 
       setCustomProjectDomain({ label: '', description: '' });
       setIsDialogOpen(false);
@@ -262,50 +315,172 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
+  // Function to save skills to backend
+  const saveSkillsToProfile = async (skillsToSave: any[]) => {
+    // ADD THIS MAPPING LOGIC
+    const completeSkillsArray = skillsToSave.map((skill: any) => ({
+      ...skill,
+      level: skill.level || '',
+      experience: skill.experience || '',
+      interviewInfo: skill.interviewInfo || '',
+      interviewerRating: skill.interviewerRating || 0,
+      interviewStatus: skill.interviewStatus || StatusEnum.PENDING,
+      interviewPermission:
+        skill.interviewPermission ?? InterviewPermission.NOT_VERIFIED,
+    }));
+    // END OF NEW LOGIC
+
+    try {
+      // Send the 'completeSkillsArray' instead of 'skillsToSave'
+      const response = await axiosInstance.put('/freelancer/skill', {
+        skills: completeSkillsArray,
+      });
+
+      if (response.status === 200) {
+        notifySuccess('Skills added successfully to your profile.');
+        return response.data.data;
+      }
+    } catch (error: any) {
+      console.error(
+        'Failed to add skills to profile:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to add skills to profile. Please try again.');
+      throw error;
+    }
+  };
+
+  // Function to save domains to backend
+  const saveDomainsToProfile = async (domainsToSave: any[]) => {
+    const completeDomainsArray = domainsToSave.map((domain: any) => ({
+      ...domain,
+      level: domain.level || '',
+      experience: domain.experience || '',
+      interviewInfo: domain.interviewInfo || '',
+      interviewerRating: domain.interviewerRating || 0,
+      interviewStatus: domain.interviewStatus || StatusEnum.PENDING,
+    }));
+
+    try {
+      const response = await axiosInstance.put('/freelancer/domain', {
+        domain: completeDomainsArray,
+      });
+
+      if (response.status === 200) {
+        notifySuccess('Domains added successfully to your profile.');
+        return response.data.data;
+      }
+    } catch (error: any) {
+      console.error(
+        'Failed to add domains to profile:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to add domains to profile. Please try again.');
+      throw error;
+    }
+  };
+
+  // Function to save project domains to backend
+  const saveProjectDomainsToProfile = async (projectDomainsToSave: any[]) => {
+    const completeProjectDomainsArray = projectDomainsToSave.map(
+      (projectDomain: any) => ({
+        ...projectDomain,
+        level: projectDomain.level || '',
+        experience: projectDomain.experience || '',
+        interviewInfo: projectDomain.interviewInfo || '',
+        interviewerRating: projectDomain.interviewerRating || 0,
+        interviewStatus: projectDomain.interviewStatus || StatusEnum.PENDING,
+      }),
+    );
+
+    try {
+      const response = await axiosInstance.put('/freelancer/project-domain', {
+        projectDomain: completeProjectDomainsArray,
+      });
+
+      if (response.status === 200) {
+        notifySuccess('Project domains added successfully to your profile.');
+        return response.data.data;
+      }
+    } catch (error: any) {
+      console.error(
+        'Failed to add project domains to profile:',
+        error.response?.data || error.message,
+      );
+      notifyError(
+        'Failed to add project domains to profile. Please try again.',
+      );
+      throw error;
+    }
+  };
+
   // New: add-by-value helpers for reusable component
-  const handleAddSkillByValue = (value: string) => {
+  const handleAddSkillByValue = async (value: string) => {
     addSkill(value, skills, setSkills);
     if (value && !currSkills.some((skill: any) => skill.name === value)) {
-      setCurrSkills([
-        ...currSkills,
-        {
-          name: value,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
-      setLastAddedItems((prev) => ({
-        ...prev,
-        skills: [...prev.skills, { name: value }],
-      }));
+      const matchedSkill = skills.find(
+        (s: any) => s.name === value || s.label === value,
+      );
+      const newSkill = {
+        type_id: matchedSkill?._id || '',
+        name: value,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+        interviewPermission: InterviewPermission.NOT_VERIFIED,
+      };
+
+      // Save to backend
+      try {
+        // Send ONLY the new skill, not the whole list
+        const savedProfile = await saveSkillsToProfile([newSkill]);
+        // Update state with the skill that includes the ID from backend
+        if (savedProfile && savedProfile.skills) {
+          const skillWithIds = savedProfile.skills;
+          setCurrSkills((prev: any) => [...prev, ...skillWithIds]);
+        }
+      } catch (error) {
+        // Revert local state if API call fails
+        setCurrSkills(currSkills);
+      }
     }
   };
 
-  const handleAddDomainByValue = (value: string) => {
+  const handleAddDomainByValue = async (value: string) => {
     addDomain(value, domains, setDomains);
     if (value && !currDomains.some((domain: any) => domain.name === value)) {
-      setCurrDomains([
-        ...currDomains,
-        {
-          name: value,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
-      setLastAddedItems((prev) => ({
-        ...prev,
-        domains: [...prev.domains, { name: value }],
-      }));
+      const matchedDomain = domains.find(
+        (d: any) => d.name === value || d.label === value,
+      );
+      const newDomain = {
+        type_id: matchedDomain?._id || '',
+        _id: '',
+        name: value,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+      };
+
+      // Save to backend
+      try {
+        const savedProfile = await saveDomainsToProfile([newDomain]);
+        // Update state with the domains that include IDs from backend
+        if (savedProfile && savedProfile.domain) {
+          const domainWithIds = savedProfile.domain;
+          setCurrDomains((prev: any) => [...prev, ...domainWithIds]);
+        }
+      } catch (error) {
+        // Revert local state if API call fails
+        setCurrDomains(currDomains);
+      }
     }
   };
 
-  const handleAddProjectDomainByValue = (value: string) => {
+  const handleAddProjectDomainByValue = async (value: string) => {
     addProjectDomain(value, projectDomains, setProjectDomains);
     if (
       value &&
@@ -313,41 +488,176 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         (projectDomain: any) => projectDomain.name === value,
       )
     ) {
-      setCurrProjectDomains([
-        ...currProjectDomains,
-        {
-          name: value,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
+      const newProjectDomain = {
+        name: value,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+      };
+
+      // Update local state immediately
+      const updatedProjectDomains = [...currProjectDomains, newProjectDomain];
+      setCurrProjectDomains(updatedProjectDomains);
       setLastAddedItems((prev) => ({
         ...prev,
         projectsDomains: [...prev.projectsDomains, { name: value }],
       }));
+
+      // Save to backend
+      try {
+        const savedProfile = await saveProjectDomainsToProfile([
+          newProjectDomain,
+        ]);
+        // Update state with the project domain that includes the ID from backend
+        if (savedProfile && savedProfile.projectDomain) {
+          const projectDomainWithId = savedProfile.projectDomain.find(
+            (pd: any) => pd.name === value,
+          );
+          if (projectDomainWithId) {
+            setCurrProjectDomains((prev: any) =>
+              prev.map((pd: any) =>
+                pd.name === value ? projectDomainWithId : pd,
+              ),
+            );
+          }
+        }
+      } catch (error) {
+        // Revert local state if API call fails
+        setCurrProjectDomains(currProjectDomains);
+        setLastAddedItems((prev) => ({
+          ...prev,
+          projectsDomains: prev.projectsDomains.filter(
+            (pd) => pd.name !== value,
+          ),
+        }));
+      }
     }
   };
 
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(
-      currSkills.filter((skill: any) => skill.name !== skillToDelete),
+  const handleDeleteSkill = async (skillToDeleteName: string) => {
+    // 1. Find the full skill object from the state to get its ID
+    const skillObject = currSkills.find(
+      (skill: any) => skill.name === skillToDeleteName,
     );
+
+    if (!skillObject) {
+      console.error('Skill not found in local state. Cannot delete.');
+      notifyError('Error: Skill not found.');
+      return;
+    }
+
+    // 2. Get the ID (Change '_id' to 'id' if that's what your DB uses)
+    const skillId = skillObject._id;
+
+    if (!skillId) {
+      console.error('Skill has no ID. Cannot delete.');
+      notifyError('Error: Skill has no ID.');
+      return;
+    }
+
+    // 3. Save original state for revert
+    const originalSkills = [...currSkills];
+
+    // 4. Update local state optimistically
+    const updatedSkillsList = currSkills.filter(
+      (skill: any) => skill.name !== skillToDeleteName,
+    );
+    setCurrSkills(updatedSkillsList);
+
+    // 5. Call the new DELETE endpoint
+    try {
+      await axiosInstance.delete(`/freelancer/skill/${skillId}`);
+      notifySuccess('Skill removed successfully.');
+    } catch (error: any) {
+      console.error(
+        'Failed to remove skill:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to remove skill. Please try again.');
+      // 6. Revert local state on failure
+      setCurrSkills(originalSkills);
+    }
   };
 
-  const handleDeleteDomain = (domainToDelete: string) => {
-    setCurrDomains(
-      currDomains.filter((domain: any) => domain.name !== domainToDelete),
+  const handleDeleteDomain = async (domainToDelete: string) => {
+    const domainObject = currDomains.find(
+      (domain: any) => domain.name === domainToDelete,
     );
+
+    if (!domainObject) {
+      console.error('Domain not found in local state. Cannot delete.');
+      notifyError('Error: Domain not found.');
+      return;
+    }
+
+    const domainId = domainObject._id;
+
+    if (!domainId) {
+      console.error('Domain has no ID. Cannot delete.');
+      notifyError('Error: Domain has no ID.');
+      return;
+    }
+
+    const originalDomains = [...currDomains];
+
+    const updatedDomainsList = currDomains.filter(
+      (domain: any) => domain.name !== domainToDelete,
+    );
+    setCurrDomains(updatedDomainsList);
+
+    try {
+      await axiosInstance.delete(`/freelancer/domain/${domainId}`);
+      notifySuccess('Domain removed successfully.');
+    } catch (error: any) {
+      console.error(
+        'Failed to remove domain:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to remove domain. Please try again.');
+      setCurrDomains(originalDomains);
+    }
   };
-  const handleDeleteProjDomain = (projectDomainToDelete: string) => {
-    setCurrProjectDomains(
-      currProjectDomains.filter(
-        (projectDomain: any) => projectDomain.name !== projectDomainToDelete,
-      ),
+  const handleDeleteProjDomain = async (projectDomainToDelete: string) => {
+    const projectDomainObject = currProjectDomains.find(
+      (projectDomain: any) => projectDomain.name === projectDomainToDelete,
     );
+
+    if (!projectDomainObject) {
+      console.error('Project Domain not found in local state. Cannot delete.');
+      notifyError('Error: Project Domain not found.');
+      return;
+    }
+
+    const projectDomainId = projectDomainObject._id;
+
+    if (!projectDomainId) {
+      console.error('Project Domain has no ID. Cannot delete.');
+      notifyError('Error: Project Domain has no ID.');
+      return;
+    }
+
+    const originalProjectDomains = [...currProjectDomains];
+
+    const updatedProjectDomainsList = currProjectDomains.filter(
+      (projectDomain: any) => projectDomain.name !== projectDomainToDelete,
+    );
+    setCurrProjectDomains(updatedProjectDomainsList);
+
+    try {
+      await axiosInstance.delete(
+        `/freelancer/project-domain/${projectDomainId}`,
+      );
+      notifySuccess('Project Domain removed successfully.');
+    } catch (error: any) {
+      console.error(
+        'Failed to remove project domain:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to remove project domain. Please try again.');
+      setCurrProjectDomains(originalProjectDomains);
+    }
   };
 
   useEffect(() => {
@@ -360,14 +670,47 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
 
+        const tmpSkills: any[] = [],
+          tmpDomains: any[] = [];
+        userResponse.data.data.attributes.forEach((attr: any) => {
+          if (attr.type === 'SKILL') {
+            tmpSkills.push(attr);
+          } else if (attr.type === 'DOMAIN') {
+            tmpDomains.push(attr);
+          }
+        });
         // Set options for dropdowns
         setSkills(skillsResponse.data.data);
         setDomains(domainsResponse.data.data);
         setProjectDomains(projectDomainResponse.data.data);
 
-        setCurrSkills(userResponse.data.data.skills);
-        setCurrDomains(userResponse.data.data.domain);
-        setCurrProjectDomains(userResponse.data.data.projectDomain);
+        setCurrSkills(tmpSkills);
+        // Transform domains so that type_id holds the backend domain _id
+        // and name holds the human-readable label when available
+        const transformedDomains = tmpDomains.map((domain: any) => {
+          const matchingDomain = domainsResponse.data.data.find(
+            (d: any) => d._id === domain.type_id || d.label === domain.name,
+          );
+          return {
+            ...domain,
+            type_id: matchingDomain?._id ?? domain.type_id ?? domain.name,
+            name: matchingDomain?.label ?? domain.name,
+          };
+        });
+        setCurrDomains(transformedDomains);
+        // Transform project domains to ensure proper names
+        const transformedProjectDomains = (
+          userResponse.data.data.projectDomain || []
+        ).map((pd: any) => {
+          const matchingProjectDomain = projectDomainResponse.data.data.find(
+            (p: any) => p._id === pd.type_id || p.label === pd.name,
+          );
+          return {
+            ...pd,
+            name: matchingProjectDomain?.label ?? pd.name,
+          };
+        });
+        setCurrProjectDomains(transformedProjectDomains);
 
         // Ensure cover letter is treated as text, not URL
         const coverLetterValue = userResponse.data.data.coverLetter;
@@ -423,13 +766,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         interviewInfo: skill.interviewInfo || '',
         interviewerRating: skill.interviewerRating || 0,
         interviewStatus: skill.interviewStatus || 'PENDING',
+        interviewPermission:
+          skill.interviewPermission ?? InterviewPermission.NOT_VERIFIED,
       }));
 
       await axiosInstance.put(`/freelancer`, {
         ...restData,
         coverLetter: data.coverLetter,
-        skills: updatedSkills,
-        domain: currDomains,
         projectDomain: currProjectDomains,
         description: data.description,
       });
@@ -447,7 +790,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         description: data.description,
         skills: updatedSkills,
         domain: currDomains,
-        projectDomains: currProjectDomains,
+        projectDomain: currProjectDomains,
       });
       notifySuccess(
         'Your profile has been successfully updated.',
@@ -610,6 +953,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onRemove={handleDeleteSkill}
                   selectPlaceholder="Select skill"
                   searchPlaceholder="Search skills"
+                  showOtherOption
+                  hideRemoveButtonInSettings={true}
+                  onOtherClick={() => {
+                    setDialogType('skill');
+                    setIsDialogOpen(true);
+                  }}
                 />
               </div>
               <div className="col-span-1">
@@ -619,8 +968,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   selected={currDomains}
                   onAdd={handleAddDomainByValue}
                   onRemove={handleDeleteDomain}
+                  optionLabelKey="label"
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains"
+                  showOtherOption
+                  hideRemoveButtonInSettings={true}
+                  onOtherClick={() => {
+                    setDialogType('domain');
+                    setIsDialogOpen(true);
+                  }}
                 />
               </div>
               <div className="col-span-1">
@@ -630,8 +986,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   selected={currProjectDomains}
                   onAdd={handleAddProjectDomainByValue}
                   onRemove={handleDeleteProjDomain}
+                  optionLabelKey="label"
                   selectPlaceholder="Select project domain"
                   searchPlaceholder="Search project domains"
+                  showOtherOption
+                  onOtherClick={() => {
+                    setDialogType('projectDomain');
+                    setIsDialogOpen(true);
+                  }}
                 />
               </div>
             </div>

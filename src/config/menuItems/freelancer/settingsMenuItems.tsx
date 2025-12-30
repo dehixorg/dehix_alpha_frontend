@@ -1,11 +1,12 @@
 import {
   FileText,
   FileWarning,
-  HomeIcon,
   UserCog,
   ShieldCheck,
   User,
   UserCheck,
+  Award,
+  ArrowLeft,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -27,8 +28,8 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/dashboard/freelancer',
-    icon: <HomeIcon className="h-5 w-5" />,
-    label: 'Home',
+    icon: <ArrowLeft className="h-5 w-5" />,
+    label: 'Back',
   },
   {
     href: '/freelancer/settings/personal-info',
@@ -46,6 +47,11 @@ export const menuItemsTop: MenuItem[] = [
     label: 'KYC',
   },
   {
+    href: '/freelancer/settings/levels-badges',
+    icon: <Award className="h-5 w-5" />,
+    label: 'Levels & Badges',
+  },
+  {
     href: '/freelancer/settings/profiles',
     icon: <UserCheck className="h-5 w-5" />,
     label: 'Profiles',
@@ -56,8 +62,8 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Resume',
   },
   {
-    href: '/reports', // Link to your new Reports page
-    icon: <FileWarning className="h-5 w-5" />, // You can change icon
+    href: '/reports',
+    icon: <FileWarning className="h-5 w-5" />,
     label: 'Reports',
   },
 ];

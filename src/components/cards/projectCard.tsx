@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MoreVertical,
   ShieldCheck,
@@ -9,6 +9,7 @@ import {
   Flag,
   Tag,
   Award,
+  Bell,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
@@ -28,6 +29,7 @@ import { Badge } from '@/components/ui/badge';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
   Dialog,
@@ -82,10 +84,69 @@ export function ProjectCard({
   ...props
 }: ProjectCardProps) {
   const [openReport, setOpenReport] = useState(false);
+  const [pendingTaskCount, setPendingTaskCount] = useState(0);
   const lastDialogCloseAt = React.useRef<number>(0);
   const pathname = usePathname();
   const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
+
+  // Fetch pending task count for freelancers
+  useEffect(() => {
+    const fetchPendingTasks = async () => {
+      if (user?.type === 'freelancer' && user?.uid && project._id) {
+        try {
+          const response = await axiosInstance.get('/milestones', {
+            params: { projectId: project._id },
+          });
+
+          const milestones = response.data?.data || [];
+          let count = 0;
+
+          // Count pending tasks for this freelancer
+          for (const milestone of milestones) {
+            if (!milestone.stories) continue;
+
+            for (const story of milestone.stories) {
+              if (!story.tasks) continue;
+
+              for (const task of story.tasks) {
+                // Check all freelancer entries (task can be assigned to multiple freelancers)
+                if (task.freelancers && Array.isArray(task.freelancers)) {
+                  for (const freelancerData of task.freelancers) {
+                    if (
+                      freelancerData &&
+                      freelancerData.freelancerId === user.uid &&
+                      !freelancerData.acceptanceFreelancer &&
+                      !freelancerData.rejectionFreelancer
+                    ) {
+                      count++;
+                      break; // Count each task only once per freelancer
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          setPendingTaskCount(count);
+        } catch (error) {
+          console.error('Error fetching pending tasks:', error);
+        }
+      }
+    };
+
+    fetchPendingTasks();
+
+    // Listen for task assignment updates
+    const handleTaskUpdate = () => {
+      fetchPendingTasks();
+    };
+
+    window.addEventListener('taskAssignmentUpdated', handleTaskUpdate);
+    return () => {
+      window.removeEventListener('taskAssignmentUpdated', handleTaskUpdate);
+    };
+  }, [project._id, user?.uid, user?.type]);
 
   const reportType = getReportTypeFromPath(pathname);
   const reportData = {
@@ -218,6 +279,22 @@ export function ProjectCard({
                       <ShieldCheck className="h-5 w-5 text-green-400" />
                     </TooltipTrigger>
                     <TooltipContent side="top">Verified</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {user?.type === 'freelancer' && pendingTaskCount > 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge className="bg-amber-500 hover:bg-amber-600 text-white animate-pulse flex items-center gap-1">
+                        <Bell className="h-3 w-3" />
+                        {pendingTaskCount} pending task
+                        {pendingTaskCount > 1 ? 's' : ''}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      You have pending task assignments that need your response
+                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}

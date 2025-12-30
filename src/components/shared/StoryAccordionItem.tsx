@@ -1,45 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Copy,
-  ChevronsUpDown,
-  Plus,
-  X,
-  Check,
-  Info,
-  FileText,
-  Link as LinkIcon,
-} from 'lucide-react';
-import Image from 'next/image';
+import { Plus, Info, FileText } from 'lucide-react';
+import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '../ui/carousel';
-// removed hover-card for a more minimal URLs UI
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from '../ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../ui/table';
 
-import TaskDropdown from './TaskDropdown';
-import FreelancerTaskStatus from './FreelancerTaskStatus';
+import TaskDetailsDialog from './TaskDetailsDialog';
+import TaskCard from './TaskCard';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
@@ -47,39 +14,16 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion';
-import { Separator } from '@/components/ui/separator';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { getStatusBadge } from '@/utils/statusBadge';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import { Task } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
-
-interface TaskDetailsDialogProps {
-  task: Task | null;
-  open: boolean;
-  onClose: () => void;
-  isFreelancer: boolean;
-  onApproveUpdatePermission?: (taskId: string) => Promise<boolean>;
-  onRejectUpdatePermission?: (taskId: string) => Promise<boolean>;
-}
+import { ScrollBar } from '@/components/ui/scroll-area';
 
 interface StoryAccordionItemProps {
   milestoneId: string | undefined;
@@ -102,12 +46,69 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   freelancerId,
   fetchMilestones,
 }) => {
+  const HorizontalScrollArea: React.FC<{
+    className?: string;
+    children: React.ReactNode;
+  }> = ({ className, children }) => (
+    <ScrollAreaPrimitive.Root className={className}>
+      <ScrollAreaPrimitive.Viewport className="w-full rounded-[inherit]">
+        {children}
+      </ScrollAreaPrimitive.Viewport>
+      <ScrollBar orientation="horizontal" />
+      <ScrollAreaPrimitive.Corner />
+    </ScrollAreaPrimitive.Root>
+  );
+
   const { text: projectStatus } = getStatusBadge(story.storyStatus);
+  const taskCount = story?.tasks?.length ?? 0;
+  const normalizedTaskStatuses: string[] = (story?.tasks ?? [])
+    .map((task: any) => (task?.taskStatus ?? '').toString().toUpperCase())
+    .filter((status: string) => Boolean(status));
 
-  const taskCount = story?.tasks?.length || 0;
+  const taskStatusSet: Set<string> = new Set(normalizedTaskStatuses);
 
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState('');
+  const taskColumns: Array<{ key: string; title: string }> = [
+    { key: 'NOT_STARTED', title: 'Not started' },
+    { key: 'ONGOING', title: 'Ongoing' },
+    { key: 'COMPLETED', title: 'Completed' },
+    ...Array.from(taskStatusSet)
+      .filter(
+        (status: string) =>
+          status !== 'NOT_STARTED' &&
+          status !== 'ONGOING' &&
+          status !== 'COMPLETED',
+      )
+      .map((status: string) => ({
+        key: status,
+        title: status.replaceAll('_', ' ').toLowerCase(),
+      })),
+  ];
+
+  const getKanbanAccentClasses = (statusKey: string) => {
+    switch (statusKey) {
+      case 'NOT_STARTED':
+        return {
+          border: 'border-amber-500/40',
+          headerBg: 'bg-amber-50/70 dark:bg-amber-900/10',
+        };
+      case 'ONGOING':
+        return {
+          border: 'border-blue-500/40',
+          headerBg: 'bg-blue-50/70 dark:bg-blue-900/10',
+        };
+      case 'COMPLETED':
+        return {
+          border: 'border-emerald-500/40',
+          headerBg: 'bg-emerald-50/70 dark:bg-emerald-900/10',
+        };
+      default:
+        return {
+          border: 'border-violet-500/40',
+          headerBg: 'bg-violet-50/70 dark:bg-violet-900/10',
+        };
+    }
+  };
+
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [actedUponTasks, setActedUponTasks] = useState<Set<string>>(new Set());
 
@@ -153,12 +154,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       freelancerData.acceptanceFreelancer ||
       freelancerData.rejectionFreelancer
     ) {
-      // Add to actedUponTasks to ensure consistency
-      setActedUponTasks((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(task._id);
-        return newSet;
-      });
       return false;
     }
     return true;
@@ -173,7 +168,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
         {
           acceptanceFreelancer: true,
           rejectionFreelancer: false,
@@ -191,6 +186,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
 
       notifySuccess('Task accepted!');
       fetchMilestones(); // Refresh milestones
+      window.dispatchEvent(new CustomEvent('taskAssignmentUpdated'));
     } catch (error) {
       console.error('Error accepting task:', error);
       notifyError('Failed to accept task.', 'Error');
@@ -212,7 +208,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
         {
           acceptanceFreelancer: false,
           rejectionFreelancer: true,
@@ -230,6 +226,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
 
       notifySuccess('Task rejected and update requests removed!');
       fetchMilestones(); // Refresh milestones
+      window.dispatchEvent(new CustomEvent('taskAssignmentUpdated'));
     } catch (error) {
       console.error('Error rejecting task:', error);
       notifyError('Failed to reject task.', 'Error');
@@ -268,7 +265,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionFreelancer: true,
           updatePermissionBusiness: true,
           rejectionFreelancer: false,
-          acceptanceBusiness: true,
         };
       }
 
@@ -312,7 +308,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionFreelancer: false,
           updatePermissionBusiness: false,
           rejectionFreelancer: false,
-          acceptanceBusiness: false,
         };
       }
 
@@ -330,20 +325,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     }
   };
 
-  const handleCopy = (url: string) => {
-    navigator.clipboard.writeText(url);
-    notifySuccess('URL copied!!');
-    setOpen(false);
-    setValue('');
-  };
-
-  const truncateDescription = (text: string, maxLength = 50) => {
-    if (text?.length > maxLength) {
-      return text.slice(0, maxLength) + '...';
-    }
-    return text;
-  };
-
   return (
     <AccordionItem
       key={story._id}
@@ -351,9 +332,9 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       className={`${idx === milestoneStoriesLength - 1 ? 'border-b-0' : 'border-b'} transition-colors`}
     >
       <AccordionTrigger
-        className={`flex hover:no-underline items-center px-2 md:px-4 w-full`}
+        className={`flex hover:no-underline items-center px-3 w-full`}
       >
-        <div className="flex justify-between items-center w-full px-3 md:px-5 py-2 md:py-3 rounded-xl transition-colors">
+        <div className="flex justify-between items-center w-full px-2 rounded-xl transition-colors">
           <div className="flex items-center gap-2 min-w-0">
             <h3
               className="text-base md:text-lg font-semibold truncate"
@@ -389,71 +370,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               </PopoverContent>
             </Popover>
           </div>
-          <span className="text-sm flex items-center gap-3">
-            {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
-              ? !story?.tasks[0]?.freelancers[0]?.acceptanceFreelancer &&
-                story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
-                !story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
-                story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-yellow-500 rounded-full flex w-2 h-2 bg-yellow-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Update requested</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )
-              : !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceBusiness &&
-                story?.tasks?.[0]?.freelancers?.[0]
-                  ?.updatePermissionFreelancer &&
-                !story?.tasks?.[0]?.freelancers?.[0]
-                  ?.updatePermissionBusiness &&
-                story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-yellow-500 rounded-full flex w-2 h-2 bg-yellow-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Update requested</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-            {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
-              ? story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
-                story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
-                !story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-green-500 rounded-full flex w-2 h-2 bg-green-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Request approved</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )
-              : story?.tasks?.[0]?.freelancers?.[0]
-                  ?.updatePermissionFreelancer &&
-                story?.tasks?.[0]?.freelancers?.[0]?.updatePermissionBusiness &&
-                !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-green-500 rounded-full flex w-2 h-2 bg-green-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Request approved</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-          </span>
+
           <Badge
             className={`${profileTypeOutlineClasses(projectStatus)} hidden md:flex rounded-full`}
           >
@@ -461,376 +378,143 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           </Badge>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="w-full px-4 py-4 sm:px-6 sm:py-4 md:px-8 md:py-6 lg:px-10 lg:py-8">
-        <div className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border border-border">
-          <div className="px-6 py-4 space-y-4">
-            <div className="space-y-1">
-              <Badge
-                className={`${profileTypeOutlineClasses(projectStatus)} block md:hidden text-xs md:text-sm rounded-full`}
-                style={{ width: 'fit-content' }}
-              >
-                {projectStatus}
-              </Badge>
-              <div className="space-y-4 hidden md:flex justify-start items-center gap-4">
-                <h4 className="text-lg md:text-xl font-semibold mt-2">
-                  Important URLs:
-                </h4>
-                <Separator orientation="vertical" className="h-8" />
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={open}
-                      className="w-[300px] justify-between"
-                    >
-                      {truncateDescription(value, 23) ||
-                        'Select or search URL...'}
-                      <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[300px] p-0">
-                    <Command>
-                      <CommandInput
-                        placeholder="Search URL..."
-                        className="h-9"
-                      />
-                      <CommandList>
-                        <CommandEmpty>No URL found.</CommandEmpty>
-                        <CommandGroup>
-                          {story.importantUrls.map(
-                            (url: { urlName: string; url: string }) => (
-                              <CommandItem
-                                key={url.urlName}
-                                value={url.urlName}
-                                className="cursor-pointer"
-                                onSelect={() => {
-                                  setValue(url.urlName);
-                                  setOpen(false);
-                                }}
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <LinkIcon className="w-4 h-4 opacity-70" />
-                                  <span className="truncate">
-                                    {truncateDescription(url.urlName, 28)}
-                                  </span>
-                                </div>
-                                <div className="ml-auto flex items-center gap-1">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="cursor-pointer"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            window.open(
-                                              url.url,
-                                              '_blank',
-                                              'noopener,noreferrer',
-                                            );
-                                          }}
-                                          aria-label="Open link"
-                                        >
-                                          <FileText className="w-4 h-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Open link</TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="cursor-pointer"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleCopy(url.url);
-                                          }}
-                                          aria-label="Copy URL"
-                                        >
-                                          <Copy className="w-4 h-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Copy URL</TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              </CommandItem>
-                            ),
-                          )}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            <div className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border border-border">
-              {story?.tasks?.length > 0 ? (
-                <div className="bg-transparent">
-                  <div className="flex justify-between items-center px-3 mt-4">
-                    <div className="flex items-center gap-3">
-                      <h4 className="text-lg md:text-xl font-semibold">
-                        Tasks
-                      </h4>
-                      <Badge variant="secondary" className="rounded-full">
-                        {taskCount}
-                      </Badge>
-                    </div>
-                    {!isFreelancer && (
-                      <Button
-                        className="md:px-3 px-2 py-0 md:py-1 text-sm sm:text-base rounded-full"
-                        onClick={() => setIsTaskDialogOpen(true)}
-                      >
-                        <Plus size={15} /> Add Task
-                      </Button>
-                    )}
-                  </div>
-                  <Separator className="my-3" />
-                  <Carousel className="w-[85vw] md:w-full relative mt-4">
-                    <CarouselContent className="flex flex-nowrap gap-2 md:gap-0">
-                      {story.tasks.map((task: any) => {
-                        const { className: taskBadgeStyle } = getStatusBadge(
-                          task.taskStatus,
-                        );
 
-                        return (
-                          <CarouselItem
-                            key={task._id}
-                            className="min-w-0 mt-2 w-full md:basis-1/2 sm:w-full md:w-1/2 lg:w-1/3"
-                          >
-                            <div className=" p-0 md:p-2 mt-5">
-                              <div
-                                className="w-full cursor-pointer border relative rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card text-card-foreground"
-                                onClick={() => setSelectedTask(task)}
-                              >
-                                <div className="p-2 md:p-4">
-                                  <div className="flex justify-between items-center">
-                                    <div className="flex items-center">
-                                      <h4 className="text-sm md:text-lg font-medium">
-                                        {truncateDescription(task.title, 20)}
-                                      </h4>
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="p-1 h-auto ml-2"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedTask(task);
-                                              }}
-                                              aria-label="View task details"
-                                            >
-                                              <Info className="w-4 h-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            View task details
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </div>
-                                    <Badge
-                                      className={`${taskBadgeStyle} px-3 py-1 text-xs md:text-sm rounded-full`}
-                                    >
-                                      {task.taskStatus}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <div onClick={(e) => e.stopPropagation()}>
-                                  <TaskDropdown
-                                    fetchMilestones={fetchMilestones}
-                                    milestoneId={milestoneId}
-                                    storyId={story._id}
-                                    task={task}
-                                  />
-                                  {isFreelancer && (
-                                    <div
-                                      className="flex flex-col gap-2 sm:pb-2 mt-2 px-4"
-                                      style={{ minHeight: '2.5rem' }}
-                                    >
-                                      {/* Show accept/reject buttons only for tasks that haven't been acted upon */}
-                                      {shouldShowAcceptRejectButtons(task) && (
-                                        <div className="flex justify-between items-center">
-                                          <TooltipProvider>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Button
-                                                  onClick={() =>
-                                                    handleAcceptTask(task._id)
-                                                  }
-                                                  className="w-20 md:w-16 h-7"
-                                                  aria-label="Accept task"
-                                                >
-                                                  Accept
-                                                </Button>
-                                              </TooltipTrigger>
-                                              <TooltipContent>
-                                                Accept task
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                          <div className="flex-1 flex justify-center">
-                                            <TooltipProvider>
-                                              <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  <Button
-                                                    onClick={() =>
-                                                      handleRejectTask(task._id)
-                                                    }
-                                                    className="w-20 md:w-16 h-7"
-                                                    aria-label="Reject task"
-                                                  >
-                                                    Reject
-                                                  </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                  Reject task
-                                                </TooltipContent>
-                                              </Tooltip>
-                                            </TooltipProvider>
-                                          </div>
-                                        </div>
-                                      )}
-                                      {/* Approve/Reject Update Permission buttons for freelancers */}
-                                      {!task.freelancers?.[0]
-                                        ?.updatePermissionFreelancer &&
-                                        task.freelancers?.[0]
-                                          ?.updatePermissionBusiness &&
-                                        !task.freelancers?.[0]
-                                          ?.acceptanceFreelancer && (
-                                          <div className="flex flex-col gap-2 mt-2">
-                                            <Button
-                                              onClick={() =>
-                                                handleApproveUpdatePermission(
-                                                  task._id,
-                                                )
-                                              }
-                                              className="w-full h-7 bg-yellow-500 hover:bg-yellow-600 text-white"
-                                            >
-                                              Approve Update Permission
-                                            </Button>
-                                            <Button
-                                              onClick={() =>
-                                                handleRejectUpdatePermission(
-                                                  task._id,
-                                                )
-                                              }
-                                              className="w-full h-7 bg-red-500 hover:bg-red-600 text-white"
-                                            >
-                                              Reject Update Permission
-                                            </Button>
-                                          </div>
-                                        )}
-                                    </div>
-                                  )}
-                                  {!isFreelancer && task.freelancers?.[0] && (
-                                    <div className="mt-2 mr-7 mb-1">
-                                      <FreelancerTaskStatus task={task} />
-                                      {/* Approve/Reject Update Permission buttons for business */}
-                                      {!task.freelancers?.[0]
-                                        ?.updatePermissionBusiness &&
-                                        task.freelancers?.[0]
-                                          ?.updatePermissionFreelancer &&
-                                        !task.freelancers?.[0]
-                                          ?.acceptanceBusiness && (
-                                          <div className="flex flex-col gap-2 mt-2">
-                                            <Button
-                                              onClick={() =>
-                                                handleApproveUpdatePermission(
-                                                  task._id,
-                                                )
-                                              }
-                                              className="w-full h-7 bg-gray-500 hover:bg-green-500 text-white"
-                                            >
-                                              Approve Update Permission
-                                            </Button>
-                                            <Button
-                                              onClick={() =>
-                                                handleRejectUpdatePermission(
-                                                  task._id,
-                                                )
-                                              }
-                                              className="w-full h-7 bg-gray-500 hover:bg-red-600 text-white"
-                                            >
-                                              Reject Update Permission
-                                            </Button>
-                                          </div>
-                                        )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </CarouselItem>
-                        );
-                      })}
-                    </CarouselContent>
+      <AccordionContent className="w-full px-4">
+        {story?.tasks?.length > 0 ? (
+          <HorizontalScrollArea className="relative -mx-2 overflow-hidden">
+            <div className="flex gap-3 min-w-max px-2 pb-1">
+              {taskColumns.map((column) => {
+                const tasksInColumn = (story?.tasks ?? []).filter(
+                  (task: any) =>
+                    (task?.taskStatus ?? '').toString().toUpperCase() ===
+                    column.key,
+                );
+                const accent = getKanbanAccentClasses(column.key);
+
+                return (
+                  <div
+                    key={column.key}
+                    className="w-[280px] shrink-0 sm:w-[320px] lg:w-[340px]"
+                  >
                     <div
-                      className={`${story?.tasks?.length > (typeof window !== 'undefined' && window.innerWidth > 768 ? 2 : 1) ? 'block' : 'hidden'}`}
+                      className={`rounded-xl border border-border/60 pb-1 ${accent.border} ${accent.headerBg}`}
                     >
-                      {story?.tasks?.length >
-                        (typeof window !== 'undefined' &&
-                        window.innerWidth >= 768
-                          ? 2
-                          : 1) && (
-                        <>
-                          <CarouselPrevious className="absolute top-1 md:top-2 left-2 transform -translate-y-1/2 shadow rounded-full p-2" />
-                          <CarouselNext className="absolute top-1 md:top-2  right-2 transform -translate-y-1/2 shadow rounded-full p-2" />
-                        </>
-                      )}
-                    </div>
-                  </Carousel>
-                </div>
-              ) : (
-                <div className="mt-8 p-6 rounded-xl border bg-muted/20 text-center">
-                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  {!isFreelancer ? (
-                    <>
-                      <h4 className="text-base md:text-lg font-semibold">
-                        No tasks yet
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        This “{story.title}” currently has no tasks. Create
-                        tasks to track progress.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h4 className="text-base md:text-lg font-semibold">
-                        No tasks assigned
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        This “{story.title}” currently has no tasks assigned.
-                        Please check back later.
-                      </p>
-                    </>
-                  )}
-                  {!isFreelancer && (
-                    <div className="mt-4">
-                      <Button
-                        variant="secondary"
-                        className="px-3 py-1.5 rounded-full"
-                        onClick={() => setIsTaskDialogOpen(true)}
+                      <div
+                        className={`flex items-center justify-between gap-2 px-3 py-2`}
                       >
-                        <Plus size={15} className="mr-1" /> Add Task
-                      </Button>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm truncate capitalize">
+                              {column.title.toUpperCase()}
+                            </h4>
+                            <Badge
+                              variant="secondary"
+                              className="rounded-full px-2 py-0.5 text-xs"
+                            >
+                              {tasksInColumn.length}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="px-1 pb-2">
+                        {tasksInColumn.length > 0 ? (
+                          tasksInColumn.map((task: any) => {
+                            const { className: taskBadgeStyle } =
+                              getStatusBadge(task.taskStatus);
+
+                            return (
+                              <TaskCard
+                                key={task._id}
+                                task={task}
+                                isFreelancer={isFreelancer}
+                                onTaskClick={(t) => setSelectedTask(t)}
+                                onAcceptTask={handleAcceptTask}
+                                onRejectTask={handleRejectTask}
+                                onApproveUpdatePermission={
+                                  handleApproveUpdatePermission
+                                }
+                                onRejectUpdatePermission={
+                                  handleRejectUpdatePermission
+                                }
+                                shouldShowAcceptRejectButtons={
+                                  shouldShowAcceptRejectButtons
+                                }
+                                fetchMilestones={fetchMilestones}
+                                milestoneId={milestoneId}
+                                storyId={story._id}
+                                taskBadgeStyle={taskBadgeStyle}
+                              />
+                            );
+                          })
+                        ) : (
+                          <div className="px-3 pb-2 text-xs text-muted-foreground">
+                            No tasks
+                          </div>
+                        )}
+
+                        {!isFreelancer && (
+                          <div className="px-2 pt-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="w-full justify-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsTaskDialogOpen(true);
+                              }}
+                            >
+                              <Plus className="mr-1 h-4 w-4" /> Add
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                );
+              })}
             </div>
+          </HorizontalScrollArea>
+        ) : (
+          <div className="p-6 rounded-xl border bg-muted/20 text-center">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <FileText className="h-5 w-5" />
+            </div>
+            {!isFreelancer ? (
+              <>
+                <h4 className="text-base md:text-lg font-semibold">
+                  No tasks yet
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  Create tasks for “{story.title}” to track progress.
+                </p>
+              </>
+            ) : (
+              <>
+                <h4 className="text-base md:text-lg font-semibold">
+                  No tasks assigned
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  There are no tasks assigned to you in “{story.title}”.
+                </p>
+              </>
+            )}
+            {!isFreelancer && (
+              <div className="mt-4">
+                <Button
+                  variant="secondary"
+                  className="px-3 py-1.5 rounded-full"
+                  onClick={() => setIsTaskDialogOpen(true)}
+                >
+                  <Plus className="mr-1 h-4 w-4" /> Add Task
+                </Button>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </AccordionContent>
+
       <TaskDetailsDialog
         task={selectedTask}
         open={!!selectedTask}
@@ -847,200 +531,4 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   );
 };
 
-const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
-  task,
-  open,
-  onClose,
-  isFreelancer,
-  onApproveUpdatePermission,
-  onRejectUpdatePermission,
-}) => {
-  if (!task) return null;
-  const { className: dialogStatusBadgeStyle } = getStatusBadge(
-    (task as any).taskStatus,
-  );
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="rounded-lg mx-auto w-[86vw] sm:max-w-xl shadow-lg ">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            {task.title}
-          </DialogTitle>
-        </DialogHeader>
-        <DialogDescription className="text-sm mt-2 leading-relaxed">
-          {task.taskStatus !== 'SUMMARY' && (
-            <div className="mb-3">
-              <Badge
-                className={`${dialogStatusBadgeStyle} rounded-full px-3 py-1 w-fit`}
-              >
-                {task.taskStatus}
-              </Badge>
-            </div>
-          )}
-          {/* Description */}
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-start">
-            <div className="sm:col-span-3 order-2 sm:order-1">
-              <h4 className="font-semibold mb-1">Description</h4>
-              <p className="mb-3 whitespace-pre-wrap">
-                {task.summary || 'No description provided.'}
-              </p>
-            </div>
-            <div className="sm:col-span-2 order-1 sm:order-2">
-              <div className="relative mx-auto h-24 w-24 sm:h-28 sm:w-28">
-                <Image
-                  src="/banner1.svg"
-                  alt="Task details illustration"
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 640px) 96px, 112px"
-                  priority
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Key fields (hidden for story SUMMARY popover) */}
-          {task.taskStatus !== 'SUMMARY' && (
-            <>
-              <Separator className="my-3" />
-              <p className="mt-2 text-sm">
-                Task status:{' '}
-                <span className="font-medium ">{task?.taskStatus}</span>
-              </p>
-              <p className="mt-2 text-sm">
-                Freelancer Name:{' '}
-                <span className="font-medium ">
-                  {task?.freelancers[0]?.freelancerName || '—'}
-                </span>
-              </p>
-              <p className="mt-2 text-sm">
-                Payment Status:{' '}
-                <span className="font-medium ">
-                  {task?.freelancers[0]?.paymentStatus || '—'}
-                </span>
-              </p>
-            </>
-          )}
-
-          {/* Update task request - only visible to business and not for SUMMARY */}
-          {!isFreelancer && task.taskStatus !== 'SUMMARY' && (
-            <div className="mt-4">
-              <h4 className="font-semibold mb-2">Update Task Request</h4>
-              {task.freelancers.some(
-                (f: any) =>
-                  f.updatePermissionFreelancer && !f.updatePermissionBusiness,
-              ) ? (
-                <Table className="border border-border bg-card rounded-md">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="font-semibold text-left">
-                        Freelancer
-                      </TableHead>
-                      <TableHead className="font-semibold text-center">
-                        Action
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {task.freelancers
-                      .filter(
-                        (f: any) =>
-                          f.updatePermissionFreelancer &&
-                          !f.updatePermissionBusiness,
-                      )
-                      .map((freelancer: any, index: number) => (
-                        <TableRow
-                          key={index}
-                          className="border-b last:border-0"
-                        >
-                          <TableCell className="py-2 px-4">
-                            {freelancer.freelancerName || 'Freelancer'}
-                          </TableCell>
-                          <TableCell className="py-2 px-4">
-                            <div className="flex items-center justify-center gap-4">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      aria-label="Approve update permission"
-                                      onClick={async () => {
-                                        if (onApproveUpdatePermission) {
-                                          const ok =
-                                            await onApproveUpdatePermission(
-                                              task._id,
-                                            );
-                                          if (ok) {
-                                            (task as any).freelancers = (
-                                              task.freelancers || []
-                                            ).filter(
-                                              (f: any) =>
-                                                f._id !== freelancer._id,
-                                            );
-                                          }
-                                        }
-                                      }}
-                                    >
-                                      <Check className="text-green-500 w-5 h-5" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Approve</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      aria-label="Reject update permission"
-                                      onClick={async () => {
-                                        if (onRejectUpdatePermission) {
-                                          const ok =
-                                            await onRejectUpdatePermission(
-                                              task._id,
-                                            );
-                                          if (ok) {
-                                            (task as any).freelancers = (
-                                              task.freelancers || []
-                                            ).filter(
-                                              (f: any) =>
-                                                f._id !== freelancer._id,
-                                            );
-                                          }
-                                        }
-                                      }}
-                                    >
-                                      <X className="text-red-500 w-5 h-5" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Reject</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No update permission requests.
-                </p>
-              )}
-            </div>
-          )}
-        </DialogDescription>
-        <div className="flex justify-end mt-4">
-          <DialogClose asChild>
-            <Button variant="outline">Close</Button>
-          </DialogClose>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
 export default StoryAccordionItem;

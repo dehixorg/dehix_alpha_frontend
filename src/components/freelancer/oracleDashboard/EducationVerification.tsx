@@ -7,6 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
+import EmptyState from '@/components/shared/EmptyState';
 
 type FilterOption = 'all' | 'pending' | 'verified' | 'rejected';
 
@@ -150,16 +152,10 @@ const OracleDashboard = () => {
   }, [fetchData]);
 
   return (
-    <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
-      <div className="flex flex-col gap-2 p-6 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Education Verification
-        </h1>
-        <p className="text-muted-foreground">
-          Monitor and manage education verification requests.
-        </p>
-      </div>
-
+    <OracleVerificationLayout
+      title="Education Verification"
+      description="Monitor and manage education verification requests."
+    >
       <Tabs
         value={filter}
         onValueChange={(v) => handleFilterChange(v as FilterOption)}
@@ -253,7 +249,7 @@ const OracleDashboard = () => {
                     filteredData.map((data) => (
                       <EducationVerificationCard
                         key={data.document_id}
-                        _id={data.document_id}
+                        _id={data._id}
                         type="education"
                         location={data.universityName}
                         degree={data.degree}
@@ -276,10 +272,12 @@ const OracleDashboard = () => {
                       />
                     ))
                   ) : (
-                    <div className="text-center w-full col-span-full mt-10 py-10">
-                      <p className="text-sm text-muted-foreground">
-                        No education verification records found.
-                      </p>
+                    <div className="w-full col-span-full mt-10">
+                      <EmptyState
+                        title="No education verification records found"
+                        description="Education verification requests will show up here once they are submitted."
+                        className="py-10"
+                      />
                     </div>
                   )}
                 </div>
@@ -288,7 +286,7 @@ const OracleDashboard = () => {
           ),
         )}
       </Tabs>
-    </div>
+    </OracleVerificationLayout>
   );
 };
 

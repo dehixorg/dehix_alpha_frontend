@@ -116,38 +116,40 @@ const Header: React.FC<HeaderProps> = ({
       {/* Breadcrumb Navigation */}
       <Breadcrumb items={breadcrumbItems || []} />
 
-      <div className="relative ml-auto hidden md:block">
-        <label htmlFor="global-search-input" className="sr-only">
-          Search
-        </label>
-        <Input
-          id="global-search-input"
-          type="search"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          placeholder={searchPlaceholder || 'Search...'}
-          aria-label="Search"
-          className="w-[220px] lg:w-[336px]"
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
-        />
-        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 select-none text-xs text-muted-foreground">
-          /
-        </span>
+      <div className="ml-auto flex items-center gap-2">
+        <div className="relative hidden md:block">
+          <label htmlFor="global-search-input" className="sr-only">
+            Search
+          </label>
+          <Input
+            id="global-search-input"
+            type="search"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder={searchPlaceholder || 'Search...'}
+            aria-label="Search"
+            className="w-[220px] lg:w-[336px]"
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+          />
+          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 select-none text-xs text-muted-foreground">
+            /
+          </span>
+        </div>
+
+        {user?.uid ? (
+          <DisplayConnectsDialog userId={user.uid} connects={connects} />
+        ) : (
+          <Button variant="ghost" size="sm">
+            <Wallet className="h-4 w-4" />
+          </Button>
+        )}
+        {/* Notification Button */}
+        <NotificationButton />
+
+        {/* Profile Dropdown */}
+        <DropdownProfile setConnects={setConnects} />
       </div>
-
-      {user?.uid ? (
-        <DisplayConnectsDialog userId={user.uid} connects={connects} />
-      ) : (
-        <Button variant="ghost" size="sm">
-          <Wallet className="h-4 w-4" />
-        </Button>
-      )}
-      {/* Notification Button */}
-      <NotificationButton />
-
-      {/* Profile Dropdown */}
-      <DropdownProfile setConnects={setConnects} />
     </header>
   );
 };

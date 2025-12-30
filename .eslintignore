@@ -1,8 +1,28 @@
-node_modules/
+# Ignore build and generated files
 .next/
+node_modules/
 dist/
+build/
+coverage/
 public/
 src/components/ui/
-postcss.config.js
-*.config.js
-*.config.ts
+
+# Ignore all JavaScript files
+*.js
+**/*.js
+
+# Include TypeScript files in src
+!src/**/*.{ts,tsx}
+
+# Include other necessary files
+!*.md
+!.eslintrc.json
+!package.json
+!tsconfig.json
+!tsconfig.*.json
+*.min.js
+*.min.js.map
+*.d.ts
+__tests__/
+*.test.*
+*.spec.*

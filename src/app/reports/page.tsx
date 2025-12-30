@@ -47,16 +47,6 @@ export default function NewReportPage() {
     ? businessMenuItemsBottom
     : freelancerMenuItemsBottom;
 
-  const breadcrumbItems = isBusinessRole
-    ? [
-        { label: 'Business', link: '/dashboard/business' },
-        { label: 'Reports', link: '#' },
-      ]
-    : [
-        { label: 'Freelancer', link: '/dashboard/freelancer' },
-        { label: 'Reports', link: '#' },
-      ];
-
   const reportType = getReportTypeFromPath(pathname);
   const type = searchParams.get('type');
   const reportInfo: ReportInfo = {
@@ -100,7 +90,10 @@ export default function NewReportPage() {
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Reports"
-          breadcrumbItems={breadcrumbItems}
+          breadcrumbItems={[
+            { label: 'Settings', link: '#' },
+            { label: 'Reports', link: '#' },
+          ]}
         />
 
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
@@ -116,7 +109,7 @@ export default function NewReportPage() {
             </div>
 
             {/* Main Content */}
-            <div className="bg-muted-foreground/20 dark:bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+            <div className="card rounded-xl border shadow-sm overflow-hidden mb-6">
               <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
@@ -163,7 +156,7 @@ export default function NewReportPage() {
                       View and manage your previously generated reports
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-0">
                     <PastReportsTab key={refreshKey} />
                   </CardContent>
                 </TabsContent>
