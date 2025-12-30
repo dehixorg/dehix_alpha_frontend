@@ -15,9 +15,13 @@ import { Conversation } from './chatList';
 
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-
 
 // Local helpers to keep component self-contained
 function formatChatTimestamp(timestamp: string) {
@@ -101,12 +105,20 @@ function ChatMessageItem({
   messagesEndRef,
   onOpenProfileSidebar,
 }: Props) {
-  const formattedTimestamp = useMemo(() => formatChatTimestamp(message.timestamp), [message.timestamp]);
-  const readableTimestamp = useMemo(() => formatDistanceToNow(new Date(message.timestamp)) + ' ago', [message.timestamp]);
+  const formattedTimestamp = useMemo(
+    () => formatChatTimestamp(message.timestamp),
+    [message.timestamp],
+  );
+  const readableTimestamp = useMemo(
+    () => formatDistanceToNow(new Date(message.timestamp)) + ' ago',
+    [message.timestamp],
+  );
 
   const prev = messages[index - 1];
   const isNewDay = useMemo(() => {
-    return !prev || !isSameDay(new Date(prev.timestamp), new Date(message.timestamp));
+    return (
+      !prev || !isSameDay(new Date(prev.timestamp), new Date(message.timestamp))
+    );
   }, [prev, message.timestamp]);
   const emojiInfo = useMemo(() => {
     if (
@@ -131,17 +143,32 @@ function ChatMessageItem({
 
   const { isEmojiOnly, isSingleEmoji } = emojiInfo;
 
-  const isSender = useMemo(() => message.senderId === userId, [message.senderId, userId]);
-  const isGroupChat = useMemo(() => conversation.type === 'group', [conversation.type]);
-  const showSenderName = isGroupChat && (index === 0 || messages[index - 1]?.senderId !== message.senderId);
+  const isSender = useMemo(
+    () => message.senderId === userId,
+    [message.senderId, userId],
+  );
+  const isGroupChat = useMemo(
+    () => conversation.type === 'group',
+    [conversation.type],
+  );
+  const showSenderName =
+    isGroupChat &&
+    (index === 0 || messages[index - 1]?.senderId !== message.senderId);
   const senderName = useMemo(
-    () => (isGroupChat && !isSender ? (conversation.participantDetails?.[message.senderId]?.userName || 'Unknown User') : ''),
-    [conversation.participantDetails, isGroupChat, isSender, message.senderId]
+    () =>
+      isGroupChat && !isSender
+        ? conversation.participantDetails?.[message.senderId]?.userName ||
+          'Unknown User'
+        : '',
+    [conversation.participantDetails, isGroupChat, isSender, message.senderId],
   );
 
   const senderAvatar = useMemo(
-    () => (isGroupChat && !isSender ? (conversation.participantDetails?.[message.senderId]?.profilePic || '') : ''),
-    [conversation.participantDetails, isGroupChat, isSender, message.senderId]
+    () =>
+      isGroupChat && !isSender
+        ? conversation.participantDetails?.[message.senderId]?.profilePic || ''
+        : '',
+    [conversation.participantDetails, isGroupChat, isSender, message.senderId],
   );
 
   const sanitizedContent = useMemo(
@@ -152,7 +179,7 @@ function ChatMessageItem({
         FORBID_ATTR: ['style', 'target'],
         ALLOWED_URI_REGEXP: /^(https?:|mailto:)/i,
       }),
-    [message.content]
+    [message.content],
   );
 
   return (
@@ -180,28 +207,20 @@ function ChatMessageItem({
             className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => {
               if (onOpenProfileSidebar) {
-                onOpenProfileSidebar(
-                  message.senderId,
-                  'user',
-                  {
-                    userName: senderName,
-                    profilePic: senderAvatar,
-                  }
-                );
+                onOpenProfileSidebar(message.senderId, 'user', {
+                  userName: senderName,
+                  profilePic: senderAvatar,
+                });
               }
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 if (onOpenProfileSidebar) {
-                  onOpenProfileSidebar(
-                    message.senderId,
-                    'user',
-                    {
-                      userName: senderName,
-                      profilePic: senderAvatar,
-                    }
-                  );
+                  onOpenProfileSidebar(message.senderId, 'user', {
+                    userName: senderName,
+                    profilePic: senderAvatar,
+                  });
                 }
               }
             }}
@@ -215,10 +234,19 @@ function ChatMessageItem({
           </div>
         )}
 
-        <div id={`message-${message.id}`} className={cn('flex flex-col', isSender ? 'items-end' : 'items-start', 'max-w-[80%]')}>
+        <div
+          id={`message-${message.id}`}
+          className={cn(
+            'flex flex-col',
+            isSender ? 'items-end' : 'items-start',
+            'max-w-[80%]',
+          )}
+        >
           {isGroupChat && showSenderName && !isSender && (
             <div className="mb-0.5">
-              <span className="text-xs font-medium text-muted-foreground">{senderName}</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {senderName}
+              </span>
             </div>
           )}
 
@@ -233,11 +261,13 @@ function ChatMessageItem({
                   : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-tl-none'
                 : isSender
                   ? 'bg-muted-foreground/20 dark:bg-muted-foreground/20 dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
-                  : 'bg-muted-foreground/20 dark:bg-muted-foreground/20 dark:text-[hsl(var(--secondary-foreground))] rounded-tl-none relative flex justify-center items-center pr-20 min-w-[180px]'
+                  : 'bg-muted-foreground/20 dark:bg-muted-foreground/20 dark:text-[hsl(var(--secondary-foreground))] rounded-tl-none relative flex justify-center items-center pr-20 min-w-[180px]',
             )}
             onClick={() => {
               if (message.replyTo) {
-                const replyMessageElement = document.getElementById(message.replyTo);
+                const replyMessageElement = document.getElementById(
+                  message.replyTo,
+                );
                 if (replyMessageElement) {
                   replyMessageElement.classList.add(
                     'ring-2',
@@ -247,7 +277,10 @@ function ChatMessageItem({
                     'transition-all',
                     'duration-300',
                   );
-                  replyMessageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  replyMessageElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                  });
                   setTimeout(() => {
                     replyMessageElement.classList.remove(
                       'ring-2',
@@ -269,19 +302,28 @@ function ChatMessageItem({
                         <div
                           className={cn(
                             'italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2',
-                            isSender ? 'text-primary-foreground dark:text-primary-foreground' : 'text-primary dark:text-primary',
+                            isSender
+                              ? 'text-primary-foreground dark:text-primary-foreground'
+                              : 'text-primary dark:text-primary',
                           )}
                         >
                           <span className="font-medium">
-                            {messages.find((msg) => msg.id === message.replyTo)?.content?.substring(0, 100) || 'Original message'}
-                            {(messages.find((msg) => msg.id === message.replyTo)?.content?.length || 0) > 100 && '...'}
+                            {messages
+                              .find((msg) => msg.id === message.replyTo)
+                              ?.content?.substring(0, 100) ||
+                              'Original message'}
+                            {(messages.find((msg) => msg.id === message.replyTo)
+                              ?.content?.length || 0) > 100 && '...'}
                           </span>
                         </div>
                       </div>
                     )}
 
                     {message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ? (
-                      <div className="relative inline-block w-full cursor-pointer" onClick={() => setModalImage(message.content)}>
+                      <div
+                        className="relative inline-block w-full cursor-pointer"
+                        onClick={() => setModalImage(message.content)}
+                      >
                         <Image
                           src={message.content || '/placeholder.svg'}
                           alt="Message Image"
@@ -291,10 +333,14 @@ function ChatMessageItem({
                         />
                         <div className="absolute bottom-2 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded flex items-center space-x-1">
                           <span>{formattedTimestamp}</span>
-                          {isSender && <CheckCheck className="w-3.5 h-3.5 ml-1" />}
+                          {isSender && (
+                            <CheckCheck className="w-3.5 h-3.5 ml-1" />
+                          )}
                         </div>
                       </div>
-                    ) : message.content.match(/\.(pdf|doc|docx|ppt|pptx)(\?|$)/i) ? (
+                    ) : message.content.match(
+                        /\.(pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                      ) ? (
                       <FileAttachment
                         fileName={message.content.split('/').pop() || 'File'}
                         fileUrl={message.content}
@@ -302,11 +348,19 @@ function ChatMessageItem({
                       />
                     ) : (
                       !message.voiceMessage &&
-                      !message.content.match(/\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i) && (
+                      !message.content.match(
+                        /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                      ) && (
                         <>
                           <div
-                            className={cn('w-full break-words', isEmojiOnly && 'text-4xl leading-snug text-center')}
-                            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+                            className={cn(
+                              'w-full break-words',
+                              isEmojiOnly &&
+                                'text-4xl leading-snug text-center',
+                            )}
+                            dangerouslySetInnerHTML={{
+                              __html: sanitizedContent,
+                            }}
                           />
                           {!isEmojiOnly && (
                             <div
@@ -318,56 +372,71 @@ function ChatMessageItem({
                               )}
                             >
                               <span>{formattedTimestamp}</span>
-                              {isSender && <CheckCheck className="w-3.5 h-3.5" />}
+                              {isSender && (
+                                <CheckCheck className="w-3.5 h-3.5" />
+                              )}
                             </div>
                           )}
                         </>
                       )
                     )}
 
-                    {message.voiceMessage && message.voiceMessage.type === 'voice' && (
-                      <div className="mt-2 flex items-center space-x-2 max-w-full">
-                        <audio
-                          ref={(el) => {
-                            audioRefs.current[message.id] = el;
-                            return undefined;
-                          }}
-                          src={message.content}
-                          controls
-                          preload="metadata"
-                          className="h-10 w-40 sm:w-44 md:w-56 lg:w-64 rounded-md"
-                          onLoadedMetadata={() => handleLoadedMetadata(message.id)}
-                          onPlay={() => handlePlay(message.id)}
-                        />
-                        <span className="text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap flex items-center min-w-[48px] justify-end">
-                          {formattedTimestamp}
-                          {isSender && (
-                            <CheckCheck className="w-3.5 h-3.5 ml-1 align-middle text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300" />
-                          )}
-                        </span>
-                      </div>
-                    )}
+                    {message.voiceMessage &&
+                      message.voiceMessage.type === 'voice' && (
+                        <div className="mt-2 flex items-center space-x-2 max-w-full">
+                          <audio
+                            ref={(el) => {
+                              audioRefs.current[message.id] = el;
+                              return undefined;
+                            }}
+                            src={message.content}
+                            controls
+                            preload="metadata"
+                            className="h-10 w-40 sm:w-44 md:w-56 lg:w-64 rounded-md"
+                            onLoadedMetadata={() =>
+                              handleLoadedMetadata(message.id)
+                            }
+                            onPlay={() => handlePlay(message.id)}
+                          />
+                          <span className="text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap flex items-center min-w-[48px] justify-end">
+                            {formattedTimestamp}
+                            {isSender && (
+                              <CheckCheck className="w-3.5 h-3.5 ml-1 align-middle text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300" />
+                            )}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" sideOffset={5} className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] text-xs p-1 rounded">
+                <TooltipContent
+                  side="bottom"
+                  sideOffset={5}
+                  className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] text-xs p-1 rounded"
+                >
                   <p>{readableTimestamp}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
             <div className="absolute -bottom-3 left-2 z-10">
-              <Reactions messageId={message.id} reactions={message.reactions || {}} toggleReaction={toggleReaction} />
+              <Reactions
+                messageId={message.id}
+                reactions={message.reactions || {}}
+                toggleReaction={toggleReaction}
+              />
             </div>
 
             <div
               className={cn(
                 'flex items-center text-xs mt-1',
-                isSender ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-500' : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
+                isSender
+                  ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-500'
+                  : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
                 isSender ? 'justify-end' : 'justify-start',
               )}
             >
-              {isEmojiOnly && (
-                isSingleEmoji ? (
+              {isEmojiOnly &&
+                (isSingleEmoji ? (
                   <div className="inline-flex items-center align-middle leading-none space-x-1 bg-[#c8a3ed] dark:bg-[#9966ccba] px-1.5 py-0.5 rounded text-[hsl(var(--foreground))]">
                     <span>{formattedTimestamp}</span>
                     {isSender && <CheckCheck className="w-3.5 h-3.5" />}
@@ -377,8 +446,7 @@ function ChatMessageItem({
                     <span>{formattedTimestamp}</span>
                     {isSender && <CheckCheck className="w-3.5 h-3.5 ml-1" />}
                   </>
-                )
-              )}
+                ))}
             </div>
           </div>
         </div>
@@ -394,7 +462,7 @@ function ChatMessageItem({
               'flex items-center rounded-full border shadow-sm backdrop-blur-sm',
               'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))]',
               'dark:bg-[hsl(var(--accent)_/_0.15)] dark:text-[hsl(var(--accent-foreground))]',
-              isSender?'ml-[-40px] mt-[-20px]':'ml-[-60px]'
+              isSender ? 'ml-[-40px] mt-[-20px]' : 'ml-[-60px]',
             )}
           >
             {!isSender && (
@@ -414,7 +482,7 @@ function ChatMessageItem({
                       'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20 focus-visible:ring-2 focus-visible:ring-offset-2',
                       isSender
                         ? 'text-[hsl(var(--foreground)_/_0.85)] dark:text-purple-300'
-                        : 'text-[hsl(var(--muted-foreground))]'
+                        : 'text-[hsl(var(--muted-foreground))]',
                     )}
                     onClick={() => setReplyToMessageId(message.id)}
                     aria-label="Reply to message"

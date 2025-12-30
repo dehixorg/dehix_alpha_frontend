@@ -9,6 +9,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
 import NetworkProvider from '@/utils/NetworkProvider';
+import { QueryProvider } from '@/providers/QueryProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,25 +24,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <StoreProvider>
-      <html lang="en">
-        <body className={inter.className}>
-          {' '}
-          <AuthProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <TooltipProvider>
-                <NetworkProvider>{children}</NetworkProvider>
-              </TooltipProvider>
-              <Toaster />
-            </ThemeProvider>
-          </AuthProvider>
-        </body>
-      </html>
-    </StoreProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <StoreProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <TooltipProvider>
+                  <NetworkProvider>
+                    {children}
+                    <Toaster />
+                  </NetworkProvider>
+                </TooltipProvider>
+              </ThemeProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </StoreProvider>
+      </body>
+    </html>
   );
 }

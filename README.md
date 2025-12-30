@@ -51,12 +51,14 @@ First, run the development server:
 This repo uses [Husky](https://typicode.github.io/husky) to run ESLint on commits, aligned with `/.github/workflows/lint-check.yml` (max 5 warnings).
 
 #### 1) Prerequisites
+
 - **Git** installed.
 - **Node.js 18+** and **pnpm**.
 - Windows users: run commands in **Git Bash** (preferred) or ensure Git’s sh is available.
   - If you prefer npm, use the npm commands below.
 
 #### 2) Install Husky
+
 ```bash
 # pnpm
 pnpm add -D husky
@@ -66,6 +68,7 @@ npm install --save-dev husky
 ```
 
 Ensure `package.json` has the prepare script (already added in this repo):
+
 ```json
 {
   "scripts": { "prepare": "husky" }
@@ -73,6 +76,7 @@ Ensure `package.json` has the prepare script (already added in this repo):
 ```
 
 Then install hooks:
+
 ```bash
 # pnpm
 pnpm install
@@ -84,7 +88,9 @@ npm run prepare
 ```
 
 #### 3) Pre-commit hook
+
 The hook is stored at `/.husky/pre-commit` and runs:
+
 ```sh
 # pnpm
 pnpm exec eslint . --ext .ts,.tsx --max-warnings 5
@@ -96,19 +102,24 @@ npx eslint . --ext .ts,.tsx --max-warnings 5
 ```
 
 Make sure it’s executable (macOS/Linux):
+
 ```bash
 chmod +x .husky/pre-commit
 ```
+
 On Windows, no chmod is needed; use Git Bash to run shell hooks.
 
 #### 4) Verify
+
 ```bash
 git add -A
 git commit -m "test: trigger husky pre-commit"
 ```
+
 Commit will fail if ESLint errors exist or warnings > 5.
 
 #### Optional: Lint only staged files
+
 ```bash
 # pnpm
 pnpm add -D lint-staged
@@ -116,7 +127,9 @@ pnpm add -D lint-staged
 # npm
 npm install --save-dev lint-staged
 ```
+
 Add to `package.json`:
+
 ```json
 {
   "lint-staged": {
@@ -124,7 +137,9 @@ Add to `package.json`:
   }
 }
 ```
+
 Update `/.husky/pre-commit` to:
+
 ```sh
 # pnpm
 pnpm exec lint-staged

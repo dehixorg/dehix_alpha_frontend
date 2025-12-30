@@ -26,8 +26,6 @@
 }
 /* globals.css */
 
-
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -82,7 +80,7 @@
     background-color: transparent !important;
     border-radius: 15px;
     box-shadow:
-      0 6px 54px rgba(153, 102, 204, 0.30),
+      0 6px 54px rgba(153, 102, 204, 0.3),
       inset 0 0 0 2px rgba(153, 102, 204, 0.22) !important;
     outline: 2px solid rgba(153, 102, 204, 0.28) !important;
   }
@@ -96,7 +94,7 @@
     }
     50% {
       box-shadow:
-        0 10px 30px hsl(262 83% 58% / 0.30),
+        0 10px 30px hsl(262 83% 58% / 0.3),
         inset 0 0 0 2px hsl(262 83% 58% / 0.22);
       transform: scale(1.01);
     }
@@ -111,7 +109,10 @@
   @media (prefers-reduced-motion: reduce) {
     .message-highlight {
       animation: none;
-      transition: background-color 200ms ease, box-shadow 200ms ease, outline-color 200ms ease;
+      transition:
+        background-color 200ms ease,
+        box-shadow 200ms ease,
+        outline-color 200ms ease;
     }
   }
 
@@ -211,12 +212,10 @@
   }
 }
 
+.card {
+  @apply bg-muted-foreground/20 dark:bg-muted/20;
+}
 
-  .card {
-    @apply bg-muted-foreground/20 dark:bg-muted/20;
-  }
-
-  .bg-gradient {
-    @apply bg-gradient-to-bl from-background/0 via-primary/5 to-primary/20;
-  }
-  
+.bg-gradient {
+  @apply bg-gradient-to-bl from-background/0 via-primary/5 to-primary/20;
+}

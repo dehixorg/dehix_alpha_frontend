@@ -198,7 +198,10 @@ export function NewChatDialog({
             <TabsTrigger value="group">Group</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="individual" className="flex-1 flex flex-col space-y-4 pt-4">
+          <TabsContent
+            value="individual"
+            className="flex-1 flex flex-col space-y-4 pt-4"
+          >
             <div className="px-1">
               <Input
                 placeholder="Search by name or email..."
@@ -208,14 +211,15 @@ export function NewChatDialog({
             </div>
             <div className="flex-1 min-h-0">
               <ScrollArea className="h-full">
-                <div className="pr-4">
-                  {renderUserList(false)}
-                </div>
+                <div className="pr-4">{renderUserList(false)}</div>
               </ScrollArea>
             </div>
           </TabsContent>
 
-          <TabsContent value="group" className="flex-1 flex flex-col space-y-4 pt-4">
+          <TabsContent
+            value="group"
+            className="flex-1 flex flex-col space-y-4 pt-4"
+          >
             <div className="space-y-4 px-1">
               <div className="space-y-2">
                 <Label htmlFor="groupName">Group Name</Label>
@@ -242,7 +246,7 @@ export function NewChatDialog({
                 onChange={(e) => setUserSearchTerm(e.target.value)}
               />
             </div>
-            
+
             {selectedGroupMembers.length > 0 && (
               <div className="px-1">
                 <div className="p-2 border rounded-md bg-background/50">
@@ -258,7 +262,7 @@ export function NewChatDialog({
                         <span className="truncate max-w-[120px] sm:max-w-[160px]">
                           {member.displayName}
                         </span>
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleGroupMember(member);
@@ -274,12 +278,10 @@ export function NewChatDialog({
                 </div>
               </div>
             )}
-            
+
             <div className="flex-1 min-h-0">
               <ScrollArea className="h-full">
-                <div className="pr-4">
-                  {renderUserList(true)}
-                </div>
+                <div className="pr-4">{renderUserList(true)}</div>
               </ScrollArea>
             </div>
           </TabsContent>
