@@ -58,6 +58,7 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
     const localDate = endOfDay(date);
 
     const formData = {
+      creatorId: userId,
       intervieweeId: userId,
       interviewType: 'INTERVIEWER',
       talentType: talentType.toUpperCase(),
@@ -67,10 +68,7 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
     };
 
     try {
-      const response = await axiosInstance.post(
-        `/interview/${userId}`,
-        formData,
-      );
+      const response = await axiosInstance.post('/interview', formData);
 
       if (response.status === 200 || response.status === 201) {
         notifySuccess('Interview scheduled successfully', 'Success');

@@ -59,12 +59,17 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Analytics',
   },
   {
-    href: '/freelancer/interview',
+    href: '/freelancer/leaderboard',
+    icon: <Trophy className="h-5 w-5" />,
+    label: 'Leaderboard',
+  },
+  {
+    href: '/freelancer/interviewer',
     icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
   },
   {
-    href: '/freelancer/interview/schedule',
+    href: '/freelancer/interviewee/current',
     icon: <CalendarClock className="h-5 w-5" />,
     label: 'Schedule Interviews',
   },
@@ -93,7 +98,6 @@ export const menuItemsTop: MenuItem[] = [
     icon: <StickyNote className="h-5 w-5" />,
     label: 'Notes',
   },
-  //   <ReportMenuItem key="report" />
 ];
 
 export const menuItemsBottom: MenuItem[] = [
