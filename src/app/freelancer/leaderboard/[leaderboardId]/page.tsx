@@ -11,6 +11,7 @@ import {
   Sparkles,
   Award,
   CheckCircle,
+  Gift,
 } from 'lucide-react';
 
 import { useAppSelector } from '@/lib/hooks';
@@ -422,6 +423,7 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
                                 onClick={handleClaim}
                                 disabled={isClaiming}
                               >
+                                <Gift className="h-4 w-4" />
                                 {isClaiming ? 'Claiming...' : 'Claim Rewards'}
                               </Button>
                             </TooltipTrigger>
