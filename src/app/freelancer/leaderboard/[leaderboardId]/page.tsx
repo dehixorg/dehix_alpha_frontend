@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Users, Target, Trophy, Info } from 'lucide-react';
+import { useAppSelector } from '@/lib/hooks';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
@@ -37,10 +38,12 @@ interface PageProps {
 export default function LeaderboardDetailsPage({ params }: PageProps) {
   const router = useRouter();
   const { leaderboardId } = params;
+  const currentUserId = useAppSelector((state) => state.user.uid);
 
   const [isLoading, setIsLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState<FullLeaderboard | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   useEffect(() => {
     if (leaderboardId) {
@@ -85,6 +88,33 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
       const errorMessage =
         err.response?.data?.message || 'Failed to join leaderboard';
       notifyError(errorMessage, 'Error');
+    }
+  };
+
+  const handleClaim = async () => {
+    if (!leaderboard) return;
+
+    setIsClaiming(true);
+    try {
+      const response = await axiosInstance.post(
+        `/leaderboard/claim-reward/${leaderboardId}`,
+      );
+
+      if (response.data.success) {
+        notifySuccess(
+          `Congratulations! You've claimed your reward of ${response.data.data.baseAmount}`,
+          'Reward Claimed',
+        );
+        // Reload leaderboard details to show updated reward status
+        await loadLeaderboardDetails();
+      }
+    } catch (err: any) {
+      console.error('Error claiming reward:', err);
+      const errorMessage =
+        err.response?.data?.message || 'Failed to claim reward';
+      notifyError(errorMessage, 'Error');
+    } finally {
+      setIsClaiming(false);
     }
   };
 
@@ -276,14 +306,75 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
               </div>
             </div>
 
-            <Button
-              size="lg"
-              className="w-full md:w-auto shadow-lg shadow-primary/20"
-              onClick={handleParticipate}
-              disabled={leaderboard.isJoined}
-            >
-              {leaderboard.isJoined ? 'Joined' : 'Participate Now'}
-            </Button>
+            {(() => {
+              const userEntry = leaderboard?.rankings?.find(
+                (r) => r.freelancerId === currentUserId,
+              );
+              const userRank = userEntry?.rank;
+              const hasClaimedReward = userEntry?.reward;
+              const isClaimable =
+                leaderboard?.status === 'PUBLISHED' &&
+                userRank !== undefined &&
+                userRank <= 3 &&
+                !hasClaimedReward;
+              const isPublished = leaderboard?.status === 'PUBLISHED';
+
+              if (hasClaimedReward) {
+                return (
+                  <Button
+                    size="lg"
+                    variant="default"
+                    className="w-full md:w-auto bg-gradient-to-r from-green-500 to-emerald-600"
+                    disabled
+                  >
+                    Reward Claimed
+                  </Button>
+                );
+              } else if (isClaimable) {
+                return (
+                  <Button
+                    size="lg"
+                    className="w-full md:w-auto shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    onClick={handleClaim}
+                    disabled={isClaiming}
+                  >
+                    {isClaiming ? 'Claiming...' : 'Claim Rewards'}
+                  </Button>
+                );
+              } else if (leaderboard.isJoined) {
+                return (
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="w-full md:w-auto"
+                    disabled
+                  >
+                    Joined
+                  </Button>
+                );
+              } else if (isPublished && !leaderboard.isJoined) {
+                return (
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="w-full md:w-auto"
+                    disabled
+                  >
+                    Participate Now
+                  </Button>
+                );
+              } else {
+                return (
+                  <Button
+                    size="lg"
+                    className="w-full md:w-auto shadow-lg shadow-primary/20"
+                    onClick={handleParticipate}
+                  >
+                    Participate Now
+                  </Button>
+                );
+              }
+            })()}
           </div>
 
           {/* Info Grid */}
