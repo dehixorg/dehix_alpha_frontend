@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarPlus, CheckCircle, Clock, Plus, Sparkles } from 'lucide-react';
+import {
+  CalendarPlus,
+  CheckCircle,
+  Clock,
+  Plus,
+  Sparkles,
+  Settings2,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -45,10 +52,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import type { RootState } from '@/lib/store';
 
 const InterviewProfile: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
+
+  type DayKey = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
+
+  type AvailabilityRange = {
+    start: string;
+    end: string;
+  };
+
+  type InterviewerAvailability = {
+    timezone: string;
+    weekly: Record<DayKey, AvailabilityRange[]>;
+    slotDurationMinutes: number;
+    bufferMinutes: number;
+    minNoticeMinutes: number;
+    updatedAt?: string;
+  };
 
   interface VerifiedAttribute {
     _id: string;
@@ -91,6 +123,209 @@ const InterviewProfile: React.FC = () => {
   const [interviewDescription, setInterviewDescription] = useState('');
   const [scheduling, setScheduling] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const [openAvailabilitySheet, setOpenAvailabilitySheet] = useState(false);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilitySaving, setAvailabilitySaving] = useState(false);
+
+  const emptyWeekly = useMemo((): InterviewerAvailability['weekly'] => {
+    return {
+      MON: [],
+      TUE: [],
+      WED: [],
+      THU: [],
+      FRI: [],
+      SAT: [],
+      SUN: [],
+    };
+  }, []);
+
+  const [availability, setAvailability] = useState<InterviewerAvailability>({
+    timezone: '',
+    weekly: emptyWeekly,
+    slotDurationMinutes: 30,
+    bufferMinutes: 0,
+    minNoticeMinutes: 0,
+  });
+
+  const dayOrder: DayKey[] = useMemo(
+    () => ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+    [],
+  );
+
+  const dayLabel: Record<DayKey, string> = useMemo(
+    () => ({
+      MON: 'Mon',
+      TUE: 'Tue',
+      WED: 'Wed',
+      THU: 'Thu',
+      FRI: 'Fri',
+      SAT: 'Sat',
+      SUN: 'Sun',
+    }),
+    [],
+  );
+
+  const detectTimezone = () => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch {
+      return '';
+    }
+  };
+
+  const fetchAvailability = async () => {
+    setAvailabilityLoading(true);
+    try {
+      const res = await axiosInstance.get(
+        '/freelancer/interviewer/availability',
+      );
+      const data: InterviewerAvailability | undefined = res?.data?.data;
+
+      if (!data) {
+        setAvailability((prev) => ({
+          ...prev,
+          timezone: detectTimezone() || prev.timezone,
+        }));
+        return;
+      }
+
+      setAvailability({
+        timezone: String(data.timezone || detectTimezone() || ''),
+        weekly: {
+          MON: Array.isArray(data.weekly?.MON) ? data.weekly.MON : [],
+          TUE: Array.isArray(data.weekly?.TUE) ? data.weekly.TUE : [],
+          WED: Array.isArray(data.weekly?.WED) ? data.weekly.WED : [],
+          THU: Array.isArray(data.weekly?.THU) ? data.weekly.THU : [],
+          FRI: Array.isArray(data.weekly?.FRI) ? data.weekly.FRI : [],
+          SAT: Array.isArray(data.weekly?.SAT) ? data.weekly.SAT : [],
+          SUN: Array.isArray(data.weekly?.SUN) ? data.weekly.SUN : [],
+        },
+        slotDurationMinutes: Number(data.slotDurationMinutes || 30),
+        bufferMinutes: Number(data.bufferMinutes || 0),
+        minNoticeMinutes: Number(data.minNoticeMinutes || 0),
+        updatedAt: data.updatedAt,
+      });
+    } catch (error: any) {
+      console.error('Error fetching availability:', error);
+      notifyError(
+        'Failed to load availability. Please try again later.',
+        'Error',
+      );
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  };
+
+  const upsertSingleRangeForDay = (
+    day: DayKey,
+    patch: Partial<AvailabilityRange>,
+  ) => {
+    setAvailability((prev) => {
+      const current = prev.weekly[day]?.[0] || { start: '10:00', end: '19:00' };
+      const nextRange: AvailabilityRange = {
+        start: patch.start ?? current.start,
+        end: patch.end ?? current.end,
+      };
+
+      return {
+        ...prev,
+        weekly: {
+          ...prev.weekly,
+          [day]: [nextRange],
+        },
+      };
+    });
+  };
+
+  const toggleDayEnabled = (day: DayKey, enabled: boolean) => {
+    setAvailability((prev) => {
+      if (!enabled) {
+        return {
+          ...prev,
+          weekly: {
+            ...prev.weekly,
+            [day]: [],
+          },
+        };
+      }
+
+      const existing = prev.weekly[day]?.[0];
+      return {
+        ...prev,
+        weekly: {
+          ...prev.weekly,
+          [day]: [existing || { start: '10:00', end: '19:00' }],
+        },
+      };
+    });
+  };
+
+  const validateAvailability = () => {
+    for (const day of dayOrder) {
+      const range = availability.weekly?.[day]?.[0];
+      if (!range) continue;
+      if (!range.start || !range.end) {
+        return `Please select start and end time for ${dayLabel[day]}.`;
+      }
+      if (range.start >= range.end) {
+        return `Start time must be before end time for ${dayLabel[day]}.`;
+      }
+    }
+    if (
+      !availability.slotDurationMinutes ||
+      availability.slotDurationMinutes <= 0
+    ) {
+      return 'Slot duration must be greater than 0.';
+    }
+    if (availability.bufferMinutes < 0 || availability.minNoticeMinutes < 0) {
+      return 'Buffer and minimum notice must be 0 or more.';
+    }
+    return null;
+  };
+
+  const saveAvailability = async () => {
+    const validationError = validateAvailability();
+    if (validationError) {
+      notifyError(validationError, 'Error');
+      return;
+    }
+
+    setAvailabilitySaving(true);
+    try {
+      const timezone = detectTimezone() || availability.timezone || 'UTC';
+
+      const weekly: InterviewerAvailability['weekly'] = {
+        MON: Array.isArray(availability.weekly?.MON) ? availability.weekly.MON : [],
+        TUE: Array.isArray(availability.weekly?.TUE) ? availability.weekly.TUE : [],
+        WED: Array.isArray(availability.weekly?.WED) ? availability.weekly.WED : [],
+        THU: Array.isArray(availability.weekly?.THU) ? availability.weekly.THU : [],
+        FRI: Array.isArray(availability.weekly?.FRI) ? availability.weekly.FRI : [],
+        SAT: Array.isArray(availability.weekly?.SAT) ? availability.weekly.SAT : [],
+        SUN: Array.isArray(availability.weekly?.SUN) ? availability.weekly.SUN : [],
+      };
+
+      const payload: InterviewerAvailability = {
+        timezone,
+        weekly,
+        slotDurationMinutes: Number(availability.slotDurationMinutes),
+        bufferMinutes: Number(availability.bufferMinutes),
+        minNoticeMinutes: Number(availability.minNoticeMinutes),
+      };
+
+      await axiosInstance.put('/freelancer/interviewer/availability', payload);
+      notifySuccess('Availability updated successfully.', 'Success');
+      setOpenAvailabilitySheet(false);
+    } catch (error: any) {
+      console.error('Error saving availability:', error);
+      const message =
+        error?.response?.data?.message ||
+        'Failed to update availability. Please try again later.';
+      notifyError(message, 'Error');
+    } finally {
+      setAvailabilitySaving(false);
+    }
+  };
 
   const visibleAttributes = useMemo(
     () =>
@@ -246,6 +481,10 @@ const InterviewProfile: React.FC = () => {
     setOpenApplyDialog(true);
   };
 
+  const openAvailability = async () => {
+    setOpenAvailabilitySheet(true);
+  };
+
   const openSchedule = (attribute: VerifiedAttribute) => {
     setScheduleAttribute(attribute);
     setInterviewDateLocal('');
@@ -351,6 +590,183 @@ const InterviewProfile: React.FC = () => {
               <Plus className="h-4 w-4" />
               Apply as interviewer
             </Button>
+
+            <Sheet
+              open={openAvailabilitySheet}
+              onOpenChange={(open) => {
+                setOpenAvailabilitySheet(open);
+                if (open) {
+                  fetchAvailability();
+                }
+              }}
+            >
+              <SheetTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={openAvailability}
+                  type="button"
+                >
+                  <Settings2 className="h-4 w-4" />
+                  Manage availability
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col">
+                <SheetHeader className="px-6 pt-6">
+                  <SheetTitle>Availability settings</SheetTitle>
+                  <SheetDescription>
+                    Configure when you are available for interviews.
+                  </SheetDescription>
+                </SheetHeader>
+
+                <ScrollArea className="flex-1 px-6 py-4">
+                  <div className="grid gap-6">
+                    <div className="grid gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div className="grid gap-2">
+                          <Label>Slot duration (min)</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={availability.slotDurationMinutes}
+                            onChange={(e) =>
+                              setAvailability((prev) => ({
+                                ...prev,
+                                slotDurationMinutes: Number(e.target.value),
+                              }))
+                            }
+                            disabled={availabilityLoading || availabilitySaving}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label>Buffer (min)</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            value={availability.bufferMinutes}
+                            onChange={(e) =>
+                              setAvailability((prev) => ({
+                                ...prev,
+                                bufferMinutes: Number(e.target.value),
+                              }))
+                            }
+                            disabled={availabilityLoading || availabilitySaving}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label>Min notice (min)</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            value={availability.minNoticeMinutes}
+                            onChange={(e) =>
+                              setAvailability((prev) => ({
+                                ...prev,
+                                minNoticeMinutes: Number(e.target.value),
+                              }))
+                            }
+                            disabled={availabilityLoading || availabilitySaving}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3">
+                      <div className="text-sm font-medium">Weekly</div>
+
+                      <div className="grid gap-3">
+                        {dayOrder.map((day) => {
+                          const range = availability.weekly?.[day]?.[0];
+                          const enabled = Boolean(range);
+                          return (
+                            <div
+                              key={day}
+                              className="rounded-lg border p-3 grid gap-3"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="font-medium">
+                                  {dayLabel[day]}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Label className="text-xs text-muted-foreground">
+                                    Available
+                                  </Label>
+                                  <Switch
+                                    checked={enabled}
+                                    onCheckedChange={(val) =>
+                                      toggleDayEnabled(day, Boolean(val))
+                                    }
+                                    disabled={
+                                      availabilityLoading || availabilitySaving
+                                    }
+                                  />
+                                </div>
+                              </div>
+
+                              {enabled ? (
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="grid gap-2">
+                                    <Label className="text-xs">Start</Label>
+                                    <Input
+                                      type="time"
+                                      value={range?.start || ''}
+                                      onChange={(e) =>
+                                        upsertSingleRangeForDay(day, {
+                                          start: e.target.value,
+                                        })
+                                      }
+                                      disabled={
+                                        availabilityLoading ||
+                                        availabilitySaving
+                                      }
+                                    />
+                                  </div>
+                                  <div className="grid gap-2">
+                                    <Label className="text-xs">End</Label>
+                                    <Input
+                                      type="time"
+                                      value={range?.end || ''}
+                                      onChange={(e) =>
+                                        upsertSingleRangeForDay(day, {
+                                          end: e.target.value,
+                                        })
+                                      }
+                                      disabled={
+                                        availabilityLoading ||
+                                        availabilitySaving
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </ScrollArea>
+
+                <SheetFooter className="border-t px-6 py-4 flex-row gap-2">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => setOpenAvailabilitySheet(false)}
+                    disabled={availabilitySaving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={saveAvailability}
+                    disabled={availabilityLoading || availabilitySaving}
+                  >
+                    {availabilitySaving ? 'Saving...' : 'Save'}
+                  </Button>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </CardHeader>

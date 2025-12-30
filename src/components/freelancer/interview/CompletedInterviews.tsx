@@ -5,10 +5,8 @@ import { useSelector } from 'react-redux';
 import {
   ArrowDown,
   ArrowUp,
-  CheckCircle,
   GraduationCap,
   Handshake,
-  History,
   Search,
   Table,
   TrendingUp,
@@ -410,10 +408,6 @@ export default function HistoryInterviews({
       </div>
     );
   };
-
-  const totalFilteredCount = sections.reduce((acc, s) => {
-    return acc + normalizeList(grouped[s.key]).length;
-  }, 0);
 
   return (
     <>

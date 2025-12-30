@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+'use client';
 import React, { useEffect, useState } from 'react';
 import { Briefcase } from 'lucide-react';
 
@@ -23,191 +24,141 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import EmptyState from '@/components/shared/EmptyState';
 
 type InterviewBid = {
   _id?: string;
   interviewerId?: string;
-  suggestedDateTime?: string;
   fee?: string;
-  interviewer?: {
-    _id?: string;
-    userName?: string;
-    skills?: string[];
-    workExperience?: number;
-  };
   status?: string;
+  description?: string;
 };
 
 type Interview = {
   _id?: string;
-  talentId?: {
-    id: string;
-    label?: string;
-  };
-  talentType?: string;
-  interviewType?: string;
   interviewDate?: string;
-  intervieweeName?: string;
   description?: string;
-  interviewBids?: Record<string, InterviewBid>; // Object of bids
-  InterviewStatus?: string;
-  skillName?: string;
+  interviewStatus?: string;
+  interviewBids?: InterviewBid[];
+  createdAt?: string;
+  updatedAt?: string;
 };
 
+const formatDate = (iso?: string) => {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '-';
+  return d.toLocaleString();
+};
+
+const formatBidsCount = (bids?: InterviewBid[]) => {
+  const list = Array.isArray(bids) ? bids : [];
+  const meaningful = list.filter((b) => b && (b._id || b.fee || b.status));
+  return meaningful.length;
+};
+
+const normalizeBids = (bids?: InterviewBid[]) => {
+  const list = Array.isArray(bids) ? bids : [];
+  return list.filter((b) => b && (b._id || b.fee || b.status || b.description));
+};
 const BidsPage = ({ userId }: { userId?: string }) => {
   const [bidsData, setBidsData] = useState<Interview[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [confirmAction, setConfirmAction] = useState<{
-    interviewId?: string;
-    bidId?: string;
-    action?: string;
-  } | null>(null);
-  const [bidFee, setBidFee] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedInterview, setSelectedInterview] = useState<Interview | null>(
+    null,
+  );
+  const [selectingBidId, setSelectingBidId] = useState<string | null>(null);
+
+  const handleSelectBid = async (bid: InterviewBid) => {
+    if (!selectedInterview?._id || !bid?._id) return;
+
+    try {
+      setSelectingBidId(String(bid._id));
+
+      await axiosInstance.post(
+        `/interview/${selectedInterview._id}/interview-bids/${bid._id}`,
+        {},
+      );
+
+      notifySuccess('Bid selected successfully.', 'Success');
+
+      // Refresh the list to reflect the change (e.g., interview may move to scheduled)
+      const fetchBids = async () => {
+        try {
+          setLoading(true);
+          setErrorMessage(null);
+
+          const res = await axiosInstance.get('/interview/creator/open', {
+            params: { page: 1, limit: 20 },
+          });
+
+          const list: Interview[] = Array.isArray(res?.data?.data)
+            ? res.data.data
+            : Array.isArray(res?.data)
+              ? res.data
+              : [];
+
+          const sorted = [...list].sort((a, b) => {
+            const at = a?.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+            const bt = b?.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+            return bt - at;
+          });
+
+          setBidsData(sorted);
+        } catch (e: any) {
+          const msg =
+            e?.response?.data?.message ||
+            'Failed to refresh interviews after selection.';
+          setErrorMessage(String(msg));
+          notifyError(String(msg), 'Error');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      await fetchBids();
+
+      // Close the dialog after successful selection
+      setSelectedInterview(null);
+    } finally {
+      setSelectingBidId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchBids = async () => {
       try {
         setLoading(true);
-        // Fetch interviews where the current user is the interviewee
-        const [{ data: interviewRes }, { data: freelancerRes }] =
-          await Promise.all([
-            axiosInstance.get(`/interview?intervieweeId=${userId}`),
-            axiosInstance.get(`/freelancer/${userId}`), // assumes this endpoint returns freelancer doc
-          ]);
+        setErrorMessage(null);
 
-        const allInterviews: any[] = Array.isArray(interviewRes)
-          ? interviewRes
-          : interviewRes?.data ?? [];
-
-        const dehixTalentObj = freelancerRes?.data?.dehixTalent ?? {};
-
-        const talentToSkillMap: Record<string, string> = {};
-        Object.values(dehixTalentObj).forEach((talent: any) => {
-          if (talent._id) {
-            // Use talentName as the primary source for skill name
-            const skillName =
-              talent.talentName ||
-              talent.skillName ||
-              talent.name ||
-              talent.label ||
-              talent.skill ||
-              talent.talentId;
-            // Map both _id and talentId to the same skill name
-            talentToSkillMap[talent._id] = skillName;
-            if (talent.talentId) {
-              talentToSkillMap[talent.talentId] = skillName;
-            }
-          }
+        const res = await axiosInstance.get('/interview/creator/open', {
+          params: {
+            page: 1,
+            limit: 20,
+          },
         });
 
-        // TEMP FIX: Show all interviews for the user as interviewee, regardless of talentId or status
-        const eligibleInterviews = allInterviews;
+        const list: Interview[] = Array.isArray(res?.data?.data)
+          ? res.data.data
+          : Array.isArray(res?.data)
+            ? res.data
+            : [];
 
-        // Fetch interviewee profiles to get their names/headlines
-        const intervieweeIds = Array.from(
-          new Set(
-            eligibleInterviews
-              .map((iv: any) => iv.intervieweeId)
-              .filter(Boolean),
-          ),
-        );
-
-        // If all interviews are for the current user, we can use the current user's profile
-        const isAllCurrentUser =
-          intervieweeIds.length === 1 && intervieweeIds[0] === userId;
-
-        const intervieweeMap: Record<string, any> = {};
-        if (isAllCurrentUser && userId) {
-          // If all interviews are for the current user, use the current user's profile
-          intervieweeMap[userId] = freelancerRes?.data;
-        } else if (intervieweeIds.length) {
-          const profilePromises = intervieweeIds.map((id) =>
-            axiosInstance.get(`/freelancer/${id}`).catch((err) => {
-              console.error(`Failed to fetch profile for ${id}:`, err);
-              return null;
-            }),
-          );
-          const profileResults = await Promise.all(profilePromises);
-          profileResults.forEach((res, idx) => {
-            if (res?.data) {
-              intervieweeMap[intervieweeIds[idx]] = res.data;
-            }
-          });
-        }
-
-        const enriched = eligibleInterviews.map((iv: any) => {
-          const intervieweeProfile = intervieweeMap[iv.intervieweeId];
-
-          let intervieweeName = 'Unknown';
-          if (intervieweeProfile) {
-            // Check if the profile is wrapped in a data property
-            const profile = intervieweeProfile.data || intervieweeProfile;
-
-            if (profile.firstName || profile.lastName) {
-              intervieweeName =
-                `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
-            } else if (profile.userName) {
-              intervieweeName = profile.userName;
-            } else if (profile.profileHeadline) {
-              intervieweeName = profile.profileHeadline;
-            } else if (profile.name) {
-              intervieweeName = profile.name;
-            }
-          } else {
-            // Fallback to showing the ID if no profile is found
-            intervieweeName = `User ${iv.intervieweeId.substring(0, 8)}...`;
-          }
-
-          return {
-            ...iv,
-            intervieweeName,
-          };
+        const sorted = [...list].sort((a, b) => {
+          const at = a?.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+          const bt = b?.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+          return bt - at;
         });
 
-        // Use the talentId label or talentType as skill name since skill API is not working
-        const finalList = enriched.map((iv: any) => {
-          // Try to get skill name from user's talent mapping first
-          const talentId = iv.talentId; // This is the _id of the talent object
-
-          // Try different variations of the talentId
-          const variations = [
-            talentId,
-            talentId?.toString(),
-            talentId?.toLowerCase(),
-            talentId?.toUpperCase(),
-          ].filter(Boolean);
-
-          let foundSkillName = null;
-          for (const variation of variations) {
-            if (talentToSkillMap[variation]) {
-              foundSkillName = talentToSkillMap[variation];
-
-              break;
-            }
-          }
-
-          const skillName =
-            foundSkillName ||
-            iv.talentId?.label ||
-            iv.talentType ||
-            iv.skill ||
-            iv.level ||
-            talentId ||
-            'Unknown Skill';
-
-          return {
-            ...iv,
-            skillName,
-          };
-        });
-
-        setBidsData(finalList);
-      } catch (error) {
+        setBidsData(sorted);
+      } catch (error: any) {
         console.error('Error fetching interview bids', error);
-        notifyError('Something went wrong. Please try again.', 'Error');
+        const msg =
+          error?.response?.data?.message ||
+          'Something went wrong. Please try again.';
+        setErrorMessage(String(msg));
+        notifyError(String(msg), 'Error');
       } finally {
         setLoading(false);
       }
@@ -215,124 +166,6 @@ const BidsPage = ({ userId }: { userId?: string }) => {
 
     fetchBids();
   }, [userId]);
-
-  const handleActionConfirm = async () => {
-    if (!confirmAction) return;
-
-    const { interviewId, bidId, action } = confirmAction;
-    const interviewToUpdate = bidsData.find(
-      (interview) => interview._id === interviewId,
-    );
-    if (!interviewToUpdate) return;
-
-    const updatedTalentId = interviewToUpdate.talentId?.id;
-
-    if (action === 'PLACE_BID') {
-      // Build new bid
-      const newBidId = crypto.randomUUID
-        ? crypto.randomUUID()
-        : Date.now().toString();
-      const newBid = {
-        _id: newBidId,
-        interviewerId: userId,
-        dateTimeAgreement: true,
-        suggestedDateTime: new Date().toISOString(),
-        fee: bidFee || '0',
-        status: 'PENDING',
-      };
-
-      const rawBids = interviewToUpdate.interviewBids || {};
-      const bidsObj = Array.isArray(rawBids)
-        ? Object.fromEntries((rawBids as any[]).map((b: any) => [b._id, b]))
-        : { ...rawBids };
-      bidsObj[newBidId] = newBid;
-
-      const updatedInterview = {
-        _id: interviewToUpdate._id,
-        talentId: updatedTalentId,
-        interviewBids: bidsObj,
-        InterviewStatus: 'BIDDING',
-      };
-
-      try {
-        await axiosInstance.put(`/interview/${interviewId}`, updatedInterview);
-        notifySuccess('Bid placed successfully');
-        // Refresh list
-        setBidsData((prev) =>
-          prev.map((iv) =>
-            iv._id === interviewId ? { ...iv, interviewBids: bidsObj } : iv,
-          ),
-        );
-      } catch (err) {
-        console.error(err);
-        notifyError('Failed to place bid', 'Error');
-      }
-
-      setBidFee('');
-      setConfirmAction(null);
-      return;
-    }
-
-    const isAccepted = action === 'ACCEPTED';
-
-    const rawBids = interviewToUpdate.interviewBids || {};
-    const bidsArray: any[] = Array.isArray(rawBids)
-      ? rawBids
-      : Object.values(rawBids);
-
-    const updatedBidsArray = bidsArray
-      .map((bid: any) => ({
-        _id: bid._id,
-        interviewerId: bid.interviewer?._id || bid.interviewerId,
-        dateTimeAgreement: bid.dateTimeAgreement || false,
-        suggestedDateTime: bid.suggestedDateTime || null,
-        fee: bid.fee || '0',
-        status:
-          bid._id === bidId ? action : isAccepted ? 'REJECTED' : bid.status,
-      }))
-      .filter((bid: any) => bid.interviewerId);
-
-    const updatedBidsObject = updatedBidsArray.reduce((acc: any, bid: any) => {
-      acc[bid._id] = bid;
-      return acc;
-    }, {} as any);
-
-    const hasAcceptedBid = Object.values(updatedBidsObject).some(
-      (bid: any) => bid.status === 'ACCEPTED',
-    );
-    const updatedInterviewStatus = hasAcceptedBid ? 'SCHEDULED' : 'BIDDING';
-
-    const updatedInterview = {
-      _id: interviewToUpdate._id,
-      talentId: updatedTalentId,
-      interviewBids: updatedBidsObject,
-      InterviewStatus: updatedInterviewStatus,
-    };
-
-    try {
-      await axiosInstance.put(`/interview/${interviewId}`, updatedInterview);
-
-      // If accepted, remove interview from bidsData
-      setBidsData((prevData: any) =>
-        isAccepted
-          ? prevData.filter((interview: any) => interview._id !== interviewId)
-          : prevData.map((interview: any) =>
-              interview._id === interviewId
-                ? {
-                    ...interview,
-                    interviewBids: updatedBidsObject,
-                    InterviewStatus: updatedInterviewStatus,
-                  }
-                : interview,
-            ),
-      );
-    } catch (error) {
-      console.error('Error updating interview bid:', error);
-      notifyError('Something went wrong. Please try again.', 'Error');
-    }
-
-    setConfirmAction(null);
-  };
 
   return (
     <div className="w-full">
@@ -342,10 +175,9 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Skill</TableHead>
-                <TableHead>Interviewee</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Bids</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -353,16 +185,13 @@ const BidsPage = ({ userId }: { userId?: string }) => {
               {[...Array(4)].map((_, idx) => (
                 <TableRow key={idx}>
                   <TableCell>
-                    <div className="h-4 w-28 bg-muted rounded" />
-                  </TableCell>
-                  <TableCell>
                     <div className="h-4 w-40 bg-muted rounded" />
                   </TableCell>
                   <TableCell>
-                    <div className="h-4 w-24 bg-muted rounded" />
+                    <div className="h-6 w-24 bg-muted rounded-full" />
                   </TableCell>
                   <TableCell>
-                    <div className="h-6 w-24 bg-muted rounded-full" />
+                    <div className="h-4 w-16 bg-muted rounded" />
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="h-8 w-8 bg-muted rounded-md inline-block" />
@@ -372,47 +201,74 @@ const BidsPage = ({ userId }: { userId?: string }) => {
             </TableBody>
           </Table>
         </div>
+      ) : errorMessage ? (
+        <EmptyState
+          className="my-2"
+          title="Unable to load bids"
+          description={errorMessage}
+          icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setLoading(true);
+                setErrorMessage(null);
+                axiosInstance
+                  .get('/interview/creator/open', {
+                    params: { page: 1, limit: 20 },
+                  })
+                  .then((res) => {
+                    const list: Interview[] = Array.isArray(res?.data?.data)
+                      ? res.data.data
+                      : Array.isArray(res?.data)
+                        ? res.data
+                        : [];
+                    setBidsData(list);
+                  })
+                  .catch((err) => {
+                    const msg =
+                      err?.response?.data?.message ||
+                      'Something went wrong. Please try again.';
+                    setErrorMessage(String(msg));
+                  })
+                  .finally(() => setLoading(false));
+              }}
+            >
+              Retry
+            </Button>
+          }
+        />
       ) : bidsData?.length > 0 ? (
         <div className="w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Skill</TableHead>
-                <TableHead>Interviewee</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Bids</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {bidsData.map((interview) => (
                 <TableRow key={interview?._id}>
-                  <TableCell className="font-medium">
-                    {interview?.skillName || 'Unknown Skill'}
-                  </TableCell>
-                  <TableCell>{interview?.intervieweeName || '-'}</TableCell>
                   <TableCell>
-                    {interview?.interviewDate
-                      ? new Date(interview.interviewDate).toLocaleDateString()
-                      : '-'}
+                    {formatDate(interview?.interviewDate)}
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">
-                      {interview?.InterviewStatus || 'BIDDING'}
+                      {interview?.interviewStatus || 'BIDDING'}
                     </Badge>
                   </TableCell>
+                  <TableCell>{formatBidsCount(interview?.interviewBids)}</TableCell>
                   <TableCell className="text-center">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        setConfirmAction({
-                          interviewId: interview._id,
-                          action: 'PLACE_BID',
-                        })
-                      }
+                      onClick={() => setSelectedInterview(interview)}
                     >
-                      Place Bid
+                      View bids
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -423,53 +279,100 @@ const BidsPage = ({ userId }: { userId?: string }) => {
       ) : (
         <EmptyState
           className="my-2"
-          title="No interview bids yet"
-          description="When you have interviews open for bidding, they will show up here."
+          title="No open interviews"
+          description="When you create interviews open for bidding, they will show up here."
           icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
         />
       )}
 
-      {confirmAction && (
+      {selectedInterview ? (
         <Dialog
-          open={!!confirmAction}
-          onOpenChange={() => setConfirmAction(null)}
+          open={!!selectedInterview}
+          onOpenChange={() => setSelectedInterview(null)}
         >
-          <DialogContent className="m-2 w-[80vw] md:max-w-lg ">
-            {confirmAction?.action === 'PLACE_BID' ? (
-              <div className="space-y-4">
-                <Label htmlFor="fee">Enter your bid fee</Label>
-                <Input
-                  id="fee"
-                  type="number"
-                  value={bidFee}
-                  onChange={(e) => setBidFee(e.target.value)}
-                  placeholder="e.g. 500"
-                />
+          <DialogContent className="m-2 w-[90vw] md:max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Interview bids</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {selectedInterview?.description ? (
+                <div className="rounded-lg border p-3">
+                  <div className="text-sm font-medium">Interview description</div>
+                  <div className="mt-1 text-sm text-muted-foreground whitespace-pre-line">
+                    {selectedInterview.description}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="text-sm text-muted-foreground">
+                Date: {formatDate(selectedInterview?.interviewDate)}
               </div>
-            ) : (
-              <DialogHeader>
-                <DialogTitle>
-                  Confirm {confirmAction.action?.toLowerCase()} action?
-                </DialogTitle>
-              </DialogHeader>
-            )}
+
+              {normalizeBids(selectedInterview?.interviewBids).length ? (
+                <div className="w-full overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Interviewer</TableHead>
+                        <TableHead>Fee</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {normalizeBids(selectedInterview?.interviewBids).map((bid) => (
+                        <TableRow key={bid._id || `${bid.interviewerId}-${bid.fee}`}>
+                          <TableCell className="font-medium">
+                            {bid.interviewerId || '-'}
+                          </TableCell>
+                          <TableCell>{bid.fee || '-'}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">
+                              {bid.status || 'PENDING'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[420px]">
+                            <div className="text-sm text-muted-foreground whitespace-pre-line">
+                              {bid.description || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => handleSelectBid(bid)}
+                              disabled={!bid._id || selectingBidId === String(bid._id)}
+                            >
+                              {selectingBidId === String(bid._id)
+                                ? 'Selecting...'
+                                : 'Select'}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <EmptyState
+                  className="my-2"
+                  title="No bids yet"
+                  description="No one has placed a bid on this interview yet."
+                  icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
+                />
+              )}
+            </div>
+
             <DialogFooter>
-              <Button variant="outline" onClick={() => setConfirmAction(null)}>
-                Cancel
-              </Button>
-              <Button
-                className="mb-3"
-                disabled={confirmAction.action === 'PLACE_BID' && !bidFee}
-                onClick={handleActionConfirm}
-              >
-                Confirm
+              <Button type="button" variant="outline" onClick={() => setSelectedInterview(null)}>
+                Close
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
-
-      {/* Removed View Bids dialog to keep only single action */}
+      ) : null}
     </div>
   );
 };

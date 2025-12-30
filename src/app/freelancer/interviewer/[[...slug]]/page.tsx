@@ -21,7 +21,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import InterviewProfile from '@/components/freelancer/interview/interviewProfile';
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
-import Bids from '@/components/freelancer/interview/Bids';
+import InterviewerBids from '@/components/freelancer/interview/InterviewerBids';
 import { RootState } from '@/lib/store';
 
 export default function InterviewerPage() {
@@ -115,7 +115,7 @@ export default function InterviewerPage() {
                       <CurrentComponent enableViewToggle />
                     </TabsContent>
                     <TabsContent value="bids" className="m-0">
-                      <Bids userId={user.uid} />
+                      <InterviewerBids userId={user.uid} />
                     </TabsContent>
                     <TabsContent value="history" className="m-0">
                       <CompletedInterviews enableViewToggle />
