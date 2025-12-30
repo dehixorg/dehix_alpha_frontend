@@ -6,6 +6,8 @@ import {
   User,
   UserCheck,
   Award,
+  ArrowLeft,
+  Trophy,
 } from 'lucide-react';
 import Image from 'next/image';
 
