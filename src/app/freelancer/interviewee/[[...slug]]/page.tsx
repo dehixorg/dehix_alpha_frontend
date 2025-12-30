@@ -99,7 +99,7 @@ export default function IntervieweePage() {
                     </TabsList>
                   </div>
 
-                  <div className="px-4 py-4 sm:px-6">
+                  <div>
                     <TabsContent value="current" className="m-0">
                       <CurrentComponent
                         apiRole="interviewee"
@@ -108,7 +108,7 @@ export default function IntervieweePage() {
                         enableViewToggle
                       />
                     </TabsContent>
-                    <TabsContent value="bids" className="m-0">
+                    <TabsContent value="bids" className="m-0 p-0">
                       <Bids userId={user.uid} />
                     </TabsContent>
                     <TabsContent value="history" className="m-0">

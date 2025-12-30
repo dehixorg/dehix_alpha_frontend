@@ -43,6 +43,37 @@ export function LeaderboardTable({
 }) {
   const allEntries = data;
 
+  const getTierMeta = (rank: number) => {
+    if (rank === 1)
+      return {
+        title: 'Gold Champion',
+        Icon: Crown,
+        badgeClass:
+          'bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-amber-500/20',
+        iconWrapClass:
+          'bg-gradient-to-r from-yellow-400 to-amber-500 dark:text-muted text-white/80',
+      };
+    if (rank === 2)
+      return {
+        title: 'Silver Runner-up',
+        Icon: Trophy,
+        badgeClass:
+          'bg-gradient-to-r from-gray-300 to-gray-400 text-white shadow-slate-500/20',
+        iconWrapClass:
+          'bg-gradient-to-r from-gray-300 to-gray-400 dark:text-muted text-white/80',
+      };
+    if (rank === 3)
+      return {
+        title: 'Bronze Achiever',
+        Icon: Medal,
+        badgeClass:
+          'bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-rose-500/20',
+        iconWrapClass:
+          'bg-gradient-to-r from-orange-400 to-orange-600 dark:text-muted text-white/80',
+      };
+    return null;
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -52,24 +83,23 @@ export function LeaderboardTable({
   };
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1)
+    const tier = getTierMeta(rank);
+    if (tier) {
+      const Icon = tier.Icon;
       return (
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 dark:text-muted text-white/80">
-          <Crown className="h-4 w-4" />
+        <div className="flex flex-col items-center gap-1">
+          <div
+            className={`flex items-center justify-center w-8 h-8 rounded-full ${tier.iconWrapClass}`}
+            title={tier.title}
+          >
+            <Icon className="h-4 w-4" />
+          </div>
+          <span className="text-[10px] font-medium text-muted-foreground">
+            {tier.title.split(' ')[0]}
+          </span>
         </div>
       );
-    if (rank === 2)
-      return (
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-gray-300 to-gray-400 dark:text-muted text-white/80">
-          <Trophy className="h-4 w-4" />
-        </div>
-      );
-    if (rank === 3)
-      return (
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 dark:text-muted text-white/80">
-          <Medal className="h-4 w-4" />
-        </div>
-      );
+    }
     return (
       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-muted-foreground font-semibold text-sm">
         {rank}
@@ -98,6 +128,20 @@ export function LeaderboardTable({
         className={`${variants[rank as 1 | 2 | 3] || 'bg-muted text-muted-foreground'} font-semibold px-2.5 py-0.5 text-xs shadow-sm`}
       >
         {reward.amount} connects
+      </Badge>
+    );
+  };
+
+  const getTierBadge = (rank: number) => {
+    const tier = getTierMeta(rank);
+    if (!tier) return <span className="text-sm text-muted-foreground">-</span>;
+    const Icon = tier.Icon;
+    return (
+      <Badge
+        className={`${tier.badgeClass} font-semibold px-2.5 py-0.5 text-xs shadow-sm border-0 inline-flex items-center gap-1.5`}
+      >
+        <Icon className="h-3.5 w-3.5" />
+        {tier.title}
       </Badge>
     );
   };
@@ -303,6 +347,7 @@ export function LeaderboardTable({
               <TableHead className="w-16">Rank</TableHead>
               <TableHead>Participant</TableHead>
               <TableHead className="text-center">Score</TableHead>
+              <TableHead className="text-center">Badge</TableHead>
               <TableHead className="text-center">Reward</TableHead>
             </TableRow>
           </TableHeader>
@@ -343,6 +388,9 @@ export function LeaderboardTable({
                   <span className="font-semibold">
                     {entry.score.toLocaleString()}
                   </span>
+                </TableCell>
+                <TableCell className="text-center">
+                  {getTierBadge(entry.rank)}
                 </TableCell>
                 <TableCell className="text-center">
                   {getRewardBadge(entry.rank, entry.reward)}

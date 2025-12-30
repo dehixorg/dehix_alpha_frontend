@@ -581,8 +581,8 @@ const InterviewProfile: React.FC = () => {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="gap-3 border-b">
+    <Card className="w-full rounded-none">
+      <CardHeader className="gap-3 border-b rounded-none">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <CardTitle className="text-lg sm:text-xl">

@@ -59,11 +59,6 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Analytics',
   },
   {
-    href: '/freelancer/leaderboard',
-    icon: <Trophy className="h-5 w-5" />,
-    label: 'Leaderboard',
-  },
-  {
     href: '/freelancer/interviewer',
     icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',

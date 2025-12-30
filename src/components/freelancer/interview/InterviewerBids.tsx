@@ -285,7 +285,7 @@ export default function InterviewerBids() {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full p-4 sm:p-6">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="text-lg font-semibold">Interview bids</div>
