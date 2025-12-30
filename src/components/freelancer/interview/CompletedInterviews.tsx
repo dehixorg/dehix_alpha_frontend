@@ -25,13 +25,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -41,6 +34,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { notifyError } from '@/utils/toastMessage';
+import EmptyState from '@/components/shared/EmptyState';
+import InterviewItemCard from '@/components/freelancer/interview/InterviewItemCard';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type InterviewApiRole = 'interviewer' | 'interviewee';
 
@@ -208,52 +204,8 @@ export default function HistoryInterviews({
   ] as const;
 
   const renderInterviewCard = (item: InterviewItem) => {
-    const interviewDate = item?.interviewDate
-      ? new Date(item.interviewDate)
-      : undefined;
-    const meetingLink = String(item?.meetingLink || '').trim();
-    const talentName = String(item?.name || item?.talentName || '').trim();
-
     return (
-      <Card key={item._id} className="overflow-hidden">
-        <CardHeader className="gap-1">
-          <CardTitle className="text-base">
-            {String(item?.interviewType || 'INTERVIEW').toUpperCase()}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            {String(item?.interviewStatus || '-').toUpperCase()}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="text-sm">
-            <span className="font-medium">Talent:</span>{' '}
-            {String(item?.talentType || '-').toUpperCase()} / {item?.talentId || '-'}
-            {talentName ? ` (${talentName})` : ''}
-          </div>
-          <div className="text-sm">
-            <span className="font-medium">Date:</span>{' '}
-            {interviewDate ? interviewDate.toLocaleString() : '-'}
-          </div>
-          {item?.description ? (
-            <div className="text-sm text-muted-foreground line-clamp-2">
-              {item.description}
-            </div>
-          ) : null}
-          {meetingLink ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() =>
-                window.open(meetingLink, '_blank', 'noopener,noreferrer')
-              }
-            >
-              Open meeting
-            </Button>
-          ) : null}
-        </CardContent>
-      </Card>
+      <InterviewItemCard key={item._id} item={item} hideIds={hideIds} />
     );
   };
 
@@ -307,12 +259,51 @@ export default function HistoryInterviews({
     const rows = getAllItems();
 
     if (isLoading) {
-      return <div className="text-sm text-muted-foreground">Loading...</div>;
+      return (
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr className="text-left">
+                <th className="px-4 py-3 font-medium">Type</th>
+                <th className="px-4 py-3 font-medium">Talent</th>
+                <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Meeting</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <tr key={idx} className="border-t">
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <Skeleton className="h-5 w-24" />
+                  </td>
+                  <td className="px-4 py-3 min-w-[220px]">
+                    <Skeleton className="h-5 w-56" />
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <Skeleton className="h-5 w-40" />
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <Skeleton className="h-5 w-20" />
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <Skeleton className="h-9 w-20" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
     }
 
     if (rows.length === 0) {
       return (
-        <div className="text-sm text-muted-foreground">No interviews found.</div>
+        <EmptyState
+          className="py-8"
+          title="No interviews found"
+          description="Try adjusting your search or filters."
+        />
       );
     }
 
@@ -411,7 +402,7 @@ export default function HistoryInterviews({
 
   return (
     <>
-      <div className="flex flex-col gap-4 md:gap-6">
+      <div className="flex flex-col gap-4 md:gap-6 p-4 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="w-full sm:w-48">
@@ -444,7 +435,7 @@ export default function HistoryInterviews({
           <div className="flex items-center gap-2">
             {enableViewToggle ? (
               <>
-                <span className="text-xs text-muted-foreground">View</span>
+                
                 <Button
                   onClick={() => setView('table')}
                   variant={view === 'table' ? 'default' : 'outline'}
@@ -482,37 +473,73 @@ export default function HistoryInterviews({
                   value={section.key}
                   className={`border rounded-lg${idx === 0 ? '' : ' mt-4'}`}
                 >
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                    <div className="flex w-full items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`grid h-9 w-9 place-items-center rounded-md ${section.iconClassName}`}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <div className="text-left leading-tight">
-                          <div className="text-sm font-semibold">
-                            {section.title}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {section.description}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="shrink-0 rounded-md border px-2 py-1 text-xs font-medium text-muted-foreground">
-                        {items.length}
-                      </div>
+                  <AccordionTrigger className="group rounded-lg px-4 py-3 transition-colors hover:bg-muted/50 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                      <div className="flex w-full items-start justify-between gap-4">
+                                        <div className="flex items-start gap-3">
+                                          <div
+                                            className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ring-1 ring-inset ring-black/5 transition-colors dark:ring-white/10 ${section.iconClassName}`}
+                                          >
+                                            <Icon className="h-5 w-5" />
+                                          </div>
+                                          <div className="min-w-0 text-left leading-tight">
+                                            <div className="text-sm font-semibold tracking-tight">
+                                              {section.title}
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-muted-foreground">
+                                              {section.description}
+                                            </div>
+                                          </div>
+                                        </div>
+                  
+                                        <div className="shrink-0 my-auto mr-2 rounded-md border bg-background px-2.5 py-1 text-xs font-medium tabular-nums text-foreground/70 shadow-sm">
+                                          {items.length}
+                                        </div>
                     </div>
                   </AccordionTrigger>
 
                   <AccordionContent className="px-4 pb-4">
                     {isLoading ? (
-                      <div className="text-sm text-muted-foreground">Loading...</div>
-                    ) : items.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">
-                        No interviews found.
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {Array.from({ length: 6 }).map((_, idx) => (
+                          <div
+                            key={idx}
+                            className="overflow-hidden rounded-lg border bg-card/60"
+                          >
+                            <div className="space-y-3 p-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                  <Skeleton className="h-9 w-9 rounded-lg" />
+                                  <div className="space-y-2">
+                                    <Skeleton className="h-5 w-28" />
+                                    <Skeleton className="h-4 w-40" />
+                                  </div>
+                                </div>
+                                <Skeleton className="h-5 w-20" />
+                              </div>
+
+                              <div className="space-y-2 rounded-lg border bg-background/60 p-3">
+                                <div className="flex items-center gap-2">
+                                  <Skeleton className="h-4 w-4 rounded" />
+                                  <Skeleton className="h-4 w-16" />
+                                  <Skeleton className="h-4 w-36" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Skeleton className="h-4 w-4 rounded" />
+                                  <Skeleton className="h-4 w-44" />
+                                </div>
+                              </div>
+
+                              <Skeleton className="h-9 w-full" />
+                            </div>
+                          </div>
+                        ))}
                       </div>
+                    ) : items.length === 0 ? (
+                      <EmptyState
+                        className="py-8 mt-2"
+                        title="No interviews found"
+                        description="Try adjusting your search or filters."
+                      />
                     ) : (
                       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {items.map(renderInterviewCard)}

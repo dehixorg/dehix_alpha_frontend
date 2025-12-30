@@ -7,21 +7,33 @@ import { Trophy, Check, CheckCircle, Loader2 } from 'lucide-react';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
+import { axiosInstance } from '@/lib/axiosinstance';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
+import EmptyState from '@/components/shared/EmptyState';
 
 /* ================= CONFIG ================= */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-const GAMIFICATION_INFO_API = `${API_BASE_URL}/api/v1/gamification/info`;
-const STATUS_API = `${API_BASE_URL}/api/freelancer/gamification/status`;
-const ELIGIBLE_API = `${API_BASE_URL}/api/freelancer/gamification/eligible`;
-const CLAIM_BADGE_API = `${API_BASE_URL}/api/freelancer/gamification/claim-badge`;
-const LEVEL_UP_API = `${API_BASE_URL}/api/freelancer/gamification/level-up`;
+const GAMIFICATION_INFO_API = '/api/v1/gamification/info';
+const STATUS_API = '/api/freelancer/gamification/status';
+const ELIGIBLE_API = '/api/freelancer/gamification/eligible';
+const CLAIM_BADGE_API = '/api/freelancer/gamification/claim-badge';
+const LEVEL_UP_API = '/api/freelancer/gamification/level-up';
 
 /* ================= TYPES ================= */
 
@@ -85,27 +97,8 @@ interface GamificationInfoResponse {
 // Fetch public gamification info (badges and levels)
 const fetchGamificationInfo = async (): Promise<GamificationInfoResponse> => {
   try {
-    console.log('Fetching gamification info from:', GAMIFICATION_INFO_API);
-    const response = await fetch(GAMIFICATION_INFO_API, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Error response:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorData,
-      });
-      throw new Error(errorData.message || 'Failed to fetch gamification info');
-    }
-
-    const data = await response.json();
-    console.log('Gamification Info API Response:', data);
+    const response = await axiosInstance.get(GAMIFICATION_INFO_API);
+    const data = response?.data;
     return {
       badges: Array.isArray(data?.badges) ? data.badges : [],
       levels: Array.isArray(data?.levels) ? data.levels : [],
@@ -116,87 +109,32 @@ const fetchGamificationInfo = async (): Promise<GamificationInfoResponse> => {
   }
 };
 
-// Get the auth token from localStorage
-const getAuthToken = (): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token') || null;
-  }
-  return null;
-};
-
 const fetchStatus = async (): Promise<GamificationStatusResponse> => {
-  const token = getAuthToken();
-  if (!token) {
-    console.error('No authentication token found');
-    throw new Error('Please log in to view gamification data');
-  }
-
   try {
-    console.log('Fetching status from:', STATUS_API);
-    const response = await fetch(STATUS_API, {
-      method: 'GET',
-      credentials: 'include', // Important for cookies
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Error response:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorData,
-      });
-      throw new Error(errorData.message || 'Failed to fetch status');
-    }
-
-    const data = await response.json();
-    console.log('Status API Response:', data);
+    const response = await axiosInstance.get(STATUS_API);
+    const data = response?.data;
 
     // Handle both response formats for backward compatibility
     const result = data.data || data;
     console.log('Processed status data:', result);
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in fetchStatus:', error);
-    throw error;
+    if (error?.response?.status === 401) {
+      throw new Error('Please log in to view gamification data');
+    }
+    throw new Error(
+      error?.response?.data?.message ||
+        error?.message ||
+        'Failed to fetch status',
+    );
   }
 };
 
 const fetchEligible = async (): Promise<GamificationEligibleResponse> => {
-  const token = getAuthToken();
-  if (!token) {
-    console.error('No authentication token found');
-    throw new Error('Please log in to view eligible badges');
-  }
-
   try {
-    console.log('Fetching eligible from:', ELIGIBLE_API);
-    const response = await fetch(ELIGIBLE_API, {
-      method: 'GET',
-      credentials: 'include', // Important for cookies
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Error response:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorData,
-      });
-      throw new Error(errorData.message || 'Failed to fetch eligible items');
-    }
-
-    const data = await response.json();
-    console.log('Eligible API Response:', data);
+    const response = await axiosInstance.get(ELIGIBLE_API);
+    const data = response?.data;
 
     // Handle the response data
     const responseData = data.data || data;
@@ -225,8 +163,11 @@ const fetchEligible = async (): Promise<GamificationEligibleResponse> => {
         levels,
       },
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in fetchEligible:', error);
+    if (error?.response?.status === 401) {
+      throw new Error('Please log in to view eligible badges');
+    }
     // Return a properly structured response even in case of error
     return { data: { badges: [], levels: [] } };
   }
@@ -236,60 +177,37 @@ const fetchEligible = async (): Promise<GamificationEligibleResponse> => {
 const claimBadge = async (
   badgeId: string,
 ): Promise<{ success: boolean; message?: string }> => {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error('Please log in to claim badges');
-  }
-
   try {
-    const response = await fetch(CLAIM_BADGE_API, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ badgeId }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to claim badge');
-    }
-
+    await axiosInstance.post(CLAIM_BADGE_API, { badgeId });
     return { success: true, message: 'Badge claimed successfully!' };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error claiming badge:', error);
-    throw error;
+    if (error?.response?.status === 401) {
+      throw new Error('Please log in to claim badges');
+    }
+    throw new Error(
+      error?.response?.data?.message ||
+        error?.message ||
+        'Failed to claim badge',
+    );
   }
 };
 
 // Level up to next level
 const levelUp = async (): Promise<{ success: boolean; message?: string }> => {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error('Please log in to level up');
-  }
-
   try {
-    const response = await fetch(LEVEL_UP_API, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to level up');
-    }
-
-    const data = await response.json();
-    return { success: true, ...data };
+    const response = await axiosInstance.post(LEVEL_UP_API);
+    return { success: true, ...(response?.data || {}) };
   } catch (error: any) {
     console.error('Level up error:', error);
-    throw new Error(error.message || 'An error occurred while leveling up');
+    if (error?.response?.status === 401) {
+      throw new Error('Please log in to level up');
+    }
+    throw new Error(
+      error?.response?.data?.message ||
+        error?.message ||
+        'An error occurred while leveling up',
+    );
   }
 };
 
@@ -456,8 +374,8 @@ export default function LevelsAndBadgesPage() {
 
   // Handle authentication errors
   const authError =
-    statusError?.message?.includes('No authentication token found') ||
-    eligibleError?.message?.includes('No authentication token found');
+    statusError?.message?.includes('Please log in') ||
+    eligibleError?.message?.includes('Please log in');
 
   if (authError) {
     return (
@@ -474,36 +392,19 @@ export default function LevelsAndBadgesPage() {
             active="levels-badges"
           />
           <main className="flex-1 overflow-y-auto p-6">
-            <div className="bg-red-50 border-l-4 border-red-400 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-5 w-5 text-red-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">
-                    You need to be logged in to view this page. Please{' '}
-                    <a
-                      href="/login"
-                      className="font-medium text-red-700 underline hover:text-red-600"
-                    >
-                      sign in
-                    </a>
-                    .
-                  </p>
-                </div>
-              </div>
-            </div>
+            <Alert variant="destructive">
+              <AlertTitle>Authentication required</AlertTitle>
+              <AlertDescription>
+                You need to be logged in to view this page. Please{' '}
+                <a
+                  href="/login"
+                  className="font-medium underline underline-offset-4"
+                >
+                  sign in
+                </a>
+                .
+              </AlertDescription>
+            </Alert>
           </main>
         </div>
       </div>
@@ -526,11 +427,22 @@ export default function LevelsAndBadgesPage() {
             active="levels-badges"
           />
           <main className="flex-1 overflow-y-auto p-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-              <span className="ml-4 text-gray-600">
-                Loading gamification data...
-              </span>
+            <div className="mx-auto w-full max-w-5xl">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-7 w-52" />
+                    <Skeleton className="h-4 w-72" />
+                  </div>
+                  <Skeleton className="h-9 w-32" />
+                </div>
+                <Skeleton className="h-28 w-full" />
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <Skeleton className="h-36 w-full" />
+                  <Skeleton className="h-36 w-full" />
+                  <Skeleton className="h-36 w-full" />
+                </div>
+              </div>
             </div>
           </main>
         </div>
@@ -557,37 +469,21 @@ export default function LevelsAndBadgesPage() {
             active="levels-badges"
           />
           <main className="flex-1 overflow-y-auto p-6">
-            <div className="bg-red-50 border-l-4 border-red-400 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-5 w-5 text-red-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">
-                    Error loading gamification data. Please try again later.
-                  </p>
-                  <p className="mt-2 text-sm text-red-600">
-                    {statusError?.message || eligibleError?.message}
-                  </p>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    Retry
-                  </button>
-                </div>
-              </div>
+            <div className="mx-auto w-full max-w-4xl space-y-4">
+              <Alert variant="destructive">
+                <AlertTitle>Couldn&apos;t load gamification data</AlertTitle>
+                <AlertDescription>
+                  {statusError?.message || eligibleError?.message}
+                </AlertDescription>
+              </Alert>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="w-fit"
+              >
+                Retry
+              </Button>
             </div>
           </main>
         </div>
@@ -842,7 +738,7 @@ export default function LevelsAndBadgesPage() {
 
   // Main component render
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -855,83 +751,91 @@ export default function LevelsAndBadgesPage() {
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="settings"
+          breadcrumbItems={[
+            { label: 'Settings', link: '#' },
+            { label: 'Levels & Badges', link: '#' },
+          ]}
         />
 
-        <main className="p-4 sm:p-6 max-w-7xl mx-auto">
+        <main className="mx-auto max-w-7xl p-4 sm:p-6">
           {/* Header with Title and Level Up Button */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight">
                 Levels & Badges
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
-                Track your progress and achievements
+              <p className="text-sm text-muted-foreground">
+                Track your progress and achievements.
               </p>
             </div>
-            <Button
-              onClick={handleLevelUp}
-              disabled={!hasEligibleLevels || levelUpMutation.isPending}
-              className={`mt-2 sm:mt-0 flex items-center gap-2 ${
-                hasEligibleLevels
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-gray-300 cursor-not-allowed text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-              }`}
-            >
-              {levelUpMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Leveling Up...
-                </>
-              ) : hasEligibleLevels ? (
-                'Level Up!'
-              ) : (
-                'Max Level Reached'
-              )}
-            </Button>
+
+            <div className="flex flex-col items-start gap-1 sm:items-end">
+              <Button
+                onClick={handleLevelUp}
+                disabled={!hasEligibleLevels || levelUpMutation.isPending}
+                className="h-9"
+                type="button"
+              >
+                {levelUpMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Leveling up
+                  </>
+                ) : hasEligibleLevels ? (
+                  'Level up'
+                ) : (
+                  'Max level'
+                )}
+              </Button>
+              {hasEligibleLevels ? (
+                <div className="text-xs text-muted-foreground">
+                  Next: {String(nextLevel?.name || '-')}
+                </div>
+              ) : null}
+            </div>
           </div>
 
           {/* Current Level Card */}
-          {currentLevel && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Current Level
-                  </h2>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {currentLevel ? (
+            <Card className="mb-8">
+              <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
+                <div className="space-y-1">
+                  <CardTitle className="text-base">Current level</CardTitle>
+                  <CardDescription className="text-sm">
                     {currentLevel.name}
-                  </h3>
-                  <div className="mt-2 flex items-center text-sm text-green-600 dark:text-green-400 font-medium">
-                    <CheckCircle className="h-5 w-5 mr-1.5" />
-                    Current Level
-                  </div>
+                  </CardDescription>
                 </div>
-                <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
-                  <Trophy className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mt-6">
-                <div className="flex justify-between text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <Badge variant="secondary" className="gap-1">
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  Current
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Progress to next level</span>
                   <span>0%</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 dark:bg-blue-500 h-2.5 rounded-full"
-                    style={{ width: '0%' }}
-                  />
-                </div>
-              </div>
-            </div>
+                <Progress value={0} />
+              </CardContent>
+            </Card>
+          ) : (
+            <EmptyState
+              className="mb-8 py-10"
+              title="No level data"
+              description="Your current level will appear here once available."
+              icon={<Trophy className="h-10 w-10 text-muted-foreground" />}
+            />
           )}
 
           {/* Levels Section */}
           <section className="mb-12">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-              Available Levels
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Available levels</h2>
+              <span className="text-xs text-muted-foreground">
+                {allLevels.length} total
+              </span>
+            </div>
+
             <div className="space-y-4">
               {allLevels.length > 0 ? (
                 allLevels.map((level, index) => {
@@ -951,218 +855,192 @@ export default function LevelsAndBadgesPage() {
                       );
 
                   return (
-                    <div
-                      key={levelId}
-                      className={`bg-white dark:bg-gray-800 rounded-xl border ${
-                        isCurrent
-                          ? 'border-blue-200 dark:border-blue-900 shadow-md dark:shadow-lg'
-                          : 'border-gray-200 dark:border-gray-700'
-                      } p-6 transition-all`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div
-                            className={`h-10 w-10 rounded-full flex items-center justify-center mr-4 ${isCurrent ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}
-                          >
-                            <Trophy
-                              className={`h-6 w-6 ${isCurrent ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`}
-                            />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    <Card key={levelId}>
+                      <CardHeader className="space-y-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <CardTitle className="truncate text-base">
                               {level.name}
-                            </h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            </CardTitle>
+                            <CardDescription className="line-clamp-2">
                               {level.description}
-                            </p>
+                            </CardDescription>
                           </div>
-                        </div>
-                        <div>
+
                           {isCurrent ? (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
-                              <CheckCircle className="h-4 w-4 mr-1.5" />
+                            <Badge variant="secondary" className="gap-1">
+                              <CheckCircle className="h-3.5 w-3.5" />
                               Current
-                            </span>
+                            </Badge>
                           ) : isUnlocked ? (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-                              <Check className="h-4 w-4 mr-1.5" />
+                            <Badge variant="outline" className="gap-1">
+                              <Check className="h-3.5 w-3.5" />
                               Unlocked
-                            </span>
+                            </Badge>
                           ) : (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                              Locked
-                            </span>
+                            <Badge variant="outline">Locked</Badge>
                           )}
                         </div>
-                      </div>
+                      </CardHeader>
 
-                      {/* Progress Bar for Current Level */}
-                      <div className="mt-4">
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${isCurrent ? 'bg-blue-500' : isUnlocked ? 'bg-green-500' : 'bg-gray-400'}`}
-                            style={{
-                              width: isCurrent
-                                ? '50%'
-                                : isUnlocked
-                                  ? '100%'
-                                  : '0%',
-                            }}
-                          />
-                        </div>
-                      </div>
+                      <CardContent className="space-y-3">
+                        <Progress
+                          value={isCurrent ? 50 : isUnlocked ? 100 : 0}
+                        />
 
-                      {/* Requirements */}
-                      {isCurrent && level.requirements && (
-                        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Requirements to next level:
-                          </h4>
-                          <ul className="space-y-2">
-                            {Array.isArray(level.requirements) &&
-                              level.requirements.map(
-                                (req: string, i: number) => (
-                                  <li
-                                    key={i}
-                                    className="flex items-center text-sm text-gray-600 dark:text-gray-400"
-                                  >
-                                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                                    {req}
-                                  </li>
-                                ),
-                              )}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
+                        {/* Requirements */}
+                        {isCurrent && level.requirements && (
+                          <div className="space-y-2">
+                            <div className="text-xs font-medium text-muted-foreground">
+                              Requirements to next level
+                            </div>
+                            <div className="space-y-1">
+                              {Array.isArray(level.requirements)
+                                ? level.requirements.map(
+                                    (req: string, i: number) => (
+                                      <div
+                                        key={i}
+                                        className="flex items-start gap-2 text-sm"
+                                      >
+                                        <CheckCircle className="mt-0.5 h-4 w-4 text-emerald-600" />
+                                        <span className="text-muted-foreground">
+                                          {req}
+                                        </span>
+                                      </div>
+                                    ),
+                                  )
+                                : null}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   );
                 })
               ) : (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  No levels available
-                </div>
+                <EmptyState
+                  className="py-12"
+                  title="No levels available"
+                  description="Levels will appear here once they are configured."
+                  icon={<Trophy className="h-10 w-10 text-muted-foreground" />}
+                />
               )}
             </div>
           </section>
 
           {/* Badges Section */}
           <section>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                Your Badges
-              </h2>
-              <div className="flex items-center mt-3 sm:mt-0 bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700">
-                <Switch
-                  id="show-eligible"
-                  checked={showEligibleOnly}
-                  onCheckedChange={setShowEligibleOnly}
-                  className={`mr-2 ${showEligibleOnly ? 'data-[state=checked]:bg-blue-600' : ''}`}
-                />
-                <label
-                  htmlFor="show-eligible"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-200 cursor-pointer"
-                >
-                  Show eligible only
-                </label>
-              </div>
-            </div>
-
-            {filteredBadges.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredBadges.map((badge) => {
-                  const badgeId = badge._id || badge.badge_id || '';
-                  const isEarned = isBadgeEarned(badgeId);
-                  const isEligible = eligibleBadges.some(
-                    (b) => (b._id || b.badge_id) === badgeId,
-                  );
-
-                  return (
-                    <div
-                      key={badgeId}
-                      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
-                    >
-                      <div className="p-4">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <div
-                              className={`h-12 w-12 rounded-full flex items-center justify-center ${
-                                isEarned
-                                  ? 'bg-green-100 dark:bg-green-900/30'
-                                  : 'bg-gray-100 dark:bg-gray-700'
-                              }`}
-                            >
-                              <Trophy
-                                className={`h-6 w-6 ${isEarned ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}
-                              />
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                              {badge.name}
-                            </h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {badge.description ||
-                                'Earn this badge by completing achievements'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex justify-end">
-                          {isEarned ? (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-                              <Check className="h-3 w-3 mr-1" /> Earned
-                            </span>
-                          ) : isEligible ? (
-                            <Button
-                              onClick={() => handleClaimBadge(badgeId)}
-                              disabled={claimBadgeMutation.isPending}
-                              className="text-xs py-1 px-3 h-8"
-                              size="sm"
-                            >
-                              {claimBadgeMutation.isPending ? (
-                                <>
-                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                  Claiming...
-                                </>
-                              ) : (
-                                'Claim Badge'
-                              )}
-                            </Button>
-                          ) : (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              Not eligible yet
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center transition-colors">
-                <div className="mx-auto h-16 w-16 text-blue-400 dark:text-blue-500 mb-4">
-                  <Trophy className="h-full w-full opacity-70" />
+            <Card>
+              <CardHeader className="flex-row items-center justify-between space-y-0">
+                <div className="space-y-1">
+                  <CardTitle className="text-base">Your badges</CardTitle>
+                  <CardDescription>
+                    Earn badges by completing achievements.
+                  </CardDescription>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                  No Badges Available Yet
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                  You haven&apos;t unlocked any badges yet. Complete more tasks
-                  and earn badges to level up your profile!
-                </p>
-                <div className="mt-6">
-                  <Button
-                    variant="outline"
-                    className="border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                    onClick={() =>
-                      window.scrollTo({ top: 0, behavior: 'smooth' })
-                    }
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="show-eligible"
+                    checked={showEligibleOnly}
+                    onCheckedChange={setShowEligibleOnly}
+                  />
+                  <label
+                    htmlFor="show-eligible"
+                    className="text-sm font-medium"
                   >
-                    Check Your Progress
-                  </Button>
+                    Eligible only
+                  </label>
                 </div>
-              </div>
-            )}
+              </CardHeader>
+
+              <CardContent>
+                {filteredBadges.length > 0 ? (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {filteredBadges.map((badge) => {
+                      const badgeId = badge._id || badge.badge_id || '';
+                      const isEarned = isBadgeEarned(badgeId);
+                      const isEligible = eligibleBadges.some(
+                        (b) => (b._id || b.badge_id) === badgeId,
+                      );
+
+                      return (
+                        <Card key={badgeId} className="overflow-hidden">
+                          <CardHeader className="space-y-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <CardTitle className="truncate text-sm">
+                                  {badge.name}
+                                </CardTitle>
+                                <CardDescription className="line-clamp-2">
+                                  {badge.description ||
+                                    'Earn this badge by completing achievements'}
+                                </CardDescription>
+                              </div>
+
+                              {isEarned ? (
+                                <Badge className="gap-1" variant="secondary">
+                                  <Check className="h-3.5 w-3.5" />
+                                  Earned
+                                </Badge>
+                              ) : isEligible ? (
+                                <Badge variant="outline">Eligible</Badge>
+                              ) : (
+                                <Badge variant="outline">Locked</Badge>
+                              )}
+                            </div>
+                          </CardHeader>
+
+                          <CardContent className="pt-0">
+                            {isEarned ? null : isEligible ? (
+                              <Button
+                                onClick={() => handleClaimBadge(badgeId)}
+                                disabled={claimBadgeMutation.isPending}
+                                size="sm"
+                                className="w-full"
+                                type="button"
+                              >
+                                {claimBadgeMutation.isPending ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Claiming
+                                  </>
+                                ) : (
+                                  'Claim badge'
+                                )}
+                              </Button>
+                            ) : (
+                              <div className="text-xs text-muted-foreground">
+                                Not eligible yet
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <EmptyState
+                    className="py-12"
+                    title="No badges to show"
+                    description="Complete more tasks to unlock badges and level up your profile."
+                    icon={
+                      <Trophy className="h-10 w-10 text-muted-foreground" />
+                    }
+                    actions={
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          window.scrollTo({ top: 0, behavior: 'smooth' })
+                        }
+                        type="button"
+                      >
+                        Check progress
+                      </Button>
+                    }
+                  />
+                )}
+              </CardContent>
+            </Card>
           </section>
         </main>
       </div>

@@ -106,7 +106,7 @@ export default function InterviewerPage() {
                     </div>
                   </div>
 
-                  <div className="px-4 py-4 sm:px-6">
+                  <div>
                     <TabsContent value="profile" className="m-0">
                       <InterviewProfile />
                     </TabsContent>
