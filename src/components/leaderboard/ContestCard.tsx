@@ -1,5 +1,7 @@
 import React from 'react';
-import { Calendar, Users, Trophy, Award, Crown, Medal } from 'lucide-react';
+import { Calendar, Users, Trophy, Crown, Medal } from 'lucide-react';
+
+import EmptyState from '../shared/EmptyState';
 
 import {
   Card,
@@ -7,10 +9,12 @@ import {
   CardTitle,
   CardContent,
   CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FullLeaderboard } from '@/types/leaderboard';
+import StatusDot from '@/components/shared/StatusDot';
 
 // Helper Functions
 function formatDateRange(start: string, end: string): string {
@@ -34,7 +38,7 @@ function getEligibilitySummary(eligibility: {
     eligibility.levelsAllowed && eligibility.levelsAllowed.length > 0;
 
   if (!hasBadges && !hasLevels) {
-    return 'Open to all freelancers';
+    return <EmptyState title="Open to all" className="h-4" />;
   }
 
   return (
@@ -60,61 +64,57 @@ export function ContestCard({
   leaderboard: FullLeaderboard;
   onParticipate: (id: string) => void;
 }) {
-  const getFrequencyIcon = (frequency: string) => {
-    switch (frequency) {
-      case 'WEEKLY':
-        return <Award className="h-5 w-5" />;
-      case 'BIWEEKLY':
-        return <Calendar className="h-5 w-5" />;
-      case 'MONTHLY':
-        return <Trophy className="h-5 w-5" />;
-      default:
-        return <Trophy className="h-5 w-5" />;
-    }
-  };
-
-  const getFrequencyColor = (frequency: string) => {
-    switch (frequency) {
-      case 'WEEKLY':
-        return 'from-blue-400 to-blue-600';
-      case 'BIWEEKLY':
-        return 'from-purple-400 to-purple-600';
-      case 'MONTHLY':
-        return 'from-yellow-400 to-orange-600';
-      default:
-        return 'from-gray-400 to-gray-600';
-    }
-  };
+  const isCompleted = leaderboard.status === 'PUBLISHED';
+  const isJoined = Boolean(leaderboard.isJoined);
+  const statusForDot =
+    leaderboard.status === 'PUBLISHED'
+      ? 'COMPLETED'
+      : leaderboard.status === 'SCHEDULED'
+        ? 'PENDING'
+        : leaderboard.status;
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardHeader>
-        <div className="flex items-center justify-between mb-2">
-          <Badge
-            className={`bg-gradient-to-r ${getFrequencyColor(leaderboard.frequency)} text-white`}
-          >
-            {leaderboard.frequency}
-          </Badge>
-          <Badge variant="outline">{leaderboard.status}</Badge>
+    <Card className="group flex h-full flex-col overflow-hidden border transition-all duration-300 hover:shadow-md">
+      <CardHeader className="relative pb-4">
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2"></div>
+
+            <CardTitle className="flex items-start gap-2 text-lg leading-snug">
+              <span className="min-w-0 truncate">{leaderboard.name}</span>
+            </CardTitle>
+          </div>
+
+          <div className="flex items-center pt-1">
+            <StatusDot status={statusForDot} size="md" />
+          </div>
         </div>
-        <CardTitle className="flex items-center gap-2">
-          {getFrequencyIcon(leaderboard.frequency)}
-          {leaderboard.name}
-        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="flex-1 space-y-5">
+        {/* Date Range */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-2 rounded-md border bg-muted/20 px-3 py-1.5 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>
+              {formatDateRange(leaderboard.periodStart, leaderboard.periodEnd)}
+            </span>
+          </div>
+        </div>
+
+        {isJoined && !isCompleted && (
+          <Badge
+            variant="secondary"
+            className="bg-primary/10 text-primary hover:bg-primary/10"
+          >
+            Joined
+          </Badge>
+        )}
         {leaderboard.description && (
-          <CardDescription className="text-sm mt-1">
+          <CardDescription className="mt-2 line-clamp-2">
             {leaderboard.description}
           </CardDescription>
         )}
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Date Range */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          <span>
-            {formatDateRange(leaderboard.periodStart, leaderboard.periodEnd)}
-          </span>
-        </div>
 
         {/* Eligibility */}
         <div>
@@ -132,46 +132,47 @@ export function ContestCard({
           <p className="text-xs font-medium text-muted-foreground mb-2">
             Top Rewards
           </p>
-          <div className="space-y-2">
-            {leaderboard.rewardConfig.slice(0, 3).map((reward, idx) => {
-              const icons = [
-                <Crown key="crown" className="h-4 w-4 text-yellow-500" />,
-                <Trophy key="trophy" className="h-4 w-4 text-gray-400" />,
-                <Medal key="medal" className="h-4 w-4 text-orange-500" />,
-              ];
-              return (
-                <div
-                  key={reward.rank}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    {icons[idx]}
-                    <span>{reward.title}</span>
+          <div className="rounded-lg border bg-muted/20 p-3">
+            <div className="space-y-2">
+              {leaderboard.rewardConfig.slice(0, 3).map((reward, idx) => {
+                const icons = [
+                  <Crown key="crown" className="h-4 w-4 text-yellow-500" />,
+                  <Trophy key="trophy" className="h-4 w-4 text-gray-400" />,
+                  <Medal key="medal" className="h-4 w-4 text-orange-500" />,
+                ];
+                return (
+                  <div
+                    key={reward.rank}
+                    className="flex items-center justify-between gap-3 text-sm"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      {icons[idx]}
+                      <span className="min-w-0 truncate">{reward.title}</span>
+                    </div>
+                    <span className="shrink-0 font-semibold">
+                      ${reward.baseAmount}
+                    </span>
                   </div>
-                  <span className="font-semibold">${reward.baseAmount}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
-
+      </CardContent>
+      <CardFooter className="mt-auto flex items-center justify-end">
         {/* Participate Button */}
         <Button
           className="w-full"
-          variant={
-            leaderboard.isJoined || leaderboard.status === 'PUBLISHED'
-              ? 'outline'
-              : 'default'
-          }
+          variant={isJoined || isCompleted ? 'outline' : 'default'}
           onClick={() => onParticipate(leaderboard._id)}
         >
-          {leaderboard.status === 'PUBLISHED'
+          {isCompleted
             ? 'View Leaderboard'
-            : leaderboard.isJoined
+            : isJoined
               ? 'View Details'
               : 'Participate Now'}
         </Button>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

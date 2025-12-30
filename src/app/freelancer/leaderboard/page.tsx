@@ -2,15 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trophy } from 'lucide-react';
+import {
+  CalendarClock,
+  SignalHigh,
+  SignalLow,
+  SignalMedium,
+  Trophy,
+  Zap,
+} from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import {
   menuItemsTop,
   menuItemsBottom,
@@ -24,6 +39,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 // Skeleton Loaders
 function CardGridSkeleton() {
@@ -47,20 +68,171 @@ function CardGridSkeleton() {
 }
 
 // Empty State Component
-function EmptyState({ filter }: { filter: string }) {
+function EmptyIllustration() {
+  return (
+    <svg
+      viewBox="0 0 600 240"
+      role="img"
+      aria-label="No contests illustration"
+      className="w-full max-w-[520px]"
+    >
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="hsl(var(--primary))" stopOpacity="0.18" />
+          <stop offset="1" stopColor="hsl(var(--primary))" stopOpacity="0.06" />
+        </linearGradient>
+      </defs>
+      <rect x="24" y="24" width="552" height="192" rx="24" fill="url(#g)" />
+      <rect
+        x="70"
+        y="70"
+        width="220"
+        height="24"
+        rx="12"
+        fill="hsl(var(--muted))"
+      />
+      <rect
+        x="70"
+        y="108"
+        width="300"
+        height="14"
+        rx="7"
+        fill="hsl(var(--muted))"
+        opacity="0.9"
+      />
+      <rect
+        x="70"
+        y="132"
+        width="260"
+        height="14"
+        rx="7"
+        fill="hsl(var(--muted))"
+        opacity="0.75"
+      />
+      <circle
+        cx="468"
+        cy="118"
+        r="44"
+        fill="hsl(var(--primary))"
+        opacity="0.12"
+      />
+      <path
+        d="M468 88c10 0 18 8 18 18s-8 18-18 18-18-8-18-18 8-18 18-18Z"
+        fill="hsl(var(--primary))"
+        opacity="0.25"
+      />
+      <path
+        d="M442 166c14-20 40-20 52 0"
+        stroke="hsl(var(--primary))"
+        strokeOpacity="0.25"
+        strokeWidth="10"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function EmptyState({
+  filter,
+  onClear,
+}: {
+  filter: string;
+  onClear: () => void;
+}) {
   return (
     <Card>
-      <CardContent className="py-16">
-        <div className="flex flex-col items-center justify-center">
-          <Trophy className="h-16 w-16 text-muted-foreground/50 mb-4" />
-          <h3 className="text-xl font-semibold mb-2">
-            No {filter === 'ALL' ? '' : filter.toLowerCase()} Contests
-          </h3>
-          <p className="text-muted-foreground text-center max-w-md">
-            No {filter === 'ALL' ? '' : filter.toLowerCase()} contests found.
-            Try changing your filter.
+      <CardContent className="py-10 sm:py-14">
+        <div className="flex flex-col items-center justify-center gap-5">
+          <div className="text-muted-foreground">
+            <EmptyIllustration />
+          </div>
+          <div className="text-center">
+            <h3 className="text-xl font-semibold">
+              No {filter === 'ALL' ? '' : filter.toLowerCase()} contests
+            </h3>
+            <p className="text-muted-foreground mt-2 max-w-md">
+              There are no contests matching your current filters.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <Button variant="outline" onClick={onClear}>
+              Clear filters
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ContestStatCard({
+  title,
+  value,
+  icon,
+  variant,
+  subtitle,
+}: {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  subtitle: string;
+  variant: 'blue' | 'green' | 'amber';
+}) {
+  const styles = {
+    blue: {
+      bg: 'bg-gradient-to-br from-blue-50/70 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20',
+      dot: 'bg-blue-200/30 dark:bg-blue-900/20',
+      iconWrap: 'bg-blue-100 dark:bg-blue-900/50',
+      iconColor: 'text-blue-600 dark:text-blue-300',
+      valueGrad:
+        'bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-200',
+    },
+    green: {
+      bg: 'bg-gradient-to-br from-green-50/70 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20',
+      dot: 'bg-green-200/30 dark:bg-green-900/20',
+      iconWrap: 'bg-green-100 dark:bg-green-900/50',
+      iconColor: 'text-green-600 dark:text-green-300',
+      valueGrad:
+        'bg-gradient-to-r from-green-600 to-green-800 dark:from-green-400 dark:to-green-200',
+    },
+    amber: {
+      bg: 'bg-gradient-to-br from-amber-50/70 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20',
+      dot: 'bg-amber-200/30 dark:bg-amber-900/20',
+      iconWrap: 'bg-amber-100 dark:bg-amber-900/50',
+      iconColor: 'text-amber-600 dark:text-amber-300',
+      valueGrad:
+        'bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-200',
+    },
+  } as const;
+
+  const s = styles[variant];
+
+  return (
+    <Card
+      className={`relative overflow-hidden group hover:shadow-md transition-all duration-300 border border ${s.bg}`}
+    >
+      <div
+        className={`absolute -right-5 -top-5 w-24 h-24 rounded-full group-hover:scale-110 transition-transform duration-500 ${s.dot}`}
+      />
+      <CardHeader className="pb-1 px-4 pt-3 relative z-10">
+        <div className="flex items-center justify-between">
+          <div
+            className={`w-8 h-8 flex items-center justify-center rounded-lg ${s.iconWrap}`}
+          >
+            <span className={s.iconColor}>{icon}</span>
+          </div>
+          <p
+            className={`text-2xl font-bold bg-clip-text text-transparent ${s.valueGrad}`}
+          >
+            {value}
           </p>
         </div>
+        <CardTitle className="text-lg font-semibold text-foreground/90">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="relative z-10 px-4 py-1">
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
       </CardContent>
     </Card>
   );
@@ -126,6 +298,14 @@ export default function LeaderboardPage() {
     (l) => l.frequency === 'MONTHLY',
   );
 
+  const activeCount = leaderboards.filter((l) => l.status === 'ACTIVE').length;
+  const upcomingCount = leaderboards.filter(
+    (l) => l.status === 'SCHEDULED',
+  ).length;
+  const completedCount = leaderboards.filter(
+    (l) => l.status === 'PUBLISHED',
+  ).length;
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
@@ -143,119 +323,216 @@ export default function LeaderboardPage() {
             { label: 'Leaderboard', link: '/freelancer/leaderboard' },
           ]}
         />
-        <main className="p-4 sm:px-8">
-          {/* Page Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
-                  <Trophy className="h-8 w-8 text-white" />
+        <main className="flex-1 p-4 sm:px-6 sm:py-2">
+          <div className="mx-auto w-full max-w-[92vw]">
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                      <Trophy className="h-5 w-5" />
+                      Leaderboard
+                    </CardTitle>
+                    <CardDescription>
+                      Join contests, track performance, and compete for rewards.
+                    </CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold">Freelancer Contests</h1>
-                  <p className="text-gray-400 mt-2">
-                    Join active contests and compete for rewards
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {isLoading ? (
-            <CardGridSkeleton />
-          ) : error ? (
-            <Card>
-              <CardContent className="py-16">
-                <div className="flex flex-col items-center justify-center">
-                  <Trophy className="h-16 w-16 text-destructive/50 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">
-                    Error Loading Data
-                  </h3>
-                  <p className="text-muted-foreground text-center max-w-md">
-                    {error}
-                  </p>
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <ContestStatCard
+                    title="Active"
+                    value={activeCount}
+                    subtitle="Live contests right now"
+                    variant="blue"
+                    icon={<Zap className="h-4 w-4" />}
+                  />
+                  <ContestStatCard
+                    title="Upcoming"
+                    value={upcomingCount}
+                    subtitle="Scheduled contests"
+                    variant="amber"
+                    icon={<CalendarClock className="h-4 w-4" />}
+                  />
+                  <ContestStatCard
+                    title="Completed"
+                    value={completedCount}
+                    subtitle="Finished contests"
+                    variant="green"
+                    icon={<Trophy className="h-4 w-4" />}
+                  />
                 </div>
+              </CardHeader>
+
+              <CardContent className="p-0">
+                <Tabs defaultValue="weekly" className="w-full">
+                  <div className="border-b px-2 sm:px-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="max-w-full overflow-x-auto no-scrollbar">
+                        <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                          <TabsTrigger
+                            value="weekly"
+                            className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                          >
+                            <SignalLow className="h-4 w-4" />
+                            <span>Weekly</span>
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="biweekly"
+                            className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                          >
+                            <SignalMedium className="h-4 w-4" />
+                            <span>Bi-weekly</span>
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="monthly"
+                            className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                          >
+                            <SignalHigh className="h-4 w-4" />
+                            <span>Monthly</span>
+                          </TabsTrigger>
+                        </TabsList>
+                      </div>
+
+                      <TooltipProvider>
+                        <div className="flex items-center gap-2">
+                          <Separator
+                            orientation="vertical"
+                            className="hidden sm:block h-8"
+                          />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="w-[190px]">
+                                <Select
+                                  value={statusFilter}
+                                  onValueChange={(value) =>
+                                    setStatusFilter(value)
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Filter by status" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="ALL">All</SelectItem>
+                                    <SelectItem value="ACTIVE">
+                                      Active
+                                    </SelectItem>
+                                    <SelectItem value="SCHEDULED">
+                                      Upcoming
+                                    </SelectItem>
+                                    <SelectItem value="PUBLISHED">
+                                      Completed
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Filter contests by status
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+
+                  <div className="px-4 py-4 sm:px-6">
+                    {isLoading ? (
+                      <CardGridSkeleton />
+                    ) : error ? (
+                      <Card>
+                        <CardContent className="py-10 sm:py-14">
+                          <div className="flex flex-col items-center justify-center gap-4 text-center">
+                            <div className="h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center">
+                              <Trophy className="h-7 w-7 text-destructive" />
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-semibold">
+                                Couldn’t load leaderboard
+                              </h3>
+                              <p className="text-muted-foreground mt-2 max-w-md">
+                                {error}
+                              </p>
+                            </div>
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                              <Button onClick={loadLeaderboardData}>
+                                Try again
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => setStatusFilter('ALL')}
+                              >
+                                Clear filters
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <>
+                        <TabsContent value="weekly" className="m-0">
+                          {weeklyLeaderboards.length === 0 ? (
+                            <EmptyState
+                              filter={statusFilter}
+                              onClear={() => setStatusFilter('ALL')}
+                            />
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {weeklyLeaderboards.map((lb) => (
+                                <ContestCard
+                                  key={lb._id}
+                                  leaderboard={lb}
+                                  onParticipate={handleParticipate}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="biweekly" className="m-0">
+                          {biweeklyLeaderboards.length === 0 ? (
+                            <EmptyState
+                              filter={statusFilter}
+                              onClear={() => setStatusFilter('ALL')}
+                            />
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {biweeklyLeaderboards.map((lb) => (
+                                <ContestCard
+                                  key={lb._id}
+                                  leaderboard={lb}
+                                  onParticipate={handleParticipate}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="monthly" className="m-0">
+                          {monthlyLeaderboards.length === 0 ? (
+                            <EmptyState
+                              filter={statusFilter}
+                              onClear={() => setStatusFilter('ALL')}
+                            />
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {monthlyLeaderboards.map((lb) => (
+                                <ContestCard
+                                  key={lb._id}
+                                  leaderboard={lb}
+                                  onParticipate={handleParticipate}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </TabsContent>
+                      </>
+                    )}
+                  </div>
+                </Tabs>
               </CardContent>
             </Card>
-          ) : (
-            <>
-              {/* Filter Controls */}
-              <div className="flex justify-end mb-6">
-                <div className="w-[180px]">
-                  <Select
-                    value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ACTIVE">Active</SelectItem>
-                      <SelectItem value="PUBLISHED">Completed</SelectItem>
-                      <SelectItem value="SCHEDULED">Upcoming</SelectItem>
-                      <SelectItem value="ALL">All</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Tabs defaultValue="weekly" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 max-w-[400px] mb-8">
-                  <TabsTrigger value="weekly">Weekly</TabsTrigger>
-                  <TabsTrigger value="biweekly">Bi-weekly</TabsTrigger>
-                  <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="weekly">
-                  {weeklyLeaderboards.length === 0 ? (
-                    <EmptyState filter={statusFilter} />
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {weeklyLeaderboards.map((lb) => (
-                        <ContestCard
-                          key={lb._id}
-                          leaderboard={lb}
-                          onParticipate={handleParticipate}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="biweekly">
-                  {biweeklyLeaderboards.length === 0 ? (
-                    <EmptyState filter={statusFilter} />
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {biweeklyLeaderboards.map((lb) => (
-                        <ContestCard
-                          key={lb._id}
-                          leaderboard={lb}
-                          onParticipate={handleParticipate}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="monthly">
-                  {monthlyLeaderboards.length === 0 ? (
-                    <EmptyState filter={statusFilter} />
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {monthlyLeaderboards.map((lb) => (
-                        <ContestCard
-                          key={lb._id}
-                          leaderboard={lb}
-                          onParticipate={handleParticipate}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </>
-          )}
+          </div>
         </main>
       </div>
     </div>
