@@ -1,8 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trophy, Check, CheckCircle, Loader2 } from 'lucide-react';
+import {
+  Trophy,
+  Check,
+  CheckCircle,
+  Loader2,
+  Lock,
+  Crown,
+  Medal,
+} from 'lucide-react';
 
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -116,7 +124,6 @@ const fetchStatus = async (): Promise<GamificationStatusResponse> => {
 
     // Handle both response formats for backward compatibility
     const result = data.data || data;
-    console.log('Processed status data:', result);
     return result;
   } catch (error: any) {
     console.error('Error in fetchStatus:', error);
@@ -218,6 +225,37 @@ export default function LevelsAndBadgesPage() {
   const [showEligibleOnly, setShowEligibleOnly] = useState(false);
   const queryClient = useQueryClient();
 
+  const getStepTierMeta = (levelIndex: number) => {
+    const stageNames = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+    const stageIndex = Math.floor(levelIndex / 3);
+    const stage = stageNames[stageIndex] || `Stage ${stageIndex + 1}`;
+
+    const tierIndex = levelIndex % 3;
+    if (tierIndex === 0)
+      return {
+        title: `${stage} Bronze`,
+        short: `${stage} Bronze`,
+        Icon: Medal,
+        badgeClass:
+          'bg-gradient-to-r from-orange-400 to-orange-600 dark:text-muted text-white/80',
+      };
+    if (tierIndex === 1)
+      return {
+        title: `${stage} Silver`,
+        short: `${stage} Silver`,
+        Icon: Trophy,
+        badgeClass:
+          'bg-gradient-to-r from-gray-300 to-gray-400 dark:text-muted text-white/80',
+      };
+    return {
+      title: `${stage} Gold`,
+      short: `${stage} Gold`,
+      Icon: Crown,
+      badgeClass:
+        'bg-gradient-to-r from-yellow-400 to-amber-500 dark:text-muted text-white/80',
+    };
+  };
+
   // Level up mutation with optimistic updates
   const levelUpMutation = useMutation({
     mutationFn: levelUp,
@@ -308,7 +346,7 @@ export default function LevelsAndBadgesPage() {
       // Invalidate and refetch to ensure we have fresh data
       queryClient.invalidateQueries({ queryKey: ['gamification-status'] });
       queryClient.invalidateQueries({ queryKey: ['gamification-eligible'] });
-
+      console.log('Badge claimed successfully:', badgeId);
       // Show success message
       toast({
         title: 'Badge Claimed!',
@@ -316,8 +354,6 @@ export default function LevelsAndBadgesPage() {
           data.message || 'You have successfully claimed your badge!',
         variant: 'default',
       });
-
-      console.log(`Successfully claimed badge ${badgeId}:`, data);
     },
     onError: (error: Error, badgeId, context) => {
       console.error(`Error claiming badge ${badgeId}:`, error);
@@ -377,6 +413,17 @@ export default function LevelsAndBadgesPage() {
     statusError?.message?.includes('Please log in') ||
     eligibleError?.message?.includes('Please log in');
 
+  useEffect(() => {
+    if (authError) return;
+    if (!statusError && !eligibleError) return;
+
+    toast({
+      variant: 'destructive',
+      title: "Couldn't load gamification data",
+      description: String(statusError?.message || eligibleError?.message || ''),
+    });
+  }, [authError, statusError, eligibleError]);
+
   if (authError) {
     return (
       <div className="flex flex-col h-screen">
@@ -414,17 +461,23 @@ export default function LevelsAndBadgesPage() {
   // Show loading state
   if (loadingStatus || loadingEligible) {
     return (
-      <div className="flex flex-col h-screen">
-        <Header
+      <div className="min-h-screen">
+        <SidebarMenu
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="settings"
+          active="Levels & Badges"
+          isKycCheck={true}
         />
-        <div className="flex flex-1 overflow-hidden">
-          <SidebarMenu
+
+        <div className="sm:ml-14">
+          <Header
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="levels-badges"
+            activeMenu="settings"
+            breadcrumbItems={[
+              { label: 'Settings', link: '#' },
+              { label: 'Levels & Badges', link: '#' },
+            ]}
           />
           <main className="flex-1 overflow-y-auto p-6">
             <div className="mx-auto w-full max-w-5xl">
@@ -450,58 +503,11 @@ export default function LevelsAndBadgesPage() {
     );
   }
 
-  // Show error state if there was an error
-  if (statusError || eligibleError) {
-    console.error('API Error - Status:', statusError);
-    console.error('API Error - Eligible:', eligibleError);
-
-    return (
-      <div className="flex flex-col h-screen">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="settings"
-        />
-        <div className="flex flex-1 overflow-hidden">
-          <SidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="levels-badges"
-          />
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="mx-auto w-full max-w-4xl space-y-4">
-              <Alert variant="destructive">
-                <AlertTitle>Couldn&apos;t load gamification data</AlertTitle>
-                <AlertDescription>
-                  {statusError?.message || eligibleError?.message}
-                </AlertDescription>
-              </Alert>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => window.location.reload()}
-                className="w-fit"
-              >
-                Retry
-              </Button>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
-  /* ===== FRONTEND LOGIC (BASED ON BACKEND DATA) ===== */
-
-  // Process the status API response
-  console.log('Status API response:', status);
-
   // Handle both response formats
   const statusData = status?.data || status || {};
 
   // Get current level from the response
   const currentLevel = statusData.currentLevel || null;
-  console.log('Current level from API:', currentLevel);
 
   // Get earned badges from the response
   const earnedBadges = Array.isArray(statusData.badges)
@@ -510,12 +516,6 @@ export default function LevelsAndBadgesPage() {
   const earnedBadgeIds = new Set(
     earnedBadges.map((badge: BadgeItem) => badge.badge_id || badge._id || ''),
   );
-  console.log('Earned badges:', earnedBadges);
-  console.log('Earned badge IDs:', Array.from(earnedBadgeIds));
-
-  // Process gamification info (public badges and levels)
-  console.log('=== GAMIFICATION INFO ===');
-  console.log('Gamification info:', gamificationInfo);
 
   // Extract badges and levels from the gamification info
   const publicBadges = Array.isArray(gamificationInfo?.badges)
@@ -524,13 +524,6 @@ export default function LevelsAndBadgesPage() {
   const publicLevels = Array.isArray(gamificationInfo?.levels)
     ? gamificationInfo.levels
     : [];
-
-  console.log('Public badges:', publicBadges);
-  console.log('Public levels:', publicLevels);
-
-  // Then process the eligible data
-  console.log('=== RAW ELIGIBLE DATA ===');
-  console.log(JSON.stringify(eligible, null, 2));
 
   // Extract badges and levels from the response
   let eligibleBadges: BadgeItem[] = [];
@@ -583,36 +576,10 @@ export default function LevelsAndBadgesPage() {
       isActive: true,
     }));
 
-  console.log('All unique badges:', allUniqueBadges);
-  console.log('All unique levels:', allUniqueLevels);
-
-  console.log('=== PROCESSED DATA ===');
-  console.log('Eligible badges count:', eligibleBadges.length);
-  console.log('Eligible levels count:', eligibleLevels.length);
-
-  // Log the first badge and level for debugging
-  if (eligibleBadges.length > 0) {
-    console.log(
-      'First eligible badge:',
-      JSON.stringify(eligibleBadges[0], null, 2),
-    );
-  }
-  if (eligibleLevels.length > 0) {
-    console.log(
-      'First eligible level:',
-      JSON.stringify(eligibleLevels[0], null, 2),
-    );
-  }
-
   // Process active badges from both public and eligible sources
   const activeBadges = allUniqueBadges.filter((item) => {
     if (!item) return false;
     const isActive = item.isActive !== false;
-    console.log('Badge:', {
-      id: item._id || item.badge_id,
-      name: item.name,
-      isActive,
-    });
     return isActive;
   });
 
@@ -620,18 +587,9 @@ export default function LevelsAndBadgesPage() {
   const activeLevels = allUniqueLevels.filter((item) => {
     if (!item) return false;
     const isActive = item.isActive !== false;
-    console.log('Level:', {
-      id: item._id || item.level_id,
-      name: item.name,
-      isActive,
-    });
     return isActive;
   });
 
-  console.log('Active badges count:', activeBadges.length);
-  console.log('Active levels count:', activeLevels.length);
-
-  // Process levels
   const allLevels = activeLevels
     .map((level: any) => ({
       ...level,
@@ -655,17 +613,8 @@ export default function LevelsAndBadgesPage() {
       isActive: badge.isActive !== false,
       priority: badge.priority || 0,
     };
-
-    console.log('Processed badge:', JSON.stringify(processedBadge, null, 2));
     return processedBadge;
   });
-
-  console.log('Total processed badges:', allBadges.length);
-
-  // Debug badge filtering
-  console.log('=== BADGE FILTERING ===');
-  console.log('Show eligible only:', showEligibleOnly);
-  console.log('All badges count:', allBadges.length);
 
   // Filter badges based on showEligibleOnly
   const filteredBadges = showEligibleOnly
@@ -677,23 +626,26 @@ export default function LevelsAndBadgesPage() {
       })
     : allBadges;
 
-  // Debug eligible levels
-  console.log('Eligible levels:', eligibleLevels);
-  console.log('Current level:', currentLevel);
-
   // Check if there are any eligible levels to show
   const hasEligibleLevels = eligibleLevels.length > 0;
 
   // Get the next level the user can level up to
   const nextLevel = eligibleLevels[0];
 
+  const currentLevelIndex = currentLevel
+    ? allLevels.findIndex((lvl: any) => {
+        const lvlId = lvl._id || lvl.level_id;
+        const curId = currentLevel._id || currentLevel.level_id;
+        return Boolean(curId && lvlId && String(lvlId) === String(curId));
+      })
+    : -1;
+  const currentLevelTier =
+    currentLevelIndex >= 0 ? getStepTierMeta(currentLevelIndex) : null;
+
   // Function to check if a badge is earned
   const isBadgeEarned = (badgeId: string): boolean => {
     return earnedBadgeIds.has(badgeId);
   };
-
-  console.log('Has eligible levels:', hasEligibleLevels);
-  console.log('Next level:', nextLevel);
 
   // Handle level up with confirmation
   const handleLevelUp = async () => {
@@ -795,27 +747,109 @@ export default function LevelsAndBadgesPage() {
             </div>
           </div>
 
+          <Card className="mb-8">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-base">
+                How levels & badges work
+              </CardTitle>
+              <CardDescription>
+                Every 3 levels form a stage (Beginner → Intermediate → ...).
+                Within each stage the tiers go Bronze → Silver → Gold.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  getStepTierMeta(0),
+                  getStepTierMeta(1),
+                  getStepTierMeta(2),
+                ].map((tier, idx) => {
+                  if (!tier) return null;
+                  const Icon = tier.Icon;
+                  const subtleBg =
+                    idx === 0
+                      ? 'from-orange-400/10 to-orange-600/10 border-orange-500/20'
+                      : idx === 1
+                        ? 'from-gray-300/10 to-gray-400/10 border-gray-400/20'
+                        : 'from-yellow-400/10 to-amber-500/10 border-yellow-500/20';
+
+                  return (
+                    <div
+                      key={tier.short}
+                      className={`flex items-center gap-3 rounded-lg border bg-gradient-to-r p-3 ${subtleBg}`}
+                    >
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-full ${tier.badgeClass}`}
+                        title={tier.title}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold truncate">
+                          {tier.title}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {idx === 0
+                            ? 'Bronze tier'
+                            : idx === 1
+                              ? 'Silver tier'
+                              : 'Gold tier'}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Current Level Card */}
           {currentLevel ? (
-            <Card className="mb-8">
-              <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
-                <div className="space-y-1">
-                  <CardTitle className="text-base">Current level</CardTitle>
-                  <CardDescription className="text-sm">
-                    {currentLevel.name}
-                  </CardDescription>
+            <Card className="mb-8 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5" />
+              <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+              <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+
+              <CardHeader className="relative flex-row items-start justify-between gap-3 space-y-0">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-primary to-primary/70 text-primary-foreground">
+                    <Trophy className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 space-y-1">
+                    <CardTitle className="text-base">Current level</CardTitle>
+                    <CardDescription className="text-sm truncate">
+                      {currentLevel.name}
+                    </CardDescription>
+                    {currentLevelTier
+                      ? (() => {
+                          const Icon = currentLevelTier.Icon;
+                          return (
+                            <div className="pt-1">
+                              <Badge
+                                className={`${currentLevelTier.badgeClass} border-0 inline-flex items-center gap-1.5`}
+                                title={currentLevelTier.title}
+                              >
+                                <Icon className="h-3.5 w-3.5" />
+                                {currentLevelTier.title}
+                              </Badge>
+                            </div>
+                          );
+                        })()
+                      : null}
+                  </div>
                 </div>
-                <Badge variant="secondary" className="gap-1">
+
+                <Badge variant="secondary" className="gap-1 whitespace-nowrap">
                   <CheckCircle className="h-3.5 w-3.5" />
                   Current
                 </Badge>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="relative space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Progress to next level</span>
                   <span>0%</span>
                 </div>
-                <Progress value={0} />
+                <Progress value={0} className="h-2 w-full bg-foreground/10" />
               </CardContent>
             </Card>
           ) : (
@@ -831,7 +865,7 @@ export default function LevelsAndBadgesPage() {
           <section className="mb-12">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Available levels</h2>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground border px-2 rounded-full">
                 {allLevels.length} total
               </span>
             </div>
@@ -854,14 +888,36 @@ export default function LevelsAndBadgesPage() {
                         ),
                       );
 
+                  const tier = getStepTierMeta(index);
+
                   return (
                     <Card key={levelId}>
                       <CardHeader className="space-y-1">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <CardTitle className="truncate text-base">
-                              {level.name}
-                            </CardTitle>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <CardTitle className="truncate text-base">
+                                {level.name}
+                              </CardTitle>
+                              {tier ? (
+                                (() => {
+                                  const Icon = tier.Icon;
+                                  return (
+                                    <Badge
+                                      className={`${tier.badgeClass} border-0 inline-flex items-center gap-1.5`}
+                                      title={tier.title}
+                                    >
+                                      <Icon className="h-3.5 w-3.5" />
+                                      {tier.short}
+                                    </Badge>
+                                  );
+                                })()
+                              ) : (
+                                <Badge variant="outline" className="text-xs">
+                                  Step {index + 1}
+                                </Badge>
+                              )}
+                            </div>
                             <CardDescription className="line-clamp-2">
                               {level.description}
                             </CardDescription>
@@ -878,7 +934,10 @@ export default function LevelsAndBadgesPage() {
                               Unlocked
                             </Badge>
                           ) : (
-                            <Badge variant="outline">Locked</Badge>
+                            <Badge variant="outline" className="gap-1">
+                              <Lock className="h-3.5 w-3.5" />
+                              Locked
+                            </Badge>
                           )}
                         </div>
                       </CardHeader>
@@ -886,6 +945,7 @@ export default function LevelsAndBadgesPage() {
                       <CardContent className="space-y-3">
                         <Progress
                           value={isCurrent ? 50 : isUnlocked ? 100 : 0}
+                          className="h-1 w-full bg-foreground/20"
                         />
 
                         {/* Requirements */}
