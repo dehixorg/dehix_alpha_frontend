@@ -4,8 +4,12 @@ import {
   ArrowRight,
   Briefcase,
   CheckCircle2,
+  DollarSign,
   Eye,
   EyeOff,
+  Github,
+  Globe,
+  Linkedin,
   Loader2,
   LoaderCircle,
   Rocket,
@@ -30,13 +34,27 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Label } from '@/components/ui/label';
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
   Form,
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import OtpLogin from '@/components/shared/otpDialog';
 import DateOfBirthPicker from '@/components/DateOfBirthPicker/DateOfBirthPicker';
 import TermsDialog from '@/components/shared/FreelancerTermsDialog';
@@ -59,60 +77,92 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
     { id: 2, title: 'Verification', icon: Shield },
   ];
 
+  const activeStep = steps.find((s) => s.id === currentStep) ?? steps[0];
+  const progressValue = ((currentStep + 1) / steps.length) * 100;
+
   return (
-    <div className="w-full max-w-5xl mx-auto py-4 sm:py-6 mb-10 sm:mb-8">
-      <div className="text-center space-y-2 sm:space-y-4">
-        <h1 className="text-3xl font-bold">
-          Create Your Freelancer <span className="block">Account</span>
-        </h1>
-        <p className="text-muted-foreground">
-          Join our community and start your Freelancing Journey.
-        </p>
+    <div className="w-full">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">
+              Step {currentStep + 1} of {steps.length}
+            </Badge>
+            <h2 className="text-base sm:text-lg font-semibold tracking-tight truncate">
+              {activeStep.title}
+            </h2>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Complete the steps below to finish setting up your freelancer
+            account.
+          </p>
+        </div>
       </div>
-      <div className="my-4 text-center text-xs sm:text-sm">
-        Are you a business?{' '}
-        <Button variant="outline" size="sm" className="ml-2" asChild>
-          <Link href="/auth/sign-up/business">Register Business</Link>
-        </Button>
+
+      <div className="mt-4">
+        <Progress value={progressValue} className="h-2" />
       </div>
-      <div className="flex items-center justify-center mt-4 sm:mt-8 px-2 sm:px-0">
-        {steps.map((step, index) => (
-          <React.Fragment key={step.id}>
-            <div className="relative">
-              <div
-                className={`w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300
-                ${
-                  currentStep > step.id
-                    ? 'bg-primary border-primary'
-                    : currentStep === step.id
-                      ? 'border-primary bg-background text-primary'
-                      : 'border-muted bg-background text-muted'
-                }`}
-              >
-                {currentStep > step.id ? (
-                  <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6 text-background" />
-                ) : (
-                  <step.icon className="w-4 h-4 sm:w-6 sm:h-6" />
+
+      <nav aria-label="Registration steps" className="mt-4">
+        <ol className="grid grid-cols-3 gap-2">
+          {steps.map((step) => {
+            const isActive = currentStep === step.id;
+            const isDone = currentStep > step.id;
+
+            return (
+              <li
+                key={step.id}
+                aria-current={isActive ? 'step' : undefined}
+                className={cn(
+                  'rounded-lg border px-2 py-2 sm:px-3 sm:py-3 transition-colors',
+                  isActive
+                    ? 'border-primary/40 bg-primary/5 shadow-sm'
+                    : isDone
+                      ? 'border-border bg-muted/30'
+                      : 'border-border bg-background hover:bg-muted/20',
                 )}
-              </div>
-              <span
-                className={`absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs sm:text-sm whitespace-nowrap font-medium
-                ${currentStep >= step.id ? 'text-primary' : 'text-muted-foreground'}`}
               >
-                {step.title}
-              </span>
-            </div>
-            {index < steps.length - 1 && (
-              <div className="w-20 sm:w-40 mx-2 sm:mx-4 h-[2px] bg-muted">
-                <div
-                  className="h-full bg-primary transition-all duration-500"
-                  style={{ width: currentStep > step.id ? '100%' : '0%' }}
-                />
-              </div>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <div
+                    className={cn(
+                      'h-7 w-7 sm:h-8 sm:w-8 rounded-full border flex items-center justify-center shrink-0',
+                      isDone
+                        ? 'bg-primary border-primary text-primary-foreground'
+                        : isActive
+                          ? 'border-primary text-primary'
+                          : 'border-muted-foreground/30 text-muted-foreground',
+                    )}
+                  >
+                    {isDone ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : (
+                      <step.icon className="h-4 w-4" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className={cn(
+                        'text-xs sm:text-sm font-medium truncate',
+                        isActive ? 'text-foreground' : 'text-muted-foreground',
+                      )}
+                      title={step.title}
+                    >
+                      {step.title}
+                    </p>
+                    <p className="hidden sm:block text-[11px] text-muted-foreground truncate">
+                      {step.id === 0
+                        ? 'Basics & security'
+                        : step.id === 1
+                          ? 'Links & pricing'
+                          : 'Phone & consent'}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
     </div>
   );
 };
@@ -154,12 +204,21 @@ const profileFormSchema = z
       .string()
       .optional()
       .refine(
-        (value) =>
-          !value ||
-          /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_-]+\/?$/.test(value),
+        (value) => {
+          const v = (value ?? '').trim();
+          if (!v) return true;
+
+          // Accept:
+          // - github.com/username
+          // - www.github.com/username
+          // - https://github.com/username (with optional trailing path/query)
+          const re =
+            /^(?:https?:\/\/)?(?:www\.)?github\.com\/[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\/?(?:[?#].*)?$/;
+          return re.test(v);
+        },
         {
           message:
-            'GitHub URL must start with "https://github.com/" or "www.github.com/" and have a valid username',
+            'Enter a valid GitHub profile (e.g. github.com/username or https://github.com/username)',
         },
       ),
 
@@ -167,26 +226,44 @@ const profileFormSchema = z
       .string()
       .optional()
       .refine(
-        (value) =>
-          !value ||
-          /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/.test(value),
+        (value) => {
+          const v = (value ?? '').trim();
+          if (!v) return true;
+
+          // Accept:
+          // - linkedin.com/in/handle
+          // - www.linkedin.com/in/handle
+          // - https://www.linkedin.com/in/handle
+          // (with optional trailing path/query)
+          const re =
+            /^(?:https?:\/\/)?(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/in\/[A-Za-z0-9-_%]+\/?(?:[?#].*)?$/i;
+          return re.test(v);
+        },
         {
           message:
-            'LinkedIn URL must start with "https://www.linkedin.com/in/" and have a valid username',
+            'Enter a valid LinkedIn profile (e.g. linkedin.com/in/your-handle)',
         },
       ),
     personalWebsite: z
       .string()
       .optional()
       .refine(
-        (value) =>
-          !value ||
-          /^(https?:\/\/|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}.*[a-zA-Z0-9].*$/.test(
-            value,
-          ),
+        (value) => {
+          const v = (value ?? '').trim();
+          if (!v) return true;
+
+          // Accept:
+          // - example.com
+          // - www.example.com
+          // - https://example.com/path?x=y
+          // Reject strings without a dot TLD.
+          const re =
+            /^(?:https?:\/\/)?(?:www\.)?[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+\/?(?:[?#].*)?$/;
+          return re.test(v);
+        },
         {
           message:
-            'Invalid website URL. Must start with "www." or "https://" and contain letters',
+            'Enter a valid website (e.g. example.com or https://example.com)',
         },
       ), // Allow empty string or valid URL
     password: z.string().min(6, { message: '' }),
@@ -249,16 +326,103 @@ export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
 
   return (
-    <div className="flex w-full items-center justify-center">
-      <div className="w-full max-w-5xl px-4 sm:px-6 lg:px-4">
-        <Stepper currentStep={currentStep} />
-        <div className="flex justify-center w-full">
-          <div className="w-full max-w-4xl">
-            <FreelancerRegisterForm
-              currentStep={currentStep}
-              setCurrentStep={setCurrentStep}
-            />
-          </div>
+    <div className="w-full">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+          <section className="hidden lg:block">
+            <div className="sticky top-10">
+              <div className="rounded-2xl border bg-gradient p-8">
+                <div className="flex items-start gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 border flex items-center justify-center px-3">
+                    <Rocket className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="text-3xl font-bold tracking-tight">
+                      Create your freelancer account
+                    </h1>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      A clean profile helps clients trust you faster. You’re
+                      just a couple of steps away.
+                    </p>
+                  </div>
+                </div>
+
+                <Separator className="my-6" />
+
+                <div className="grid gap-3 text-sm">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+                    <p className="text-muted-foreground">
+                      Verify your email and phone to secure your account.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Briefcase className="mt-0.5 h-4 w-4 text-primary" />
+                    <p className="text-muted-foreground">
+                      Add links and pricing so clients can evaluate you quickly.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Shield className="mt-0.5 h-4 w-4 text-primary" />
+                    <p className="text-muted-foreground">
+                      Agree to terms and you’re ready to start.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8 rounded-xl bg-background/60 border p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">Estimated time</p>
+                    <Badge variant="outline">2-3 minutes</Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Keep your details handy (email + phone). You can finish
+                    later if needed.
+                  </p>
+                </div>
+
+                <div className="mt-6">
+                  <Button size="lg" className="w-full rounded-xl" asChild>
+                    <Link
+                      href="/auth/sign-up/business"
+                      className="flex items-center justify-center gap-2"
+                    >
+                      Register as a Business
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="w-full">
+            <Card className="w-full rounded-xl">
+              <CardHeader>
+                <div className="lg:hidden mb-2">
+                  <CardTitle>Create your freelancer account</CardTitle>
+                  <CardDescription>
+                    Join our community and start your freelancing journey.
+                  </CardDescription>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 my-2"
+                    asChild
+                  >
+                    <Link href="/auth/sign-up/business">Register Business</Link>
+                  </Button>
+                </div>
+                <Stepper currentStep={currentStep} />
+              </CardHeader>
+              <CardContent>
+                <FreelancerRegisterForm
+                  currentStep={currentStep}
+                  setCurrentStep={setCurrentStep}
+                />
+              </CardContent>
+            </Card>
+          </section>
         </div>
       </div>
     </div>
@@ -500,11 +664,38 @@ function FreelancerRegisterForm({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full max-w-3xl mx-auto"
-      >
-        <div className="w-full p-4 sm:p-6 rounded-lg shadow-sm border">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+        <div className="grid gap-4 sm:gap-6 w-full">
+          <div className="grid gap-2">
+            {currentStep === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Use your real details—clients will see your name and profile
+                later.
+              </p>
+            )}
+            {currentStep === 1 && (
+              <p className="text-sm text-muted-foreground">
+                These details help clients understand your experience and
+                pricing.
+              </p>
+            )}
+            {currentStep === 2 && (
+              <p className="text-sm text-muted-foreground">
+                Verify your phone and accept the terms to create your account.
+              </p>
+            )}
+          </div>
+
+          {currentStep === 0 &&
+            isEmailVerified &&
+            verifiedEmail === form.getValues('email') && (
+              <Alert className="border-primary/30 bg-primary/5">
+                <AlertDescription className="text-sm">
+                  Email verified. You can continue.
+                </AlertDescription>
+              </Alert>
+            )}
+
           <div className="grid gap-4 sm:gap-6 w-full">
             {/* First Step */}
             <div
@@ -662,13 +853,130 @@ function FreelancerRegisterForm({
             >
               {/* GitHub and referral Code */}
               <div className="grid gap-4 sm:grid-cols-2">
-                <TextInput
+                <FormField
                   control={form.control}
                   name="githubLink"
-                  label="GitHub"
-                  type="url"
-                  placeholder="https://github.com/yourusername"
-                  className="w-full"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>GitHub</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Github className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            type="url"
+                            placeholder="https://github.com/yourusername"
+                            className="pl-9"
+                            {...field}
+                            value={field.value ?? ''}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="linkedin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Linkedin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            type="url"
+                            placeholder="https://www.linkedin.com/in/yourprofile"
+                            className="pl-9"
+                            {...field}
+                            value={field.value ?? ''}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="personalWebsite"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Personal Website</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            type="url"
+                            placeholder="https://www.yourwebsite.com"
+                            className="pl-9"
+                            {...field}
+                            value={field.value ?? ''}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="perHourPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hourly Rate</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            max={300}
+                            step={1}
+                            placeholder="0"
+                            className="pl-9"
+                            value={field.value ?? 0}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              field.onChange(v === '' ? 0 : Number(v));
+                            }}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* LinkedIn and Personal Website */}
+              <div className="grid gap-4 sm:grid-cols-1">
+                <FormField
+                  control={form.control}
+                  name="workExperience"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Work Experience</FormLabel>
+                        <span className="text-xs text-muted-foreground">
+                          {Number(field.value ?? 0)} yrs
+                        </span>
+                      </div>
+                      <FormControl>
+                        <div className="pt-2">
+                          <Slider
+                            min={0}
+                            max={60}
+                            step={1}
+                            value={[Number(field.value ?? 0)]}
+                            onValueChange={([val]) => field.onChange(val)}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
                 <TextInput
                   control={form.control}
@@ -680,51 +988,12 @@ function FreelancerRegisterForm({
                 />
               </div>
 
-              {/* LinkedIn and Personal Website */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <TextInput
-                  control={form.control}
-                  name="linkedin"
-                  label="LinkedIn"
-                  type="url"
-                  placeholder="https://linkedin.com/in/yourprofile"
-                  className="w-full"
-                />
-                <TextInput
-                  control={form.control}
-                  name="personalWebsite"
-                  label="Personal Website"
-                  type="url"
-                  placeholder="https://www.yourwebsite.com"
-                  className="w-full"
-                />
-              </div>
-
-              {/* Hourly Rate and Work Experience */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <TextInput
-                  control={form.control}
-                  name="perHourPrice"
-                  label="Hourly Rate ($)"
-                  type="number"
-                  placeholder="0"
-                  className="w-full"
-                />
-                <TextInput
-                  control={form.control}
-                  name="workExperience"
-                  label="Work Experience (Years)"
-                  type="number"
-                  placeholder="0"
-                  className="w-full"
-                />
-              </div>
-
               <div className="flex gap-2 justify-between mt-4">
                 <Button
                   type="button"
                   onClick={handlePreviousStep}
                   className="w-full sm:w-auto"
+                  variant="outline"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Previous
@@ -754,22 +1023,23 @@ function FreelancerRegisterForm({
               </div>
 
               <div className="flex items-center gap-2 mt-4">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id="terms"
                   checked={isChecked}
-                  onChange={() => {
+                  onCheckedChange={() => {
                     if (!isTermsDialog) {
                       setIsChecked(!isChecked);
                     }
                   }}
-                  className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
-                <label htmlFor="terms" className="text-sm text-gray-600">
+                <label
+                  htmlFor="terms"
+                  className="text-sm text-muted-foreground leading-relaxed"
+                >
                   I agree to the{' '}
                   <span
                     onClick={() => setIsTermsDialog(true)}
-                    className="text-primary hover:underline"
+                    className="text-primary hover:underline cursor-pointer"
                   >
                     Terms and Conditions
                   </span>
@@ -786,6 +1056,7 @@ function FreelancerRegisterForm({
                   type="button"
                   onClick={handlePreviousStep}
                   className="w-full sm:w-auto"
+                  variant="outline"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Previous

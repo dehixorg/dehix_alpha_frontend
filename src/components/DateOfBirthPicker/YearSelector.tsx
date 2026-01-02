@@ -20,9 +20,12 @@ const YearSelector = ({ selectedYear, onSelect }: YearSelectorProps) => {
   ).reverse();
 
   return (
-    <Select onValueChange={(value) => onSelect(Number(value))}>
+    <Select
+      value={String(selectedYear)}
+      onValueChange={(value) => onSelect(Number(value))}
+    >
       <SelectTrigger className="w-full">
-        <SelectValue placeholder={selectedYear} />
+        <SelectValue placeholder="Select year" />
       </SelectTrigger>
       <SelectContent>
         {yearOptions.map((year) => (
