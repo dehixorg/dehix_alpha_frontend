@@ -1,14 +1,13 @@
+import { Button } from '@/components/ui/button';
+
 interface ConfirmButtonProps {
   onConfirm: () => void;
 }
 
 const ConfirmButton = ({ onConfirm }: ConfirmButtonProps) => (
-  <button
-    onClick={onConfirm}
-    className="mt-4 w-full bg-blue-600 text-white p-2 rounded-lg"
-  >
-    Confirm
-  </button>
+  <Button type="button" onClick={onConfirm} className="w-full">
+    Continue
+  </Button>
 );
 
 export default ConfirmButton;
