@@ -28,7 +28,7 @@ export default function Dashboard() {
             { label: 'Create Project', link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
+        <main className="flex-1 items-start py-4 sm:py-2 md:gap-8">
           <CreateProjectBusinessForm />
         </main>
       </div>
