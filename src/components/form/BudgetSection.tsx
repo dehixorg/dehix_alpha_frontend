@@ -11,7 +11,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 
 type Props = {
   form: UseFormReturn<any>;
@@ -98,6 +102,9 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
                 </div>
               </RadioGroup>
             </FormControl>
+            <FormDescription>
+              Select how you&apos;d like to budget this profile.
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -113,29 +120,18 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
                 Fixed Budget Amount ($)
               </FormLabel>
               <FormControl>
-                <div className="relative">
-                  <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
+                <InputGroup aria-describedby={`fixed-help-${uid}`}>
+                  <InputGroupText>$</InputGroupText>
+                  <InputGroupInput
                     type="number"
                     inputMode="decimal"
                     placeholder="Enter fixed amount"
                     min="1"
                     step="0.01"
-                    className="pl-8 pr-16"
-                    aria-describedby={`fixed-help-${uid}`}
                     {...field}
                   />
-                  {field.value ? (
-                    <button
-                      type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs underline"
-                      onClick={() => field.onChange('')}
-                      aria-label="Clear fixed amount"
-                    >
-                      Clear
-                    </button>
-                  ) : null}
-                </div>
+                  <InputGroupText>USD</InputGroupText>
+                </InputGroup>
               </FormControl>
               <FormDescription>
                 Enter the total fixed price for the project
@@ -153,35 +149,29 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
             name={`profiles.${activeProfile}.budget.hourly.minRate`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Minimum Rate ($/hour)</FormLabel>
+                <FormLabel>Minimum Rate</FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
+                  <InputGroup
+                    aria-invalid={minMaxInvalid}
+                    aria-describedby={
+                      minMaxInvalid ? `rate-error-${uid}` : undefined
+                    }
+                  >
+                    <InputGroupText>$</InputGroupText>
+                    <InputGroupInput
                       type="number"
                       inputMode="decimal"
                       placeholder="Min rate"
                       min="1"
                       step="0.01"
-                      className="pl-8 pr-16"
-                      aria-invalid={minMaxInvalid}
-                      aria-describedby={
-                        minMaxInvalid ? `rate-error-${uid}` : undefined
-                      }
                       {...field}
                     />
-                    {field.value ? (
-                      <button
-                        type="button"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs underline"
-                        onClick={() => field.onChange('')}
-                        aria-label="Clear minimum rate"
-                      >
-                        Clear
-                      </button>
-                    ) : null}
-                  </div>
+                    <InputGroupText>/hr</InputGroupText>
+                  </InputGroup>
                 </FormControl>
+                <FormDescription>
+                  The lowest hourly rate you&apos;re willing to pay.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -191,35 +181,29 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
             name={`profiles.${activeProfile}.budget.hourly.maxRate`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Maximum Rate ($/hour)</FormLabel>
+                <FormLabel>Maximum Rate</FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
+                  <InputGroup
+                    aria-invalid={minMaxInvalid}
+                    aria-describedby={
+                      minMaxInvalid ? `rate-error-${uid}` : undefined
+                    }
+                  >
+                    <InputGroupText>$</InputGroupText>
+                    <InputGroupInput
                       type="number"
                       inputMode="decimal"
                       placeholder="Max rate"
                       min="1"
                       step="0.01"
-                      className="pl-8 pr-16"
-                      aria-invalid={minMaxInvalid}
-                      aria-describedby={
-                        minMaxInvalid ? `rate-error-${uid}` : undefined
-                      }
                       {...field}
                     />
-                    {field.value ? (
-                      <button
-                        type="button"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs underline"
-                        onClick={() => field.onChange('')}
-                        aria-label="Clear maximum rate"
-                      >
-                        Clear
-                      </button>
-                    ) : null}
-                  </div>
+                    <InputGroupText>/hr</InputGroupText>
+                  </InputGroup>
                 </FormControl>
+                <FormDescription>
+                  The highest hourly rate you&apos;re willing to pay.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -231,13 +215,16 @@ const BudgetSection: React.FC<Props> = ({ form, activeProfile, className }) => {
               <FormItem>
                 <FormLabel>Estimated Hours</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    inputMode="numeric"
-                    placeholder="Estimated number of hours"
-                    min="1"
-                    {...field}
-                  />
+                  <InputGroup>
+                    <InputGroupInput
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="Estimated number of hours"
+                      min="1"
+                      {...field}
+                    />
+                    <InputGroupText>HOURS</InputGroupText>
+                  </InputGroup>
                 </FormControl>
                 <FormDescription>
                   Estimated total hours required for project completion

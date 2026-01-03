@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { Plus } from 'lucide-react';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -28,49 +28,94 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
   const searchParams = useSearchParams();
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
-  const [startDateTime, setStartDateTime] = useState<string>(
+  const [startDate, setStartDate] = useState<string>(
     dayjs().add(1, 'day').format('YYYY-MM-DD'),
   );
-  const [endDateTime, setEndDateTime] = useState<string>(
-    dayjs().add(1, 'day').add(1, 'hour').format('YYYY-MM-DD'),
+  const [startTime, setStartTime] = useState<string>('09:00');
+  const [endDate, setEndDate] = useState<string>(
+    dayjs().add(1, 'day').format('YYYY-MM-DD'),
   );
+  const [endTime, setEndTime] = useState<string>('10:00');
   const [attendees, setAttendees] = useState<string[]>(['']);
+  const [submitting, setSubmitting] = useState(false);
+  const [meetLink, setMeetLink] = useState<string>('');
 
-  const handleRequest = (meetingData: object) => {
-    const query = Object.fromEntries(searchParams.entries());
-    if (query.code) {
-      handleCreateMeet(meetingData, query.code);
-    } else {
-      handleAuth();
-    }
-  };
+  const query = useMemo(
+    () => Object.fromEntries(searchParams.entries()),
+    [searchParams],
+  );
 
-  const handleCreateMeet = (meetingData: object, code: string) => {
-    const response = axiosInstance.post(`/meeting`, meetingData, {
-      params: {
-        code: code, // Add the query string here
-      },
+  const DRAFT_KEY = 'DEHIX_MEETING_DRAFT';
+
+  const handleCreateMeet = async (meetingData: object, code: string) => {
+    const response = await axiosInstance.post(`/meeting`, meetingData, {
+      params: { code },
     });
+
+    const link =
+      response?.data?.data?.hangoutLink ||
+      response?.data?.data?.htmlLink ||
+      response?.data?.hangoutLink ||
+      response?.data?.link ||
+      '';
+
+    if (link) {
+      setMeetLink(String(link));
+      toast({
+        title: 'Meeting created',
+        description: 'Your meeting link is ready.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Meeting created, but no link returned',
+        description: 'Please check your calendar for the event link.',
+      });
+    }
   };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
+    const startDateTimeIso = dayjs(`${startDate}T${startTime}`).toISOString();
+    const endDateTimeIso = dayjs(`${endDate}T${endTime}`).toISOString();
+
     const meetingData = {
       summary,
       description,
       start: {
-        dateTime: dayjs(startDateTime).toISOString(),
+        dateTime: startDateTimeIso,
         timeZone: 'Asia/Kolkata',
       },
       end: {
-        dateTime: dayjs(endDateTime).toISOString(),
+        dateTime: endDateTimeIso,
         timeZone: 'Asia/Kolkata',
       },
       attendees,
     };
-    handleRequest(meetingData);
-    // onClose();
+
+    if (query.code) {
+      setSubmitting(true);
+      handleCreateMeet(meetingData, String(query.code))
+        .catch((error) => {
+          console.error('Error creating meeting:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to create meeting. Please try again.',
+          });
+        })
+        .finally(() => setSubmitting(false));
+      return;
+    }
+
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(meetingData));
+    } catch (error) {
+      console.error('Failed to save meeting draft:', error);
+    }
+
+    handleAuth();
   };
 
   const handleAuth = async () => {
@@ -81,7 +126,7 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
       });
       const authUrl = response.data.url;
       if (authUrl) {
-        router.push(authUrl);
+        window.location.href = authUrl;
       }
     } catch (error) {
       console.error('Error fetching Google Auth URL:', error);
@@ -92,6 +137,41 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
       }); // Error toast
     }
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!query.code) return;
+
+    let draft: any = null;
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) draft = JSON.parse(raw);
+    } catch (error) {
+      console.error('Failed to read meeting draft:', error);
+    }
+
+    if (!draft) return;
+
+    setSubmitting(true);
+    handleCreateMeet(draft, String(query.code))
+      .then(() => {
+        try {
+          localStorage.removeItem(DRAFT_KEY);
+        } catch {
+          // ignore
+        }
+        router.replace(window.location.pathname);
+      })
+      .catch((error) => {
+        console.error('Error creating meeting:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to create meeting. Please try again.',
+        });
+      })
+      .finally(() => setSubmitting(false));
+  }, [isOpen, query.code, router]);
 
   const addAttendee = () => {
     setAttendees([...attendees, '']);
@@ -147,8 +227,8 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
             </Label>
             <Input
               type="date"
-              value={startDateTime}
-              onChange={(e) => setStartDateTime(e.target.value)}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
               className="col-span-3"
               required
             />
@@ -161,8 +241,8 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
             </Label>
             <Input
               type="date"
-              value={endDateTime}
-              onChange={(e) => setEndDateTime(e.target.value)}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
               className="col-span-3"
               required
             />
@@ -176,15 +256,8 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
             <Input
               type="time"
               className="col-span-3"
-              value={dayjs(startDateTime).format('HH:mm')}
-              onChange={(e) => {
-                const [hours, minutes] = e.target.value.split(':').map(Number);
-                const updatedStartDateTime = dayjs(startDateTime)
-                  .set('hour', hours)
-                  .set('minute', minutes)
-                  .format('YYYY-MM-DDTHH:mm');
-                setStartDateTime(updatedStartDateTime);
-              }}
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
               required
             />
           </div>
@@ -195,15 +268,8 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
             <Input
               type="time"
               className="col-span-3"
-              value={dayjs(startDateTime).format('HH:mm')}
-              onChange={(e) => {
-                const [hours, minutes] = e.target.value.split(':').map(Number);
-                const updatedStartDateTime = dayjs(startDateTime)
-                  .set('hour', hours)
-                  .set('minute', minutes)
-                  .format('YYYY-MM-DDTHH:mm');
-                setStartDateTime(updatedStartDateTime);
-              }}
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
               required
             />
           </div>
@@ -241,9 +307,41 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
           </div>
 
           <DialogFooter className="flex justify-center">
-            <Button type="submit">Create Meeting</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? 'Working...' : 'Create Meeting'}
+            </Button>
           </DialogFooter>
         </form>
+
+        {meetLink ? (
+          <div className="mt-2 grid gap-2">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Link</Label>
+              <Input className="col-span-3" value={meetLink} readOnly />
+            </div>
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(meetLink);
+                    toast({ title: 'Copied', description: 'Link copied.' });
+                  } catch (error) {
+                    console.error('Failed to copy:', error);
+                    toast({
+                      variant: 'destructive',
+                      title: 'Copy failed',
+                      description: 'Please copy the link manually.',
+                    });
+                  }
+                }}
+              >
+                Copy link
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

@@ -2,9 +2,20 @@ import React from 'react';
 import Image from 'next/image';
 import { Lightbulb, Rocket, Palette } from 'lucide-react';
 
-const ProjectFormIllustration: React.FC = () => {
+import { cn } from '@/lib/utils';
+
+type Props = {
+  className?: string;
+};
+
+const ProjectFormIllustration: React.FC<Props> = ({ className }) => {
   return (
-    <div className="relative hidden lg:flex lg:flex-col lg:items-center lg:justify-center rounded-xl p-6">
+    <div
+      className={cn(
+        'relative flex flex-col items-center justify-center rounded-xl p-6',
+        className,
+      )}
+    >
       <div className="relative w-64 h-64">
         <Image
           src="/undraw_preferences-popup_cru5.svg"
