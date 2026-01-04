@@ -574,7 +574,6 @@ function FreelancerRegisterForm({
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
-    console.log('TEST:', data);
     // Ensure email is verified and matches the verified email before submitting
     const currentEmail = form.getValues('email');
     if (!isEmailVerified || verifiedEmail !== currentEmail) {
@@ -673,7 +672,7 @@ function FreelancerRegisterForm({
   }, [searchParams, form]);
 
   const onInvalid: SubmitErrorHandler<ProfileFormValues> = (errors) => {
-    console.log('FORM_INVALID:', errors);
+    console.error('FORM_INVALID:', errors);
     notifyError(
       'Please fix the highlighted fields and try again.',
       'Validation Error',
