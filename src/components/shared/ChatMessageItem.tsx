@@ -55,6 +55,25 @@ function isSameDay(d1: Date, d2: Date) {
   );
 }
 
+function getMessagePreviewLabel(
+  content: string,
+  voiceMessage?: ChatMessage['voiceMessage'],
+) {
+  if (voiceMessage?.type === 'voice') return 'Voice message';
+  if (content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i)) return 'Photo';
+  if (content.match(/\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt)(\?|$)/i))
+    return 'Document';
+  return content;
+}
+
+function isImageUrl(content: string) {
+  return /\.(jpeg|jpg|gif|png)(\?|$)/i.test(content);
+}
+
+function isDocUrl(content: string) {
+  return /\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt)(\?|$)/i.test(content);
+}
+
 export type ChatMessage = {
   id: string;
   senderId: string;
@@ -252,7 +271,7 @@ function ChatMessageItem({
 
           <div
             className={cn(
-              'flex w-max max-w-full flex-col gap-1 rounded-lg p-2 text-sm shadow-xl',
+              'flex w-max max-w-full flex-col gap-1 rounded-lg p-2 text-sm',
               message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ||
                 isEmojiOnly ||
                 (message.voiceMessage && message.voiceMessage.type === 'voice')
@@ -307,14 +326,51 @@ function ChatMessageItem({
                               : 'text-primary dark:text-primary',
                           )}
                         >
-                          <span className="font-medium">
-                            {messages
-                              .find((msg) => msg.id === message.replyTo)
-                              ?.content?.substring(0, 100) ||
-                              'Original message'}
-                            {(messages.find((msg) => msg.id === message.replyTo)
-                              ?.content?.length || 0) > 100 && '...'}
-                          </span>
+                          {(() => {
+                            const replyMsg = messages.find(
+                              (msg) => msg.id === message.replyTo,
+                            );
+                            if (!replyMsg) {
+                              return (
+                                <span className="font-medium">
+                                  Original message
+                                </span>
+                              );
+                            }
+
+                            const raw = replyMsg.content || '';
+                            const label = replyMsg.voiceMessage
+                              ? 'Voice message'
+                              : isImageUrl(raw)
+                                ? 'Photo'
+                                : isDocUrl(raw)
+                                  ? 'Document'
+                                  : getMessagePreviewLabel(
+                                      raw,
+                                      replyMsg.voiceMessage,
+                                    )
+                                        .replace(/<[^>]*>/g, '')
+                                        .replace(/&nbsp;/g, ' ')
+                                        .trim();
+
+                            return (
+                              <div className="flex items-center gap-2 min-w-0">
+                                {isImageUrl(raw) ? (
+                                  <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded">
+                                    <Image
+                                      src={raw}
+                                      alt="Reply preview"
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                ) : null}
+                                <span className="font-medium truncate">
+                                  {label || 'Original message'}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     )}
