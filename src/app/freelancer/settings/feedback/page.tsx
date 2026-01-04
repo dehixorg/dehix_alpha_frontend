@@ -57,12 +57,12 @@ export default function FeedbackPage() {
           campaignId: campaign._id,
           title: campaign.title,
           description: campaign.description,
-          questions: campaign.questions.map((q: any) => ({
+          questions: (campaign.questions || []).map((q: any) => ({
             questionId: q._id,
             questionText: q.questionText,
             type: q.type,
             isRequired: q.isRequired,
-            options: q.options,
+            options: q.options || [],
           })),
         }),
       );
