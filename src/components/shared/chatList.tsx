@@ -7,6 +7,7 @@ import {
   SquarePen,
   Loader2,
   Archive,
+  ArrowLeft,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -294,14 +295,16 @@ export function ChatList({
           >
             <SquarePen className="h-4 w-4 mr-2" /> New Chat
           </Button>
-          <Button
-            variant="outline"
-            className="flex items-center justify-center text-sm px-3 py-2 rounded-full shadow-lg"
-            onClick={handleOpenArchivedChats}
-            aria-label="View archived chats"
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
+          {activeView !== 'archived' && (
+            <Button
+              variant="outline"
+              className="flex items-center justify-center text-sm px-3 py-2 rounded-full shadow-lg"
+              onClick={handleOpenArchivedChats}
+              aria-label="View archived chats"
+            >
+              <Archive className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         <div className="relative">
           <Search
@@ -319,14 +322,16 @@ export function ChatList({
       </div>
 
       {activeView === 'archived' && (
-        <div className="p-3 text-center border-b border-[hsl(var(--border))]">
+        <div className="p-3 text-center border-b bg-gradient">
           <div className="flex items-center justify-between">
-            <Button variant="link" onClick={handleOpenInbox}>
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--ring))] hover:text-white dark:hover:text-black transition-colors">
-                &larr;
-              </span>
+            <Button
+              size="icon"
+              className="rounded-full"
+              onClick={handleOpenInbox}
+            >
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h3 className="font-semibold text-lg">Archived Chats</h3>
+            <h3 className="text-lg">Archived Chats</h3>
             <div style={{ width: '60px' }}></div>
           </div>
         </div>
