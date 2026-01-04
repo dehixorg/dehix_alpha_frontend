@@ -382,7 +382,7 @@ const ProjectInvitationsPage: React.FC = () => {
                       onClick={() =>
                         router.push(
                           isFreelancer
-                            ? `/freelancer/project/${inv.projectId}`
+                            ? `/freelancer/market/project/${inv.projectId}/apply`
                             : `/business/project/${inv.projectId}`,
                         )
                       }
@@ -392,7 +392,7 @@ const ProjectInvitationsPage: React.FC = () => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           router.push(
                             isFreelancer
-                              ? `/freelancer/project/${inv.projectId}`
+                              ? `/freelancer/market/project/${inv.projectId}/apply`
                               : `/business/project/${inv.projectId}`,
                           );
                         }
