@@ -209,7 +209,7 @@ function ContestStatCard({
 
   return (
     <Card
-      className={`relative overflow-hidden group hover:shadow-md transition-all duration-300 border border ${s.bg}`}
+      className={`relative overflow-hidden group hover:shadow-md transition-all duration-300 border ${s.bg}`}
     >
       <div
         className={`absolute -right-5 -top-5 w-24 h-24 rounded-full group-hover:scale-110 transition-transform duration-500 ${s.dot}`}

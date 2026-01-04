@@ -7,6 +7,7 @@ import {
   UserCheck,
   Award,
   ArrowLeft,
+  MessageSquare,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -60,6 +61,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/settings/resume',
     icon: <FileText className="h-5 w-5" />,
     label: 'Resume',
+  },
+  {
+    href: '/freelancer/settings/feedback',
+    icon: <MessageSquare className="h-5 w-5" />,
+    label: 'Feedback',
   },
   {
     href: '/reports',

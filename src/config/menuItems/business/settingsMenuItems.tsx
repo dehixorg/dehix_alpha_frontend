@@ -1,4 +1,10 @@
-import { ArrowLeft, FileWarning, ShieldCheck, User } from 'lucide-react';
+import {
+  ArrowLeft,
+  FileWarning,
+  ShieldCheck,
+  User,
+  MessageSquare,
+} from 'lucide-react';
 import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -31,6 +37,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/business/settings/kyc',
     icon: <ShieldCheck className="h-5 w-5" />,
     label: 'KYC',
+  },
+  {
+    href: '/business/settings/feedback',
+    icon: <MessageSquare className="h-5 w-5" />,
+    label: 'Feedback',
   },
   {
     href: '/reports', // Link to your new Reports page
