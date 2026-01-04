@@ -679,7 +679,7 @@ const FreelancerProfile = () => {
                   <EmptyState
                     title="No projects added yet"
                     description="Once this freelancer adds projects to their profile, you'll see them listed here."
-                    icon={<Code className="h-16 w-16 text-green-500" />}
+                    Icon={Code}
                     className="py-10 border-border/60 bg-background"
                   />
                 )}
@@ -728,7 +728,7 @@ const FreelancerProfile = () => {
                   <EmptyState
                     title="No professional experience added"
                     description="Work experience added by the freelancer will appear here."
-                    icon={<Briefcase className="h-16 w-16 text-amber-500" />}
+                    Icon={Briefcase}
                     className="py-10 border-border/60 bg-background"
                   />
                 )}
@@ -773,7 +773,7 @@ const FreelancerProfile = () => {
                   <EmptyState
                     title="No education details added"
                     description="Education details added by the freelancer will appear here."
-                    icon={<GraduationCap className="h-16 w-16 text-cyan-500" />}
+                    Icon={GraduationCap}
                     className="py-10 border-border/60 bg-background"
                   />
                 )}

@@ -118,7 +118,7 @@ export default function Resume() {
           {resumeData.length === 0 && (
             <div className="col-span-full">
               <EmptyState
-                icon={<Plus className="h-12 w-12 text-muted-foreground/80" />}
+                Icon={Plus}
                 title="No resumes found"
                 description="Create your first resume to get started."
                 actions={

@@ -653,9 +653,7 @@ export default function ProfilesPage() {
                         className="py-12 bg-transparent border-0"
                         title="No Freelancer profiles found"
                         description="Create your first Freelancer profile to start applying faster with a ready-to-use summary."
-                        icon={
-                          <User className="h-12 w-12 text-muted-foreground" />
-                        }
+                        Icon={User}
                         actions={
                           <Button
                             onClick={() => {
@@ -722,9 +720,7 @@ export default function ProfilesPage() {
                         className="py-12 bg-transparent border-0"
                         title="No Consultant profiles found"
                         description="Create a Consultant profile to showcase your expertise and start getting matched to the right opportunities."
-                        icon={
-                          <UserCog className="h-12 w-12 text-muted-foreground" />
-                        }
+                        Icon={UserCog}
                         actions={
                           <Button
                             onClick={() => {

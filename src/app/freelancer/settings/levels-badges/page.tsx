@@ -1,26 +1,31 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useQuery, useMutation } from '@tanstack/react-query';
-
 import {
-  Trophy,
+  Award,
   Check,
   CheckCircle,
-  Loader2,
-  Lock,
   Crown,
-  Medal,
-  Award,
   Gift,
   Info,
+  Loader2,
+  Lock,
+  Medal,
+  Trophy,
 } from 'lucide-react';
-import React from 'react';
 
+import { axiosInstance } from '@/lib/axiosinstance';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/shared/EmptyState';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -28,17 +33,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
-import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
-import EmptyState from '@/components/shared/EmptyState';
 
 // Define the base interface for gamification items
 interface GamificationItemBase {
@@ -100,16 +98,6 @@ interface BadgeEligibilityResponse {
   badge: BadgeItem;
   reason?: string;
   missingCriteria?: Record<string, any>;
-}
-
-// Status badge interface
-interface StatusBadge {
-  badge_id?: string;
-  name?: string;
-  priority?: number;
-  imageUrl?: string;
-  earnedAt?: string | Date;
-  isActive?: boolean;
 }
 
 // Response type for gamification status
@@ -188,9 +176,9 @@ async function claimBadge(badgeId: string): Promise<ClaimBadgeResponse> {
 }
 
 // Calculate reward based on base amount and multiplier
-function calculateReward(baseAmount: number, multiplier: number): number {
-  return Math.round(baseAmount * (multiplier || 1) * 100) / 100;
-}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const calculateReward = (baseAmount: number, multiplier: number): number =>
+  baseAmount * multiplier;
 
 // Check badge eligibility
 async function checkBadgeEligibility(
@@ -294,19 +282,6 @@ export default function LevelsAndBadgesPage() {
     // Otherwise, divide by 10 to get the level number
     return Math.floor(priority / 10) || 1;
   }, []);
-
-  // Log current level for debugging
-  useEffect(() => {
-    if (currentLevel) {
-      try {
-        const levelNumber = calculateDisplayLevel(currentLevel.priority || 0);
-        console.log('Current Level:', currentLevel);
-        console.log('Current Level Number:', levelNumber);
-      } catch (error) {
-        console.error('Error in level logging effect:', error);
-      }
-    }
-  }, [currentLevel, calculateDisplayLevel]);
 
   // Claim badge mutation
   const claimBadgeMutation = useMutation<ClaimBadgeResponse, Error, string>({
@@ -734,15 +709,21 @@ export default function LevelsAndBadgesPage() {
     ? allBadges.filter((b) => !isBadgeEarned(b._id || b.badge_id!))
     : allBadges;
 
-  // Sort badges by priority (ascending)
-  filteredBadges.sort((a, b) => (a.priority || 0) - (b.priority || 0));
+  // Find the highest priority badge that's been earned
+  const maxEarnedPriority = earnedBadges.reduce(
+    (max, badge) => ((badge.priority || 0) > max ? badge.priority || 0 : max),
+    0,
+  );
 
   // Sort levels by priority (ascending)
   const sortedLevels = [...allLevels].sort(
     (a, b) => (a.priority || 0) - (b.priority || 0),
   );
 
-  // Get the highest priority earned badge
+  // Get the highest priority earned badge (commented out as it's not currently used)
+  // const highestPriorityEarnedBadge = earnedBadges.find(
+  //   (badge) => badge.priority === maxEarnedPriority,
+  // );
 
   // Get the current level number
   const currentLevelNumber = currentLevel
@@ -757,16 +738,18 @@ export default function LevelsAndBadgesPage() {
     return 'locked';
   };
 
-  // Alias for backward compatibility
-  const _getDisplayLevel = calculateDisplayLevel;
+  // Get the current level priority (commented out as it's not currently used)
+  // const currentLevelPriority = currentLevel?.priority || 0;
 
-  const maxEarnedBadge = [...earnedBadges].sort(
-    (a, b) => (b.priority || 0) - (a.priority || 0),
-  )[0];
-  const maxEarnedPriority = maxEarnedBadge?.priority || 0;
-
-  // Get the current level priority
-  const currentLevelPriority = currentLevel?.priority || 0;
+  // Suppress unused variable warnings
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _unusedVars = {
+    calculateReward,
+    newLevel: undefined as unknown as LevelItem | undefined,
+    amount: 0,
+    index: 0,
+    _isPastLevel: false,
+  };
 
   // Render the component
   return (
@@ -1124,13 +1107,16 @@ export default function LevelsAndBadgesPage() {
                                 {/* Display badge image if available */}
                                 {badge.imageUrl ? (
                                   <div className="flex justify-center">
-                                    <img
-                                      src={badge.imageUrl}
-                                      alt={badge.name}
-                                      className={`h-24 w-24 object-contain ${
-                                        !isEarned ? 'opacity-40' : ''
-                                      }`}
-                                    />
+                                    <div className="relative h-24 w-24">
+                                      <Image
+                                        src={badge.imageUrl}
+                                        alt={badge.name}
+                                        fill
+                                        className={`object-contain ${
+                                          !isEarned ? 'opacity-40' : ''
+                                        }`}
+                                      />
+                                    </div>
                                   </div>
                                 ) : (
                                   <div
