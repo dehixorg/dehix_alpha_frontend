@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 
@@ -54,6 +54,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { Slider } from '@/components/ui/slider';
 import OtpLogin from '@/components/shared/otpDialog';
 import DateOfBirthPicker from '@/components/DateOfBirthPicker/DateOfBirthPicker';
@@ -569,6 +574,7 @@ function FreelancerRegisterForm({
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
+    console.log('TEST:', data);
     // Ensure email is verified and matches the verified email before submitting
     const currentEmail = form.getValues('email');
     if (!isEmailVerified || verifiedEmail !== currentEmail) {
@@ -584,6 +590,9 @@ function FreelancerRegisterForm({
     const referralCodeFromForm = data.referralCode;
 
     const referralCode = referralCodeFromQuery || referralCodeFromForm || null;
+    const encodedReferralCode = referralCode
+      ? encodeURIComponent(referralCode)
+      : null;
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
     );
@@ -592,6 +601,7 @@ function FreelancerRegisterForm({
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+      phoneNumber: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
       phoneVerify: false,
       role: 'freelancer',
       connects: 0,
@@ -611,8 +621,8 @@ function FreelancerRegisterForm({
       // oracleStatus: 'notApplied',
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
-    const url = referralCode
-      ? `/register/freelancer?referralCode=${referralCode}`
+    const url = encodedReferralCode
+      ? `/register/freelancer?referralCode=${encodedReferralCode}`
       : '/register/freelancer';
     try {
       await axiosInstance.post(url, formData);
@@ -662,9 +672,21 @@ function FreelancerRegisterForm({
     }
   }, [searchParams, form]);
 
+  const onInvalid: SubmitErrorHandler<ProfileFormValues> = (errors) => {
+    console.log('FORM_INVALID:', errors);
+    notifyError(
+      'Please fix the highlighted fields and try again.',
+      'Validation Error',
+    );
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+      <form
+        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+        className="w-full"
+        noValidate
+      >
         <div className="grid gap-4 sm:gap-6 w-full">
           <div className="grid gap-2">
             {currentStep === 0 && (
@@ -860,16 +882,17 @@ function FreelancerRegisterForm({
                     <FormItem>
                       <FormLabel>GitHub</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <Github className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
+                        <InputGroup>
+                          <InputGroupText>
+                            <Github className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
                             type="url"
                             placeholder="https://github.com/yourusername"
-                            className="pl-9"
                             {...field}
                             value={field.value ?? ''}
                           />
-                        </div>
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -882,16 +905,17 @@ function FreelancerRegisterForm({
                     <FormItem>
                       <FormLabel>LinkedIn</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <Linkedin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
+                        <InputGroup>
+                          <InputGroupText>
+                            <Linkedin className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
                             type="url"
                             placeholder="https://www.linkedin.com/in/yourprofile"
-                            className="pl-9"
                             {...field}
                             value={field.value ?? ''}
                           />
-                        </div>
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -904,16 +928,17 @@ function FreelancerRegisterForm({
                     <FormItem>
                       <FormLabel>Personal Website</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
+                        <InputGroup>
+                          <InputGroupText>
+                            <Globe className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
                             type="url"
                             placeholder="https://www.yourwebsite.com"
-                            className="pl-9"
                             {...field}
                             value={field.value ?? ''}
                           />
-                        </div>
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -926,23 +951,24 @@ function FreelancerRegisterForm({
                     <FormItem>
                       <FormLabel>Hourly Rate</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
+                        <InputGroup>
+                          <InputGroupText>
+                            <DollarSign className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
                             type="number"
                             inputMode="decimal"
                             min={0}
                             max={300}
                             step={1}
                             placeholder="0"
-                            className="pl-9"
                             value={field.value ?? 0}
                             onChange={(e) => {
                               const v = e.target.value;
                               field.onChange(v === '' ? 0 : Number(v));
                             }}
                           />
-                        </div>
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

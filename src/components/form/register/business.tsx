@@ -51,6 +51,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -749,16 +754,17 @@ function BusinessRegisterForm({
                     <FormItem>
                       <FormLabel>LinkedIn</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <Linkedin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
+                        <InputGroup>
+                          <InputGroupText>
+                            <Linkedin className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
                             type="url"
                             placeholder="https://www.linkedin.com/in/username"
-                            className="pl-9"
                             {...field}
                             value={field.value ?? ''}
                           />
-                        </div>
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -771,16 +777,17 @@ function BusinessRegisterForm({
                     <FormItem>
                       <FormLabel>Portfolio URL</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
+                        <InputGroup>
+                          <InputGroupText>
+                            <Globe className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
                             type="url"
                             placeholder="https://www.yourwebsite.com"
-                            className="pl-9"
                             {...field}
                             value={field.value ?? ''}
                           />
-                        </div>
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
