@@ -1550,7 +1550,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
   return (
     <>
-      <div className="max-w-5xl mx-auto pt-4">
+      <div className="max-w-5xl mx-auto px-4 pt-4">
         <Accordion type="single" collapsible>
           {userData!.data.profiles.map((profile: any) => (
             <AccordionItem
