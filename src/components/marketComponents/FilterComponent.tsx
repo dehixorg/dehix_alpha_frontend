@@ -16,7 +16,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Accordion,
   AccordionContent,
@@ -154,7 +154,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   };
 
   return (
-    <div className="sticky top-[4rem] lg:h-[calc(100vh-6rem)] border rounded-lg flex flex-col">
+    <div className="h-full sm:border rounded-lg flex flex-col lg:sticky lg:top-[4rem] lg:h-[calc(100vh-6rem)]">
       <div className="bg-gradient border-b p-4 rounded-t-lg">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Filters</h2>
@@ -321,7 +321,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
           </div>
         )}
       </div>
-      <div className="h-full overflow-auto no-scrollbar px-4 pb-2 pt-4">
+      <ScrollArea className="flex-1 min-h-0 max-h-[calc(100vh-12rem)] px-4 pb-2 pt-4">
         <Accordion
           type="multiple"
           defaultValue={[
@@ -805,7 +805,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-      </div>
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
     </div>
   );
 };
