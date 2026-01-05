@@ -5,6 +5,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
+import { compressImageFile } from '@/utils/imageCompression';
 
 interface ThumbnailUploadProps {
   onThumbnailUpdate?: (thumbnailUrl: string) => void;
@@ -25,8 +26,12 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
   const handleUploadClick = async () => {
     if (!selectedThumbnail || typeof selectedThumbnail === 'string') return;
 
+    const file = await compressImageFile(selectedThumbnail, {
+      maxBytes: 5 * 1024 * 1024,
+    });
+
     const formData = new FormData();
-    formData.append('file', selectedThumbnail);
+    formData.append('file', file);
 
     try {
       setIsUploading(true);
