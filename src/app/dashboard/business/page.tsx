@@ -22,7 +22,6 @@ import Link from 'next/link';
 //   ResponsiveContainer,
 // } from 'recharts';
 
-import SidebarMenu from '@/components/menu/sidebarMenu';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -37,17 +36,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RootState } from '@/lib/store';
 import { ProjectCard } from '@/components/cards/projectCard';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import Header from '@/components/header/header';
 import { notifyError } from '@/utils/toastMessage';
 import StatItem from '@/components/shared/StatItem';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
 
 // Define the activity type
 // type Activity = {
@@ -118,125 +113,111 @@ export default function Dashboard() {
   // ];
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Dashboard"
-      />
-      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Dashboard"
-          breadcrumbItems={[{ label: 'Dashboard', link: '#' }]}
-        />
-
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3">
-          {/* Left Column */}
-          <div className="grid auto-rows-max items-start gap-4 md:gap-6 lg:col-span-2">
-            {/* Welcome Card */}
-            <Card className="bg-gradient shadow-sm">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="text-2xl font-bold tracking-tight">
-                      Welcome Back,{' '}
-                      {user?.displayName
-                        ? user.displayName
-                            .split(' ')
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() +
-                                word.slice(1).toLowerCase(),
-                            )
-                            .join(' ')
-                        : 'User'}
-                      !
-                    </CardTitle>
-                    <CardDescription>
-                      Here&lsquo;s what&lsquo;s happening with your projects
-                      today.
-                    </CardDescription>
-                  </div>
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={user?.photoURL || ''} alt={user?.name} />
-                    <AvatarFallback>
-                      {user?.displayName?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-              </CardHeader>
-              <CardFooter className="flex flex-col gap-2">
-                <div className="flex items-center justify-between w-full text-xs uppercase">
-                  <span>Project Completion</span>
-                  <span className="font-medium">
-                    {responseData.length > 0
-                      ? Math.round(
-                          (completedProjects.length / responseData.length) *
-                            100,
+    <BusinessDashboardLayout
+      active="Dashboard"
+      activeMenu="Dashboard"
+      breadcrumbItems={[{ label: 'Dashboard', link: '#' }]}
+      contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
+      mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3"
+    >
+      {/* Left Column */}
+      <div className="grid auto-rows-max items-start gap-4 md:gap-6 lg:col-span-2">
+        {/* Welcome Card */}
+        <Card className="bg-gradient shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-2xl font-bold tracking-tight">
+                  Welcome Back,{' '}
+                  {user?.displayName
+                    ? user.displayName
+                        .split(' ')
+                        .map(
+                          (word) =>
+                            word.charAt(0).toUpperCase() +
+                            word.slice(1).toLowerCase(),
                         )
-                      : 0}
-                    %
-                  </span>
-                </div>
-                {(() => {
-                  const completionPercentage =
-                    responseData.length > 0
-                      ? Math.round(
-                          (completedProjects.length / responseData.length) *
-                            100,
-                        )
-                      : 0;
-                  const completionColor =
-                    completionPercentage >= 70
-                      ? '[&>*]:bg-green-500'
-                      : completionPercentage >= 30
-                        ? '[&>*]:bg-amber-500'
-                        : '[&>*]:bg-red-500';
-
-                  return (
-                    <Progress
-                      value={completionPercentage}
-                      className={cn(
-                        'h-1 w-full bg-foreground/20',
-                        completionColor,
-                      )}
-                    />
-                  );
-                })()}
-              </CardFooter>
-            </Card>
-
-            {/* Stats Grid */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-              <StatItem
-                variant="card"
-                color="blue"
-                icon={<PackageOpen />}
-                label="Total Projects"
-                value={responseData.length}
-              />
-
-              <StatItem
-                variant="card"
-                color="green"
-                icon={<CheckCircle />}
-                label="Completed"
-                value={completedProjects.length}
-              />
-
-              <StatItem
-                variant="card"
-                color="amber"
-                icon={<Clock3 />}
-                label="In Progress"
-                value={pendingProjects.length}
-              />
+                        .join(' ')
+                    : 'User'}
+                  !
+                </CardTitle>
+                <CardDescription>
+                  Here&lsquo;s what&lsquo;s happening with your projects today.
+                </CardDescription>
+              </div>
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={user?.photoURL || ''} alt={user?.name} />
+                <AvatarFallback>
+                  {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
             </div>
+          </CardHeader>
+          <CardFooter className="flex flex-col gap-2">
+            <div className="flex items-center justify-between w-full text-xs uppercase">
+              <span>Project Completion</span>
+              <span className="font-medium">
+                {responseData.length > 0
+                  ? Math.round(
+                      (completedProjects.length / responseData.length) * 100,
+                    )
+                  : 0}
+                %
+              </span>
+            </div>
+            {(() => {
+              const completionPercentage =
+                responseData.length > 0
+                  ? Math.round(
+                      (completedProjects.length / responseData.length) * 100,
+                    )
+                  : 0;
+              const completionColor =
+                completionPercentage >= 70
+                  ? '[&>*]:bg-green-500'
+                  : completionPercentage >= 30
+                    ? '[&>*]:bg-amber-500'
+                    : '[&>*]:bg-red-500';
 
-            {/* Project Performance Chart */}
-            {/* <Card>
+              return (
+                <Progress
+                  value={completionPercentage}
+                  className={cn('h-1 w-full bg-foreground/20', completionColor)}
+                />
+              );
+            })()}
+          </CardFooter>
+        </Card>
+
+        {/* Stats Grid */}
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+          <StatItem
+            variant="card"
+            color="blue"
+            icon={<PackageOpen />}
+            label="Total Projects"
+            value={responseData.length}
+          />
+
+          <StatItem
+            variant="card"
+            color="green"
+            icon={<CheckCircle />}
+            label="Completed"
+            value={completedProjects.length}
+          />
+
+          <StatItem
+            variant="card"
+            color="amber"
+            icon={<Clock3 />}
+            label="In Progress"
+            value={pendingProjects.length}
+          />
+        </div>
+
+        {/* Project Performance Chart */}
+        {/* <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Project Performance</CardTitle>
@@ -283,143 +264,135 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </CardContent>
             </Card> */}
-            {/* Projects Section */}
-            <Tabs defaultValue="current" className="w-full">
-              <div className="flex items-center justify-between">
-                <TabsList>
-                  <TabsTrigger value="current">Current Projects</TabsTrigger>
-                  <TabsTrigger value="completed">Completed</TabsTrigger>
-                </TabsList>
-                <ProjectTypeDialog
-                  onOpenChange={(isOpen) => {
-                    setModalOpen(isOpen);
-                    if (!isOpen) setMode(null);
-                  }}
-                />
-              </div>
-
-              <TabsContent value="current" className="mt-4">
-                {pendingProjects.length > 0 ? (
-                  <>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {pendingProjects
-                        .slice(0, 6)
-                        .map((project: any, index: number) => (
-                          <ProjectCard key={index} project={project} />
-                        ))}
-                    </div>
-                    {pendingProjects.length > 6 && (
-                      <div className="mt-4 flex justify-center">
-                        <Link href="/business/projects">
-                          <Button variant="outline" size="sm">
-                            View more
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <Card className="border-dashed">
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <PackageOpen className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">
-                        No active projects
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-4 text-center">
-                        Get started by creating a new project
-                      </p>
-                      <ProjectTypeDialog
-                        onOpenChange={setModalOpen}
-                        trigger={
-                          <Button size="sm">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Project
-                          </Button>
-                        }
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-
-              <TabsContent value="completed" className="mt-4">
-                {completedProjects.length > 0 ? (
-                  <>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {completedProjects
-                        .slice(0, 6)
-                        .map((project: any, index: number) => (
-                          <ProjectCard key={index} project={project} />
-                        ))}
-                    </div>
-                    {completedProjects.length > 6 && (
-                      <div className="mt-4 flex justify-center">
-                        <Link href="/business/projects">
-                          <Button variant="outline" size="sm">
-                            View more
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <Card className="border-dashed">
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <CheckCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">
-                        No completed projects yet
-                      </h3>
-                      <p className="text-sm text-muted-foreground text-center">
-                        Your completed projects will appear here
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-            </Tabs>
+        {/* Projects Section */}
+        <Tabs defaultValue="current" className="w-full">
+          <div className="flex items-center justify-between">
+            <TabsList>
+              <TabsTrigger value="current">Current Projects</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+            </TabsList>
+            <ProjectTypeDialog
+              onOpenChange={(isOpen) => {
+                setModalOpen(isOpen);
+                if (!isOpen) setMode(null);
+              }}
+            />
           </div>
-          {/* Right Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <Card className="bg-muted/20">
-              <CardHeader>
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ProjectTypeDialog
-                  onOpenChange={setModalOpen}
-                  trigger={
-                    <Button variant="outline" className="w-full justify-start">
-                      <Plus className="mr-2 h-4 w-4" />
-                      New Project
-                    </Button>
-                  }
-                />
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full justify-start"
-                >
-                  <Link href="/business/projects">
-                    <FolderOpen className="mr-2 h-4 w-4" />
-                    Projects
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full justify-start"
-                >
-                  <Link href="/project-invitations">
-                    <SendHorizontal className="mr-2 h-4 w-4" />
-                    Project Invitations
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
 
-            {/* Upcoming Tasks */}
-            {/* <Card>
+          <TabsContent value="current" className="mt-4">
+            {pendingProjects.length > 0 ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {pendingProjects
+                    .slice(0, 6)
+                    .map((project: any, index: number) => (
+                      <ProjectCard key={index} project={project} />
+                    ))}
+                </div>
+                {pendingProjects.length > 6 && (
+                  <div className="mt-4 flex justify-center">
+                    <Link href="/business/projects">
+                      <Button variant="outline" size="sm">
+                        View more
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <PackageOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">
+                    No active projects
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4 text-center">
+                    Get started by creating a new project
+                  </p>
+                  <ProjectTypeDialog
+                    onOpenChange={setModalOpen}
+                    trigger={
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Project
+                      </Button>
+                    }
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="completed" className="mt-4">
+            {completedProjects.length > 0 ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {completedProjects
+                    .slice(0, 6)
+                    .map((project: any, index: number) => (
+                      <ProjectCard key={index} project={project} />
+                    ))}
+                </div>
+                {completedProjects.length > 6 && (
+                  <div className="mt-4 flex justify-center">
+                    <Link href="/business/projects">
+                      <Button variant="outline" size="sm">
+                        View more
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <CheckCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">
+                    No completed projects yet
+                  </h3>
+                  <p className="text-sm text-muted-foreground text-center">
+                    Your completed projects will appear here
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+      {/* Right Sidebar */}
+      <div className="space-y-6">
+        {/* Quick Actions */}
+        <Card className="bg-muted/20">
+          <CardHeader>
+            <CardTitle className="text-lg">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ProjectTypeDialog
+              onOpenChange={setModalOpen}
+              trigger={
+                <Button variant="outline" className="w-full justify-start">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Project
+                </Button>
+              }
+            />
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/business/projects">
+                <FolderOpen className="mr-2 h-4 w-4" />
+                Projects
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/project-invitations">
+                <SendHorizontal className="mr-2 h-4 w-4" />
+                Project Invitations
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Tasks */}
+        {/* <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Upcoming Tasks</CardTitle>
@@ -449,13 +422,11 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card> */}
-            <div className="text-center py-10 w-full">
-              <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
-              <p className="text-gray-500">No interviews scheduled</p>
-            </div>
-          </div>
-        </main>
+        <div className="text-center py-10 w-full">
+          <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
+          <p className="text-gray-500">No interviews scheduled</p>
+        </div>
       </div>
-    </div>
+    </BusinessDashboardLayout>
   );
 }
