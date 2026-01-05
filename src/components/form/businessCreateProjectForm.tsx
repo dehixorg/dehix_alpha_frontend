@@ -52,7 +52,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import {
   InputGroup,
   InputGroupInput,
@@ -697,7 +696,12 @@ export function CreateProjectBusinessForm() {
           <FormItem>
             <FormLabel className="text-foreground">Project Name</FormLabel>
             <FormControl>
-              <Input placeholder="Enter your project name" {...field} />
+              <InputGroup>
+                <InputGroupInput
+                  placeholder="Enter your project name"
+                  {...field}
+                />
+              </InputGroup>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -710,7 +714,13 @@ export function CreateProjectBusinessForm() {
           <FormItem>
             <FormLabel className="text-foreground">Contact Email</FormLabel>
             <FormControl>
-              <Input type="email" placeholder="you@company.com" {...field} />
+              <InputGroup>
+                <InputGroupInput
+                  type="email"
+                  placeholder="you@company.com"
+                  {...field}
+                />
+              </InputGroup>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -775,7 +785,9 @@ export function CreateProjectBusinessForm() {
                   </FormDescription>
                   <FormControl>
                     <div className="flex items-center gap-2">
-                      <Input {...field} placeholder="https://" />
+                      <InputGroup>
+                        <InputGroupInput {...field} placeholder="https://" />
+                      </InputGroup>
                       <Button
                         variant="outline"
                         type="button"

@@ -19,14 +19,6 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import Header from '@/components/header/header';
-import {
-  menuItemsBottom as freelancerMenuItemsBottom,
-  menuItemsTop as freelancerMenuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
-import { Badge } from '@/components/ui/badge';
-import EmptyState from '@/components/shared/EmptyState';
 import {
   Card,
   CardContent,
@@ -34,6 +26,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import EmptyState from '@/components/shared/EmptyState';
+import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 
 // Section header component
 function SectionHeader({
@@ -263,144 +258,134 @@ export default function ProjectPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col pb-10">
-      <SidebarMenu
-        menuItemsTop={freelancerMenuItemsTop}
-        menuItemsBottom={freelancerMenuItemsBottom}
-        active="Projects"
-      />
-      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
-        <Header
-          menuItemsTop={freelancerMenuItemsTop}
-          menuItemsBottom={freelancerMenuItemsBottom}
-          activeMenu="Dashboard"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Projects', link: '/freelancer/project' },
-          ]}
-        />
+    <FreelancerAppLayout
+      active="Projects"
+      activeMenu="Dashboard"
+      breadcrumbItems={[
+        { label: 'Freelancer', link: '/dashboard/freelancer' },
+        { label: 'Projects', link: '/freelancer/project' },
+      ]}
+      containerClassName="flex min-h-screen w-full flex-col pb-10"
+      mainClassName="flex-1"
+    >
+      <div className="w-full p-4 sm:px-6 sm:py-2">
+        <Card className="w-full">
+          <CardHeader className="space-y-1 bg-gradient">
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Projects
+            </CardTitle>
+            <CardDescription>
+              Track your projects by status and respond to invitations.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0 px-0">
+            <Tabs
+              value={activeTab}
+              onValueChange={handleTabChange}
+              className="w-full flex flex-col gap-4"
+            >
+              <div className="border-b px-4 sm:px-6">
+                <div className="max-w-full overflow-x-auto no-scrollbar">
+                  <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                    <TabsTrigger
+                      value="current"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <FolderDot className="mr-2 h-4 w-4" /> Current
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="applied"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <Pointer className="mr-2 h-4 w-4" /> Applied
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="completed"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <FileCheck className="mr-2 h-4 w-4" /> Completed
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="rejected"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <CircleX className="mr-2 h-4 w-4" /> Rejected
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+              </div>
 
-        <div className="flex-1">
-          <div className="w-full p-4 sm:px-6 sm:py-2">
-            <Card className="w-full">
-              <CardHeader className="space-y-1 bg-gradient">
-                <CardTitle className="text-2xl font-bold tracking-tight">
-                  Projects
-                </CardTitle>
-                <CardDescription>
-                  Track your projects by status and respond to invitations.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0 px-0">
-                <Tabs
-                  value={activeTab}
-                  onValueChange={handleTabChange}
-                  className="w-full flex flex-col gap-4"
-                >
-                  <div className="border-b px-4 sm:px-6">
-                    <div className="max-w-full overflow-x-auto no-scrollbar">
-                      <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
-                        <TabsTrigger
-                          value="current"
-                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                        >
-                          <FolderDot className="mr-2 h-4 w-4" /> Current
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="applied"
-                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                        >
-                          <Pointer className="mr-2 h-4 w-4" /> Applied
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="completed"
-                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                        >
-                          <FileCheck className="mr-2 h-4 w-4" /> Completed
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="rejected"
-                          className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                        >
-                          <CircleX className="mr-2 h-4 w-4" /> Rejected
-                        </TabsTrigger>
-                      </TabsList>
-                    </div>
-                  </div>
-
-                  <TabsContent value="current" className="space-y-4 px-6">
-                    <SectionHeader
-                      title="Current Projects"
-                      subtitle="Browse and manage your active freelance projects"
-                      right={
-                        <FilterToggle
-                          id="project-type"
-                          projectType={projectType}
-                          onChange={setProjectType}
-                        />
-                      }
-                    />
-                    <ProjectList
-                      status="ACTIVE"
+              <TabsContent value="current" className="space-y-4 px-6">
+                <SectionHeader
+                  title="Current Projects"
+                  subtitle="Browse and manage your active freelance projects"
+                  right={
+                    <FilterToggle
+                      id="project-type"
                       projectType={projectType}
-                      refreshTrigger={projectsRefreshTrigger}
+                      onChange={setProjectType}
                     />
-                  </TabsContent>
+                  }
+                />
+                <ProjectList
+                  status="ACTIVE"
+                  projectType={projectType}
+                  refreshTrigger={projectsRefreshTrigger}
+                />
+              </TabsContent>
 
-                  <TabsContent value="applied" className="space-y-4 px-6">
-                    <SectionHeader
-                      title="Projects Under Verification"
-                      subtitle="Track the status of your projects currently undergoing verification before final approval."
-                      right={
-                        <FilterToggle
-                          id="project-type-applied"
-                          projectType={projectType}
-                          onChange={setProjectType}
-                        />
-                      }
-                    />
-                    <ProjectList status="PENDING" projectType={projectType} />
-                  </TabsContent>
-
-                  <TabsContent value="completed" className="space-y-4 px-6">
-                    <SectionHeader
-                      title="Completed Projects"
-                      subtitle="Explore and manage your successfully completed freelance projects."
-                      right={
-                        <FilterToggle
-                          id="project-type-completed"
-                          projectType={projectType}
-                          onChange={setProjectType}
-                        />
-                      }
-                    />
-                    <ProjectList status="COMPLETED" projectType={projectType} />
-                  </TabsContent>
-
-                  <TabsContent value="rejected" className="space-y-4 px-6">
-                    <SectionHeader
-                      title="Rejected Projects"
-                      subtitle="Explore and Review projects that were not selected and gain insights for future submissions."
-                      right={
-                        <FilterToggle
-                          id="project-type-rejected"
-                          projectType={projectType}
-                          onChange={setProjectType}
-                        />
-                      }
-                    />
-                    <ProjectList
-                      status="REJECTED"
+              <TabsContent value="applied" className="space-y-4 px-6">
+                <SectionHeader
+                  title="Projects Under Verification"
+                  subtitle="Track the status of your projects currently undergoing verification before final approval."
+                  right={
+                    <FilterToggle
+                      id="project-type-applied"
                       projectType={projectType}
-                      refreshTrigger={projectsRefreshTrigger}
+                      onChange={setProjectType}
                     />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                  }
+                />
+                <ProjectList status="PENDING" projectType={projectType} />
+              </TabsContent>
+
+              <TabsContent value="completed" className="space-y-4 px-6">
+                <SectionHeader
+                  title="Completed Projects"
+                  subtitle="Explore and manage your successfully completed freelance projects."
+                  right={
+                    <FilterToggle
+                      id="project-type-completed"
+                      projectType={projectType}
+                      onChange={setProjectType}
+                    />
+                  }
+                />
+                <ProjectList status="COMPLETED" projectType={projectType} />
+              </TabsContent>
+
+              <TabsContent value="rejected" className="space-y-4 px-6">
+                <SectionHeader
+                  title="Rejected Projects"
+                  subtitle="Explore and Review projects that were not selected and gain insights for future submissions."
+                  right={
+                    <FilterToggle
+                      id="project-type-rejected"
+                      projectType={projectType}
+                      onChange={setProjectType}
+                    />
+                  }
+                />
+                <ProjectList
+                  status="REJECTED"
+                  projectType={projectType}
+                  refreshTrigger={projectsRefreshTrigger}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </FreelancerAppLayout>
   );
 }
