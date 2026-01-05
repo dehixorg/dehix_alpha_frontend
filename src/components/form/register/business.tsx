@@ -50,7 +50,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import {
   InputGroup,
   InputGroupInput,
@@ -589,6 +588,7 @@ function BusinessRegisterForm({
                   disabled={isEmailOtpDialogOpen}
                 />
               </div>
+
               <div className="space-y-2">
                 <Label>Password</Label>
                 <FormField
@@ -599,18 +599,20 @@ function BusinessRegisterForm({
                       <FormControl>
                         <div>
                           <div className="relative">
-                            <Input
-                              placeholder="Enter your password"
-                              type={showPassword ? 'text' : 'password'}
-                              className="pr-10"
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                setPasswordStrength(
-                                  getPasswordStrength(e.target.value),
-                                );
-                              }}
-                            />
+                            <InputGroup>
+                              <InputGroupInput
+                                placeholder="Enter your password"
+                                type={showPassword ? 'text' : 'password'}
+                                className="pr-10"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  setPasswordStrength(
+                                    getPasswordStrength(e.target.value),
+                                  );
+                                }}
+                              />
+                            </InputGroup>
                             <button
                               type="button"
                               onClick={togglePasswordVisibility}
@@ -635,6 +637,7 @@ function BusinessRegisterForm({
                   )}
                 />
               </div>
+
               <div className="space-y-2">
                 <Label>Confirm Password</Label>
                 <FormField
@@ -644,12 +647,14 @@ function BusinessRegisterForm({
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <Input
-                            placeholder="Confirm your password"
-                            type={showPassword ? 'text' : 'password'}
-                            className="pr-10"
-                            {...field}
-                          />
+                          <InputGroup>
+                            <InputGroupInput
+                              placeholder="Confirm your password"
+                              type={showPassword ? 'text' : 'password'}
+                              className="pr-10"
+                              {...field}
+                            />
+                          </InputGroup>
                           <button
                             type="button"
                             onClick={togglePasswordVisibility}

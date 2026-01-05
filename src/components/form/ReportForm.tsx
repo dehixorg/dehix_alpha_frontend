@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { MessageSquareText } from 'lucide-react';
 
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +16,11 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import {
   Select,
   SelectTrigger,
@@ -183,11 +188,16 @@ export function ReportForm({
                   <FormItem>
                     <Label>Subject</Label>
                     <FormControl>
-                      <Input
-                        className="h-9"
-                        placeholder="Issue subject"
-                        {...field}
-                      />
+                      <InputGroup>
+                        <InputGroupText>
+                          <MessageSquareText className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          className="h-9"
+                          placeholder="Issue subject"
+                          {...field}
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -284,7 +294,7 @@ export function ReportForm({
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input type="hidden" readOnly {...field} />
+                  <input type="hidden" readOnly {...field} />
                 </FormControl>
               </FormItem>
             )}

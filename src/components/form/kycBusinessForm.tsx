@@ -4,7 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  BadgeCheck,
+  DollarSign,
+} from 'lucide-react';
 
 import LiveCaptureField from './register/livecapture';
 import KYCDetailsView from './KYCDetailsView';
@@ -22,7 +27,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { cn } from '@/lib/utils';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
 import KycStatusAlert from '@/components/shared/KycStatusAlert';
@@ -545,10 +554,15 @@ export function KYCForm({ user_id }: { user_id: string }) {
                         <FormItem>
                           <FormLabel>Business Proof</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Enter your business registration number"
-                              {...field}
-                            />
+                            <InputGroup>
+                              <InputGroupText>
+                                <BadgeCheck className="h-4 w-4" />
+                              </InputGroupText>
+                              <InputGroupInput
+                                placeholder="Enter your business registration number"
+                                {...field}
+                              />
+                            </InputGroup>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -562,14 +576,20 @@ export function KYCForm({ user_id }: { user_id: string }) {
                         <FormItem>
                           <FormLabel>Business Profit</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Enter your annual business profit"
-                              type="number"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(Number(e.target.value))
-                              }
-                            />
+                            <InputGroup>
+                              <InputGroupText>
+                                <DollarSign className="h-4 w-4" />
+                              </InputGroupText>
+                              <InputGroupInput
+                                placeholder="Enter your annual business profit"
+                                type="number"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                              />
+                              <InputGroupText>YEARLY</InputGroupText>
+                            </InputGroup>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
