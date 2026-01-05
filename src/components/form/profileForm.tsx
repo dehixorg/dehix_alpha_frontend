@@ -810,7 +810,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-6 bg-muted-foreground/20 dark:bg-muted/20">
+    <Card className="p-6">
       {/* Page Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-xl md:text-2xl font-semibold tracking-tight flex items-center gap-2">
