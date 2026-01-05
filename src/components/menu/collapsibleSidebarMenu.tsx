@@ -103,15 +103,12 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
         </nav>
 
         <nav className="grid gap-6 text-lg font-medium">
+          {/* Check if the current item is "Settings" and add ThemeToggle above it */}
+          <div className="flex items-center px-2.5 text-muted-foreground hover:text-foreground mb-1 ml-auto">
+            <ThemeToggle full />
+          </div>
           {menuItemsBottom.map((item, index) => (
             <React.Fragment key={index}>
-              {/* Check if the current item is "Settings" and add ThemeToggle above it */}
-              {item.label === 'Settings' && (
-                <div className="flex items-center px-2.5 text-muted-foreground hover:text-foreground mb-1">
-                  <ThemeToggle />
-                </div>
-              )}
-
               <Link
                 href={item.href ? item.href : ''}
                 onClick={() => setActive(item.label)}

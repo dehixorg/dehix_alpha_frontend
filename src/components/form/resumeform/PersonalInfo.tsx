@@ -1,10 +1,14 @@
 import React from 'react';
-import { User, X } from 'lucide-react';
+import { User, X, Mail, Phone, MapPin, Github, Linkedin } from 'lucide-react';
 
 import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import {
   Card,
   CardContent,
@@ -109,94 +113,137 @@ export const PersonalInfo: React.FC<PersonalInfoProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor={`firstName-${index}`}>First Name</Label>
-                  <Input
-                    id={`firstName-${index}`}
-                    value={info.firstName}
-                    onChange={(e) =>
-                      handleInputChange(index, 'firstName', e.target.value)
-                    }
-                    placeholder="Enter your first name"
-                  />
+                  <InputGroup>
+                    <InputGroupText>
+                      <User className="h-4 w-4" />
+                    </InputGroupText>
+                    <InputGroupInput
+                      id={`firstName-${index}`}
+                      value={info.firstName}
+                      onChange={(e) =>
+                        handleInputChange(index, 'firstName', e.target.value)
+                      }
+                      placeholder="Enter your first name"
+                    />
+                  </InputGroup>
                 </div>
                 <div>
                   <Label htmlFor={`lastName-${index}`}>Last Name</Label>
-                  <Input
-                    id={`lastName-${index}`}
-                    value={info.lastName}
-                    onChange={(e) =>
-                      handleInputChange(index, 'lastName', e.target.value)
-                    }
-                    placeholder="Enter your last name"
-                  />
+                  <InputGroup>
+                    <InputGroupText>
+                      <User className="h-4 w-4" />
+                    </InputGroupText>
+                    <InputGroupInput
+                      id={`lastName-${index}`}
+                      value={info.lastName}
+                      onChange={(e) =>
+                        handleInputChange(index, 'lastName', e.target.value)
+                      }
+                      placeholder="Enter your last name"
+                    />
+                  </InputGroup>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor={`city-${index}`}>City</Label>
-                  <Input
-                    id={`city-${index}`}
-                    value={info.city}
-                    onChange={(e) =>
-                      handleInputChange(index, 'city', e.target.value)
-                    }
-                    placeholder="Enter your city"
-                  />
+                  <InputGroup>
+                    <InputGroupText>
+                      <MapPin className="h-4 w-4" />
+                    </InputGroupText>
+                    <InputGroupInput
+                      id={`city-${index}`}
+                      value={info.city}
+                      onChange={(e) =>
+                        handleInputChange(index, 'city', e.target.value)
+                      }
+                      placeholder="Enter your city"
+                    />
+                  </InputGroup>
                 </div>
                 <div>
                   <Label htmlFor={`country-${index}`}>Country</Label>
-                  <Input
-                    id={`country-${index}`}
-                    value={info.country}
-                    onChange={(e) =>
-                      handleInputChange(index, 'country', e.target.value)
-                    }
-                    placeholder="Enter your country"
-                  />
+                  <InputGroup>
+                    <InputGroupText>
+                      <MapPin className="h-4 w-4" />
+                    </InputGroupText>
+                    <InputGroupInput
+                      id={`country-${index}`}
+                      value={info.country}
+                      onChange={(e) =>
+                        handleInputChange(index, 'country', e.target.value)
+                      }
+                      placeholder="Enter your country"
+                    />
+                  </InputGroup>
                 </div>
               </div>
               <div>
                 <Label htmlFor={`phoneNumber-${index}`}>Phone</Label>
-                <Input
-                  id={`phoneNumber-${index}`}
-                  value={info.phoneNumber}
-                  onChange={(e) =>
-                    handleInputChange(index, 'phoneNumber', e.target.value)
-                  }
-                  placeholder="Enter your phone number"
-                />
+                <InputGroup>
+                  <InputGroupText>
+                    <Phone className="h-4 w-4" />
+                  </InputGroupText>
+                  <InputGroupInput
+                    id={`phoneNumber-${index}`}
+                    value={info.phoneNumber}
+                    onChange={(e) =>
+                      handleInputChange(index, 'phoneNumber', e.target.value)
+                    }
+                    placeholder="Enter your phone number"
+                    inputMode="tel"
+                  />
+                </InputGroup>
               </div>
               <div>
                 <Label htmlFor={`email-${index}`}>Email</Label>
-                <Input
-                  id={`email-${index}`}
-                  value={info.email}
-                  onChange={(e) =>
-                    handleInputChange(index, 'email', e.target.value)
-                  }
-                  placeholder="Enter your email address"
-                />
+                <InputGroup>
+                  <InputGroupText>
+                    <Mail className="h-4 w-4" />
+                  </InputGroupText>
+                  <InputGroupInput
+                    id={`email-${index}`}
+                    value={info.email}
+                    onChange={(e) =>
+                      handleInputChange(index, 'email', e.target.value)
+                    }
+                    placeholder="Enter your email address"
+                    type="email"
+                    inputMode="email"
+                  />
+                </InputGroup>
               </div>
               <div>
-                <Label htmlFor={`github-${index}`}>Github Id</Label>
-                <Input
-                  id={`github-${index}`}
-                  value={info.github}
-                  onChange={(e) =>
-                    handleInputChange(index, 'github', e.target.value)
-                  }
-                  placeholder="Enter your github id"
-                />
+                <Label htmlFor={`github-${index}`}>Github</Label>
+                <InputGroup>
+                  <InputGroupText>
+                    <Github className="h-4 w-4" />
+                  </InputGroupText>
+                  <InputGroupInput
+                    id={`github-${index}`}
+                    value={info.github}
+                    onChange={(e) =>
+                      handleInputChange(index, 'github', e.target.value)
+                    }
+                    placeholder="Enter your github"
+                  />
+                </InputGroup>
               </div>
               <div>
                 <Label htmlFor={`linkedin-${index}`}>LinkedIn Id</Label>
-                <Input
-                  id={`linkedin-${index}`}
-                  value={info.linkedin}
-                  onChange={(e) =>
-                    handleInputChange(index, 'linkedin', e.target.value)
-                  }
-                  placeholder="Enter your linkedin id"
-                />
+                <InputGroup>
+                  <InputGroupText>
+                    <Linkedin className="h-4 w-4" />
+                  </InputGroupText>
+                  <InputGroupInput
+                    id={`linkedin-${index}`}
+                    value={info.linkedin}
+                    onChange={(e) =>
+                      handleInputChange(index, 'linkedin', e.target.value)
+                    }
+                    placeholder="Enter your linkedin id"
+                  />
+                </InputGroup>
               </div>
             </CardContent>
           </Card>

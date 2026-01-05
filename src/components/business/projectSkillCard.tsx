@@ -1,14 +1,8 @@
 import React from 'react';
-import { Plus, CheckCircle, Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '../ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import {
   HoverCard,
   HoverCardContent,
@@ -17,7 +11,6 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
 import DateHistory from '@/components/shared/DateHistory';
@@ -181,13 +174,6 @@ function ProjectSkillCard({
           </p>
         </div>
       </CardContent>
-
-      <CardFooter className="pt-0">
-        <Button size="sm" variant="outline" className="ml-auto gap-2">
-          <CheckCircle className="w-4 h-4" />
-          Mark as completed
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

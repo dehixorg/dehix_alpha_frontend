@@ -1,11 +1,16 @@
 'use client';
 
-import { CalendarX2 } from 'lucide-react';
+import { CalendarX2, Users2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Carousel,
   CarouselContent,
@@ -292,14 +297,29 @@ export default function Dashboard() {
         />
         <main className="flex flex-col lg:grid lg:grid-cols-4 xl:grid-cols-4 flex-1 items-start gap-4 p-4 sm:px-6 sm:py-3 md:gap-8">
           <div className="w-full lg:col-span-3 space-y-4 md:space-y-8">
-            <Tabs defaultValue="Project-Info">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="Project-Info">Project Info</TabsTrigger>
-                <TabsTrigger value="Profiles">Profile Bids</TabsTrigger>
-              </TabsList>
-              <TabsContent value="Project-Info">
-                <div className="space-y-4 md:space-y-8">
-                  <div>
+            <Card className="overflow-hidden rounded-xl border shadow-sm">
+              <Tabs defaultValue="Project-Info" className="w-full">
+                <div className="border-b px-4 sm:px-6">
+                  <div className="-mx-1 max-w-full overflow-x-auto no-scrollbar px-1">
+                    <TabsList className="bg-transparent h-12 w-max min-w-full md:w-auto p-0 flex-nowrap">
+                      <TabsTrigger
+                        value="Project-Info"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        Project Info
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="Profiles"
+                        className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        Profile Bids
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+                </div>
+
+                <TabsContent value="Project-Info" className="m-0">
+                  <CardContent className="p-4 sm:p-6 space-y-6">
                     <ProjectDetailCard
                       projectName={project.projectName}
                       description={project.description}
@@ -316,62 +336,88 @@ export default function Dashboard() {
                       userRole="Business"
                       milestones={project.milestones}
                     />
-                  </div>
-                  <div>
-                    <CardHeader className="pl-0 ">
-                      <CardTitle className="pb-4">Profiles</CardTitle>
-                    </CardHeader>
-                    <Carousel className="w-full relative pt-3">
-                      <CarouselContent className="flex mt-3 -ml-2">
-                        {project.profiles?.map((profile, index) => (
-                          <CarouselItem
-                            key={index}
-                            className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3"
-                          >
-                            <ProjectSkillCard
-                              domainName={profile.domain}
-                              description={profile.description}
-                              email={project.email}
-                              profileType={profile.profileType}
-                              startDate={project.createdAt}
-                              endDate={project.end}
-                              domains={[]}
-                              skills={profile.skills}
-                              team={profile.team || []}
-                            />
-                          </CarouselItem>
-                        ))}
-                        {/* Only show Add Profile card if project is not completed or rejected */}
-                        {project.status !== StatusEnum.COMPLETED &&
-                          project.status !== StatusEnum.REJECTED && (
-                            <CarouselItem className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3 pl-2">
-                              <ProjectSkillCard
-                                isLastCard={true}
-                                onAddProfile={handleAddProfile}
-                              />
-                            </CarouselItem>
-                          )}
-                      </CarouselContent>
-                      {project.profiles && project.profiles.length > 0 && (
-                        <>
-                          <div className="flex">
-                            <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors bg-muted-foreground/20 dark:bg-muted/20">
-                              Previous
-                            </CarouselPrevious>
-                            <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors bg-muted-foreground/20 dark:bg-muted/20">
-                              Next
-                            </CarouselNext>
+
+                    <div className="pb-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg">Profiles</CardTitle>
+                          <CardDescription>
+                            Define requirements and manage team allocation
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      {!project.profiles || project.profiles.length === 0 ? (
+                        <div className="rounded-xl border bg-muted/20 p-8 sm:p-10 text-center">
+                          <div className="mx-auto mb-5 h-14 w-14 rounded-2xl border bg-background flex items-center justify-center">
+                            <Users2 className="h-7 w-7 text-muted-foreground" />
                           </div>
-                        </>
+                          <div className="text-sm font-semibold">
+                            No profiles yet
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Add a profile to start receiving bids for specific
+                            roles.
+                          </p>
+                          {project.status !== StatusEnum.COMPLETED &&
+                            project.status !== StatusEnum.REJECTED && (
+                              <div className="mt-5 flex justify-center">
+                                <ProjectSkillCard
+                                  isLastCard={true}
+                                  onAddProfile={handleAddProfile}
+                                />
+                              </div>
+                            )}
+                        </div>
+                      ) : (
+                        <Carousel className="w-full relative pt-2">
+                          <CarouselContent className="flex mt-3 -ml-2">
+                            {project.profiles?.map((profile, index) => (
+                              <CarouselItem
+                                key={index}
+                                className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3"
+                              >
+                                <ProjectSkillCard
+                                  domainName={profile.domain}
+                                  description={profile.description}
+                                  email={project.email}
+                                  profileType={profile.profileType}
+                                  startDate={project.createdAt}
+                                  endDate={project.end}
+                                  domains={[]}
+                                  skills={profile.skills}
+                                  team={profile.team || []}
+                                />
+                              </CarouselItem>
+                            ))}
+                            {project.status !== StatusEnum.COMPLETED &&
+                              project.status !== StatusEnum.REJECTED && (
+                                <CarouselItem className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3 pl-2">
+                                  <ProjectSkillCard
+                                    isLastCard={true}
+                                    onAddProfile={handleAddProfile}
+                                  />
+                                </CarouselItem>
+                              )}
+                          </CarouselContent>
+                          <div className="flex mb-2">
+                            <CarouselPrevious className="absolute left-0 top-0 transform -translate-y-1/2 shadow-md transition-colors bg-muted-foreground/20 dark:bg-muted/20" />
+                            <CarouselNext className="absolute right-0 top-0 transform -translate-y-1/2 shadow-md transition-colors bg-muted-foreground/20 dark:bg-muted/20" />
+                          </div>
+                        </Carousel>
                       )}
-                    </Carousel>
-                  </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="Profiles">
-                <BidsDetails id={project_id || ''} />
-              </TabsContent>
-            </Tabs>
+                    </div>
+                  </CardContent>
+                </TabsContent>
+
+                <TabsContent value="Profiles" className="m-0">
+                  <CardContent className="p-0">
+                    <BidsDetails id={project_id || ''} />
+                  </CardContent>
+                </TabsContent>
+              </Tabs>
+            </Card>
           </div>
           <div className="w-full lg:col-span-1 lg:w-auto mt-8 lg:mt-0 space-y-6 min-w-0">
             <CardTitle className="group flex items-center gap-2 text-xl">

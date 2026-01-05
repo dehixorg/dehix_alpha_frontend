@@ -195,7 +195,7 @@ const SkillDomainForm: React.FC = () => {
   );
 
   return (
-    <section className="min-h-screen py-4 px-4 sm:px-6 lg:px-8">
+    <section className="min-h-screen">
       <Card className="w-full shadow-lg">
         <CardHeader className="border-b bg-card/50">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

@@ -1,7 +1,11 @@
-/* eslint-disable prettier/prettier */
-'use client';
 import React, { useEffect, useState } from 'react';
-import { Briefcase } from 'lucide-react';
+import {
+  Briefcase,
+  Calendar,
+  Clock,
+  DollarSign,
+  MessageSquare,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -21,6 +25,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -32,6 +37,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 
 type BiddableInterview = {
   _id: string;
@@ -85,9 +97,9 @@ const hasMeaningfulBid = (bid?: MyBid) => {
   if (!bid) return false;
   return Boolean(
     (bid.fee && String(bid.fee).trim()) ||
-      (bid.status && String(bid.status).trim()) ||
-      (bid.description && String(bid.description).trim()) ||
-      (bid.suggestedDateTime && String(bid.suggestedDateTime).trim()),
+    (bid.status && String(bid.status).trim()) ||
+    (bid.description && String(bid.description).trim()) ||
+    (bid.suggestedDateTime && String(bid.suggestedDateTime).trim()),
   );
 };
 
@@ -218,7 +230,9 @@ export default function InterviewerBids() {
   const filteredBiddedItems =
     selectedTalentId === 'ALL'
       ? biddedItems
-      : biddedItems.filter((iv) => String(iv.talentId || '') === selectedTalentId);
+      : biddedItems.filter(
+          (iv) => String(iv.talentId || '') === selectedTalentId,
+        );
 
   const filteredBiddableItems =
     selectedTalentId === 'ALL'
@@ -228,7 +242,9 @@ export default function InterviewerBids() {
         );
 
   const approvedAttributes = attributes.filter((a) =>
-    String(a.interviewerStatus || '').toUpperCase().includes('APPROVED'),
+    String(a.interviewerStatus || '')
+      .toUpperCase()
+      .includes('APPROVED'),
   );
 
   const handleOpenBid = (iv: BiddableInterview) => {
@@ -377,7 +393,8 @@ export default function InterviewerBids() {
                 const bidFee = myBid?.fee;
                 const bidStatus = myBid?.status;
                 const bidDescription = (myBid?.description || '').trim();
-                const descriptionToShow = bidDescription || iv.description || '-';
+                const descriptionToShow =
+                  bidDescription || iv.description || '-';
 
                 return (
                   <Card key={iv._id} className="overflow-hidden">
@@ -476,12 +493,16 @@ export default function InterviewerBids() {
                   className="my-2"
                   title="Unable to load available interviews"
                   description={message}
-                  icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
+                  icon={
+                    <Briefcase className="h-12 w-12 text-muted-foreground" />
+                  }
                   actions={
                     showAvailabilityCta ? (
                       <Button
                         type="button"
-                        onClick={() => router.push('/freelancer/interviewer/profile')}
+                        onClick={() =>
+                          router.push('/freelancer/interviewer/profile')
+                        }
                       >
                         Set your availability
                       </Button>
@@ -504,28 +525,81 @@ export default function InterviewerBids() {
                 const { date, time } = formatDateTime(iv.interviewDate);
 
                 return (
-                  <Card key={iv._id} className="overflow-hidden">
-                    <CardHeader className="gap-1">
-                      <CardTitle className="text-base">
-                        {iv.talentName || 'Interview'}
-                      </CardTitle>
-                      <CardDescription>
-                        {date} • {time}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {iv.description ? (
-                        <div className="text-sm text-muted-foreground line-clamp-3">
-                          {iv.description}
+                  <Card key={iv._id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                            <AvatarImage src={undefined} />
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                              {iv.talentName?.charAt(0)?.toUpperCase() || 'I'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-base font-semibold leading-tight truncate">
+                              {iv.talentName || 'Interview'}
+                            </CardTitle>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="secondary" className="text-xs">
+                                Available
+                              </Badge>
+                            </div>
+                          </div>
                         </div>
-                      ) : null}
-
-                      <div>
-                        <Button type="button" onClick={() => handleOpenBid(iv)}>
-                          Bid
-                        </Button>
                       </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{date}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{time}</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <Separator />
+
+                    <CardContent className="pt-4 pb-4">
+                      {iv.description ? (
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-muted-foreground">
+                              Details
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+                            {iv.description}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-muted-foreground">
+                              Details
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground italic">
+                            No description provided
+                          </p>
+                        </div>
+                      )}
                     </CardContent>
+
+                    <CardFooter className="pt-0">
+                      <Button
+                        type="button"
+                        onClick={() => handleOpenBid(iv)}
+                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                        variant="outline"
+                      >
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Place Bid
+                      </Button>
+                    </CardFooter>
                   </Card>
                 );
               })}
@@ -559,14 +633,19 @@ export default function InterviewerBids() {
 
             <div className="grid gap-2">
               <Label htmlFor="fee">Bid fee</Label>
-              <Input
-                id="fee"
-                placeholder="Enter fee"
-                value={fee}
-                onChange={(e) => setFee(e.target.value)}
-                type="number"
-                min={0}
-              />
+              <InputGroup>
+                <InputGroupText>
+                  <DollarSign className="h-4 w-4" />
+                </InputGroupText>
+                <InputGroupInput
+                  id="fee"
+                  placeholder="Enter fee"
+                  value={fee}
+                  onChange={(e) => setFee(e.target.value)}
+                  type="number"
+                  min={0}
+                />
+              </InputGroup>
             </div>
 
             <div className="grid gap-2">
@@ -589,7 +668,11 @@ export default function InterviewerBids() {
               >
                 Cancel
               </Button>
-              <Button type="button" onClick={handleSubmitBid} disabled={submitting}>
+              <Button
+                type="button"
+                onClick={handleSubmitBid}
+                disabled={submitting}
+              >
                 {submitting ? 'Submitting...' : 'Submit bid'}
               </Button>
             </div>

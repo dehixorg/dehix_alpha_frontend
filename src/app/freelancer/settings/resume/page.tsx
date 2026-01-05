@@ -4,13 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Plus } from 'lucide-react';
 
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import Header from '@/components/header/header';
+import FreelancerSettingsLayout from '../../../../components/layout/FreelancerSettingsLayout';
+
 import ResumeEditor from '@/components/resumeEditor/editor';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
 import { RootState } from '@/lib/store';
 import { notifyError } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -61,81 +57,64 @@ export default function Resume() {
 
   if (showResumeEditor) {
     return (
-      <>
-        <div className="flex min-h-screen w-full flex-col">
-          <ResumeEditor
-            initialResume={selectedResume}
-            onCancel={() => {
-              setShowResumeEditor(false);
-              fetchResumeData(); // Call fetchResumeData when returning from editor
-            }}
-          />
-        </div>
-      </>
+      <div className="flex min-h-screen w-full flex-col">
+        <ResumeEditor
+          initialResume={selectedResume}
+          onCancel={() => {
+            setShowResumeEditor(false);
+            fetchResumeData(); // Call fetchResumeData when returning from editor
+          }}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Resume"
-        isKycCheck={true}
-      />
-      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Resume"
-          breadcrumbItems={[
-            { label: 'Settings', link: '#' },
-            { label: 'Resume Building', link: '#' },
-          ]}
-        />
-        <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+    <FreelancerSettingsLayout
+      active="Resume"
+      activeMenu="Resume"
+      breadcrumbItems={[
+        { label: 'Settings', link: '#' },
+        { label: 'Resume Building', link: '#' },
+      ]}
+      isKycCheck={true}
+      contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14"
+      mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-        >
-          {resumeData.map((resume) => (
-            <ResumeInfoCard
-              key={resume._id}
-              {...resume}
-              onClick={() => handleEditResume(resume)}
-            />
-          ))}
+    >
+      {resumeData.map((resume) => (
+        <ResumeInfoCard
+          key={resume._id}
+          {...resume}
+          onClick={() => handleEditResume(resume)}
+        />
+      ))}
 
-          {resumeData.length > 0 && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleNewResume}
-              className="my-auto"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          )}
-          {resumeData.length === 0 && (
-            <div className="col-span-full">
-              <EmptyState
-                icon={<Plus className="h-12 w-12 text-muted-foreground/80" />}
-                title="No resumes found"
-                description="Create your first resume to get started."
-                actions={
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleNewResume}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                }
-                className="py-8"
-              />
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
+      {resumeData.length > 0 && (
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleNewResume}
+          className="my-auto"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      )}
+      {resumeData.length === 0 && (
+        <div className="col-span-full">
+          <EmptyState
+            icon={<Plus className="h-12 w-12 text-muted-foreground/80" />}
+            title="No resumes found"
+            description="Create your first resume to get started."
+            actions={
+              <Button variant="outline" size="icon" onClick={handleNewResume}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            }
+            className="py-8"
+          />
+        </div>
+      )}
+    </FreelancerSettingsLayout>
   );
 }

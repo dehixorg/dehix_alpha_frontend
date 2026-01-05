@@ -24,12 +24,7 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 
 import { RootState } from '@/lib/store';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
-import Header from '@/components/header/header';
+import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -546,991 +541,943 @@ export default function ProfileDetailPage() {
 
   if (isLoading || !skillsAndDomainsLoaded) {
     return (
-      <div className="flex min-h-screen w-full flex-col">
-        <SidebarMenu
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          active="Profiles"
-          isKycCheck={true}
-        />
-        <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
-          <Header
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            activeMenu="Profiles"
-            breadcrumbItems={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Settings', link: '#' },
-              { label: 'Profiles', link: '/freelancer/settings/profiles' },
-              { label: 'Profile Details', link: '#' },
-            ]}
-          />
-          <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
-            <div className="grid w-full gap-4 py-6">
-              <Card>
-                <CardHeader>
-                  <Skeleton className="h-6 w-48" />
-                  <Skeleton className="h-4 w-80" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-10 w-full" />
-                    </div>
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-10 w-full" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-24 w-full" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <Skeleton className="h-6 w-40" />
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Skeleton className="h-36 w-full" />
-                    <Skeleton className="h-36 w-full" />
-                    <Skeleton className="h-36 w-full" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </main>
+      <FreelancerSettingsLayout
+        active="Profiles"
+        activeMenu="Profiles"
+        breadcrumbItems={[
+          { label: 'Settings', link: '#' },
+          { label: 'Profiles', link: '/freelancer/settings/profiles' },
+          { label: 'Profile Details', link: '#' },
+        ]}
+        isKycCheck={true}
+        mainClassName="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8"
+      >
+        <div className="grid w-full gap-4 py-6">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-80" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-40" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Skeleton className="h-36 w-full" />
+                <Skeleton className="h-36 w-full" />
+                <Skeleton className="h-36 w-full" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      </FreelancerSettingsLayout>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen w-full flex-col">
-        <SidebarMenu
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          active="Profiles"
-          isKycCheck={true}
-        />
-        <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
-          <Header
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            activeMenu="Profiles"
-            breadcrumbItems={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Settings', link: '#' },
-              { label: 'Profiles', link: '/freelancer/settings/profiles' },
-              { label: 'Profile Details', link: '#' },
-            ]}
-          />
-          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
-            <div className="text-center py-12">
-              <p>Profile not found</p>
-              <Button
-                onClick={() => router.push('/freelancer/settings/profiles')}
-                className="mt-4"
-              >
-                Back to Profiles
-              </Button>
-            </div>
-          </main>
+      <FreelancerSettingsLayout
+        active="Profiles"
+        activeMenu="Profiles"
+        breadcrumbItems={[
+          { label: 'Settings', link: '#' },
+          { label: 'Profiles', link: '/freelancer/settings/profiles' },
+          { label: 'Profile Details', link: '#' },
+        ]}
+        isKycCheck={true}
+        mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8"
+      >
+        <div className="text-center py-12">
+          <p>Profile not found</p>
+          <Button
+            onClick={() => router.push('/freelancer/settings/profiles')}
+            className="mt-4"
+          >
+            Back to Profiles
+          </Button>
         </div>
-      </div>
+      </FreelancerSettingsLayout>
     );
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Profiles"
-        isKycCheck={true}
-      />
-      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Profiles"
-          breadcrumbItems={[
-            { label: 'Settings', link: '#' },
-            { label: 'Profiles', link: '/freelancer/settings/profiles' },
-            { label: editingProfileData.profileName, link: '#' },
-          ]}
-        />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
-          <div className="space-y-6 w-full">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/freelancer/settings/profiles')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Profiles
-            </Button>
+    <FreelancerSettingsLayout
+      active="Profiles"
+      activeMenu="Profiles"
+      breadcrumbItems={[
+        { label: 'Settings', link: '#' },
+        { label: 'Profiles', link: '/freelancer/settings/profiles' },
+        { label: editingProfileData.profileName, link: '#' },
+      ]}
+      isKycCheck={true}
+      mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8"
+    >
+      <div className="space-y-6 w-full">
+        <Button
+          variant="outline"
+          onClick={() => router.push('/freelancer/settings/profiles')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Profiles
+        </Button>
 
-            {!isEditMode && (
-              <Alert className="bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-300">
-                <AlertTitle className="font-semibold">View mode</AlertTitle>
-                <AlertDescription>
-                  You are viewing your profile. Click the{' '}
-                  <span className="font-medium">Edit</span> button to make
-                  changes.
-                </AlertDescription>
-              </Alert>
-            )}
+        {!isEditMode && (
+          <Alert className="bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-300">
+            <AlertTitle className="font-semibold">View mode</AlertTitle>
+            <AlertDescription>
+              You are viewing your profile. Click the{' '}
+              <span className="font-medium">Edit</span> button to make changes.
+            </AlertDescription>
+          </Alert>
+        )}
 
-            <Card className="bg-gradient shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-2xl font-bold">
-                        {editingProfileData.profileName || 'Untitled Profile'}
-                      </h1>
-                      {!isEditMode && (
-                        <Badge variant="secondary">
-                          {editingProfileData.profileType === 'Consultant'
-                            ? 'Consultant'
-                            : 'Freelancer'}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground">
-                      {isEditMode
-                        ? 'Edit your professional profile'
-                        : 'Viewing your professional profile'}
-                    </p>
-
-                    {!isEditMode && (
-                      <div className="flex flex-wrap items-center gap-2 pt-2">
-                        {editingProfileData.githubLink && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  asChild
-                                  variant="outline"
-                                  size="sm"
-                                  className="gap-2"
-                                >
-                                  <a
-                                    href={editingProfileData.githubLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Github className="h-4 w-4" />
-                                    <span className="hidden md:inline">
-                                      {' '}
-                                      GitHub
-                                    </span>
-                                  </a>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Open GitHub</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                        {editingProfileData.linkedinLink && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  asChild
-                                  variant="outline"
-                                  size="sm"
-                                  className="gap-2"
-                                >
-                                  <a
-                                    href={editingProfileData.linkedinLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Linkedin className="h-4 w-4" />
-                                    <span className="hidden md:inline">
-                                      {' '}
-                                      LinkedIn
-                                    </span>
-                                  </a>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Open LinkedIn</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                        {editingProfileData.personalWebsite && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  asChild
-                                  variant="outline"
-                                  size="sm"
-                                  className="gap-2"
-                                >
-                                  <a
-                                    href={editingProfileData.personalWebsite}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Globe className="h-4 w-4" />
-                                    <span className="hidden md:inline">
-                                      {' '}
-                                      Website
-                                    </span>
-                                  </a>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Open Website</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2 md:flex-none">
-                    {isEditMode ? (
-                      <>
-                        <Button
-                          onClick={handleUpdateProfile}
-                          disabled={isUpdating}
-                          className="flex items-center gap-2"
-                        >
-                          <Save className="h-4 w-4" />
-                          {isUpdating ? 'Updating...' : 'Save Changes'}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={handleCancelEdit}
-                          className="flex items-center gap-2"
-                        >
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          variant="default"
-                          onClick={() => setIsEditMode(true)}
-                          className="flex items-center gap-2"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          onClick={() => setDeleteDialogOpen(true)}
-                          className="flex items-center gap-2"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-muted-foreground/20 dark:bg-muted/20">
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold">
-                  Profile Information
-                </CardTitle>
-                <CardDescription>
-                  Your headline, summary, and basic details clients will see.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    {isEditMode ? (
-                      <>
-                        <div className="flex justify-between items-center">
-                          <Label htmlFor="profileName">Profile Name</Label>
-                          <span
-                            className={`text-sm ${
-                              (editingProfileData.profileName || '').length >
-                              100
-                                ? 'text-red-500'
-                                : 'text-muted-foreground'
-                            }`}
-                          >
-                            {(editingProfileData.profileName || '').length}/100
-                          </span>
-                        </div>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="profileName"
-                            value={editingProfileData.profileName || ''}
-                            onChange={(e) =>
-                              handleInputChange('profileName', e.target.value)
-                            }
-                            placeholder="e.g., Frontend Developer"
-                            className={`pl-9 ${
-                              (editingProfileData.profileName || '').length >
-                              100
-                                ? 'border-red-500'
-                                : ''
-                            }`}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Keep it short and specific. Example: Senior React
-                          Engineer.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <Label>Profile Name</Label>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <p className="text-lg font-medium">
-                            {editingProfileData.profileName &&
-                            editingProfileData.profileName.trim().length > 0
-                              ? editingProfileData.profileName
-                              : 'Untitled Profile'}
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    {isEditMode ? (
-                      <>
-                        <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                        <div className="relative">
-                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="hourlyRate"
-                            type="number"
-                            inputMode="decimal"
-                            min="0"
-                            step="1"
-                            value={editingProfileData.hourlyRate || ''}
-                            onChange={(e) =>
-                              handleInputChange(
-                                'hourlyRate',
-                                parseFloat(e.target.value) || 0,
-                              )
-                            }
-                            placeholder="50"
-                            className="pl-9"
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          You can adjust pricing per project. Keep it
-                          competitive.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <Label>Hourly Rate ($)</Label>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          <p className="text-lg font-medium">
-                            {editingProfileData.hourlyRate
-                              ? `$${editingProfileData.hourlyRate}/hr`
-                              : 'Not specified'}
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  {isEditMode ? (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <Label htmlFor="description">Description</Label>
-                        <span
-                          className={`text-sm ${
-                            (editingProfileData.description || '').length > 500
-                              ? 'text-red-500'
-                              : 'text-muted-foreground'
-                          }`}
-                        >
-                          {(editingProfileData.description || '').length}/500
-                        </span>
-                      </div>
-                      <Textarea
-                        id="description"
-                        value={editingProfileData.description || ''}
-                        onChange={(e) =>
-                          handleInputChange('description', e.target.value)
-                        }
-                        placeholder="Describe your expertise and experience..."
-                        rows={4}
-                        className={
-                          (editingProfileData.description || '').length > 500
-                            ? 'border-red-500'
-                            : ''
-                        }
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Summarize your strengths, recent achievements, and the
-                        value you bring.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <Label>Description</Label>
-                      {editingProfileData.description &&
-                      editingProfileData.description.trim().length > 0 ? (
-                        <div className="flex items-start gap-2">
-                          <FileText className="h-4 w-4 mt-1 text-muted-foreground" />
-                          <p className="text-muted-foreground whitespace-pre-line">
-                            {editingProfileData.description}
-                          </p>
-                        </div>
-                      ) : (
-                        <Card className="mt-2 bg-muted/30">
-                          <CardContent className="py-6 flex items-center gap-3">
-                            <svg
-                              width="28"
-                              height="28"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="opacity-60"
-                            >
-                              <path
-                                d="M4 5H20V19H4V5Z"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                              <path
-                                d="M7 9H17"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                              <path
-                                d="M7 13H14"
-                                stroke="#9CA3AF"
-                                strokeWidth="1.5"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-sm text-muted-foreground">
-                                No description yet.
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Use Edit to add a short summary that highlights
-                                your strengths.
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </>
+        <Card className="bg-gradient shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold">
+                    {editingProfileData.profileName || 'Untitled Profile'}
+                  </h1>
+                  {!isEditMode && (
+                    <Badge variant="secondary">
+                      {editingProfileData.profileType === 'Consultant'
+                        ? 'Consultant'
+                        : 'Freelancer'}
+                    </Badge>
                   )}
                 </div>
+                <p className="text-muted-foreground">
+                  {isEditMode
+                    ? 'Edit your professional profile'
+                    : 'Viewing your professional profile'}
+                </p>
 
-                <Separator />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <TagSection
-                    title="Skills"
-                    Icon={Award}
-                    options={freelancerSkillsOptions}
-                    selectedIds={editingProfileData.skills || []}
-                    getNameById={getSkillNameById}
-                    onAdd={(value: string) => {
-                      const selectedSkill = freelancerSkillsOptions.find(
-                        (s: any) => (s.label || s.name) === value,
-                      );
-                      if (!selectedSkill) return;
-                      const id = selectedSkill._id;
-                      if ((editingProfileData.skills || []).includes(id))
-                        return;
-                      setEditingProfileData((prev: any) => ({
-                        ...prev,
-                        skills: [...(prev.skills || []), id],
-                      }));
-                    }}
-                    onRemove={(name: string) => {
-                      const skill = freelancerSkillsOptions.find(
-                        (s: any) => (s.label || s.name) === name,
-                      );
-                      const id = skill?._id;
-                      if (!id) return;
-                      setEditingProfileData((prev: any) => ({
-                        ...prev,
-                        skills: (prev.skills || []).filter(
-                          (sid: string) => sid !== id,
-                        ),
-                      }));
-                    }}
-                  />
-                  <TagSection
-                    title="Domains"
-                    Icon={Layers}
-                    options={freelancerDomainsOptions}
-                    selectedIds={editingProfileData.domains || []}
-                    getNameById={getDomainNameById}
-                    onAdd={(value: string) => {
-                      const selectedDomain = freelancerDomainsOptions.find(
-                        (d: any) => (d.label || d.name) === value,
-                      );
-                      if (!selectedDomain) return;
-                      const id = selectedDomain._id;
-                      if ((editingProfileData.domains || []).includes(id))
-                        return;
-                      setEditingProfileData((prev: any) => ({
-                        ...prev,
-                        domains: [...(prev.domains || []), id],
-                      }));
-                    }}
-                    onRemove={(name: string) => {
-                      const domain = freelancerDomainsOptions.find(
-                        (d: any) => (d.label || d.name) === name,
-                      );
-                      const id = domain?._id;
-                      if (!id) return;
-                      setEditingProfileData((prev: any) => ({
-                        ...prev,
-                        domains: (prev.domains || []).filter(
-                          (did: string) => did !== id,
-                        ),
-                      }));
-                    }}
-                  />
-                </div>
-
-                {isEditMode && <Separator />}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    {isEditMode ? (
-                      <>
-                        <Label
-                          htmlFor="githubLink"
-                          className="flex items-center gap-2"
-                        >
-                          <Github className="h-4 w-4 text-muted-foreground" />{' '}
-                          GitHub
-                        </Label>
-
-                        <div className="relative">
-                          <Input
-                            id="githubLink"
-                            value={editingProfileData.githubLink || ''}
-                            onChange={(e) =>
-                              handleInputChange('githubLink', e.target.value)
-                            }
-                            placeholder="https://github.com/username"
-                          />
-                        </div>
-                      </>
-                    ) : editingProfileData.githubLink ? (
-                      <></>
-                    ) : (
-                      <Card className="bg-muted/30">
-                        <CardContent className="py-4 flex items-center gap-3">
-                          <svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="opacity-60"
-                          >
-                            <path
-                              d="M12 2C6.477 2 2 6.477 2 12C2 16.418 4.865 20.166 8.838 21.489C9.338 21.58 9.52 21.27 9.52 21.004C9.52 20.77 9.511 20.147 9.506 19.31C6.73 19.918 6.048 17.98 6.048 17.98C5.594 16.836 4.882 16.533 4.882 16.533C3.873 15.846 4.958 15.86 4.958 15.86C6.067 15.937 6.652 16.999 6.652 16.999C7.646 18.701 9.364 18.207 10.049 17.954C10.141 17.254 10.43 16.78 10.75 16.518C8.58 16.253 6.3 15.403 6.3 11.657C6.3 10.572 6.68 9.694 7.332 9.01C7.226 8.744 6.894 7.796 7.432 6.478C7.432 6.478 8.265 6.193 9.5 7.258C10.29 7.04 11.14 6.93 11.99 6.926C12.84 6.93 13.69 7.04 14.48 7.258C15.715 6.193 16.548 6.478 16.548 6.478C17.086 7.796 16.754 8.744 16.648 9.01C17.3 9.694 17.68 10.572 17.68 11.657C17.68 15.413 15.398 16.251 13.224 16.512C13.62 16.842 13.966 17.478 13.966 18.452C13.966 19.874 13.952 20.735 13.952 21.002C13.952 21.27 14.13 21.584 14.638 21.49C18.613 20.165 21.48 16.417 21.48 12C21.48 6.477 17.003 2 12 2Z"
-                              stroke="#9CA3AF"
-                              strokeWidth="1.2"
-                            />
-                          </svg>
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              No GitHub link
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Share your repositories to boost credibility.
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
+                {!isEditMode && (
+                  <div className="flex flex-wrap items-center gap-2 pt-2">
+                    {editingProfileData.githubLink && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                            >
+                              <a
+                                href={editingProfileData.githubLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Github className="h-4 w-4" />
+                                <span className="hidden md:inline">
+                                  {' '}
+                                  GitHub
+                                </span>
+                              </a>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Open GitHub</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    {editingProfileData.linkedinLink && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                            >
+                              <a
+                                href={editingProfileData.linkedinLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Linkedin className="h-4 w-4" />
+                                <span className="hidden md:inline">
+                                  {' '}
+                                  LinkedIn
+                                </span>
+                              </a>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Open LinkedIn</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    {editingProfileData.personalWebsite && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                            >
+                              <a
+                                href={editingProfileData.personalWebsite}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Globe className="h-4 w-4" />
+                                <span className="hidden md:inline">
+                                  {' '}
+                                  Website
+                                </span>
+                              </a>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Open Website</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    {isEditMode ? (
-                      <>
-                        <Label
-                          htmlFor="linkedinLink"
-                          className="flex items-center gap-2"
-                        >
-                          <Linkedin className="h-4 w-4 text-muted-foreground" />{' '}
-                          LinkedIn
-                        </Label>
-
-                        <div className="relative">
-                          <Input
-                            id="linkedinLink"
-                            value={editingProfileData.linkedinLink || ''}
-                            onChange={(e) =>
-                              handleInputChange('linkedinLink', e.target.value)
-                            }
-                            placeholder="https://linkedin.com/in/username"
-                          />
-                        </div>
-                      </>
-                    ) : editingProfileData.linkedinLink ? (
-                      <></>
-                    ) : (
-                      <Card className="bg-muted/30">
-                        <CardContent className="py-4 flex items-center gap-3">
-                          <svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="opacity-60"
-                          >
-                            <rect
-                              x="3"
-                              y="3"
-                              width="18"
-                              height="18"
-                              rx="2"
-                              stroke="#9CA3AF"
-                              strokeWidth="1.2"
-                            />
-                            <path
-                              d="M7 10V17"
-                              stroke="#9CA3AF"
-                              strokeWidth="1.2"
-                            />
-                            <circle cx="7" cy="7" r="1" fill="#9CA3AF" />
-                          </svg>
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              No LinkedIn link
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Add LinkedIn to help clients learn more about you.
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    {isEditMode ? (
-                      <>
-                        <Label
-                          htmlFor="personalWebsite"
-                          className="flex items-center gap-2"
-                        >
-                          <Globe className="h-4 w-4 text-muted-foreground" />{' '}
-                          Website
-                        </Label>
-
-                        <div className="relative">
-                          <Input
-                            id="personalWebsite"
-                            value={editingProfileData.personalWebsite || ''}
-                            onChange={(e) =>
-                              handleInputChange(
-                                'personalWebsite',
-                                e.target.value,
-                              )
-                            }
-                            placeholder="https://yourwebsite.com"
-                          />
-                        </div>
-                      </>
-                    ) : editingProfileData.personalWebsite ? (
-                      <></>
-                    ) : (
-                      <Card className="bg-muted/30">
-                        <CardContent className="py-4 flex items-center gap-3">
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              No website
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Add your portfolio or personal site link.
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-                  <div>
-                    {isEditMode && (
-                      <>
-                        <div className="flex items-center gap-2 mb-2">
-                          <UserCog className="h-4 w-4 text-muted-foreground" />
-                          <Label htmlFor="availability">Availability</Label>
-                        </div>
-                        <Select
-                          value={editingProfileData.availability || 'FREELANCE'}
-                          onValueChange={(value) =>
-                            handleInputChange('availability', value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select availability" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="FULL_TIME">Full Time</SelectItem>
-                            <SelectItem value="PART_TIME">Part Time</SelectItem>
-                            <SelectItem value="CONTRACT">Contract</SelectItem>
-                            <SelectItem value="FREELANCE">Freelance</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-muted-foreground/20 dark:bg-muted/20">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-xl font-semibold">
-                    Projects
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground hidden md:block">
-                    Showcase the work you are proud of.
-                  </p>
-                  {isEditMode ? (
+                )}
+              </div>
+              <div className="flex gap-2 md:flex-none">
+                {isEditMode ? (
+                  <>
                     <Button
-                      variant="outline"
-                      onClick={() => setShowProjectDialog(true)}
+                      onClick={handleUpdateProfile}
+                      disabled={isUpdating}
                       className="flex items-center gap-2"
                     >
-                      <Plus className="h-4 w-4" />
-                      Add Projects
+                      <Save className="h-4 w-4" />
+                      {isUpdating ? 'Updating...' : 'Save Changes'}
                     </Button>
-                  ) : null}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {editingProfileData.projects &&
-                editingProfileData.projects.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {editingProfileData.projects.map(
-                      (project: any, index: number) => (
-                        <div key={project._id || index} className="relative">
-                          <ProjectCard
-                            {...project}
-                            onClick={() => handleProjectClick(project)}
-                          />
-                          {isEditMode ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveProject(project._id);
-                              }}
-                              className="absolute top-2 right-2 z-10 h-8 w-8 p-0 bg-red-500/80 hover:bg-red-600/90 text-white rounded-full"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          ) : null}
-                        </div>
-                      ),
-                    )}
-                  </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleCancelEdit}
+                      className="flex items-center gap-2"
+                    >
+                      Cancel
+                    </Button>
+                  </>
                 ) : (
-                  <Card className="flex flex-col items-center justify-center py-12">
-                    <div className="mb-4 opacity-70">
+                  <>
+                    <Button
+                      variant="default"
+                      onClick={() => setIsEditMode(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setDeleteDialogOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-muted-foreground/20 dark:bg-muted/20">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold">
+              Profile Information
+            </CardTitle>
+            <CardDescription>
+              Your headline, summary, and basic details clients will see.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                {isEditMode ? (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="profileName">Profile Name</Label>
+                      <span
+                        className={`text-sm ${
+                          (editingProfileData.profileName || '').length > 100
+                            ? 'text-red-500'
+                            : 'text-muted-foreground'
+                        }`}
+                      >
+                        {(editingProfileData.profileName || '').length}/100
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="profileName"
+                        value={editingProfileData.profileName || ''}
+                        onChange={(e) =>
+                          handleInputChange('profileName', e.target.value)
+                        }
+                        placeholder="e.g., Frontend Developer"
+                        className={`pl-9 ${
+                          (editingProfileData.profileName || '').length > 100
+                            ? 'border-red-500'
+                            : ''
+                        }`}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Keep it short and specific. Example: Senior React
+                      Engineer.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Label>Profile Name</Label>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-lg font-medium">
+                        {editingProfileData.profileName &&
+                        editingProfileData.profileName.trim().length > 0
+                          ? editingProfileData.profileName
+                          : 'Untitled Profile'}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
+                {isEditMode ? (
+                  <>
+                    <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="hourlyRate"
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="1"
+                        value={editingProfileData.hourlyRate || ''}
+                        onChange={(e) =>
+                          handleInputChange(
+                            'hourlyRate',
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
+                        placeholder="50"
+                        className="pl-9"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      You can adjust pricing per project. Keep it competitive.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Label>Hourly Rate ($)</Label>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-lg font-medium">
+                        {editingProfileData.hourlyRate
+                          ? `$${editingProfileData.hourlyRate}/hr`
+                          : 'Not specified'}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {isEditMode ? (
+                <>
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="description">Description</Label>
+                    <span
+                      className={`text-sm ${
+                        (editingProfileData.description || '').length > 500
+                          ? 'text-red-500'
+                          : 'text-muted-foreground'
+                      }`}
+                    >
+                      {(editingProfileData.description || '').length}/500
+                    </span>
+                  </div>
+                  <Textarea
+                    id="description"
+                    value={editingProfileData.description || ''}
+                    onChange={(e) =>
+                      handleInputChange('description', e.target.value)
+                    }
+                    placeholder="Describe your expertise and experience..."
+                    rows={4}
+                    className={
+                      (editingProfileData.description || '').length > 500
+                        ? 'border-red-500'
+                        : ''
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Summarize your strengths, recent achievements, and the value
+                    you bring.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Label>Description</Label>
+                  {editingProfileData.description &&
+                  editingProfileData.description.trim().length > 0 ? (
+                    <div className="flex items-start gap-2">
+                      <FileText className="h-4 w-4 mt-1 text-muted-foreground" />
+                      <p className="text-muted-foreground whitespace-pre-line">
+                        {editingProfileData.description}
+                      </p>
+                    </div>
+                  ) : (
+                    <Card className="mt-2 bg-muted/30">
+                      <CardContent className="py-6 flex items-center gap-3">
+                        <svg
+                          width="28"
+                          height="28"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="opacity-60"
+                        >
+                          <path
+                            d="M4 5H20V19H4V5Z"
+                            stroke="#9CA3AF"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M7 9H17"
+                            stroke="#9CA3AF"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M7 13H14"
+                            stroke="#9CA3AF"
+                            strokeWidth="1.5"
+                          />
+                        </svg>
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            No description yet.
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Use Edit to add a short summary that highlights your
+                            strengths.
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </div>
+
+            <Separator />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TagSection
+                title="Skills"
+                Icon={Award}
+                options={freelancerSkillsOptions}
+                selectedIds={editingProfileData.skills || []}
+                getNameById={getSkillNameById}
+                onAdd={(value: string) => {
+                  const selectedSkill = freelancerSkillsOptions.find(
+                    (s: any) => (s.label || s.name) === value,
+                  );
+                  if (!selectedSkill) return;
+                  const id = selectedSkill._id;
+                  if ((editingProfileData.skills || []).includes(id)) return;
+                  setEditingProfileData((prev: any) => ({
+                    ...prev,
+                    skills: [...(prev.skills || []), id],
+                  }));
+                }}
+                onRemove={(name: string) => {
+                  const skill = freelancerSkillsOptions.find(
+                    (s: any) => (s.label || s.name) === name,
+                  );
+                  const id = skill?._id;
+                  if (!id) return;
+                  setEditingProfileData((prev: any) => ({
+                    ...prev,
+                    skills: (prev.skills || []).filter(
+                      (sid: string) => sid !== id,
+                    ),
+                  }));
+                }}
+              />
+              <TagSection
+                title="Domains"
+                Icon={Layers}
+                options={freelancerDomainsOptions}
+                selectedIds={editingProfileData.domains || []}
+                getNameById={getDomainNameById}
+                onAdd={(value: string) => {
+                  const selectedDomain = freelancerDomainsOptions.find(
+                    (d: any) => (d.label || d.name) === value,
+                  );
+                  if (!selectedDomain) return;
+                  const id = selectedDomain._id;
+                  if ((editingProfileData.domains || []).includes(id)) return;
+                  setEditingProfileData((prev: any) => ({
+                    ...prev,
+                    domains: [...(prev.domains || []), id],
+                  }));
+                }}
+                onRemove={(name: string) => {
+                  const domain = freelancerDomainsOptions.find(
+                    (d: any) => (d.label || d.name) === name,
+                  );
+                  const id = domain?._id;
+                  if (!id) return;
+                  setEditingProfileData((prev: any) => ({
+                    ...prev,
+                    domains: (prev.domains || []).filter(
+                      (did: string) => did !== id,
+                    ),
+                  }));
+                }}
+              />
+            </div>
+
+            {isEditMode && <Separator />}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                {isEditMode ? (
+                  <>
+                    <Label
+                      htmlFor="githubLink"
+                      className="flex items-center gap-2"
+                    >
+                      <Github className="h-4 w-4 text-muted-foreground" />{' '}
+                      GitHub
+                    </Label>
+
+                    <div className="relative">
+                      <Input
+                        id="githubLink"
+                        value={editingProfileData.githubLink || ''}
+                        onChange={(e) =>
+                          handleInputChange('githubLink', e.target.value)
+                        }
+                        placeholder="https://github.com/username"
+                      />
+                    </div>
+                  </>
+                ) : editingProfileData.githubLink ? (
+                  <></>
+                ) : (
+                  <Card className="bg-muted/30">
+                    <CardContent className="py-4 flex items-center gap-3">
                       <svg
-                        width="72"
-                        height="72"
+                        width="24"
+                        height="24"
                         viewBox="0 0 24 24"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
+                        className="opacity-60"
+                      >
+                        <path
+                          d="M12 2C6.477 2 2 6.477 2 12C2 16.418 4.865 20.166 8.838 21.489C9.338 21.58 9.52 21.27 9.52 21.004C9.52 20.77 9.511 20.147 9.506 19.31C6.73 19.918 6.048 17.98 6.048 17.98C5.594 16.836 4.882 16.533 4.882 16.533C3.873 15.846 4.958 15.86 4.958 15.86C6.067 15.937 6.652 16.999 6.652 16.999C7.646 18.701 9.364 18.207 10.049 17.954C10.141 17.254 10.43 16.78 10.75 16.518C8.58 16.253 6.3 15.403 6.3 11.657C6.3 10.572 6.68 9.694 7.332 9.01C7.226 8.744 6.894 7.796 7.432 6.478C7.432 6.478 8.265 6.193 9.5 7.258C10.29 7.04 11.14 6.93 11.99 6.926C12.84 6.93 13.69 7.04 14.48 7.258C15.715 6.193 16.548 6.478 16.548 6.478C17.086 7.796 16.754 8.744 16.648 9.01C17.3 9.694 17.68 10.572 17.68 11.657C17.68 15.413 15.398 16.251 13.224 16.512C13.62 16.842 13.966 17.478 13.966 18.452C13.966 19.874 13.952 20.735 13.952 21.002C13.952 21.27 14.13 21.584 14.638 21.49C18.613 20.165 21.48 16.417 21.48 12C21.48 6.477 17.003 2 12 2Z"
+                          stroke="#9CA3AF"
+                          strokeWidth="1.2"
+                        />
+                      </svg>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          No GitHub link
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Share your repositories to boost credibility.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+              <div className="space-y-2">
+                {isEditMode ? (
+                  <>
+                    <Label
+                      htmlFor="linkedinLink"
+                      className="flex items-center gap-2"
+                    >
+                      <Linkedin className="h-4 w-4 text-muted-foreground" />{' '}
+                      LinkedIn
+                    </Label>
+
+                    <div className="relative">
+                      <Input
+                        id="linkedinLink"
+                        value={editingProfileData.linkedinLink || ''}
+                        onChange={(e) =>
+                          handleInputChange('linkedinLink', e.target.value)
+                        }
+                        placeholder="https://linkedin.com/in/username"
+                      />
+                    </div>
+                  </>
+                ) : editingProfileData.linkedinLink ? (
+                  <></>
+                ) : (
+                  <Card className="bg-muted/30">
+                    <CardContent className="py-4 flex items-center gap-3">
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="opacity-60"
                       >
                         <rect
                           x="3"
-                          y="4"
+                          y="3"
                           width="18"
-                          height="14"
+                          height="18"
                           rx="2"
                           stroke="#9CA3AF"
-                          strokeWidth="1.5"
+                          strokeWidth="1.2"
                         />
-                        <path d="M3 9H21" stroke="#9CA3AF" strokeWidth="1.5" />
+                        <path d="M7 10V17" stroke="#9CA3AF" strokeWidth="1.2" />
                         <circle cx="7" cy="7" r="1" fill="#9CA3AF" />
-                        <circle cx="10" cy="7" r="1" fill="#9CA3AF" />
                       </svg>
-                    </div>
-                    <p className="text-muted-foreground mb-4">
-                      No projects added to this profile yet
-                    </p>
-                    {isEditMode ? (
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowProjectDialog(true)}
-                        className="flex items-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add Projects
-                      </Button>
-                    ) : null}
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          No LinkedIn link
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Add LinkedIn to help clients learn more about you.
+                        </p>
+                      </div>
+                    </CardContent>
                   </Card>
                 )}
-              </CardContent>
-            </Card>
-            <Card className="border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background shadow-sm">
-              <CardHeader className="pb-3 border-b border-border/60">
-                <div className="flex justify-between items-center w-full">
-                  <div className="space-y-1">
-                    <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                      <Briefcase className="h-5 w-5 text-primary" />
-                      Experience
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground hidden md:block">
-                      Relevant roles and responsibilities you have handled.
-                    </p>
-                  </div>
-                  {isEditMode && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowExperienceDialog(true)}
+              </div>
+              <div className="space-y-2">
+                {isEditMode ? (
+                  <>
+                    <Label
+                      htmlFor="personalWebsite"
                       className="flex items-center gap-2"
                     >
-                      <Plus className="h-4 w-4" /> Add Experience
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
+                      <Globe className="h-4 w-4 text-muted-foreground" />{' '}
+                      Website
+                    </Label>
 
-              <CardContent className="pt-4">
-                {editingProfileData.experiences &&
-                editingProfileData.experiences.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {editingProfileData.experiences.map((experience: any) => {
-                      const workFrom = new Date(experience.workFrom);
-                      const workTo = experience.workTo
-                        ? new Date(experience.workTo)
-                        : null;
+                    <div className="relative">
+                      <Input
+                        id="personalWebsite"
+                        value={editingProfileData.personalWebsite || ''}
+                        onChange={(e) =>
+                          handleInputChange('personalWebsite', e.target.value)
+                        }
+                        placeholder="https://yourwebsite.com"
+                      />
+                    </div>
+                  </>
+                ) : editingProfileData.personalWebsite ? (
+                  <></>
+                ) : (
+                  <Card className="bg-muted/30">
+                    <CardContent className="py-4 flex items-center gap-3">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          No website
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Add your portfolio or personal site link.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+              <div>
+                {isEditMode && (
+                  <>
+                    <div className="flex items-center gap-2 mb-2">
+                      <UserCog className="h-4 w-4 text-muted-foreground" />
+                      <Label htmlFor="availability">Availability</Label>
+                    </div>
+                    <Select
+                      value={editingProfileData.availability || 'FREELANCE'}
+                      onValueChange={(value) =>
+                        handleInputChange('availability', value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select availability" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="FULL_TIME">Full Time</SelectItem>
+                        <SelectItem value="PART_TIME">Part Time</SelectItem>
+                        <SelectItem value="CONTRACT">Contract</SelectItem>
+                        <SelectItem value="FREELANCE">Freelance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                      return (
-                        <Card
-                          key={experience._id}
-                          className="relative flex flex-col justify-between h-full border border-border/70 bg-card/80 dark:bg-card/60 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+        <Card className="bg-muted-foreground/20 dark:bg-muted/20">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xl font-semibold">Projects</CardTitle>
+              <p className="text-sm text-muted-foreground hidden md:block">
+                Showcase the work you are proud of.
+              </p>
+              {isEditMode ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowProjectDialog(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Projects
+                </Button>
+              ) : null}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {editingProfileData.projects &&
+            editingProfileData.projects.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {editingProfileData.projects.map(
+                  (project: any, index: number) => (
+                    <div key={project._id || index} className="relative">
+                      <ProjectCard
+                        {...project}
+                        onClick={() => handleProjectClick(project)}
+                      />
+                      {isEditMode ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveProject(project._id);
+                          }}
+                          className="absolute top-2 right-2 z-10 h-8 w-8 p-0 bg-red-500/80 hover:bg-red-600/90 text-white rounded-full"
                         >
-                          <div className="p-3.5 pb-3 flex-1 flex flex-col gap-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="space-y-1">
-                                <h4 className="font-semibold text-sm md:text-base text-foreground line-clamp-2">
-                                  {experience.jobTitle || experience.title}
-                                </h4>
-                                <p className="text-xs text-muted-foreground flex items-center gap-1 line-clamp-1">
-                                  <Briefcase className="h-3.5 w-3.5 text-muted-foreground/80" />
-                                  {experience.company ||
-                                    'Company not specified'}
-                                </p>
-                              </div>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  ),
+                )}
+              </div>
+            ) : (
+              <Card className="flex flex-col items-center justify-center py-12">
+                <div className="mb-4 opacity-70">
+                  <svg
+                    width="72"
+                    height="72"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect
+                      x="3"
+                      y="4"
+                      width="18"
+                      height="14"
+                      rx="2"
+                      stroke="#9CA3AF"
+                      strokeWidth="1.5"
+                    />
+                    <path d="M3 9H21" stroke="#9CA3AF" strokeWidth="1.5" />
+                    <circle cx="7" cy="7" r="1" fill="#9CA3AF" />
+                    <circle cx="10" cy="7" r="1" fill="#9CA3AF" />
+                  </svg>
+                </div>
+                <p className="text-muted-foreground mb-4">
+                  No projects added to this profile yet
+                </p>
+                {isEditMode ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowProjectDialog(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Projects
+                  </Button>
+                ) : null}
+              </Card>
+            )}
+          </CardContent>
+        </Card>
+        <Card className="border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background shadow-sm">
+          <CardHeader className="pb-3 border-b border-border/60">
+            <div className="flex justify-between items-center w-full">
+              <div className="space-y-1">
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-primary" />
+                  Experience
+                </CardTitle>
+                <p className="text-sm text-muted-foreground hidden md:block">
+                  Relevant roles and responsibilities you have handled.
+                </p>
+              </div>
+              {isEditMode && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowExperienceDialog(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" /> Add Experience
+                </Button>
+              )}
+            </div>
+          </CardHeader>
 
-                              {isEditMode && (
-                                <button
-                                  type="button"
-                                  className="p-1 rounded-full hover:bg-destructive/10 text-destructive transition-colors"
-                                  onClick={() =>
-                                    handleRemoveExperience(experience._id)
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
+          <CardContent className="pt-4">
+            {editingProfileData.experiences &&
+            editingProfileData.experiences.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {editingProfileData.experiences.map((experience: any) => {
+                  const workFrom = new Date(experience.workFrom);
+                  const workTo = experience.workTo
+                    ? new Date(experience.workTo)
+                    : null;
 
-                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                              <Calendar className="h-3.5 w-3.5" />
-                              <span>
-                                {workFrom.toLocaleDateString('en-US', {
+                  return (
+                    <Card
+                      key={experience._id}
+                      className="relative flex flex-col justify-between h-full border border-border/70 bg-card/80 dark:bg-card/60 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                    >
+                      <div className="p-3.5 pb-3 flex-1 flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-1">
+                            <h4 className="font-semibold text-sm md:text-base text-foreground line-clamp-2">
+                              {experience.jobTitle || experience.title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 line-clamp-1">
+                              <Briefcase className="h-3.5 w-3.5 text-muted-foreground/80" />
+                              {experience.company || 'Company not specified'}
+                            </p>
+                          </div>
+
+                          {isEditMode && (
+                            <button
+                              type="button"
+                              className="p-1 rounded-full hover:bg-destructive/10 text-destructive transition-colors"
+                              onClick={() =>
+                                handleRemoveExperience(experience._id)
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>
+                            {workFrom.toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                            })}{' '}
+                            -{' '}
+                            {workTo
+                              ? workTo.toLocaleDateString('en-US', {
                                   year: 'numeric',
                                   month: 'short',
-                                })}{' '}
-                                -{' '}
-                                {workTo
-                                  ? workTo.toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                    })
-                                  : 'Present'}
-                              </span>
-                            </div>
+                                })
+                              : 'Present'}
+                          </span>
+                        </div>
 
-                            {experience.workDescription && (
-                              <p className="text-xs md:text-sm text-muted-foreground line-clamp-3 mt-1">
-                                {experience.workDescription}
-                              </p>
-                            )}
+                        {experience.workDescription && (
+                          <p className="text-xs md:text-sm text-muted-foreground line-clamp-3 mt-1">
+                            {experience.workDescription}
+                          </p>
+                        )}
 
-                            {experience.referencePersonName && (
-                              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
-                                Reference: {experience.referencePersonName}
-                              </p>
-                            )}
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-dashed border-border/70 bg-muted/40 text-center">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                      <Briefcase className="h-6 w-6 text-primary" />
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      No experience added to this profile yet.
-                    </p>
-                    {isEditMode && (
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowExperienceDialog(true)}
-                        className="flex items-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" /> Add Experience
-                      </Button>
-                    )}
-                  </div>
+                        {experience.referencePersonName && (
+                          <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
+                            Reference: {experience.referencePersonName}
+                          </p>
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-dashed border-border/70 bg-muted/40 text-center">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Briefcase className="h-6 w-6 text-primary" />
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  No experience added to this profile yet.
+                </p>
+                {isEditMode && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowExperienceDialog(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" /> Add Experience
+                  </Button>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-            <ExperienceSelectionDialog
-              open={showExperienceDialog}
-              onOpenChange={setShowExperienceDialog}
-              freelancerId={user.uid}
-              currentProfileId={profileId}
-              onSuccess={(newExperiences) => {
-                setEditingProfileData((prev: any) => {
-                  const existing = Array.isArray(prev.experiences)
-                    ? prev.experiences
-                    : [];
-                  const byId = new Map<string, any>();
+        <ExperienceSelectionDialog
+          open={showExperienceDialog}
+          onOpenChange={setShowExperienceDialog}
+          freelancerId={user.uid}
+          currentProfileId={profileId}
+          onSuccess={(newExperiences) => {
+            setEditingProfileData((prev: any) => {
+              const existing = Array.isArray(prev.experiences)
+                ? prev.experiences
+                : [];
+              const byId = new Map<string, any>();
 
-                  // Keep existing ones
-                  for (const e of existing) byId.set(String(e._id), e);
+              // Keep existing ones
+              for (const e of existing) byId.set(String(e._id), e);
 
-                  // Add/overwrite with new ones
-                  for (const e of newExperiences) byId.set(String(e._id), e);
+              // Add/overwrite with new ones
+              for (const e of newExperiences) byId.set(String(e._id), e);
 
-                  return { ...prev, experiences: Array.from(byId.values()) };
-                });
-              }}
-            />
-          </div>
-        </main>
+              return { ...prev, experiences: Array.from(byId.values()) };
+            });
+          }}
+        />
       </div>
 
       <ProjectSelectionDialog
@@ -1679,6 +1626,6 @@ export default function ProfileDetailPage() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+    </FreelancerSettingsLayout>
   );
 }

@@ -15,8 +15,6 @@ import {
 } from 'lucide-react';
 
 import { useAppSelector } from '@/lib/hooks';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import Header from '@/components/header/header';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
@@ -36,13 +34,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  menuItemsTop,
-  menuItemsBottom,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { FullLeaderboard } from '@/types/leaderboard';
 import { LeaderboardTable } from '@/components/leaderboard/LeaderboardTable';
 import StatItem from '@/components/shared/StatItem';
+import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 
 // types for params
 interface PageProps {
@@ -172,81 +167,61 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen w-full flex-col">
-        <SidebarMenu
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          active="Leaderboard"
-        />
-        <div className="flex flex-col sm:gap-4 sm:pb-4 sm:pl-14">
-          <Header
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            activeMenu="Leaderboard"
-            breadcrumbItems={[
-              { label: 'Dashboard', link: '/dashboard/freelancer' },
-              { label: 'Leaderboard', link: '/freelancer/leaderboard' },
-              { label: 'Details', link: '#' },
-            ]}
-          />
-          <main className="p-4 sm:px-8 space-y-8">
-            <Skeleton className="h-12 w-1/3" />
-            <Card className="h-96">
-              <CardHeader className="pb-4">
-                <Skeleton className="h-8 w-3/4" />
-                <Skeleton className="h-4 w-1/2 mt-2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-64 w-full" />
-              </CardContent>
-            </Card>
-          </main>
-        </div>
-      </div>
+      <FreelancerAppLayout
+        active="Leaderboard"
+        activeMenu="Leaderboard"
+        breadcrumbItems={[
+          { label: 'Dashboard', link: '/dashboard/freelancer' },
+          { label: 'Leaderboard', link: '/freelancer/leaderboard' },
+          { label: 'Details', link: '#' },
+        ]}
+        mainClassName="p-4 sm:px-8 space-y-8"
+      >
+        <Skeleton className="h-12 w-1/3" />
+        <Card className="h-96">
+          <CardHeader className="pb-4">
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2 mt-2" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-64 w-full" />
+          </CardContent>
+        </Card>
+      </FreelancerAppLayout>
     );
   }
 
   if (error || !leaderboard) {
     return (
-      <div className="flex min-h-screen w-full flex-col">
-        <SidebarMenu
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          active="Leaderboard"
-        />
-        <div className="flex flex-col sm:gap-4 sm:pb-4 sm:pl-14">
-          <Header
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            activeMenu="Leaderboard"
-            breadcrumbItems={[
-              { label: 'Dashboard', link: '/dashboard/freelancer' },
-              { label: 'Leaderboard', link: '/freelancer/leaderboard' },
-            ]}
-          />
-          <main className="p-4 sm:px-8">
-            <Card className="relative overflow-hidden">
-              <CardContent className="py-16 flex flex-col items-center">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 bg-gradient-to-r from-destructive/20 to-destructive/10 rounded-full blur-2xl" />
-                  <Info className="relative h-16 w-16 text-destructive mb-4" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Error</h3>
-                <p className="text-muted-foreground text-center max-w-md">
-                  {error || 'Leaderboard not found'}
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-6"
-                  onClick={() => router.back()}
-                >
-                  Go Back
-                </Button>
-              </CardContent>
-            </Card>
-          </main>
-        </div>
-      </div>
+      <FreelancerAppLayout
+        active="Leaderboard"
+        activeMenu="Leaderboard"
+        breadcrumbItems={[
+          { label: 'Dashboard', link: '/dashboard/freelancer' },
+          { label: 'Leaderboard', link: '/freelancer/leaderboard' },
+        ]}
+        mainClassName="p-4 sm:px-8"
+      >
+        <Card className="relative overflow-hidden">
+          <CardContent className="py-16 flex flex-col items-center">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-gradient-to-r from-destructive/20 to-destructive/10 rounded-full blur-2xl" />
+              <Info className="relative h-16 w-16 text-destructive mb-4" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Error</h3>
+            <p className="text-muted-foreground text-center max-w-md">
+              {error || 'Leaderboard not found'}
+            </p>
+            <Button
+              variant="outline"
+              className="mt-6"
+              onClick={() => router.back()}
+            >
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
+      </FreelancerAppLayout>
     );
   }
 
@@ -339,241 +314,221 @@ export default function LeaderboardDetailsPage({ params }: PageProps) {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Leaderboard"
-      />
-      <div className="flex flex-col sm:gap-4 sm:pb-4 sm:pl-14">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Leaderboard"
-          breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/freelancer' },
-            { label: 'Leaderboard', link: '/freelancer/leaderboard' },
-            { label: leaderboard.name, link: '#' },
-          ]}
-        />
-        <main className="p-4 sm:px-8 space-y-8">
-          {/* Header Card */}
-          <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-2xl" />
-            <CardHeader className="relative pb-6">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => router.back()}
-                    className="gap-2"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                  </Button>
-                  <div className="h-4 w-px bg-border" />
-                  <div className="flex items-center gap-3">
-                    <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
-                      {leaderboard.frequency}
-                    </Badge>
-                    <Badge
-                      variant={
-                        leaderboard.status === 'ACTIVE'
-                          ? 'default'
-                          : 'secondary'
-                      }
-                    >
-                      {leaderboard.status}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex-shrink-0">
-                  {(() => {
-                    const userEntry = leaderboard?.rankings?.find(
-                      (r) => r.freelancerId === currentUserId,
-                    );
-                    const userRank = userEntry?.rank;
-                    const hasClaimedReward = userEntry?.reward;
-                    const isClaimable =
-                      leaderboard?.status === 'PUBLISHED' &&
-                      userRank !== undefined &&
-                      userRank <= 3 &&
-                      !hasClaimedReward;
-                    const isPublished = leaderboard?.status === 'PUBLISHED';
-
-                    if (hasClaimedReward) {
-                      return (
-                        <Button
-                          variant="default"
-                          className="bg-gradient-to-r from-green-500 to-emerald-600"
-                          disabled
-                        >
-                          Reward Claimed
-                        </Button>
-                      );
-                    } else if (isClaimable) {
-                      return (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                className="shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                                onClick={handleClaim}
-                                disabled={isClaiming}
-                              >
-                                <Gift className="h-4 w-4" />
-                                {isClaiming ? 'Claiming...' : 'Claim Rewards'}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>You ranked in the top 3! Claim your reward.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      );
-                    } else if (leaderboard.isJoined) {
-                      return (
-                        <Button
-                          variant="secondary"
-                          className="w-full lg:w-auto"
-                          disabled
-                        >
-                          Joined
-                        </Button>
-                      );
-                    } else if (isPublished && !leaderboard.isJoined) {
-                      return (
-                        <Button
-                          variant="secondary"
-                          className="w-full lg:w-auto"
-                          disabled
-                        >
-                          Participate Now
-                        </Button>
-                      );
-                    } else {
-                      return (
-                        <Button
-                          className="shadow-lg shadow-primary/20"
-                          onClick={handleParticipate}
-                        >
-                          Participate Now
-                        </Button>
-                      );
-                    }
-                  })()}
-                </div>
+    <FreelancerAppLayout
+      active="Leaderboard"
+      activeMenu="Leaderboard"
+      breadcrumbItems={[
+        { label: 'Dashboard', link: '/dashboard/freelancer' },
+        { label: 'Leaderboard', link: '/freelancer/leaderboard' },
+        { label: leaderboard.name, link: '#' },
+      ]}
+      mainClassName="p-4 sm:px-8 space-y-8"
+    >
+      {/* Header Card */}
+      <Card className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-2xl" />
+        <CardHeader className="relative pb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={() => router.back()}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+              <div className="h-4 w-px bg-border" />
+              <div className="flex items-center gap-3">
+                <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
+                  {leaderboard.frequency}
+                </Badge>
+                <Badge
+                  variant={
+                    leaderboard.status === 'ACTIVE' ? 'default' : 'secondary'
+                  }
+                >
+                  {leaderboard.status}
+                </Badge>
               </div>
-              <div className="space-y-4">
-                <CardTitle className="text-3xl lg:text-4xl font-bold tracking-tight">
-                  {leaderboard.name}
-                </CardTitle>
-                {leaderboard.description && (
-                  <CardDescription className="text-base lg:text-lg max-w-3xl">
-                    {leaderboard.description}
-                  </CardDescription>
-                )}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    {formatDate(leaderboard.periodStart)} -{' '}
-                    {formatDate(leaderboard.periodEnd)}
-                  </span>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Rankings */}
-            <div className="lg:col-span-2">
-              <LeaderboardTable
-                data={leaderboard.rankings}
-                rewardConfig={leaderboard.rewardConfig}
-              />
             </div>
+            <div className="flex-shrink-0">
+              {(() => {
+                const userEntry = leaderboard?.rankings?.find(
+                  (r) => r.freelancerId === currentUserId,
+                );
+                const userRank = userEntry?.rank;
+                const hasClaimedReward = userEntry?.reward;
+                const isClaimable =
+                  leaderboard?.status === 'PUBLISHED' &&
+                  userRank !== undefined &&
+                  userRank <= 3 &&
+                  !hasClaimedReward;
+                const isPublished = leaderboard?.status === 'PUBLISHED';
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Eligibility Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Users className="h-5 w-5 text-primary" />
-                    Eligibility
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2">
-                      Allowed Badges
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {leaderboard.eligibility.badgesAllowed.length > 0 ? (
-                        leaderboard.eligibility.badgesAllowed.map(
-                          (badge, i) => (
-                            <Badge key={i} variant="secondary">
-                              {badge}
-                            </Badge>
-                          ),
-                        )
-                      ) : (
-                        <span className="text-sm text-muted-foreground">
-                          Any badge level
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2">
-                      Allowed Levels
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {leaderboard.eligibility.levelsAllowed.length > 0 ? (
-                        leaderboard.eligibility.levelsAllowed.map(
-                          (level, i) => (
-                            <Badge
-                              key={i}
-                              variant="outline"
-                              className="border-primary/50"
-                            >
-                              {level}
-                            </Badge>
-                          ),
-                        )
-                      ) : (
-                        <span className="text-sm text-muted-foreground">
-                          All levels allowed
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Scoring Rules Card */}
-              {leaderboard.scoringWeights && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Target className="h-5 w-5 text-green-500" />
-                      Scoring Rules
-                    </CardTitle>
-                    <CardDescription>How points are calculated</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {renderScoringWeights(leaderboard.scoringWeights)}
-                  </CardContent>
-                </Card>
-              )}
+                if (hasClaimedReward) {
+                  return (
+                    <Button
+                      variant="default"
+                      className="bg-gradient-to-r from-green-500 to-emerald-600"
+                      disabled
+                    >
+                      Reward Claimed
+                    </Button>
+                  );
+                } else if (isClaimable) {
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            className="shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                            onClick={handleClaim}
+                            disabled={isClaiming}
+                          >
+                            <Gift className="h-4 w-4" />
+                            {isClaiming ? 'Claiming...' : 'Claim Rewards'}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>You ranked in the top 3! Claim your reward.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                } else if (leaderboard.isJoined) {
+                  return (
+                    <Button
+                      variant="secondary"
+                      className="w-full lg:w-auto"
+                      disabled
+                    >
+                      Joined
+                    </Button>
+                  );
+                } else if (isPublished && !leaderboard.isJoined) {
+                  return (
+                    <Button
+                      variant="secondary"
+                      className="w-full lg:w-auto"
+                      disabled
+                    >
+                      Participate Now
+                    </Button>
+                  );
+                } else {
+                  return (
+                    <Button
+                      className="shadow-lg shadow-primary/20"
+                      onClick={handleParticipate}
+                    >
+                      Participate Now
+                    </Button>
+                  );
+                }
+              })()}
             </div>
           </div>
-        </main>
+          <div className="space-y-4">
+            <CardTitle className="text-3xl lg:text-4xl font-bold tracking-tight">
+              {leaderboard.name}
+            </CardTitle>
+            {leaderboard.description && (
+              <CardDescription className="text-base lg:text-lg max-w-3xl">
+                {leaderboard.description}
+              </CardDescription>
+            )}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {formatDate(leaderboard.periodStart)} -{' '}
+                {formatDate(leaderboard.periodEnd)}
+              </span>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Rankings */}
+        <div className="lg:col-span-2">
+          <LeaderboardTable
+            data={leaderboard.rankings}
+            rewardConfig={leaderboard.rewardConfig}
+          />
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Eligibility Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Users className="h-5 w-5 text-primary" />
+                Eligibility
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Allowed Badges</h4>
+                <div className="flex flex-wrap gap-2">
+                  {leaderboard.eligibility.badgesAllowed.length > 0 ? (
+                    leaderboard.eligibility.badgesAllowed.map((badge, i) => (
+                      <Badge key={i} variant="secondary">
+                        {badge}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Any badge level
+                    </span>
+                  )}
+                </div>
+              </div>
+              <Separator />
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Allowed Levels</h4>
+                <div className="flex flex-wrap gap-2">
+                  {leaderboard.eligibility.levelsAllowed.length > 0 ? (
+                    leaderboard.eligibility.levelsAllowed.map((level, i) => (
+                      <Badge
+                        key={i}
+                        variant="outline"
+                        className="border-primary/50"
+                      >
+                        {level}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      All levels allowed
+                    </span>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Scoring Rules Card */}
+          {leaderboard.scoringWeights && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Target className="h-5 w-5 text-green-500" />
+                  Scoring Rules
+                </CardTitle>
+                <CardDescription>How points are calculated</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {renderScoringWeights(leaderboard.scoringWeights)}
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
-    </div>
+    </FreelancerAppLayout>
   );
 }

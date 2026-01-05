@@ -53,7 +53,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import {
   InputGroup,
   InputGroupInput,
@@ -778,18 +777,20 @@ function FreelancerRegisterForm({
                       <FormControl>
                         <div>
                           <div className="relative">
-                            <Input
-                              placeholder="Enter your password"
-                              type={showPassword ? 'text' : 'password'}
-                              className="pr-10"
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                setPasswordStrength(
-                                  getPasswordStrength(e.target.value),
-                                );
-                              }}
-                            />
+                            <InputGroup>
+                              <InputGroupInput
+                                placeholder="Enter your password"
+                                type={showPassword ? 'text' : 'password'}
+                                className="pr-10"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  setPasswordStrength(
+                                    getPasswordStrength(e.target.value),
+                                  );
+                                }}
+                              />
+                            </InputGroup>
                             <button
                               type="button"
                               onClick={togglePasswordVisibility}
@@ -824,12 +825,14 @@ function FreelancerRegisterForm({
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <Input
-                            placeholder="Confirm your password"
-                            type={showPassword ? 'text' : 'password'}
-                            className="pr-10"
-                            {...field}
-                          />
+                          <InputGroup>
+                            <InputGroupInput
+                              placeholder="Confirm your password"
+                              type={showPassword ? 'text' : 'password'}
+                              className="pr-10"
+                              {...field}
+                            />
+                          </InputGroup>
                           <button
                             type="button"
                             onClick={togglePasswordVisibility}

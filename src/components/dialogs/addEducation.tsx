@@ -1,5 +1,13 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { ArrowLeft, ArrowRight, GraduationCap, Plus } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  BookOpen,
+  GraduationCap,
+  Plus,
+  School,
+} from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,7 +16,6 @@ import DraftDialog from '../shared/DraftDialog';
 import { DatePicker } from '../shared/datePicker';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -18,6 +25,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import {
   Dialog,
   DialogTrigger,
@@ -287,10 +299,15 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Degree</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="e.g., B.Tech in Computer Science"
-                          {...field}
-                        />
+                        <InputGroup>
+                          <InputGroupText>
+                            <GraduationCap className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="e.g., B.Tech in Computer Science"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -304,7 +321,15 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>University / Institute</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., IIT Delhi" {...field} />
+                        <InputGroup>
+                          <InputGroupText>
+                            <School className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="e.g., IIT Delhi"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -318,10 +343,15 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Field of Study</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="e.g., Computer Science"
-                          {...field}
-                        />
+                        <InputGroup>
+                          <InputGroupText>
+                            <BookOpen className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="e.g., Computer Science"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -367,7 +397,15 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Grade (optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 8.5 CGPA / A" {...field} />
+                        <InputGroup>
+                          <InputGroupText>
+                            <Award className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="e.g., 8.5 CGPA / A"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

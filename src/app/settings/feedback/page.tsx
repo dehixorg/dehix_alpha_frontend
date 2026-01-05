@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import {
   CheckCircle2,
@@ -9,8 +9,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 
-import Header from '@/components/header/header';
-import SidebarMenu from '@/components/menu/sidebarMenu';
+import SettingsAppLayout from '@/components/layout/SettingsAppLayout';
 import { Button } from '@/components/ui/button';
 import {
   Accordion,
@@ -34,14 +33,6 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StarRating } from '@/components/ui/star-rating';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  menuItemsBottom as businessMenuItemsBottom,
-  menuItemsTop as businessMenuItemsTop,
-} from '@/config/menuItems/business/settingsMenuItems';
-import {
-  menuItemsBottom as freelancerMenuItemsBottom,
-  menuItemsTop as freelancerMenuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
@@ -119,18 +110,6 @@ export default function FeedbackPage() {
   useEffect(() => {
     setUserType(readUserType());
   }, []);
-
-  const menuItemsTop = useMemo(() => {
-    return userType === 'business'
-      ? businessMenuItemsTop
-      : freelancerMenuItemsTop;
-  }, [userType]);
-
-  const menuItemsBottom = useMemo(() => {
-    return userType === 'business'
-      ? businessMenuItemsBottom
-      : freelancerMenuItemsBottom;
-  }, [userType]);
 
   const fetchCampaigns = async () => {
     try {
@@ -337,227 +316,212 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Feedback"
-        isKycCheck={true}
-      />
-      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Feedback"
-          breadcrumbItems={[
-            { label: 'Settings', link: '#' },
-            { label: 'Feedback', link: '#' },
-          ]}
-        />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
-          <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-            <div className="space-y-4">
-              <Card>
-                <CardHeader className="flex flex-row items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      Feedback
-                    </CardTitle>
-                    <CardDescription>
-                      Your input helps us improve Dehix for everyone.
-                    </CardDescription>
+    <SettingsAppLayout
+      active="Feedback"
+      activeMenu="Feedback"
+      userType={userType}
+      isKycCheck={true}
+      breadcrumbItems={[
+        { label: 'Settings', link: '#' },
+        { label: 'Feedback', link: '#' },
+      ]}
+      mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8"
+    >
+      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div className="space-y-1">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Feedback
+                </CardTitle>
+                <CardDescription>
+                  Your input helps us improve Dehix for everyone.
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!userType ? (
+                <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading your account…
+                </div>
+              ) : loading ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="rounded-lg border p-4">
+                      <Skeleton className="h-5 w-2/3" />
+                      <Skeleton className="mt-2 h-4 w-full" />
+                      <Skeleton className="mt-4 h-8 w-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : campaigns.length === 0 ? (
+                <div className="rounded-lg border bg-muted/30 p-6">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-muted-foreground" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">No pending feedback</p>
+                      <p className="text-sm text-muted-foreground">
+                        You’re all caught up. New campaigns will appear here.
+                      </p>
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {!userType ? (
-                    <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading your account…
-                    </div>
-                  ) : loading ? (
-                    <div className="space-y-4">
-                      {[1, 2].map((i) => (
-                        <div key={i} className="rounded-lg border p-4">
-                          <Skeleton className="h-5 w-2/3" />
-                          <Skeleton className="mt-2 h-4 w-full" />
-                          <Skeleton className="mt-4 h-8 w-full" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : campaigns.length === 0 ? (
-                    <div className="rounded-lg border bg-muted/30 p-6">
-                      <div className="flex items-start gap-3">
-                        <CheckCircle2 className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium">
-                            No pending feedback
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            You’re all caught up. New campaigns will appear
-                            here.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <Accordion
-                      type="single"
-                      collapsible
-                      value={expandedCampaignId}
-                      onValueChange={(v) =>
-                        setExpandedCampaignId(v ? String(v) : undefined)
-                      }
-                      className="w-full space-y-4"
-                    >
-                      {campaigns.map((campaign) => {
-                        const requiredCount = countRequiredQuestions(campaign);
-                        const answeredRequiredCount =
-                          countAnsweredRequiredQuestions(campaign, answers);
-                        const progress =
-                          requiredCount === 0
-                            ? 100
-                            : Math.round(
-                                (answeredRequiredCount / requiredCount) * 100,
-                              );
+                </div>
+              ) : (
+                <Accordion
+                  type="single"
+                  collapsible
+                  value={expandedCampaignId}
+                  onValueChange={(v) =>
+                    setExpandedCampaignId(v ? String(v) : undefined)
+                  }
+                  className="w-full space-y-4"
+                >
+                  {campaigns.map((campaign) => {
+                    const requiredCount = countRequiredQuestions(campaign);
+                    const answeredRequiredCount =
+                      countAnsweredRequiredQuestions(campaign, answers);
+                    const progress =
+                      requiredCount === 0
+                        ? 100
+                        : Math.round(
+                            (answeredRequiredCount / requiredCount) * 100,
+                          );
 
-                        return (
-                          <AccordionItem
-                            key={campaign.campaignId}
-                            value={campaign.campaignId}
-                            className="rounded-lg border px-4 card"
-                          >
-                            <AccordionTrigger className="hover:no-underline">
-                              <div className="flex w-full items-start justify-between gap-4 pr-2">
-                                <div className="space-y-1 text-left">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-semibold">
-                                      {campaign.title}
-                                    </span>
-                                    <Badge variant="outline">
-                                      {requiredCount} required
-                                    </Badge>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground line-clamp-2">
-                                    {campaign.description}
-                                  </p>
-                                </div>
-                                <div className="hidden min-w-[140px] flex-col items-end gap-2 text-right sm:flex">
-                                  <span className="text-xs text-muted-foreground">
-                                    {answeredRequiredCount}/{requiredCount}{' '}
-                                    required answered
-                                  </span>
-                                  <Progress value={progress} className="h-2" />
-                                </div>
+                    return (
+                      <AccordionItem
+                        key={campaign.campaignId}
+                        value={campaign.campaignId}
+                        className="rounded-lg border px-4 card"
+                      >
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex w-full items-start justify-between gap-4 pr-2">
+                            <div className="space-y-1 text-left">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold">
+                                  {campaign.title}
+                                </span>
+                                <Badge variant="outline">
+                                  {requiredCount} required
+                                </Badge>
                               </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="space-y-6 pt-2">
-                                <div className="sm:hidden">
-                                  <div className="flex items-center justify-between gap-2">
-                                    <span className="text-xs text-muted-foreground">
-                                      {answeredRequiredCount}/{requiredCount}{' '}
-                                      required answered
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {progress}%
-                                    </span>
-                                  </div>
-                                  <Progress
-                                    value={progress}
-                                    className="mt-2 h-2"
-                                  />
-                                </div>
-
-                                <Separator />
-
-                                <div className="space-y-5">
-                                  {campaign.questions.map((question) =>
-                                    renderQuestion(campaign, question),
-                                  )}
-                                </div>
-
-                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                  <p className="text-xs text-muted-foreground">
-                                    Fields marked as “Required” must be answered
-                                    to submit.
-                                  </p>
-                                  <Button
-                                    onClick={() => handleSubmit(campaign)}
-                                    disabled={
-                                      submitting === campaign.campaignId ||
-                                      !validateCampaign(campaign)
-                                    }
-                                    className="w-full sm:w-auto"
-                                  >
-                                    {submitting === campaign.campaignId ? (
-                                      <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Submitting…
-                                      </>
-                                    ) : (
-                                      'Submit'
-                                    )}
-                                  </Button>
-                                </div>
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {campaign.description}
+                              </p>
+                            </div>
+                            <div className="hidden min-w-[140px] flex-col items-end gap-2 text-right sm:flex">
+                              <span className="text-xs text-muted-foreground">
+                                {answeredRequiredCount}/{requiredCount} required
+                                answered
+                              </span>
+                              <Progress value={progress} className="h-2" />
+                            </div>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-6 pt-2">
+                            <div className="sm:hidden">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {answeredRequiredCount}/{requiredCount}{' '}
+                                  required answered
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {progress}%
+                                </span>
                               </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        );
-                      })}
-                    </Accordion>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                              <Progress value={progress} className="mt-2 h-2" />
+                            </div>
 
-            <div className="space-y-4">
-              <Alert>
-                <ClipboardList className="h-4 w-4" />
-                <AlertTitle>How this works</AlertTitle>
-                <AlertDescription>
-                  <div className="space-y-2">
-                    <p className="text-sm">
-                      When a campaign is available, you’ll see it listed here.
-                      Open a campaign, answer the questions, and submit.
-                    </p>
-                    <ul className="list-disc pl-5 text-sm">
-                      <li>Only “Required” questions are mandatory.</li>
-                      <li>You can edit answers before submitting.</li>
-                      <li>After submission, the campaign disappears.</li>
-                    </ul>
-                  </div>
-                </AlertDescription>
-              </Alert>
+                            <Separator />
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">
-                    Tips for great feedback
-                  </CardTitle>
-                  <CardDescription>
-                    Clear, specific feedback helps us act faster.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="rounded-lg border bg-muted/30 p-3">
-                    <p className="font-medium">Be specific</p>
-                    <p className="text-muted-foreground">
-                      Mention what you were trying to do and what happened.
-                    </p>
-                  </div>
-                  <div className="rounded-lg border bg-muted/30 p-3">
-                    <p className="font-medium">Suggest improvements</p>
-                    <p className="text-muted-foreground">
-                      If something felt confusing, tell us what you expected.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </main>
+                            <div className="space-y-5">
+                              {campaign.questions.map((question) =>
+                                renderQuestion(campaign, question),
+                              )}
+                            </div>
+
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                              <p className="text-xs text-muted-foreground">
+                                Fields marked as “Required” must be answered to
+                                submit.
+                              </p>
+                              <Button
+                                onClick={() => handleSubmit(campaign)}
+                                disabled={
+                                  submitting === campaign.campaignId ||
+                                  !validateCampaign(campaign)
+                                }
+                                className="w-full sm:w-auto"
+                              >
+                                {submitting === campaign.campaignId ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Submitting…
+                                  </>
+                                ) : (
+                                  'Submit'
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-4">
+          <Alert>
+            <ClipboardList className="h-4 w-4" />
+            <AlertTitle>How this works</AlertTitle>
+            <AlertDescription>
+              <div className="space-y-2">
+                <p className="text-sm">
+                  When a campaign is available, you’ll see it listed here. Open
+                  a campaign, answer the questions, and submit.
+                </p>
+                <ul className="list-disc pl-5 text-sm">
+                  <li>Only “Required” questions are mandatory.</li>
+                  <li>You can edit answers before submitting.</li>
+                  <li>After submission, the campaign disappears.</li>
+                </ul>
+              </div>
+            </AlertDescription>
+          </Alert>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                Tips for great feedback
+              </CardTitle>
+              <CardDescription>
+                Clear, specific feedback helps us act faster.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <p className="font-medium">Be specific</p>
+                <p className="text-muted-foreground">
+                  Mention what you were trying to do and what happened.
+                </p>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <p className="font-medium">Suggest improvements</p>
+                <p className="text-muted-foreground">
+                  If something felt confusing, tell us what you expected.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </SettingsAppLayout>
   );
 }
