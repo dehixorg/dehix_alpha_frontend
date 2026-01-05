@@ -10,6 +10,7 @@ import {
   DropzoneContent,
   DropzoneEmptyState,
 } from '@/components/ui/shadcn-io/dropzone';
+import { compressImageFile } from '@/utils/imageCompression';
 
 export type ImageUploaderProps = {
   label?: string;
@@ -89,22 +90,27 @@ export default function ImageUploader({
             maxFiles={maxFiles}
             accept={accept}
             src={files}
-            onDrop={(accepted) => {
-              const file = accepted?.[0];
-              if (file) {
-                onChange(file);
-                setFiles(accepted);
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                  if (typeof e.target?.result === 'string') {
-                    setLocalPreview(e.target.result);
-                  }
-                };
-                reader.readAsDataURL(file);
-              } else {
+            onDrop={async (accepted) => {
+              const original = accepted?.[0];
+              if (!original) {
                 setFiles(undefined);
                 setLocalPreview('');
+                return;
               }
+
+              const file = await compressImageFile(original, {
+                maxBytes: maxSize,
+              });
+
+              onChange(file);
+              setFiles([file]);
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                if (typeof e.target?.result === 'string') {
+                  setLocalPreview(e.target.result);
+                }
+              };
+              reader.readAsDataURL(file);
             }}
             onError={() => {}}
             className="w-full"
