@@ -1,9 +1,14 @@
 import React from 'react';
-import { PlusCircle, X } from 'lucide-react';
+import { PlusCircle, X, Code2 } from 'lucide-react';
 
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
+import { Input } from '@/components/ui/input';
 
 interface ProjectInfo {
   title: string;
@@ -55,14 +60,19 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
 
             <div>
               <Label htmlFor={`project-title-${index}`}>Project Name</Label>
-              <Input
-                id={`project-title-${index}`}
-                name="title"
-                value={project.title}
-                onChange={(e) => onProjectChange(e, index, 'title')}
-                placeholder="My cool project"
-                className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
-              />
+              <InputGroup>
+                <InputGroupText>
+                  <Code2 className="h-4 w-4" />
+                </InputGroupText>
+                <InputGroupInput
+                  id={`project-title-${index}`}
+                  name="title"
+                  value={project.title}
+                  onChange={(e) => onProjectChange(e, index, 'title')}
+                  placeholder="My cool project"
+                  className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
+                />
+              </InputGroup>
             </div>
 
             <div>

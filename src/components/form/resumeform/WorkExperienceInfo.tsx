@@ -1,9 +1,14 @@
 import React from 'react';
-import { BriefcaseBusiness, X } from 'lucide-react';
+import { BriefcaseBusiness, X, Building2 } from 'lucide-react';
 
 import { AddButton } from '@/components/ui/AddButton';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
+import { DatePicker } from '@/components/shared/datePicker';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -49,6 +54,8 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
     };
     setWorkExperienceData(updatedWorkExperience);
   };
+
+  const toYmd = (iso: string) => iso.slice(0, 10);
 
   const handleAddWorkExperience = () => {
     setWorkExperienceData([
@@ -113,50 +120,58 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor={`jobTitle-${index}`}>Job Title</Label>
-                <Input
-                  id={`jobTitle-${index}`}
-                  type="text"
-                  value={work.jobTitle}
-                  onChange={(e) =>
-                    handleInputChange(index, 'jobTitle', e.target.value)
-                  }
-                  placeholder="e.g., Software Engineer"
-                />
+                <InputGroup>
+                  <InputGroupText>
+                    <BriefcaseBusiness className="h-4 w-4" />
+                  </InputGroupText>
+                  <InputGroupInput
+                    id={`jobTitle-${index}`}
+                    type="text"
+                    value={work.jobTitle}
+                    onChange={(e) =>
+                      handleInputChange(index, 'jobTitle', e.target.value)
+                    }
+                    placeholder="e.g., Software Engineer"
+                  />
+                </InputGroup>
               </div>
               <div>
                 <Label htmlFor={`company-${index}`}>Company</Label>
-                <Input
-                  id={`company-${index}`}
-                  type="text"
-                  value={work.company}
-                  onChange={(e) =>
-                    handleInputChange(index, 'company', e.target.value)
-                  }
-                  placeholder="e.g., Tech Solutions Inc."
-                />
+                <InputGroup>
+                  <InputGroupText>
+                    <Building2 className="h-4 w-4" />
+                  </InputGroupText>
+                  <InputGroupInput
+                    id={`company-${index}`}
+                    type="text"
+                    value={work.company}
+                    onChange={(e) =>
+                      handleInputChange(index, 'company', e.target.value)
+                    }
+                    placeholder="e.g., Tech Solutions Inc."
+                  />
+                </InputGroup>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor={`startDate-${index}`}>Start Date</Label>
-                  <Input
-                    id={`startDate-${index}`}
-                    type="date"
+                  <DatePicker
                     value={work.startDate}
-                    onChange={(e) =>
-                      handleInputChange(index, 'startDate', e.target.value)
+                    onChange={(date) =>
+                      handleInputChange(index, 'startDate', toYmd(date))
                     }
+                    max={new Date().toISOString().slice(0, 10)}
                   />
                 </div>
                 <div>
                   <Label htmlFor={`endDate-${index}`}>End Date</Label>
-                  <Input
-                    id={`endDate-${index}`}
-                    type="date"
+                  <DatePicker
                     value={work.endDate}
-                    onChange={(e) =>
-                      handleInputChange(index, 'endDate', e.target.value)
+                    onChange={(date) =>
+                      handleInputChange(index, 'endDate', toYmd(date))
                     }
+                    max={new Date().toISOString().slice(0, 10)}
                   />
                 </div>
               </div>

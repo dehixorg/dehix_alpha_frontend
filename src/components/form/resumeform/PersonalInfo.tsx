@@ -214,7 +214,7 @@ export const PersonalInfo: React.FC<PersonalInfoProps> = ({
                 </InputGroup>
               </div>
               <div>
-                <Label htmlFor={`github-${index}`}>Github Id</Label>
+                <Label htmlFor={`github-${index}`}>Github</Label>
                 <InputGroup>
                   <InputGroupText>
                     <Github className="h-4 w-4" />
@@ -225,7 +225,7 @@ export const PersonalInfo: React.FC<PersonalInfoProps> = ({
                     onChange={(e) =>
                       handleInputChange(index, 'github', e.target.value)
                     }
-                    placeholder="Enter your github id"
+                    placeholder="Enter your github"
                   />
                 </InputGroup>
               </div>

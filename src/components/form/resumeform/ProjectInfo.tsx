@@ -1,10 +1,14 @@
 import React from 'react';
-import { Code2, X } from 'lucide-react';
+import { Code2, X, FileText } from 'lucide-react';
 
 import { AddButton } from '@/components/ui/AddButton';
 import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -87,27 +91,37 @@ export const ProjectInfo: React.FC<ProjectInfoProps> = ({
             <CardContent className={cn('space-y-4')}>
               <div>
                 <Label htmlFor={`title-${index}`}>Project Title</Label>
-                <Input
-                  id={`title-${index}`}
-                  type="text"
-                  value={project.title}
-                  onChange={(e) =>
-                    handleInputChange(index, 'title', e.target.value)
-                  }
-                  placeholder="e.g., AI Resume Builder"
-                />
+                <InputGroup>
+                  <InputGroupText>
+                    <Code2 className="h-4 w-4" />
+                  </InputGroupText>
+                  <InputGroupInput
+                    id={`title-${index}`}
+                    type="text"
+                    value={project.title}
+                    onChange={(e) =>
+                      handleInputChange(index, 'title', e.target.value)
+                    }
+                    placeholder="e.g., AI Resume Builder"
+                  />
+                </InputGroup>
               </div>
               <div>
                 <Label htmlFor={`description-${index}`}>Description</Label>
-                <Input
-                  id={`description-${index}`}
-                  type="text"
-                  value={project.description}
-                  onChange={(e) =>
-                    handleInputChange(index, 'description', e.target.value)
-                  }
-                  placeholder="e.g., Built a resume generator using GPT and Next.js"
-                />
+                <InputGroup>
+                  <InputGroupText>
+                    <FileText className="h-4 w-4" />
+                  </InputGroupText>
+                  <InputGroupInput
+                    id={`description-${index}`}
+                    type="text"
+                    value={project.description}
+                    onChange={(e) =>
+                      handleInputChange(index, 'description', e.target.value)
+                    }
+                    placeholder="e.g., Built a resume generator using GPT and Next.js"
+                  />
+                </InputGroup>
               </div>
             </CardContent>
           </Card>

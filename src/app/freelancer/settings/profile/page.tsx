@@ -151,7 +151,7 @@ export default function FreelancerProfileSettings() {
       isKycCheck={true}
       contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14"
     >
-      <div className="w-full mx-auto mt-2">
+      <div className="w-full mx-auto">
         <div className="card rounded-xl border shadow-sm overflow-hidden">
           <Tabs
             value={activeTab}
