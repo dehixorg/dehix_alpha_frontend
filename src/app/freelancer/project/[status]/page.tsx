@@ -190,7 +190,12 @@ const ProjectList = ({
             {projects.length === 0 ? (
               <div className="col-span-full w-full">
                 <EmptyState
-                  Icon={PackageOpen}
+                  icon={
+                    <PackageOpen
+                      className="mx-auto text-muted-foreground"
+                      size={100}
+                    />
+                  }
                   title="No projects available"
                   description="Once you have projects in this status, they will appear here."
                   className="border-0 bg-transparent py-6"
