@@ -46,6 +46,26 @@ import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+interface SkillBase {
+  _id: string;
+  name?: string;
+  label: string;
+  description?: string;
+  createdBy?: string;
+  createdById?: string;
+  createdAt?: string;
+  status?: string;
+}
+
+interface SkillOption extends SkillBase {
+  // Additional properties specific to SkillOption if needed
+}
+
+interface Skill extends SkillBase {
+  skillName: string; // For backward compatibility
+  [key: string]: any; // Allow additional properties
+}
+
 interface ResumeData {
   _id?: string;
   personalInfo?: {
@@ -71,7 +91,7 @@ interface ResumeData {
     startDate: string;
     endDate: string;
   }>;
-  skills?: string[];
+  skills?: Array<string | Skill>;
   achievements?: Array<{
     achievementDescription: string;
   }>;
@@ -129,9 +149,13 @@ export default function ResumeEditor({
     },
   ]);
 
-  const [skillData, setSkillData] = useState<any[]>([
-    { skillName: 'JavaScript' },
-  ]);
+  interface Skill {
+    skillName: string;
+    _id?: string;
+    name?: string;
+  }
+  const [skillData, setSkillData] = useState<Skill[]>([]);
+  const [skillOptions, setSkillOptions] = useState<Array<{_id?: string; name: string}>>([]);
   const [achievementData, setAchievementData] = useState<any[]>([
     { achievementName: 'Won Hackathon 2022' },
   ]);
@@ -154,10 +178,27 @@ export default function ResumeEditor({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Fetch skills for the skill picker
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const res = await axiosInstance.get('/skills');
+        setSkillOptions(res?.data?.data || []);
+      } catch (e) {
+        console.error('Failed to fetch skills:', e);
+        setSkillOptions([]);
+      }
+    };
+    fetchSkills();
+  }, []);
+
   // Populate data from savedResume or initialResume
   useEffect(() => {
-    const resume = initialResume;
-    if (resume) {
+    const loadResumeData = async () => {
+      const resume = initialResume;
+      if (!resume) return;
+      
+      try {
       setPersonalData([
         {
           firstName: resume.personalInfo?.firstName || 'John',
@@ -173,19 +214,111 @@ export default function ResumeEditor({
 
       setWorkExperienceData(resume.workExperience || []);
       setEducationData(resume.education || []);
-      setSkillData(resume.skills?.map((skill) => ({ skillName: skill })) || []);
-      setAchievementData(
-        resume.achievements?.map((ach) => ({
-          achievementName: ach.achievementDescription,
-        })) || [],
-      );
-      setProjectData(resume.projects || []);
-      setSummaryData(
-        resume.professionalSummary ? [resume.professionalSummary] : [],
-      );
-      setSelectedTemplate(resume.selectedTemplate || 'ResumePreview2');
-    }
-  }, [initialResume]);
+      // First, wait for skills to be loaded
+      await new Promise(resolve => {
+        if (skillOptions.length > 0) resolve(true);
+        const interval = setInterval(() => {
+          if (skillOptions.length > 0) {
+            clearInterval(interval);
+            resolve(true);
+          }
+        }, 100);
+      });
+
+      // First, create a map of all available skills for quick lookup
+      const skillMap = new Map<string, Skill>();
+      (skillOptions as SkillOption[]).forEach(skill => {
+        if (skill._id) {
+          skillMap.set(skill._id, {
+            ...skill,
+            name: skill.label, // Use label as name for display
+            skillName: skill.label // For backward compatibility
+          });
+        }
+      });
+
+      // First, get all skill IDs that are strings (not already mapped)
+      const skillIds = (resume.skills || []).filter(s => typeof s === 'string');
+      
+      // If we have skill IDs to look up, fetch them in a batch
+      if (skillIds.length > 0) {
+        try {
+          // Fetch all skills in one request
+          const response = await axiosInstance.get('/skills', {
+            params: { ids: skillIds.join(',') }
+          });
+          
+          // Update the skill map with the fetched skills
+          (response.data?.data || []).forEach((skill: SkillOption) => {
+            if (skill?._id) {
+              const skillData: Skill = {
+                ...skill,
+                name: skill.label, // Use label as the name since that's what's displayed
+                skillName: skill.label, // For backward compatibility
+              };
+              skillMap.set(skill._id, skillData);
+            }
+          });
+        } catch (error) {
+          console.error('Failed to fetch skills:', error);
+        }
+      }
+      
+      // Map all skills, using the skill map for lookups
+      const mappedSkills = (resume.skills || []).map(skill => {
+        // If it's a string, it's an ID
+        if (typeof skill === 'string') {
+          return skillMap.get(skill) || {
+            _id: skill,
+            name: skill,
+            skillName: skill,
+            label: skill
+          };
+        }
+        
+        // If it's an object with an ID, try to enhance it with data from the map
+        if (skill?._id) {
+          const mappedSkill = skillMap.get(skill._id);
+          if (mappedSkill) {
+            return {
+              ...mappedSkill,
+              ...skill // Allow any provided fields to override
+            };
+          }
+        }
+        
+        // If it's an object without an ID, use it as-is but ensure required fields
+        if (typeof skill === 'object') {
+          const { _id, name, skillName, label, ...rest } = skill;
+          return {
+            _id: _id || '',
+            name: label || name || '',
+            skillName: label || skillName || name || '',
+            label: label || name || '',
+            ...rest
+          };
+        }
+        
+        return null;
+      }).filter((s): s is Skill => s !== null); // Remove null entries and ensure type
+        setSkillData(mappedSkills);
+        setAchievementData(
+          resume.achievements?.map((ach) => ({
+            achievementName: ach.achievementDescription,
+          })) || [],
+        );
+        setProjectData(resume.projects || []);
+        setSummaryData(
+          resume.professionalSummary ? [resume.professionalSummary] : [],
+        );
+        setSelectedTemplate(resume.selectedTemplate || 'ResumePreview2');
+      } catch (error) {
+        console.error('Error loading resume data:', error);
+      }
+    };
+    
+    loadResumeData();
+  }, [initialResume, skillOptions]);
 
   // PDF Optimization
   const optimizePdfContent = () => {
@@ -244,20 +377,43 @@ export default function ResumeEditor({
     <SkillInfo
       key="skill"
       skillData={skillData}
-      onAddSkill={(name) => {
-        setSkillData((prev) => {
-          const emptyIdx = prev.findIndex((s) => !s.skillName);
-          if (emptyIdx >= 0) {
-            const next = [...prev];
-            next[emptyIdx] = { skillName: name };
-            return next;
-          }
-          return [...prev, { skillName: name }];
-        });
+      onAddSkill={(skillStr) => {
+        try {
+          // Try to parse the skill if it's a JSON string
+          const skill = typeof skillStr === 'string' && skillStr.startsWith('{')
+            ? JSON.parse(skillStr)
+            : { skillName: skillStr };
+
+          setSkillData((prev) => {
+            // Check if skill already exists
+            const exists = prev.some(s => 
+              s._id === skill._id || 
+              s.skillName === skill.skillName || 
+              s.name === skill.name
+            );
+            
+            if (exists) return prev;
+            
+            const newSkill = {
+              skillName: skill.name || skill.skillName || skillStr,
+              name: skill.name || skill.skillName || skillStr,
+              label: skill.label || skill.name || skill.skillName || skillStr,
+              ...(skill._id && { _id: skill._id })
+            };
+            
+            return [...prev, newSkill];
+          });
+        } catch (error) {
+          console.error('Error adding skill:', error);
+        }
       }}
-      onRemoveSkill={(name) => {
+      onRemoveSkill={(skillId) => {
         setSkillData((prev) => {
-          const idx = prev.findIndex((s) => s.skillName === name);
+          const idx = prev.findIndex((s) => 
+            s._id === skillId || 
+            s.skillName === skillId || 
+            s.name === skillId
+          );
           if (idx === -1) return prev;
           return prev.filter((_, i) => i !== idx);
         });
@@ -324,7 +480,10 @@ export default function ResumeEditor({
           startDate: formatDateForBackend(edu.startDate),
           endDate: formatDateForBackend(edu.endDate),
         })),
-        skills: skillData.map((skill) => skill.skillName).filter(Boolean),
+        // Send skill IDs as strings to match backend schema
+        skills: skillData
+          .filter(s => s && s._id) // Only include skills with valid IDs
+          .map(s => s._id), // Map to just the ID string
         achievements: achievementData.map((ach) => ({
           achievementDescription: ach.achievementName || '',
         })),
