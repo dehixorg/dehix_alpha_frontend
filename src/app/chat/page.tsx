@@ -430,7 +430,7 @@ const HomePage = () => {
   } else {
     chatListComponentContent = (
       <EmptyState
-        Icon={MessageSquare}
+        icon={<MessageSquare className="w-10 h-10 text-muted-foreground/80" />}
         title="No conversations"
         description="New chats will appear here."
         actions={
@@ -513,7 +513,7 @@ const HomePage = () => {
   } else {
     chatWindowComponentContent = (
       <EmptyState
-        Icon={MessageSquare}
+        icon={<MessageSquare className="w-10 h-10 text-muted-foreground/80" />}
         title="No conversations found"
         description="Start a new chat to get connected!"
         className="h-full bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none"
