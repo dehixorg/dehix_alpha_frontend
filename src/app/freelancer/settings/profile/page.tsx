@@ -142,11 +142,11 @@ export default function FreelancerProfileSettings() {
 
   return (
     <FreelancerSettingsLayout
-      active="Profile Settings"
-      activeMenu="Profile Settings"
+      active="My Profile"
+      activeMenu="My Profile"
       breadcrumbItems={[
         { label: 'Settings', link: '#' },
-        { label: 'Profile', link: '#' },
+        { label: 'My Profile', link: '#' },
       ]}
       isKycCheck={true}
       contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14"

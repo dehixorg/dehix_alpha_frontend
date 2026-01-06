@@ -86,8 +86,15 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      const effectiveType = user?.type || Cookies.get('userType');
+      const uid = user?.uid;
+      if (!effectiveType || !uid) {
+        setLoading(false);
+        return;
+      }
+
+      const cacheKey = `${effectiveType}:${uid}`;
       try {
-        const cacheKey = `${user?.type || ''}:${user?.uid || ''}`;
         if (profileBootstrapCache.has(cacheKey)) {
           const cached = profileBootstrapCache.get(cacheKey)!;
           localStorage.setItem('DHX_CONNECTS', String(cached.connects));
@@ -100,7 +107,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
         if (!promise) {
           promise = (async () => {
             const response = await axiosInstance.get(
-              `/${user.type}/${user?.uid}`,
+              `/${effectiveType}/${uid}`,
             );
             const fetchCode =
               response.data?.referral?.referralCode ||
@@ -122,13 +129,12 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
         console.error('API Error:', error);
         notifyError('Something went wrong. Please try again.', 'Error');
       } finally {
-        const cacheKey = `${user?.type || ''}:${user?.uid || ''}`;
         profileBootstrapInFlight.delete(cacheKey);
         setLoading(false);
       }
     };
 
-    if (user?.uid) {
+    if (user?.uid && (user?.type || Cookies.get('userType'))) {
       fetchData();
     } else {
       console.warn('User ID is not available. Skipping API call.');
