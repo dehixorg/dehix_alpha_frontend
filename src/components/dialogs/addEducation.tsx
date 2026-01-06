@@ -25,6 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
 import {
   InputGroup,
   InputGroupInput,
@@ -42,6 +43,9 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import useDraft from '@/hooks/useDraft';
 
+const toDateOnly = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
 const FormSchema = z
   .object({
     degree: z.string().min(1, { message: 'Degree is required' }),
@@ -49,38 +53,53 @@ const FormSchema = z
       .string()
       .min(1, { message: 'University name is required' }),
     fieldOfStudy: z.string().min(1, { message: 'Field of study is required' }),
-    startDate: z.string().min(1, { message: 'Start date is required' }),
-    endDate: z.string().min(1, { message: 'End date is required' }),
+    startDate: z
+      .string()
+      .min(1, { message: 'Start date is required' })
+      .datetime({ message: 'Invalid Start date.' }),
+    endDate: z
+      .union([
+        z.string().trim().datetime({ message: 'Invalid End date.' }),
+        z.literal(''),
+      ])
+      .transform((val) => (val === '' ? undefined : val))
+      .optional(),
+    ongoing: z.boolean().optional(),
     grade: z.string().optional(),
   })
-  .refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        const start = new Date(data.startDate);
-        const end = new Date(data.endDate);
-        return start < end;
+  .superRefine((data, ctx) => {
+    if (!data.ongoing && !data.endDate) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'End date is required',
+        path: ['endDate'],
+      });
+    }
+
+    if (data.startDate) {
+      const start = toDateOnly(new Date(data.startDate));
+      const today = toDateOnly(new Date());
+
+      if (start > today) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Start date cannot be in the future',
+          path: ['startDate'],
+        });
       }
-      return true;
-    },
-    {
-      message: 'Start Date must be before End Date',
-      path: ['endDate'],
-    },
-  )
-  .refine(
-    (data) => {
-      if (data.startDate) {
-        const start = new Date(data.startDate);
-        const today = new Date();
-        return start <= today;
+
+      if (!data.ongoing && data.endDate) {
+        const end = toDateOnly(new Date(data.endDate));
+        if (start >= end) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Start Date must be before End Date',
+            path: ['endDate'],
+          });
+        }
       }
-      return true;
-    },
-    {
-      message: 'Start date cannot be in the future',
-      path: ['startDate'],
-    },
-  );
+    }
+  });
 
 interface AddEducationProps {
   onFormSubmit: () => void;
@@ -93,6 +112,12 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
 
+  React.useEffect(() => {
+    if (isDialogOpen) {
+      setStep(1);
+    }
+  }, [isDialogOpen]);
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -101,9 +126,12 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
       fieldOfStudy: '',
       startDate: '',
       endDate: '',
+      ongoing: false,
       grade: '',
     },
   });
+
+  const ongoing = form.watch('ongoing');
 
   const resetForm = useCallback(() => {
     form.reset({
@@ -112,6 +140,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
       fieldOfStudy: '',
       startDate: '',
       endDate: '',
+      ongoing: false,
       grade: '',
     });
     restoredDraft.current = null;
@@ -147,6 +176,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     discardDraft,
     handleSaveAndClose,
     handleDiscardAndClose: handleDiscardAndCloseDraft,
+    handleDialogClose,
   } = useDraft({
     form,
     formSection: 'education',
@@ -160,30 +190,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     },
   });
 
-  const handleDiscardAndClose = () => {
-    resetForm();
-    if (setIsDialogOpen) {
-      setIsDialogOpen(false);
-    }
-  };
-
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    // Check if required fields are filled
-    const requiredFields = [
-      'degree',
-      'universityName',
-      'fieldOfStudy',
-      'startDate',
-      'endDate',
-    ];
-    const missingFields = requiredFields.filter(
-      (field) => !data[field as keyof typeof data],
-    );
-    if (missingFields.length > 0) {
-      notifyError('Please fill in all required fields', 'Validation Error');
-      return;
-    }
-
     try {
       setLoading(true);
       const formattedData = {
@@ -193,7 +200,11 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         startDate: data.startDate
           ? new Date(data.startDate).toISOString()
           : null,
-        endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
+        endDate: data.ongoing
+          ? null
+          : data.endDate
+            ? new Date(data.endDate).toISOString()
+            : null,
         grade: data.grade,
         oracleAssigned: '',
         verificationStatus: 'ADDED',
@@ -225,26 +236,9 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
       open={isDialogOpen}
       onOpenChange={(open) => {
         if (!open) {
-          const formValues = form.getValues();
-          const hasValues = Object.values(formValues).some(
-            (value) => value && value.toString().trim() !== '',
-          );
-
-          if (hasValues) {
-            setConfirmExitDialog(true);
-          } else {
-            setIsDialogOpen(false);
-            resetForm();
-          }
+          handleDialogClose();
         } else {
-          // Reset form when dialog is opened
-          resetForm();
-          setStep(1);
-          // Show draft dialog if there's a draft
-          if (restoredDraft.current) {
-            setShowDraftDialog(true);
-          }
-          setIsDialogOpen(true);
+          setIsDialogOpen(open);
         }
       }}
     >
@@ -381,9 +375,32 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                   name="endDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Date</FormLabel>
+                      <div className="flex items-center justify-between gap-3">
+                        <FormLabel>End Date</FormLabel>
+                        <FormField
+                          control={form.control}
+                          name="ongoing"
+                          render={({ field: ongoingField }) => (
+                            <div className="flex items-center gap-2">
+                              <FormLabel className="text-xs text-muted-foreground">
+                                Currently studying
+                              </FormLabel>
+                              <Switch
+                                checked={Boolean(ongoingField.value)}
+                                onCheckedChange={(val) => {
+                                  ongoingField.onChange(Boolean(val));
+                                  if (val) {
+                                    form.setValue('endDate', '');
+                                    form.clearErrors('endDate');
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
+                        />
+                      </div>
                       <FormControl>
-                        <DatePicker {...field} />
+                        <DatePicker {...field} disabled={ongoing} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -433,39 +450,6 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                 </>
               )}
             </DialogFooter>
-
-            {/* Confirmation Dialog for Discard */}
-            <Dialog
-              open={confirmExitDialog}
-              onOpenChange={setConfirmExitDialog}
-            >
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Discard Changes?</DialogTitle>
-                  <DialogDescription>
-                    You have unsaved changes. Are you sure you want to discard
-                    them?
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setConfirmExitDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      handleDiscardAndCloseDraft();
-                      setConfirmExitDialog(false);
-                    }}
-                  >
-                    Discard
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </form>
         </Form>
       </DialogContent>
@@ -475,7 +459,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
           setDialogChange={setConfirmExitDialog}
           heading="Save Draft?"
           desc="Do you want to save your draft before leaving?"
-          handleClose={handleDiscardAndClose}
+          handleClose={handleDiscardAndCloseDraft}
           handleSave={handleSaveAndClose}
           btn1Txt="Don't save"
           btn2Txt="Yes save"

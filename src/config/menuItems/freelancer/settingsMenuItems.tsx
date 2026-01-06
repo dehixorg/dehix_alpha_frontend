@@ -40,7 +40,7 @@ export const menuItemsTop: MenuItem[] = [
   {
     href: '/freelancer/settings/profile',
     icon: <UserCog className="h-5 w-5" />,
-    label: 'Profile Settings',
+    label: 'My Profile',
   },
   {
     href: '/freelancer/settings/kyc',

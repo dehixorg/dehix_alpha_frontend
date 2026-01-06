@@ -10,6 +10,7 @@ import {
   Building2,
   Github,
   MessageSquare,
+  Mail,
   Phone,
   User,
 } from 'lucide-react';
@@ -37,6 +38,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   InputGroup,
   InputGroupInput,
@@ -46,12 +56,80 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import useDraft from '@/hooks/useDraft';
 
+const toDateOnly = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+const addOneMonthClamped = (from: Date) => {
+  const year = from.getFullYear();
+  const month = from.getMonth();
+  const day = from.getDate();
+
+  const targetMonthIndex = month + 1;
+  const targetYear = year + Math.floor(targetMonthIndex / 12);
+  const targetMonth = ((targetMonthIndex % 12) + 12) % 12;
+  const lastDayOfTargetMonth = new Date(
+    targetYear,
+    targetMonth + 1,
+    0,
+  ).getDate();
+  const clampedDay = Math.min(day, lastDayOfTargetMonth);
+
+  return new Date(targetYear, targetMonth, clampedDay);
+};
+
+const isValidPhoneNumber = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  const normalized = trimmed.replace(/[\s()-]/g, '');
+  if (!/^\+?\d+$/.test(normalized)) return false;
+  const digits = normalized.startsWith('+') ? normalized.slice(1) : normalized;
+  return digits.length >= 7 && digits.length <= 15;
+};
+
+const isValidGithubRepoUrl = (value: string) => {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:') return false;
+
+    const host = url.hostname.toLowerCase();
+    if (host !== 'github.com' && host !== 'www.github.com') return false;
+
+    const path = url.pathname.replace(/\/+$/, '');
+    const segments = path.split('/').filter(Boolean);
+    if (segments.length < 2) return false;
+
+    const [owner, repo] = segments;
+    if (!owner || !repo) return false;
+
+    const repoName = repo.endsWith('.git') ? repo.slice(0, -4) : repo;
+    if (!repoName) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const validateWorkDates = (
-  data: { workFrom?: string; workTo?: string },
+  data: { workFrom?: string; workTo?: string; ongoing?: boolean },
   ctx: any,
 ) => {
-  const workFromDate = data.workFrom ? new Date(data.workFrom) : null;
-  const workToDate = data.workTo ? new Date(data.workTo) : null;
+  const workFromDate = data.workFrom
+    ? toDateOnly(new Date(data.workFrom))
+    : null;
+  const workToDate = data.workTo ? toDateOnly(new Date(data.workTo)) : null;
+
+  if (!data.ongoing && !data.workTo) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Work to is required.',
+      path: ['workTo'],
+    });
+  }
+
+  if (data.ongoing) {
+    return;
+  }
 
   if (workFromDate && workToDate) {
     if (workFromDate > workToDate) {
@@ -62,8 +140,7 @@ const validateWorkDates = (
       });
     }
 
-    const oneMonthLater = new Date(workFromDate);
-    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+    const oneMonthLater = addOneMonthClamped(workFromDate);
 
     if (workToDate < oneMonthLater) {
       ctx.addIssue({
@@ -82,26 +159,64 @@ const experienceFormSchema = z
     workDescription: z
       .string()
       .min(1, { message: 'Work Description is required.' }),
-    workFrom: z.string().min(1, { message: 'Work from is required.' }),
-    workTo: z.string().min(1, { message: 'Work to is required.' }),
+    workFrom: z
+      .string()
+      .min(1, { message: 'Work from is required.' })
+      .datetime({ message: 'Invalid Work From date.' }),
+    workTo: z
+      .union([
+        z.string().trim().datetime({ message: 'Invalid Work To date.' }),
+        z.literal(''),
+      ])
+      .transform((val) => (val === '' ? undefined : val))
+      .optional(),
+    ongoing: z.boolean().optional(),
     referencePersonName: z
       .string()
       .min(1, { message: 'Reference Person Name is required.' }),
+    referenceContactType: z.enum(['phone', 'email']).optional(),
     referencePersonContact: z
       .string()
       .min(1, { message: 'Reference Person Contact is required.' }),
     githubRepoLink: z
-      .string()
-      .trim()
+      .union([
+        z.string().trim().url({ message: 'Invalid URL.' }),
+        z.literal(''),
+      ])
       .transform((val) => (val === '' ? undefined : val))
-      .optional()
-      .refine((url) => !url || url.startsWith('https://github.com/'), {
-        message: 'GitHub URL must start with https://github.com/',
+      .refine((url) => !url || isValidGithubRepoUrl(url), {
+        message:
+          'Please enter a valid GitHub repository URL (e.g. https://github.com/owner/repo).',
       }),
     comments: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     validateWorkDates(data, ctx);
+
+    const type = data.referenceContactType || 'phone';
+    const value = (data.referencePersonContact || '').trim();
+    if (!value) return;
+
+    if (type === 'email') {
+      const parsed = z.string().email().safeParse(value);
+      if (!parsed.success) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Please enter a valid email address.',
+          path: ['referencePersonContact'],
+        });
+      }
+    }
+
+    if (type === 'phone') {
+      if (!isValidPhoneNumber(value)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Please enter a valid phone number.',
+          path: ['referencePersonContact'],
+        });
+      }
+    }
   });
 
 type ExperienceFormValues = z.infer<typeof experienceFormSchema>;
@@ -127,52 +242,42 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
       workDescription: '',
       workFrom: '',
       workTo: '',
+      ongoing: false,
+      referencePersonName: '',
+      referencePersonContact: '',
+      referenceContactType: 'phone',
+      githubRepoLink: '',
+      comments: '',
     },
   });
 
+  const ongoing = form.watch('ongoing');
+  const referenceContactType = form.watch('referenceContactType');
+
   // Validate Step 1 fields before proceeding to Step 2
-  const validateStep1 = () => {
-    const { company, jobTitle, workDescription, workFrom, workTo } =
-      form.getValues();
+  const validateStep1 = async () => {
+    const valid = await form.trigger([
+      'company',
+      'jobTitle',
+      'workDescription',
+      'workFrom',
+      'workTo',
+    ]);
 
-    // Check if required fields are filled
-    if (!company || !jobTitle || !workDescription || !workFrom || !workTo) {
+    if (!valid) {
       notifyError(
-        'Please fill all required fields in Step 1.',
-        'Missing fields',
+        'Please fix the highlighted errors in Step 1.',
+        'Validation error',
       );
-      return false;
-    }
-
-    // Validate dates
-    const workFromDate = new Date(workFrom);
-    const workToDate = new Date(workTo);
-
-    if (workFromDate > workToDate) {
-      form.setError('workFrom', {
-        type: 'manual',
-        message: 'Work From date cannot be after Work To date.',
-      });
-      return false;
-    }
-
-    const oneMonthLater = new Date(workFromDate);
-    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-
-    if (workToDate < oneMonthLater) {
-      form.setError('workTo', {
-        type: 'manual',
-        message: 'Work To date must be at least 1 month after Work From date.',
-      });
       return false;
     }
 
     return true;
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (step === 1) {
-      if (validateStep1()) {
+      if (await validateStep1()) {
         setStep(2);
       }
     }
@@ -187,19 +292,8 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   useEffect(() => {
     if (isDialogOpen) {
       setStep(1);
-      form.reset({
-        company: '',
-        jobTitle: '',
-        workDescription: '',
-        workFrom: '',
-        workTo: '',
-        referencePersonName: '',
-        referencePersonContact: '',
-        githubRepoLink: '',
-        comments: '',
-      });
     }
-  }, [isDialogOpen, form]);
+  }, [isDialogOpen]);
   const {
     showDraftDialog,
     setShowDraftDialog,
@@ -231,7 +325,11 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
         jobTitle: data.jobTitle || '',
         workDescription: data.workDescription || '',
         workFrom: data.workFrom ? new Date(data.workFrom).toISOString() : null,
-        workTo: data.workTo ? new Date(data.workTo).toISOString() : null,
+        workTo: data.ongoing
+          ? null
+          : data.workTo
+            ? new Date(data.workTo).toISOString()
+            : null,
         referencePersonName: data.referencePersonName || '',
         referencePersonContact: data.referencePersonContact || '',
         githubRepoLink: data.githubRepoLink || '',
@@ -246,6 +344,8 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
         'The experience has been successfully added.',
         'Experience Added',
       );
+      form.reset();
+      setStep(1);
     } catch (error) {
       console.error('API Error:', error);
       notifyError('Failed to add experience. Please try again later.', 'Error');
@@ -258,8 +358,11 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
     <Dialog
       open={isDialogOpen}
       onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        if (!open) handleDialogClose();
+        if (!open) {
+          handleDialogClose();
+        } else {
+          setIsDialogOpen(open);
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -385,9 +488,32 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                     name="workTo"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Work To</FormLabel>
+                        <div className="flex items-center justify-between gap-3">
+                          <FormLabel>Work To</FormLabel>
+                          <FormField
+                            control={form.control}
+                            name="ongoing"
+                            render={({ field: ongoingField }) => (
+                              <div className="flex items-center gap-2">
+                                <FormLabel className="text-xs text-muted-foreground">
+                                  Ongoing
+                                </FormLabel>
+                                <Switch
+                                  checked={Boolean(ongoingField.value)}
+                                  onCheckedChange={(val) => {
+                                    ongoingField.onChange(Boolean(val));
+                                    if (val) {
+                                      form.setValue('workTo', '');
+                                      form.clearErrors('workTo');
+                                    }
+                                  }}
+                                />
+                              </div>
+                            )}
+                          />
+                        </div>
                         <FormControl>
-                          <DatePicker {...field} />
+                          <DatePicker {...field} disabled={ongoing} />
                         </FormControl>
                         <FormDescription>Select the end date</FormDescription>
                         <FormMessage />
@@ -431,14 +557,44 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                     name="referencePersonContact"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Reference Person Contact</FormLabel>
+                        <div className="flex items-center justify-between gap-3">
+                          <FormLabel>Reference Person Contact</FormLabel>
+                          <FormField
+                            control={form.control}
+                            name="referenceContactType"
+                            render={({ field: contactTypeField }) => (
+                              <Select
+                                onValueChange={contactTypeField.onChange}
+                                value={contactTypeField.value || 'phone'}
+                              >
+                                <SelectTrigger className="h-8 w-[120px]">
+                                  <SelectValue placeholder="Phone" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectGroup>
+                                    <SelectItem value="phone">Phone</SelectItem>
+                                    <SelectItem value="email">Email</SelectItem>
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
                         <FormControl>
                           <InputGroup>
                             <InputGroupText>
-                              <Phone className="h-4 w-4" />
+                              {(referenceContactType || 'phone') === 'email' ? (
+                                <Mail className="h-4 w-4" />
+                              ) : (
+                                <Phone className="h-4 w-4" />
+                              )}
                             </InputGroupText>
                             <InputGroupInput
-                              placeholder="Enter reference person contact"
+                              placeholder={
+                                (referenceContactType || 'phone') === 'email'
+                                  ? 'Enter reference email'
+                                  : 'Enter reference phone number'
+                              }
                               {...field}
                             />
                           </InputGroup>
