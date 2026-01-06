@@ -460,9 +460,56 @@ const TalentCard: React.FC<TalentCardProps> = ({
     <TooltipProvider>
       <div className="flex flex-wrap mt-4 justify-center gap-4">
         {!loading && talents.length === 0 && (
-          <div className="w-full text-center text-sm text-muted-foreground py-8">
-            No talents found.
-          </div>
+          <Card className="col-span-full overflow-hidden border bg-muted/20">
+            <CardContent className="flex flex-col items-center justify-center text-center p-8 sm:p-10">
+              <div className="mb-5 opacity-90">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 200 120"
+                  className="h-28 w-44"
+                  aria-hidden
+                >
+                  <rect
+                    x="14"
+                    y="22"
+                    width="172"
+                    height="76"
+                    rx="14"
+                    className="fill-muted"
+                  />
+                  <rect
+                    x="28"
+                    y="38"
+                    width="84"
+                    height="10"
+                    rx="5"
+                    className="fill-muted-foreground/35"
+                  />
+                  <rect
+                    x="28"
+                    y="56"
+                    width="132"
+                    height="10"
+                    rx="5"
+                    className="fill-muted-foreground/25"
+                  />
+                  <rect
+                    x="28"
+                    y="74"
+                    width="110"
+                    height="10"
+                    rx="5"
+                    className="fill-muted-foreground/20"
+                  />
+                  <circle cx="156" cy="60" r="12" className="fill-primary/25" />
+                </svg>
+              </div>
+              <div className="text-sm font-semibold">No talents found</div>
+              <div className="mt-1 text-sm text-muted-foreground max-w-md">
+                Try changing your filters or add new skill/domain requirements.
+              </div>
+            </CardContent>
+          </Card>
         )}
         {/* Map directly over 'talents' instead of 'filteredTalents' */}
         {talents.map((talent) => {
@@ -480,7 +527,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           return (
             <Card
               key={`${talent.freelancer_id}:${talentEntry.type}:${talentEntry.talentName}`}
-              className="group relative w-full sm:w-[350px] lg:w-[450px] overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20"
+              className="group relative w-full overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md"
               onClick={() => {
                 if (isSheetClosingRef.current) return;
                 if (isDialogOpen) return; // prevent opening while dialog is active
@@ -489,13 +536,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
                 );
               }}
             >
-              <CardHeader className="flex flex-row items-center gap-4 pb-3 pt-5 px-6">
+              <CardHeader className="flex flex-row items-center justify-between gap-4 pb-3 pt-5 px-6">
                 <Link
                   href={`/freelancer-profile/${talent.freelancer_id}`}
                   onClick={(e) => e.stopPropagation()}
                   className="flex items-center gap-4 max-w-full"
                 >
-                  <Avatar className="h-14 w-14 rounded-xl border border-gray-200 dark:border-gray-700">
+                  <Avatar className="h-14 w-14 rounded-xl border">
                     <AvatarImage
                       src={talent.profilePic || '/default-avatar.png'}
                     />
@@ -519,7 +566,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     {talentEntries.map((t) => (
                       <div
                         key={`${talent.freelancer_id}:${t.type}:${t.talentName}`}
-                        className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50"
+                        className="p-3 rounded-lg border bg-muted/30"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0">
@@ -530,7 +577,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               >
                                 {t.type}
                               </Badge>
-                              <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                              <span className="text-sm font-medium truncate">
                                 {t.talentName || 'N/A'}
                               </span>
                             </div>

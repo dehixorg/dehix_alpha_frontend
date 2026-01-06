@@ -54,7 +54,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
           <DialogTitle>Rate Interview</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Please rate your interview with <strong>{intervieweeName}</strong>
           </p>
           <div className="flex justify-center">
@@ -73,7 +73,6 @@ export const RatingModal: React.FC<RatingModalProps> = ({
           <Button
             onClick={handleSubmit}
             disabled={rating === 0 || isSubmitting}
-            className="bg-blue-500 hover:bg-blue-600"
           >
             {isSubmitting ? (
               <>

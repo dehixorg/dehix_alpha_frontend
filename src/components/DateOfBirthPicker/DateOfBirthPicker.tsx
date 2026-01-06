@@ -16,7 +16,15 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 const DateOfBirthPicker = ({ field }: any) => {
   const today = new Date();
@@ -45,8 +53,14 @@ const DateOfBirthPicker = ({ field }: any) => {
             <Button
               type="button"
               variant="outline"
-              className={`w-full justify-start text-left font-normal ${selectedDate ? '' : 'text-muted-foreground'}`}
-              onClick={() => setOpenDialog(true)}
+              className={cn(
+                'w-full justify-start text-left font-normal',
+                !selectedDate && 'text-muted-foreground',
+              )}
+              onClick={() => {
+                setOpenCalendar(false);
+                setOpenDialog(true);
+              }}
             >
               {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
@@ -70,8 +84,13 @@ const DateOfBirthPicker = ({ field }: any) => {
       </Popover>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="max-w-sm rounded-lg bg-[#111] mx-1 shadow-xl p-6">
-          <h2 className="text-lg text-white mb-4">Select Month & Year</h2>
+        <DialogContent className="max-w-sm mx-1">
+          <DialogHeader>
+            <DialogTitle>Select month and year</DialogTitle>
+            <DialogDescription>
+              Choose your birth month and year first, then pick the exact day.
+            </DialogDescription>
+          </DialogHeader>
           <MonthSelector
             selectedMonth={selectedMonth}
             onSelect={setSelectedMonth}
@@ -80,7 +99,9 @@ const DateOfBirthPicker = ({ field }: any) => {
             selectedYear={selectedYear}
             onSelect={setSelectedYear}
           />
-          <ConfirmButton onConfirm={handleConfirm} />
+          <DialogFooter>
+            <ConfirmButton onConfirm={handleConfirm} />
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

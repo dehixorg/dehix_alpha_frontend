@@ -58,7 +58,7 @@ export function FilterSheet({
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
-        <ScrollArea className="flex-1">
+        <ScrollArea>
           <FilterComponent
             filters={filters}
             setFilters={setFilters}

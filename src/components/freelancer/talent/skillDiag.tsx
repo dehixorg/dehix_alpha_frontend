@@ -17,7 +17,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -214,7 +218,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                 })();
 
                 return (
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         <Gauge className="h-3 w-3" />
@@ -256,21 +260,26 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                <Clock className="h-3 w-3" />
                 <span>Experience</span>
               </div>
               <Controller
                 control={control}
                 name="experience"
                 render={({ field }) => (
-                  <Input
-                    type="number"
-                    placeholder="Years of experience"
-                    min={0}
-                    max={50}
-                    step={0.1}
-                    {...field}
-                  />
+                  <InputGroup>
+                    <InputGroupText>
+                      <Clock className="h-4 w-4" />
+                    </InputGroupText>
+                    <InputGroupInput
+                      type="number"
+                      placeholder="Experience"
+                      min={0}
+                      max={50}
+                      step={0.1}
+                      {...field}
+                    />
+                    <InputGroupText>YEARS</InputGroupText>
+                  </InputGroup>
                 )}
               />
               {errors.experience && (
@@ -282,22 +291,24 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
 
             <div>
               <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                <Wallet className="h-3 w-3" />
                 <span>Monthly pay</span>
               </div>
               <Controller
                 control={control}
                 name="monthlyPay"
                 render={({ field }) => (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">$</span>
-                    <Input
+                  <InputGroup>
+                    <InputGroupText>
+                      <Wallet className="h-4 w-4" />
+                    </InputGroupText>
+                    <InputGroupInput
                       type="number"
-                      placeholder="Expected monthly pay"
+                      placeholder="Monthly Pay"
                       min={0}
                       {...field}
                     />
-                  </div>
+                    <InputGroupText>/MONTH</InputGroupText>
+                  </InputGroup>
                 )}
               />
               {errors.monthlyPay && (

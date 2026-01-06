@@ -72,7 +72,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           <DialogTitle>Provide Feedback</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Please provide your feedback for the interview with{' '}
             <strong>{intervieweeName}</strong>
           </p>
@@ -84,7 +84,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               className="min-h-[120px] resize-none"
               maxLength={1000} // Additional character limit for safety
             />
-            <div className="text-right text-sm text-gray-500">
+            <div className="text-right text-sm text-muted-foreground">
               {wordCount}/{MAX_WORDS} words
             </div>
           </div>
@@ -96,7 +96,6 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           <Button
             onClick={handleSubmit}
             disabled={!feedback.trim() || isSubmitting}
-            className="bg-blue-500 hover:bg-blue-600"
           >
             {isSubmitting ? (
               <>

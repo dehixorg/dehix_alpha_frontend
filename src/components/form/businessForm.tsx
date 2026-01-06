@@ -3,7 +3,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useDispatch } from 'react-redux';
-import { Building2, Save } from 'lucide-react';
+import {
+  Building2,
+  Save,
+  User,
+  Mail,
+  Phone,
+  Users,
+  Briefcase,
+  Linkedin,
+  Globe,
+} from 'lucide-react';
 
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import { Label } from '../ui/label';
@@ -19,7 +29,11 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { Type } from '@/utils/enum';
 import { setUser } from '@/lib/userSlice';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -206,7 +220,15 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input placeholder="Enter your first name" {...field} />
+                      <InputGroup>
+                        <InputGroupText>
+                          <User className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your first name"
+                          {...field}
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -221,7 +243,15 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input placeholder="Enter your last name" {...field} />
+                      <InputGroup>
+                        <InputGroupText>
+                          <User className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your last name"
+                          {...field}
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -238,13 +268,18 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
-                        disabled={true}
-                        placeholder="Enter your email"
-                        type="email"
-                        {...field}
-                        readOnly
-                      />
+                      <InputGroup>
+                        <InputGroupText>
+                          <Mail className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          disabled={true}
+                          placeholder="Enter your email"
+                          type="email"
+                          {...field}
+                          readOnly
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                     <FormDescription>Non editable field</FormDescription>
@@ -260,13 +295,18 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
-                        disabled={true}
-                        placeholder="Enter your phone number"
-                        type="tel"
-                        {...field}
-                        readOnly
-                      />
+                      <InputGroup>
+                        <InputGroupText>
+                          <Phone className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          disabled={true}
+                          placeholder="Enter your phone number"
+                          type="tel"
+                          {...field}
+                          readOnly
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                     <FormDescription>Non editable field</FormDescription>
@@ -285,7 +325,15 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input placeholder="Enter your company name" {...field} />
+                      <InputGroup>
+                        <InputGroupText>
+                          <Building2 className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your company name"
+                          {...field}
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -301,7 +349,15 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input placeholder="Enter your company size" {...field} />
+                      <InputGroup>
+                        <InputGroupText>
+                          <Users className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your company size"
+                          {...field}
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -317,7 +373,15 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input placeholder="Enter your position" {...field} />
+                      <InputGroup>
+                        <InputGroupText>
+                          <Briefcase className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your position"
+                          {...field}
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -335,11 +399,16 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
-                        placeholder="Enter your LinkedIn URL"
-                        type="url"
-                        {...field}
-                      />
+                      <InputGroup>
+                        <InputGroupText>
+                          <Linkedin className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your LinkedIn URL"
+                          type="url"
+                          {...field}
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -355,11 +424,16 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
-                        placeholder="Enter your website URL"
-                        type="url"
-                        {...field}
-                      />
+                      <InputGroup>
+                        <InputGroupText>
+                          <Globe className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your website URL"
+                          type="url"
+                          {...field}
+                        />
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

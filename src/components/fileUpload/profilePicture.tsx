@@ -9,6 +9,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { setUser } from '@/lib/userSlice';
 import { RootState } from '@/lib/store';
 import { Type } from '@/utils/enum';
+import { compressImageFile } from '@/utils/imageCompression';
 
 const allowedImageFormats = [
   'image/png',
@@ -17,7 +18,7 @@ const allowedImageFormats = [
   'image/gif',
   'image/svg+xml',
 ];
-const maxImageSize = 5 * 1024 * 1024; // 5MB
+const maxImageSize = 5 * 1024; // 5MB
 
 const ProfilePictureUpload = ({
   profile,
@@ -36,21 +37,23 @@ const ProfilePictureUpload = ({
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && allowedImageFormats.includes(file.type)) {
-      if (file.size <= maxImageSize) {
-        setSelectedProfilePicture(file);
-        setPreviewUrl(URL.createObjectURL(file));
-      } else {
-        notifyError('Image size should not exceed 5MB.', 'File too large');
-      }
-    } else {
+    if (!file || !allowedImageFormats.includes(file.type)) {
       notifyError(
         `Please upload a valid image file. Allowed formats: ${allowedImageFormats.join(', ')}`,
         'Invalid file type',
       );
+      return;
     }
+    console.log('IMAGWE:', file.size, maxImageSize);
+    const nextFile =
+      file.size > maxImageSize
+        ? await compressImageFile(file, { maxBytes: maxImageSize })
+        : file;
+
+    setSelectedProfilePicture(nextFile);
+    setPreviewUrl(URL.createObjectURL(nextFile));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

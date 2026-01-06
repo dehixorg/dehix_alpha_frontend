@@ -679,10 +679,17 @@ export default function LevelsAndBadgesPage() {
                   ))}
                 </div>
               </div>
+              <Skeleton className="h-9 w-32" />
             </div>
-          </main>
+            <Skeleton className="h-28 w-full" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Skeleton className="h-36 w-full" />
+              <Skeleton className="h-36 w-full" />
+              <Skeleton className="h-36 w-full" />
+            </div>
+          </div>
         </div>
-      </div>
+      </FreelancerSettingsLayout>
     );
   }
 
@@ -844,6 +851,8 @@ export default function LevelsAndBadgesPage() {
               </CardContent>
             </Card>
           )}
+        </div>
+      </section>
 
           {/* Levels Section */}
           <div className="space-y-4">

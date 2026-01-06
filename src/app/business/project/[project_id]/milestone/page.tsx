@@ -4,18 +4,12 @@ import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
-import { Inbox, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import Header from '@/components/header/header';
 import MilestoneTimeline from '@/components/shared/MilestoneTimeline';
 import StoriesSection from '@/components/shared/StoriesSection';
 import FreelancerList from '@/components/freelancer/FreelancerList';
 import EmptyState from '@/components/shared/EmptyState';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/business/dashboardMenuItems';
 import { CreateMilestoneDialog } from '@/components/shared/CreateMilestoneDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -23,6 +17,7 @@ import type { Milestone, Story } from '@/utils/types/Milestone';
 import type { RootState } from '@/lib/store';
 import { CreateProjectGroupDialog } from '@/components/shared/CreateProjectGroupDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
 
 interface Project {
   _id: string;
@@ -205,114 +200,104 @@ const Page = () => {
   }, [milestones]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active=""
-      />
-      <div className="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu=""
-          breadcrumbItems={[
-            { label: 'Project', link: '/business/projects' },
-            {
-              label: project ? project.projectName : project_id,
-              link: `/business/project/${project_id}`,
-            },
-            { label: 'Milestone', link: '#' },
-          ]}
-        />
-        <div className="px-2 md:px-4 w-full max-w-full overflow-hidden">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-xl md:text-2xl font-bold">
-              {project?.projectName} Milestones
-            </h1>
+    <BusinessDashboardLayout
+      active="Projects"
+      activeMenu="Projects"
+      breadcrumbItems={[
+        { label: 'Project', link: '/business/projects' },
+        {
+          label: project ? project.projectName : project_id,
+          link: `/business/project/${project_id}`,
+        },
+        { label: 'Milestone', link: '#' },
+      ]}
+      contentClassName="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14"
+      mainClassName="px-2 md:px-4 w-full max-w-full overflow-hidden"
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl md:text-2xl font-bold">
+          {project?.projectName} Milestones
+        </h1>
 
-            <div className="flex gap-2">
-              <CreateMilestoneDialog
-                projectId={project_id}
-                fetchMilestones={fetchMilestones}
-              />
+        <div className="flex gap-2">
+          <CreateMilestoneDialog
+            projectId={project_id}
+            fetchMilestones={fetchMilestones}
+          />
+        </div>
+      </div>
+
+      {/* Main content area */}
+      <div className="mt-4 w-full max-w-full">
+        {loading ? (
+          <div className="w-full max-w-full">
+            <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading milestones...</span>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
+              <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+
+              <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-[320px] w-full" />
+              </div>
             </div>
           </div>
-
-          {/* Main content area */}
-          <div className="mt-4 w-full max-w-full">
-            {loading ? (
-              <div className="w-full max-w-full">
-                <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Loading milestones...</span>
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
-                  <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full space-y-3">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                  </div>
-
-                  <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-[320px] w-full" />
-                  </div>
-                </div>
+        ) : milestones.length > 0 ? (
+          <>
+            <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
+              {/* Left Part: FreelancerList */}
+              <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full">
+                <FreelancerList
+                  projectId={project_id}
+                  onChatClick={handleChatClick}
+                  className="w-full max-w-full"
+                />
               </div>
-            ) : milestones.length > 0 ? (
-              <>
-                <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
-                  {/* Left Part: FreelancerList */}
-                  <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full">
-                    <FreelancerList
-                      projectId={project_id}
-                      onChatClick={handleChatClick}
-                      className="w-full max-w-full"
-                    />
-                  </div>
 
-                  {/* Right Part */}
-                  <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
-                    {/* Top: MilestoneTimeline */}
-                    <MilestoneTimeline
-                      fetchMilestones={fetchMilestones}
-                      milestones={milestones}
-                      handleStorySubmit={handleStorySubmit}
-                      selectedIndex={selectedMilestoneIndex}
-                      onMilestoneSelect={(index) =>
-                        setSelectedMilestoneIndex(index)
-                      }
-                    />
+              {/* Right Part */}
+              <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
+                {/* Top: MilestoneTimeline */}
+                <MilestoneTimeline
+                  fetchMilestones={fetchMilestones}
+                  milestones={milestones}
+                  handleStorySubmit={handleStorySubmit}
+                  selectedIndex={selectedMilestoneIndex}
+                  onMilestoneSelect={(index) =>
+                    setSelectedMilestoneIndex(index)
+                  }
+                />
 
-                    {/* Bottom: StoriesSection (milestone cards) */}
-                    {selectedMilestoneIndex !== null && (
-                      <StoriesSection
-                        key={
-                          milestones[selectedMilestoneIndex]?._id ??
-                          selectedMilestoneIndex
-                        }
-                        milestone={milestones[selectedMilestoneIndex]}
-                        fetchMilestones={fetchMilestones}
-                        handleStorySubmit={handleStorySubmit}
-                        isFreelancer={false}
-                      />
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <EmptyState
-                title="No milestones found"
-                description="Create your first milestone to start tracking progress for this project."
-                Icon={Inbox}
-                className="h-16 w-16 text-muted-foreground"
-              />
-            )}
-          </div>
-        </div>
+                {/* Bottom: StoriesSection (milestone cards) */}
+                {selectedMilestoneIndex !== null && (
+                  <StoriesSection
+                    key={
+                      milestones[selectedMilestoneIndex]?._id ??
+                      selectedMilestoneIndex
+                    }
+                    milestone={milestones[selectedMilestoneIndex]}
+                    fetchMilestones={fetchMilestones}
+                    handleStorySubmit={handleStorySubmit}
+                    isFreelancer={false}
+                  />
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            className="h-[40vh] border-0 bg-transparent py-0"
+            title="No milestones created"
+            description="Start by creating your first milestone for this project."
+          />
+        )}
       </div>
 
       {/* Create Project Group Dialog */}
@@ -323,7 +308,7 @@ const Page = () => {
         projectId={project_id}
         currentUserUid={user?.uid || ''}
       />
-    </div>
+    </BusinessDashboardLayout>
   );
 };
 

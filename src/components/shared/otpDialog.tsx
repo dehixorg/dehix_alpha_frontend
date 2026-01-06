@@ -195,7 +195,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="rounded-lg">
           <DialogHeader>
             <p className="text-sm text-center text-gray-500">
               OTP sent to{' '}

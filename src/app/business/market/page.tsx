@@ -3,18 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { notifyError } from '@/utils/toastMessage';
 import FreelancerList from '@/components/business/market/FreelancerList';
 import { BusinessFilterSheet } from '@/components/business/market/BusinessFilterSheet';
-import Header from '@/components/header/header';
 import BusinessFilterComponent from '@/components/business/market/BusinessFilterComponent';
+import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
 
 export interface FilterState {
   location: string[];
@@ -186,83 +181,76 @@ const Market: React.FC = () => {
   }, []);
 
   return (
-    <section className="flex min-h-screen w-full flex-col">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Market"
-      />
-      <div className="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Market"
-          breadcrumbItems={[
-            { label: 'Dashboard', link: '/business/dashboard' },
-            { label: 'Market', link: '/business/market' },
-          ]}
-        />
-        <div className="flex flex-col sm:gap-4">
-          <div className="p-4 sm:px-6">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex flex-col space-y-2">
-                <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
-                  Business Marketplace
-                </h1>
-                <p className="hidden md:block text-muted-foreground">
-                  Discover and hire vetted freelancers for your projects.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between px-1">
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
-                  {freelancers.length}{' '}
-                  {freelancers.length === 1 ? 'result' : 'results'}
-                </span>
-              </div>
-              {!isLargeScreen && (
-                <div className="ml-auto flex items-center gap-2">
-                  <BusinessFilterSheet
-                    filters={filters}
-                    onFilterChange={handleFilterChange}
-                    activeFilterCount={activeFilterCount}
-                    skills={skills}
-                    domains={domains}
-                    experiences={experiences}
-                    jobTypes={jobTypes}
-                    locations={locations}
-                    onReset={handleReset}
-                  />
-                </div>
-              )}
+    <BusinessDashboardLayout
+      active="Market"
+      activeMenu="Market"
+      breadcrumbItems={[
+        { label: 'Dashboard', link: '/business/dashboard' },
+        { label: 'Market', link: '/business/market' },
+      ]}
+      contentClassName="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14"
+      mainClassName="p-0"
+    >
+      <div className="flex flex-col sm:gap-4">
+        <div className="p-4 sm:px-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col space-y-2">
+              <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
+                Business Marketplace
+              </h1>
+              <p className="hidden md:block text-muted-foreground">
+                Discover and hire vetted freelancers for your projects.
+              </p>
             </div>
-          </div>
-          <div className="flex flex-1 px-4 sm:px-8 pb-8">
-            {isLargeScreen && (
-              <aside className="w-80 flex-shrink-0 pr-6">
-                <BusinessFilterComponent
+
+            <div className="flex items-center justify-between px-1">
+              <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+                {freelancers.length}{' '}
+                {freelancers.length === 1 ? 'result' : 'results'}
+              </span>
+            </div>
+            {!isLargeScreen && (
+              <div className="ml-auto flex items-center gap-2">
+                <BusinessFilterSheet
                   filters={filters}
                   onFilterChange={handleFilterChange}
-                  onReset={handleReset}
                   activeFilterCount={activeFilterCount}
                   skills={skills}
                   domains={domains}
-                  locations={locations}
-                  jobTypes={jobTypes}
                   experiences={experiences}
+                  jobTypes={jobTypes}
+                  locations={locations}
+                  onReset={handleReset}
                 />
-              </aside>
+              </div>
             )}
-            <div className="flex-1 overflow-y-auto">
-              <FreelancerList
-                freelancers={freelancers}
-                isLoading={isDataLoading}
+          </div>
+        </div>
+        <div className="flex flex-1 px-4 sm:px-8 pb-8">
+          {isLargeScreen && (
+            <aside className="w-80 flex-shrink-0 pr-6">
+              <BusinessFilterComponent
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onReset={handleReset}
+                activeFilterCount={activeFilterCount}
+                skills={skills}
+                domains={domains}
+                locations={locations}
+                jobTypes={jobTypes}
+                experiences={experiences}
               />
-            </div>
+            </aside>
+          )}
+          <div className="flex-1 overflow-y-auto">
+            <FreelancerList
+              freelancers={freelancers}
+              isLoading={isDataLoading}
+            />
           </div>
         </div>
       </div>
-    </section>
+    </BusinessDashboardLayout>
   );
 };
 

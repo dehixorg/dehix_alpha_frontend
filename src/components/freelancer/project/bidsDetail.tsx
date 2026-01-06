@@ -1249,13 +1249,57 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
     if (rows.length === 0) {
       return (
-        <div className="py-10">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <PackageOpen className="h-10 w-10 text-muted-foreground" />
-            <div className="text-sm font-medium">No bids in this stage</div>
-            <div className="text-sm text-muted-foreground">
-              When bids move to {status.toLowerCase()}, they will show up here.
+        <div className="p-8 sm:p-10">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-5 opacity-90">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 200 120"
+                className="h-28 w-44"
+                aria-hidden
+              >
+                <rect
+                  x="14"
+                  y="22"
+                  width="172"
+                  height="76"
+                  rx="14"
+                  className="fill-muted"
+                />
+                <rect
+                  x="28"
+                  y="38"
+                  width="84"
+                  height="10"
+                  rx="5"
+                  className="fill-muted-foreground/35"
+                />
+                <rect
+                  x="28"
+                  y="56"
+                  width="132"
+                  height="10"
+                  rx="5"
+                  className="fill-muted-foreground/25"
+                />
+                <rect
+                  x="28"
+                  y="74"
+                  width="110"
+                  height="10"
+                  rx="5"
+                  className="fill-muted-foreground/20"
+                />
+                <circle cx="156" cy="60" r="12" className="fill-primary/25" />
+              </svg>
             </div>
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <PackageOpen className="h-4 w-4 text-muted-foreground" />
+              No bids in this stage
+            </div>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              When bids move to {status.toLowerCase()}, they will show up here.
+            </p>
           </div>
         </div>
       );
@@ -1506,18 +1550,18 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
   return (
     <>
-      <div className="max-w-5xl mx-auto p-4">
+      <div className="max-w-5xl mx-auto px-4 pt-4">
         <Accordion type="single" collapsible>
           {userData!.data.profiles.map((profile: any) => (
             <AccordionItem
               key={profile._id}
               value={profile._id || ''}
               onClick={() => setProfileId(profile._id)}
-              className="mb-3 overflow-hidden rounded-xl border card shadow-sm"
+              className="mb-3 p-2 overflow-hidden rounded-xl border card shadow-sm"
             >
               <AccordionTrigger className="px-5 py-4 hover:no-underline">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
-                  <h4 className="text-base sm:text-lg font-semibold tracking-tight">
+                  <h4 className="text-base sm:text-lg font-semibold tracking-tight text-left">
                     {profile.domain ?? 'N/A'}
                   </h4>
                   <div className="flex items-center gap-3">
@@ -1566,74 +1610,86 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     />
                   </div>
 
-                  <Tabs defaultValue="PENDING" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 rounded-md bg-muted/30 p-1 mb-4">
+                  <Card className="overflow-hidden">
+                    <Tabs defaultValue="PENDING" className="w-full">
+                      <div className="border-b px-4 sm:px-6">
+                        <div className="-mx-1 max-w-full overflow-x-auto no-scrollbar px-1">
+                          <TabsList className="bg-transparent h-12 w-max min-w-full md:w-auto p-0 flex-nowrap">
+                            {BID_STATUSES.map((status) => (
+                              <TabsTrigger
+                                key={status}
+                                value={status}
+                                className="relative h-12 px-4 rounded-none whitespace-nowrap justify-between gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                              >
+                                <span className="truncate">
+                                  {status.charAt(0) +
+                                    status.slice(1).toLowerCase()}
+                                </span>
+                                <Badge
+                                  variant="secondary"
+                                  className="h-5 px-2 text-[10px]"
+                                >
+                                  {bidCounts[status] || 0}
+                                </Badge>
+                              </TabsTrigger>
+                            ))}
+                          </TabsList>
+                        </div>
+                      </div>
+
                       {BID_STATUSES.map((status) => (
-                        <TabsTrigger
+                        <TabsContent
                           key={status}
                           value={status}
-                          className="justify-between gap-2"
+                          className="m-0"
                         >
-                          <span className="truncate">
-                            {status.charAt(0) + status.slice(1).toLowerCase()}
-                          </span>
-                          <Badge
-                            variant="secondary"
-                            className="h-5 px-2 text-[10px]"
+                          <CardContent
+                            className={loadingFreelancerDetails ? 'p-4' : 'p-0'}
                           >
-                            {bidCounts[status] || 0}
-                          </Badge>
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                    {BID_STATUSES.map((status) => (
-                      <TabsContent key={status} value={status} className="mt-4">
-                        {loadingFreelancerDetails ? (
-                          <div className="space-y-4 py-4">
-                            <div className="flex justify-between items-center">
-                              <Skeleton className="h-8 w-48" />
-                              <Skeleton className="h-9 w-32" />
-                            </div>
-                            <div className="space-y-2">
-                              {[...Array(5)].map((_, i) => (
-                                <div
-                                  key={i}
-                                  className="flex items-center justify-between p-4 border rounded-lg"
-                                >
-                                  <div className="flex items-center space-x-4">
-                                    <Skeleton className="h-10 w-10 rounded-full" />
-                                    <div className="space-y-2">
-                                      <Skeleton className="h-4 w-32" />
-                                      <Skeleton className="h-3 w-24" />
+                            {loadingFreelancerDetails ? (
+                              <div className="space-y-4 py-2">
+                                <div className="flex justify-between items-center">
+                                  <Skeleton className="h-8 w-48" />
+                                  <Skeleton className="h-9 w-32" />
+                                </div>
+                                <div className="space-y-2">
+                                  {[...Array(5)].map((_, i) => (
+                                    <div
+                                      key={i}
+                                      className="flex items-center justify-between p-4 border rounded-lg"
+                                    >
+                                      <div className="flex items-center space-x-4">
+                                        <Skeleton className="h-10 w-10 rounded-full" />
+                                        <div className="space-y-2">
+                                          <Skeleton className="h-4 w-32" />
+                                          <Skeleton className="h-3 w-24" />
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center space-x-4">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-4 w-16" />
+                                        <Skeleton className="h-9 w-24" />
+                                      </div>
                                     </div>
-                                  </div>
-                                  <div className="flex items-center space-x-4">
-                                    <Skeleton className="h-4 w-20" />
-                                    <Skeleton className="h-4 w-16" />
-                                    <Skeleton className="h-9 w-24" />
+                                  ))}
+                                </div>
+                                <div className="flex justify-between items-center pt-2">
+                                  <Skeleton className="h-8 w-24" />
+                                  <div className="flex space-x-2">
+                                    <Skeleton className="h-9 w-9 rounded-md" />
+                                    <Skeleton className="h-9 w-9 rounded-md" />
+                                    <Skeleton className="h-9 w-9 rounded-md" />
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                            <div className="flex justify-between items-center pt-2">
-                              <Skeleton className="h-8 w-24" />
-                              <div className="flex space-x-2">
-                                <Skeleton className="h-9 w-9 rounded-md" />
-                                <Skeleton className="h-9 w-9 rounded-md" />
-                                <Skeleton className="h-9 w-9 rounded-md" />
                               </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <Card className="border border-border/60 rounded-2xl shadow-sm bg-card/95">
-                            <CardContent className="p-0">
+                            ) : (
                               <BidsTable status={status as BidStatus} />
-                            </CardContent>
-                          </Card>
-                        )}
-                      </TabsContent>
-                    ))}
-                  </Tabs>
+                            )}
+                          </CardContent>
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  </Card>
                 </div>
               </AccordionContent>
             </AccordionItem>

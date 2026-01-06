@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { User, Tags, Upload, Save } from 'lucide-react';
+import {
+  User,
+  Tags,
+  Upload,
+  Save,
+  Mail,
+  Phone,
+  Globe,
+  AtSign,
+} from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,7 +32,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { Separator } from '@/components/ui/separator';
 import { Type } from '@/utils/enum';
 import { InterviewPermission, StatusEnum } from '@/utils/freelancer/enum';
@@ -32,6 +45,7 @@ import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
     message: 'First Name must be at least 2 characters.',
@@ -810,7 +824,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-6 bg-muted-foreground/20 dark:bg-muted/20">
+    <Card className="p-6">
       {/* Page Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-xl md:text-2xl font-semibold tracking-tight flex items-center gap-2">
@@ -836,7 +850,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your first name" {...field} />
+                    <InputGroup>
+                      <InputGroupText>
+                        <User className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your first name"
+                        {...field}
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -849,7 +871,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your last name" {...field} />
+                    <InputGroup>
+                      <InputGroupText>
+                        <User className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your last name"
+                        {...field}
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -862,11 +892,16 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Enter your username"
-                      {...field}
-                      readOnly
-                    />
+                    <InputGroup>
+                      <InputGroupText>
+                        <AtSign className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your username"
+                        {...field}
+                        readOnly
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormMessage />
                   <FormDescription>Non editable field</FormDescription>
@@ -880,7 +915,16 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your email" {...field} readOnly />
+                    <InputGroup>
+                      <InputGroupText>
+                        <Mail className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your email"
+                        {...field}
+                        readOnly
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormDescription>Non editable field</FormDescription>
                   <FormMessage />
@@ -909,7 +953,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="+91" {...field} readOnly />
+                    <InputGroup>
+                      <InputGroupText>
+                        <Phone className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput placeholder="+91" {...field} readOnly />
+                    </InputGroup>
                   </FormControl>
                   <FormMessage />
                   <FormDescription>Non editable field</FormDescription>
@@ -923,11 +972,16 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Personal Website URL</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Enter your LinkedIn URL"
-                      type="url"
-                      {...field}
-                    />
+                    <InputGroup>
+                      <InputGroupText>
+                        <Globe className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your Personal Website URL"
+                        type="url"
+                        {...field}
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormDescription>
                     Enter your Personal Website URL

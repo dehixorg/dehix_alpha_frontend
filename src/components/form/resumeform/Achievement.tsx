@@ -3,8 +3,12 @@ import { Trophy, X } from 'lucide-react';
 
 import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import {
   Card,
   CardContent,
@@ -85,15 +89,20 @@ export const AchievementInfo: React.FC<AchievementInfoProps> = ({
                 <Label htmlFor={`achievementName-${index}`}>
                   Achievement Description
                 </Label>
-                <Input
-                  id={`achievementName-${index}`}
-                  type="text"
-                  value={achievement.achievementName}
-                  onChange={(e) =>
-                    handleAchievementChange(index, e.target.value)
-                  }
-                  placeholder="e.g., Increased sales by 20%, Led a team of 5, etc."
-                />
+                <InputGroup>
+                  <InputGroupText>
+                    <Trophy className="h-4 w-4" />
+                  </InputGroupText>
+                  <InputGroupInput
+                    id={`achievementName-${index}`}
+                    type="text"
+                    value={achievement.achievementName}
+                    onChange={(e) =>
+                      handleAchievementChange(index, e.target.value)
+                    }
+                    placeholder="e.g., Increased sales by 20%, Led a team of 5, etc."
+                  />
+                </InputGroup>
               </div>
             </CardContent>
           </Card>

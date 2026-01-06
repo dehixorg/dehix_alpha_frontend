@@ -2,7 +2,17 @@ import React, { useRef, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, ArrowRight, ArrowLeft, Briefcase } from 'lucide-react';
+import {
+  Plus,
+  ArrowRight,
+  ArrowLeft,
+  Briefcase,
+  Building2,
+  Github,
+  MessageSquare,
+  Phone,
+  User,
+} from 'lucide-react';
 
 import DraftDialog from '../shared/DraftDialog';
 
@@ -26,7 +36,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import useDraft from '@/hooks/useDraft';
@@ -290,7 +305,15 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                       <FormItem>
                         <FormLabel>Company</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter company name" {...field} />
+                          <InputGroup>
+                            <InputGroupText>
+                              <Building2 className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter company name"
+                              {...field}
+                            />
+                          </InputGroup>
                         </FormControl>
                         <FormDescription>
                           Enter the company name
@@ -306,7 +329,15 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                       <FormItem>
                         <FormLabel>Job Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter job title" {...field} />
+                          <InputGroup>
+                            <InputGroupText>
+                              <Briefcase className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter job title"
+                              {...field}
+                            />
+                          </InputGroup>
                         </FormControl>
                         <FormDescription>Enter the job title</FormDescription>
                         <FormMessage />
@@ -321,8 +352,9 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                         <FormItem>
                           <FormLabel>Work Description</FormLabel>
                           <FormControl>
-                            <Input
+                            <Textarea
                               placeholder="Enter work description"
+                              className="min-h-[110px]"
                               {...field}
                             />
                           </FormControl>
@@ -377,10 +409,15 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                       <FormItem>
                         <FormLabel>Reference Person Name</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Enter reference person name"
-                            {...field}
-                          />
+                          <InputGroup>
+                            <InputGroupText>
+                              <User className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter reference person name"
+                              {...field}
+                            />
+                          </InputGroup>
                         </FormControl>
                         <FormDescription>
                           Enter the reference person&apos;s name
@@ -396,10 +433,15 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                       <FormItem>
                         <FormLabel>Reference Person Contact</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Enter reference person contact"
-                            {...field}
-                          />
+                          <InputGroup>
+                            <InputGroupText>
+                              <Phone className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter reference person contact"
+                              {...field}
+                            />
+                          </InputGroup>
                         </FormControl>
                         <FormDescription>
                           Enter the reference person&apos;s contact
@@ -416,10 +458,15 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                         <FormItem>
                           <FormLabel>GitHub Repo Link</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Enter GitHub repository link"
-                              {...field}
-                            />
+                            <InputGroup>
+                              <InputGroupText>
+                                <Github className="h-4 w-4" />
+                              </InputGroupText>
+                              <InputGroupInput
+                                placeholder="Enter GitHub repository link"
+                                {...field}
+                              />
+                            </InputGroup>
                           </FormControl>
                           <FormDescription>
                             Enter the GitHub repository link (optional)
@@ -437,10 +484,15 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                         <FormItem>
                           <FormLabel>Comments</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Enter any comments"
-                              {...field}
-                            />
+                            <InputGroup>
+                              <InputGroupText>
+                                <MessageSquare className="h-4 w-4" />
+                              </InputGroupText>
+                              <InputGroupInput
+                                placeholder="Enter any comments"
+                                {...field}
+                              />
+                            </InputGroup>
                           </FormControl>
                           <FormDescription>
                             Enter any comments (optional)
