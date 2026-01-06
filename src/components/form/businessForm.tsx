@@ -9,7 +9,6 @@ import {
   User,
   Mail,
   Phone,
-  Users,
   Briefcase,
   Linkedin,
   Globe,
@@ -34,6 +33,14 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Type } from '@/utils/enum';
 import { setUser } from '@/lib/userSlice';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -349,15 +356,23 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <InputGroup>
-                        <InputGroupText>
-                          <Users className="h-4 w-4" />
-                        </InputGroupText>
-                        <InputGroupInput
-                          placeholder="Enter your company size"
-                          {...field}
-                        />
-                      </InputGroup>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? ''}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="0-20">0-20</SelectItem>
+                            <SelectItem value="20-50">20-50</SelectItem>
+                            <SelectItem value="50-100">50-100</SelectItem>
+                            <SelectItem value="100-500">100-500</SelectItem>
+                            <SelectItem value="500+">500 +</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
