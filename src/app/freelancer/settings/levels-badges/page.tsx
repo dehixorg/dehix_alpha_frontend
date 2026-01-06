@@ -1,21 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
-  Trophy,
+  Award,
   Check,
   CheckCircle,
+  Crown,
+  Gift,
+  Info,
   Loader2,
   Lock,
-  Crown,
   Medal,
+  Trophy,
 } from 'lucide-react';
 
+import { axiosInstance } from '@/lib/axiosinstance';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/shared/EmptyState';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -23,17 +33,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
-import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
-import EmptyState from '@/components/shared/EmptyState';
 
 // Define the base interface for gamification items
 interface GamificationItemBase {
@@ -79,13 +82,14 @@ interface LevelItem extends GamificationItemBase {
 }
 
 // Interface for badge items
-export interface BadgeItem extends GamificationItemBase {
+interface BadgeItem extends GamificationItemBase {
   badge_id: string;
   type: 'BADGE';
   earnedAt?: string;
   isActive?: boolean;
   baseReward?: number;
   priority?: number;
+  imageUrl?: string;
 }
 
 // Badge eligibility response
@@ -96,32 +100,18 @@ interface BadgeEligibilityResponse {
   missingCriteria?: Record<string, any>;
 }
 
-// Status badge interface
-interface StatusBadge {
-  badge_id?: string;
-  name?: string;
-  priority?: number;
-  imageUrl?: string;
-  earnedAt?: string | Date;
-  isActive?: boolean;
-}
-
 // Response type for gamification status
 interface GamificationStatusResponse {
   data?: {
     currentLevel?: LevelItem | null;
     badges?: BadgeItem[];
+    progress?: {
+      currentPoints: number;
+      requiredPoints: number;
+    };
   };
   currentLevel?: LevelItem | null;
   badges?: BadgeItem[];
-}
-
-// Response type for gamification eligible
-interface GamificationEligibleResponse {
-  data?: {
-    badges?: BadgeItem[];
-    levels?: LevelItem[];
-  };
 }
 
 // Response type for gamification info
@@ -131,138 +121,133 @@ interface GamificationInfoResponse {
 }
 
 // Fetch public gamification info (badges and levels)
-const fetchGamificationInfo = async (): Promise<GamificationInfoResponse> => {
-  try {
-    const response = await axiosInstance.get('/gamification/info');
-    const data = response?.data;
-    return {
-      badges: Array.isArray(data?.badges) ? data.badges : [],
-      levels: Array.isArray(data?.levels) ? data.levels : [],
-    };
-  } catch (error) {
-    console.error('Error in fetchGamificationInfo:', error);
-    throw error;
-  }
-};
+async function fetchGamificationInfo(): Promise<GamificationInfoResponse> {
+  const response = await axiosInstance.get('/gamification/info');
+  return response.data;
+}
 
-const fetchStatus = async (): Promise<GamificationStatusResponse> => {
+// Fetch user's gamification status
+async function fetchStatus(): Promise<GamificationStatusResponse> {
   try {
     const response = await axiosInstance.get('/freelancer/gamification/status');
-    const data = response?.data;
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching gamification status:', error);
+    return { currentLevel: null, badges: [] };
+  }
+}
 
-    // Handle both response formats for backward compatibility
-    const result = data.data || data;
-    return result;
+// Reward payload interface
+interface RewardPayload {
+  amount: number;
+}
+
+// Claim a badge response
+interface ClaimBadgeResponse {
+  success: boolean;
+  message?: string;
+  reward?: RewardPayload;
+}
+
+async function claimBadge(badgeId: string): Promise<ClaimBadgeResponse> {
+  try {
+    const response = await axiosInstance.post<ClaimBadgeResponse>(
+      `/freelancer/gamification/claim-badge`,
+      { badgeId, applyMultiplier: false },
+    );
+
+    if (response.data.reward) {
+      response.data.reward = {
+        amount: response.data.reward.amount,
+      };
+    }
+
+    return response.data;
   } catch (error: any) {
-    console.error('Error in fetchStatus:', error);
     if (error?.response?.status === 401) {
-      throw new Error('Please log in to view gamification data');
+      throw new Error('Please log in to claim badge');
     }
     throw new Error(
       error?.response?.data?.message ||
         error?.message ||
-        'Failed to fetch status',
+        'Failed to claim badge. Please try again.',
     );
   }
-};
+}
 
-const fetchEligible = async (): Promise<GamificationEligibleResponse> => {
-  try {
-    const response = await axiosInstance.get(
-      '/freelancer/gamification/eligible',
-    );
-    const data = response?.data;
-
-    // Handle the response data
-    const responseData = data.data || data;
-
-    // Process badges if they exist in the response
-    const badges = Array.isArray(responseData.badges)
-      ? responseData.badges.map((badge: any) => ({
-          ...badge,
-          badge_id: badge._id,
-          type: 'BADGE' as const,
-        }))
-      : [];
-
-    // Process levels if they exist in the response
-    const levels = Array.isArray(responseData.levels)
-      ? responseData.levels.map((level: any) => ({
-          ...level,
-          level_id: level._id,
-          type: 'LEVEL' as const,
-        }))
-      : [];
-
-    return {
-      data: {
-        badges,
-        levels,
-      },
-    };
-  } catch (error: any) {
-    console.error('Error in fetchEligible:', error);
-    if (error?.response?.status === 401) {
-      throw new Error('Please log in to view eligible badges');
-    }
-    // Return a properly structured response even in case of error
-    return { data: { badges: [], levels: [] } };
-  }
-};
-
-// Claim a badge
-const claimBadge = async (
-  badgeId: string,
-): Promise<{ success: boolean; message?: string }> => {
-  try {
-    await axiosInstance.post('/freelancer/gamification/claim-badge', {
-      badgeId,
-    });
-    return { success: true, message: 'Badge claimed successfully!' };
-  } catch (error: any) {
-    console.error('Error claiming badge:', error);
-    if (error?.response?.status === 401) {
-      throw new Error('Please log in to claim badges');
-    }
-    throw new Error(
-      error?.response?.data?.message ||
-        error?.message ||
-        'Failed to claim badge',
-    );
-  }
-};
+// Calculate reward based on base amount and multiplier
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const calculateReward = (baseAmount: number, multiplier: number): number =>
+  baseAmount * multiplier;
 
 // Check badge eligibility
-const checkBadgeEligibility = async (
+async function checkBadgeEligibility(
   badgeId: string,
-): Promise<BadgeEligibilityResponse> => {
+): Promise<BadgeEligibilityResponse> {
   try {
     const response = await axiosInstance.post(
-      '/freelancer/gamification/check-badge-eligibility',
+      `/freelancer/gamification/check-badge-eligibility`,
       { badgeId },
     );
-    const data = response?.data?.data || response?.data;
-    return data;
+    return response.data.data;
   } catch (error: any) {
-    console.error('Error checking badge eligibility:', error);
-    if (error?.response?.status === 401) {
-      throw new Error('Please log in to check badge eligibility');
+    if (error.response?.status === 400) {
+      return {
+        eligible: false,
+        badge: error.response.data.badge,
+        reason: error.response.data.message,
+        missingCriteria: error.response.data.missingCriteria,
+      };
     }
-    throw new Error(
-      error?.response?.data?.message ||
-        error?.message ||
-        'Failed to check badge eligibility',
-    );
+    throw error;
   }
-};
+}
 
-// Level up to next level
-const levelUp = async (): Promise<{ success: boolean; message?: string }> => {
+// Interface for level up response
+interface LevelUpResponse {
+  success: boolean;
+  message?: string;
+  newLevel?: LevelItem;
+  reward?: {
+    amount: number;
+    multiplier: number;
+    total: number;
+  };
+  newBadgesEarned?: Array<{
+    _id: string;
+    name: string;
+    description: string;
+    baseReward: number;
+    reward?: {
+      amount: number; // Fixed amount for badge rewards
+    };
+  }>;
+}
+
+// Level up to next level with proper reward handling
+async function levelUp(): Promise<LevelUpResponse> {
   try {
-    const response = await axiosInstance.post(
+    // Tell the backend to apply multiplier only to level rewards, not badge rewards
+    const response = await axiosInstance.post<LevelUpResponse>(
       '/freelancer/gamification/level-up',
+      {
+        applyMultiplierToBadge: false,
+        applyMultiplierToLevel: true,
+      },
     );
-    return { success: true, ...(response?.data || {}) };
+
+    // Process the response to ensure badge rewards are fixed amounts
+    const result = response.data;
+
+    // Ensure badge rewards don't have multipliers applied
+    if (result.newBadgesEarned) {
+      result.newBadgesEarned = result.newBadgesEarned.map((badge) => ({
+        ...badge,
+        reward: badge.reward ? { amount: badge.reward.amount } : undefined,
+      }));
+    }
+
+    return result;
   } catch (error: any) {
     console.error('Level up error:', error);
     if (error?.response?.status === 401) {
@@ -274,13 +259,15 @@ const levelUp = async (): Promise<{ success: boolean; message?: string }> => {
         'An error occurred while leveling up',
     );
   }
-};
+}
 
 export default function LevelsAndBadgesPage() {
   // State for toggling eligible badges
   const [showEligibleOnly, setShowEligibleOnly] = useState(false);
-
-  // State for badge eligibility checks
+  const [currentLevel, setCurrentLevel] = useState<LevelItem | null>(null);
+  const [allLevels, setAllLevels] = useState<LevelItem[]>([]);
+  const [allBadgesFromInfo, setAllBadgesFromInfo] = useState<BadgeItem[]>([]);
+  const [earnedBadges, setEarnedBadges] = useState<BadgeItem[]>([]);
   const [eligibilityChecks, setEligibilityChecks] = useState<
     Record<string, BadgeEligibilityResponse>
   >({});
@@ -288,48 +275,135 @@ export default function LevelsAndBadgesPage() {
     Record<string, boolean>
   >({});
 
-  const getStepTierMeta = (levelIndex: number) => {
-    const stageNames = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
-    const stageIndex = Math.floor(levelIndex / 3);
-    const stage = stageNames[stageIndex] || `Stage ${stageIndex + 1}`;
+  // Memoize the calculateDisplayLevel function
+  const calculateDisplayLevel = useCallback((priority: number): number => {
+    // If priority is 0, it's level 1
+    if (priority === 0) return 1;
+    // Otherwise, divide by 10 to get the level number
+    return Math.floor(priority / 10) || 1;
+  }, []);
 
-    const tierIndex = levelIndex % 3;
-    if (tierIndex === 0)
-      return {
-        title: `${stage} Bronze`,
-        short: `${stage} Bronze`,
-        Icon: Medal,
-        badgeClass:
-          'bg-gradient-to-r from-orange-400 to-orange-600 dark:text-muted text-white/80',
-      };
-    if (tierIndex === 1)
-      return {
-        title: `${stage} Silver`,
-        short: `${stage} Silver`,
-        Icon: Trophy,
-        badgeClass:
-          'bg-gradient-to-r from-gray-300 to-gray-400 dark:text-muted text-white/80',
-      };
-    return {
-      title: `${stage} Gold`,
-      short: `${stage} Gold`,
-      Icon: Crown,
-      badgeClass:
-        'bg-gradient-to-r from-yellow-400 to-amber-500 dark:text-muted text-white/80',
-    };
-  };
-
-  // Level up mutation with refetch
-  const levelUpMutation = useMutation({
-    mutationFn: levelUp,
-    onSuccess: (data) => {
+  // Claim badge mutation
+  const claimBadgeMutation = useMutation<ClaimBadgeResponse, Error, string>({
+    mutationFn: claimBadge,
+    onSuccess: (data, badgeId) => {
+      // Refresh data
       refetchStatus();
-      refetchEligible();
+
+      // Clear eligibility check for this badge
+      setEligibilityChecks((prev) => {
+        const updated = { ...prev };
+        delete updated[badgeId];
+        return updated;
+      });
+
       toast({
-        title: 'Level Up Successful!',
-        description: data.message || 'You have successfully leveled up!',
+        title: 'Badge Claimed!',
+        description: data.message || 'You have successfully claimed the badge!',
         variant: 'default',
       });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description:
+          error.message || 'Failed to claim badge. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Helper function to update connects with amount from backend
+  const updateConnects = (amount: number) => {
+    const currentConnects = parseInt(
+      localStorage.getItem('DHX_CONNECTS') || '0',
+      10,
+    );
+    const newConnects = currentConnects + amount;
+    localStorage.setItem('DHX_CONNECTS', newConnects.toString());
+    window.dispatchEvent(new Event('connectsUpdated'));
+  };
+
+  // Handle claiming a badge - uses fixed reward amount without multipliers
+  const handleClaimBadge = async (badgeId: string) => {
+    if (!badgeId) return;
+
+    try {
+      const result: ClaimBadgeResponse =
+        await claimBadgeMutation.mutateAsync(badgeId);
+
+      // If badge has a reward, update connects with the fixed amount
+      if (result.reward?.amount) {
+        updateConnects(result.reward.amount);
+
+        // Show reward notification (no multiplier info for badge rewards)
+        toast({
+          title: 'Badge Claimed!',
+          description: `You've received ${result.reward.amount} Connects for claiming this badge!`,
+          variant: 'default',
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error claiming badge:', error);
+      // Error is already handled by the mutation
+    }
+  };
+
+  // Level up mutation
+  const levelUpMutation = useMutation<LevelUpResponse, Error>({
+    mutationFn: levelUp,
+    onSuccess: async (data) => {
+      // Refresh data
+      await refetchStatus();
+
+      // Get the new level after refresh
+      const newLevel = currentLevel
+        ? allLevels.find(
+            (l) => (l.priority || 0) > (currentLevel.priority || 0),
+          )
+        : allLevels[0];
+
+      // Handle level up reward if any
+      if (data.reward) {
+        const { amount, multiplier, total } = data.reward;
+        updateConnects(total);
+
+        // Show success message with reward info (multiplier is applied for level up)
+        const multiplierText =
+          multiplier > 1 ? ` (${multiplier}x level multiplier applied)` : '';
+        toast({
+          title: 'Level Up Successful!',
+          description: `You've received ${total} Connects for leveling up!${multiplierText}`,
+          variant: 'default',
+        });
+      } else {
+        // Fallback message if no reward data
+        toast({
+          title: 'Level Up Successful!',
+          description: data.message || 'You have successfully leveled up!',
+          variant: 'default',
+        });
+      }
+
+      // Check for newly earned badges after level up
+      if (data.newBadgesEarned?.length) {
+        data.newBadgesEarned.forEach((badge) => {
+          if (badge.reward) {
+            // Badge rewards are fixed amounts (no multiplier)
+            const { amount } = badge.reward;
+            updateConnects(amount);
+
+            // Show reward notification (no multiplier for badge rewards)
+            toast({
+              title: 'New Badge Earned!',
+              description: `You've earned the ${badge.name} badge and received ${amount} Connects!`,
+              variant: 'default',
+            });
+          }
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -340,198 +414,269 @@ export default function LevelsAndBadgesPage() {
     },
   });
 
-  // Handler for checking badge eligibility
-  const handleCheckEligibility = async (badgeId: string) => {
-    setCheckingEligibility((prev) => ({ ...prev, [badgeId]: true }));
-    try {
-      const result = await checkBadgeEligibility(badgeId);
-      setEligibilityChecks((prev) => ({ ...prev, [badgeId]: result }));
+  // Check level requirements
+  const checkLevelRequirements = (
+    level: LevelItem,
+  ): { canLevelUp: boolean; missingRequirements: string[] } => {
+    const missing: string[] = [];
+    const criteria = level.criteria || {};
 
-      if (result.eligible) {
-        toast({
-          title: 'Eligible!',
-          description: `You are eligible for this badge! Reward: ${result.badge.baseReward || 0} Connects`,
-          variant: 'default',
-        });
-      } else {
-        const reasons = [];
-        if (result.missingCriteria) {
-          Object.entries(result.missingCriteria).forEach(([key, value]) => {
-            if (
-              typeof value === 'object' &&
-              value !== null &&
-              'required' in value
-            ) {
-              reasons.push(
-                `${key}: ${(value as any).current}/${(value as any).required}`,
-              );
-            } else {
-              reasons.push(key);
-            }
-          });
-        }
-        toast({
-          title: 'Not Eligible',
-          description:
-            result.reason || 'You do not meet the criteria for this badge.',
-          variant: 'destructive',
-        });
-      }
-    } catch (error: any) {
+    // Check all criteria and collect missing requirements
+    if (criteria.profileComplete) {
+      // if (!profileIsComplete) missing.push('Complete your profile');
+    }
+    if (criteria.minProjects) {
+      // if (userProjects.length < criteria.minProjects) missing.push(`Complete ${criteria.minProjects} projects`);
+    }
+    // Add other criteria checks as needed
+
+    return {
+      canLevelUp: missing.length === 0,
+      missingRequirements: missing,
+    };
+  };
+
+  // Handle level up with requirement check
+  const handleLevelUp = async (): Promise<void> => {
+    if (!currentLevel) return;
+
+    const nextLevel = allLevels.find(
+      (l: LevelItem) => (l.priority || 0) === (currentLevel.priority || 0) + 1,
+    );
+
+    if (!nextLevel) {
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to check eligibility',
+        title: 'Maximum Level Reached',
+        description: 'You have reached the maximum level!',
+        variant: 'default',
+      });
+      return;
+    }
+
+    const { canLevelUp, missingRequirements } =
+      checkLevelRequirements(nextLevel);
+
+    if (!canLevelUp) {
+      toast({
+        title: 'Requirements Not Met',
+        description:
+          'You need to complete the following requirements to level up: ' +
+          missingRequirements.join(', '),
         variant: 'destructive',
       });
-    } finally {
-      setCheckingEligibility((prev) => ({ ...prev, [badgeId]: false }));
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Are you sure you want to level up? This action cannot be undone.',
+    );
+    if (!confirmed) return;
+
+    try {
+      await levelUpMutation.mutateAsync();
+    } catch (error) {
+      console.error('Error leveling up:', error);
+      // Error is already handled by the mutation
     }
   };
 
-  // Mutation for claiming a badge with refetch
-  const claimBadgeMutation = useMutation({
-    mutationFn: claimBadge,
-    onSuccess: (data, badgeId) => {
-      refetchStatus();
-      refetchEligible();
-      // Clear eligibility check for this badge
-      setEligibilityChecks((prev) => {
-        const updated = { ...prev };
-        delete updated[badgeId];
-        return updated;
-      });
+  // Handle checking eligibility for a badge
+  const handleCheckEligibility = async (badgeId: string): Promise<boolean> => {
+    if (!badgeId) return false;
+
+    setCheckingEligibility((prev) => ({
+      ...prev,
+      [badgeId]: true,
+    }));
+
+    try {
+      const result = await checkBadgeEligibility(badgeId);
+      setEligibilityChecks((prev) => ({
+        ...prev,
+        [badgeId]: result,
+      }));
+
+      if (result.eligible) {
+        const reward = result.badge?.baseReward || 0;
+        const badgeName = result.badge?.name || 'this badge';
+
+        toast({
+          title: 'Eligible!',
+          description: `You are eligible for the ${badgeName}!${reward > 0 ? ` Reward: ${reward} Connects` : ''}`,
+          variant: 'default',
+          duration: 5000,
+        });
+      } else {
+        const reasons: string[] = [];
+        const missingCriteria = result.missingCriteria || {};
+
+        Object.entries(missingCriteria).forEach(([key, value]) => {
+          if (value && typeof value === 'object' && 'required' in value) {
+            const typedValue = value as { current?: number; required: number };
+            const current = typedValue.current || 0;
+            reasons.push(
+              `${key
+                .replace(/([A-Z])/g, ' ')
+                .replace(/^./, (str) => str.toUpperCase())
+                .trim()}: ${current}/${typedValue.required}`,
+            );
+          } else if (typeof value === 'string') {
+            reasons.push(value);
+          } else {
+            reasons.push(
+              key
+                .replace(/([A-Z])/g, ' ')
+                .replace(/^./, (str) => str.toUpperCase())
+                .trim(),
+            );
+          }
+        });
+
+        toast({
+          title: 'Not Eligible',
+          description:
+            (result.reason || 'You do not meet the criteria for this badge.') +
+            (reasons.length > 0
+              ? ` Missing requirements: ${reasons.join(', ')}`
+              : ''),
+          variant: 'destructive',
+          duration: 5000, // Show for longer since there's more content
+        });
+      }
+
+      return result.eligible;
+    } catch (error) {
+      console.error('Error checking eligibility:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to check eligibility. Please try again.';
       toast({
-        title: 'Badge Claimed!',
-        description:
-          data.message || 'You have successfully claimed your badge!',
-        variant: 'default',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Claim Failed',
-        description:
-          error.message || 'Failed to claim badge. Please try again.',
+        title: 'Error',
+        description: errorMessage,
         variant: 'destructive',
       });
-    },
-  });
+      return false;
+    } finally {
+      setCheckingEligibility((prev) => ({
+        ...prev,
+        [badgeId]: false,
+      }));
+    }
+  };
 
   // Fetch public gamification info (no auth required)
   const { data: gamificationInfo } = useQuery<GamificationInfoResponse>({
     queryKey: ['gamification-info'],
     queryFn: fetchGamificationInfo,
-    retry: 1, // Only retry once on failure
   });
 
+  // Fetch user's gamification status
   const {
-    data: status,
-    isLoading: loadingStatus,
-    error: statusError,
+    data: statusData,
+    isLoading: statusLoading,
     refetch: refetchStatus,
-  } = useQuery({
+  } = useQuery<GamificationStatusResponse>({
     queryKey: ['gamification-status'],
     queryFn: fetchStatus,
-    retry: 1, // Only retry once on failure
   });
 
-  const {
-    data: eligible,
-    isLoading: loadingEligible,
-    error: eligibleError,
-    refetch: refetchEligible,
-  } = useQuery({
-    queryKey: ['gamification-eligible'],
-    queryFn: fetchEligible,
-    retry: 1, // Only retry once on failure
-  });
+  // Calculate progress to next level
+  const calculateProgress = (): { progress: number; nextLevel?: LevelItem } => {
+    if (!currentLevel || !statusData?.data?.progress) return { progress: 0 };
 
-  // Handle authentication errors
-  const authError =
-    statusError?.message?.includes('Please log in') ||
-    eligibleError?.message?.includes('Please log in');
-
-  useEffect(() => {
-    if (authError) return;
-    if (!statusError && !eligibleError) return;
-
-    toast({
-      variant: 'destructive',
-      title: "Couldn't load gamification data",
-      description: String(statusError?.message || eligibleError?.message || ''),
-    });
-  }, [authError, statusError, eligibleError]);
-
-  if (authError) {
-    return (
-      <div className="flex flex-col h-screen">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="settings"
-        />
-        <div className="flex flex-1 overflow-hidden">
-          <SidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="levels-badges"
-          />
-          <main className="flex-1 overflow-y-auto p-6">
-            <Alert variant="destructive">
-              <AlertTitle>Authentication required</AlertTitle>
-              <AlertDescription>
-                You need to be logged in to view this page. Please{' '}
-                <a
-                  href="/login"
-                  className="font-medium underline underline-offset-4"
-                >
-                  sign in
-                </a>
-                .
-              </AlertDescription>
-            </Alert>
-          </main>
-        </div>
-      </div>
+    const nextLevel = allLevels.find(
+      (l) => (l.priority || 0) > (currentLevel.priority || 0),
     );
-  }
 
-  // Show loading state
-  if (loadingStatus || loadingEligible) {
+    if (!nextLevel) return { progress: 100, nextLevel };
+
+    // Get progress data from the backend if available
+    const progressData = statusData.data.progress;
+    const currentPoints = progressData?.currentPoints || 0;
+    const requiredPoints = progressData?.requiredPoints || 100; // Default to 100 if not provided
+
+    const progress = Math.min(
+      Math.round((currentPoints / requiredPoints) * 100),
+      100,
+    );
+
+    return { progress, nextLevel };
+  };
+
+  // Set current level and earned badges when status data changes
+  useEffect(() => {
+    if (statusData?.data && allBadgesFromInfo.length > 0) {
+      setCurrentLevel(statusData.data.currentLevel || null);
+      const enrichedEarnedBadges = (statusData.data.badges || [])
+        .filter((b) => b.badge_id || b._id)
+        .map((earnedBadge) => {
+          const badgeInfo = allBadgesFromInfo.find(
+            (b) => b.badge_id === (earnedBadge.badge_id || earnedBadge._id),
+          );
+          return {
+            ...earnedBadge,
+            ...badgeInfo,
+            earnedAt: earnedBadge.earnedAt || new Date().toISOString(),
+          };
+        });
+      setEarnedBadges(enrichedEarnedBadges);
+    }
+  }, [statusData, allBadgesFromInfo]);
+
+  // Set all levels and badges when gamification info changes
+  useEffect(() => {
+    if (gamificationInfo) {
+      setAllLevels(gamificationInfo.levels || []);
+      setAllBadgesFromInfo(gamificationInfo.badges || []);
+    }
+  }, [gamificationInfo]);
+
+  const eligibleLoading = Object.values(checkingEligibility).some(Boolean);
+
+  // Loading state
+  if (statusLoading || eligibleLoading) {
     return (
-      <div className="min-h-screen">
-        <SidebarMenu
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          active="Levels & Badges"
-          isKycCheck={true}
-        />
+      <div className="flex min-h-screen w-full bg-background">
+        {/* Sidebar */}
+        <div className="hidden md:flex md:flex-shrink-0">
+          <div className="flex flex-col w-64 border-r border-gray-200 dark:border-gray-800">
+            <SidebarMenu
+              menuItemsTop={menuItemsTop}
+              menuItemsBottom={menuItemsBottom}
+              active="settings"
+            />
+          </div>
+        </div>
 
-        <div className="sm:ml-14">
+        {/* Main content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header */}
           <Header
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             activeMenu="settings"
-            breadcrumbItems={[
-              { label: 'Settings', link: '#' },
-              { label: 'Levels & Badges', link: '#' },
-            ]}
           />
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="mx-auto w-full max-w-5xl">
+
+          {/* Page content */}
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-7xl mx-auto">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <Skeleton className="h-7 w-52" />
-                    <Skeleton className="h-4 w-72" />
-                  </div>
-                  <Skeleton className="h-9 w-32" />
-                </div>
-                <Skeleton className="h-28 w-full" />
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <Skeleton className="h-36 w-full" />
-                  <Skeleton className="h-36 w-full" />
-                  <Skeleton className="h-36 w-full" />
+                <Skeleton className="h-10 w-64" />
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {[...Array(3)].map((_, i) => (
+                    <Card key={i}>
+                      <CardHeader>
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2 mt-2" />
+                      </CardHeader>
+                      <CardContent>
+                        <Skeleton className="h-4 w-full mt-2" />
+                        <Skeleton className="h-4 w-5/6 mt-2" />
+                        <Skeleton className="h-4 w-4/6 mt-2" />
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </div>
             </div>
@@ -541,485 +686,324 @@ export default function LevelsAndBadgesPage() {
     );
   }
 
-  // Handle both response formats
-  const statusData = status?.data || status || {};
-
-  // Get current level from the response
-  const currentLevel = statusData.currentLevel || null;
-
-  // Get earned badges from the response
-  const earnedBadges = Array.isArray(statusData.badges)
-    ? statusData.badges
-    : [];
-  const earnedBadgeIds = new Set(
-    earnedBadges.map((badge: BadgeItem) => badge.badge_id || badge._id || ''),
-  );
-
-  // Extract badges and levels from the gamification info
-  const publicBadges = Array.isArray(gamificationInfo?.badges)
-    ? gamificationInfo.badges
-    : [];
-  const publicLevels = Array.isArray(gamificationInfo?.levels)
-    ? gamificationInfo.levels
-    : [];
-
-  // Extract badges and levels from the response
-  let eligibleBadges: BadgeItem[] = [];
-  let eligibleLevels: LevelItem[] = [];
-
-  if (Array.isArray(eligible)) {
-    // Handle case where eligible is an array of GamificationItems
-    eligibleBadges = eligible;
-  } else if (eligible?.data) {
-    // Handle case where eligible has a data property with badges and levels
-    eligibleBadges = Array.isArray(eligible.data.badges)
-      ? eligible.data.badges
-      : [];
-    eligibleLevels = Array.isArray(eligible.data.levels)
-      ? eligible.data.levels
-      : [];
-  }
-
-  // Combine public badges with eligible badges, ensuring required fields
-  const allUniqueBadges = [...publicBadges, ...eligibleBadges]
-    .filter(Boolean)
-    .map((badge) => ({
-      ...badge,
-      _id: badge._id || badge.badge_id || '',
-      badge_id: badge.badge_id || badge._id || '',
-      type: 'BADGE' as const,
-      isActive: true,
-    }))
-    .filter(
-      (badge, index, self) =>
-        index ===
-        self.findIndex(
-          (b) =>
-            (b._id && b._id === badge._id) ||
-            (b.badge_id && b.badge_id === badge.badge_id),
-        ),
-    );
-
-  // Process levels - ensure required fields
-  const allUniqueLevels = [...publicLevels, ...eligibleLevels]
-    .filter((level): level is LevelItem =>
-      Boolean(level && (level.level_id || level._id)),
-    )
-    .map((level) => ({
-      ...level,
-      _id: level._id || level.level_id || '',
-      level_id: level.level_id || level._id || '',
-      type: 'LEVEL' as const,
-      priority: level.priority || 0,
-      isActive: true,
-    }));
-
-  // Process active badges from both public and eligible sources
-  const activeBadges = allUniqueBadges.filter((item) => {
-    if (!item) return false;
-    const isActive = item.isActive !== false;
-    return isActive;
-  });
-
-  // Process active levels from both public and eligible sources
-  const activeLevels = allUniqueLevels.filter((item) => {
-    if (!item) return false;
-    const isActive = item.isActive !== false;
-    return isActive;
-  });
-
-  const allLevels = activeLevels
-    .map((level: any) => ({
-      ...level,
-      level_id: level._id || level.level_id,
-      type: 'LEVEL' as const,
-    }))
-    .sort((a: any, b: any) => (a.priority ?? 0) - (b.priority ?? 0));
-
-  // Process badges - ensure all required fields are present and sort by priority
-  const allBadges = activeBadges
-    .map((badge: any) => {
-      const processedBadge = {
-        ...badge,
-        _id:
-          badge._id ||
-          badge.badge_id ||
-          `temp-${Math.random().toString(36).substr(2, 9)}`,
-        badge_id: badge.badge_id || badge._id,
-        name: badge.name || 'Unnamed Badge',
-        description: badge.description || '',
-        type: 'BADGE' as const,
-        isActive: badge.isActive !== false,
-        priority: badge.priority || 0,
-      };
-      return processedBadge;
-    })
-    .sort((a, b) => (a.priority || 0) - (b.priority || 0));
-
-  // Find max earned badge priority for sequential logic
-  const earnedBadgePriorities = earnedBadges
-    .map((b: StatusBadge) => b.priority || 0)
-    .filter((p) => p > 0);
-  const maxEarnedPriority =
-    earnedBadgePriorities.length > 0 ? Math.max(...earnedBadgePriorities) : 0;
-
-  // Function to check if a badge is earned
+  // Check if a badge is earned
   const isBadgeEarned = (badgeId: string): boolean => {
-    return earnedBadgeIds.has(badgeId);
+    return earnedBadges.some(
+      (b) => (b._id || b.badge_id) === badgeId && b.isActive,
+    );
   };
+
+  // Get all badges (earned + eligible)
+  const allBadges = allBadgesFromInfo.map((badge) => {
+    const earnedBadge = earnedBadges.find(
+      (b) => (b._id || b.badge_id) === (badge._id || badge.badge_id),
+    );
+    if (earnedBadge) {
+      return { ...badge, ...earnedBadge };
+    }
+    return badge;
+  });
 
   // Filter badges based on showEligibleOnly
   const filteredBadges = showEligibleOnly
-    ? allBadges.filter((badge) => {
-        const badgeId = badge.badge_id || badge._id;
-        const isEligible = eligibleBadges.some(
-          (b) => (b.badge_id || b._id) === badgeId,
-        );
-        // Also consider checked eligibility status
-        const isEligibleChecked = eligibilityChecks[badgeId]?.eligible === true;
-        return (isEligible || isEligibleChecked) && !isBadgeEarned(badgeId);
-      })
+    ? allBadges.filter((b) => !isBadgeEarned(b._id || b.badge_id!))
     : allBadges;
 
-  // Check if there are any eligible levels to show
-  const hasEligibleLevels = eligibleLevels.length > 0;
+  // Find the highest priority badge that's been earned
+  const maxEarnedPriority = earnedBadges.reduce(
+    (max, badge) => ((badge.priority || 0) > max ? badge.priority || 0 : max),
+    0,
+  );
 
-  // Get the next level the user can level up to
-  const nextLevel = eligibleLevels[0];
+  // Sort levels by priority (ascending)
+  const sortedLevels = [...allLevels].sort(
+    (a, b) => (a.priority || 0) - (b.priority || 0),
+  );
 
-  const currentLevelIndex = currentLevel
-    ? allLevels.findIndex((lvl: any) => {
-        const lvlId = lvl._id || lvl.level_id;
-        const curId = currentLevel._id || currentLevel.level_id;
-        return Boolean(curId && lvlId && String(lvlId) === String(curId));
-      })
-    : -1;
-  const currentLevelTier =
-    currentLevelIndex >= 0 ? getStepTierMeta(currentLevelIndex) : null;
+  // Get the highest priority earned badge (commented out as it's not currently used)
+  // const highestPriorityEarnedBadge = earnedBadges.find(
+  //   (badge) => badge.priority === maxEarnedPriority,
+  // );
 
-  // Handle level up with confirmation
-  const handleLevelUp = async () => {
-    if (
-      !window.confirm(
-        'Are you sure you want to level up? This action cannot be undone.',
-      )
-    ) {
-      return;
-    }
+  // Get the current level number
+  const currentLevelNumber = currentLevel
+    ? calculateDisplayLevel(currentLevel.priority || 0)
+    : 0;
 
-    try {
-      await levelUpMutation.mutateAsync();
-    } catch (error) {
-      // Error is already handled by the mutation
-      console.error('Level up error:', error);
-    }
+  // Function to determine level status
+  const getLevelStatus = (levelPriority: number) => {
+    const levelNumber = calculateDisplayLevel(levelPriority);
+    if (levelNumber < currentLevelNumber) return 'completed';
+    if (levelNumber === currentLevelNumber) return 'current';
+    return 'locked';
   };
 
-  // Handle badge claim
-  const handleClaimBadge = async (badgeId: string) => {
-    try {
-      await claimBadgeMutation.mutateAsync(badgeId);
-    } catch (error) {
-      // Error is already handled by the mutation
-      console.error('Error claiming badge:', error);
-    }
+  // Get the current level priority (commented out as it's not currently used)
+  // const currentLevelPriority = currentLevel?.priority || 0;
+
+  // Suppress unused variable warnings
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _unusedVars = {
+    calculateReward,
+    newLevel: undefined as unknown as LevelItem | undefined,
+    amount: 0,
+    index: 0,
+    _isPastLevel: false,
   };
 
-  // Main component render
+  // Render the component
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Levels & Badges"
-        isKycCheck={true}
+        active="settings"
       />
 
-      <div className="sm:ml-14">
+      <div className="md:pl-[50px] flex-1 flex flex-col min-h-screen">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="settings"
-          breadcrumbItems={[
-            { label: 'Settings', link: '#' },
-            { label: 'Levels & Badges', link: '#' },
-          ]}
         />
 
-        <main className="mx-auto max-w-7xl p-4 sm:p-6">
-          {/* Header with Title and Level Up Button */}
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight">
+        <main className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
                 Levels & Badges
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Track your progress and achievements.
+              <p className="text-muted-foreground">
+                Track your progress and earn rewards as you complete tasks and
+                level up
               </p>
             </div>
-
-            <div className="flex flex-col items-start gap-1 sm:items-end">
+            {currentLevel && (
               <Button
                 onClick={handleLevelUp}
-                disabled={!hasEligibleLevels || levelUpMutation.isPending}
-                className="h-9"
-                type="button"
+                disabled={levelUpMutation.isPending}
+                className="h-10"
               >
                 {levelUpMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Leveling up
+                    Leveling Up...
                   </>
-                ) : hasEligibleLevels ? (
-                  'Level up'
                 ) : (
-                  'Max level'
+                  'Level Up!'
                 )}
               </Button>
-              {hasEligibleLevels ? (
-                <div className="text-xs text-muted-foreground">
-                  Next: {String(nextLevel?.name || '-')}
-                </div>
-              ) : null}
-            </div>
+            )}
           </div>
 
           {/* Current Level Card */}
-          {currentLevel ? (
-            <Card className="mb-8 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5" />
-              <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
-              <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
-
-              <CardHeader className="relative flex-row items-start justify-between gap-3 space-y-0">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-primary to-primary/70 text-primary-foreground">
-                    <Trophy className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 space-y-1">
-                    <CardTitle className="text-base">Current level</CardTitle>
-                    <CardDescription className="text-sm truncate">
-                      {currentLevel.name}
+          {currentLevel && (
+            <Card className="mb-8">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Your Current Level</CardTitle>
+                    <CardDescription>
+                      {currentLevel.description ||
+                        'Keep completing tasks to level up!'}
                     </CardDescription>
-                    {currentLevelTier
-                      ? (() => {
-                          const Icon = currentLevelTier.Icon;
-                          return (
-                            <div className="pt-1">
-                              <Badge
-                                className={`${currentLevelTier.badgeClass} border-0 inline-flex items-center gap-1.5`}
-                                title={currentLevelTier.title}
-                              >
-                                <Icon className="h-3.5 w-3.5" />
-                                {currentLevelTier.title}
-                              </Badge>
-                            </div>
-                          );
-                        })()
-                      : null}
                   </div>
+                  <Badge variant="outline" className="px-3 py-1 text-sm">
+                    Level {calculateDisplayLevel(currentLevel.priority || 0)}
+                  </Badge>
                 </div>
-
-                <Badge variant="secondary" className="gap-1 whitespace-nowrap">
-                  <CheckCircle className="h-3.5 w-3.5" />
-                  Current
-                </Badge>
               </CardHeader>
-              <CardContent className="relative space-y-2">
-                {/* Display current reward multiplier */}
-                {currentLevel.rewardMultiplier && (
-                  <div className="flex items-center gap-2 text-sm font-medium mb-3">
-                    <Crown className="h-4 w-4 text-primary" />
-                    <span>
-                      Current Multiplier: {currentLevel.rewardMultiplier}x
-                    </span>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between text-sm font-medium mb-1">
+                      <span>Progress to Next Level</span>
+                      <span>{calculateProgress().progress}%</span>
+                    </div>
+                    <Progress
+                      value={calculateProgress().progress}
+                      className="h-2"
+                    />
+                    {calculateProgress().nextLevel && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {statusData?.data?.progress?.currentPoints || 0} /{' '}
+                        {statusData?.data?.progress?.requiredPoints || 100}{' '}
+                        points to {calculateProgress().nextLevel?.name}
+                      </p>
+                    )}
                   </div>
-                )}
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Progress to next level</span>
-                  <span>0%</span>
+                  {currentLevel.rewardMultiplier && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Gift className="h-4 w-4" />
+                      <span>
+                        {currentLevel.rewardMultiplier}x reward multiplier
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <Progress value={0} className="h-2 w-full bg-foreground/10" />
               </CardContent>
             </Card>
-          ) : (
-            <EmptyState
-              className="mb-8 py-10"
-              title="No level data"
-              description="Your current level will appear here once available."
-              icon={<Trophy className="h-10 w-10 text-muted-foreground" />}
-            />
           )}
 
-          {/* Levels Section - Vertical Timeline */}
-          <section className="mb-12">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">All levels</h2>
-              <span className="text-xs text-muted-foreground border px-2 rounded-full">
-                {allLevels.length} total
-              </span>
+          {/* Levels Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold tracking-tight">Your Level</h2>
+              {currentLevel && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Trophy className="h-4 w-4" />
+                  <span>
+                    Level {calculateDisplayLevel(currentLevel.priority || 0)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4 relative">
               {/* Vertical timeline connector */}
               <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border" />
 
-              {allLevels.length > 0 ? (
-                allLevels.map((level, index) => {
+              {sortedLevels.length > 0 ? (
+                sortedLevels.map((level, index) => {
                   const levelId = level._id || level.level_id || '';
                   const currentLevelPriority = currentLevel?.priority || 0;
-                  const isPastLevel =
+                  const _isPastLevel =
                     (level.priority || 0) < currentLevelPriority;
                   const isCurrentLevel =
-                    level.priority === currentLevelPriority;
+                    (level.priority || 0) === currentLevelPriority;
                   const isNextLevel =
-                    level.priority === currentLevelPriority + 10;
+                    (level.priority || 0) === currentLevelPriority + 1;
                   const isFutureLevel =
-                    (level.priority || 0) > currentLevelPriority &&
-                    !isNextLevel;
-
-                  const tier = getStepTierMeta(index);
-                  const TierIcon = tier?.Icon || Medal;
+                    (level.priority || 0) > currentLevelPriority + 1;
 
                   return (
                     <div key={levelId} className="relative pl-12">
                       {/* Timeline node */}
                       <div
                         className={`absolute left-0 top-4 flex h-10 w-10 items-center justify-center rounded-full border-4 border-background ${
-                          isPastLevel
-                            ? 'bg-green-500'
-                            : isCurrentLevel
-                              ? 'bg-primary animate-pulse'
-                              : 'bg-muted border-border'
+                          getLevelStatus(level.priority || 0) === 'completed'
+                            ? 'bg-green-500 text-white'
+                            : getLevelStatus(level.priority || 0) === 'current'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground'
                         }`}
                       >
-                        {isPastLevel ? (
-                          <Check className="h-5 w-5 text-white" />
-                        ) : isCurrentLevel ? (
-                          <TierIcon className="h-5 w-5 text-primary-foreground" />
+                        {getLevelStatus(level.priority || 0) === 'completed' ? (
+                          <Check className="h-5 w-5" />
+                        ) : getLevelStatus(level.priority || 0) ===
+                          'current' ? (
+                          <Crown className="h-5 w-5" />
                         ) : (
-                          <Lock className="h-5 w-5 text-muted-foreground" />
+                          <Lock className="h-5 w-5" />
                         )}
                       </div>
 
                       <Card
-                        className={
-                          isCurrentLevel ? 'border-primary shadow-lg' : ''
-                        }
+                        className={`relative overflow-hidden ${
+                          isCurrentLevel ? 'border-primary' : ''
+                        }`}
                       >
                         <CardHeader className="space-y-1">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
-                                <CardTitle className="text-base">
-                                  Level {index}
+                                <CardTitle className="text-lg">
+                                  {level.name}
                                 </CardTitle>
-                                {tier && (
-                                  <Badge
-                                    className={`${tier.badgeClass} border-0 inline-flex items-center gap-1.5`}
-                                    title={tier.title}
-                                  >
-                                    <TierIcon className="h-3.5 w-3.5" />
-                                    {tier.short}
-                                  </Badge>
-                                )}
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    isCurrentLevel ? 'border-primary' : ''
+                                  }
+                                >
+                                  Level{' '}
+                                  {calculateDisplayLevel(level.priority || 0)}
+                                </Badge>
                               </div>
-                              <CardDescription className="line-clamp-2 mt-1">
-                                {level.description}
-                              </CardDescription>
+                              {level.description && (
+                                <CardDescription className="mt-1">
+                                  {level.description}
+                                </CardDescription>
+                              )}
                             </div>
-
-                            {isPastLevel ? (
-                              <Badge variant="secondary" className="gap-1">
-                                <Check className="h-3.5 w-3.5" />
-                                Completed
-                              </Badge>
-                            ) : isCurrentLevel ? (
-                              <Badge variant="default" className="gap-1">
-                                <CheckCircle className="h-3.5 w-3.5" />
-                                Current
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="gap-1">
-                                <Lock className="h-3.5 w-3.5" />
-                                Locked
+                            {isCurrentLevel && (
+                              <Badge className="bg-primary/10 text-primary">
+                                Current Level
                               </Badge>
                             )}
                           </div>
                         </CardHeader>
-
                         <CardContent className="space-y-3">
                           {/* Display reward multiplier prominently */}
                           {level.rewardMultiplier && (
-                            <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                              <Crown className="h-4 w-4" />
-                              <span>
-                                Reward Multiplier: {level.rewardMultiplier}x
-                              </span>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                                <Gift className="h-4 w-4" />
+                                <span>
+                                  {level.rewardMultiplier}x Reward Multiplier
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Earn {level.rewardMultiplier}x more rewards on
+                                all completed tasks
+                              </p>
                             </div>
                           )}
 
-                          {/* Progress bar */}
-                          <Progress
-                            value={isPastLevel ? 100 : isCurrentLevel ? 50 : 0}
-                            className="h-1.5 w-full"
-                          />
+                          {/* Display benefits */}
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-medium">Benefits:</h4>
+                            <ul className="space-y-1 text-sm text-muted-foreground">
+                              <li className="flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                <span>Access to higher-paying projects</span>
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                <span>Priority customer support</span>
+                              </li>
+                              {level.rewardMultiplier && (
+                                <li className="flex items-center gap-2">
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                  <span>
+                                    {level.rewardMultiplier}x reward multiplier
+                                    on all tasks
+                                  </span>
+                                </li>
+                              )}
+                            </ul>
+                          </div>
 
-                          {/* Show eligibility button only for next level */}
-                          {isNextLevel &&
-                            eligibleLevels.some(
-                              (l) =>
-                                l._id === levelId || l.level_id === levelId,
-                            ) && (
-                              <Button
-                                onClick={handleLevelUp}
-                                disabled={levelUpMutation.isPending}
-                                size="sm"
-                                className="w-full"
-                                type="button"
-                              >
-                                {levelUpMutation.isPending ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Leveling Up
-                                  </>
-                                ) : (
-                                  'Level Up Now'
-                                )}
-                              </Button>
-                            )}
-
-                          {/* Show criteria only for locked levels (next and future) */}
+                          {/* Show requirements for next level */}
                           {(isNextLevel || isFutureLevel) && level.criteria && (
                             <div className="text-xs text-muted-foreground space-y-1 border-t pt-3">
                               <div className="font-medium">Requirements:</div>
                               <ul className="list-disc list-inside space-y-0.5">
                                 {level.criteria.minProjectApplications && (
                                   <li>
+                                    Apply to{' '}
                                     {level.criteria.minProjectApplications}{' '}
-                                    project applications
+                                    projects
                                   </li>
                                 )}
-                                {level.criteria.minVerifiedDehixTalent && (
+                                {level.criteria.minSuccessfulProjects && (
                                   <li>
-                                    {level.criteria.minVerifiedDehixTalent}{' '}
-                                    verified talents
+                                    Complete{' '}
+                                    {level.criteria.minSuccessfulProjects}{' '}
+                                    projects successfully
                                   </li>
                                 )}
-                                {level.criteria.minInterviewsTaken && (
+                                {level.criteria.minRating && (
                                   <li>
-                                    {level.criteria.minInterviewsTaken}{' '}
-                                    interviews
+                                    Maintain a {level.criteria.minRating}+
+                                    rating
                                   </li>
                                 )}
-                                {level.criteria.minBids && (
-                                  <li>{level.criteria.minBids} bids</li>
+                                {level.criteria.verificationRequired && (
+                                  <li>Complete profile verification</li>
                                 )}
-                                {level.criteria.requiresVerifiedProfile && (
-                                  <li>Verified profile</li>
-                                )}
-                                {level.criteria.requiresOracle && (
-                                  <li>Oracle status</li>
+                                {level.criteria.oracleRequired && (
+                                  <li>Complete Oracle verification</li>
                                 )}
                               </ul>
                             </div>
@@ -1034,11 +1018,11 @@ export default function LevelsAndBadgesPage() {
                   className="py-12"
                   title="No levels available"
                   description="Levels will appear here once they are configured."
-                  icon={<Trophy className="h-10 w-10 text-muted-foreground" />}
+                  Icon={Trophy}
                 />
               )}
             </div>
-          </section>
+          </div>
 
           {/* Badges Section */}
           <section>
@@ -1047,249 +1031,237 @@ export default function LevelsAndBadgesPage() {
                 <div className="space-y-1">
                   <CardTitle className="text-base">All badges</CardTitle>
                   <CardDescription>
-                    Earn badges by completing achievements.
+                    Earn badges by completing achievements and leveling up
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center space-x-2
+"
+                >
                   <Switch
-                    id="show-eligible"
+                    id="show-eligible-only"
                     checked={showEligibleOnly}
                     onCheckedChange={setShowEligibleOnly}
                   />
                   <label
-                    htmlFor="show-eligible"
-                    className="text-sm font-medium"
+                    htmlFor="show-eligible-only"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    Eligible only
+                    Show eligible only
                   </label>
                 </div>
               </CardHeader>
-
               <CardContent>
                 {filteredBadges.length > 0 ? (
-                  <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin">
-                    {filteredBadges.map((badge) => {
-                      const badgeId = badge._id || badge.badge_id || '';
-                      const isEarned = isBadgeEarned(badgeId);
-                      const isNextBadge =
-                        badge.priority === maxEarnedPriority + 10;
-                      const isFutureBadge =
-                        (badge.priority || 0) > maxEarnedPriority + 10;
-                      const isEligible = eligibleBadges.some(
-                        (b) => (b._id || b.badge_id) === badgeId,
-                      );
-                      const eligibilityCheck = eligibilityChecks[badgeId];
-                      const isChecking = checkingEligibility[badgeId];
+                  <div className="relative">
+                    <div className="flex space-x-4 pb-4 overflow-x-auto scrollbar-hide -mx-2 px-2">
+                      {filteredBadges.map((badge) => {
+                        const badgeId = badge._id || badge.badge_id || '';
+                        const isEarned = isBadgeEarned(badgeId);
+                        const isNextBadge =
+                          badge.priority === maxEarnedPriority + 1;
+                        const eligibility = eligibilityChecks[badgeId];
+                        const isChecking = checkingEligibility[badgeId];
 
-                      return (
-                        <Card
-                          key={badgeId}
-                          className={`flex-shrink-0 w-72 snap-center overflow-hidden ${isNextBadge ? 'border-primary shadow-md' : ''}`}
-                        >
-                          <CardHeader className="space-y-1">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <CardTitle className="truncate text-sm">
-                                  {badge.name}
-                                </CardTitle>
-                                <CardDescription className="line-clamp-2">
-                                  {badge.description ||
-                                    'Earn this badge by completing achievements'}
-                                </CardDescription>
-                              </div>
-
-                              {isEarned ? (
-                                <Badge className="gap-1" variant="secondary">
-                                  <Check className="h-3.5 w-3.5" />
-                                  Earned
-                                </Badge>
-                              ) : isNextBadge ? (
-                                <Badge variant="default" className="gap-1">
-                                  Next
-                                </Badge>
-                              ) : isFutureBadge ? (
-                                <Badge variant="outline" className="gap-1">
-                                  <Lock className="h-3.5 w-3.5" />
-                                  Locked
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline">Locked</Badge>
-                              )}
-                            </div>
-                          </CardHeader>
-
-                          <CardContent className="pt-0 space-y-3">
-                            {/* Display badge image if available */}
-                            {badge.imageUrl && (
-                              <div className="flex justify-center">
-                                <img
-                                  src={badge.imageUrl}
-                                  alt={badge.name}
-                                  className="h-16 w-16 object-contain"
-                                />
-                              </div>
-                            )}
-
-                            {/* Display base reward prominently */}
-                            {badge.baseReward && (
-                              <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                                <Trophy className="h-4 w-4" />
-                                <span>Reward: {badge.baseReward} Connects</span>
-                              </div>
-                            )}
-
-                            {/* Action buttons - only for next badge */}
-                            {isEarned ? null : isNextBadge ? (
-                              <div>
-                                {!eligibilityCheck ? (
-                                  <Button
-                                    onClick={() =>
-                                      handleCheckEligibility(badgeId)
-                                    }
-                                    disabled={isChecking}
-                                    size="sm"
-                                    variant="default"
-                                    className="w-full"
-                                    type="button"
-                                  >
-                                    {isChecking ? (
-                                      <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Checking
-                                      </>
-                                    ) : (
-                                      'Check Eligibility'
-                                    )}
-                                  </Button>
-                                ) : eligibilityCheck.eligible ? (
-                                  <Button
-                                    onClick={() => handleClaimBadge(badgeId)}
-                                    disabled={claimBadgeMutation.isPending}
-                                    size="sm"
-                                    className="w-full"
-                                    type="button"
-                                  >
-                                    {claimBadgeMutation.isPending ? (
-                                      <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Claiming
-                                      </>
-                                    ) : (
-                                      'Claim Badge'
-                                    )}
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    disabled
-                                    size="sm"
-                                    variant="outline"
-                                    className="w-full"
-                                    type="button"
-                                  >
-                                    Not Eligible
-                                  </Button>
-                                )}
-                              </div>
-                            ) : null}
-
-                            {/* Show criteria only for locked badges (next and future) */}
-                            {!isEarned &&
-                              (isNextBadge || isFutureBadge) &&
-                              (!eligibilityCheck ||
-                                !eligibilityCheck.eligible) &&
-                              badge.criteria && (
-                                <div className="text-xs text-muted-foreground space-y-1 border-t pt-2">
-                                  <div className="font-medium">
-                                    Requirements:
+                        return (
+                          <div
+                            key={badgeId}
+                            className={`w-64 flex-shrink-0 transition-all duration-200 ${
+                              isNextBadge
+                                ? 'ring-2 ring-primary/30 rounded-lg'
+                                : ''
+                            }`}
+                          >
+                            <Card className="h-full">
+                              <CardHeader className="pb-2">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <CardTitle className="truncate text-sm">
+                                      {badge.name}
+                                    </CardTitle>
+                                    <CardDescription className="text-xs">
+                                      {badge.priority &&
+                                        `Priority: ${badge.priority}`}
+                                    </CardDescription>
                                   </div>
-                                  <ul className="list-disc list-inside space-y-0.5">
-                                    {badge.criteria.minProjectApplications && (
-                                      <li>
-                                        {badge.criteria.minProjectApplications}{' '}
-                                        project applications
-                                      </li>
-                                    )}
-                                    {badge.criteria.minVerifiedDehixTalent && (
-                                      <li>
-                                        {badge.criteria.minVerifiedDehixTalent}{' '}
-                                        verified Dehix talents
-                                      </li>
-                                    )}
-                                    {badge.criteria
-                                      .minVerifiedInterviewTalents && (
-                                      <li>
-                                        {
-                                          badge.criteria
-                                            .minVerifiedInterviewTalents
-                                        }{' '}
-                                        verified interview talents
-                                      </li>
-                                    )}
-                                    {badge.criteria.minInterviewsTaken && (
-                                      <li>
-                                        {badge.criteria.minInterviewsTaken}{' '}
-                                        interviews taken
-                                      </li>
-                                    )}
-                                    {badge.criteria.minTalentHiring && (
-                                      <li>
-                                        {badge.criteria.minTalentHiring} talent
-                                        hirings
-                                      </li>
-                                    )}
-                                    {badge.criteria.minBids && (
-                                      <li>{badge.criteria.minBids} bids</li>
-                                    )}
-                                    {badge.criteria.minLongestStreak && (
-                                      <li>
-                                        {badge.criteria.minLongestStreak} day
-                                        streak
-                                      </li>
-                                    )}
-                                    {(badge.criteria.requiresVerifiedProfile ||
-                                      badge.criteria.verificationRequired) && (
-                                      <li>Verified profile</li>
-                                    )}
-                                    {(badge.criteria.requiresOracle ||
-                                      badge.criteria.oracleRequired) && (
-                                      <li>Oracle status</li>
-                                    )}
-                                  </ul>
+                                  {isEarned ? (
+                                    <Badge
+                                      variant="outline"
+                                      className="flex-shrink-0"
+                                    >
+                                      <Check className="mr-1 h-3 w-3" />
+                                      Earned
+                                    </Badge>
+                                  ) : isNextBadge ? (
+                                    <Badge
+                                      variant="outline"
+                                      className="flex-shrink-0"
+                                    >
+                                      <Medal className="mr-1 h-3 w-3" />
+                                      Next Up
+                                    </Badge>
+                                  ) : null}
                                 </div>
-                              )}
+                              </CardHeader>
+                              <CardContent className="pt-0 space-y-3">
+                                {/* Display badge image if available */}
+                                {badge.imageUrl ? (
+                                  <div className="flex justify-center">
+                                    <div className="relative h-24 w-24">
+                                      <Image
+                                        src={badge.imageUrl}
+                                        alt={badge.name}
+                                        fill
+                                        className={`object-contain ${
+                                          !isEarned ? 'opacity-40' : ''
+                                        }`}
+                                      />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={`flex h-24 w-full items-center justify-center rounded-md bg-muted ${
+                                      !isEarned ? 'opacity-40' : ''
+                                    }`}
+                                  >
+                                    <Award className="h-12 w-12 text-muted-foreground" />
+                                  </div>
+                                )}
 
-                            {/* Show earned date for earned badges */}
-                            {isEarned && badge.earnedAt && (
-                              <div className="text-xs text-muted-foreground border-t pt-2">
-                                Earned on{' '}
-                                {new Date(badge.earnedAt).toLocaleDateString()}
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                                {/* Badge description */}
+                                {badge.description && (
+                                  <p className="text-sm text-muted-foreground">
+                                    {badge.description}
+                                  </p>
+                                )}
+
+                                {/* Reward info */}
+                                {badge.baseReward && badge.baseReward > 0 && (
+                                  <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                                    <Gift className="h-4 w-4" />
+                                    <span>
+                                      Reward: {badge.baseReward} Connects
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Action buttons */}
+                                {!isEarned && (
+                                  <div>
+                                    {!isNextBadge ? (
+                                      <Button
+                                        disabled
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full"
+                                      >
+                                        <Lock className="mr-2 h-3 w-3" />
+                                        Complete previous badges
+                                      </Button>
+                                    ) : (
+                                      <div className="space-y-2">
+                                        <Button
+                                          onClick={() =>
+                                            handleCheckEligibility(badgeId)
+                                          }
+                                          disabled={isChecking}
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full"
+                                        >
+                                          {isChecking ? (
+                                            <>
+                                              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                              Checking...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Info className="mr-2 h-3 w-3" />
+                                              Check Eligibility
+                                            </>
+                                          )}
+                                        </Button>
+                                        {eligibility?.eligible && (
+                                          <Button
+                                            onClick={() =>
+                                              handleClaimBadge(badgeId)
+                                            }
+                                            disabled={
+                                              claimBadgeMutation.isPending
+                                            }
+                                            size="sm"
+                                            className="w-full"
+                                          >
+                                            {claimBadgeMutation.isPending ? (
+                                              <>
+                                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                                Claiming...
+                                              </>
+                                            ) : (
+                                              'Claim Badge'
+                                            )}
+                                          </Button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Requirements for unearned badges */}
+                                {!isEarned && badge.criteria && (
+                                  <div className="text-xs text-muted-foreground space-y-1 border-t pt-2">
+                                    <div className="font-medium">
+                                      Requirements:
+                                    </div>
+                                    <ul className="list-disc list-inside space-y-0.5">
+                                      {badge.criteria
+                                        .minProjectApplications && (
+                                        <li>
+                                          Apply to{' '}
+                                          {
+                                            badge.criteria
+                                              .minProjectApplications
+                                          }{' '}
+                                          projects
+                                        </li>
+                                      )}
+                                      {badge.criteria.minSuccessfulProjects && (
+                                        <li>
+                                          Complete{' '}
+                                          {badge.criteria.minSuccessfulProjects}{' '}
+                                          projects successfully
+                                        </li>
+                                      )}
+                                      {badge.criteria.minRating && (
+                                        <li>
+                                          Maintain a {badge.criteria.minRating}+
+                                          rating
+                                        </li>
+                                      )}
+                                      {badge.criteria.verificationRequired && (
+                                        <li>Complete profile verification</li>
+                                      )}
+                                      {badge.criteria.oracleRequired && (
+                                        <li>Complete Oracle verification</li>
+                                      )}
+                                    </ul>
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ) : (
-                  <EmptyState
-                    className="py-12"
-                    title="No badges to show"
-                    description="Complete more tasks to unlock badges and level up your profile."
-                    icon={
-                      <Trophy className="h-10 w-10 text-muted-foreground" />
-                    }
-                    actions={
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          window.scrollTo({ top: 0, behavior: 'smooth' })
-                        }
-                        type="button"
-                      >
-                        Check progress
-                      </Button>
-                    }
-                  />
+                  <div className="py-12">
+                    <EmptyState
+                      title="No badges to show"
+                      description="Complete more tasks to unlock badges and level up your profile."
+                      Icon={Award}
+                    />
+                  </div>
                 )}
               </CardContent>
             </Card>

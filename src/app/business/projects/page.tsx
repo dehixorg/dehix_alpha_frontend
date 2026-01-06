@@ -312,9 +312,7 @@ const BusinessProjectsPage: React.FC = () => {
             ) : projects.length === 0 ? (
               /* Empty state for both views */
               <EmptyState
-                icon={
-                  <PackageOpen className="h-12 w-12 text-muted-foreground" />
-                }
+                Icon={PackageOpen}
                 title="No projects found"
                 description="Create a project to see it listed here."
                 className="py-12 border-0 bg-transparent"
@@ -565,9 +563,7 @@ const BusinessProjectsPage: React.FC = () => {
                             <TableRow>
                               <TableCell colSpan={4} className="h-40 p-0">
                                 <EmptyState
-                                  icon={
-                                    <Search className="h-8 w-8 text-muted-foreground" />
-                                  }
+                                  Icon={Search}
                                   title="No matching projects"
                                   className="h-full border-0 bg-transparent py-6"
                                 />

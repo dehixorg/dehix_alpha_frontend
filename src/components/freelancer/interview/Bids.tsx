@@ -181,147 +181,147 @@ const BidsPage = ({ userId }: { userId?: string }) => {
 
   return (
     <div>
-        {loading ? (
-          // Table skeleton
-          <div className="w-full overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Talent</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Bids</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+      {loading ? (
+        // Table skeleton
+        <div className="w-full overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Talent</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Bids</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(4)].map((_, idx) => (
+                <TableRow key={idx}>
+                  <TableCell>
+                    <div className="h-4 w-40 bg-muted rounded" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-44 bg-muted rounded" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-6 w-24 bg-muted rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-16 bg-muted rounded" />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="h-8 w-20 bg-muted rounded-md inline-block" />
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[...Array(4)].map((_, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>
-                      <div className="h-4 w-40 bg-muted rounded" />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : errorMessage ? (
+        <EmptyState
+          className="py-10"
+          title="Unable to load bids"
+          description={errorMessage}
+          icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setLoading(true);
+                setErrorMessage(null);
+                axiosInstance
+                  .get('/interview/creator/open', {
+                    params: { page: 1, limit: 20 },
+                  })
+                  .then((res) => {
+                    const list: Interview[] = Array.isArray(res?.data?.data)
+                      ? res.data.data
+                      : Array.isArray(res?.data)
+                        ? res.data
+                        : [];
+                    setBidsData(list);
+                  })
+                  .catch((err) => {
+                    const msg =
+                      err?.response?.data?.message ||
+                      'Something went wrong. Please try again.';
+                    setErrorMessage(String(msg));
+                  })
+                  .finally(() => setLoading(false));
+              }}
+            >
+              Retry
+            </Button>
+          }
+        />
+      ) : bidsData?.length > 0 ? (
+        <div className="w-full overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Talent</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-center">Bids</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bidsData.map((interview) => {
+                const talentName =
+                  interview?.name || interview?.talentName || '-';
+                const talentType = String(interview?.talentType || '').trim();
+
+                return (
+                  <TableRow key={interview?._id}>
+                    <TableCell className="whitespace-nowrap">
+                      {formatDate(interview?.interviewDate)}
                     </TableCell>
-                    <TableCell>
-                      <div className="h-4 w-44 bg-muted rounded" />
+                    <TableCell className="min-w-[220px]">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="min-w-0 truncate font-medium">
+                          {talentName}
+                        </span>
+                        {talentType ? (
+                          <Badge variant="secondary" className="shrink-0">
+                            {talentType.toUpperCase()}
+                          </Badge>
+                        ) : null}
+                      </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="h-6 w-24 bg-muted rounded-full" />
+                    <TableCell className="whitespace-nowrap">
+                      <Badge variant="secondary">
+                        {interview?.interviewStatus || 'BIDDING'}
+                      </Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="h-4 w-16 bg-muted rounded" />
+                    <TableCell className="whitespace-nowrap text-center">
+                      {formatBidsCount(interview?.interviewBids)}
                     </TableCell>
-                    <TableCell className="text-center">
-                      <div className="h-8 w-20 bg-muted rounded-md inline-block" />
+                    <TableCell className="text-center whitespace-nowrap">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setSelectedInterview(interview)}
+                        type="button"
+                      >
+                        <ArrowUpRight />
+                      </Button>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : errorMessage ? (
-          <EmptyState
-            className="py-10"
-            title="Unable to load bids"
-            description={errorMessage}
-            icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
-            actions={
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setLoading(true);
-                  setErrorMessage(null);
-                  axiosInstance
-                    .get('/interview/creator/open', {
-                      params: { page: 1, limit: 20 },
-                    })
-                    .then((res) => {
-                      const list: Interview[] = Array.isArray(res?.data?.data)
-                        ? res.data.data
-                        : Array.isArray(res?.data)
-                          ? res.data
-                          : [];
-                      setBidsData(list);
-                    })
-                    .catch((err) => {
-                      const msg =
-                        err?.response?.data?.message ||
-                        'Something went wrong. Please try again.';
-                      setErrorMessage(String(msg));
-                    })
-                    .finally(() => setLoading(false));
-                }}
-              >
-                Retry
-              </Button>
-            }
-          />
-        ) : bidsData?.length > 0 ? (
-          <div className="w-full overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Talent</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Bids</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bidsData.map((interview) => {
-                  const talentName =
-                    interview?.name || interview?.talentName || '-';
-                  const talentType = String(interview?.talentType || '').trim();
-
-                  return (
-                    <TableRow key={interview?._id}>
-                      <TableCell className="whitespace-nowrap">
-                        {formatDate(interview?.interviewDate)}
-                      </TableCell>
-                      <TableCell className="min-w-[220px]">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <span className="min-w-0 truncate font-medium">
-                            {talentName}
-                          </span>
-                          {talentType ? (
-                            <Badge variant="secondary" className="shrink-0">
-                              {talentType.toUpperCase()}
-                            </Badge>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <Badge variant="secondary">
-                          {interview?.interviewStatus || 'BIDDING'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-center">
-                        {formatBidsCount(interview?.interviewBids)}
-                      </TableCell>
-                      <TableCell className="text-center whitespace-nowrap">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => setSelectedInterview(interview)}
-                          type="button"
-                        >
-                          <ArrowUpRight />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <EmptyState
-            className="py-12"
-            title="No open interviews"
-            description="When you create interviews open for bidding, they will show up here."
-            icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
-          />
-        )}
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <EmptyState
+          className="py-12"
+          title="No open interviews"
+          description="When you create interviews open for bidding, they will show up here."
+          icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
+        />
+      )}
 
       {selectedInterview ? (
         <Dialog
@@ -334,7 +334,8 @@ const BidsPage = ({ userId }: { userId?: string }) => {
                 <div className="min-w-0">
                   <DialogTitle className="truncate">Interview bids</DialogTitle>
                   <div className="mt-1 text-sm text-muted-foreground">
-                    Review bids and select the interviewer you want to proceed with.
+                    Review bids and select the interviewer you want to proceed
+                    with.
                   </div>
                 </div>
               </div>
@@ -346,10 +347,14 @@ const BidsPage = ({ userId }: { userId?: string }) => {
               <div className="space-y-4 p-6">
                 <Card>
                   <CardHeader className="space-y-1">
-                    <CardTitle className="text-base">Interview details</CardTitle>
+                    <CardTitle className="text-base">
+                      Interview details
+                    </CardTitle>
                     <CardDescription className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      <span>{formatDate(selectedInterview?.interviewDate)}</span>
+                      <span>
+                        {formatDate(selectedInterview?.interviewDate)}
+                      </span>
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -389,49 +394,53 @@ const BidsPage = ({ userId }: { userId?: string }) => {
                               <TableHead>Fee</TableHead>
                               <TableHead>Status</TableHead>
                               <TableHead>Description</TableHead>
-                              <TableHead className="text-right">Action</TableHead>
+                              <TableHead className="text-right">
+                                Action
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {normalizeBids(selectedInterview?.interviewBids).map(
-                              (bid) => (
-                                <TableRow
-                                  key={bid._id || `${bid.interviewerId}-${bid.fee}`}
-                                >
-                                  <TableCell className="font-medium">
-                                    {bid.interviewerId || '-'}
-                                  </TableCell>
-                                  <TableCell className="whitespace-nowrap">
-                                    {bid.fee || '-'}
-                                  </TableCell>
-                                  <TableCell className="whitespace-nowrap">
-                                    <Badge variant="secondary">
-                                      {bid.status || 'PENDING'}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="max-w-[420px]">
-                                    <div className="text-sm text-muted-foreground whitespace-pre-line">
-                                      {bid.description || '-'}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="text-right whitespace-nowrap">
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      onClick={() => handleSelectBid(bid)}
-                                      disabled={
-                                        !bid._id ||
-                                        selectingBidId === String(bid._id)
-                                      }
-                                    >
-                                      {selectingBidId === String(bid._id)
-                                        ? 'Selecting...'
-                                        : 'Select'}
-                                    </Button>
-                                  </TableCell>
-                                </TableRow>
-                              ),
-                            )}
+                            {normalizeBids(
+                              selectedInterview?.interviewBids,
+                            ).map((bid) => (
+                              <TableRow
+                                key={
+                                  bid._id || `${bid.interviewerId}-${bid.fee}`
+                                }
+                              >
+                                <TableCell className="font-medium">
+                                  {bid.interviewerId || '-'}
+                                </TableCell>
+                                <TableCell className="whitespace-nowrap">
+                                  {bid.fee || '-'}
+                                </TableCell>
+                                <TableCell className="whitespace-nowrap">
+                                  <Badge variant="secondary">
+                                    {bid.status || 'PENDING'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="max-w-[420px]">
+                                  <div className="text-sm text-muted-foreground whitespace-pre-line">
+                                    {bid.description || '-'}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-right whitespace-nowrap">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={() => handleSelectBid(bid)}
+                                    disabled={
+                                      !bid._id ||
+                                      selectingBidId === String(bid._id)
+                                    }
+                                  >
+                                    {selectingBidId === String(bid._id)
+                                      ? 'Selecting...'
+                                      : 'Select'}
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
                           </TableBody>
                         </Table>
                       </div>

@@ -305,10 +305,10 @@ const Page = () => {
               </>
             ) : (
               <EmptyState
-                className="h-[40vh] border-0 bg-transparent py-0"
                 title="No milestones found"
                 description="Create your first milestone to start tracking progress for this project."
-                icon={<Inbox className="h-16 w-16 text-muted-foreground" />}
+                Icon={Inbox}
+                className="h-16 w-16 text-muted-foreground"
               />
             )}
           </div>
