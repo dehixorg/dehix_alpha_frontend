@@ -63,7 +63,14 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
   const uploadFile = async (file: File) => {
     try {
       setIsUploading(true);
-      const scope = userId || 'freelancer';
+      const scope = userId;
+      if (!scope) {
+        notifyError(
+          'User ID is missing. Please log in again and try uploading your resume.',
+          'Authentication required',
+        );
+        return;
+      }
       const extFromName = file.name?.split('.')?.pop();
       const extFromType = (file.type || '').split('/')[1];
       const ext = (extFromName || extFromType || 'pdf').split(';')[0];

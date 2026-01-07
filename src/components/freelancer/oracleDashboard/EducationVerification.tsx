@@ -272,7 +272,7 @@ const OracleDashboard = () => {
                       />
                     ))
                   ) : (
-                    <div className="w-full col-span-full mt-10">
+                    <div className="w-full col-span-full">
                       <EmptyState
                         title="No education verification records found"
                         description="Education verification requests will show up here once they are submitted."

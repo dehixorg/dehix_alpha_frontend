@@ -263,7 +263,7 @@ const WorkExpVerification = () => {
                       />
                     ))
                   ) : (
-                    <div className="w-full col-span-full mt-10">
+                    <div className="w-full col-span-full">
                       <EmptyState
                         icon={
                           <PackageOpen
