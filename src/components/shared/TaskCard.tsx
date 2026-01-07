@@ -58,7 +58,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const freelancer = task?.freelancers?.[0];
   const isAssigned = !!freelancer?.freelancerName;
-  console.log('Freelancer', task);
 
   return (
     <div className="p-1 md:p-2">

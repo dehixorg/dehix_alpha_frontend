@@ -47,7 +47,6 @@ const ProfilePictureUpload = ({
       );
       return;
     }
-    console.log('IMAGWE:', file.size, maxImageSize);
     const nextFile =
       file.size > maxImageSize
         ? await compressImageFile(file, { maxBytes: maxImageSize })
