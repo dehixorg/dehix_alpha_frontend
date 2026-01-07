@@ -60,6 +60,15 @@ const ProfilePictureUpload = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const uid = user?.uid;
+    if (!uid) {
+      notifyError(
+        'You must be logged in to upload a profile picture. Please log in and try again.',
+        'Authentication required',
+      );
+      return;
+    }
+
     if (!selectedProfilePicture) {
       notifyError(
         'Please select an image before submitting.',
@@ -71,7 +80,6 @@ const ProfilePictureUpload = ({
     setIsUploading(true);
 
     try {
-      const uid = user?.uid || 'user';
       const extFromType = (selectedProfilePicture.type || '').split('/')[1];
       const ext = (extFromType || 'jpg').split(';')[0];
       const { url } = await uploadFileViaSignedUrl(selectedProfilePicture, {
@@ -161,7 +169,7 @@ const ProfilePictureUpload = ({
           <Button
             type="submit"
             className="w-full"
-            disabled={!selectedProfilePicture || isUploading}
+            disabled={!user?.uid || !selectedProfilePicture || isUploading}
           >
             {isUploading ? (
               <>
