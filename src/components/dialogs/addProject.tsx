@@ -75,9 +75,8 @@ const projectFormSchema = z
       }),
     liveDemoLink: z
       .string()
-      .url({ message: 'Live demo link must be a valid URL.' })
-      .optional()
-      .or(z.literal('')),
+      .min(1, { message: 'Live demo link is required.' })
+      .url({ message: 'Live demo link must be a valid URL.' }),
     thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
@@ -280,7 +279,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         projectName: data.projectName,
         description: data.description,
         githubLink: data.githubLink,
-        liveDemoLink: data.liveDemoLink || '', // Now supported by backend CREATE schema
+        liveDemoLink: data.liveDemoLink,
         thumbnail: data.thumbnail, // Now required
         techUsed: currSkills,
         verified: false,
