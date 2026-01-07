@@ -250,7 +250,7 @@ const ProjectVerification = () => {
                       />
                     ))
                   ) : (
-                    <div className="w-full col-span-full mt-10">
+                    <div className="w-full col-span-full">
                       <EmptyState
                         title="No project verifications found"
                         description="When there are project verification requests, they will be listed here."
