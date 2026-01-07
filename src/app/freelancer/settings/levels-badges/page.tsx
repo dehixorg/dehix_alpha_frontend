@@ -358,16 +358,9 @@ export default function LevelsAndBadgesPage() {
       // Refresh data
       await refetchStatus();
 
-      // Get the new level after refresh
-      const newLevel = currentLevel
-        ? allLevels.find(
-            (l) => (l.priority || 0) > (currentLevel.priority || 0),
-          )
-        : allLevels[0];
-
       // Handle level up reward if any
       if (data.reward) {
-        const { amount, multiplier, total } = data.reward;
+        const { multiplier, total } = data.reward;
         updateConnects(total);
 
         // Show success message with reward info (multiplier is applied for level up)
@@ -687,9 +680,9 @@ export default function LevelsAndBadgesPage() {
               <Skeleton className="h-36 w-full" />
               <Skeleton className="h-36 w-full" />
             </div>
-          </div>
+          </main>
         </div>
-      </FreelancerSettingsLayout>
+      </div>
     );
   }
 
@@ -851,8 +844,6 @@ export default function LevelsAndBadgesPage() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </section>
 
           {/* Levels Section */}
           <div className="space-y-4">
@@ -873,11 +864,9 @@ export default function LevelsAndBadgesPage() {
               <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border" />
 
               {sortedLevels.length > 0 ? (
-                sortedLevels.map((level, index) => {
+                sortedLevels.map((level) => {
                   const levelId = level._id || level.level_id || '';
                   const currentLevelPriority = currentLevel?.priority || 0;
-                  const _isPastLevel =
-                    (level.priority || 0) < currentLevelPriority;
                   const isCurrentLevel =
                     (level.priority || 0) === currentLevelPriority;
                   const isNextLevel =
@@ -1034,7 +1023,7 @@ export default function LevelsAndBadgesPage() {
           </div>
 
           {/* Badges Section */}
-          <section>
+          <div>
             <Card>
               <CardHeader className="flex-row items-center justify-between space-y-0">
                 <div className="space-y-1">
@@ -1274,7 +1263,7 @@ export default function LevelsAndBadgesPage() {
                 )}
               </CardContent>
             </Card>
-          </section>
+          </div>
         </main>
       </div>
     </div>
