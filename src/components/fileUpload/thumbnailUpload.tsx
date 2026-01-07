@@ -3,9 +3,9 @@ import { Loader2 } from 'lucide-react';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
-import { axiosInstance } from '@/lib/axiosinstance';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
 import { compressImageFile } from '@/utils/imageCompression';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 
 interface ThumbnailUploadProps {
   onThumbnailUpdate?: (thumbnailUrl: string) => void;
@@ -30,27 +30,18 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
       maxBytes: 5 * 1024 * 1024,
     });
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
       setIsUploading(true);
-      const postResponse = await axiosInstance.post(
-        '/register/upload-image',
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
-      );
-
-      const { Location } = postResponse.data.data;
-
-      if (!Location) throw new Error('Failed to upload the thumbnail.');
+      const { url } = await uploadFileViaSignedUrl(file, {
+        keyPrefix: 'thumbnails',
+      });
 
       // Update to uploaded URL
-      setSelectedThumbnail(Location);
+      setSelectedThumbnail(url);
 
       // Notify parent component if callback provided
       if (onThumbnailUpdate) {
-        onThumbnailUpdate(Location);
+        onThumbnailUpdate(url);
       }
 
       notifySuccess('Thumbnail uploaded successfully!', 'Success');

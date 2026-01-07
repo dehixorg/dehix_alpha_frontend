@@ -3,17 +3,23 @@
 import { Api_Methods } from '../utils/common/enum';
 
 import { apiService } from './apiService';
+import { uploadFileViaSignedUrl } from './imageSignedUpload';
 
 export const apiHelperService = {
   uploadProfilePicture: async (file: File) => {
-    const formData = new FormData();
-    formData.append('profilePicture', file);
-
-    return apiService({
-      method: Api_Methods.POST,
-      endpoint: '/register/upload-image',
-      body: formData,
+    const { url, key } = await uploadFileViaSignedUrl(file, {
+      keyPrefix: 'profile',
     });
+    return {
+      success: true,
+      data: {
+        data: {
+          Location: url,
+          Key: key,
+          Bucket: 's3',
+        },
+      },
+    };
   },
 
   updateUserProfilePicture: async (userId: string, imageUrl: string) => {

@@ -10,6 +10,7 @@ import { setUser } from '@/lib/userSlice';
 import { RootState } from '@/lib/store';
 import { Type } from '@/utils/enum';
 import { compressImageFile } from '@/utils/imageCompression';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 
 const allowedImageFormats = [
   'image/png',
@@ -69,29 +70,22 @@ const ProfilePictureUpload = ({
 
     setIsUploading(true);
 
-    const formData = new FormData();
-    formData.append('profilePicture', selectedProfilePicture);
-
     try {
-      const postResponse = await axiosInstance.post(
-        '/register/upload-image',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      );
+      const uid = user?.uid || 'user';
+      const extFromType = (selectedProfilePicture.type || '').split('/')[1];
+      const ext = (extFromType || 'jpg').split(';')[0];
+      const { url } = await uploadFileViaSignedUrl(selectedProfilePicture, {
+        key: `profile/${uid}/profile-picture.${ext}`,
+        methods: ['upload', 'get'],
+      });
 
-      const { Location } = postResponse.data.data;
-
-      dispatch(setUser({ ...user, photoURL: Location }));
+      dispatch(setUser({ ...user, photoURL: url }));
 
       const updateEndpoint =
         entityType === Type.FREELANCER ? `/freelancer` : `/business`;
 
       const putResponse = await axiosInstance.put(updateEndpoint, {
-        profilePic: Location,
+        profilePic: url,
       });
 
       if (putResponse.status === 200) {

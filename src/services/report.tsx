@@ -1,6 +1,7 @@
 import { Api_Methods } from '../utils/common/enum';
 
 import { apiService } from './apiService';
+import { uploadFileViaSignedUrl } from './imageSignedUpload';
 
 export const apiHelperService = {
   getAllReports: async (params = {}) => {
@@ -21,13 +22,19 @@ export const apiHelperService = {
   },
 
   uploadReportImage: async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return apiService({
-      method: Api_Methods.POST,
-      endpoint: '/register/upload-image',
-      body: formData,
+    const { key, url } = await uploadFileViaSignedUrl(file, {
+      keyPrefix: 'reports',
     });
+    return {
+      success: true,
+      data: {
+        data: {
+          Location: url,
+          Key: key,
+          Bucket: 's3',
+        },
+      },
+    };
   },
 
   createReport: async (data: any) => {
