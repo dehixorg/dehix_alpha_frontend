@@ -17,12 +17,7 @@ import {
 } from 'lucide-react';
 
 import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
-import Header from '@/components/header/header';
-import SidebarMenu from '@/components/menu/sidebarMenu';
+import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
 import EmptyState from '@/components/shared/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -594,59 +589,46 @@ export default function LevelsAndBadgesPage() {
   // Loading state
   if (statusLoading || eligibleLoading) {
     return (
-      <div className="flex min-h-screen w-full bg-background">
-        {/* Sidebar */}
-        <div className="hidden md:flex md:flex-shrink-0">
-          <div className="flex flex-col w-64 border-r border-gray-200 dark:border-gray-800">
-            <SidebarMenu
-              menuItemsTop={menuItemsTop}
-              menuItemsBottom={menuItemsBottom}
-              active="settings"
-            />
+      <FreelancerSettingsLayout
+        active="Levels & Badges"
+        activeMenu="Levels & Badges"
+        breadcrumbItems={[
+          { label: 'Settings', link: '#' },
+          { label: 'Levels & Badges', link: '#' },
+        ]}
+        isKycCheck={true}
+        mainClassName="flex-1 overflow-y-auto p-4 md:p-6"
+        contentClassName="md:pl-[50px] flex-1 flex flex-col min-h-screen"
+        containerClassName="flex min-h-screen w-full bg-background"
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-64" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2 mt-2" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-4 w-full mt-2" />
+                    <Skeleton className="h-4 w-5/6 mt-2" />
+                    <Skeleton className="h-4 w-4/6 mt-2" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
+          <Skeleton className="h-9 w-32" />
         </div>
-
-        {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          <Header
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            activeMenu="settings"
-          />
-
-          {/* Page content */}
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="max-w-7xl mx-auto">
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-64" />
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {[...Array(3)].map((_, i) => (
-                    <Card key={i}>
-                      <CardHeader>
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-4 w-1/2 mt-2" />
-                      </CardHeader>
-                      <CardContent>
-                        <Skeleton className="h-4 w-full mt-2" />
-                        <Skeleton className="h-4 w-5/6 mt-2" />
-                        <Skeleton className="h-4 w-4/6 mt-2" />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-              <Skeleton className="h-9 w-32" />
-            </div>
-            <Skeleton className="h-28 w-full" />
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Skeleton className="h-36 w-full" />
-              <Skeleton className="h-36 w-full" />
-              <Skeleton className="h-36 w-full" />
-            </div>
-          </main>
+        <Skeleton className="h-28 w-full" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Skeleton className="h-36 w-full" />
+          <Skeleton className="h-36 w-full" />
+          <Skeleton className="h-36 w-full" />
         </div>
-      </div>
+      </FreelancerSettingsLayout>
     );
   }
 
@@ -717,519 +699,472 @@ export default function LevelsAndBadgesPage() {
 
   // Render the component
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="settings"
-      />
-
-      <div className="md:pl-[50px] flex-1 flex flex-col min-h-screen">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="settings"
-        />
-
-        <main className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-          <div className="flex items-center justify-between space-y-2">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Levels & Badges
-              </h1>
-              <p className="text-muted-foreground">
-                Track your progress and earn rewards as you complete tasks and
-                level up
-              </p>
-            </div>
-            {currentLevel && (
-              <Button
-                onClick={handleLevelUp}
-                disabled={levelUpMutation.isPending}
-                className="h-10"
-              >
-                {levelUpMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Leveling Up...
-                  </>
-                ) : (
-                  'Level Up!'
-                )}
-              </Button>
+    <FreelancerSettingsLayout
+      active="Levels & Badges"
+      activeMenu="Levels & Badges"
+      breadcrumbItems={[
+        { label: 'Settings', link: '#' },
+        { label: 'Levels & Badges', link: '#' },
+      ]}
+      isKycCheck={true}
+    >
+      <div className="flex items-center justify-between space-y-2">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Levels & Badges</h1>
+          <p className="text-muted-foreground">
+            Track your progress and earn rewards as you complete tasks and level
+            up
+          </p>
+        </div>
+        {currentLevel && (
+          <Button
+            onClick={handleLevelUp}
+            disabled={levelUpMutation.isPending}
+            className="h-10"
+          >
+            {levelUpMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Leveling Up...
+              </>
+            ) : (
+              'Level Up!'
             )}
-          </div>
+          </Button>
+        )}
+      </div>
 
-          {/* Current Level Card */}
-          {currentLevel && (
-            <Card className="mb-8">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Your Current Level</CardTitle>
-                    <CardDescription>
-                      {currentLevel.description ||
-                        'Keep completing tasks to level up!'}
-                    </CardDescription>
-                  </div>
-                  <Badge variant="outline" className="px-3 py-1 text-sm">
-                    Level {calculateDisplayLevel(currentLevel.priority || 0)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between text-sm font-medium mb-1">
-                      <span>Progress to Next Level</span>
-                      <span>{calculateProgress().progress}%</span>
-                    </div>
-                    <Progress
-                      value={calculateProgress().progress}
-                      className="h-2"
-                    />
-                    {calculateProgress().nextLevel && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {statusData?.data?.progress?.currentPoints || 0} /{' '}
-                        {statusData?.data?.progress?.requiredPoints || 100}{' '}
-                        points to {calculateProgress().nextLevel?.name}
-                      </p>
-                    )}
-                  </div>
-                  {currentLevel.rewardMultiplier && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Gift className="h-4 w-4" />
-                      <span>
-                        {currentLevel.rewardMultiplier}x reward multiplier
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Levels Section */}
-          <div className="space-y-4">
+      {/* Current Level Card */}
+      {currentLevel && (
+        <Card className="mb-8">
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold tracking-tight">Your Level</h2>
-              {currentLevel && (
+              <div>
+                <CardTitle>Your Current Level</CardTitle>
+                <CardDescription>
+                  {currentLevel.description ||
+                    'Keep completing tasks to level up!'}
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="px-3 py-1 text-sm">
+                Level {calculateDisplayLevel(currentLevel.priority || 0)}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between text-sm font-medium mb-1">
+                  <span>Progress to Next Level</span>
+                  <span>{calculateProgress().progress}%</span>
+                </div>
+                <Progress
+                  value={calculateProgress().progress}
+                  className="h-2"
+                />
+                {calculateProgress().nextLevel && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {statusData?.data?.progress?.currentPoints || 0} /{' '}
+                    {statusData?.data?.progress?.requiredPoints || 100} points
+                    to {calculateProgress().nextLevel?.name}
+                  </p>
+                )}
+              </div>
+              {currentLevel.rewardMultiplier && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Trophy className="h-4 w-4" />
+                  <Gift className="h-4 w-4" />
                   <span>
-                    Level {calculateDisplayLevel(currentLevel.priority || 0)}
+                    {currentLevel.rewardMultiplier}x reward multiplier
                   </span>
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+      )}
 
-            <div className="space-y-4 relative">
-              {/* Vertical timeline connector */}
-              <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border" />
+      {/* Levels Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold tracking-tight">Your Level</h2>
+          {currentLevel && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Trophy className="h-4 w-4" />
+              <span>
+                Level {calculateDisplayLevel(currentLevel.priority || 0)}
+              </span>
+            </div>
+          )}
+        </div>
 
-              {sortedLevels.length > 0 ? (
-                sortedLevels.map((level) => {
-                  const levelId = level._id || level.level_id || '';
-                  const currentLevelPriority = currentLevel?.priority || 0;
-                  const isCurrentLevel =
-                    (level.priority || 0) === currentLevelPriority;
-                  const isNextLevel =
-                    (level.priority || 0) === currentLevelPriority + 1;
-                  const isFutureLevel =
-                    (level.priority || 0) > currentLevelPriority + 1;
+        <div className="space-y-4 relative">
+          {/* Vertical timeline connector */}
+          <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border" />
 
-                  return (
-                    <div key={levelId} className="relative pl-12">
-                      {/* Timeline node */}
-                      <div
-                        className={`absolute left-0 top-4 flex h-10 w-10 items-center justify-center rounded-full border-4 border-background ${
-                          getLevelStatus(level.priority || 0) === 'completed'
-                            ? 'bg-green-500 text-white'
-                            : getLevelStatus(level.priority || 0) === 'current'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {getLevelStatus(level.priority || 0) === 'completed' ? (
-                          <Check className="h-5 w-5" />
-                        ) : getLevelStatus(level.priority || 0) ===
-                          'current' ? (
-                          <Crown className="h-5 w-5" />
-                        ) : (
-                          <Lock className="h-5 w-5" />
+          {sortedLevels.length > 0 ? (
+            sortedLevels.map((level) => {
+              const levelId = level._id || level.level_id || '';
+              const currentLevelPriority = currentLevel?.priority || 0;
+              const isCurrentLevel =
+                (level.priority || 0) === currentLevelPriority;
+              const isNextLevel =
+                (level.priority || 0) === currentLevelPriority + 1;
+              const isFutureLevel =
+                (level.priority || 0) > currentLevelPriority + 1;
+
+              return (
+                <div key={levelId} className="relative pl-12">
+                  {/* Timeline node */}
+                  <div
+                    className={`absolute left-0 top-4 flex h-10 w-10 items-center justify-center rounded-full border-4 border-background ${
+                      getLevelStatus(level.priority || 0) === 'completed'
+                        ? 'bg-green-500 text-white'
+                        : getLevelStatus(level.priority || 0) === 'current'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {getLevelStatus(level.priority || 0) === 'completed' ? (
+                      <Check className="h-5 w-5" />
+                    ) : getLevelStatus(level.priority || 0) === 'current' ? (
+                      <Crown className="h-5 w-5" />
+                    ) : (
+                      <Lock className="h-5 w-5" />
+                    )}
+                  </div>
+
+                  <Card
+                    className={`relative overflow-hidden ${
+                      isCurrentLevel ? 'border-primary' : ''
+                    }`}
+                  >
+                    <CardHeader className="space-y-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <CardTitle className="text-lg">
+                              {level.name}
+                            </CardTitle>
+                            <Badge
+                              variant="outline"
+                              className={isCurrentLevel ? 'border-primary' : ''}
+                            >
+                              Level {calculateDisplayLevel(level.priority || 0)}
+                            </Badge>
+                          </div>
+                          {level.description && (
+                            <CardDescription className="mt-1">
+                              {level.description}
+                            </CardDescription>
+                          )}
+                        </div>
+                        {isCurrentLevel && (
+                          <Badge className="bg-primary/10 text-primary">
+                            Current Level
+                          </Badge>
                         )}
                       </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {/* Display reward multiplier prominently */}
+                      {level.rewardMultiplier && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                            <Gift className="h-4 w-4" />
+                            <span>
+                              {level.rewardMultiplier}x Reward Multiplier
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Earn {level.rewardMultiplier}x more rewards on all
+                            completed tasks
+                          </p>
+                        </div>
+                      )}
 
-                      <Card
-                        className={`relative overflow-hidden ${
-                          isCurrentLevel ? 'border-primary' : ''
-                        }`}
-                      >
-                        <CardHeader className="space-y-1">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <CardTitle className="text-lg">
-                                  {level.name}
-                                </CardTitle>
-                                <Badge
-                                  variant="outline"
-                                  className={
-                                    isCurrentLevel ? 'border-primary' : ''
-                                  }
-                                >
-                                  Level{' '}
-                                  {calculateDisplayLevel(level.priority || 0)}
-                                </Badge>
-                              </div>
-                              {level.description && (
-                                <CardDescription className="mt-1">
-                                  {level.description}
-                                </CardDescription>
-                              )}
+                      {/* Display benefits */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium">Benefits:</h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <span>Access to higher-paying projects</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <span>Priority customer support</span>
+                          </li>
+                          {level.rewardMultiplier && (
+                            <li className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              <span>
+                                {level.rewardMultiplier}x reward multiplier on
+                                all tasks
+                              </span>
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+
+                      {/* Show requirements for next level */}
+                      {(isNextLevel || isFutureLevel) && level.criteria && (
+                        <div className="text-xs text-muted-foreground space-y-1 border-t pt-3">
+                          <div className="font-medium">Requirements:</div>
+                          <ul className="list-disc list-inside space-y-0.5">
+                            {level.criteria.minProjectApplications && (
+                              <li>
+                                Apply to {level.criteria.minProjectApplications}{' '}
+                                projects
+                              </li>
+                            )}
+                            {level.criteria.minSuccessfulProjects && (
+                              <li>
+                                Complete {level.criteria.minSuccessfulProjects}{' '}
+                                projects successfully
+                              </li>
+                            )}
+                            {level.criteria.minRating && (
+                              <li>
+                                Maintain a {level.criteria.minRating}+ rating
+                              </li>
+                            )}
+                            {level.criteria.verificationRequired && (
+                              <li>Complete profile verification</li>
+                            )}
+                            {level.criteria.oracleRequired && (
+                              <li>Complete Oracle verification</li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })
+          ) : (
+            <EmptyState
+              className="py-12"
+              title="No levels available"
+              description="Levels will appear here once they are configured."
+              Icon={Trophy}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Badges Section */}
+      <Card className="max-w-full">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div className="space-y-1">
+            <CardTitle className="text-base">All badges</CardTitle>
+            <CardDescription>
+              Earn badges by completing achievements and leveling up
+            </CardDescription>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-eligible-only"
+              checked={showEligibleOnly}
+              onCheckedChange={setShowEligibleOnly}
+            />
+            <label
+              htmlFor="show-eligible-only"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Show eligible only
+            </label>
+          </div>
+        </CardHeader>
+        <CardContent className="max-w-full">
+          {filteredBadges.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredBadges.map((badge) => {
+                const badgeId = badge._id || badge.badge_id || '';
+                const isEarned = isBadgeEarned(badgeId);
+                const isNextBadge = badge.priority === maxEarnedPriority + 1;
+                const eligibility = eligibilityChecks[badgeId];
+                const isChecking = checkingEligibility[badgeId];
+
+                return (
+                  <div
+                    key={badgeId}
+                    className={`min-w-0 transition-all duration-200 ${
+                      isNextBadge ? 'ring-2 ring-primary/30 rounded-lg' : ''
+                    }`}
+                  >
+                    <Card className="h-full">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-sm break-words">
+                              {badge.name}
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                              {badge.priority && `Priority: ${badge.priority}`}
+                            </CardDescription>
+                          </div>
+                          {isEarned ? (
+                            <Badge variant="outline" className="flex-shrink-0">
+                              <Check className="mr-1 h-3 w-3" />
+                              Earned
+                            </Badge>
+                          ) : isNextBadge ? (
+                            <Badge variant="outline" className="flex-shrink-0">
+                              <Medal className="mr-1 h-3 w-3" />
+                              Next Up
+                            </Badge>
+                          ) : null}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 space-y-3">
+                        {/* Display badge image if available */}
+                        {badge.imageUrl ? (
+                          <div className="flex justify-center">
+                            <div className="relative h-24 w-24">
+                              <Image
+                                src={badge.imageUrl}
+                                alt={badge.name}
+                                fill
+                                className={`object-contain ${
+                                  !isEarned ? 'opacity-40' : ''
+                                }`}
+                              />
                             </div>
-                            {isCurrentLevel && (
-                              <Badge className="bg-primary/10 text-primary">
-                                Current Level
-                              </Badge>
+                          </div>
+                        ) : (
+                          <div
+                            className={`flex h-24 w-full items-center justify-center rounded-md bg-muted ${
+                              !isEarned ? 'opacity-40' : ''
+                            }`}
+                          >
+                            <Award className="h-12 w-12 text-muted-foreground" />
+                          </div>
+                        )}
+
+                        {/* Badge description */}
+                        {badge.description && (
+                          <p className="text-sm text-muted-foreground break-words">
+                            {badge.description}
+                          </p>
+                        )}
+
+                        {/* Reward info */}
+                        {badge.baseReward && badge.baseReward > 0 && (
+                          <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                            <Gift className="h-4 w-4" />
+                            <span>Reward: {badge.baseReward} Connects</span>
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        {!isEarned && (
+                          <div>
+                            {!isNextBadge ? (
+                              <Button
+                                disabled
+                                variant="outline"
+                                size="sm"
+                                className="w-full"
+                              >
+                                <Lock className="mr-2 h-3 w-3" />
+                                Complete previous badges
+                              </Button>
+                            ) : (
+                              <div className="space-y-2">
+                                <Button
+                                  onClick={() =>
+                                    handleCheckEligibility(badgeId)
+                                  }
+                                  disabled={isChecking}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full"
+                                >
+                                  {isChecking ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                      Checking...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Info className="mr-2 h-3 w-3" />
+                                      Check Eligibility
+                                    </>
+                                  )}
+                                </Button>
+                                {eligibility?.eligible && (
+                                  <Button
+                                    onClick={() => handleClaimBadge(badgeId)}
+                                    disabled={claimBadgeMutation.isPending}
+                                    size="sm"
+                                    className="w-full"
+                                  >
+                                    {claimBadgeMutation.isPending ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                        Claiming...
+                                      </>
+                                    ) : (
+                                      'Claim Badge'
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
                             )}
                           </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          {/* Display reward multiplier prominently */}
-                          {level.rewardMultiplier && (
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                                <Gift className="h-4 w-4" />
-                                <span>
-                                  {level.rewardMultiplier}x Reward Multiplier
-                                </span>
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                Earn {level.rewardMultiplier}x more rewards on
-                                all completed tasks
-                              </p>
-                            </div>
-                          )}
+                        )}
 
-                          {/* Display benefits */}
-                          <div className="space-y-2">
-                            <h4 className="text-sm font-medium">Benefits:</h4>
-                            <ul className="space-y-1 text-sm text-muted-foreground">
-                              <li className="flex items-center gap-2">
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                                <span>Access to higher-paying projects</span>
-                              </li>
-                              <li className="flex items-center gap-2">
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                                <span>Priority customer support</span>
-                              </li>
-                              {level.rewardMultiplier && (
-                                <li className="flex items-center gap-2">
-                                  <CheckCircle className="h-4 w-4 text-green-500" />
-                                  <span>
-                                    {level.rewardMultiplier}x reward multiplier
-                                    on all tasks
-                                  </span>
+                        {/* Requirements for unearned badges */}
+                        {!isEarned && badge.criteria && (
+                          <div className="text-xs text-muted-foreground space-y-1 border-t pt-2">
+                            <div className="font-medium">Requirements:</div>
+                            <ul className="list-disc list-inside space-y-0.5">
+                              {badge.criteria.minProjectApplications && (
+                                <li>
+                                  Apply to{' '}
+                                  {badge.criteria.minProjectApplications}{' '}
+                                  projects
                                 </li>
+                              )}
+                              {badge.criteria.minSuccessfulProjects && (
+                                <li>
+                                  Complete{' '}
+                                  {badge.criteria.minSuccessfulProjects}{' '}
+                                  projects successfully
+                                </li>
+                              )}
+                              {badge.criteria.minRating && (
+                                <li>
+                                  Maintain a {badge.criteria.minRating}+ rating
+                                </li>
+                              )}
+                              {badge.criteria.verificationRequired && (
+                                <li>Complete profile verification</li>
+                              )}
+                              {badge.criteria.oracleRequired && (
+                                <li>Complete Oracle verification</li>
                               )}
                             </ul>
                           </div>
-
-                          {/* Show requirements for next level */}
-                          {(isNextLevel || isFutureLevel) && level.criteria && (
-                            <div className="text-xs text-muted-foreground space-y-1 border-t pt-3">
-                              <div className="font-medium">Requirements:</div>
-                              <ul className="list-disc list-inside space-y-0.5">
-                                {level.criteria.minProjectApplications && (
-                                  <li>
-                                    Apply to{' '}
-                                    {level.criteria.minProjectApplications}{' '}
-                                    projects
-                                  </li>
-                                )}
-                                {level.criteria.minSuccessfulProjects && (
-                                  <li>
-                                    Complete{' '}
-                                    {level.criteria.minSuccessfulProjects}{' '}
-                                    projects successfully
-                                  </li>
-                                )}
-                                {level.criteria.minRating && (
-                                  <li>
-                                    Maintain a {level.criteria.minRating}+
-                                    rating
-                                  </li>
-                                )}
-                                {level.criteria.verificationRequired && (
-                                  <li>Complete profile verification</li>
-                                )}
-                                {level.criteria.oracleRequired && (
-                                  <li>Complete Oracle verification</li>
-                                )}
-                              </ul>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </div>
-                  );
-                })
-              ) : (
-                <EmptyState
-                  className="py-12"
-                  title="No levels available"
-                  description="Levels will appear here once they are configured."
-                  Icon={Trophy}
-                />
-              )}
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-
-          {/* Badges Section */}
-          <div>
-            <Card>
-              <CardHeader className="flex-row items-center justify-between space-y-0">
-                <div className="space-y-1">
-                  <CardTitle className="text-base">All badges</CardTitle>
-                  <CardDescription>
-                    Earn badges by completing achievements and leveling up
-                  </CardDescription>
-                </div>
-                <div
-                  className="flex items-center space-x-2
-"
-                >
-                  <Switch
-                    id="show-eligible-only"
-                    checked={showEligibleOnly}
-                    onCheckedChange={setShowEligibleOnly}
-                  />
-                  <label
-                    htmlFor="show-eligible-only"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Show eligible only
-                  </label>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {filteredBadges.length > 0 ? (
-                  <div className="relative">
-                    <div className="flex space-x-4 pb-4 overflow-x-auto scrollbar-hide -mx-2 px-2">
-                      {filteredBadges.map((badge) => {
-                        const badgeId = badge._id || badge.badge_id || '';
-                        const isEarned = isBadgeEarned(badgeId);
-                        const isNextBadge =
-                          badge.priority === maxEarnedPriority + 1;
-                        const eligibility = eligibilityChecks[badgeId];
-                        const isChecking = checkingEligibility[badgeId];
-
-                        return (
-                          <div
-                            key={badgeId}
-                            className={`w-64 flex-shrink-0 transition-all duration-200 ${
-                              isNextBadge
-                                ? 'ring-2 ring-primary/30 rounded-lg'
-                                : ''
-                            }`}
-                          >
-                            <Card className="h-full">
-                              <CardHeader className="pb-2">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0">
-                                    <CardTitle className="truncate text-sm">
-                                      {badge.name}
-                                    </CardTitle>
-                                    <CardDescription className="text-xs">
-                                      {badge.priority &&
-                                        `Priority: ${badge.priority}`}
-                                    </CardDescription>
-                                  </div>
-                                  {isEarned ? (
-                                    <Badge
-                                      variant="outline"
-                                      className="flex-shrink-0"
-                                    >
-                                      <Check className="mr-1 h-3 w-3" />
-                                      Earned
-                                    </Badge>
-                                  ) : isNextBadge ? (
-                                    <Badge
-                                      variant="outline"
-                                      className="flex-shrink-0"
-                                    >
-                                      <Medal className="mr-1 h-3 w-3" />
-                                      Next Up
-                                    </Badge>
-                                  ) : null}
-                                </div>
-                              </CardHeader>
-                              <CardContent className="pt-0 space-y-3">
-                                {/* Display badge image if available */}
-                                {badge.imageUrl ? (
-                                  <div className="flex justify-center">
-                                    <div className="relative h-24 w-24">
-                                      <Image
-                                        src={badge.imageUrl}
-                                        alt={badge.name}
-                                        fill
-                                        className={`object-contain ${
-                                          !isEarned ? 'opacity-40' : ''
-                                        }`}
-                                      />
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div
-                                    className={`flex h-24 w-full items-center justify-center rounded-md bg-muted ${
-                                      !isEarned ? 'opacity-40' : ''
-                                    }`}
-                                  >
-                                    <Award className="h-12 w-12 text-muted-foreground" />
-                                  </div>
-                                )}
-
-                                {/* Badge description */}
-                                {badge.description && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {badge.description}
-                                  </p>
-                                )}
-
-                                {/* Reward info */}
-                                {badge.baseReward && badge.baseReward > 0 && (
-                                  <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                                    <Gift className="h-4 w-4" />
-                                    <span>
-                                      Reward: {badge.baseReward} Connects
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Action buttons */}
-                                {!isEarned && (
-                                  <div>
-                                    {!isNextBadge ? (
-                                      <Button
-                                        disabled
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full"
-                                      >
-                                        <Lock className="mr-2 h-3 w-3" />
-                                        Complete previous badges
-                                      </Button>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        <Button
-                                          onClick={() =>
-                                            handleCheckEligibility(badgeId)
-                                          }
-                                          disabled={isChecking}
-                                          variant="outline"
-                                          size="sm"
-                                          className="w-full"
-                                        >
-                                          {isChecking ? (
-                                            <>
-                                              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                              Checking...
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Info className="mr-2 h-3 w-3" />
-                                              Check Eligibility
-                                            </>
-                                          )}
-                                        </Button>
-                                        {eligibility?.eligible && (
-                                          <Button
-                                            onClick={() =>
-                                              handleClaimBadge(badgeId)
-                                            }
-                                            disabled={
-                                              claimBadgeMutation.isPending
-                                            }
-                                            size="sm"
-                                            className="w-full"
-                                          >
-                                            {claimBadgeMutation.isPending ? (
-                                              <>
-                                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                                Claiming...
-                                              </>
-                                            ) : (
-                                              'Claim Badge'
-                                            )}
-                                          </Button>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-
-                                {/* Requirements for unearned badges */}
-                                {!isEarned && badge.criteria && (
-                                  <div className="text-xs text-muted-foreground space-y-1 border-t pt-2">
-                                    <div className="font-medium">
-                                      Requirements:
-                                    </div>
-                                    <ul className="list-disc list-inside space-y-0.5">
-                                      {badge.criteria
-                                        .minProjectApplications && (
-                                        <li>
-                                          Apply to{' '}
-                                          {
-                                            badge.criteria
-                                              .minProjectApplications
-                                          }{' '}
-                                          projects
-                                        </li>
-                                      )}
-                                      {badge.criteria.minSuccessfulProjects && (
-                                        <li>
-                                          Complete{' '}
-                                          {badge.criteria.minSuccessfulProjects}{' '}
-                                          projects successfully
-                                        </li>
-                                      )}
-                                      {badge.criteria.minRating && (
-                                        <li>
-                                          Maintain a {badge.criteria.minRating}+
-                                          rating
-                                        </li>
-                                      )}
-                                      {badge.criteria.verificationRequired && (
-                                        <li>Complete profile verification</li>
-                                      )}
-                                      {badge.criteria.oracleRequired && (
-                                        <li>Complete Oracle verification</li>
-                                      )}
-                                    </ul>
-                                  </div>
-                                )}
-                              </CardContent>
-                            </Card>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="py-12">
-                    <EmptyState
-                      title="No badges to show"
-                      description="Complete more tasks to unlock badges and level up your profile."
-                      Icon={Award}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-    </div>
+          ) : (
+            <div className="py-12">
+              <EmptyState
+                title="No badges to show"
+                description="Complete more tasks to unlock badges and level up your profile."
+                Icon={Award}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </FreelancerSettingsLayout>
   );
 }
