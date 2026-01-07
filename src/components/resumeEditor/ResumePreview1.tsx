@@ -80,32 +80,32 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
           boxSizing: 'border-box',
         }}
       >
-        <div className="w-full text-center mb-4">
+        <div className="w-full text-center mb-2">
           {sectionVisibility.personal &&
             personalData.map((person, index) => (
               <div key={index}>
                 <h1
-                  className="text-2xl font-bold text-gray-900"
+                  className="text-2xl font-bold text-gray-900 mb-1"
                   style={{ color: headingColor }}
                 >
                   {`${person.firstName} ${person.lastName}`}
                 </h1>
-                <p className="text-sm text-gray-800">
+                <p className="text-sm text-gray-800 leading-tight">
                   {person.email} • {person.phoneNumber}
                 </p>
-                <p className="text-sm text-gray-800">
+                <p className="text-sm text-gray-800 leading-tight">
                   {person.github} • {person.linkedin}
                 </p>
               </div>
             ))}
         </div>
 
-        <Separator className="bg-gray-300 mb-4" />
+        <Separator className="bg-gray-300 my-2" />
 
         {sectionVisibility.summary && summaryData.length > 0 && (
-          <div className="mb-4">
+          <div className="mb-3">
             <h2
-              className="text-lg font-semibold text-gray-900 mb-2"
+              className="text-lg font-semibold text-gray-900 mb-1"
               style={{ color: headingColor }}
             >
               Summary
@@ -118,7 +118,7 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
         )}
 
         {sectionVisibility.workExperience && workExperienceData.length > 0 && (
-          <div className="mb-4">
+          <div className="mb-3">
             <h2
               className="text-lg font-semibold text-gray-900 mb-2"
               style={{ color: headingColor }}
@@ -127,7 +127,7 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
             </h2>
             <Separator className="mb-2 bg-gray-300" />
             {workExperienceData.map((item, index) => (
-              <div key={index} className="mb-4">
+              <div key={index} className="mb-3">
                 <p className="text-sm font-medium text-gray-900">
                   {item.jobTitle} - {item.company}
                 </p>
@@ -174,7 +174,7 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
             </h2>
             <Separator className="mb-2 bg-gray-300" />
             {projectData.map((project, index) => (
-              <div key={index} className="mb-4">
+              <div key={index} className="mb-3">
                 <p className="text-sm font-medium text-gray-900">
                   {project.title}
                 </p>

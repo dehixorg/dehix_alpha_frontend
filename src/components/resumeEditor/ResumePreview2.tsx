@@ -99,96 +99,110 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
       <div
         ref={containerRef}
         className="bg-white w-full max-w-[794px] flex rounded-md overflow-hidden"
-        style={{ boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)' }}
+        style={{
+          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)',
+          minHeight: '297mm',
+          width: '210mm',
+          boxSizing: 'border-box',
+        }}
       >
-        {' '}
         {/* Left Section - Fixed width */}
-        <div className="w-1/3 bg-gray-100 p-4 flex flex-col">
-          {' '}
+        <div className="w-1/3 bg-gray-50 p-5 flex flex-col">
           {sectionVisibility.personal &&
             personalData.map((person, index) => (
-              <div key={index} className="mb-4">
+              <div key={index} className="mb-3">
                 <h1
-                  className="text-3xl font-bold text-gray-900"
+                  className="text-2xl font-bold text-gray-900 mb-2"
                   style={{ color: headingColor }}
                 >
                   {`${person.firstName} ${person.lastName}`}
                 </h1>
-                <div className="mt-4">
+                <div className="mt-3">
                   <h2
-                    className="text-lg font-semibold text-gray-900 mb-2"
+                    className="text-base font-semibold text-gray-900 mb-1"
                     style={{ color: headingColor }}
                   >
-                    Contact Details
+                    Contact
                   </h2>
-                  <Separator className="my-2" />
-                  <p className="text-sm text-gray-800 break-words truncate">
-                    {person.email}
-                  </p>
-                  <p className="text-sm text-gray-800 break-words truncate">
-                    {person.phoneNumber}
-                  </p>
-                  <p className="text-sm text-gray-800 mt-1 break-words truncate">
-                    {person.linkedin}
-                  </p>
-                  <p className="text-sm text-gray-800 break-words truncate">
-                    {person.github}
-                  </p>
+                  <Separator className="my-1 h-[1px] bg-gray-300" />
+                  <div className="space-y-1 mt-2">
+                    <p className="text-xs text-gray-700 break-words">
+                      {person.email}
+                    </p>
+                    <p className="text-xs text-gray-700 break-words">
+                      {person.phoneNumber}
+                    </p>
+                    <p className="text-xs text-gray-700 break-words">
+                      {person.linkedin}
+                    </p>
+                    <p className="text-xs text-gray-700 break-words">
+                      {person.github}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
           {sectionVisibility.skills && skillData.length > 0 && (
             <div className="mt-4">
               <h2
-                className="text-lg font-semibold text-gray-900"
+                className="text-base font-semibold text-gray-900 mb-1"
                 style={{ color: headingColor }}
               >
                 Skills
               </h2>
-              <Separator className="my-2" />
-              <ul className="list-disc list-inside text-sm text-gray-800 space-y-1">
+              <Separator className="my-1 h-[1px] bg-gray-300" />
+              <div className="mt-2">
                 {skillData.map((skill, index) => (
-                  <li key={index}>{skill.skillName}</li>
+                  <div key={index} className="text-xs text-gray-700 mb-1">
+                    • {skill.skillName}
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>
         {/* Right Section - Flexible width */}
-        <div className="w-2/3 p-4 flex flex-col">
+        <div className="w-2/3 p-6 flex flex-col">
           {sectionVisibility.summary && summaryData.length > 0 && (
             <div className="mb-4">
               <h2
-                className="text-lg font-bold text-gray-900"
+                className="text-base font-semibold text-gray-900 mb-1"
                 style={{ color: headingColor }}
               >
-                Profile Summary
+                SUMMARY
               </h2>
-              <Separator className="my-2" />
-              <p className="text-sm text-gray-800">{summaryData.join(' ')}</p>
+              <Separator className="my-2 h-[1px] bg-gray-300" />
+              <p className="text-xs text-gray-700 leading-relaxed">
+                {summaryData.join(' ')}
+              </p>
             </div>
           )}
 
           {sectionVisibility.workExperience &&
             workExperienceData.length > 0 && (
-              <div className="mb-4">
+              <div className="mb-5">
                 <h2
-                  className="text-lg font-semibold text-gray-900"
+                  className="text-base font-semibold text-gray-900 mb-1"
                   style={{ color: headingColor }}
                 >
-                  Experience
+                  EXPERIENCE
                 </h2>
-                <Separator className="my-2" />
-                {workExperienceData.map((item, index) => (
-                  <div key={index} className="mb-4">
-                    <p className="text-sm font-medium text-gray-900">
-                      {item.jobTitle} - {item.company}
+                <Separator className="my-1 h-[1px] bg-gray-300 mb-3" />
+                {workExperienceData.map((exp, index) => (
+                  <div key={index} className="mb-4 last:mb-0">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        {exp.jobTitle}
+                      </h3>
+                      <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                        {exp.startDate} - {exp.endDate}
+                      </span>
+                    </div>
+                    <p className="text-xs font-medium text-gray-700 mb-1">
+                      {exp.company}
                     </p>
-                    <p className="text-xs text-gray-700">
-                      {item.startDate} to {item.endDate}
-                    </p>
-                    <p className="text-sm text-gray-800 mt-1 ">
-                      {item.description}
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      {exp.description}
                     </p>
                   </div>
                 ))}
@@ -196,61 +210,71 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
             )}
 
           {sectionVisibility.projects && projectData.length > 0 && (
-            <div className="mb-4">
+            <div className="mb-5">
               <h2
-                className="text-lg font-semibold text-gray-900"
+                className="text-base font-semibold text-gray-900 mb-1"
                 style={{ color: headingColor }}
               >
-                Projects
+                PROJECTS
               </h2>
-              <Separator className="my-2" />
+              <Separator className="my-1 h-[1px] bg-gray-300 mb-3" />
               {projectData.map((project, index) => (
-                <div key={index} className="mb-3">
-                  <p className="text-sm font-medium text-gray-900">
+                <div key={index} className="mb-3 last:mb-0">
+                  <h3 className="text-sm font-semibold text-gray-900">
                     {project.title}
+                  </h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {project.description}
                   </p>
-                  <p className="text-sm text-gray-700">{project.description}</p>
                 </div>
               ))}
             </div>
           )}
 
           {sectionVisibility.education && educationData.length > 0 && (
-            <div className="mb-4">
+            <div className="mb-5">
               <h2
-                className="text-lg font-semibold text-gray-900"
+                className="text-base font-semibold text-gray-900 mb-1"
                 style={{ color: headingColor }}
               >
-                Education
+                EDUCATION
               </h2>
-              <Separator className="my-2" />
-              {educationData.map((item, index) => (
-                <div key={index} className="mb-2">
-                  <p className="text-sm font-medium text-gray-900">
-                    {item.degree} - {item.school}
-                  </p>
-                  <p className="text-xs text-gray-700">
-                    {item.startDate} to {item.endDate}
-                  </p>
+              <Separator className="my-1 h-[1px] bg-gray-300 mb-3" />
+              {educationData.map((edu, index) => (
+                <div key={index} className="mb-3 last:mb-0">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      {edu.degree}
+                    </h3>
+                    <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                      {edu.startDate} - {edu.endDate}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-700">{edu.school}</p>
                 </div>
               ))}
             </div>
           )}
 
           {sectionVisibility.achievements && achievementData.length > 0 && (
-            <div>
+            <div className="mb-5">
               <h2
-                className="text-lg font-semibold text-gray-900"
+                className="text-base font-semibold text-gray-900 mb-1"
                 style={{ color: headingColor }}
               >
-                Achievements
+                ACHIEVEMENTS
               </h2>
-              <Separator className="my-2" />
-              <ul className="list-disc list-inside text-sm text-gray-800">
+              <Separator className="my-1 h-[1px] bg-gray-300 mb-3" />
+              <div className="space-y-2">
                 {achievementData.map((achievement, index) => (
-                  <li key={index}>{achievement.achievementName}</li>
+                  <div key={index} className="flex items-start">
+                    <span className="text-xs text-gray-500 mr-2 mt-0.5">•</span>
+                    <p className="text-xs text-gray-700 leading-relaxed">
+                      {achievement.achievementName}
+                    </p>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>
