@@ -407,29 +407,7 @@ export default function LevelsAndBadgesPage() {
     },
   });
 
-  // Check level requirements
-  const checkLevelRequirements = (
-    level: LevelItem,
-  ): { canLevelUp: boolean; missingRequirements: string[] } => {
-    const missing: string[] = [];
-    const criteria = level.criteria || {};
-
-    // Check all criteria and collect missing requirements
-    if (criteria.profileComplete) {
-      // if (!profileIsComplete) missing.push('Complete your profile');
-    }
-    if (criteria.minProjects) {
-      // if (userProjects.length < criteria.minProjects) missing.push(`Complete ${criteria.minProjects} projects`);
-    }
-    // Add other criteria checks as needed
-
-    return {
-      canLevelUp: missing.length === 0,
-      missingRequirements: missing,
-    };
-  };
-
-  // Handle level up with requirement check
+  // Handle level up - server validates requirements
   const handleLevelUp = async (): Promise<void> => {
     if (!currentLevel) return;
 
@@ -442,20 +420,6 @@ export default function LevelsAndBadgesPage() {
         title: 'Maximum Level Reached',
         description: 'You have reached the maximum level!',
         variant: 'default',
-      });
-      return;
-    }
-
-    const { canLevelUp, missingRequirements } =
-      checkLevelRequirements(nextLevel);
-
-    if (!canLevelUp) {
-      toast({
-        title: 'Requirements Not Met',
-        description:
-          'You need to complete the following requirements to level up: ' +
-          missingRequirements.join(', '),
-        variant: 'destructive',
       });
       return;
     }

@@ -65,9 +65,11 @@ export interface GamificationStatusResponse {
   data?: {
     currentLevel?: LevelItem | null;
     badges?: BadgeItem[];
+    progress?: number | null;
   };
   currentLevel?: LevelItem | null;
   badges?: BadgeItem[];
+  progress?: number | null;
 }
 
 // Response type for gamification eligible
