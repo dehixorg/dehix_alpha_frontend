@@ -10,6 +10,7 @@ import { notifyError } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 
 interface ResumeUploadProps {
   maxResumeSize?: number;
@@ -62,27 +63,24 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
   const uploadFile = async (file: File) => {
     try {
       setIsUploading(true);
-      const formData = new FormData();
-      formData.append('resume', file);
-      const postResponse = await axiosInstance.post(
-        '/register/upload-image',
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        },
-      );
-      const { Location } = postResponse.data?.data || {};
-      if (!Location) throw new Error('Failed to upload the resume.');
+      const scope = userId || 'freelancer';
+      const extFromName = file.name?.split('.')?.pop();
+      const extFromType = (file.type || '').split('/')[1];
+      const ext = (extFromName || extFromType || 'pdf').split(';')[0];
+      const { url } = await uploadFileViaSignedUrl(file, {
+        key: `resume/${scope}/resume.${ext}`,
+        methods: ['upload', 'get'],
+      });
 
       const putResponse = await axiosInstance.put('/freelancer', {
-        resume: Location,
+        resume: url,
       });
       if (putResponse.status !== 200)
         throw new Error('Failed to update resume.');
 
       onResumeUpdate?.();
-      setExistingResumeUrl(Location);
-      setUploadedFileName(extractFileNameFromUrl(Location));
+      setExistingResumeUrl(url);
+      setUploadedFileName(extractFileNameFromUrl(url));
       setFiles(undefined);
     } catch (err: any) {
       notifyError(

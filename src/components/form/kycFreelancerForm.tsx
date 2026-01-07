@@ -32,9 +32,10 @@ import {
   InputGroupText,
 } from '@/components/ui/input-group';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import ImageUploader from '@/components/fileUpload/ImageUploader';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import ImageUploader from '@/components/fileUpload/ImageUploader';
 import KycStatusAlert from '@/components/shared/KycStatusAlert';
 
 const profileFormSchema = z.object({
@@ -238,16 +239,13 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   }, [user_id, reset]);
 
   const uploadImage = async (file: File, fieldName: string) => {
-    const formData = new FormData();
-    formData.append(fieldName, file);
-    const response = await axiosInstance.post(
-      '/register/upload-image',
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      },
-    );
-    return response.data.data.Location;
+    const extFromType = (file.type || '').split('/')[1];
+    const ext = (extFromType || 'jpg').split(';')[0];
+    const { url } = await uploadFileViaSignedUrl(file, {
+      key: `kyc/${user_id}/${fieldName}.${ext}`,
+      methods: ['upload', 'get'],
+    });
+    return url;
   };
 
   async function onSubmit(data: ProfileFormValues) {

@@ -64,7 +64,8 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
   Dialog,
@@ -133,6 +134,7 @@ export function CardsChat({
   onOpenProfileSidebar,
   onConversationUpdate,
 }: CardsChatProps) {
+  const { toast } = useToast();
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -456,41 +458,9 @@ export function CardsChat({
 
       try {
         setIsSending(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
-        // Function to attempt upload with retries
-        const attemptUpload = async (retryCount = 0, maxRetries = 3) => {
-          try {
-            const postFileResponse = await axiosInstance.post(
-              '/register/upload-image',
-              formData,
-              {
-                headers: {
-                  'Content-Type': 'multipart/form-data',
-                  Accept: 'application/json',
-                },
-                onUploadProgress: () => {},
-              },
-            );
-
-            return postFileResponse;
-          } catch (error: any) {
-            if (
-              retryCount < maxRetries &&
-              (error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED')
-            ) {
-              // Wait for 1 second before retrying
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-              return attemptUpload(retryCount + 1, maxRetries);
-            }
-            throw error;
-          }
-        };
-
-        const postFileResponse = await attemptUpload();
-
-        const fileUrl = postFileResponse.data.data.Location;
+        const { url: fileUrl } = await uploadFileViaSignedUrl(file, {
+          keyPrefix: `chat/${conversation?.id || 'conversation'}`,
+        });
 
         const message: Partial<Message> = {
           senderId: user.uid,
@@ -709,41 +679,9 @@ export function CardsChat({
       });
 
       // Step 2: Create FormData (same as regular file upload)
-      const formData = new FormData();
-      formData.append('file', audioFile);
-
-      // Step 3: Use the same working file upload endpoint with retry mechanism
-      const attemptUpload = async (retryCount = 0, maxRetries = 3) => {
-        try {
-          const postFileResponse = await axiosInstance.post(
-            '/register/upload-image',
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-                Accept: 'application/json',
-              },
-              onUploadProgress: () => {},
-            },
-          );
-
-          return postFileResponse;
-        } catch (error: any) {
-          if (
-            retryCount < maxRetries &&
-            (error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED')
-          ) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            return attemptUpload(retryCount + 1, maxRetries);
-          }
-          throw error;
-        }
-      };
-
-      const postFileResponse = await attemptUpload();
-
-      // Step 4: Get the file URL from response
-      const fileUrl = postFileResponse.data.data.Location;
+      const { url: fileUrl } = await uploadFileViaSignedUrl(audioFile, {
+        keyPrefix: `chat/${conversation?.id || 'conversation'}/voice`,
+      });
 
       // Step 5: Create message with voice file URL and duration metadata
       const message: Partial<Message> = {
