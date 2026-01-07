@@ -214,7 +214,7 @@ const Page = () => {
       contentClassName="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14"
       mainClassName="px-2 md:px-4 w-full max-w-full overflow-hidden"
     >
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mt-4 md:mt-0">
         <h1 className="text-xl md:text-2xl font-bold">
           {project?.projectName} Milestones
         </h1>

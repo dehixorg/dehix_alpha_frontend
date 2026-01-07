@@ -8,10 +8,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const url = request.nextUrl.clone();
 
-  const allowCrossRolePaths = new Set<string>([
-    '/project-invitations',
-    '/freelancer-profile',
-  ]);
+  const allowCrossRolePaths = ['/project-invitations', '/freelancer-profile'];
 
   // Skip middleware for static files, API routes, and auth pages
   if (
@@ -62,11 +59,13 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/business') ||
       pathname.startsWith('/dashboard/business');
 
-    const isAllowedCrossRolePath = allowCrossRolePaths.has(pathname);
+    const isAllowedCrossRolePath = allowCrossRolePaths.some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`),
+    );
 
     if (
       (isFreelancer && isBusinessPath && !isAllowedCrossRolePath) ||
-      (isBusiness && isFreelancerPath) ||
+      (isBusiness && isFreelancerPath && !isAllowedCrossRolePath) ||
       pathname === '/'
     ) {
       url.pathname = `/dashboard/${userType}`;
