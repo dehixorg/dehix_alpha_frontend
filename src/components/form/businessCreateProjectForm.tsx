@@ -15,6 +15,7 @@ import {
   Plus,
   Award,
   CheckCircle2,
+  FileText,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
@@ -266,6 +267,8 @@ enum FormSteps {
 
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
+
+  // State for skills and domains
   const [skills, setSkills] = useState<any[]>([]);
   const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
   const [currDomains, setCurrDomains] = useState<{ [key: number]: string[] }>(
@@ -274,8 +277,10 @@ export function CreateProjectBusinessForm() {
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
 
+  // State for form and UI
   const [loading, setLoading] = useState(false);
-  const [, setProfileType] = useState<'Freelancer' | 'Consultant'>(
+  const [_isSaving, _setIsSaving] = useState(false);
+  const [_profileType, setProfileType] = useState<'Freelancer' | 'Consultant'>(
     'Freelancer',
   );
   const [showLoadDraftDialog, setShowLoadDraftDialog] = useState(false);
@@ -401,13 +406,22 @@ export function CreateProjectBusinessForm() {
     keyName: 'formId', // Add a unique key to help with re-renders
   });
 
+  // State to store the current draft data
+  const [currentDraft, setCurrentDraft] = useState<any>(null);
+
   // Draft logic
   useEffect(() => {
     const savedDraft = localStorage.getItem(FORM_DRAFT_KEY);
     if (savedDraft) {
-      const parsedDraft = JSON.parse(savedDraft);
-      if (hasOtherValues(parsedDraft) || hasProfiles(parsedDraft.profiles)) {
-        setShowLoadDraftDialog(true);
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        if (hasOtherValues(parsedDraft) || hasProfiles(parsedDraft.profiles)) {
+          setCurrentDraft(parsedDraft);
+          setShowLoadDraftDialog(true);
+        }
+      } catch (error) {
+        console.error('Error parsing saved draft:', error);
+        localStorage.removeItem(FORM_DRAFT_KEY);
       }
     }
   }, [hasProfiles, hasOtherValues]);
@@ -451,46 +465,101 @@ export function CreateProjectBusinessForm() {
     const formValues = form.getValues();
     const isOtherValid = hasOtherValues(formValues);
     const isProfileValid = hasProfiles(formValues.profiles);
+
     if (!isOtherValid && !isProfileValid) {
       notifyError('Cannot save an empty draft.', 'Empty Draft');
       return;
     }
-    const DraftProfile = formValues.profiles?.map(
+
+    // Prepare profiles with current skills
+    const draftProfiles = formValues.profiles?.map(
       (profile: any, index: number) => ({
         ...profile,
-        skills: Array.isArray(currSkills[index]) ? currSkills[index] : [],
+        skills: Array.isArray(currSkills[index]) ? [...currSkills[index]] : [],
       }),
     );
-    const DraftData = { ...formValues, profiles: DraftProfile };
-    localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(DraftData));
-    notifySuccess('Your form data has been saved as a draft.', 'Draft Saved');
+
+    // Save additional metadata with the draft
+    const draftData = {
+      ...formValues,
+      profiles: draftProfiles,
+      savedAt: new Date().toISOString(),
+      currentStep,
+      activeProfile,
+      mode,
+    };
+
+    try {
+      localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(draftData));
+      setCurrentDraft(draftData); // Update the current draft state
+      notifySuccess(
+        'Your form data has been saved as a draft. Redirecting to dashboard...',
+        'Draft Saved',
+      );
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        window.location.href = '/dashboard/business';
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      notifyError('Failed to save draft. Please try again.', 'Error');
+    }
   };
 
   const loadDraft = () => {
-    const savedDraft = localStorage.getItem(FORM_DRAFT_KEY);
-    if (savedDraft) {
-      try {
-        const parsedDraft = JSON.parse(savedDraft);
-        form.reset(parsedDraft);
-        setCurrSkills(
-          parsedDraft.profiles?.map((profile: any) =>
-            Array.isArray(profile.skills) ? profile.skills : [],
-          ) || [],
-        );
+    if (!currentDraft) {
+      notifyError('No draft data available to load.', 'No Draft Found');
+      setShowLoadDraftDialog(false);
+      return;
+    }
 
-        notifySuccess('Your saved draft has been loaded.', 'Draft loaded');
-      } catch {
-        notifyError(
-          'There was a problem loading your draft.',
-          'Error loading draft',
-        );
+    try {
+      // Update form with draft data
+      form.reset({
+        ...currentDraft,
+        // Ensure we don't include internal metadata in the form values
+        savedAt: undefined,
+        currentStep: undefined,
+        activeProfile: undefined,
+        mode: undefined,
+      });
+
+      // Update skills state
+      if (currentDraft.profiles) {
+        const skillsMap: { [key: number]: string[] } = {};
+        currentDraft.profiles.forEach((profile: any, index: number) => {
+          skillsMap[index] = Array.isArray(profile.skills)
+            ? [...profile.skills]
+            : [];
+        });
+        setCurrSkills(skillsMap);
       }
+
+      // Update current step if available in draft
+      if (currentDraft.currentStep) {
+        setCurrentStep(currentDraft.currentStep);
+      }
+
+      // Update active profile if available
+      if (currentDraft.activeProfile !== undefined) {
+        setActiveProfile(currentDraft.activeProfile);
+      }
+
+      notifySuccess('Your saved draft has been loaded.', 'Draft loaded');
+    } catch (error) {
+      console.error('Error loading draft:', error);
+      notifyError(
+        'There was a problem loading your draft.',
+        'Error loading draft',
+      );
     }
     setShowLoadDraftDialog(false);
   };
 
   const discardDraft = () => {
     localStorage.removeItem(FORM_DRAFT_KEY);
+    setCurrentDraft(null);
     setShowLoadDraftDialog(false);
     notifySuccess('Your saved draft has been discarded.', 'Draft discarded');
   };
@@ -1313,29 +1382,44 @@ export function CreateProjectBusinessForm() {
 
                         <div className="flex items-center gap-2">
                           {currentStep === FormSteps.ProjectInfo && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              aria-label="Next"
-                              onClick={async () => {
-                                const ok = await form.trigger([
-                                  'projectName',
-                                  'email',
-                                  'projectDomain',
-                                  'description',
-                                ]);
-                                if (!ok) {
-                                  notifyError(
-                                    'Please complete required fields before continuing',
-                                  );
-                                  return;
-                                }
-                                setCurrentStep(FormSteps.ProfileInfo);
-                              }}
-                            >
-                              <ArrowRight className="h-4 w-4 sm:mr-1" />
-                              <span className="hidden sm:inline">Next</span>
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={saveDraft}
+                                title="Save Draft"
+                                aria-label="Save Draft"
+                              >
+                                <Save className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">
+                                  Save Draft
+                                </span>
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                aria-label="Next"
+                                onClick={async () => {
+                                  const ok = await form.trigger([
+                                    'projectName',
+                                    'email',
+                                    'projectDomain',
+                                    'description',
+                                  ]);
+                                  if (!ok) {
+                                    notifyError(
+                                      'Please complete required fields before continuing',
+                                    );
+                                    return;
+                                  }
+                                  setCurrentStep(FormSteps.ProfileInfo);
+                                }}
+                              >
+                                <ArrowRight className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Next</span>
+                              </Button>
+                            </div>
                           )}
 
                           {currentStep === FormSteps.ProfileInfo && (
@@ -1349,6 +1433,19 @@ export function CreateProjectBusinessForm() {
                               >
                                 <ArrowLeft className="h-4 w-4 sm:mr-1" />
                                 <span className="hidden sm:inline">Back</span>
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={saveDraft}
+                                title="Save Draft"
+                                aria-label="Save Draft"
+                              >
+                                <Save className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">
+                                  Save Draft
+                                </span>
                               </Button>
                               <Button
                                 type="button"
@@ -1398,6 +1495,7 @@ export function CreateProjectBusinessForm() {
                                   Save Draft
                                 </span>
                               </Button>
+
                               <ConnectsDialog
                                 loading={loading}
                                 setLoading={setLoading}
