@@ -149,7 +149,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     const customSkillData = {
       label: customSkill.label,
-      interviewInfo: customSkill.description,
+      description: customSkill.description,
       status: 'INACTIVE',
       createdBy: Type.FREELANCER,
       createdById: user_id,
@@ -159,47 +159,17 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       // Create the new skill in master table
       await axiosInstance.post('/skills', customSkillData);
 
-      const updatedSkills = [...skills, { label: customSkill.label }];
-      setSkills(updatedSkills);
-
-      const newSkill = {
-        name: customSkill.label,
-        level: '',
-        experience: '',
-        interviewStatus: 'PENDING',
-        interviewInfo: customSkill.description,
-        interviewerRating: 0,
-        interviewPermission: InterviewPermission.NOT_VERIFIED,
-      };
-
-      const updatedCurrSkills = [...currSkills, newSkill];
-      setCurrSkills(updatedCurrSkills);
-
-      // Save to freelancer profile
-      const savedProfile = await saveSkillsToProfile([newSkill]);
-      // Update state with the skill that includes the ID from backend
-      if (savedProfile && savedProfile.attributes) {
-        const skillWithId = savedProfile.attributes.find(
-          (attr: any) => attr.type === 'SKILL' && attr.name === newSkill.name,
-        );
-        if (skillWithId) {
-          setCurrSkills((prev: any) =>
-            prev.map((s: any) => (s.name === newSkill.name ? skillWithId : s)),
-          );
-        }
-      }
-
       setCustomSkill({ label: '', description: '' });
       setIsDialogOpen(false);
-      notifySuccess('New skill added to your profile successfully.');
+      notifySuccess(
+        'Submitted for admin approval. It will appear in your profile after verification.',
+      );
     } catch (error: any) {
       console.error(
         'Failed to add skill:',
         error.response?.data || error.message,
       );
       notifyError('Failed to add skill. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -210,7 +180,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     const customDomainData = {
       label: customDomain.label,
-      interviewInfo: customDomain.description,
+      description: customDomain.description,
+      status: 'INACTIVE',
       createdBy: Type.FREELANCER,
       createdById: user_id,
     };
@@ -218,48 +189,17 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     try {
       await axiosInstance.post('/domain', customDomainData);
 
-      const updatedDomains = [...domains, { label: customDomain.label }];
-      setDomains(updatedDomains);
-
-      const newDomain = {
-        name: customDomain.label,
-        level: '',
-        experience: '',
-        interviewStatus: 'PENDING',
-        interviewInfo: customDomain.description,
-        interviewerRating: 0,
-      };
-
-      const updatedCurrDomains = [...currDomains, newDomain];
-      setCurrDomains(updatedCurrDomains);
-
-      // Save to freelancer profile
-      const savedProfile = await saveDomainsToProfile([newDomain]);
-      // Update state with the domain that includes the ID from backend
-      if (savedProfile && savedProfile.attributes) {
-        const domainWithId = savedProfile.attributes.find(
-          (attr: any) => attr.type === 'DOMAIN' && attr.name === newDomain.name,
-        );
-        if (domainWithId) {
-          setCurrDomains((prev: any) =>
-            prev.map((d: any) =>
-              d.name === newDomain.name ? domainWithId : d,
-            ),
-          );
-        }
-      }
-
       setCustomDomain({ label: '', description: '' });
       setIsDialogOpen(false);
-      notifySuccess('New domain added to your profile successfully.');
+      notifySuccess(
+        'Submitted for admin approval. It will appear in your profile after verification.',
+      );
     } catch (error: any) {
       console.error(
         'Failed to add domain:',
         error.response?.data || error.message,
       );
       notifyError('Failed to add domain. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -270,6 +210,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     const customProjectDomainData = {
       label: customProjectDomain.label,
+      description: customProjectDomain.description,
+      status: 'INACTIVE',
       createdBy: Type.FREELANCER,
       createdById: user_id,
     };
@@ -277,55 +219,17 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     try {
       await axiosInstance.post('/projectdomain', customProjectDomainData);
 
-      const updatedProjectDomains = [
-        ...projectDomains,
-        { label: customProjectDomain.label },
-      ];
-      setProjectDomains(updatedProjectDomains);
-
-      const newProjectDomain = {
-        name: customProjectDomain.label,
-        level: '',
-        experience: '',
-        interviewStatus: 'PENDING',
-        interviewInfo: customProjectDomain.description,
-        interviewerRating: 0,
-      };
-
-      const updatedCurrProjectDomains = [
-        ...currProjectDomains,
-        newProjectDomain,
-      ];
-      setCurrProjectDomains(updatedCurrProjectDomains);
-
-      // Save to freelancer profile
-      const savedProfile = await saveProjectDomainsToProfile([
-        newProjectDomain,
-      ]);
-      // Update state with the project domain that includes the ID from backend
-      if (savedProfile && savedProfile.projectDomain) {
-        const projectDomainWithId = savedProfile.projectDomain.find(
-          (pd: any) => pd.name === newProjectDomain.name,
-        );
-        if (projectDomainWithId) {
-          setCurrProjectDomains((prev: any) =>
-            prev.map((pd: any) =>
-              pd.name === newProjectDomain.name ? projectDomainWithId : pd,
-            ),
-          );
-        }
-      }
-
       setCustomProjectDomain({ label: '', description: '' });
       setIsDialogOpen(false);
+      notifySuccess(
+        'Submitted for admin approval. It will appear in your profile after verification.',
+      );
     } catch (error: any) {
       console.error(
         'Failed to add project domain:',
         error.response?.data || error.message,
       );
       notifyError('Failed to add project domain. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -680,9 +584,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
         setUser(userResponse.data.data);
 
-        const skillsResponse = await axiosInstance.get('/skills');
-        const domainsResponse = await axiosInstance.get('/domain');
-        const projectDomainResponse = await axiosInstance.get('/projectdomain');
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        const domainsResponse = await axiosInstance.get('/domain/all');
+        const projectDomainResponse =
+          await axiosInstance.get('/projectdomain/all');
 
         const tmpSkills: any[] = [],
           tmpDomains: any[] = [];
@@ -1137,6 +1042,27 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                             required
                           />
                         </div>
+                        <div className="mb-4">
+                          <label
+                            htmlFor="skillDescription"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Description
+                          </label>
+                          <textarea
+                            id="skillDescription"
+                            value={customSkill.description}
+                            onChange={(e) =>
+                              setCustomSkill({
+                                ...customSkill,
+                                description: e.target.value,
+                              })
+                            }
+                            placeholder="Enter skill description"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white min-h-[80px]"
+                            required
+                          />
+                        </div>
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
@@ -1192,6 +1118,27 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                             required
                           />
                         </div>
+                        <div className="mb-4">
+                          <label
+                            htmlFor="domainDescription"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Description
+                          </label>
+                          <textarea
+                            id="domainDescription"
+                            value={customDomain.description}
+                            onChange={(e) =>
+                              setCustomDomain({
+                                ...customDomain,
+                                description: e.target.value,
+                              })
+                            }
+                            placeholder="Enter domain description"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white min-h-[80px]"
+                            required
+                          />
+                        </div>
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
@@ -1244,6 +1191,27 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                             }
                             placeholder="Enter Project Domain label"
                             className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            required
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label
+                            htmlFor="projectDomainDescription"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Description
+                          </label>
+                          <textarea
+                            id="projectDomainDescription"
+                            value={customProjectDomain.description}
+                            onChange={(e) =>
+                              setCustomProjectDomain({
+                                ...customProjectDomain,
+                                description: e.target.value,
+                              })
+                            }
+                            placeholder="Enter project domain description"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white min-h-[80px]"
                             required
                           />
                         </div>
