@@ -8,7 +8,7 @@ import FreelancerSettingsLayout from '../../../../components/layout/FreelancerSe
 
 import ResumeEditor from '@/components/resumeEditor/editor';
 import { RootState } from '@/lib/store';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ResumeInfoCard from '@/components/cards/resumeInfoCard';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,17 @@ export default function Resume() {
     setShowResumeEditor(true);
   };
 
+  const handleDeleteResume = async (resumeId: string) => {
+    try {
+      await axiosInstance.delete(`/resume/${resumeId}`);
+      setResumeData((prev) => prev.filter((resume) => resume._id !== resumeId));
+      notifySuccess('Resume deleted successfully');
+    } catch (error) {
+      notifyError('Failed to delete resume. Please try again.');
+      console.error('Delete Error:', error);
+    }
+  };
+
   if (showResumeEditor) {
     return (
       <div className="flex min-h-screen w-full flex-col">
@@ -87,6 +98,7 @@ export default function Resume() {
           key={resume._id}
           {...resume}
           onClick={() => handleEditResume(resume)}
+          onDelete={handleDeleteResume}
         />
       ))}
 

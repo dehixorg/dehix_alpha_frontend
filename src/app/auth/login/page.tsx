@@ -4,7 +4,15 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import Cookies from 'js-cookie';
 import { UserCredential } from 'firebase/auth';
-import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
+import {
+  LoaderCircle,
+  Chrome,
+  Key,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  X,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -43,6 +51,8 @@ export default function Login() {
   const [formError, setFormError] = useState<string>('');
   const [srMessage, setSrMessage] = useState<string>('');
   const [forgotOpen, setForgotOpen] = useState<boolean>(false);
+
+  const clearFormError = () => setFormError('');
   const [forgotEmail, setForgotEmail] = useState<string>('');
   const [forgotError, setForgotError] = useState<string>('');
   const [forgotMsg, setForgotMsg] = useState<string>('');
@@ -137,13 +147,12 @@ export default function Login() {
             );
           }, 0);
         } catch (error: any) {
-          notifyError('Invalid Email or Password. Please try again.');
+          setFormError('Invalid Email or Password. Please try again.');
           console.error(error.message);
         }
       }
     } catch (error: any) {
       setFormError('Invalid Email or Password. Please try again.');
-      notifyError('Invalid Email or Password. Please try again.');
       console.error(error.message);
     } finally {
       setIsEmailLoginLoading(false); // Ensures isLoading resets after API call completion
@@ -199,9 +208,20 @@ export default function Login() {
               {formError && (
                 <div
                   role="alert"
-                  className="rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-3 py-2 text-sm"
+                  className="relative rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-3 py-2 text-sm"
                 >
-                  {formError}
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">{formError}</div>
+                    <button
+                      type="button"
+                      onClick={clearFormError}
+                      className="text-destructive/70 hover:text-destructive"
+                      aria-label="Dismiss error"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               )}
               <div className="grid gap-2">
@@ -211,7 +231,10 @@ export default function Login() {
                   type="email"
                   placeholder="m@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (formError) clearFormError();
+                  }}
                   required
                   autoComplete="email"
                   aria-invalid={!!emailError}
@@ -247,7 +270,10 @@ export default function Login() {
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    onChange={(e) => setPass(e.target.value)}
+                    onChange={(e) => {
+                      setPass(e.target.value);
+                      if (formError) clearFormError();
+                    }}
                     required
                     autoComplete="current-password"
                     aria-invalid={!!passwordError}
