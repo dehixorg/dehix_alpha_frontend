@@ -312,12 +312,11 @@ const Page = () => {
       active="Market"
       activeMenu="Market"
       breadcrumbItems={[
-        { label: 'Freelancer', link: '/dashboard/freelancer' },
+        { label: 'Dashboard', link: '/dashboard/freelancer' },
         { label: 'Marketplace', link: '/freelancer/market' },
         { label: project?.projectName || 'Project', link: '#' },
       ]}
-      containerClassName="flex min-h-screen w-full bg-background"
-      mainClassName="p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto"
+      mainClassName="p-4 sm:px-8"
     >
       <AnimatePresence>
         <motion.div
