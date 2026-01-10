@@ -8,7 +8,7 @@ import FreelancerSettingsLayout from '../../../../components/layout/FreelancerSe
 
 import ResumeEditor from '@/components/resumeEditor/editor';
 import { RootState } from '@/lib/store';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ResumeInfoCard from '@/components/cards/resumeInfoCard';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ export default function Resume() {
   const [showResumeEditor, setShowResumeEditor] = useState(false);
   const [resumeData, setResumeData] = useState<any[]>([]);
   const [selectedResume, setSelectedResume] = useState<any>(null);
+  const [, setIsDeleting] = useState(false);
 
   const fetchResumeData = useCallback(
     async (isMounted?: boolean) => {
@@ -55,6 +56,26 @@ export default function Resume() {
     setShowResumeEditor(true);
   };
 
+  const handleDeleteResume = async (resumeId: string) => {
+    if (!resumeId) return;
+
+    try {
+      setIsDeleting(true);
+      await axiosInstance.delete(`/resume/${resumeId}`);
+
+      // Update the UI by removing the deleted resume
+      setResumeData((prevData) =>
+        prevData.filter((resume) => resume._id !== resumeId),
+      );
+      notifySuccess('Resume deleted successfully');
+    } catch (error) {
+      console.error('Error deleting resume:', error);
+      notifyError('Failed to delete resume. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (showResumeEditor) {
     return (
       <div className="flex min-h-screen w-full flex-col">
@@ -87,6 +108,7 @@ export default function Resume() {
           key={resume._id}
           {...resume}
           onClick={() => handleEditResume(resume)}
+          onDelete={handleDeleteResume}
         />
       ))}
 
