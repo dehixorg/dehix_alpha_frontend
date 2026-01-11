@@ -47,7 +47,7 @@ const ResumeInfoCard: React.FC<ResumeProps> = ({
 
   const handleConfirmDelete = async () => {
     if (!onDelete) return;
-    
+
     try {
       setIsDeleting(true);
       await onDelete(_id);
@@ -121,7 +121,7 @@ const ResumeInfoCard: React.FC<ResumeProps> = ({
           </span>
         </CardFooter>
       </Card>
-      
+
       <DeleteConfirmationDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
