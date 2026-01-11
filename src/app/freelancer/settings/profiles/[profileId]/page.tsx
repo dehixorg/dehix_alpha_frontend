@@ -359,7 +359,11 @@ export default function ProfileDetailPage() {
       }) || [];
 
     // Create a clean payload without LinkedIn and Website fields
-    const { linkedinLink, personalWebsite, ...cleanProfileData } = profileData;
+    const {
+      linkedinLink: _linkedinLink,
+      personalWebsite: _personalWebsite,
+      ...cleanProfileData
+    } = profileData;
 
     return {
       ...cleanProfileData,
