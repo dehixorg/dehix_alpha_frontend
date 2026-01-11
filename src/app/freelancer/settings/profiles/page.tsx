@@ -31,19 +31,6 @@ import EmptyState from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
 import CreateProfileDialog from '@/components/freelancer/CreateProfileDialog';
 
-// URL validation functions
-const isValidLinkedInUrl = (url: string) => {
-  const linkedInRegex =
-    /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
-  return linkedInRegex.test(url.trim());
-};
-
-const isValidWebsiteUrl = (url: string) => {
-  const websiteRegex =
-    /^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})?(\/.*)?$/;
-  return websiteRegex.test(url.trim());
-};
-
 export default function ProfilesPage() {
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
@@ -54,9 +41,6 @@ export default function ProfilesPage() {
   const [newProfileDescription, setNewProfileDescription] = useState('');
   const [newProfileHourlyRate, setNewProfileHourlyRate] = useState<number>(0);
   const [newProfileGithubLink, setNewProfileGithubLink] = useState('');
-  const [newProfileLinkedinLink, setNewProfileLinkedinLink] = useState('');
-  const [newProfilePersonalWebsite, setNewProfilePersonalWebsite] =
-    useState('');
   const [newProfileAvailability, setNewProfileAvailability] =
     useState('FREELANCE');
   // Store full selected option objects for skills/domains
@@ -147,8 +131,6 @@ export default function ProfilesPage() {
     setNewProfileDescription('');
     setNewProfileHourlyRate(0);
     setNewProfileGithubLink('');
-    setNewProfileLinkedinLink('');
-    setNewProfilePersonalWebsite('');
     setNewProfileAvailability('FREELANCE');
     setNewProfileSkills([]);
     setNewProfileDomains([]);
@@ -168,31 +150,6 @@ export default function ProfilesPage() {
       newProfileDescription.trim().length < 10
     ) {
       notifyError('Description must be at least 10 characters long');
-      return;
-    }
-
-    // URL validation
-    if (!newProfileLinkedinLink.trim()) {
-      notifyError('LinkedIn profile URL is required');
-      return;
-    }
-
-    if (!isValidLinkedInUrl(newProfileLinkedinLink)) {
-      notifyError(
-        'Please enter a valid LinkedIn profile URL (e.g., https://linkedin.com/in/username)',
-      );
-      return;
-    }
-
-    if (!newProfilePersonalWebsite.trim()) {
-      notifyError('Personal website URL is required');
-      return;
-    }
-
-    if (!isValidWebsiteUrl(newProfilePersonalWebsite)) {
-      notifyError(
-        'Please enter a valid website URL (e.g., https://example.com)',
-      );
       return;
     }
 
@@ -219,8 +176,8 @@ export default function ProfilesPage() {
         experiences: newProfileExperiences,
         portfolioLinks: [],
         githubLink: newProfileGithubLink.trim(),
-        linkedinLink: newProfileLinkedinLink.trim(),
-        personalWebsite: newProfilePersonalWebsite.trim(),
+        linkedinLink: '', // Send empty string to prevent backend error
+        personalWebsite: '', // Send empty string to prevent backend error
         availability: newProfileAvailability,
       };
 
@@ -740,10 +697,6 @@ export default function ProfilesPage() {
         setNewProfileHourlyRate={setNewProfileHourlyRate}
         newProfileGithubLink={newProfileGithubLink}
         setNewProfileGithubLink={setNewProfileGithubLink}
-        newProfileLinkedinLink={newProfileLinkedinLink}
-        setNewProfileLinkedinLink={setNewProfileLinkedinLink}
-        newProfilePersonalWebsite={newProfilePersonalWebsite}
-        setNewProfilePersonalWebsite={setNewProfilePersonalWebsite}
         newProfileAvailability={newProfileAvailability}
         setNewProfileAvailability={setNewProfileAvailability}
         skillsOptions={skillsOptions}
@@ -763,8 +716,6 @@ export default function ProfilesPage() {
           setNewProfileDescription('');
           setNewProfileHourlyRate(0);
           setNewProfileGithubLink('');
-          setNewProfileLinkedinLink('');
-          setNewProfilePersonalWebsite('');
           setNewProfileAvailability('FREELANCE');
           setNewProfileSkills([]);
           setNewProfileDomains([]);

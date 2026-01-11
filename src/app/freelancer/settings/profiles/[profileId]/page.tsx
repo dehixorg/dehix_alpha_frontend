@@ -12,8 +12,6 @@ import {
   User,
   DollarSign,
   FileText,
-  Linkedin,
-  Globe,
   Layers,
   Github,
   Award,
@@ -360,8 +358,14 @@ export default function ProfileDetailPage() {
         return domain._id;
       }) || [];
 
+    // Create a clean payload without LinkedIn and Website fields
+    const { linkedinLink, personalWebsite, ...cleanProfileData } = profileData;
+    // Explicitly ignore the destructured variables to prevent linting warnings
+    void linkedinLink;
+    void personalWebsite;
+
     return {
-      ...profileData,
+      ...cleanProfileData,
       skills: transformedSkills,
       domains: transformedDomains,
     };
@@ -698,60 +702,6 @@ export default function ProfileDetailPage() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Open GitHub</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                    {editingProfileData.linkedinLink && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              asChild
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
-                            >
-                              <a
-                                href={editingProfileData.linkedinLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <Linkedin className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                  {' '}
-                                  LinkedIn
-                                </span>
-                              </a>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Open LinkedIn</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                    {editingProfileData.personalWebsite && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              asChild
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
-                            >
-                              <a
-                                href={editingProfileData.personalWebsite}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <Globe className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                  {' '}
-                                  Website
-                                </span>
-                              </a>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Open Website</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     )}
@@ -1114,105 +1064,6 @@ export default function ProfileDetailPage() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Share your repositories to boost credibility.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-              <div className="space-y-2">
-                {isEditMode ? (
-                  <>
-                    <Label
-                      htmlFor="linkedinLink"
-                      className="flex items-center gap-2"
-                    >
-                      <Linkedin className="h-4 w-4 text-muted-foreground" />{' '}
-                      LinkedIn
-                    </Label>
-
-                    <div className="relative">
-                      <Input
-                        id="linkedinLink"
-                        value={editingProfileData.linkedinLink || ''}
-                        onChange={(e) =>
-                          handleInputChange('linkedinLink', e.target.value)
-                        }
-                        placeholder="https://linkedin.com/in/username"
-                      />
-                    </div>
-                  </>
-                ) : editingProfileData.linkedinLink ? (
-                  <></>
-                ) : (
-                  <Card className="bg-muted/30">
-                    <CardContent className="py-4 flex items-center gap-3">
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="opacity-60"
-                      >
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          stroke="#9CA3AF"
-                          strokeWidth="1.2"
-                        />
-                        <path d="M7 10V17" stroke="#9CA3AF" strokeWidth="1.2" />
-                        <circle cx="7" cy="7" r="1" fill="#9CA3AF" />
-                      </svg>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          No LinkedIn link
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Add LinkedIn to help clients learn more about you.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-              <div className="space-y-2">
-                {isEditMode ? (
-                  <>
-                    <Label
-                      htmlFor="personalWebsite"
-                      className="flex items-center gap-2"
-                    >
-                      <Globe className="h-4 w-4 text-muted-foreground" />{' '}
-                      Website
-                    </Label>
-
-                    <div className="relative">
-                      <Input
-                        id="personalWebsite"
-                        value={editingProfileData.personalWebsite || ''}
-                        onChange={(e) =>
-                          handleInputChange('personalWebsite', e.target.value)
-                        }
-                        placeholder="https://yourwebsite.com"
-                      />
-                    </div>
-                  </>
-                ) : editingProfileData.personalWebsite ? (
-                  <></>
-                ) : (
-                  <Card className="bg-muted/30">
-                    <CardContent className="py-4 flex items-center gap-3">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          No website
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Add your portfolio or personal site link.
                         </p>
                       </div>
                     </CardContent>

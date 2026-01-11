@@ -6,9 +6,7 @@ import {
   Briefcase,
   DollarSign,
   Github,
-  Globe,
   Layers,
-  Linkedin,
   Plus,
   User,
   UserCog,
@@ -68,10 +66,6 @@ type Props = {
   setNewProfileHourlyRate: (value: number) => void;
   newProfileGithubLink: string;
   setNewProfileGithubLink: (value: string) => void;
-  newProfileLinkedinLink: string;
-  setNewProfileLinkedinLink: (value: string) => void;
-  newProfilePersonalWebsite: string;
-  setNewProfilePersonalWebsite: (value: string) => void;
   newProfileAvailability: string;
   setNewProfileAvailability: (value: string) => void;
 
@@ -100,11 +94,6 @@ type Props = {
   onExperiencesSelected: (selected: any[]) => void;
 };
 
-const linkedInRegex =
-  /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
-const websiteRegex =
-  /^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})?(\/.*)?$/;
-
 const createProfileSchema = z.object({
   profileName: z.string().trim().min(1, 'Profile name is required'),
   description: z
@@ -115,22 +104,6 @@ const createProfileSchema = z.object({
     .number({ invalid_type_error: 'Hourly rate must be a number' })
     .min(0, 'Hourly rate must be 0 or greater'),
   githubLink: z.string().trim().optional(),
-  linkedinLink: z
-    .string()
-    .trim()
-    .min(1, 'LinkedIn profile URL is required')
-    .regex(
-      linkedInRegex,
-      'Please enter a valid LinkedIn profile URL (e.g., https://linkedin.com/in/username)',
-    ),
-  personalWebsite: z
-    .string()
-    .trim()
-    .min(1, 'Personal website URL is required')
-    .regex(
-      websiteRegex,
-      'Please enter a valid website URL (e.g., https://example.com)',
-    ),
   availability: z.string().min(1, 'Availability is required'),
 });
 
@@ -148,10 +121,6 @@ export default function CreateProfileDialog({
   setNewProfileHourlyRate,
   newProfileGithubLink,
   setNewProfileGithubLink,
-  newProfileLinkedinLink,
-  setNewProfileLinkedinLink,
-  newProfilePersonalWebsite,
-  setNewProfilePersonalWebsite,
   newProfileAvailability,
   setNewProfileAvailability,
   skillsOptions,
@@ -181,8 +150,6 @@ export default function CreateProfileDialog({
       description: newProfileDescription,
       hourlyRate: newProfileHourlyRate ?? 0,
       githubLink: newProfileGithubLink,
-      linkedinLink: newProfileLinkedinLink,
-      personalWebsite: newProfilePersonalWebsite,
       availability: newProfileAvailability,
     },
     mode: 'onTouched',
@@ -195,8 +162,6 @@ export default function CreateProfileDialog({
       description: newProfileDescription,
       hourlyRate: newProfileHourlyRate ?? 0,
       githubLink: newProfileGithubLink,
-      linkedinLink: newProfileLinkedinLink,
-      personalWebsite: newProfilePersonalWebsite,
       availability: newProfileAvailability,
     });
   }, [
@@ -206,8 +171,6 @@ export default function CreateProfileDialog({
     newProfileDescription,
     newProfileHourlyRate,
     newProfileGithubLink,
-    newProfileLinkedinLink,
-    newProfilePersonalWebsite,
     newProfileAvailability,
   ]);
 
@@ -465,69 +428,6 @@ export default function CreateProfileDialog({
                               onChange={(e) => {
                                 field.onChange(e);
                                 setNewProfileGithubLink(e.target.value);
-                              }}
-                            />
-                          </InputGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="linkedin-link"
-                    className="flex items-center gap-2"
-                  >
-                    LinkedIn
-                  </Label>
-                  <FormField
-                    control={form.control}
-                    name="linkedinLink"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <InputGroup>
-                            <InputGroupText>
-                              <Linkedin className="h-4 w-4" />
-                            </InputGroupText>
-                            <InputGroupInput
-                              id="linkedin-link"
-                              placeholder="https://linkedin.com/in/username"
-                              value={field.value}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                setNewProfileLinkedinLink(e.target.value);
-                              }}
-                            />
-                          </InputGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="personal-website"> Website</Label>
-                  <FormField
-                    control={form.control}
-                    name="personalWebsite"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <InputGroup>
-                            <InputGroupText>
-                              <Globe className="h-4 w-4" />
-                            </InputGroupText>
-                            <InputGroupInput
-                              id="personal-website"
-                              placeholder="https://yourwebsite.com"
-                              value={field.value}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                setNewProfilePersonalWebsite(e.target.value);
                               }}
                             />
                           </InputGroup>
