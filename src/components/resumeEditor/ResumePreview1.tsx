@@ -5,7 +5,6 @@ import React, { useRef } from 'react';
 // import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
-// Define SectionVisibility interface
 interface SectionVisibility {
   personal: boolean;
   summary: boolean;
@@ -71,9 +70,8 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
     <div className="flex justify-center w-full h-full rounded-md">
       <div
         ref={containerRef}
-        className="bg-white w-[900px] p-10 shadow-lg flex flex-col rounded-md border border-gray-300"
+        className="bg-white w-[900px] p-10 flex flex-col rounded-md border border-gray-300"
         style={{
-          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
           width: '210mm',
           minHeight: '297mm',
           padding: '15mm',
