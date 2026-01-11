@@ -360,9 +360,6 @@ export default function ProfileDetailPage() {
 
     // Create a clean payload without LinkedIn and Website fields
     const { linkedinLink, personalWebsite, ...cleanProfileData } = profileData;
-    // Explicitly ignore the destructured variables to prevent linting warnings
-    void linkedinLink;
-    void personalWebsite;
 
     return {
       ...cleanProfileData,

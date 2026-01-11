@@ -176,8 +176,6 @@ export default function ProfilesPage() {
         experiences: newProfileExperiences,
         portfolioLinks: [],
         githubLink: newProfileGithubLink.trim(),
-        linkedinLink: '', // Send empty string to prevent backend error
-        personalWebsite: '', // Send empty string to prevent backend error
         availability: newProfileAvailability,
       };
 
