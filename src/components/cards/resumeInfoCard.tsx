@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
 
 interface ResumeProps {
   _id: string;
@@ -36,24 +37,23 @@ const ResumeInfoCard: React.FC<ResumeProps> = ({
   onClick,
   onDelete,
 }) => {
-  const [, setIsDeleting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDeleteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
     if (!onDelete) return;
-
-    // Show browser's confirmation dialog
-    const isConfirmed = window.confirm(
-      'Are you sure you want to delete this resume? This action cannot be undone.',
-    );
-
-    if (isConfirmed) {
-      try {
-        setIsDeleting(true);
-        await onDelete(_id);
-      } finally {
-        setIsDeleting(false);
-      }
+    
+    try {
+      setIsDeleting(true);
+      await onDelete(_id);
+      setShowDeleteDialog(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -121,6 +121,17 @@ const ResumeInfoCard: React.FC<ResumeProps> = ({
           </span>
         </CardFooter>
       </Card>
+      
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Resume"
+        description="Are you sure you want to delete this resume? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        confirmLoading={isDeleting}
+      />
     </>
   );
 };
