@@ -268,14 +268,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.warn('Field is required.');
       return;
     }
-    const customProjectDomainData = {
-      label: customProjectDomain.label,
-      createdBy: Type.FREELANCER,
-      createdById: user_id,
+    const customDomainData = {
+      name: customProjectDomain.label,
+      type: 'DOMAIN',
+      level: '',
+      experience: '',
+      interviewStatus: 'PENDING',
+      interviewInfo: customProjectDomain.description,
+      interviewerRating: 0,
     };
 
     try {
-      await axiosInstance.post('/projectdomain', customProjectDomainData);
+      const savedDomainProfile = await saveDomainsToProfile([customDomainData]);
 
       const updatedProjectDomains = [
         ...projectDomains,
@@ -436,6 +440,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         (s: any) => s.name === value || s.label === value,
       );
       const newSkill = {
+        _id: matchedSkill?._id || `temp_${Date.now()}`,
         type_id: matchedSkill?._id || '',
         name: value,
         level: '',
@@ -1007,13 +1012,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onRemove={handleDeleteSkill}
                   selectPlaceholder="Select skill"
                   searchPlaceholder="Search skills"
-                  showOtherOption
-                  hideRemoveButtonInSettings={true}
-                  onOtherClick={() => {
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
                     setDialogType('skill');
                     setIsDialogOpen(true);
                   }}
-                />
+                  className="mt-2 text-xs"
+                >
+                  + Not able to find your skill? 
+                </Button>
               </div>
               <div className="col-span-1">
                 <SelectTagPicker
@@ -1025,13 +1036,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   optionLabelKey="label"
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains"
-                  showOtherOption
-                  hideRemoveButtonInSettings={true}
-                  onOtherClick={() => {
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
                     setDialogType('domain');
                     setIsDialogOpen(true);
                   }}
-                />
+                  className="mt-2 text-xs"
+                >
+                  + Not able to find your domain?
+                </Button>
               </div>
               <div className="col-span-1">
                 <SelectTagPicker
@@ -1043,12 +1060,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   optionLabelKey="label"
                   selectPlaceholder="Select project domain"
                   searchPlaceholder="Search project domains"
-                  showOtherOption
-                  onOtherClick={() => {
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
                     setDialogType('projectDomain');
                     setIsDialogOpen(true);
                   }}
-                />
+                  className="mt-2 text-xs"
+                >
+                  + Not able to find your project domain? 
+                </Button>
               </div>
             </div>
           </div>
