@@ -15,7 +15,6 @@
     "@google/generative-ai": "^0.21.0",
     "@hookform/resolvers": "^3.8.0",
     "@radix-ui/react-accordion": "^1.2.0",
-    "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.1",
