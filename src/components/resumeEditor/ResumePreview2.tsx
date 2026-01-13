@@ -98,7 +98,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
     <div className="flex justify-center w-full h-full rounded-md">
       <div
         ref={containerRef}
-        className="bg-white w-full max-w-[794px] flex rounded-md overflow-hidden"
+        className="bg-white w-full max-w-[794px] flex rounded-md overflow-hidden  border border-gray-300"
         style={{
           boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)',
           minHeight: '297mm',
@@ -107,7 +107,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
         }}
       >
         {/* Left Section - Fixed width */}
-        <div className="w-1/3 bg-gray-50 p-5 flex flex-col">
+        <div className="w-1/3 bg-white p-5 flex flex-col">
           {sectionVisibility.personal &&
             personalData.map((person, index) => (
               <div key={index} className="mb-3">
