@@ -278,10 +278,6 @@ export function CreateProjectBusinessForm() {
 
   // State for form and UI
   const [loading, setLoading] = useState(false);
-  const [_isSaving, _setIsSaving] = useState(false);
-  const [_profileType, setProfileType] = useState<'Freelancer' | 'Consultant'>(
-    'Freelancer',
-  );
   const [showLoadDraftDialog, setShowLoadDraftDialog] = useState(false);
   const [currentStep, setCurrentStep] = useState<FormSteps>(
     FormSteps.ProjectInfo,
@@ -922,7 +918,6 @@ export function CreateProjectBusinessForm() {
                         : 'outline'
                     }
                     onClick={() => {
-                      setProfileType('Freelancer');
                       form.setValue(
                         `profiles.${index}.profileType`,
                         'FREELANCER',
@@ -941,7 +936,6 @@ export function CreateProjectBusinessForm() {
                         : 'outline'
                     }
                     onClick={() => {
-                      setProfileType('Consultant');
                       form.setValue(
                         `profiles.${index}.profileType`,
                         'CONSULTANT',

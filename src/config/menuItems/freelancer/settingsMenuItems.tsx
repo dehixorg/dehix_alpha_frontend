@@ -8,6 +8,7 @@ import {
   Award,
   ArrowLeft,
   Star,
+  Flame,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -51,6 +52,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/settings/levels-badges',
     icon: <Award className="h-5 w-5" />,
     label: 'Levels & Badges',
+  },
+  {
+    href: '/freelancer/settings/streak',
+    icon: <Flame className="h-5 w-5" />,
+    label: 'Streak',
   },
   {
     href: '/freelancer/settings/profiles',
