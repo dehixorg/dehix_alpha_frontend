@@ -147,6 +147,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.warn('Field is required.');
       return;
     }
+    
+    // Check if skill already exists
+    if (currSkills.some((skill: any) => skill.name === customSkill.label)) {
+      notifySuccess('Skill already present!');
+      return;
+    }
     const customSkillData = {
       label: customSkill.label,
       interviewInfo: customSkill.description,
@@ -197,7 +203,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to add skill:',
         error.response?.data || error.message,
       );
-      notifyError('Failed to add skill. Please try again.');
+      
+      // Check for specific conflict error
+      if (error.response?.data?.code === 'CONFLICT_ERROR') {
+        notifySuccess('Skill already present!');
+      } else {
+        notifyError('Failed to add skill. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -206,6 +218,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const handleAddCustomDomain = async () => {
     if (!customDomain.label.trim()) {
       console.warn('Field is required.');
+      return;
+    }
+    
+    // Check if domain already exists
+    if (currDomains.some((domain: any) => domain.name === customDomain.label)) {
+      notifySuccess('Domain already present!');
       return;
     }
     const customDomainData = {
@@ -257,7 +275,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to add domain:',
         error.response?.data || error.message,
       );
-      notifyError('Failed to add domain. Please try again.');
+      
+      // Check for specific conflict error
+      if (error.response?.data?.code === 'CONFLICT_ERROR') {
+        notifySuccess('Domain already present!');
+      } else {
+        notifyError('Failed to add domain. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -268,9 +292,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.warn('Field is required.');
       return;
     }
-    const customDomainData = {
+    
+    // Check if project domain already exists
+    if (currProjectDomains.some((projectDomain: any) => projectDomain.name === customProjectDomain.label)) {
+      notifySuccess('Project domain already present!');
+      return;
+    }
+    const customProjectDomainData = {
       name: customProjectDomain.label,
-      type: 'DOMAIN',
+      type: 'PROJECT_DOMAIN',
       level: '',
       experience: '',
       interviewStatus: 'PENDING',
@@ -279,7 +309,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     };
 
     try {
-      const savedDomainProfile = await saveDomainsToProfile([customDomainData]);
+      const savedProjectDomainProfile = await saveProjectDomainsToProfile([customProjectDomainData]);
 
       const updatedProjectDomains = [
         ...projectDomains,
@@ -327,7 +357,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to add project domain:',
         error.response?.data || error.message,
       );
-      notifyError('Failed to add project domain. Please try again.');
+      
+      // Check for specific conflict error
+      if (error.response?.data?.code === 'CONFLICT_ERROR') {
+        notifySuccess('Project domain already present!');
+      } else {
+        notifyError('Failed to add project domain. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -451,17 +487,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         interviewPermission: InterviewPermission.NOT_VERIFIED,
       };
 
-      // Save to backend
       try {
-        // Send ONLY the new skill, not the whole list
         const savedProfile = await saveSkillsToProfile([newSkill]);
-        // Update state with the skill that includes the ID from backend
         if (savedProfile && savedProfile.skills) {
           const skillWithIds = savedProfile.skills;
           setCurrSkills((prev: any) => [...prev, ...skillWithIds]);
         }
       } catch (error) {
-        // Revert local state if API call fails
         setCurrSkills(currSkills);
       }
     }
@@ -698,14 +730,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             tmpDomains.push(attr);
           }
         });
-        // Set options for dropdowns
         setSkills(skillsResponse.data.data);
         setDomains(domainsResponse.data.data);
         setProjectDomains(projectDomainResponse.data.data);
 
         setCurrSkills(tmpSkills);
-        // Transform domains so that type_id holds the backend domain _id
-        // and name holds the human-readable label when available
         const transformedDomains = tmpDomains.map((domain: any) => {
           const matchingDomain = domainsResponse.data.data.find(
             (d: any) => d._id === domain.type_id || d.label === domain.name,
@@ -717,7 +746,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           };
         });
         setCurrDomains(transformedDomains);
-        // Transform project domains to ensure proper names
         const transformedProjectDomains = (
           userResponse.data.data.projectDomain || []
         ).map((pd: any) => {
@@ -728,10 +756,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             ...pd,
             name: matchingProjectDomain?.label ?? pd.name,
           };
-        });
+        })
+        // Remove duplicates by keeping only unique items
+        .filter((pd: any, index: number, self: any[]) => 
+          self.findIndex((item: any) => item.name === pd.name) === index
+        );
         setCurrProjectDomains(transformedProjectDomains);
-
-        // Ensure cover letter is treated as text, not URL
         const coverLetterValue = userResponse.data.data.coverLetter;
         const cleanCoverLetter =
           coverLetterValue &&
@@ -1010,6 +1040,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   selected={currSkills}
                   onAdd={handleAddSkillByValue}
                   onRemove={handleDeleteSkill}
+                  hideRemoveButton={true}
                   selectPlaceholder="Select skill"
                   searchPlaceholder="Search skills"
                 />
@@ -1034,6 +1065,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onAdd={handleAddDomainByValue}
                   onRemove={handleDeleteDomain}
                   optionLabelKey="label"
+                  hideRemoveButton={true}
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains"
                 />
@@ -1058,6 +1090,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onAdd={handleAddProjectDomainByValue}
                   onRemove={handleDeleteProjDomain}
                   optionLabelKey="label"
+                  hideRemoveButton={true}
                   selectPlaceholder="Select project domain"
                   searchPlaceholder="Search project domains"
                 />
@@ -1137,7 +1170,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          handleAddCustomSkill(); // Add custom skill logic
+                          handleAddCustomSkill(); 
                         }}
                       >
                         <div className="mb-4">
@@ -1157,14 +1190,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               })
                             }
                             placeholder="Enter skill label"
-                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white  focus:outline-none"
                             required
                           />
                         </div>
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
-                            variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
                             className="mt-3"
                           >
@@ -1192,7 +1224,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          handleAddCustomDomain(); // Add custom domain logic
+                          handleAddCustomDomain(); 
                         }}
                       >
                         <div className="mb-4">
@@ -1212,14 +1244,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               })
                             }
                             placeholder="Enter Domain label"
-                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white  focus:outline-none"
                             required
                           />
                         </div>
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
-                            variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
                             className="mt-3"
                           >
@@ -1247,7 +1278,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          handleAddCustomProjectDomain(); // Add custom project domain logic
+                          handleAddCustomProjectDomain(); 
                         }}
                       >
                         <div className="mb-4">
@@ -1267,14 +1298,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               })
                             }
                             placeholder="Enter Project Domain label"
-                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white  focus:outline-none"
                             required
                           />
                         </div>
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
-                            variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
                             className="mt-3"
                           >
