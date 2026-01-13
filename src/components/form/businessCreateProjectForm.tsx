@@ -15,7 +15,6 @@ import {
   Plus,
   Award,
   CheckCircle2,
-  FileText,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';

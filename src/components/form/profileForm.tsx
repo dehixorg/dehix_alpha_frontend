@@ -147,7 +147,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.warn('Field is required.');
       return;
     }
-    
+
     // Check if skill already exists
     if (currSkills.some((skill: any) => skill.name === customSkill.label)) {
       notifySuccess('Skill already present!');
@@ -203,7 +203,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to add skill:',
         error.response?.data || error.message,
       );
-      
+
       // Check for specific conflict error
       if (error.response?.data?.code === 'CONFLICT_ERROR') {
         notifySuccess('Skill already present!');
@@ -220,7 +220,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.warn('Field is required.');
       return;
     }
-    
+
     // Check if domain already exists
     if (currDomains.some((domain: any) => domain.name === customDomain.label)) {
       notifySuccess('Domain already present!');
@@ -275,7 +275,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to add domain:',
         error.response?.data || error.message,
       );
-      
+
       // Check for specific conflict error
       if (error.response?.data?.code === 'CONFLICT_ERROR') {
         notifySuccess('Domain already present!');
@@ -292,9 +292,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.warn('Field is required.');
       return;
     }
-    
+
     // Check if project domain already exists
-    if (currProjectDomains.some((projectDomain: any) => projectDomain.name === customProjectDomain.label)) {
+    if (
+      currProjectDomains.some(
+        (projectDomain: any) =>
+          projectDomain.name === customProjectDomain.label,
+      )
+    ) {
       notifySuccess('Project domain already present!');
       return;
     }
@@ -309,7 +314,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     };
 
     try {
-      const savedProjectDomainProfile = await saveProjectDomainsToProfile([customProjectDomainData]);
+      const savedProjectDomainProfile = await saveProjectDomainsToProfile([
+        customProjectDomainData,
+      ]);
 
       const updatedProjectDomains = [
         ...projectDomains,
@@ -357,7 +364,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to add project domain:',
         error.response?.data || error.message,
       );
-      
+
       // Check for specific conflict error
       if (error.response?.data?.code === 'CONFLICT_ERROR') {
         notifySuccess('Project domain already present!');
@@ -748,19 +755,21 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setCurrDomains(transformedDomains);
         const transformedProjectDomains = (
           userResponse.data.data.projectDomain || []
-        ).map((pd: any) => {
-          const matchingProjectDomain = projectDomainResponse.data.data.find(
-            (p: any) => p._id === pd.type_id || p.label === pd.name,
+        )
+          .map((pd: any) => {
+            const matchingProjectDomain = projectDomainResponse.data.data.find(
+              (p: any) => p._id === pd.type_id || p.label === pd.name,
+            );
+            return {
+              ...pd,
+              name: matchingProjectDomain?.label ?? pd.name,
+            };
+          })
+          // Remove duplicates by keeping only unique items
+          .filter(
+            (pd: any, index: number, self: any[]) =>
+              self.findIndex((item: any) => item.name === pd.name) === index,
           );
-          return {
-            ...pd,
-            name: matchingProjectDomain?.label ?? pd.name,
-          };
-        })
-        // Remove duplicates by keeping only unique items
-        .filter((pd: any, index: number, self: any[]) => 
-          self.findIndex((item: any) => item.name === pd.name) === index
-        );
         setCurrProjectDomains(transformedProjectDomains);
         const coverLetterValue = userResponse.data.data.coverLetter;
         const cleanCoverLetter =
@@ -1054,7 +1063,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   }}
                   className="mt-2 text-xs"
                 >
-                  + Not able to find your skill? 
+                  + Not able to find your skill?
                 </Button>
               </div>
               <div className="col-span-1">
@@ -1104,7 +1113,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   }}
                   className="mt-2 text-xs"
                 >
-                  + Not able to find your project domain? 
+                  + Not able to find your project domain?
                 </Button>
               </div>
             </div>
@@ -1170,7 +1179,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          handleAddCustomSkill(); 
+                          handleAddCustomSkill();
                         }}
                       >
                         <div className="mb-4">
@@ -1224,7 +1233,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          handleAddCustomDomain(); 
+                          handleAddCustomDomain();
                         }}
                       >
                         <div className="mb-4">
@@ -1278,7 +1287,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          handleAddCustomProjectDomain(); 
+                          handleAddCustomProjectDomain();
                         }}
                       >
                         <div className="mb-4">
