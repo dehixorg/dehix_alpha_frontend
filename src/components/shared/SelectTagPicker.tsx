@@ -35,6 +35,7 @@ type SelectTagPickerProps = {
   searchPlaceholder?: string;
   showOtherOption?: boolean;
   showRemoveButton?: boolean;
+  hideRemoveButton?: boolean;
   hideRemoveButtonInSettings?: boolean;
   onOtherClick?: () => void;
 };
@@ -52,6 +53,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
   searchPlaceholder = 'Search',
   showOtherOption = false,
   showRemoveButton = true,
+  hideRemoveButton = false,
   hideRemoveButtonInSettings = false,
   onOtherClick,
 }) => {
@@ -222,6 +224,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
             >
               {itemName}
               {showRemoveButton &&
+                !hideRemoveButton &&
                 (!isInSettingsSection || !hideRemoveButtonInSettings) &&
                 onRemove &&
                 !isNonDeletable && (
