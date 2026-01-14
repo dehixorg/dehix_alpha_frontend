@@ -145,14 +145,6 @@ const TalentMarketCard: React.FC<Props> = ({
           >
             <Bookmark className={cn('h-4 w-4', bookmarked && 'fill-current')} />
           </button>
-          {item.status && (
-            <Badge
-              variant="outline"
-              className={cn(getOutlineStatusClasses(item.status))}
-            >
-              {String(item.status).toUpperCase()}
-            </Badge>
-          )}
         </div>
         <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">
           {title}
