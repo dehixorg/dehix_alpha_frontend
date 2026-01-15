@@ -521,7 +521,6 @@ const TalentMarketTab: React.FC = () => {
                   Required: {selectedItem.freelancerRequired}
                 </Badge>
               )}
-              
             </div>
 
             <div className="flex flex-wrap gap-2 text-xs">
