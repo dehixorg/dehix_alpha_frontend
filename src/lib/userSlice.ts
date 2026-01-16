@@ -11,6 +11,7 @@ export interface UserState {
   phoneNumber?: string | null;
   emailVerified?: boolean;
   type?: UserType;
+  connects?: number; // Connects balance for both freelancer and business users
   // Add other user properties as needed
   [key: string]: any; // For backward compatibility
 }
@@ -50,7 +51,8 @@ const userSlice = createSlice({
         ...(phoneNumber !== undefined && { phoneNumber }),
         ...(emailVerified !== undefined && { emailVerified }),
         ...(type !== undefined && { type }),
-        ...(type === 'freelancer' && rest.connects !== undefined
+        ...((type === 'freelancer' || type === 'business') &&
+        rest.connects !== undefined
           ? { connects: rest.connects }
           : {}),
       };
@@ -58,9 +60,17 @@ const userSlice = createSlice({
     clearUser: () => {
       return { uid: '' }; // Return default state with empty uid
     },
+    updateConnects: (state, action: PayloadAction<number>) => {
+      if (
+        state.uid &&
+        (state.type === 'freelancer' || state.type === 'business')
+      ) {
+        state.connects = action.payload;
+      }
+    },
   },
 });
 
-export const { setUser, clearUser } = userSlice.actions;
+export const { setUser, clearUser, updateConnects } = userSlice.actions;
 
 export default userSlice.reducer;

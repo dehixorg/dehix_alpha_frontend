@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import {
   Dialog,
   DialogTrigger,
@@ -109,6 +110,17 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       if (response.status === 200 && response.data?.data) {
         const newTalent = response.data.data;
         onSubmitSkill({ ...data, uid: newTalent._id });
+
+        // Update connects balance from backend response
+        const remainingConnects = response.data?.remainingConnects;
+        if (typeof remainingConnects === 'number') {
+          updateConnectsBalance(remainingConnects);
+        } else {
+          console.warn(
+            'remainingConnects not returned from hire-dehixtalent endpoint',
+          );
+        }
+
         reset();
         setOpen(false);
         notifySuccess(
