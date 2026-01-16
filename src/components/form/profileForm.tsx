@@ -247,21 +247,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       notifySuccess('Project domain already present!');
       return;
     }
-    const customProjectDomainData = {
-      name: customProjectDomain.label,
-      type: 'PROJECT_DOMAIN',
-      level: '',
-      experience: '',
-      interviewStatus: 'PENDING',
-      interviewInfo: customProjectDomain.description,
-      interviewerRating: 0,
-    };
 
     try {
-      const savedProjectDomainProfile = await saveProjectDomainsToProfile([
-        customProjectDomainData,
-      ]);
-
       setCustomProjectDomain({ label: '', description: '' });
       setIsDialogOpen(false);
       notifySuccess(
