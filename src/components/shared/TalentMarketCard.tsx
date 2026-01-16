@@ -62,7 +62,6 @@ interface Props {
   ) => void | Promise<void>;
 }
 
-
 const TalentMarketCard: React.FC<Props> = ({
   item,
   onNotInterested,
@@ -80,13 +79,17 @@ const TalentMarketCard: React.FC<Props> = ({
   const created = React.useMemo(() => {
     if (!item.createdAt) return 'Recently';
     const date = new Date(item.createdAt);
-    return isNaN(date.getTime()) ? 'Recently' : formatDistanceToNow(date, { addSuffix: true });
+    return isNaN(date.getTime())
+      ? 'Recently'
+      : formatDistanceToNow(date, { addSuffix: true });
   }, [item.createdAt]);
 
   const updated = React.useMemo(() => {
     if (!item.updatedAt) return undefined;
     const date = new Date(item.updatedAt);
-    return isNaN(date.getTime()) ? undefined : formatDistanceToNow(date, { addSuffix: true });
+    return isNaN(date.getTime())
+      ? undefined
+      : formatDistanceToNow(date, { addSuffix: true });
   }, [item.updatedAt]);
 
   return (
