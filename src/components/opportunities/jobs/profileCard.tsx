@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useSelector } from 'react-redux';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import {
   Dialog,
   DialogContent,
@@ -80,9 +81,14 @@ const ProfileCard: React.FC<ProfileProps> = ({
         biddingValue: amount,
       });
 
-      const updatedConnects = (currentConnects - amount).toString();
-      localStorage.setItem('DHX_CONNECTS', updatedConnects);
-      window.dispatchEvent(new Event('connectsUpdated'));
+      // Update connects balance
+      const remainingConnects = response?.data?.remainingConnects;
+      if (typeof remainingConnects === 'number') {
+        updateConnectsBalance(remainingConnects);
+      } else {
+        // Fallback to calculation if backend doesn't return remainingConnects
+        updateConnectsBalance(currentConnects - amount);
+      }
 
       setAmount(0);
       setDescription('');

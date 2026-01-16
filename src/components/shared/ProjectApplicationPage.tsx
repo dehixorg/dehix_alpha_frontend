@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
+
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -302,8 +304,11 @@ const ProjectApplicationForm = ({
       const res = await axiosInstance.post('/bid', bidData);
       const remainingConnects = res?.data?.remainingConnects;
       if (typeof remainingConnects === 'number') {
-        localStorage.setItem('DHX_CONNECTS', String(remainingConnects));
-        window.dispatchEvent(new Event('connectsUpdated'));
+        updateConnectsBalance(remainingConnects);
+      } else {
+        // Fallback: calculate locally if backend doesn't return remainingConnects
+        const currentConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
+        updateConnectsBalance(currentConnects - bidAmount);
       }
 
       // Reset form state

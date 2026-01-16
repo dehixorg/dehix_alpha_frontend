@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import {
   Dialog,
   DialogTrigger,
@@ -112,14 +113,23 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       if (response.status === 200) {
         const newTalent = response.data.data;
         onSubmitDomain({ ...data, uid: newTalent._id });
+
+        // Update connects balance from backend response
+        const remainingConnects = response.data?.remainingConnects;
+        if (typeof remainingConnects === 'number') {
+          updateConnectsBalance(remainingConnects);
+        } else {
+          console.warn(
+            'remainingConnects not returned from hire-dehixtalent endpoint',
+          );
+        }
+
         reset();
         setOpen(false);
         notifySuccess(
           'The Talent has been successfully added.',
           'Talent Added',
         );
-        // Server deducts connects; avoid client-side deduction to prevent double counting.
-        // If you want immediate UI sync, refresh the user profile/connects from backend here.
       }
     } catch (error) {
       console.error('Error submitting domain data', error);

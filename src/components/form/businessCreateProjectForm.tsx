@@ -19,6 +19,8 @@ import {
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
+
 import ProjectFormIllustration from './ProjectFormIllustration';
 import ProjectFormStepper from './ProjectFormStepper';
 import BudgetSection from './BudgetSection';
@@ -602,30 +604,33 @@ export function CreateProjectBusinessForm() {
         url: (data.urls || []).map((u) => u.value).filter(Boolean),
         profiles: profilesWithFormattedBudget,
       };
-      await axiosInstance.post(`/project/business`, payload);
+      const response = await axiosInstance.post(`/project/business`, payload);
+
+      const remaining = response?.data?.remainingConnects;
+      if (typeof remaining === 'number') {
+        updateConnectsBalance(remaining);
+      } else {
+        // Fallback: fetch updated profile to sync connects
+        console.warn('remainingConnects not in response, fetching profile...');
+        try {
+          const profileResponse = await axiosInstance.get(
+            `/business/${user.uid}`,
+          );
+          const connects = profileResponse.data?.data?.connects;
+          if (typeof connects === 'number') {
+            updateConnectsBalance(connects);
+          }
+        } catch (error) {
+          console.error('Failed to fetch updated connects:', error);
+          // Don't show error to user - project was created successfully
+        }
+      }
+
       notifySuccess(
         'Your project has been successfully added.',
         'Project Added',
       );
-
-      const connectsCost = parseInt(
-        process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '150',
-        10,
-      );
-      const prevConnects = parseInt(
-        localStorage.getItem('DHX_CONNECTS') || '0',
-      );
-      const updatedConnects = prevConnects - connectsCost;
-      // Update connects in DB as well
-      try {
-        await axiosInstance.put('/business', { connects: updatedConnects });
-      } catch (err) {
-        // Optionally handle error, but don't block UI
-        console.error('Failed to update connects in DB:', err);
-      }
-      localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
       localStorage.removeItem(FORM_DRAFT_KEY);
-      window.dispatchEvent(new Event('connectsUpdated'));
     } catch {
       notifyError('Failed to add project. Please try again later.', 'Error');
     } finally {
