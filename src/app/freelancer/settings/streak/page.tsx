@@ -469,93 +469,113 @@ export default function StreakPage() {
                   const canClaim = canClaimMilestone(milestone.days);
 
                   return (
-                    <Card
+                    <div
                       key={milestone.days}
-                      className={`transition-all ${
+                      className={`border shadow-sm rounded-lg overflow-hidden bg-green-50 dark:bg-green-950/30 ${
                         status === 'available'
-                          ? 'border-blue-500 shadow-lg shadow-blue-500/20'
+                          ? 'ring-2 ring-blue-500 ring-offset-2'
                           : status === 'claimed'
-                            ? 'border-green-500'
-                            : 'border-border'
+                            ? ''
+                            : 'opacity-75'
                       }`}
                     >
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-xl">
-                            {milestone.days} Day Streak
-                          </CardTitle>
-                          <Badge
-                            variant={
-                              status === 'claimed'
-                                ? 'default'
-                                : status === 'available'
-                                  ? 'default'
-                                  : 'secondary'
-                            }
-                            className={
-                              status === 'claimed'
-                                ? 'bg-green-500 hover:bg-green-600'
-                                : status === 'available'
-                                  ? 'bg-blue-500 hover:bg-blue-600'
-                                  : ''
-                            }
+                      <div className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`p-2 rounded-lg ${
+                              status === 'available'
+                                ? 'bg-blue-100 dark:bg-blue-900/50'
+                                : status === 'claimed'
+                                  ? 'bg-green-100 dark:bg-green-900/50'
+                                  : 'bg-gray-100 dark:bg-gray-900/50'
+                            }`}
                           >
-                            {status === 'claimed'
-                              ? 'Claimed'
-                              : status === 'available'
-                                ? 'Available'
-                                : 'Locked'}
-                          </Badge>
+                            <Gift
+                              className={`h-5 w-5 ${
+                                status === 'available'
+                                  ? 'text-blue-600 dark:text-blue-400'
+                                  : status === 'claimed'
+                                    ? 'text-green-600 dark:text-green-400'
+                                    : 'text-gray-500 dark:text-gray-400'
+                              }`}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <p className="text-sm text-muted-foreground">
+                                  {milestone.days} Day Streak
+                                </p>
+                                <div className="text-lg font-semibold text-green-600 dark:text-green-400">
+                                  {milestone.reward} Connects
+                                </div>
+                              </div>
+                              <Badge
+                                variant={
+                                  status === 'claimed'
+                                    ? 'default'
+                                    : status === 'available'
+                                      ? 'default'
+                                      : 'secondary'
+                                }
+                                className={
+                                  status === 'claimed'
+                                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                                    : status === 'available'
+                                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                                      : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                }
+                              >
+                                {status === 'claimed'
+                                  ? 'Reward Claimed'
+                                  : status === 'available'
+                                    ? 'Available'
+                                    : 'Locked'}
+                              </Badge>
+                            </div>
+
+                            {/* Progress Bar */}
+                            <div className="mt-3 space-y-2">
+                              <Progress value={progress} className="h-2" />
+                              <p className="text-xs text-muted-foreground text-right">
+                                {streakData.currentStreak} / {milestone.days}{' '}
+                                days{' '}
+                              </p>
+                            </div>
+
+                            {/* Action Button */}
+                            {status === 'available' && (
+                              <Button
+                                onClick={handleClaimReward}
+                                disabled={
+                                  claimRewardMutation.isPending || !canClaim
+                                }
+                                className="w-full mt-3"
+                              >
+                                {claimRewardMutation.isPending
+                                  ? 'Claiming...'
+                                  : 'Claim Reward'}
+                              </Button>
+                            )}
+
+                            {status === 'claimed' && (
+                              <Button
+                                disabled={true}
+                                className="w-full mt-3 opacity-50 cursor-not-allowed"
+                              >
+                                Reward Claimed
+                              </Button>
+                            )}
+
+                            {status === 'locked' && (
+                              <p className="text-sm text-muted-foreground text-center mt-3">
+                                Keep logging in to unlock this reward
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Reward Amount */}
-                        <div className="flex items-center gap-2">
-                          <Gift className="w-5 h-5 text-purple-500" />
-                          <span className="text-lg font-semibold">
-                            {milestone.reward} Connects
-                          </span>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="space-y-2">
-                          <Progress value={progress} className="h-2" />
-                          <p className="text-xs text-muted-foreground text-right">
-                            {streakData.currentStreak} / {milestone.days} days
-                          </p>
-                        </div>
-
-                        {/* Claim Button */}
-                        {status === 'available' && (
-                          <Button
-                            onClick={handleClaimReward}
-                            disabled={
-                              claimRewardMutation.isPending || !canClaim
-                            }
-                            className="w-full"
-                          >
-                            {claimRewardMutation.isPending
-                              ? 'Claiming...'
-                              : 'Claim Reward'}
-                          </Button>
-                        )}
-
-                        {status === 'claimed' && (
-                          <Button
-                            disabled={true}
-                            className="w-full opacity-50 cursor-not-allowed"
-                          >
-                            Reward Claimed
-                          </Button>
-                        )}
-
-                        {status === 'locked' && (
-                          <p className="text-sm text-muted-foreground text-center">
-                            Keep logging in to unlock this reward
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   );
                 })}
             </div>
