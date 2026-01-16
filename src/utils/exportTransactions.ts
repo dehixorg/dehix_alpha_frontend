@@ -1,5 +1,6 @@
-import { Transaction } from '@/types/transaction';
 import { format } from 'date-fns';
+
+import { Transaction } from '@/types/transaction';
 
 export const exportTransactionsToCSV = (
   transactions: Transaction[],

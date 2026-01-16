@@ -19,12 +19,11 @@ import {
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 
-import { updateConnectsBalance } from '@/lib/updateConnects';
-
 import ProjectFormIllustration from './ProjectFormIllustration';
 import ProjectFormStepper from './ProjectFormStepper';
 import BudgetSection from './BudgetSection';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import {
   Card,
   CardContent,
