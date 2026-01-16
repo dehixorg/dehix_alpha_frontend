@@ -1,5 +1,5 @@
 'use client';
-import { Activity, CheckCircle, Clock, CalendarX2 } from 'lucide-react';
+import { Activity, CheckCircle, Clock } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -14,8 +14,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
-import { Button } from '@/components/ui/button';
-import MeetingDialog from '@/components/ui/meetingDialog';
+import { InterviewsSection } from '@/components/interviews/InterviewsSection';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
@@ -32,7 +31,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [showMeetingDialog, setShowMeetingDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -71,10 +69,6 @@ export default function Dashboard() {
   useEffect(() => {
     fetchProjectData();
   }, [user.uid]);
-
-  const handleCreateMeetClick = () => {
-    setShowMeetingDialog(true);
-  };
 
   // Total revenue display (placeholder for now, can be made dynamic later)
   const totalRevenueValue = '$45,231.89';
@@ -212,25 +206,9 @@ export default function Dashboard() {
           </div>
 
           {/* Create Meet Section */}
-          <div className="space-y-6">
-            <CardTitle className="group flex items-center gap-2 text-2xl">
-              Interviews
-            </CardTitle>
-            <div className="text-center py-10">
-              <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
-              <p className="text-gray-500">No interviews scheduled</p>
-              <Button className="mt-3" onClick={handleCreateMeetClick}>
-                Create Meet
-              </Button>
-            </div>
-          </div>
+          <InterviewsSection />
         </main>
       </div>
-
-      <MeetingDialog
-        isOpen={showMeetingDialog}
-        onClose={() => setShowMeetingDialog(false)}
-      />
     </div>
   );
 }
