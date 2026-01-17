@@ -7,7 +7,6 @@ import {
   Receipt,
   ArrowUpCircle,
   ArrowDownCircle,
-  Loader2,
   RefreshCw,
   Download,
 } from 'lucide-react';
@@ -266,7 +265,6 @@ export default function TransactionsPage() {
     totalDebits: 0,
     netChange: 0,
   };
-  const total = Array.isArray(transactions) ? transactions.length : 0;
   // If we have a full page of results, there might be more pages
   const hasMorePages = transactions.length === limit;
   const totalPages = hasMorePages ? page + 1 : page;
