@@ -66,7 +66,6 @@ interface Props {
 const getOutlineStatusClasses = (status?: string) => {
   const s = (status || '').toLowerCase();
   switch (s) {
-    case 'added':
     case 'active':
       return 'border-blue-300 text-blue-700 bg-blue-50 dark:border-blue-400/40 dark:text-blue-300 dark:bg-blue-950/30';
     case 'pending':
@@ -145,7 +144,7 @@ const TalentMarketCard: React.FC<Props> = ({
           >
             <Bookmark className={cn('h-4 w-4', bookmarked && 'fill-current')} />
           </button>
-          {item.status && (
+          {item.status && item.status.toUpperCase() !== 'ADDED' && (
             <Badge
               variant="outline"
               className={cn(getOutlineStatusClasses(item.status))}

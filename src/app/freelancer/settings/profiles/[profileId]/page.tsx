@@ -359,11 +359,8 @@ export default function ProfileDetailPage() {
       }) || [];
 
     // Create a clean payload without LinkedIn and Website fields
-    const {
-      linkedinLink: _linkedinLink,
-      personalWebsite: _personalWebsite,
-      ...cleanProfileData
-    } = profileData;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { linkedinLink, personalWebsite, ...cleanProfileData } = profileData;
 
     return {
       ...cleanProfileData,
