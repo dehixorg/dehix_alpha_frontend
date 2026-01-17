@@ -2,8 +2,6 @@
 
 import React from 'react';
 import { Calendar, Search, Filter, X } from 'lucide-react';
-import { format } from 'date-fns';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +18,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 
 export interface TransactionFilters {

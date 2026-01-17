@@ -258,7 +258,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     };
 
     try {
-      await saveProjectDomainsToProfile([customProjectDomainData]);
+      const savedProjectDomainProfile = await saveProjectDomainsToProfile([
+        customProjectDomainData,
+      ]);
 
       setCustomProjectDomain({ label: '', description: '' });
       setIsDialogOpen(false);
