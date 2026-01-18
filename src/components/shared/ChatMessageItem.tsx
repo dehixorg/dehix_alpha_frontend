@@ -349,9 +349,9 @@ function ChatMessageItem({
                                       raw,
                                       replyMsg.voiceMessage,
                                     )
-                                        .replace(/<[^>]*>/g, '')
-                                        .replace(/&nbsp;/g, ' ')
-                                        .trim();
+                                      .replace(/<[^>]*>/g, '')
+                                      .replace(/&nbsp;/g, ' ')
+                                      .trim();
 
                             return (
                               <div className="flex items-center gap-2 min-w-0">
