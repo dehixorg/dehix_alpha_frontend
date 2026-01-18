@@ -72,7 +72,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
 
     SetIsloading(true);
     try {
-      await axiosInstance.post(`/bid`, {
+      const response = await axiosInstance.post(`/bid`, {
         current_price: amount,
         description: descriptionValue,
         bidder_id: user.uid,
