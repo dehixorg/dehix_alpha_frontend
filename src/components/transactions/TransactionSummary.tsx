@@ -78,7 +78,6 @@ export const TransactionSummaryComponent: React.FC<TransactionSummaryProps> = ({
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Net Change
           </CardTitle>
-          <DollarSign className="h-5 w-5 text-blue-600" />
         </CardHeader>
         <CardContent>
           <div
