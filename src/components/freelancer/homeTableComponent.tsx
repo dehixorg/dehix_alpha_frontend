@@ -159,55 +159,53 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
   );
 
   return (
-    <div className="min-h-screen">
-      <Card>
-        <CardHeader>
-          <CardTitle>Projects</CardTitle>
-          <CardDescription>Recent projects from your account.</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Tabs
-            value={currentTab}
-            onValueChange={(v) => setCurrentTab(v as StatusEnum)}
-          >
-            <div className="border-b px-2 sm:px-6">
-              <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
-                <TabsTrigger
-                  value={StatusEnum.ACTIVE}
-                  className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                >
-                  Active
-                </TabsTrigger>
-                <TabsTrigger
-                  value={StatusEnum.PENDING}
-                  className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                >
-                  Pending
-                </TabsTrigger>
-                <TabsTrigger
-                  value={StatusEnum.COMPLETED}
-                  className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                >
-                  Completed
-                </TabsTrigger>
-                <TabsTrigger
-                  value={StatusEnum.REJECTED}
-                  className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                >
-                  Rejected
-                </TabsTrigger>
-              </TabsList>
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Projects</CardTitle>
+        <CardDescription>Recent projects from your account.</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Tabs
+          value={currentTab}
+          onValueChange={(v) => setCurrentTab(v as StatusEnum)}
+        >
+          <div className="border-b px-2 sm:px-6">
+            <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
+              <TabsTrigger
+                value={StatusEnum.ACTIVE}
+                className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Active
+              </TabsTrigger>
+              <TabsTrigger
+                value={StatusEnum.PENDING}
+                className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Pending
+              </TabsTrigger>
+              <TabsTrigger
+                value={StatusEnum.COMPLETED}
+                className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Completed
+              </TabsTrigger>
+              <TabsTrigger
+                value={StatusEnum.REJECTED}
+                className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Rejected
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-            {Object.values(StatusEnum).map((status) => (
-              <TabsContent key={status} value={status} className="m-0">
-                {renderTable(getVisibleProjects(status as StatusEnum))}
-              </TabsContent>
-            ))}
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+          {Object.values(StatusEnum).map((status) => (
+            <TabsContent key={status} value={status} className="m-0">
+              {renderTable(getVisibleProjects(status as StatusEnum))}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };
 export default ProjectTableCard;
