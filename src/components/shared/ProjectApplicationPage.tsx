@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Textarea } from '@/components/ui/textarea';
