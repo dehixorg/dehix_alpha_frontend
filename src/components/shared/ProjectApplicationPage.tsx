@@ -14,8 +14,6 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-import { updateConnectsBalance } from '@/lib/updateConnects';
-
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 import { axiosInstance } from '@/lib/axiosinstance';

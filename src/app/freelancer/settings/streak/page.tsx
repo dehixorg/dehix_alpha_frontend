@@ -139,7 +139,8 @@ export default function StreakPage() {
     mutationFn: claimStreakReward,
     onSuccess: async (data) => {
       // Prefer server-provided remaining connects to avoid drift
-      const remaining = data?.data?.remainingConnects;
+      const remaining = (data?.data as { remainingConnects?: number })
+        ?.remainingConnects;
       if (typeof remaining === 'number') {
         updateConnectsBalance(remaining);
       } else {
