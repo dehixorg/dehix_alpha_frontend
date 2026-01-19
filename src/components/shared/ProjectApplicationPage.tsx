@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Textarea } from '@/components/ui/textarea';
@@ -302,8 +303,14 @@ const ProjectApplicationForm = ({
       const res = await axiosInstance.post('/bid', bidData);
       const remainingConnects = res?.data?.remainingConnects;
       if (typeof remainingConnects === 'number') {
-        localStorage.setItem('DHX_CONNECTS', String(remainingConnects));
-        window.dispatchEvent(new Event('connectsUpdated'));
+        updateConnectsBalance(remainingConnects);
+      } else {
+        // Fallback: calculate locally if backend doesn't return remainingConnects
+        const currentConnects = parseInt(
+          localStorage.getItem('DHX_CONNECTS') || '0',
+          10,
+        );
+        updateConnectsBalance(currentConnects - bidAmount);
       }
 
       // Reset form state

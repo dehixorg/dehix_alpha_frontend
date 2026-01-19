@@ -4,6 +4,7 @@ import React from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Flame, Calendar, Trophy, Gift } from 'lucide-react';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -137,14 +138,20 @@ export default function StreakPage() {
   const claimRewardMutation = useMutation({
     mutationFn: claimStreakReward,
     onSuccess: async (data) => {
-      // Update localStorage connects
-      const currentConnects = localStorage.getItem('DHX_CONNECTS');
-      const connectsValue = currentConnects ? parseInt(currentConnects, 10) : 0;
-      const newConnects = connectsValue + data.data.finalAmount;
-      localStorage.setItem('DHX_CONNECTS', newConnects.toString());
-
-      // Dispatch connectsUpdated event to update header
-      window.dispatchEvent(new Event('connectsUpdated'));
+      // Prefer server-provided remaining connects to avoid drift
+      const remaining = (data?.data as { remainingConnects?: number })
+        ?.remainingConnects;
+      if (typeof remaining === 'number') {
+        updateConnectsBalance(remaining);
+      } else {
+        // Fallback: calculate locally if backend doesn't return remainingConnects
+        const currentConnects = localStorage.getItem('DHX_CONNECTS');
+        const connectsValue = currentConnects
+          ? parseInt(currentConnects, 10)
+          : 0;
+        const newConnects = connectsValue + data.data.finalAmount;
+        updateConnectsBalance(newConnects);
+      }
 
       // Refetch streak data
       await refetch();

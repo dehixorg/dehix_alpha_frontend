@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Coins, AlertTriangle } from 'lucide-react';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -125,11 +126,26 @@ export default function ConnectsDialog({
     if (lowConnects) return;
     setLoading(true);
     try {
+      let response: any;
       if (data) {
-        await onSubmit(data);
+        response = await onSubmit(data);
       } else {
-        await onSubmit();
+        response = await onSubmit();
       }
+
+      // Update connects balance if returned in response
+      const remainingConnects =
+        response?.data?.remainingConnects || response?.remainingConnects;
+      if (typeof remainingConnects === 'number') {
+        updateConnectsBalance(remainingConnects);
+      } else if (
+        typeof userConnects === 'number' &&
+        typeof requiredConnects === 'number'
+      ) {
+        // Fallback: calculate locally if backend doesn't return remainingConnects
+        updateConnectsBalance(userConnects - requiredConnects);
+      }
+
       if (!skipRedirect) {
         router.push('/dashboard/business');
       }

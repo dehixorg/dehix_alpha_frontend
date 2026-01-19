@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Star,
   Flame,
+  Receipt,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -57,6 +58,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/settings/streak',
     icon: <Flame className="h-5 w-5" />,
     label: 'Streak',
+  },
+  {
+    href: '/freelancer/settings/transactions',
+    icon: <Receipt className="h-5 w-5" />,
+    label: 'Transactions',
   },
   {
     href: '/freelancer/settings/profiles',
