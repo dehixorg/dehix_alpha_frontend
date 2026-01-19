@@ -4,16 +4,23 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  BadgeCheck,
+  DollarSign,
+} from 'lucide-react';
 
 import LiveCaptureField from './register/livecapture';
 import KYCDetailsView from './KYCDetailsView';
 
 import { Card } from '@/components/ui/card';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { Badge } from '@/components/ui/badge';
+import ImageUploader from '@/components/fileUpload/ImageUploader';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Form,
   FormControl,
@@ -22,9 +29,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { cn } from '@/lib/utils';
-import ImageUploader from '@/components/fileUpload/ImageUploader';
 import KycStatusAlert from '@/components/shared/KycStatusAlert';
 
 const kycFormSchema = z.object({
@@ -254,16 +264,13 @@ export function KYCForm({ user_id }: { user_id: string }) {
   );
 
   const uploadImage = async (file: File, fieldName: string) => {
-    const formData = new FormData();
-    formData.append(fieldName, file);
-    const response = await axiosInstance.post(
-      '/register/upload-image',
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      },
-    );
-    return response.data.data.Location;
+    const extFromType = (file.type || '').split('/')[1];
+    const ext = (extFromType || 'jpg').split(';')[0];
+    const { url } = await uploadFileViaSignedUrl(file, {
+      key: `kyc/${user_id}/${fieldName}.${ext}`,
+      methods: ['upload', 'get'],
+    });
+    return url;
   };
 
   async function onSubmit(data: KYCFormValues) {
@@ -545,10 +552,15 @@ export function KYCForm({ user_id }: { user_id: string }) {
                         <FormItem>
                           <FormLabel>Business Proof</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Enter your business registration number"
-                              {...field}
-                            />
+                            <InputGroup>
+                              <InputGroupText>
+                                <BadgeCheck className="h-4 w-4" />
+                              </InputGroupText>
+                              <InputGroupInput
+                                placeholder="Enter your business registration number"
+                                {...field}
+                              />
+                            </InputGroup>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -562,14 +574,20 @@ export function KYCForm({ user_id }: { user_id: string }) {
                         <FormItem>
                           <FormLabel>Business Profit</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Enter your annual business profit"
-                              type="number"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(Number(e.target.value))
-                              }
-                            />
+                            <InputGroup>
+                              <InputGroupText>
+                                <DollarSign className="h-4 w-4" />
+                              </InputGroupText>
+                              <InputGroupInput
+                                placeholder="Enter your annual business profit"
+                                type="number"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                              />
+                              <InputGroupText>YEARLY</InputGroupText>
+                            </InputGroup>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

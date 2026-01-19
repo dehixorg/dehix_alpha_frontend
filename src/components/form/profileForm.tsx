@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { User, Tags, Upload, Save } from 'lucide-react';
+import {
+  User,
+  Tags,
+  Upload,
+  Save,
+  Mail,
+  Phone,
+  Globe,
+  AtSign,
+} from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,7 +32,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { Separator } from '@/components/ui/separator';
 import { Type } from '@/utils/enum';
 import { InterviewPermission, StatusEnum } from '@/utils/freelancer/enum';
@@ -32,6 +45,7 @@ import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
     message: 'First Name must be at least 2 characters.',
@@ -133,9 +147,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.warn('Field is required.');
       return;
     }
+
+    // Check if skill already exists
+    if (currSkills.some((skill: any) => skill.name === customSkill.label)) {
+      notifySuccess('Skill already present!');
+      return;
+    }
     const customSkillData = {
       label: customSkill.label,
-      interviewInfo: customSkill.description,
+      description: customSkill.description,
       status: 'INACTIVE',
       createdBy: Type.FREELANCER,
       createdById: user_id,
@@ -145,45 +165,23 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       // Create the new skill in master table
       await axiosInstance.post('/skills', customSkillData);
 
-      const updatedSkills = [...skills, { label: customSkill.label }];
-      setSkills(updatedSkills);
-
-      const newSkill = {
-        name: customSkill.label,
-        level: '',
-        experience: '',
-        interviewStatus: 'PENDING',
-        interviewInfo: customSkill.description,
-        interviewerRating: 0,
-        interviewPermission: InterviewPermission.NOT_VERIFIED,
-      };
-
-      const updatedCurrSkills = [...currSkills, newSkill];
-      setCurrSkills(updatedCurrSkills);
-
-      // Save to freelancer profile
-      const savedProfile = await saveSkillsToProfile([newSkill]);
-      // Update state with the skill that includes the ID from backend
-      if (savedProfile && savedProfile.attributes) {
-        const skillWithId = savedProfile.attributes.find(
-          (attr: any) => attr.type === 'SKILL' && attr.name === newSkill.name,
-        );
-        if (skillWithId) {
-          setCurrSkills((prev: any) =>
-            prev.map((s: any) => (s.name === newSkill.name ? skillWithId : s)),
-          );
-        }
-      }
-
       setCustomSkill({ label: '', description: '' });
       setIsDialogOpen(false);
-      notifySuccess('New skill added to your profile successfully.');
+      notifySuccess(
+        'Submitted for admin approval. It will appear in your profile after verification.',
+      );
     } catch (error: any) {
       console.error(
         'Failed to add skill:',
         error.response?.data || error.message,
       );
-      notifyError('Failed to add skill. Please try again.');
+
+      // Check for specific conflict error
+      if (error.response?.data?.code === 'CONFLICT_ERROR') {
+        notifySuccess('Skill already present!');
+      } else {
+        notifyError('Failed to add skill. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -194,9 +192,16 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.warn('Field is required.');
       return;
     }
+
+    // Check if domain already exists
+    if (currDomains.some((domain: any) => domain.name === customDomain.label)) {
+      notifySuccess('Domain already present!');
+      return;
+    }
     const customDomainData = {
       label: customDomain.label,
-      interviewInfo: customDomain.description,
+      description: customDomain.description,
+      status: 'INACTIVE',
       createdBy: Type.FREELANCER,
       createdById: user_id,
     };
@@ -204,46 +209,23 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     try {
       await axiosInstance.post('/domain', customDomainData);
 
-      const updatedDomains = [...domains, { label: customDomain.label }];
-      setDomains(updatedDomains);
-
-      const newDomain = {
-        name: customDomain.label,
-        level: '',
-        experience: '',
-        interviewStatus: 'PENDING',
-        interviewInfo: customDomain.description,
-        interviewerRating: 0,
-      };
-
-      const updatedCurrDomains = [...currDomains, newDomain];
-      setCurrDomains(updatedCurrDomains);
-
-      // Save to freelancer profile
-      const savedProfile = await saveDomainsToProfile([newDomain]);
-      // Update state with the domain that includes the ID from backend
-      if (savedProfile && savedProfile.attributes) {
-        const domainWithId = savedProfile.attributes.find(
-          (attr: any) => attr.type === 'DOMAIN' && attr.name === newDomain.name,
-        );
-        if (domainWithId) {
-          setCurrDomains((prev: any) =>
-            prev.map((d: any) =>
-              d.name === newDomain.name ? domainWithId : d,
-            ),
-          );
-        }
-      }
-
       setCustomDomain({ label: '', description: '' });
       setIsDialogOpen(false);
-      notifySuccess('New domain added to your profile successfully.');
+      notifySuccess(
+        'Submitted for admin approval. It will appear in your profile after verification.',
+      );
     } catch (error: any) {
       console.error(
         'Failed to add domain:',
         error.response?.data || error.message,
       );
-      notifyError('Failed to add domain. Please try again.');
+
+      // Check for specific conflict error
+      if (error.response?.data?.code === 'CONFLICT_ERROR') {
+        notifySuccess('Domain already present!');
+      } else {
+        notifyError('Failed to add domain. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -254,62 +236,38 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.warn('Field is required.');
       return;
     }
-    const customProjectDomainData = {
-      label: customProjectDomain.label,
-      createdBy: Type.FREELANCER,
-      createdById: user_id,
-    };
+
+    // Check if project domain already exists
+    if (
+      currProjectDomains.some(
+        (projectDomain: any) =>
+          projectDomain.name === customProjectDomain.label,
+      )
+    ) {
+      notifySuccess('Project domain already present!');
+      return;
+    }
 
     try {
-      await axiosInstance.post('/projectdomain', customProjectDomainData);
-
-      const updatedProjectDomains = [
-        ...projectDomains,
-        { label: customProjectDomain.label },
-      ];
-      setProjectDomains(updatedProjectDomains);
-
-      const newProjectDomain = {
-        name: customProjectDomain.label,
-        level: '',
-        experience: '',
-        interviewStatus: 'PENDING',
-        interviewInfo: customProjectDomain.description,
-        interviewerRating: 0,
-      };
-
-      const updatedCurrProjectDomains = [
-        ...currProjectDomains,
-        newProjectDomain,
-      ];
-      setCurrProjectDomains(updatedCurrProjectDomains);
-
-      // Save to freelancer profile
-      const savedProfile = await saveProjectDomainsToProfile([
-        newProjectDomain,
-      ]);
-      // Update state with the project domain that includes the ID from backend
-      if (savedProfile && savedProfile.projectDomain) {
-        const projectDomainWithId = savedProfile.projectDomain.find(
-          (pd: any) => pd.name === newProjectDomain.name,
-        );
-        if (projectDomainWithId) {
-          setCurrProjectDomains((prev: any) =>
-            prev.map((pd: any) =>
-              pd.name === newProjectDomain.name ? projectDomainWithId : pd,
-            ),
-          );
-        }
-      }
+      await saveProjectDomainsToProfile([customProjectDomain]);
 
       setCustomProjectDomain({ label: '', description: '' });
       setIsDialogOpen(false);
+      notifySuccess(
+        'Submitted for admin approval. It will appear in your profile after verification.',
+      );
     } catch (error: any) {
       console.error(
         'Failed to add project domain:',
         error.response?.data || error.message,
       );
-      notifyError('Failed to add project domain. Please try again.');
+
+      // Check for specific conflict error
+      if (error.response?.data?.code === 'CONFLICT_ERROR') {
+        notifySuccess('Project domain already present!');
+      } else {
+        notifyError('Failed to add project domain. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -422,6 +380,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         (s: any) => s.name === value || s.label === value,
       );
       const newSkill = {
+        _id: matchedSkill?._id || `temp_${Date.now()}`,
         type_id: matchedSkill?._id || '',
         name: value,
         level: '',
@@ -432,17 +391,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         interviewPermission: InterviewPermission.NOT_VERIFIED,
       };
 
-      // Save to backend
       try {
-        // Send ONLY the new skill, not the whole list
         const savedProfile = await saveSkillsToProfile([newSkill]);
-        // Update state with the skill that includes the ID from backend
         if (savedProfile && savedProfile.skills) {
           const skillWithIds = savedProfile.skills;
           setCurrSkills((prev: any) => [...prev, ...skillWithIds]);
         }
       } catch (error) {
-        // Revert local state if API call fails
         setCurrSkills(currSkills);
       }
     }
@@ -666,9 +621,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
         setUser(userResponse.data.data);
 
-        const skillsResponse = await axiosInstance.get('/skills');
-        const domainsResponse = await axiosInstance.get('/domain');
-        const projectDomainResponse = await axiosInstance.get('/projectdomain');
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        const domainsResponse = await axiosInstance.get('/domain/all');
+        const projectDomainResponse =
+          await axiosInstance.get('/projectdomain/all');
 
         const tmpSkills: any[] = [],
           tmpDomains: any[] = [];
@@ -679,14 +635,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             tmpDomains.push(attr);
           }
         });
-        // Set options for dropdowns
         setSkills(skillsResponse.data.data);
         setDomains(domainsResponse.data.data);
         setProjectDomains(projectDomainResponse.data.data);
 
         setCurrSkills(tmpSkills);
-        // Transform domains so that type_id holds the backend domain _id
-        // and name holds the human-readable label when available
         const transformedDomains = tmpDomains.map((domain: any) => {
           const matchingDomain = domainsResponse.data.data.find(
             (d: any) => d._id === domain.type_id || d.label === domain.name,
@@ -698,21 +651,24 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           };
         });
         setCurrDomains(transformedDomains);
-        // Transform project domains to ensure proper names
         const transformedProjectDomains = (
           userResponse.data.data.projectDomain || []
-        ).map((pd: any) => {
-          const matchingProjectDomain = projectDomainResponse.data.data.find(
-            (p: any) => p._id === pd.type_id || p.label === pd.name,
+        )
+          .map((pd: any) => {
+            const matchingProjectDomain = projectDomainResponse.data.data.find(
+              (p: any) => p._id === pd.type_id || p.label === pd.name,
+            );
+            return {
+              ...pd,
+              name: matchingProjectDomain?.label ?? pd.name,
+            };
+          })
+          // Remove duplicates by keeping only unique items
+          .filter(
+            (pd: any, index: number, self: any[]) =>
+              self.findIndex((item: any) => item.name === pd.name) === index,
           );
-          return {
-            ...pd,
-            name: matchingProjectDomain?.label ?? pd.name,
-          };
-        });
         setCurrProjectDomains(transformedProjectDomains);
-
-        // Ensure cover letter is treated as text, not URL
         const coverLetterValue = userResponse.data.data.coverLetter;
         const cleanCoverLetter =
           coverLetterValue &&
@@ -810,7 +766,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-6 bg-muted-foreground/20 dark:bg-muted/20">
+    <Card className="p-6">
       {/* Page Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-xl md:text-2xl font-semibold tracking-tight flex items-center gap-2">
@@ -836,7 +792,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your first name" {...field} />
+                    <InputGroup>
+                      <InputGroupText>
+                        <User className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your first name"
+                        {...field}
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -849,7 +813,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your last name" {...field} />
+                    <InputGroup>
+                      <InputGroupText>
+                        <User className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your last name"
+                        {...field}
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -862,11 +834,16 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Enter your username"
-                      {...field}
-                      readOnly
-                    />
+                    <InputGroup>
+                      <InputGroupText>
+                        <AtSign className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your username"
+                        {...field}
+                        readOnly
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormMessage />
                   <FormDescription>Non editable field</FormDescription>
@@ -880,7 +857,16 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your email" {...field} readOnly />
+                    <InputGroup>
+                      <InputGroupText>
+                        <Mail className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your email"
+                        {...field}
+                        readOnly
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormDescription>Non editable field</FormDescription>
                   <FormMessage />
@@ -909,7 +895,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="+91" {...field} readOnly />
+                    <InputGroup>
+                      <InputGroupText>
+                        <Phone className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput placeholder="+91" {...field} readOnly />
+                    </InputGroup>
                   </FormControl>
                   <FormMessage />
                   <FormDescription>Non editable field</FormDescription>
@@ -923,11 +914,16 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormLabel>Personal Website URL</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Enter your LinkedIn URL"
-                      type="url"
-                      {...field}
-                    />
+                    <InputGroup>
+                      <InputGroupText>
+                        <Globe className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your Personal Website URL"
+                        type="url"
+                        {...field}
+                      />
+                    </InputGroup>
                   </FormControl>
                   <FormDescription>
                     Enter your Personal Website URL
@@ -951,15 +947,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   selected={currSkills}
                   onAdd={handleAddSkillByValue}
                   onRemove={handleDeleteSkill}
+                  hideRemoveButton={true}
                   selectPlaceholder="Select skill"
                   searchPlaceholder="Search skills"
-                  showOtherOption
-                  hideRemoveButtonInSettings={true}
-                  onOtherClick={() => {
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
                     setDialogType('skill');
                     setIsDialogOpen(true);
                   }}
-                />
+                  className="mt-2 text-xs"
+                >
+                  + Not able to find your skill?
+                </Button>
               </div>
               <div className="col-span-1">
                 <SelectTagPicker
@@ -969,15 +972,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onAdd={handleAddDomainByValue}
                   onRemove={handleDeleteDomain}
                   optionLabelKey="label"
+                  hideRemoveButton={true}
                   selectPlaceholder="Select domain"
                   searchPlaceholder="Search domains"
-                  showOtherOption
-                  hideRemoveButtonInSettings={true}
-                  onOtherClick={() => {
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
                     setDialogType('domain');
                     setIsDialogOpen(true);
                   }}
-                />
+                  className="mt-2 text-xs"
+                >
+                  + Not able to find your domain?
+                </Button>
               </div>
               <div className="col-span-1">
                 <SelectTagPicker
@@ -987,14 +997,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onAdd={handleAddProjectDomainByValue}
                   onRemove={handleDeleteProjDomain}
                   optionLabelKey="label"
+                  hideRemoveButton={true}
                   selectPlaceholder="Select project domain"
                   searchPlaceholder="Search project domains"
-                  showOtherOption
-                  onOtherClick={() => {
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
                     setDialogType('projectDomain');
                     setIsDialogOpen(true);
                   }}
-                />
+                  className="mt-2 text-xs"
+                >
+                  + Not able to find your project domain?
+                </Button>
               </div>
             </div>
           </div>
@@ -1059,7 +1077,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          handleAddCustomSkill(); // Add custom skill logic
+                          handleAddCustomSkill();
                         }}
                       >
                         <div className="mb-4">
@@ -1079,14 +1097,34 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               })
                             }
                             placeholder="Enter skill label"
-                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white  focus:outline-none"
+                            required
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label
+                            htmlFor="skillDescription"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Description
+                          </label>
+                          <textarea
+                            id="skillDescription"
+                            value={customSkill.description}
+                            onChange={(e) =>
+                              setCustomSkill({
+                                ...customSkill,
+                                description: e.target.value,
+                              })
+                            }
+                            placeholder="Enter skill description"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white min-h-[80px]"
                             required
                           />
                         </div>
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
-                            variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
                             className="mt-3"
                           >
@@ -1114,7 +1152,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          handleAddCustomDomain(); // Add custom domain logic
+                          handleAddCustomDomain();
                         }}
                       >
                         <div className="mb-4">
@@ -1134,14 +1172,34 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               })
                             }
                             placeholder="Enter Domain label"
-                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white  focus:outline-none"
+                            required
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label
+                            htmlFor="domainDescription"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Description
+                          </label>
+                          <textarea
+                            id="domainDescription"
+                            value={customDomain.description}
+                            onChange={(e) =>
+                              setCustomDomain({
+                                ...customDomain,
+                                description: e.target.value,
+                              })
+                            }
+                            placeholder="Enter domain description"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white min-h-[80px]"
                             required
                           />
                         </div>
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
-                            variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
                             className="mt-3"
                           >
@@ -1169,7 +1227,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          handleAddCustomProjectDomain(); // Add custom project domain logic
+                          handleAddCustomProjectDomain();
                         }}
                       >
                         <div className="mb-4">
@@ -1189,14 +1247,34 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               })
                             }
                             placeholder="Enter Project Domain label"
-                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white  focus:outline-none"
+                            required
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label
+                            htmlFor="projectDomainDescription"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Description
+                          </label>
+                          <textarea
+                            id="projectDomainDescription"
+                            value={customProjectDomain.description}
+                            onChange={(e) =>
+                              setCustomProjectDomain({
+                                ...customProjectDomain,
+                                description: e.target.value,
+                              })
+                            }
+                            placeholder="Enter project domain description"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white min-h-[80px]"
                             required
                           />
                         </div>
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
-                            variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
                             className="mt-3"
                           >

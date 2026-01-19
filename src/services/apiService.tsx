@@ -50,3 +50,42 @@ export const apiService = async ({
     };
   }
 };
+
+export interface TransactionFilters {
+  startDate?: string;
+  endDate?: string;
+  transactionType?: 'credit' | 'debit' | 'all';
+  minAmount?: number;
+  maxAmount?: number;
+  searchQuery?: string;
+}
+
+export const fetchTransactions = async (
+  userId: string,
+  userType: 'freelancer' | 'business',
+  page: number,
+  limit: number,
+  filters?: TransactionFilters,
+) => {
+  const params: any = {
+    userType,
+    page: page.toString(),
+    limit: limit.toString(),
+  };
+
+  if (filters) {
+    if (filters.startDate) params.startDate = filters.startDate;
+    if (filters.endDate) params.endDate = filters.endDate;
+    if (filters.transactionType)
+      params.transactionType = filters.transactionType;
+    if (filters.minAmount !== undefined) params.minAmount = filters.minAmount;
+    if (filters.maxAmount !== undefined) params.maxAmount = filters.maxAmount;
+    if (filters.searchQuery) params.searchQuery = filters.searchQuery;
+  }
+
+  return apiService({
+    method: Api_Methods.GET,
+    endpoint: `/transaction/user/${userId}`,
+    params,
+  });
+};

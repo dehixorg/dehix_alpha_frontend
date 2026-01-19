@@ -10,6 +10,11 @@ import {
   Check,
   ChevronsUpDown,
   FolderKanban,
+  Github,
+  Globe,
+  Link,
+  MessageSquare,
+  User,
 } from 'lucide-react';
 
 import { DatePicker } from '../shared/datePicker';
@@ -41,7 +46,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import {
   Popover,
   PopoverContent,
@@ -65,9 +75,8 @@ const projectFormSchema = z
       }),
     liveDemoLink: z
       .string()
-      .url({ message: 'Live demo link must be a valid URL.' })
-      .optional()
-      .or(z.literal('')),
+      .min(1, { message: 'Live demo link is required.' })
+      .url({ message: 'Live demo link must be a valid URL.' }),
     thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
@@ -270,7 +279,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         projectName: data.projectName,
         description: data.description,
         githubLink: data.githubLink,
-        liveDemoLink: data.liveDemoLink || '', // Now supported by backend CREATE schema
+        liveDemoLink: data.liveDemoLink,
         thumbnail: data.thumbnail, // Now required
         techUsed: currSkills,
         verified: false,
@@ -358,7 +367,15 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Project Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter project name" {...field} />
+                        <InputGroup>
+                          <InputGroupText>
+                            <FolderKanban className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="Enter project name"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -372,8 +389,9 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Input
+                        <Textarea
                           placeholder="Enter project description"
+                          className="min-h-[110px]"
                           {...field}
                         />
                       </FormControl>
@@ -518,10 +536,15 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>GitHub Repo Link</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter GitHub repository link (optional)"
-                          {...field}
-                        />
+                        <InputGroup>
+                          <InputGroupText>
+                            <Github className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="Enter GitHub repository link (optional)"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -535,10 +558,15 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Live Demo Link</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter live demo link (optional)"
-                          {...field}
-                        />
+                        <InputGroup>
+                          <InputGroupText>
+                            <Globe className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="Enter live demo link (optional)"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -568,10 +596,15 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Reference</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter project reference"
-                          {...field}
-                        />
+                        <InputGroup>
+                          <InputGroupText>
+                            <Link className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="Enter project reference"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -585,7 +618,15 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Role</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter role" {...field} />
+                        <InputGroup>
+                          <InputGroupText>
+                            <User className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="Enter role"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -599,10 +640,15 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Project Type</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter project type (optional)"
-                          {...field}
-                        />
+                        <InputGroup>
+                          <InputGroupText>
+                            <FolderKanban className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="Enter project type (optional)"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -616,10 +662,15 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Comments</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter any comments (optional)"
-                          {...field}
-                        />
+                        <InputGroup>
+                          <InputGroupText>
+                            <MessageSquare className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            placeholder="Enter any comments (optional)"
+                            {...field}
+                          />
+                        </InputGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

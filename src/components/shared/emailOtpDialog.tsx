@@ -38,6 +38,7 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
   const [resendCountdown, setResendCountdown] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [sendLocked, setSendLocked] = useState(false);
 
   const maskEmail = (value: string) => {
     try {
@@ -82,15 +83,21 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
   );
 
   const sendOtp = useCallback(async () => {
+    if (sendLocked) {
+      notifyError(
+        'Failed to send OTP after 3 attempts. Please try again later.',
+        'Error',
+      );
+      return;
+    }
     setError(null);
     setSuccess('');
     setIsSending(true);
     try {
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          // indicate pending via explicit state for each attempt
-          setResendCountdown(60);
           await axiosInstance.post('/public/send-email-otp', { email });
+          setResendCountdown(60);
           setSuccess('OTP sent successfully to your email');
           notifySuccess('OTP sent successfully to your email');
           break;
@@ -106,12 +113,13 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
     } catch (err: any) {
       const message =
         err?.response?.data?.message || err.message || 'Failed to send OTP';
+      setSendLocked(true);
       notifyError(message, 'Error');
       setError(message);
     } finally {
       setIsSending(false);
     }
-  }, [email]);
+  }, [email, sendLocked]);
 
   const verifyOtp = useCallback(async () => {
     setIsVerifying(true);
@@ -156,6 +164,7 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
       setOtp('');
       setError(null);
       setSuccess('');
+      setSendLocked(false);
     } else {
       // clear countdown when dialog is closed
       setResendCountdown(0);
@@ -164,14 +173,14 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
 
   useEffect(() => {
     // guard auto-send: only send when dialog opens and there's no active countdown
-    if (isOpen && email && resendCountdown === 0) {
+    if (isOpen && email && resendCountdown === 0 && !sendLocked) {
       sendOtp();
     }
-  }, [isOpen, email, resendCountdown, sendOtp]);
+  }, [isOpen, email, resendCountdown, sendOtp, sendLocked]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent>
+      <DialogContent className="rounded-lg">
         <DialogHeader>
           <p className="text-sm text-center text-gray-500">
             OTP sent to <strong>{maskEmail(email)}</strong>
@@ -202,7 +211,9 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
           </InputOTP>
 
           <Button
-            disabled={isSending || resendCountdown > 0 || isVerifying}
+            disabled={
+              sendLocked || isSending || resendCountdown > 0 || isVerifying
+            }
             className="mt-5"
             onClick={() => sendOtp()}
           >

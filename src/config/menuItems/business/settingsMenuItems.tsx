@@ -1,4 +1,11 @@
-import { ArrowLeft, FileWarning, ShieldCheck, User } from 'lucide-react';
+import {
+  ArrowLeft,
+  FileWarning,
+  ShieldCheck,
+  User,
+  Star,
+  Receipt,
+} from 'lucide-react';
 import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -31,6 +38,16 @@ export const menuItemsTop: MenuItem[] = [
     href: '/business/settings/kyc',
     icon: <ShieldCheck className="h-5 w-5" />,
     label: 'KYC',
+  },
+  {
+    href: '/business/settings/transactions',
+    icon: <Receipt className="h-5 w-5" />,
+    label: 'Transactions',
+  },
+  {
+    href: '/settings/feedback',
+    icon: <Star className="h-5 w-5" />,
+    label: 'Feedback',
   },
   {
     href: '/reports', // Link to your new Reports page

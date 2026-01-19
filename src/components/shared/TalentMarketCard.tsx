@@ -62,31 +62,6 @@ interface Props {
   ) => void | Promise<void>;
 }
 
-// Outline-style status classes mapping
-const getOutlineStatusClasses = (status?: string) => {
-  const s = (status || '').toLowerCase();
-  switch (s) {
-    case 'added':
-    case 'active':
-      return 'border-blue-300 text-blue-700 bg-blue-50 dark:border-blue-400/40 dark:text-blue-300 dark:bg-blue-950/30';
-    case 'pending':
-    case 'on going':
-    case 'ongoing':
-      return 'border-amber-300 text-amber-700 bg-amber-50 dark:border-amber-400/40 dark:text-amber-300 dark:bg-amber-950/30';
-    case 'completed':
-    case 'selected':
-      return 'border-emerald-300 text-emerald-700 bg-emerald-50 dark:border-emerald-400/40 dark:text-emerald-300 dark:bg-emerald-950/30';
-    case 'rejected':
-      return 'border-red-300 text-red-700 bg-red-50 dark:border-red-400/40 dark:text-red-300 dark:bg-red-950/30';
-    case 'invited':
-      return 'border-purple-300 text-purple-700 bg-purple-50 dark:border-purple-400/40 dark:text-purple-300 dark:bg-purple-950/30';
-    case 'applied':
-      return 'border-sky-300 text-sky-700 bg-sky-50 dark:border-sky-400/40 dark:text-sky-300 dark:bg-sky-950/30';
-    default:
-      return 'border-gray-300 text-gray-700 bg-gray-50 dark:border-gray-400/40 dark:text-gray-300 dark:bg-gray-950/30';
-  }
-};
-
 const TalentMarketCard: React.FC<Props> = ({
   item,
   onNotInterested,
@@ -101,22 +76,21 @@ const TalentMarketCard: React.FC<Props> = ({
     setBookmarked(!!item.bookmarked);
   }, [item.bookmarked]);
 
-  const created = item.createdAt
-    ? (() => {
-        const date = new Date(item.createdAt);
-        return isNaN(date.getTime())
-          ? 'Recently'
-          : formatDistanceToNow(date, { addSuffix: true });
-      })()
-    : 'Recently';
-  const updated = item.updatedAt
-    ? (() => {
-        const date = new Date(item.updatedAt);
-        return isNaN(date.getTime())
-          ? undefined
-          : formatDistanceToNow(date, { addSuffix: true });
-      })()
-    : undefined;
+  const created = React.useMemo(() => {
+    if (!item.createdAt) return 'Recently';
+    const date = new Date(item.createdAt);
+    return isNaN(date.getTime())
+      ? 'Recently'
+      : formatDistanceToNow(date, { addSuffix: true });
+  }, [item.createdAt]);
+
+  const updated = React.useMemo(() => {
+    if (!item.updatedAt) return undefined;
+    const date = new Date(item.updatedAt);
+    return isNaN(date.getTime())
+      ? undefined
+      : formatDistanceToNow(date, { addSuffix: true });
+  }, [item.updatedAt]);
 
   return (
     <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20">
@@ -145,14 +119,6 @@ const TalentMarketCard: React.FC<Props> = ({
           >
             <Bookmark className={cn('h-4 w-4', bookmarked && 'fill-current')} />
           </button>
-          {item.status && (
-            <Badge
-              variant="outline"
-              className={cn(getOutlineStatusClasses(item.status))}
-            >
-              {String(item.status).toUpperCase()}
-            </Badge>
-          )}
         </div>
         <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">
           {title}
@@ -163,7 +129,7 @@ const TalentMarketCard: React.FC<Props> = ({
               {item.domainName}
             </span>
           )}
-          {item.domainName && (item.experience || item.status) && (
+          {item.domainName && item.experience && (
             <Dot className="text-muted-foreground" />
           )}
           {item.experience && <span>{item.experience}+ yrs experience</span>}

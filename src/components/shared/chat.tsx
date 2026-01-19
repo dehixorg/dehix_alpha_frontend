@@ -64,7 +64,8 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
   Dialog,
@@ -133,6 +134,7 @@ export function CardsChat({
   onOpenProfileSidebar,
   onConversationUpdate,
 }: CardsChatProps) {
+  const { toast } = useToast();
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -456,41 +458,9 @@ export function CardsChat({
 
       try {
         setIsSending(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
-        // Function to attempt upload with retries
-        const attemptUpload = async (retryCount = 0, maxRetries = 3) => {
-          try {
-            const postFileResponse = await axiosInstance.post(
-              '/register/upload-image',
-              formData,
-              {
-                headers: {
-                  'Content-Type': 'multipart/form-data',
-                  Accept: 'application/json',
-                },
-                onUploadProgress: () => {},
-              },
-            );
-
-            return postFileResponse;
-          } catch (error: any) {
-            if (
-              retryCount < maxRetries &&
-              (error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED')
-            ) {
-              // Wait for 1 second before retrying
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-              return attemptUpload(retryCount + 1, maxRetries);
-            }
-            throw error;
-          }
-        };
-
-        const postFileResponse = await attemptUpload();
-
-        const fileUrl = postFileResponse.data.data.Location;
+        const { url: fileUrl } = await uploadFileViaSignedUrl(file, {
+          keyPrefix: `chat/${conversation?.id || 'conversation'}`,
+        });
 
         const message: Partial<Message> = {
           senderId: user.uid,
@@ -709,41 +679,9 @@ export function CardsChat({
       });
 
       // Step 2: Create FormData (same as regular file upload)
-      const formData = new FormData();
-      formData.append('file', audioFile);
-
-      // Step 3: Use the same working file upload endpoint with retry mechanism
-      const attemptUpload = async (retryCount = 0, maxRetries = 3) => {
-        try {
-          const postFileResponse = await axiosInstance.post(
-            '/register/upload-image',
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-                Accept: 'application/json',
-              },
-              onUploadProgress: () => {},
-            },
-          );
-
-          return postFileResponse;
-        } catch (error: any) {
-          if (
-            retryCount < maxRetries &&
-            (error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED')
-          ) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            return attemptUpload(retryCount + 1, maxRetries);
-          }
-          throw error;
-        }
-      };
-
-      const postFileResponse = await attemptUpload();
-
-      // Step 4: Get the file URL from response
-      const fileUrl = postFileResponse.data.data.Location;
+      const { url: fileUrl } = await uploadFileViaSignedUrl(audioFile, {
+        keyPrefix: `chat/${conversation?.id || 'conversation'}/voice`,
+      });
 
       // Step 5: Create message with voice file URL and duration metadata
       const message: Partial<Message> = {
@@ -1038,7 +976,8 @@ export function CardsChat({
                 </div>
               </button>
               {/* create a search bar input here to take input from user to search conversation */}
-              <div className="flex items-center space-x-0.5 sm:space-x-1">
+              <TooltipProvider>
+                <div className="flex items-center space-x-0.5 sm:space-x-1">
                 {/* Desktop controls */}
                 {isSearchVisible ? (
                   <div className="hidden sm:flex items-center space-x-2">
@@ -1048,86 +987,120 @@ export function CardsChat({
                       placeholder="Search in conversation..."
                       className="w-40 sm:w-56 rounded-full text-sm"
                     />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Close search"
+                          onClick={() => {
+                            setIsSearchVisible(false);
+                            setSearchValue('');
+                          }}
+                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        >
+                          ✕
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Close search</TooltipContent>
+                    </Tooltip>
+                  </div>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Search in chat"
+                        onClick={() => setIsSearchVisible(true)}
+                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        <Search className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Search</TooltipContent>
+                  </Tooltip>
+                )}
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label="Close search"
-                      onClick={() => {
-                        setIsSearchVisible(false);
-                        setSearchValue("");
-                      }}
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
+                      onClick={handleToggleArchive}
+                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                     >
-                      ✕
+                      {isArchived ? (
+                        <ArchiveRestore className="h-5 w-5" />
+                      ) : (
+                        <Archive className="h-5 w-5" />
+                      )}
                     </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Search in chat"
-                    onClick={() => setIsSearchVisible(true)}
-                    className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                  >
-                    <Search className="h-5 w-5" />
-                  </Button>
-                )}
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {isArchived ? 'Unarchive' : 'Archive'}
+                  </TooltipContent>
+                </Tooltip>
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
-                  onClick={handleToggleArchive}
-                  className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                >
-                  {isArchived ? (
-                    <ArchiveRestore className="h-5 w-5" />
-                  ) : (
-                    <Archive className="h-5 w-5" />
-                  )}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Video call"
+                      onClick={handleCreateMeet}
+                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    >
+                      <Video className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Video call</TooltipContent>
+                </Tooltip>
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Video call"
-                  onClick={handleCreateMeet}
-                  className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                >
-                  <Video className="h-5 w-5" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
-                  onClick={() => {
-                    if (onToggleExpand) {
-                      onToggleExpand();
-                    } else {
-                      console.error('[CardsChat] onToggleExpand is undefined!');
-                    }
-                  }}
-                  className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                >
-                  {isChatExpanded ? (
-                    <Minimize2 className="h-5 w-5" />
-                  ) : (
-                    <Maximize2 className="h-5 w-5" />
-                  )}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
+                      onClick={() => {
+                        if (onToggleExpand) {
+                          onToggleExpand();
+                        } else {
+                          console.error('[CardsChat] onToggleExpand is undefined!');
+                        }
+                      }}
+                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    >
+                      {isChatExpanded ? (
+                        <Minimize2 className="h-5 w-5" />
+                      ) : (
+                        <Maximize2 className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {isChatExpanded ? 'Collapse' : 'Expand'}
+                  </TooltipContent>
+                </Tooltip>
 
                 {/* Mobile: everything in the three-dot menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="More options"
-                      className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      <MoreVertical className="h-5 w-5" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="More options"
+                          className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        >
+                          <MoreVertical className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">More</TooltipContent>
+                    </Tooltip>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
@@ -1216,7 +1189,8 @@ export function CardsChat({
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
+                </div>
+              </TooltipProvider>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
               <ScrollArea className="flex flex-col space-y-3">
@@ -1266,16 +1240,49 @@ export function CardsChat({
                 >
                   {replyToMessageId && (
                     <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
-                      <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
-                        Replying to:{' '}
-                        <span className="font-semibold">
-                          {messages
-                            .find((msg) => msg.id === replyToMessageId)
-                            ?.content.replace(/\*|__/g, '')
-                            .substring(0, 50) || 'Message'}
-                          ...
-                        </span>
-                      </div>
+                      {(() => {
+                        const replyMsg = messages.find(
+                          (msg) => msg.id === replyToMessageId,
+                        ) as any;
+                        const raw = replyMsg?.content || '';
+
+                        const isImage = /\.(jpeg|jpg|gif|png)(\?|$)/i.test(raw);
+                        const isFile = /\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt)(\?|$)/i.test(
+                          raw,
+                        );
+
+                        const label = replyMsg?.voiceMessage
+                          ? 'Voice message'
+                          : isImage
+                            ? 'Photo'
+                            : isFile
+                              ? 'Document'
+                              : raw
+                                  .replace(/<[^>]*>/g, '')
+                                  .replace(/&nbsp;/g, ' ')
+                                  .replace(/\*|__/g, '')
+                                  .trim() || 'Message';
+
+                        return (
+                          <div className="flex items-center gap-2 min-w-0">
+                            {isImage ? (
+                              <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded">
+                                <Image
+                                  src={raw}
+                                  alt="Reply preview"
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : null}
+
+                            <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full min-w-0">
+                              Replying to:{' '}
+                              <span className="font-semibold">{label}</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       <Button
                         onClick={() => setReplyToMessageId('')}
                         variant="ghost"

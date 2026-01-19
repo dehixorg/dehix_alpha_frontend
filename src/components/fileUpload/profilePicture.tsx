@@ -9,6 +9,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { setUser } from '@/lib/userSlice';
 import { RootState } from '@/lib/store';
 import { Type } from '@/utils/enum';
+import { compressImageFile } from '@/utils/imageCompression';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 
 const allowedImageFormats = [
   'image/png',
@@ -17,7 +19,7 @@ const allowedImageFormats = [
   'image/gif',
   'image/svg+xml',
 ];
-const maxImageSize = 5 * 1024 * 1024; // 5MB
+const maxImageSize = 5 * 1024; // 5MB
 
 const ProfilePictureUpload = ({
   profile,
@@ -36,25 +38,35 @@ const ProfilePictureUpload = ({
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && allowedImageFormats.includes(file.type)) {
-      if (file.size <= maxImageSize) {
-        setSelectedProfilePicture(file);
-        setPreviewUrl(URL.createObjectURL(file));
-      } else {
-        notifyError('Image size should not exceed 5MB.', 'File too large');
-      }
-    } else {
+    if (!file || !allowedImageFormats.includes(file.type)) {
       notifyError(
         `Please upload a valid image file. Allowed formats: ${allowedImageFormats.join(', ')}`,
         'Invalid file type',
       );
+      return;
     }
+    const nextFile =
+      file.size > maxImageSize
+        ? await compressImageFile(file, { maxBytes: maxImageSize })
+        : file;
+
+    setSelectedProfilePicture(nextFile);
+    setPreviewUrl(URL.createObjectURL(nextFile));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const uid = user?.uid;
+    if (!uid) {
+      notifyError(
+        'You must be logged in to upload a profile picture. Please log in and try again.',
+        'Authentication required',
+      );
+      return;
+    }
 
     if (!selectedProfilePicture) {
       notifyError(
@@ -66,29 +78,21 @@ const ProfilePictureUpload = ({
 
     setIsUploading(true);
 
-    const formData = new FormData();
-    formData.append('profilePicture', selectedProfilePicture);
-
     try {
-      const postResponse = await axiosInstance.post(
-        '/register/upload-image',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      );
+      const extFromType = (selectedProfilePicture.type || '').split('/')[1];
+      const ext = (extFromType || 'jpg').split(';')[0];
+      const { url } = await uploadFileViaSignedUrl(selectedProfilePicture, {
+        key: `profile/${uid}/profile-picture.${ext}`,
+        methods: ['upload', 'get'],
+      });
 
-      const { Location } = postResponse.data.data;
-
-      dispatch(setUser({ ...user, photoURL: Location }));
+      dispatch(setUser({ ...user, photoURL: url }));
 
       const updateEndpoint =
         entityType === Type.FREELANCER ? `/freelancer` : `/business`;
 
       const putResponse = await axiosInstance.put(updateEndpoint, {
-        profilePic: Location,
+        profilePic: url,
       });
 
       if (putResponse.status === 200) {
@@ -164,7 +168,7 @@ const ProfilePictureUpload = ({
           <Button
             type="submit"
             className="w-full"
-            disabled={!selectedProfilePicture || isUploading}
+            disabled={!user?.uid || !selectedProfilePicture || isUploading}
           >
             {isUploading ? (
               <>

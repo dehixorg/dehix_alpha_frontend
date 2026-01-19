@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { Trophy } from 'lucide-react';
 
-import { BadgeItem } from '@/app/freelancer/settings/levels-badges/page';
+import { BadgeItem } from '@/types/gamification';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,

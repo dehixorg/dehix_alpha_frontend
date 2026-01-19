@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import {
   Save,
+  ArrowLeft,
+  ArrowRight,
+  Rocket,
   X,
   Users,
   Tag,
@@ -11,21 +14,29 @@ import {
   DollarSign,
   Plus,
   Award,
+  CheckCircle2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
-
-import { Card } from '../ui/card';
-import ConnectsDialog from '../shared/ConnectsDialog';
-import DraftDialog from '../shared/DraftDialog';
-import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 
 import ProjectFormIllustration from './ProjectFormIllustration';
 import ProjectFormStepper from './ProjectFormStepper';
 import BudgetSection from './BudgetSection';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import DraftDialog from '@/components/shared/DraftDialog';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Form,
   FormControl,
@@ -42,13 +53,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
+
+const urlValueSchema = z.string().url({ message: 'Please enter a valid URL.' });
 
 const profileFormSchema = z.object({
   projectName: z
@@ -61,7 +79,7 @@ const profileFormSchema = z.object({
   urls: z
     .array(
       z.object({
-        value: z.string().url({ message: 'Please enter a valid URL.' }),
+        value: z.string().optional(),
       }),
     )
     .optional(),
@@ -95,7 +113,7 @@ const profileFormSchema = z.object({
               parseInt(val, 10) <= 40,
             { message: 'Experience must be a number between 0 and 40.' },
           ),
-        domain_id: z.string().min(1, { message: 'Domain ID is required.' }),
+        domain_id: z.string().optional(),
         minConnect: z
           .string()
           .refine((val) => /^\d+$/.test(val) && parseInt(val, 10) > 0, {
@@ -244,10 +262,13 @@ const FORM_DRAFT_KEY = 'DEHIX-BUSINESS-DRAFT';
 enum FormSteps {
   ProjectInfo = 'ProjectInfo',
   ProfileInfo = 'ProfileInfo',
+  Budget = 'Budget',
 }
 
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
+
+  // State for skills and domains
   const [skills, setSkills] = useState<any[]>([]);
   const [currSkills, setCurrSkills] = useState<{ [key: number]: string[] }>({});
   const [currDomains, setCurrDomains] = useState<{ [key: number]: string[] }>(
@@ -256,10 +277,8 @@ export function CreateProjectBusinessForm() {
   const [domains, setDomains] = useState<any[]>([]);
   const [projectDomains, setProjectDomains] = useState<any[]>([]);
 
+  // State for form and UI
   const [loading, setLoading] = useState(false);
-  const [, setProfileType] = useState<'Freelancer' | 'Consultant'>(
-    'Freelancer',
-  );
   const [showLoadDraftDialog, setShowLoadDraftDialog] = useState(false);
   const [currentStep, setCurrentStep] = useState<FormSteps>(
     FormSteps.ProjectInfo,
@@ -269,9 +288,37 @@ export function CreateProjectBusinessForm() {
   const mode = searchParams.get('mode') as 'single' | 'multiple';
   const { hasOtherValues, hasProfiles } = useDraft({});
 
+  const schema = useMemo(() => {
+    return profileFormSchema.superRefine((data, ctx) => {
+      (data.urls || []).forEach((u, index) => {
+        const v = String(u?.value || '').trim();
+        if (!v) return;
+        if (!urlValueSchema.safeParse(v).success) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Please enter a valid URL.',
+            path: ['urls', index, 'value'],
+          });
+        }
+      });
+
+      if (mode !== 'multiple') return;
+
+      data.profiles?.forEach((profile, index) => {
+        if (!profile.domain_id || profile.domain_id.trim().length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Domain ID is required.',
+            path: ['profiles', index, 'domain_id'],
+          });
+        }
+      });
+    });
+  }, [mode]);
+
   // Initialize form with default values
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       ...defaultValues,
     },
@@ -355,13 +402,22 @@ export function CreateProjectBusinessForm() {
     keyName: 'formId', // Add a unique key to help with re-renders
   });
 
+  // State to store the current draft data
+  const [currentDraft, setCurrentDraft] = useState<any>(null);
+
   // Draft logic
   useEffect(() => {
     const savedDraft = localStorage.getItem(FORM_DRAFT_KEY);
     if (savedDraft) {
-      const parsedDraft = JSON.parse(savedDraft);
-      if (hasOtherValues(parsedDraft) || hasProfiles(parsedDraft.profiles)) {
-        setShowLoadDraftDialog(true);
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        if (hasOtherValues(parsedDraft) || hasProfiles(parsedDraft.profiles)) {
+          setCurrentDraft(parsedDraft);
+          setShowLoadDraftDialog(true);
+        }
+      } catch (error) {
+        console.error('Error parsing saved draft:', error);
+        localStorage.removeItem(FORM_DRAFT_KEY);
       }
     }
   }, [hasProfiles, hasOtherValues]);
@@ -405,46 +461,101 @@ export function CreateProjectBusinessForm() {
     const formValues = form.getValues();
     const isOtherValid = hasOtherValues(formValues);
     const isProfileValid = hasProfiles(formValues.profiles);
+
     if (!isOtherValid && !isProfileValid) {
       notifyError('Cannot save an empty draft.', 'Empty Draft');
       return;
     }
-    const DraftProfile = formValues.profiles?.map(
+
+    // Prepare profiles with current skills
+    const draftProfiles = formValues.profiles?.map(
       (profile: any, index: number) => ({
         ...profile,
-        skills: Array.isArray(currSkills[index]) ? currSkills[index] : [],
+        skills: Array.isArray(currSkills[index]) ? [...currSkills[index]] : [],
       }),
     );
-    const DraftData = { ...formValues, profiles: DraftProfile };
-    localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(DraftData));
-    notifySuccess('Your form data has been saved as a draft.', 'Draft Saved');
+
+    // Save additional metadata with the draft
+    const draftData = {
+      ...formValues,
+      profiles: draftProfiles,
+      savedAt: new Date().toISOString(),
+      currentStep,
+      activeProfile,
+      mode,
+    };
+
+    try {
+      localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(draftData));
+      setCurrentDraft(draftData); // Update the current draft state
+      notifySuccess(
+        'Your form data has been saved as a draft. Redirecting to dashboard...',
+        'Draft Saved',
+      );
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        window.location.href = '/dashboard/business';
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      notifyError('Failed to save draft. Please try again.', 'Error');
+    }
   };
 
   const loadDraft = () => {
-    const savedDraft = localStorage.getItem(FORM_DRAFT_KEY);
-    if (savedDraft) {
-      try {
-        const parsedDraft = JSON.parse(savedDraft);
-        form.reset(parsedDraft);
-        setCurrSkills(
-          parsedDraft.profiles?.map((profile: any) =>
-            Array.isArray(profile.skills) ? profile.skills : [],
-          ) || [],
-        );
+    if (!currentDraft) {
+      notifyError('No draft data available to load.', 'No Draft Found');
+      setShowLoadDraftDialog(false);
+      return;
+    }
 
-        notifySuccess('Your saved draft has been loaded.', 'Draft loaded');
-      } catch {
-        notifyError(
-          'There was a problem loading your draft.',
-          'Error loading draft',
-        );
+    try {
+      // Update form with draft data
+      form.reset({
+        ...currentDraft,
+        // Ensure we don't include internal metadata in the form values
+        savedAt: undefined,
+        currentStep: undefined,
+        activeProfile: undefined,
+        mode: undefined,
+      });
+
+      // Update skills state
+      if (currentDraft.profiles) {
+        const skillsMap: { [key: number]: string[] } = {};
+        currentDraft.profiles.forEach((profile: any, index: number) => {
+          skillsMap[index] = Array.isArray(profile.skills)
+            ? [...profile.skills]
+            : [];
+        });
+        setCurrSkills(skillsMap);
       }
+
+      // Update current step if available in draft
+      if (currentDraft.currentStep) {
+        setCurrentStep(currentDraft.currentStep);
+      }
+
+      // Update active profile if available
+      if (currentDraft.activeProfile !== undefined) {
+        setActiveProfile(currentDraft.activeProfile);
+      }
+
+      notifySuccess('Your saved draft has been loaded.', 'Draft loaded');
+    } catch (error) {
+      console.error('Error loading draft:', error);
+      notifyError(
+        'There was a problem loading your draft.',
+        'Error loading draft',
+      );
     }
     setShowLoadDraftDialog(false);
   };
 
   const discardDraft = () => {
     localStorage.removeItem(FORM_DRAFT_KEY);
+    setCurrentDraft(null);
     setShowLoadDraftDialog(false);
     notifySuccess('Your saved draft has been discarded.', 'Draft discarded');
   };
@@ -489,33 +600,36 @@ export function CreateProjectBusinessForm() {
           '',
         role: '',
         projectType: 'FREELANCE',
-        url: data.urls,
+        url: (data.urls || []).map((u) => u.value).filter(Boolean),
         profiles: profilesWithFormattedBudget,
       };
-      await axiosInstance.post(`/project/business`, payload);
+      const response = await axiosInstance.post(`/project/business`, payload);
+
+      const remaining = response?.data?.remainingConnects;
+      if (typeof remaining === 'number') {
+        updateConnectsBalance(remaining);
+      } else {
+        // Fallback: fetch updated profile to sync connects
+        console.warn('remainingConnects not in response, fetching profile...');
+        try {
+          const profileResponse = await axiosInstance.get(
+            `/business/${user.uid}`,
+          );
+          const connects = profileResponse.data?.data?.connects;
+          if (typeof connects === 'number') {
+            updateConnectsBalance(connects);
+          }
+        } catch (error) {
+          console.error('Failed to fetch updated connects:', error);
+          // Don't show error to user - project was created successfully
+        }
+      }
+
       notifySuccess(
         'Your project has been successfully added.',
         'Project Added',
       );
-
-      const connectsCost = parseInt(
-        process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '150',
-        10,
-      );
-      const prevConnects = parseInt(
-        localStorage.getItem('DHX_CONNECTS') || '0',
-      );
-      const updatedConnects = prevConnects - connectsCost;
-      // Update connects in DB as well
-      try {
-        await axiosInstance.put('/business', { connects: updatedConnects });
-      } catch (err) {
-        // Optionally handle error, but don't block UI
-        console.error('Failed to update connects in DB:', err);
-      }
-      localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
       localStorage.removeItem(FORM_DRAFT_KEY);
-      window.dispatchEvent(new Event('connectsUpdated'));
     } catch {
       notifyError('Failed to add project. Please try again later.', 'Error');
     } finally {
@@ -528,6 +642,40 @@ export function CreateProjectBusinessForm() {
   const prevStep = () => {
     if (currentStep === FormSteps.ProfileInfo)
       setCurrentStep(FormSteps.ProjectInfo);
+    if (currentStep === FormSteps.Budget) setCurrentStep(FormSteps.ProfileInfo);
+  };
+
+  const getProfileStepValidateFields = () => {
+    const profiles = form.getValues('profiles') || [];
+    const fields: string[] = [];
+
+    for (let i = 0; i < profiles.length; i += 1) {
+      fields.push(`profiles.${i}.freelancersRequired`);
+      fields.push(`profiles.${i}.skills`);
+      fields.push(`profiles.${i}.experience`);
+      fields.push(`profiles.${i}.minConnect`);
+      fields.push(`profiles.${i}.domain`);
+      if (mode === 'multiple') {
+        fields.push(`profiles.${i}.domain_id`);
+      }
+    }
+
+    return fields;
+  };
+
+  const getBudgetStepValidateFields = () => {
+    const profiles = form.getValues('profiles') || [];
+    const fields: string[] = [];
+
+    for (let i = 0; i < profiles.length; i += 1) {
+      fields.push(`profiles.${i}.budget.type`);
+      fields.push(`profiles.${i}.budget.fixedAmount`);
+      fields.push(`profiles.${i}.budget.hourly.minRate`);
+      fields.push(`profiles.${i}.budget.hourly.maxRate`);
+      fields.push(`profiles.${i}.budget.hourly.estimatedHours`);
+    }
+
+    return fields;
   };
 
   // UI render helpers
@@ -608,7 +756,7 @@ export function CreateProjectBusinessForm() {
   );
 
   const renderProjectInfoStep = () => (
-    <>
+    <div className="grid gap-4 sm:grid-cols-2">
       <FormField
         control={form.control}
         name="projectName"
@@ -616,7 +764,12 @@ export function CreateProjectBusinessForm() {
           <FormItem>
             <FormLabel className="text-foreground">Project Name</FormLabel>
             <FormControl>
-              <Input placeholder="Enter your Project Name" {...field} />
+              <InputGroup>
+                <InputGroupInput
+                  placeholder="Enter your project name"
+                  {...field}
+                />
+              </InputGroup>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -629,7 +782,13 @@ export function CreateProjectBusinessForm() {
           <FormItem>
             <FormLabel className="text-foreground">Contact Email</FormLabel>
             <FormControl>
-              <Input placeholder="Enter your email" {...field} />
+              <InputGroup>
+                <InputGroupInput
+                  type="email"
+                  placeholder="you@company.com"
+                  {...field}
+                />
+              </InputGroup>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -639,9 +798,9 @@ export function CreateProjectBusinessForm() {
         control={form.control}
         name="projectDomain"
         render={({ field }) => (
-          <FormItem className="col-span-2">
+          <FormItem className="sm:col-span-2">
             <FormLabel className="text-foreground">Project Domain</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a project domain" />
@@ -663,42 +822,44 @@ export function CreateProjectBusinessForm() {
         control={form.control}
         name="description"
         render={({ field }) => (
-          <FormItem className="col-span-2">
+          <FormItem className="sm:col-span-2">
             <FormLabel className="text-foreground">
               Project Description
             </FormLabel>
             <FormControl>
-              <Textarea placeholder="Enter description" {...field} />
+              <Textarea
+                placeholder="Describe what you need and what success looks like"
+                {...field}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-      <div className="lg:col-span-2 xl:col-span-2">
-        {urlFields.map((field, index) => (
-          <FormField
-            control={form.control}
-            key={field.id}
-            name={`urls.${index}.value`}
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2">
-                <div className="flex-1">
+      <div className="sm:col-span-2">
+        <div className="space-y-3">
+          {urlFields.map((field, index) => (
+            <FormField
+              control={form.control}
+              key={field.id}
+              name={`urls.${index}.value`}
+              render={({ field }) => (
+                <FormItem>
                   <FormLabel className={cn(index !== 0 && 'sr-only')}>
                     URLs
                   </FormLabel>
-                  <FormDescription
-                    className={`${index !== 0 ? 'sr-only' : ''} mb-2`}
-                  >
-                    Enter URL of your account
+                  <FormDescription className={index !== 0 ? 'sr-only' : ''}>
+                    Add relevant links (website, docs, etc.).
                   </FormDescription>
                   <FormControl>
-                    <div className="flex justify-center items-center  gap-3 mb-2">
-                      <Input {...field} />
+                    <div className="flex items-center gap-2">
+                      <InputGroup>
+                        <InputGroupInput {...field} placeholder="https://" />
+                      </InputGroup>
                       <Button
                         variant="outline"
                         type="button"
                         size="icon"
-                        className="ml-2"
                         onClick={() =>
                           form.setValue(
                             'urls',
@@ -712,14 +873,14 @@ export function CreateProjectBusinessForm() {
                       </Button>
                     </div>
                   </FormControl>
-                  <FormMessage className="my-2.5" />
-                </div>
-              </FormItem>
-            )}
-          />
-        ))}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ))}
+        </div>
       </div>
-    </>
+    </div>
   );
 
   const renderProfileInfoStep = () => (
@@ -729,10 +890,7 @@ export function CreateProjectBusinessForm() {
         if (mode === 'single' && index > 0) return null;
 
         return index === activeProfile || mode === 'single' ? (
-          <div
-            key={index}
-            className="rounded-xl border bg-card shadow-sm p-5 mb-6"
-          >
+          <div key={index} className="space-y-4">
             {mode === 'multiple' && (
               <div className="mb-3">
                 <ProfileTabs />
@@ -744,7 +902,9 @@ export function CreateProjectBusinessForm() {
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-semibold">Profile {index + 1}</h4>
+                  <h4 className="font-semibold">
+                    Profile {mode === 'multiple' ? index + 1 : ''}
+                  </h4>
                   <p className="text-xs text-muted-foreground">
                     Define role, skills and requirements
                   </p>
@@ -762,7 +922,6 @@ export function CreateProjectBusinessForm() {
                         : 'outline'
                     }
                     onClick={() => {
-                      setProfileType('Freelancer');
                       form.setValue(
                         `profiles.${index}.profileType`,
                         'FREELANCER',
@@ -781,7 +940,6 @@ export function CreateProjectBusinessForm() {
                         : 'outline'
                     }
                     onClick={() => {
-                      setProfileType('Consultant');
                       form.setValue(
                         `profiles.${index}.profileType`,
                         'CONSULTANT',
@@ -794,35 +952,79 @@ export function CreateProjectBusinessForm() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            <div className="grid gap-4">
+              <FormField
+                control={form.control}
+                name={`profiles.${index}.freelancersRequired`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Positions
+                    </FormLabel>
+                    <FormDescription>
+                      How many people you want for this role.
+                    </FormDescription>
+                    <FormControl>
+                      <InputGroup>
+                        <InputGroupInput
+                          type="number"
+                          inputMode="numeric"
+                          placeholder="e.g. 2"
+                          min={1}
+                          {...field}
+                        />
+                        <InputGroupText>PEOPLE</InputGroupText>
+                      </InputGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name={`profiles.${index}.domain_id`}
                 render={() => (
-                  <FormItem className="mb-4">
+                  <FormItem>
                     <FormLabel className="flex items-center gap-2">
                       <Tag className="h-4 w-4" /> Profile Domain
                     </FormLabel>
+                    <FormDescription>
+                      Choose the closest domain for this profile.
+                    </FormDescription>
                     <FormControl>
                       <SelectTagPicker
                         label=""
-                        options={domains.map((d: any) => ({
-                          label: d.label,
-                          _id: d._id,
-                        }))}
+                        options={domains}
                         selected={(currDomains[index] || []).map(
                           (d: string) => ({ name: d }),
                         )}
                         onAdd={(val: string) => {
                           if (!val) return;
+
+                          const selectedDomain = (domains || []).find(
+                            (d: any) => d?.value === val || d?.label === val,
+                          );
+                          if (!selectedDomain?.value) return;
+
                           setCurrDomains((prev) => {
-                            const prevDomains = prev[index] || [];
-                            if (prevDomains.includes(val)) return prev; // avoid duplicates
-                            const updated = [...prevDomains, val];
+                            const updated = [
+                              String(selectedDomain.label || val),
+                            ];
                             const newDomains = { ...prev, [index]: updated };
                             form.setValue(
+                              `profiles.${index}.domain_id`,
+                              String(selectedDomain.value),
+                              {
+                                shouldValidate: true,
+                              },
+                            );
+                            form.setValue(
                               `profiles.${index}.domain`,
-                              updated as any,
+                              String(selectedDomain.label || ''),
                               {
                                 shouldValidate: true,
                               },
@@ -830,19 +1032,16 @@ export function CreateProjectBusinessForm() {
                             return newDomains;
                           });
                         }}
-                        onRemove={(val: string) => {
+                        onRemove={() => {
                           setCurrDomains((prev) => {
-                            const updated = (prev[index] || []).filter(
-                              (d: string) => d !== val,
-                            );
+                            const updated: string[] = [];
                             const newDomains = { ...prev, [index]: updated };
-                            form.setValue(
-                              `profiles.${index}.domain`,
-                              updated as any,
-                              {
-                                shouldValidate: true,
-                              },
-                            );
+                            form.setValue(`profiles.${index}.domain_id`, '', {
+                              shouldValidate: true,
+                            });
+                            form.setValue(`profiles.${index}.domain`, '', {
+                              shouldValidate: true,
+                            });
                             return newDomains;
                           });
                         }}
@@ -859,33 +1058,15 @@ export function CreateProjectBusinessForm() {
               />
               <FormField
                 control={form.control}
-                name={`profiles.${index}.freelancersRequired`}
-                render={({ field }) => (
-                  <FormItem className="mb-4">
-                    <FormLabel className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Positions
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Enter number"
-                        min={1}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name={`profiles.${index}.skills`}
                 render={() => (
-                  <FormItem className="mb-4">
+                  <FormItem>
                     <FormLabel className="flex items-center gap-2">
                       <Award className="h-4 w-4" /> Skills
                     </FormLabel>
+                    <FormDescription>
+                      Add the key skills you want for this role.
+                    </FormDescription>
                     <FormControl>
                       <SelectTagPicker
                         label=""
@@ -941,7 +1122,8 @@ export function CreateProjectBusinessForm() {
                 )}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name={`profiles.${index}.experience`}
@@ -950,14 +1132,21 @@ export function CreateProjectBusinessForm() {
                     <FormLabel className="flex items-center gap-2">
                       <Target className="h-4 w-4" /> Experience
                     </FormLabel>
+                    <FormDescription>
+                      Minimum years of experience required.
+                    </FormDescription>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Enter experience"
-                        min={0}
-                        max={60}
-                        {...field}
-                      />
+                      <InputGroup>
+                        <InputGroupInput
+                          type="number"
+                          inputMode="decimal"
+                          placeholder="e.g. 3"
+                          min={0}
+                          max={60}
+                          {...field}
+                        />
+                        <InputGroupText>YEARS</InputGroupText>
+                      </InputGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -971,9 +1160,43 @@ export function CreateProjectBusinessForm() {
                     <FormLabel className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4" /> Min Connect
                     </FormLabel>
+                    <FormDescription>
+                      Minimum connects required to apply.
+                    </FormDescription>
                     <FormControl>
-                      <Input
-                        placeholder="Enter Min Connects (Recommended: 10)"
+                      <InputGroup>
+                        <InputGroupInput
+                          type="number"
+                          inputMode="numeric"
+                          placeholder="Recommended: 10"
+                          min={1}
+                          {...field}
+                        />
+                        <InputGroupText>CONNECTS</InputGroupText>
+                      </InputGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="pt-2">
+              <FormField
+                control={form.control}
+                name={`profiles.${index}.description`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground">
+                      Role Description (optional)
+                    </FormLabel>
+                    <FormDescription>
+                      Add a short note about responsibilities, deliverables, or
+                      expectations.
+                    </FormDescription>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Example: Build the frontend UI for the dashboard and integrate APIs."
                         {...field}
                       />
                     </FormControl>
@@ -982,238 +1205,420 @@ export function CreateProjectBusinessForm() {
                 )}
               />
             </div>
-            {/* Section divider before budget */}
-            <div className="border-t mt-2 mb-4" />
-            <BudgetSection
-              form={form}
-              activeProfile={activeProfile}
-              className="w-full"
-            />
           </div>
         ) : null;
       })}
     </div>
   );
 
+  const renderBudgetStep = () => (
+    <div className="lg:col-span-2 xl:col-span-2">
+      {mode === 'multiple' && (
+        <div className="mb-3">
+          <ProfileTabs />
+        </div>
+      )}
+      <BudgetSection
+        form={form}
+        activeProfile={activeProfile}
+        className="w-full"
+      />
+    </div>
+  );
+
   return (
-    <Card className="p-6 md:p-8 lg:p-10">
-      <div className="grid gap-8 lg:grid-cols-3">
-        <ProjectFormIllustration />
-
-        <div className="lg:col-span-2">
-          {/* Stepper */}
-          <ProjectFormStepper
-            currentStep={currentStep === FormSteps.ProjectInfo ? 0 : 1}
-            onProjectClick={() => setCurrentStep(FormSteps.ProjectInfo)}
-            onProfileClick={async () => {
-              const ok = await form.trigger([
-                'projectName',
-                'email',
-                'projectDomain',
-                'description',
-              ]);
-              if (!ok) {
-                notifyError(
-                  'Please complete required fields before continuing',
-                );
-                return;
-              }
-              setCurrentStep(FormSteps.ProfileInfo);
-            }}
-            className="mb-6"
-          />
-
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="gap-6 grid grid-cols-1 lg:grid-cols-2"
-            >
-              {currentStep === FormSteps.ProjectInfo && renderProjectInfoStep()}
-              {currentStep === FormSteps.ProfileInfo && renderProfileInfoStep()}
-
-              <div className="w-full flex col-span-1 lg:col-span-2 items-center justify-between gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => appendUrl({ value: '' })}
-                  disabled={currentStep === FormSteps.ProfileInfo}
-                  className={
-                    currentStep === FormSteps.ProfileInfo
-                      ? 'invisible pointer-events-none'
-                      : ''
-                  }
-                >
-                  Add URL
-                </Button>
-                <div className="flex items-center gap-2">
-                  {currentStep === FormSteps.ProjectInfo && (
-                    <Button
-                      type="button"
-                      variant="default"
-                      size="sm"
-                      onClick={async () => {
-                        const ok = await form.trigger([
-                          'projectName',
-                          'email',
-                          'projectDomain',
-                          'description',
-                        ]);
-                        if (!ok) {
-                          notifyError(
-                            'Please complete required fields before continuing',
-                          );
-                          return;
-                        }
-                        setCurrentStep(FormSteps.ProfileInfo);
-                      }}
-                    >
-                      Next
-                    </Button>
-                  )}
-                  {currentStep === FormSteps.ProfileInfo && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={prevStep}
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={saveDraft}
-                        title="Save Draft"
-                      >
-                        <Save className="h-4 w-4 mr-1" /> Save Draft
-                      </Button>
-                      <ConnectsDialog
-                        loading={loading}
-                        isValidCheck={async () => {
-                          // Validate all required fields
-                          const fieldsToValidate = [
-                            'projectName',
-                            'email',
-                            'description',
-                            'urls',
-                            'profiles',
-                          ];
-
-                          try {
-                            const isValid = await form.trigger(
-                              fieldsToValidate as any,
-                              {
-                                shouldFocus: true,
-                              },
-                            );
-                            if (!isValid) {
-                              // If validation fails, show error for the first invalid field
-                              const { errors } = form.formState;
-                              const firstError = Object.keys(errors)[0];
-
-                              if (firstError) {
-                                // Handle nested errors (like array items)
-                                const getNestedError = (
-                                  obj: any,
-                                  path: string,
-                                ) => {
-                                  return path
-                                    .split('.')
-                                    .reduce(
-                                      (o, p) =>
-                                        o && o[p] !== undefined
-                                          ? o[p]
-                                          : undefined,
-                                      obj,
-                                    );
-                                };
-
-                                const error = getNestedError(
-                                  errors,
-                                  firstError,
-                                );
-                                const errorMessage =
-                                  error?.message ||
-                                  'Please fill in all required fields';
-
-                                notifyError(
-                                  typeof errorMessage === 'string'
-                                    ? errorMessage
-                                    : 'Please fill in all required fields',
-                                  'Validation Error',
-                                );
-                              } else {
-                                notifyError(
-                                  'Please fill in all required fields',
-                                  'Validation Error',
-                                );
-                              }
-                            }
-                            return isValid;
-                          } catch (error) {
-                            console.error('Validation error:', error);
-                            return false;
-                          }
-                        }}
-                        onSubmit={async () => {
-                          try {
-                            // First validate all fields
-                            const fieldsToValidate = [
-                              'projectName',
-                              'email',
-                              'description',
-                              'urls',
-                              'profiles',
-                            ];
-
-                            const isValid = await form.trigger(
-                              fieldsToValidate as any,
-                              {
-                                shouldFocus: true,
-                              },
-                            );
-                            if (!isValid) return;
-
-                            // If validation passes, submit the form
-                            await form.handleSubmit(onSubmit)();
-                          } catch (error) {
-                            console.error('Submission error:', error);
-                          }
-                        }}
-                        setLoading={setLoading}
-                        userId={user?.uid || ''}
-                        buttonText={'Create Project'}
-                        userType={'BUSINESS'}
-                        requiredConnects={parseInt(
-                          process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST ||
-                            '150',
-                          10,
-                        )}
-                      />
+    <>
+      <div className="w-full px-4 sm:px-6">
+        <div className="mx-auto w-full">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+            <section className="hidden lg:block">
+              <div className="sticky top-10">
+                <div className="rounded-2xl border bg-gradient p-8">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 border flex items-center justify-center px-3">
+                      <Rocket className="h-6 w-6 text-primary" />
                     </div>
-                  )}
+                    <div className="min-w-0">
+                      <h1 className="text-3xl font-bold tracking-tight">
+                        Create a project
+                      </h1>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Add project info, define one or more profiles, set your
+                        budget, and publish.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 rounded-xl border bg-background/60">
+                    <ProjectFormIllustration className="p-6" />
+                  </div>
+
+                  <Separator className="my-6" />
+
+                  <div className="grid gap-3 text-sm">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+                      <p className="text-muted-foreground">
+                        Clear three-step flow (Project Info → Profiles →
+                        Budget).
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Tag className="mt-0.5 h-4 w-4 text-primary" />
+                      <p className="text-muted-foreground">
+                        Add domains and skills using quick tag pickers.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <DollarSign className="mt-0.5 h-4 w-4 text-primary" />
+                      <p className="text-muted-foreground">
+                        Set a fixed or hourly budget with validation.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 rounded-xl bg-background/60 border p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">Estimated time</p>
+                      <Badge variant="outline">3-5 minutes</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      You can save a draft before publishing.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </form>
-          </Form>
+            </section>
 
-          {showLoadDraftDialog && (
-            <DraftDialog
-              dialogChange={showLoadDraftDialog}
-              setDialogChange={setShowLoadDraftDialog}
-              heading="Load Draft?"
-              desc="A saved draft was found. Do you want to load it?"
-              handleClose={discardDraft}
-              handleSave={loadDraft}
-              btn1Txt=" Discard"
-              btn2Txt="Load Draft"
-            />
-          )}
+            <section className="w-full">
+              <Card className="w-full rounded-xl">
+                <CardHeader>
+                  <div className="lg:hidden mb-2">
+                    <CardTitle>Create a project</CardTitle>
+                    <CardDescription>
+                      Add project info, define profiles, set budget, and
+                      publish.
+                    </CardDescription>
+                  </div>
+
+                  <ProjectFormStepper
+                    currentStep={
+                      currentStep === FormSteps.ProjectInfo
+                        ? 0
+                        : currentStep === FormSteps.ProfileInfo
+                          ? 1
+                          : 2
+                    }
+                    onProjectClick={() => setCurrentStep(FormSteps.ProjectInfo)}
+                    onProfileClick={async () => {
+                      const ok = await form.trigger([
+                        'projectName',
+                        'email',
+                        'projectDomain',
+                        'description',
+                      ]);
+                      if (!ok) {
+                        notifyError(
+                          'Please complete required fields before continuing',
+                        );
+                        return;
+                      }
+                      setCurrentStep(FormSteps.ProfileInfo);
+                    }}
+                    onBudgetClick={async () => {
+                      const ok = await form.trigger([
+                        'projectName',
+                        'email',
+                        'projectDomain',
+                        'description',
+                        ...getProfileStepValidateFields(),
+                      ] as any);
+                      if (!ok) {
+                        notifyError(
+                          'Please complete required fields before continuing',
+                        );
+                        return;
+                      }
+                      setCurrentStep(FormSteps.Budget);
+                    }}
+                    className="mt-2"
+                  />
+                </CardHeader>
+
+                <CardContent>
+                  <Form {...form}>
+                    <form
+                      onSubmit={form.handleSubmit(onSubmit)}
+                      className="space-y-6"
+                    >
+                      {currentStep === FormSteps.ProjectInfo &&
+                        renderProjectInfoStep()}
+                      {currentStep === FormSteps.ProfileInfo &&
+                        renderProfileInfoStep()}
+                      {currentStep === FormSteps.Budget && renderBudgetStep()}
+
+                      <div className="w-full flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => appendUrl({ value: '' })}
+                          disabled={
+                            currentStep === FormSteps.ProfileInfo ||
+                            currentStep === FormSteps.Budget
+                          }
+                          className={
+                            currentStep === FormSteps.ProfileInfo ||
+                            currentStep === FormSteps.Budget
+                              ? 'invisible pointer-events-none'
+                              : ''
+                          }
+                        >
+                          Add URL
+                        </Button>
+
+                        <div className="flex items-center gap-2">
+                          {currentStep === FormSteps.ProjectInfo && (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={saveDraft}
+                                title="Save Draft"
+                                aria-label="Save Draft"
+                              >
+                                <Save className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">
+                                  Save Draft
+                                </span>
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                aria-label="Next"
+                                onClick={async () => {
+                                  const ok = await form.trigger([
+                                    'projectName',
+                                    'email',
+                                    'projectDomain',
+                                    'description',
+                                  ]);
+                                  if (!ok) {
+                                    notifyError(
+                                      'Please complete required fields before continuing',
+                                    );
+                                    return;
+                                  }
+                                  setCurrentStep(FormSteps.ProfileInfo);
+                                }}
+                              >
+                                <ArrowRight className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Next</span>
+                              </Button>
+                            </div>
+                          )}
+
+                          {currentStep === FormSteps.ProfileInfo && (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                aria-label="Back"
+                                onClick={prevStep}
+                              >
+                                <ArrowLeft className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Back</span>
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={saveDraft}
+                                title="Save Draft"
+                                aria-label="Save Draft"
+                              >
+                                <Save className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">
+                                  Save Draft
+                                </span>
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                aria-label="Next"
+                                onClick={async () => {
+                                  const ok = await form.trigger(
+                                    getProfileStepValidateFields() as any,
+                                  );
+                                  if (!ok) {
+                                    notifyError(
+                                      'Please complete required fields before continuing',
+                                    );
+                                    return;
+                                  }
+                                  setCurrentStep(FormSteps.Budget);
+                                }}
+                              >
+                                <ArrowRight className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Next</span>
+                              </Button>
+                            </div>
+                          )}
+
+                          {currentStep === FormSteps.Budget && (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                aria-label="Back"
+                                onClick={prevStep}
+                              >
+                                <ArrowLeft className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Back</span>
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={saveDraft}
+                                title="Save Draft"
+                                aria-label="Save Draft"
+                              >
+                                <Save className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">
+                                  Save Draft
+                                </span>
+                              </Button>
+
+                              <ConnectsDialog
+                                loading={loading}
+                                setLoading={setLoading}
+                                isValidCheck={async () => {
+                                  const fieldsToValidate = [
+                                    'projectName',
+                                    'email',
+                                    'description',
+                                    'urls',
+                                    ...getProfileStepValidateFields(),
+                                    ...getBudgetStepValidateFields(),
+                                  ];
+
+                                  try {
+                                    const isValid = await form.trigger(
+                                      fieldsToValidate as any,
+                                      {
+                                        shouldFocus: true,
+                                      },
+                                    );
+                                    if (!isValid) {
+                                      const { errors } = form.formState;
+                                      const firstError = Object.keys(errors)[0];
+
+                                      if (firstError) {
+                                        const getNestedError = (
+                                          obj: any,
+                                          path: string,
+                                        ) => {
+                                          return path
+                                            .split('.')
+                                            .reduce(
+                                              (o, p) =>
+                                                o && o[p] !== undefined
+                                                  ? o[p]
+                                                  : undefined,
+                                              obj,
+                                            );
+                                        };
+
+                                        const error = getNestedError(
+                                          errors,
+                                          firstError,
+                                        );
+                                        const errorMessage =
+                                          error?.message ||
+                                          'Please fill in all required fields';
+
+                                        notifyError(
+                                          typeof errorMessage === 'string'
+                                            ? errorMessage
+                                            : 'Please fill in all required fields',
+                                          'Validation Error',
+                                        );
+                                      } else {
+                                        notifyError(
+                                          'Please fill in all required fields',
+                                          'Validation Error',
+                                        );
+                                      }
+                                    }
+                                    return isValid;
+                                  } catch (error) {
+                                    console.error('Validation error:', error);
+                                    return false;
+                                  }
+                                }}
+                                onSubmit={async () => {
+                                  try {
+                                    const fieldsToValidate = [
+                                      'projectName',
+                                      'email',
+                                      'description',
+                                      'urls',
+                                      ...getProfileStepValidateFields(),
+                                      ...getBudgetStepValidateFields(),
+                                    ];
+
+                                    const isValid = await form.trigger(
+                                      fieldsToValidate as any,
+                                      {
+                                        shouldFocus: true,
+                                      },
+                                    );
+                                    if (!isValid) return;
+
+                                    await onSubmit(form.getValues());
+                                  } catch (error) {
+                                    console.error('Submit error:', error);
+                                  }
+                                }}
+                                userId={user.uid}
+                                buttonText="Create Project"
+                                userType="BUSINESS"
+                                requiredConnects={parseInt(
+                                  process.env
+                                    .NEXT_PUBLIC__APP_PROJECT_CREATION_COST ||
+                                    '150',
+                                  10,
+                                )}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </section>
+          </div>
         </div>
       </div>
-    </Card>
+
+      {showLoadDraftDialog && (
+        <DraftDialog
+          dialogChange={showLoadDraftDialog}
+          setDialogChange={setShowLoadDraftDialog}
+          heading="Load Draft?"
+          desc="A saved draft was found. Do you want to load it?"
+          handleClose={discardDraft}
+          handleSave={loadDraft}
+          btn1Txt=" Discard"
+          btn2Txt="Load Draft"
+        />
+      )}
+    </>
   );
 }

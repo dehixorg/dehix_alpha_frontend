@@ -7,6 +7,12 @@ import {
   SquarePen,
   Loader2,
   Archive,
+  ArrowLeft,
+  Image as ImageIcon,
+  Video,
+  FileText,
+  Mic,
+  Music2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -106,13 +112,54 @@ export function ChatList({
       .trim();
 
   // Utility function to detect and format media messages
-  const formatLastMessage = (
-    lastMessage: Conversation['lastMessage'],
-  ): string => {
-    if (!lastMessage) return 'No messages yet';
+  const getLastMessagePreview = (lastMessage: Conversation['lastMessage']) => {
+    if (!lastMessage) return { text: 'No messages yet', icon: null };
     const content = lastMessage.content;
     const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
-    // Check if content is an S3 URL
+
+    if (lastMessage.voiceMessage) {
+      return { text: 'Voice message', icon: <Mic className="h-3.5 w-3.5" /> };
+    }
+
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
+    const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
+    const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac'];
+    const documentExtensions = [
+      'pdf',
+      'doc',
+      'docx',
+      'ppt',
+      'pptx',
+      'xls',
+      'xlsx',
+      'txt',
+    ];
+
+    const getExt = (raw: string) => {
+      try {
+        const url = new URL(raw);
+        return url.pathname.split('.').pop()?.toLowerCase() || '';
+      } catch {
+        return raw.split('?')[0].split('.').pop()?.toLowerCase() || '';
+      }
+    };
+
+    if (typeof content === 'string') {
+      const ext = getExt(content);
+      if (imageExtensions.includes(ext)) {
+        return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
+      }
+      if (videoExtensions.includes(ext)) {
+        return { text: 'Video', icon: <Video className="h-3.5 w-3.5" /> };
+      }
+      if (audioExtensions.includes(ext)) {
+        return { text: 'Audio', icon: <Music2 className="h-3.5 w-3.5" /> };
+      }
+      if (documentExtensions.includes(ext)) {
+        return { text: 'Document', icon: <FileText className="h-3.5 w-3.5" /> };
+      }
+    }
+
     if (
       typeof content === 'string' &&
       s3BucketUrl &&
@@ -122,41 +169,32 @@ export function ChatList({
         const url = new URL(content);
         const fileName = decodeURIComponent(url.pathname.substring(1));
         const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-        // Check if it's a voice message based on the message type
-        if (lastMessage.voiceMessage) {
-          return '🎤 Voice message';
-        }
-        // Check file extension for different media types
-        const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
-        const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
-        const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac'];
-        const documentExtensions = [
-          'pdf',
-          'doc',
-          'docx',
-          'ppt',
-          'pptx',
-          'xls',
-          'xlsx',
-          'txt',
-        ];
+
         if (imageExtensions.includes(fileExtension)) {
-          return '📷 Photo';
-        } else if (videoExtensions.includes(fileExtension)) {
-          return '🎥 Video';
-        } else if (audioExtensions.includes(fileExtension)) {
-          return '🎵 Audio';
-        } else if (documentExtensions.includes(fileExtension)) {
-          return '📄 Document';
-        } else {
-          return '📎 File';
+          return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
         }
+        if (videoExtensions.includes(fileExtension)) {
+          return { text: 'Video', icon: <Video className="h-3.5 w-3.5" /> };
+        }
+        if (audioExtensions.includes(fileExtension)) {
+          return { text: 'Audio', icon: <Music2 className="h-3.5 w-3.5" /> };
+        }
+        if (documentExtensions.includes(fileExtension)) {
+          return {
+            text: 'Document',
+            icon: <FileText className="h-3.5 w-3.5" />,
+          };
+        }
+        return { text: 'File', icon: <FileText className="h-3.5 w-3.5" /> };
       } catch (error) {
         console.error('Error parsing S3 URL:', error);
-        return '📎 Attachment';
+        return {
+          text: 'Attachment',
+          icon: <FileText className="h-3.5 w-3.5" />,
+        };
       }
     }
-    // Check if there are attachments
+
     if (
       lastMessage.attachments &&
       Array.isArray(lastMessage.attachments) &&
@@ -165,20 +203,21 @@ export function ChatList({
       const attachment = lastMessage.attachments[0];
       if (attachment.type) {
         if (attachment.type.startsWith('image/')) {
-          return '📷 Photo';
-        } else if (attachment.type.startsWith('video/')) {
-          return '🎥 Video';
-        } else if (attachment.type.startsWith('audio/')) {
-          return '🎵 Audio';
-        } else {
-          return '📄 Document';
+          return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
         }
+        if (attachment.type.startsWith('video/')) {
+          return { text: 'Video', icon: <Video className="h-3.5 w-3.5" /> };
+        }
+        if (attachment.type.startsWith('audio/')) {
+          return { text: 'Audio', icon: <Music2 className="h-3.5 w-3.5" /> };
+        }
+        return { text: 'Document', icon: <FileText className="h-3.5 w-3.5" /> };
       }
-      return '📎 File';
+      return { text: 'File', icon: <FileText className="h-3.5 w-3.5" /> };
     }
-    // Return stripped HTML content for regular text messages
+
     const textContent = content ? stripHtml(content) : '';
-    return textContent || 'Message';
+    return { text: textContent || 'Message', icon: null };
   };
 
   const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
@@ -276,7 +315,9 @@ export function ChatList({
           conversation.participants.find((p) => p !== currentUser.uid) || ''
         ]?.userName ||
         '';
-      const lastMessageContent = formatLastMessage(conversation.lastMessage);
+      const lastMessageContent = getLastMessagePreview(
+        conversation.lastMessage,
+      ).text;
       return (
         name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
@@ -294,14 +335,16 @@ export function ChatList({
           >
             <SquarePen className="h-4 w-4 mr-2" /> New Chat
           </Button>
-          <Button
-            variant="outline"
-            className="flex items-center justify-center text-sm px-3 py-2 rounded-full shadow-lg"
-            onClick={handleOpenArchivedChats}
-            aria-label="View archived chats"
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
+          {activeView !== 'archived' && (
+            <Button
+              variant="outline"
+              className="flex items-center justify-center text-sm px-3 py-2 rounded-full shadow-lg"
+              onClick={handleOpenArchivedChats}
+              aria-label="View archived chats"
+            >
+              <Archive className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         <div className="relative">
           <Search
@@ -319,14 +362,16 @@ export function ChatList({
       </div>
 
       {activeView === 'archived' && (
-        <div className="p-3 text-center border-b border-[hsl(var(--border))]">
+        <div className="p-3 text-center border-b bg-gradient">
           <div className="flex items-center justify-between">
-            <Button variant="link" onClick={handleOpenInbox}>
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--ring))] hover:text-white dark:hover:text-black transition-colors">
-                &larr;
-              </span>
+            <Button
+              size="icon"
+              className="rounded-full"
+              onClick={handleOpenInbox}
+            >
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h3 className="font-semibold text-lg">Archived Chats</h3>
+            <h3 className="text-lg">Archived Chats</h3>
             <div style={{ width: '60px' }}></div>
           </div>
         </div>
@@ -407,9 +452,8 @@ export function ChatList({
                   const lastUpdated =
                     lastUpdatedTimes[conversation.id] || 'N/A';
                   const isActive = active?.id === conversation.id;
-                  const displayText = formatLastMessage(
-                    conversation.lastMessage,
-                  );
+                  const { text: displayText, icon: displayIcon } =
+                    getLastMessagePreview(conversation.lastMessage);
 
                   return (
                     <div
@@ -472,7 +516,12 @@ export function ChatList({
                             {lastUpdated}
                           </p>
                         </div>
-                        <p className="text-xs truncate">
+                        <p className="text-xs truncate flex items-center gap-1">
+                          {displayIcon ? (
+                            <span className="text-[hsl(var(--muted-foreground))]">
+                              {displayIcon}
+                            </span>
+                          ) : null}
                           {displayText.length > 40
                             ? displayText.substring(0, 40) + '...'
                             : displayText}

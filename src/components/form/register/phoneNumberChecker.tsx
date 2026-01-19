@@ -16,7 +16,11 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 
 interface PhoneNumberFormProps<T extends FieldValues> {
   code: string;
@@ -42,30 +46,32 @@ const PhoneNumberForm: React.FC<PhoneNumberFormProps<any>> = ({
       render={({ field }) => (
         <FormItem className="flex-1">
           <div className="flex flex-col items-start w-full">
-            <div className="flex items-center w-full space-x-2">
-              <Select onValueChange={handleCountryChange} value={code}>
-                <SelectTrigger className="w-[75px] border">
-                  <span>{country.dialCode}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {countries.map((country) => (
-                      <SelectItem key={country.code} value={country.code}>
-                        {country.name} ({country.dialCode})
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <FormControl>
-                <Input
+            <FormControl>
+              <InputGroup>
+                <InputGroupText className="p-0 bg-transparent">
+                  <Select onValueChange={handleCountryChange} value={code}>
+                    <SelectTrigger className="w-[90px] border-0 rounded-none focus:ring-0">
+                      <span>{country.dialCode}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {countries.map((country) => (
+                          <SelectItem key={country.code} value={country.code}>
+                            {country.name} ({country.dialCode})
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </InputGroupText>
+                <InputGroupInput
                   placeholder="Enter your phone number"
                   type="text"
                   {...field}
                   className="w-full"
                 />
-              </FormControl>
-            </div>
+              </InputGroup>
+            </FormControl>
           </div>
           <FormMessage />
         </FormItem>

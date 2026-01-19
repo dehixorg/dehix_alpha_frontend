@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   EyeOff,
   MoreVertical,
-  Clock,
   DollarSign,
   Calendar,
   Briefcase,
@@ -388,7 +387,7 @@ const JobCard: React.FC<JobCardProps> = ({
             </div>
 
             {/* Project Details Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
               <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
                 <div className="flex items-center space-x-2">
                   <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30">
@@ -422,29 +421,6 @@ const JobCard: React.FC<JobCardProps> = ({
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {profile?.freelancersRequired || '1'}{' '}
-                      {profile?.freelancersRequired === '1'
-                        ? 'Position'
-                        : 'Positions'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
-                <div className="flex items-center space-x-2">
-                  <div className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/30">
-                    <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Posted
-                    </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {job.createdAt
-                        ? formatDistanceToNow(new Date(job.createdAt), {
-                            addSuffix: true,
-                          })
-                        : 'Recently'}
                     </p>
                   </div>
                 </div>

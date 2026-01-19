@@ -54,8 +54,11 @@ export function BusinessFilterSheet({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-md">
-        <ScrollArea className="h-full">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-md p-0 flex flex-col"
+      >
+        <ScrollArea>
           <BusinessFilterComponent
             filters={filters}
             onFilterChange={onFilterChange}

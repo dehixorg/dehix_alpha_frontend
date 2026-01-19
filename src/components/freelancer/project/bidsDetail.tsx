@@ -7,8 +7,6 @@ import {
   PackageOpen,
   Eye,
   Briefcase,
-  Code,
-  Layers,
   BookOpen,
   UserCircle,
   Clock,
@@ -204,8 +202,6 @@ const ProfileDialog = React.memo(
     bidData: any;
     isFreelancerProfile: boolean;
   }) => {
-    const router = useRouter();
-
     const getProfileDisplayName = (
       profileData: any,
       bidData: any,
@@ -252,114 +248,87 @@ const ProfileDialog = React.memo(
       );
     };
 
+    const profilePic =
+      profileData?.profilePic || profileData?.freelancerId?.profilePic;
+
+    const hourlyRate = profileData?.hourlyRate || profileData?.perHourPrice;
+
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] p-0 overflow-hidden">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Profile Details</DialogTitle>
-          </DialogHeader>
-
-          <div className="sticky top-0 border-b bg-gradient">
-            <div className="p-4 sm:p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div
-                  className="flex items-center gap-3 min-w-0 cursor-pointer"
-                  onClick={() => {
-                    const freelancerId =
-                      profileData?.freelancerId?._id ||
-                      bidData?.bidder_id ||
-                      bidData?.freelancer?._id;
-                    if (freelancerId)
-                      router.push(`/freelancer-profile/${freelancerId}`);
-                  }}
-                >
-                  {profileData?.profilePic ||
-                  profileData?.freelancerId?.profilePic ? (
-                    <Image
-                      src={
-                        profileData?.profilePic ||
-                        profileData?.freelancerId?.profilePic
-                      }
-                      alt="Profile"
-                      className="h-11 w-11 rounded-full object-cover"
-                      width={44}
-                      height={44}
-                    />
-                  ) : (
-                    <div className="h-11 w-11 rounded-full bg-muted flex items-center justify-center border">
-                      <UserCircle className="h-7 w-7 text-muted-foreground" />
-                    </div>
-                  )}
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <p className="font-semibold leading-none truncate">
-                        {getProfileDisplayName(
-                          profileData,
-                          bidData,
-                          isFreelancerProfile,
-                        )}
-                      </p>
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      @
-                      {getProfileUsername(
-                        profileData,
-                        bidData,
-                        isFreelancerProfile,
-                      )}
-                    </p>
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
+      >
+        <DialogContent className="w-[95vw] sm:max-w-5xl max-h-[90vh] p-0 overflow-hidden">
+          <DialogHeader className="border-b px-4 py-4 sm:px-6 bg-gradient">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                {profilePic ? (
+                  <Image
+                    src={profilePic}
+                    alt="Profile"
+                    className="h-11 w-11 rounded-full object-cover"
+                    width={44}
+                    height={44}
+                  />
+                ) : (
+                  <div className="h-11 w-11 rounded-full bg-muted flex items-center justify-center border">
+                    <UserCircle className="h-7 w-7 text-muted-foreground" />
                   </div>
+                )}
+                <div className="min-w-0">
+                  <DialogTitle className="text-base sm:text-lg truncate">
+                    {getProfileDisplayName(
+                      profileData,
+                      bidData,
+                      isFreelancerProfile,
+                    )}
+                  </DialogTitle>
+                  <p className="text-sm text-muted-foreground truncate">
+                    @
+                    {getProfileUsername(
+                      profileData,
+                      bidData,
+                      isFreelancerProfile,
+                    )}
+                  </p>
                 </div>
               </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(profileData?.hourlyRate || profileData?.perHourPrice) && (
-                  <Badge
-                    variant="outline"
-                    className="flex items-center gap-1.5"
-                  >
-                    <DollarSign className="h-3.5 w-3.5" />
-                    <span>
-                      ${profileData?.hourlyRate || profileData?.perHourPrice}/hr
-                    </span>
-                  </Badge>
-                )}
-                {profileData?.availability && (
-                  <Badge
-                    variant="outline"
-                    className="flex items-center gap-1.5"
-                  >
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{profileData.availability}</span>
-                  </Badge>
-                )}
-                {profileData?.workExperience && (
-                  <Badge
-                    variant="outline"
-                    className="flex items-center gap-1.5"
-                  >
-                    <Briefcase className="h-3.5 w-3.5" />
-                    <span>{profileData.workExperience} yrs</span>
-                  </Badge>
-                )}
-                {isFreelancerProfile && profileData?.role && (
-                  <Badge
-                    variant="outline"
-                    className="flex items-center gap-1.5"
-                  >
-                    <UserCircle className="h-3.5 w-3.5" />
-                    <span className="truncate max-w-[240px]">
-                      {profileData.role}
-                    </span>
-                  </Badge>
-                )}
-              </div>
             </div>
-          </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {hourlyRate && (
+                <Badge variant="outline" className="flex items-center gap-1.5">
+                  <DollarSign className="h-3.5 w-3.5" />
+                  <span>${hourlyRate}/hr</span>
+                </Badge>
+              )}
+              {profileData?.availability && (
+                <Badge variant="outline" className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>{profileData.availability}</span>
+                </Badge>
+              )}
+              {profileData?.workExperience && (
+                <Badge variant="outline" className="flex items-center gap-1.5">
+                  <Briefcase className="h-3.5 w-3.5" />
+                  <span>{profileData.workExperience} yrs</span>
+                </Badge>
+              )}
+              {isFreelancerProfile && profileData?.role && (
+                <Badge variant="outline" className="flex items-center gap-1.5">
+                  <UserCircle className="h-3.5 w-3.5" />
+                  <span className="truncate max-w-[240px]">
+                    {profileData.role}
+                  </span>
+                </Badge>
+              )}
+            </div>
+          </DialogHeader>
 
           {loading ? (
-            <div className="p-4 sm:p-5">
+            <div className="p-4 sm:p-6">
               <div className="space-y-4">
                 <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-28 w-full" />
@@ -368,398 +337,387 @@ const ProfileDialog = React.memo(
               </div>
             </div>
           ) : (
-            <ScrollArea className="max-h-[calc(90vh-120px)]">
-              <div className="p-4 sm:p-5 pt-0 sm:pt-0 space-y-5">
-                {profileData?.description && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <BookOpen className="h-4 w-4" />
-                        About
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {profileData.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+            <div className="pb-4 sm:pb-6">
+              <Tabs defaultValue="overview" className="w-full">
+                <div className="border-b px-4 sm:px-6">
+                  <TabsList className="bg-transparent h-12 w-full md:w-auto p-0 justify-start">
+                    <TabsTrigger
+                      value="overview"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      Overview
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="projects"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      Projects
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="experience"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      Experience
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
-                {bidData?.description && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <File className="h-4 w-4" />
-                        Cover letter
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                        {bidData.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <TabsContent value="overview" className="m-0 px-4 pt-4 sm:px-6">
+                  <ScrollArea className="max-h-[calc(90vh-220px)]">
+                    <div className="space-y-4 pr-3">
+                      {profileData?.description && (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <BookOpen className="h-4 w-4" />
+                              About
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              {profileData.description}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
 
-                {(profileData?.skills?.length > 0 ||
-                  profileData?.domains?.length > 0 ||
-                  (isFreelancerProfile && profileData?.domain?.length > 0)) && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Expertise</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {profileData?.skills?.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                            Skills
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {profileData.skills.map(
-                              (skill: any, index: number) => (
-                                <Badge key={index} variant="secondary">
-                                  {skill.label || skill.name}
-                                  {skill.level && ` (${skill.level})`}
-                                </Badge>
-                              ),
+                      {bidData?.description && (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <File className="h-4 w-4" />
+                              Cover letter
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-all text-muted-foreground">
+                              {bidData.description}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {(profileData?.skills?.length > 0 ||
+                        profileData?.domains?.length > 0 ||
+                        (isFreelancerProfile &&
+                          profileData?.domain?.length > 0)) && (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm">Expertise</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {profileData?.skills?.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                  Skills
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {profileData.skills.map(
+                                    (skill: any, index: number) => (
+                                      <Badge key={index} variant="secondary">
+                                        {skill.label || skill.name}
+                                        {skill.level && ` (${skill.level})`}
+                                      </Badge>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
                             )}
+
+                            {profileData?.domains?.length > 0 && (
+                              <>
+                                {profileData?.skills?.length > 0 && (
+                                  <Separator />
+                                )}
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                    Domains
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {profileData.domains.map(
+                                      (domain: any, index: number) => (
+                                        <Badge key={index} variant="secondary">
+                                          {domain.label || domain.name}
+                                          {domain.level && ` (${domain.level})`}
+                                        </Badge>
+                                      ),
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            {isFreelancerProfile &&
+                              profileData?.domain?.length > 0 && (
+                                <>
+                                  {(profileData?.skills?.length > 0 ||
+                                    profileData?.domains?.length > 0) && (
+                                    <Separator />
+                                  )}
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                      Domain expertise
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {profileData.domain.map(
+                                        (domain: any, index: number) => (
+                                          <Badge
+                                            key={index}
+                                            variant="secondary"
+                                          >
+                                            {domain.name}
+                                            {domain.level &&
+                                              ` (${domain.level})`}
+                                          </Badge>
+                                        ),
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Contact</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="text-sm">
+                            <p className="text-xs text-muted-foreground">
+                              Email
+                            </p>
+                            <p className="break-all">
+                              {profileData?.freelancerId?.email ||
+                                profileData?.email ||
+                                'Not provided'}
+                            </p>
                           </div>
+                          {(profileData?.githubLink ||
+                            profileData?.linkedinLink ||
+                            profileData?.personalWebsite) && (
+                            <div className="text-sm">
+                              <p className="text-xs text-muted-foreground">
+                                Links
+                              </p>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {profileData?.githubLink && (
+                                  <a
+                                    href={profileData.githubLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm underline underline-offset-4"
+                                  >
+                                    GitHub
+                                  </a>
+                                )}
+                                {profileData?.linkedinLink && (
+                                  <a
+                                    href={profileData.linkedinLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm underline underline-offset-4"
+                                  >
+                                    LinkedIn
+                                  </a>
+                                )}
+                                {profileData?.personalWebsite && (
+                                  <a
+                                    href={profileData.personalWebsite}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm underline underline-offset-4"
+                                  >
+                                    Portfolio
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                    <ScrollBar orientation="vertical" />
+                  </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="projects" className="m-0 px-4 pt-4 sm:px-6">
+                  <ScrollArea className="max-h-[calc(90vh-220px)]">
+                    <div className="pr-3">
+                      {profileData?.projects &&
+                      profileData.projects.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {profileData.projects
+                            .slice(0, 6)
+                            .map((project: any, index: number) => (
+                              <ProjectCard
+                                key={project._id || index}
+                                {...project}
+                                isViewOnly={true}
+                              />
+                            ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-lg border bg-muted/20 p-8 text-center">
+                          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border bg-background">
+                            <PackageOpen className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                          <p className="mt-3 text-sm font-medium">
+                            No projects
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            This profile has no projects to show yet.
+                          </p>
                         </div>
                       )}
+                    </div>
+                    <ScrollBar orientation="vertical" />
+                  </ScrollArea>
+                </TabsContent>
 
-                      {profileData?.domains?.length > 0 && (
-                        <>
-                          {profileData?.skills?.length > 0 && <Separator />}
-                          <div className="space-y-2">
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                              Domains
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {profileData.domains.map(
-                                (domain: any, index: number) => (
-                                  <Badge key={index} variant="secondary">
-                                    {domain.label || domain.name}
-                                    {domain.level && ` (${domain.level})`}
-                                  </Badge>
-                                ),
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
+                <TabsContent
+                  value="experience"
+                  className="m-0 px-4 pt-4 sm:px-6"
+                >
+                  <ScrollArea className="max-h-[calc(90vh-220px)]">
+                    <div className="space-y-4 pr-3">
+                      {profileData?.experiences &&
+                        profileData.experiences.length > 0 && (
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm flex items-center gap-2">
+                                <Briefcase className="h-4 w-4" />
+                                Work Experience
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {profileData.experiences
+                                .slice(0, 5)
+                                .map((experience: any, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="rounded-lg border bg-muted/20 p-4"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="min-w-0">
+                                        <p className="font-medium truncate">
+                                          {experience.jobTitle}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground truncate">
+                                          {experience.company}
+                                        </p>
+                                      </div>
+                                      {experience.workFrom &&
+                                        experience.workTo && (
+                                          <p className="text-xs text-muted-foreground whitespace-nowrap">
+                                            {new Date(
+                                              experience.workFrom,
+                                            ).toLocaleDateString('en-US', {
+                                              year: 'numeric',
+                                              month: 'short',
+                                            })}{' '}
+                                            -{' '}
+                                            {new Date(
+                                              experience.workTo,
+                                            ).toLocaleDateString('en-US', {
+                                              year: 'numeric',
+                                              month: 'short',
+                                            })}
+                                          </p>
+                                        )}
+                                    </div>
+                                    {experience.workDescription && (
+                                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                                        {experience.workDescription}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                            </CardContent>
+                          </Card>
+                        )}
 
                       {isFreelancerProfile &&
-                        profileData?.domain?.length > 0 && (
-                          <>
-                            {(profileData?.skills?.length > 0 ||
-                              profileData?.domains?.length > 0) && (
-                              <Separator />
-                            )}
-                            <div className="space-y-2">
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                Domain expertise
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {profileData.domain.map(
-                                  (domain: any, index: number) => (
-                                    <Badge key={index} variant="secondary">
-                                      {domain.name}
-                                      {domain.level && ` (${domain.level})`}
-                                    </Badge>
-                                  ),
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Domain for freelancer profile */}
-                {isFreelancerProfile &&
-                  profileData?.domain &&
-                  profileData.domain.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <Layers className="w-5 h-5" />
-                        Domain Expertise
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {profileData.domain.map(
-                          (domain: any, index: number) => (
-                            <Badge
-                              key={index}
-                              className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
-                              variant="outline"
-                            >
-                              {domain.name}
-                              {domain.level && ` (${domain.level})`}
-                            </Badge>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                {/* Skills for freelancer profile */}
-                {isFreelancerProfile &&
-                  profileData?.skills &&
-                  profileData.skills.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <Code className="w-5 h-5" />
-                        Skills
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {profileData.skills.map((skill: any) => (
-                          <Badge
-                            key={
-                              skill._id ||
-                              skill.id ||
-                              `skill-${skill.name}-${skill.level}`
-                            }
-                            className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
-                            variant="outline"
-                          >
-                            {skill.name}
-                            {skill.level && ` (${skill.level})`}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                {/* Projects */}
-                {profileData?.projects && profileData.projects.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Briefcase className="w-5 h-5" />
-                      Projects <Badge>{profileData.projects.length}</Badge>
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {profileData.projects
-                        .slice(0, 4)
-                        .map((project: any, index: number) => {
-                          return (
-                            <ProjectCard
-                              key={project._id || index}
-                              {...project}
-                              isViewOnly={true}
-                            />
-                          );
-                        })}
-                    </div>
-                    {profileData.projects.length > 4 && (
-                      <p className="text-sm text-muted-foreground text-center mt-4">
-                        And {profileData.projects.length - 4} more projects...
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Work Experience */}
-                {profileData?.experiences &&
-                  profileData.experiences.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <Briefcase className="w-5 h-5" />
-                        Work Experience ({profileData.experiences.length})
-                      </h3>
-                      <div className="space-y-4">
-                        {profileData.experiences
-                          .slice(0, 3)
-                          .map((experience: any, index: number) => (
-                            <div
-                              key={index}
-                              className="bg-muted/50 p-4 rounded-lg border border-border"
-                            >
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex-1">
-                                  <h4 className="font-semibold text-foreground text-base">
-                                    {experience.jobTitle}
-                                  </h4>
-                                  <p className="text-blue-600 dark:text-blue-400 font-medium text-sm mt-1">
-                                    {experience.company}
-                                  </p>
-                                </div>
-                                {experience.workFrom && experience.workTo && (
-                                  <span className="text-sm text-muted-foreground font-medium ml-4 whitespace-nowrap">
-                                    {new Date(
-                                      experience.workFrom,
-                                    ).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                    })}{' '}
-                                    -{' '}
-                                    {new Date(
-                                      experience.workTo,
-                                    ).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                    })}
-                                  </span>
-                                )}
-                              </div>
-                              {experience.workDescription && (
-                                <div className="mt-3">
-                                  <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {experience.workDescription}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        {profileData.experiences.length > 3 && (
-                          <p className="text-sm text-muted-foreground text-center mt-4">
-                            And {profileData.experiences.length - 3} more
-                            experiences...
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                {/* Professional Info for freelancer profile */}
-                {isFreelancerProfile &&
-                  profileData?.professionalInfo &&
-                  profileData.professionalInfo.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <Briefcase className="w-5 h-5" />
-                        Professional Experience
-                      </h3>
-                      <div className="space-y-4">
-                        {profileData.professionalInfo
-                          .slice(0, 3)
-                          .map((exp: any, index: number) => (
-                            <div
-                              key={index}
-                              className="bg-muted/50 p-4 rounded-lg border border-border"
-                            >
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex-1">
-                                  <h4 className="font-semibold text-foreground text-base">
-                                    {exp.jobTitle}
-                                  </h4>
-                                  <p className="text-blue-600 dark:text-blue-400 font-medium text-sm mt-1">
-                                    {exp.company}
-                                  </p>
-                                </div>
-                                {exp.workFrom && exp.workTo && (
-                                  <span className="text-sm text-muted-foreground font-medium ml-4 whitespace-nowrap">
-                                    {new Date(exp.workFrom).toLocaleDateString(
-                                      'en-US',
-                                      {
-                                        year: 'numeric',
-                                        month: 'short',
-                                      },
-                                    )}{' '}
-                                    -{' '}
-                                    {new Date(exp.workTo).toLocaleDateString(
-                                      'en-US',
-                                      {
-                                        year: 'numeric',
-                                        month: 'short',
-                                      },
+                        profileData?.professionalInfo &&
+                        profileData.professionalInfo.length > 0 && (
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm flex items-center gap-2">
+                                <Briefcase className="h-4 w-4" />
+                                Professional Experience
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {profileData.professionalInfo
+                                .slice(0, 5)
+                                .map((exp: any, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="rounded-lg border bg-muted/20 p-4"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="min-w-0">
+                                        <p className="font-medium truncate">
+                                          {exp.jobTitle}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground truncate">
+                                          {exp.company}
+                                        </p>
+                                      </div>
+                                      {exp.workFrom && exp.workTo && (
+                                        <p className="text-xs text-muted-foreground whitespace-nowrap">
+                                          {new Date(
+                                            exp.workFrom,
+                                          ).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                          })}{' '}
+                                          -{' '}
+                                          {new Date(
+                                            exp.workTo,
+                                          ).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                          })}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {exp.workDescription && (
+                                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                                        {exp.workDescription}
+                                      </p>
                                     )}
-                                  </span>
-                                )}
-                              </div>
-                              {exp.workDescription && (
-                                <div className="mt-3">
-                                  <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {exp.workDescription}
-                                  </p>
-                                </div>
-                              )}
+                                  </div>
+                                ))}
+                            </CardContent>
+                          </Card>
+                        )}
+
+                      {!profileData?.experiences?.length &&
+                        !(
+                          isFreelancerProfile &&
+                          profileData?.professionalInfo?.length
+                        ) && (
+                          <div className="rounded-lg border bg-muted/20 p-8 text-center">
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border bg-background">
+                              <Briefcase className="h-6 w-6 text-muted-foreground" />
                             </div>
-                          ))}
-                      </div>
+                            <p className="mt-3 text-sm font-medium">
+                              No experience
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              This profile has no experience entries to show
+                              yet.
+                            </p>
+                          </div>
+                        )}
                     </div>
-                  )}
-
-                {/* Work Experience for freelancer profile */}
-                {isFreelancerProfile &&
-                  profileData?.workExperience &&
-                  profileData.workExperience > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <Briefcase className="w-5 h-5" />
-                        Work Experience
-                      </h3>
-                      <div className="bg-muted/50 p-4 rounded-lg border border-border">
-                        <p className="text-foreground leading-relaxed">
-                          {profileData.workExperience} years of professional
-                          experience
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                {/* Contact & Links */}
-                <div className="border-t pt-4">
-                  <h3 className="text-lg font-semibold mb-3">
-                    Contact Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-muted-foreground">
-                        Email:
-                      </span>
-                      <p>
-                        {profileData?.freelancerId?.email ||
-                          profileData?.email ||
-                          'Not provided'}
-                      </p>
-                    </div>
-                    {(profileData?.githubLink ||
-                      profileData?.linkedinLink ||
-                      profileData?.personalWebsite) && (
-                      <div>
-                        <span className="font-medium text-muted-foreground">
-                          Links:
-                        </span>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {profileData?.githubLink && (
-                            <a
-                              href={profileData.githubLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              GitHub ↗
-                            </a>
-                          )}
-                          {profileData?.linkedinLink && (
-                            <a
-                              href={profileData.linkedinLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              LinkedIn ↗
-                            </a>
-                          )}
-                          {profileData?.personalWebsite && (
-                            <a
-                              href={profileData.personalWebsite}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              Portfolio ↗
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <ScrollBar orientation="vertical" />
-            </ScrollArea>
+                    <ScrollBar orientation="vertical" />
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
+            </div>
           )}
         </DialogContent>
       </Dialog>
@@ -1249,13 +1207,57 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
     if (rows.length === 0) {
       return (
-        <div className="py-10">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <PackageOpen className="h-10 w-10 text-muted-foreground" />
-            <div className="text-sm font-medium">No bids in this stage</div>
-            <div className="text-sm text-muted-foreground">
-              When bids move to {status.toLowerCase()}, they will show up here.
+        <div className="p-8 sm:p-10">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-5 opacity-90">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 200 120"
+                className="h-28 w-44"
+                aria-hidden
+              >
+                <rect
+                  x="14"
+                  y="22"
+                  width="172"
+                  height="76"
+                  rx="14"
+                  className="fill-muted"
+                />
+                <rect
+                  x="28"
+                  y="38"
+                  width="84"
+                  height="10"
+                  rx="5"
+                  className="fill-muted-foreground/35"
+                />
+                <rect
+                  x="28"
+                  y="56"
+                  width="132"
+                  height="10"
+                  rx="5"
+                  className="fill-muted-foreground/25"
+                />
+                <rect
+                  x="28"
+                  y="74"
+                  width="110"
+                  height="10"
+                  rx="5"
+                  className="fill-muted-foreground/20"
+                />
+                <circle cx="156" cy="60" r="12" className="fill-primary/25" />
+              </svg>
             </div>
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <PackageOpen className="h-4 w-4 text-muted-foreground" />
+              No bids in this stage
+            </div>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              When bids move to {status.toLowerCase()}, they will show up here.
+            </p>
           </div>
         </div>
       );
@@ -1506,18 +1508,18 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
   return (
     <>
-      <div className="max-w-5xl mx-auto p-4">
+      <div className="max-w-5xl mx-auto px-4 pt-4">
         <Accordion type="single" collapsible>
           {userData!.data.profiles.map((profile: any) => (
             <AccordionItem
               key={profile._id}
               value={profile._id || ''}
               onClick={() => setProfileId(profile._id)}
-              className="mb-3 overflow-hidden rounded-xl border card shadow-sm"
+              className="mb-3 p-2 overflow-hidden rounded-xl border card shadow-sm"
             >
               <AccordionTrigger className="px-5 py-4 hover:no-underline">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
-                  <h4 className="text-base sm:text-lg font-semibold tracking-tight">
+                  <h4 className="text-base sm:text-lg font-semibold tracking-tight text-left">
                     {profile.domain ?? 'N/A'}
                   </h4>
                   <div className="flex items-center gap-3">
@@ -1566,74 +1568,86 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     />
                   </div>
 
-                  <Tabs defaultValue="PENDING" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 rounded-md bg-muted/30 p-1 mb-4">
+                  <Card className="overflow-hidden">
+                    <Tabs defaultValue="PENDING" className="w-full">
+                      <div className="border-b px-4 sm:px-6">
+                        <div className="-mx-1 max-w-full overflow-x-auto no-scrollbar px-1">
+                          <TabsList className="bg-transparent h-12 w-max min-w-full md:w-auto p-0 flex-nowrap">
+                            {BID_STATUSES.map((status) => (
+                              <TabsTrigger
+                                key={status}
+                                value={status}
+                                className="relative h-12 px-4 rounded-none whitespace-nowrap justify-between gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                              >
+                                <span className="truncate">
+                                  {status.charAt(0) +
+                                    status.slice(1).toLowerCase()}
+                                </span>
+                                <Badge
+                                  variant="secondary"
+                                  className="h-5 px-2 text-[10px]"
+                                >
+                                  {bidCounts[status] || 0}
+                                </Badge>
+                              </TabsTrigger>
+                            ))}
+                          </TabsList>
+                        </div>
+                      </div>
+
                       {BID_STATUSES.map((status) => (
-                        <TabsTrigger
+                        <TabsContent
                           key={status}
                           value={status}
-                          className="justify-between gap-2"
+                          className="m-0"
                         >
-                          <span className="truncate">
-                            {status.charAt(0) + status.slice(1).toLowerCase()}
-                          </span>
-                          <Badge
-                            variant="secondary"
-                            className="h-5 px-2 text-[10px]"
+                          <CardContent
+                            className={loadingFreelancerDetails ? 'p-4' : 'p-0'}
                           >
-                            {bidCounts[status] || 0}
-                          </Badge>
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                    {BID_STATUSES.map((status) => (
-                      <TabsContent key={status} value={status} className="mt-4">
-                        {loadingFreelancerDetails ? (
-                          <div className="space-y-4 py-4">
-                            <div className="flex justify-between items-center">
-                              <Skeleton className="h-8 w-48" />
-                              <Skeleton className="h-9 w-32" />
-                            </div>
-                            <div className="space-y-2">
-                              {[...Array(5)].map((_, i) => (
-                                <div
-                                  key={i}
-                                  className="flex items-center justify-between p-4 border rounded-lg"
-                                >
-                                  <div className="flex items-center space-x-4">
-                                    <Skeleton className="h-10 w-10 rounded-full" />
-                                    <div className="space-y-2">
-                                      <Skeleton className="h-4 w-32" />
-                                      <Skeleton className="h-3 w-24" />
+                            {loadingFreelancerDetails ? (
+                              <div className="space-y-4 py-2">
+                                <div className="flex justify-between items-center">
+                                  <Skeleton className="h-8 w-48" />
+                                  <Skeleton className="h-9 w-32" />
+                                </div>
+                                <div className="space-y-2">
+                                  {[...Array(5)].map((_, i) => (
+                                    <div
+                                      key={i}
+                                      className="flex items-center justify-between p-4 border rounded-lg"
+                                    >
+                                      <div className="flex items-center space-x-4">
+                                        <Skeleton className="h-10 w-10 rounded-full" />
+                                        <div className="space-y-2">
+                                          <Skeleton className="h-4 w-32" />
+                                          <Skeleton className="h-3 w-24" />
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center space-x-4">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-4 w-16" />
+                                        <Skeleton className="h-9 w-24" />
+                                      </div>
                                     </div>
-                                  </div>
-                                  <div className="flex items-center space-x-4">
-                                    <Skeleton className="h-4 w-20" />
-                                    <Skeleton className="h-4 w-16" />
-                                    <Skeleton className="h-9 w-24" />
+                                  ))}
+                                </div>
+                                <div className="flex justify-between items-center pt-2">
+                                  <Skeleton className="h-8 w-24" />
+                                  <div className="flex space-x-2">
+                                    <Skeleton className="h-9 w-9 rounded-md" />
+                                    <Skeleton className="h-9 w-9 rounded-md" />
+                                    <Skeleton className="h-9 w-9 rounded-md" />
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                            <div className="flex justify-between items-center pt-2">
-                              <Skeleton className="h-8 w-24" />
-                              <div className="flex space-x-2">
-                                <Skeleton className="h-9 w-9 rounded-md" />
-                                <Skeleton className="h-9 w-9 rounded-md" />
-                                <Skeleton className="h-9 w-9 rounded-md" />
                               </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <Card className="border border-border/60 rounded-2xl shadow-sm bg-card/95">
-                            <CardContent className="p-0">
+                            ) : (
                               <BidsTable status={status as BidStatus} />
-                            </CardContent>
-                          </Card>
-                        )}
-                      </TabsContent>
-                    ))}
-                  </Tabs>
+                            )}
+                          </CardContent>
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  </Card>
                 </div>
               </AccordionContent>
             </AccordionItem>
