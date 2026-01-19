@@ -44,7 +44,7 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
   const DRAFT_KEY = 'DEHIX_MEETING_DRAFT';
 
   const handleCreateMeet = async (meetingData: object) => {
-    const response = await axiosInstance.post(`/meeting/admin`, meetingData);
+    const response = await axiosInstance.post(`/meeting`, meetingData);
     console.log("RESPONSE", response)
     const link =
       response?.data?.data?.hangoutLink ||
