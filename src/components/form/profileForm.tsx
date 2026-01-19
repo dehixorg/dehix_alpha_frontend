@@ -249,7 +249,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
 
     try {
-      await saveProjectDomainsToProfile([customProjectDomainData]);
+      await saveProjectDomainsToProfile([customProjectDomain]);
 
       setCustomProjectDomain({ label: '', description: '' });
       setIsDialogOpen(false);
