@@ -6,6 +6,7 @@ import { Expand, Github, Linkedin, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
+import { fetchAndUpdateConnects } from '@/lib/updateConnects';
 import {
   Accordion,
   AccordionContent,
@@ -393,6 +394,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
 
       if (response.status === 200) {
         notifySuccess('Invitation sent successfully', 'Success');
+
+        // Sync connects balance after invitation
+        try {
+          await fetchAndUpdateConnects(businessId, 'business');
+        } catch (error) {
+          console.warn('Failed to sync connects after invitation:', error);
+          // Don't block success flow if sync fails
+        }
+
         setCurrSkills([]);
         setInvitedTalents((prev) => {
           const next = new Set(prev);

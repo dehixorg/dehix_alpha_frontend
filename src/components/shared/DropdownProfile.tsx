@@ -83,6 +83,20 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
     }
   }, [user]);
 
+  // Invalidate cache when connects are updated elsewhere
+  useEffect(() => {
+    const handleConnectsUpdate = () => {
+      const effectiveType = user?.type || Cookies.get('userType');
+      const uid = user?.uid;
+      if (effectiveType && uid) {
+        profileBootstrapCache.delete(`${effectiveType}:${uid}`);
+      }
+    };
+    window.addEventListener('connectsUpdated', handleConnectsUpdate);
+    return () =>
+      window.removeEventListener('connectsUpdated', handleConnectsUpdate);
+  }, [user?.uid, user?.type]);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);

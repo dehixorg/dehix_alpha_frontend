@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'next/navigation';
 import { Mail, CalendarDays, Award, Link2, Code2 } from 'lucide-react';
 
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -81,7 +82,7 @@ export function ProjectProfileDetailCard({
     e.preventDefault();
 
     try {
-      await axiosInstance.post(`/bid`, {
+      const response = await axiosInstance.post(`/bid`, {
         current_price: amount,
         description: descriptionValue,
         bidder_id: user.uid,
@@ -89,6 +90,14 @@ export function ProjectProfileDetailCard({
         domain_id: domain_id,
         profile_id: _id,
       });
+
+      const remaining = response?.data?.remainingConnects;
+      if (typeof remaining === 'number') {
+        updateConnectsBalance(remaining);
+      } else {
+        console.error('remainingConnects not returned or invalid from API');
+        notifyError('Failed to update connects balance.', 'Warning');
+      }
 
       setAmount('');
       setDescription('');
