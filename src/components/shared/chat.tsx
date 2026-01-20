@@ -978,217 +978,227 @@ export function CardsChat({
               {/* create a search bar input here to take input from user to search conversation */}
               <TooltipProvider>
                 <div className="flex items-center space-x-0.5 sm:space-x-1">
-                {/* Desktop controls */}
-                {isSearchVisible ? (
-                  <div className="hidden sm:flex items-center space-x-2">
-                    <Input
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      placeholder="Search in conversation..."
-                      className="w-40 sm:w-56 rounded-full text-sm"
-                    />
+                  {/* Desktop controls */}
+                  {isSearchVisible ? (
+                    <div className="hidden sm:flex items-center space-x-2">
+                      <Input
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        placeholder="Search in conversation..."
+                        className="w-40 sm:w-56 rounded-full text-sm"
+                      />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Close search"
+                            onClick={() => {
+                              setIsSearchVisible(false);
+                              setSearchValue('');
+                            }}
+                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                          >
+                            ✕
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Close search
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  ) : (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="Close search"
-                          onClick={() => {
-                            setIsSearchVisible(false);
-                            setSearchValue('');
-                          }}
-                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                          aria-label="Search in chat"
+                          onClick={() => setIsSearchVisible(true)}
+                          className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                         >
-                          ✕
+                          <Search className="h-5 w-5" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom">Close search</TooltipContent>
+                      <TooltipContent side="bottom">Search</TooltipContent>
                     </Tooltip>
-                  </div>
-                ) : (
+                  )}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label="Search in chat"
-                        onClick={() => setIsSearchVisible(true)}
+                        aria-label={
+                          isArchived ? 'Unarchive chat' : 'Archive chat'
+                        }
+                        onClick={handleToggleArchive}
                         className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                       >
-                        <Search className="h-5 w-5" />
+                        {isArchived ? (
+                          <ArchiveRestore className="h-5 w-5" />
+                        ) : (
+                          <Archive className="h-5 w-5" />
+                        )}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">Search</TooltipContent>
+                    <TooltipContent side="bottom">
+                      {isArchived ? 'Unarchive' : 'Archive'}
+                    </TooltipContent>
                   </Tooltip>
-                )}
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
-                      onClick={handleToggleArchive}
-                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      {isArchived ? (
-                        <ArchiveRestore className="h-5 w-5" />
-                      ) : (
-                        <Archive className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {isArchived ? 'Unarchive' : 'Archive'}
-                  </TooltipContent>
-                </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Video call"
+                        onClick={handleCreateMeet}
+                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        <Video className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Video call</TooltipContent>
+                  </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Video call"
-                      onClick={handleCreateMeet}
-                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      <Video className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Video call</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
-                      onClick={() => {
-                        if (onToggleExpand) {
-                          onToggleExpand();
-                        } else {
-                          console.error('[CardsChat] onToggleExpand is undefined!');
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={
+                          isChatExpanded ? 'Collapse chat' : 'Expand chat'
                         }
-                      }}
-                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      {isChatExpanded ? (
-                        <Minimize2 className="h-5 w-5" />
-                      ) : (
-                        <Maximize2 className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {isChatExpanded ? 'Collapse' : 'Expand'}
-                  </TooltipContent>
-                </Tooltip>
+                        onClick={() => {
+                          if (onToggleExpand) {
+                            onToggleExpand();
+                          } else {
+                            console.error(
+                              '[CardsChat] onToggleExpand is undefined!',
+                            );
+                          }
+                        }}
+                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        {isChatExpanded ? (
+                          <Minimize2 className="h-5 w-5" />
+                        ) : (
+                          <Maximize2 className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      {isChatExpanded ? 'Collapse' : 'Expand'}
+                    </TooltipContent>
+                  </Tooltip>
 
-                {/* Mobile: everything in the three-dot menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label="More options"
-                          className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                        >
-                          <MoreVertical className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">More</TooltipContent>
-                    </Tooltip>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={5}
-                    className="w-52 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => setIsSearchVisible((v) => !v)}
-                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                  {/* Mobile: everything in the three-dot menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="More options"
+                            className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                          >
+                            <MoreVertical className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">More</TooltipContent>
+                      </Tooltip>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      sideOffset={5}
+                      className="w-52 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
                     >
-                      <Search className="h-4 w-4" />
-                      <span className="text-sm font-medium">Search</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleToggleArchive}
-                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      {isArchived ? (
-                        <ArchiveRestore className="h-4 w-4" />
-                      ) : (
-                        <Archive className="h-4 w-4" />
-                      )}
-                      <span className="text-sm font-medium">
-                        {isArchived ? 'Unarchive' : 'Archive'}
-                      </span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleCreateMeet}
-                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      <Video className="h-4 w-4" />
-                      <span className="text-sm font-medium">Video call</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        if (onToggleExpand) {
-                          onToggleExpand();
-                        } else {
-                          console.error('[CardsChat] onToggleExpand is undefined!');
-                        }
-                      }}
-                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      {isChatExpanded ? (
-                        <Minimize2 className="h-4 w-4" />
-                      ) : (
-                        <Maximize2 className="h-4 w-4" />
-                      )}
-                      <span className="text-sm font-medium">
-                        {isChatExpanded ? 'Collapse' : 'Expand'}
-                      </span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setOpenReport(true)}
-                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span className="text-sm font-medium">Report</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuItem
+                        onClick={() => setIsSearchVisible((v) => !v)}
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        <Search className="h-4 w-4" />
+                        <span className="text-sm font-medium">Search</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleToggleArchive}
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        {isArchived ? (
+                          <ArchiveRestore className="h-4 w-4" />
+                        ) : (
+                          <Archive className="h-4 w-4" />
+                        )}
+                        <span className="text-sm font-medium">
+                          {isArchived ? 'Unarchive' : 'Archive'}
+                        </span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleCreateMeet}
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        <Video className="h-4 w-4" />
+                        <span className="text-sm font-medium">Video call</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (onToggleExpand) {
+                            onToggleExpand();
+                          } else {
+                            console.error(
+                              '[CardsChat] onToggleExpand is undefined!',
+                            );
+                          }
+                        }}
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        {isChatExpanded ? (
+                          <Minimize2 className="h-4 w-4" />
+                        ) : (
+                          <Maximize2 className="h-4 w-4" />
+                        )}
+                        <span className="text-sm font-medium">
+                          {isChatExpanded ? 'Collapse' : 'Expand'}
+                        </span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setOpenReport(true)}
+                        className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        <Flag className="h-4 w-4" />
+                        <span className="text-sm font-medium">Report</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
 
-                {/* Desktop: existing more options menu (report) */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="More options"
-                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  {/* Desktop: existing more options menu (report) */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="More options"
+                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      sideOffset={5}
+                      className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
                     >
-                      <MoreVertical className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={5}
-                    className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => setOpenReport(true)}
-                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span className="text-sm font-medium">Report</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuItem
+                        onClick={() => setOpenReport(true)}
+                        className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        <Flag className="h-4 w-4" />
+                        <span className="text-sm font-medium">Report</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </TooltipProvider>
             </CardHeader>
@@ -1247,9 +1257,10 @@ export function CardsChat({
                         const raw = replyMsg?.content || '';
 
                         const isImage = /\.(jpeg|jpg|gif|png)(\?|$)/i.test(raw);
-                        const isFile = /\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt)(\?|$)/i.test(
-                          raw,
-                        );
+                        const isFile =
+                          /\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt)(\?|$)/i.test(
+                            raw,
+                          );
 
                         const label = replyMsg?.voiceMessage
                           ? 'Voice message'

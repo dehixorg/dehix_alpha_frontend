@@ -32,9 +32,7 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
     dayjs().add(1, 'day').toDate(),
   );
   const [startTime, setStartTime] = useState<string>('09:00');
-  const [endDate, setEndDate] = useState<Date>(
-    dayjs().add(1, 'day').toDate(),
-  );
+  const [endDate, setEndDate] = useState<Date>(dayjs().add(1, 'day').toDate());
   const [endTime, setEndTime] = useState<string>('10:00');
   const [attendees, setAttendees] = useState<string[]>(['']);
   const [submitting, setSubmitting] = useState(false);
@@ -44,8 +42,8 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
   const DRAFT_KEY = 'DEHIX_MEETING_DRAFT';
 
   const handleCreateMeet = async (meetingData: object) => {
-    const response = await axiosInstance.post(`/meeting`, meetingData);
-    console.log("RESPONSE", response)
+    const response = await axiosInstance.post(`/meeting/admin`, meetingData);
+    console.log('RESPONSE', response);
     const link =
       response?.data?.data?.hangoutLink ||
       response?.data?.data?.htmlLink ||
@@ -69,14 +67,18 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
   };
 
   const validateTime = () => {
-    const startDateTime = dayjs(`${dayjs(startDate).format('YYYY-MM-DD')}T${startTime}`);
-    const endDateTime = dayjs(`${dayjs(endDate).format('YYYY-MM-DD')}T${endTime}`);
-    
+    const startDateTime = dayjs(
+      `${dayjs(startDate).format('YYYY-MM-DD')}T${startTime}`,
+    );
+    const endDateTime = dayjs(
+      `${dayjs(endDate).format('YYYY-MM-DD')}T${endTime}`,
+    );
+
     if (endDateTime.isBefore(startDateTime)) {
       setTimeError('End time must be after start time');
       return false;
     }
-    
+
     setTimeError('');
     return true;
   };
@@ -88,8 +90,10 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
       return;
     }
 
-    const startDateTimeIso = dayjs(startDate).format('YYYY-MM-DD') + 'T' + startTime + ':00';
-    const endDateTimeIso = dayjs(endDate).format('YYYY-MM-DD') + 'T' + endTime + ':00';
+    const startDateTimeIso =
+      dayjs(startDate).format('YYYY-MM-DD') + 'T' + startTime + ':00';
+    const endDateTimeIso =
+      dayjs(endDate).format('YYYY-MM-DD') + 'T' + endTime + ':00';
 
     const meetingData = {
       summary,
@@ -151,7 +155,7 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
             Fill in the details below to schedule a new meeting.
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Basic Information */}
           <Card>
@@ -169,7 +173,7 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -232,7 +236,9 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
                 <div className="flex items-center gap-2" key={index}>
                   <Input
                     value={attendee}
-                    onChange={(e) => handleAttendeeChange(index, e.target.value)}
+                    onChange={(e) =>
+                      handleAttendeeChange(index, e.target.value)
+                    }
                     placeholder="Enter attendee email"
                     type="email"
                     className="flex-grow"
@@ -269,7 +275,11 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
           </Card>
 
           <DialogFooter className="flex justify-center pt-4">
-            <Button type="submit" disabled={submitting} className="min-w-[140px]">
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="min-w-[140px]"
+            >
               {submitting ? 'Creating Meeting...' : 'Create Meeting'}
             </Button>
           </DialogFooter>
@@ -288,7 +298,10 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
                     onClick={async () => {
                       try {
                         await navigator.clipboard.writeText(meetLink);
-                        toast({ title: 'Copied!', description: 'Meeting link copied to clipboard.' });
+                        toast({
+                          title: 'Copied!',
+                          description: 'Meeting link copied to clipboard.',
+                        });
                       } catch (error) {
                         console.error('Failed to copy:', error);
                         toast({
