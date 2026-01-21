@@ -13,7 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/shared/themeToggle';
-import { getUserData, loginGoogleUser, loginUser } from '@/lib/utils';
+import {
+  getUserData,
+  loginGoogleUser,
+  loginUser,
+  resetPassword,
+} from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
 import { axiosInstance } from '@/lib/axiosinstance';
 import OtpLogin from '@/components/shared/otpDialog';
@@ -391,16 +396,16 @@ export default function Login() {
                 }
                 setIsForgotLoading(true);
                 try {
-                  // Simulate async request; wire real API when available
-                  await new Promise((res) => setTimeout(res, 800));
+                  await resetPassword(forgotEmail);
                   setForgotMsg('Password reset email sent. Check your inbox.');
                   notifySuccess('Password reset email sent.');
                   setForgotOpen(false);
-                } catch (e) {
-                  setForgotError(
-                    'Unable to send reset email. Please try again later.',
-                  );
-                  notifyError('Unable to send reset email.');
+                } catch (error: any) {
+                  const errorMsg =
+                    error.message ||
+                    'Unable to send reset email. Please try again later.';
+                  setForgotError(errorMsg);
+                  notifyError(errorMsg);
                 } finally {
                   setIsForgotLoading(false);
                 }
