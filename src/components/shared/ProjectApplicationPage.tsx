@@ -53,6 +53,18 @@ interface Profile {
   rate?: number;
   description?: string;
   profileType: 'FREELANCER' | 'CONSULTANT';
+  budget?: {
+    type: string;
+    fixedAmount?: number;
+    hourlyRate?: number;
+    hourly?: {
+      minRate?: number;
+      maxRate?: number;
+      estimatedHours?: number;
+    };
+    min?: number;
+    max?: number;
+  };
 }
 
 interface FreelancerProfile {
@@ -102,8 +114,8 @@ interface Bid {
 interface Budget {
   type: 'fixed' | 'hourly';
   hourly?: {
-    minRate: number;
-    maxRate: number;
+    minRate?: number;
+    maxRate?: number;
     estimatedHours?: number;
   };
   fixedAmount?: number;
@@ -125,6 +137,27 @@ const ProjectApplicationForm = ({
   const [coverLetter, setCoverLetter] = useState<string>('');
   const minChars = 500;
   const maxChars = 2000;
+
+  // Helper function to format budget display
+  const formatBudgetDisplay = (profile: Profile) => {
+    if (profile.budget?.type === 'FIXED' && profile.budget.fixedAmount) {
+      return `$${profile.budget.fixedAmount}`;
+    } else if (profile.budget?.type === 'HOURLY') {
+      if (profile.budget.hourlyRate) {
+        return `$${profile.budget.hourlyRate}/hr`;
+      } else if (
+        profile.budget.hourly?.minRate &&
+        profile.budget.hourly?.maxRate
+      ) {
+        return `$${profile.budget.hourly.minRate} - $${profile.budget.hourly.maxRate}/hr`;
+      }
+    } else if (profile.budget?.min && profile.budget?.max) {
+      return `$${profile.budget.min} - $${profile.budget.max}`;
+    } else if (profile.rate !== undefined) {
+      return `$${profile.rate}/hr`;
+    }
+    return 'Negotiable';
+  };
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [freelancerProfiles, setFreelancerProfiles] = useState<
@@ -451,11 +484,9 @@ const ProjectApplicationForm = ({
                                       : 'Consultant'}
                                   </p>
                                 </div>
-                                {profile.rate !== undefined && (
-                                  <Badge variant="outline" className="ml-2">
-                                    ${profile.rate}/hr
-                                  </Badge>
-                                )}
+                                <Badge variant="outline" className="ml-2">
+                                  {formatBudgetDisplay(profile)}
+                                </Badge>
                               </div>
                             ))}
                           </div>
