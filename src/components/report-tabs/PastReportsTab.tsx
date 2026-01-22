@@ -296,7 +296,6 @@ export default function PastReportsTab() {
   return (
     <div className="w-full">
       <AnimatePresence mode="wait">
-        {/* Split Dialog */}
         {viewingReport && (
           <Dialog
             open={!!viewingReport}
@@ -325,9 +324,7 @@ export default function PastReportsTab() {
                 </div>
               </DialogHeader>
 
-              {/* Split Content Area */}
               <div className="flex-1 flex overflow-hidden min-h-0">
-                {/* Left Side: Report Details (1/3) */}
                 <div className="w-1/3 border-r overflow-y-auto bg-muted/30 dark:bg-muted/20">
                   <ScrollArea className="h-full">
                     <div className="p-6 space-y-6">
@@ -398,7 +395,6 @@ export default function PastReportsTab() {
                   </ScrollArea>
                 </div>
 
-                {/* Right Side: Chat (2/3) */}
                 <div className="w-2/3 flex flex-col bg-background">
                   <div className="px-6 py-3 bg-muted/20 border-b flex-shrink-0">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
