@@ -59,9 +59,9 @@ interface ProjectData {
   budget?: {
     type: string;
     hourly?: {
-      minRate: number;
-      maxRate: number;
-      estimatedHours: number;
+      minRate?: number;
+      maxRate?: number;
+      estimatedHours?: number;
     };
     fixedAmount?: number;
   };

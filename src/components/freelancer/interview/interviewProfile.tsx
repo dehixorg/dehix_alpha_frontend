@@ -892,7 +892,7 @@ const InterviewProfile: React.FC = () => {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>Per interview charge (₹)</Label>
+                    <Label>Per interview charge ($)</Label>
                     <Input
                       type="number"
                       min={0}
@@ -934,7 +934,7 @@ const InterviewProfile: React.FC = () => {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>Per interview charge (₹)</Label>
+                    <Label>Per interview charge ($)</Label>
                     <Input
                       type="number"
                       min={0}

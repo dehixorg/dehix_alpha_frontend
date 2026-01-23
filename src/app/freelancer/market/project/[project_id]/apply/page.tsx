@@ -55,13 +55,25 @@ interface Profile {
   description?: string;
   totalBid?: string[];
   profileType: 'FREELANCER' | 'CONSULTANT';
+  budget?: {
+    type: string;
+    fixedAmount?: number;
+    hourlyRate?: number;
+    hourly?: {
+      minRate?: number;
+      maxRate?: number;
+      estimatedHours?: number;
+    };
+    min?: number;
+    max?: number;
+  };
 }
 
 interface Budget {
   type: 'fixed' | 'hourly';
   hourly?: {
-    minRate: number;
-    maxRate: number;
+    minRate?: number;
+    maxRate?: number;
     estimatedHours?: number;
   };
   fixedAmount?: number;
@@ -92,6 +104,43 @@ const Page = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [project, setProject] = useState<ProjectData | null>(null);
+
+  // Helper function to format budget display
+  const formatBudgetDisplay = (project: ProjectData) => {
+    // Check if budget is in profiles (new structure)
+    if (project.profiles && project.profiles.length > 0) {
+      const profile = project.profiles[0];
+      if (profile.budget?.type === 'FIXED' && profile.budget.fixedAmount) {
+        return `$${profile.budget.fixedAmount.toLocaleString()} (Fixed)`;
+      } else if (profile.budget?.type === 'HOURLY') {
+        if (profile.budget.hourlyRate) {
+          return `$${profile.budget.hourlyRate}/hr`;
+        } else if (
+          profile.budget.hourly?.minRate &&
+          profile.budget.hourly?.maxRate
+        ) {
+          return `$${profile.budget.hourly.minRate} - $${profile.budget.hourly.maxRate}/hr`;
+        } else if (profile.budget.hourly?.minRate) {
+          return `$${profile.budget.hourly.minRate}/hr`;
+        }
+      } else if (profile.budget?.min && profile.budget?.max) {
+        return `$${profile.budget.min} - $${profile.budget.max}`;
+      }
+    }
+
+    // Check if budget is at project level (old structure)
+    if (project.budget?.type === 'fixed' && project.budget.fixedAmount) {
+      return `$${project.budget.fixedAmount.toLocaleString()} (Fixed)`;
+    } else if (project.budget?.type === 'hourly') {
+      if (project.budget.hourly?.minRate && project.budget.hourly?.maxRate) {
+        return `$${project.budget.hourly.minRate} - $${project.budget.hourly.maxRate}/hr`;
+      } else if (project.budget.hourly?.minRate) {
+        return `$${project.budget.hourly.minRate}/hr`;
+      }
+    }
+
+    return 'Negotiable';
+  };
   const [saving, setSaving] = useState(false);
   const draftedProjects = useSelector(
     (state: RootState) => state.projectDraft.draftedProjects,
@@ -418,10 +467,25 @@ const Page = () => {
                               Budget
                             </p>
                             <p className="font-medium">
-                              {project?.budget?.type === 'hourly'
-                                ? `$${project.budget.hourly?.minRate || '0'} - $${project.budget.hourly?.maxRate || '0'}/hr`
-                                : `$${project?.budget?.fixedAmount?.toLocaleString() || '0'} (Fixed)`}
+                              {project
+                                ? formatBudgetDisplay(project)
+                                : 'Negotiable'}
                             </p>
+                            {project &&
+                              project.profiles &&
+                              project.profiles.length > 0 &&
+                              project.profiles[0].budget?.type === 'HOURLY' &&
+                              project.profiles[0].budget.hourly
+                                ?.estimatedHours && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  ~
+                                  {
+                                    project.profiles[0].budget.hourly
+                                      .estimatedHours
+                                  }{' '}
+                                  hours estimated
+                                </p>
+                              )}
                             {project?.budget?.type === 'hourly' &&
                               project.budget.hourly?.estimatedHours && (
                                 <p className="text-xs text-muted-foreground mt-1">
