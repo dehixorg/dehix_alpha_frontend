@@ -1,6 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import "shepherd.js/dist/css/shepherd.css";
+
 
 @keyframes loopScroll {
   from {
@@ -218,4 +220,109 @@
 
 .bg-gradient {
   @apply bg-gradient-to-bl from-background/0 via-primary/5 to-primary/20;
+}
+
+
+/* Tour css - shadcn look*/
+
+/* ===== Shepherd (match shadcn theme) ===== */
+.shepherd-theme-custom.shepherd-element {
+  font-family: inherit;
+}
+
+.shepherd-theme-custom .shepherd-content {
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.dark .shepherd-theme-custom .shepherd-content {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+.shepherd-theme-custom .shepherd-header {
+  background: hsl(var(--popover));
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 12px 14px;
+}
+
+.shepherd-theme-custom .shepherd-title {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
+.shepherd-theme-custom .shepherd-cancel-icon {
+  color: hsl(var(--muted-foreground));
+  transition: color 150ms ease;
+}
+.shepherd-theme-custom .shepherd-cancel-icon:hover {
+  color: hsl(var(--foreground));
+}
+
+.shepherd-theme-custom .shepherd-text {
+  color: hsl(var(--muted-foreground));
+  padding: 12px 14px 0 14px;
+  font-size: 0.9rem;
+  line-height: 1.35rem;
+}
+
+.shepherd-theme-custom .shepherd-footer {
+  padding: 12px 14px 14px 14px;
+  gap: 8px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: none;
+  background: hsl(var(--popover));
+}
+
+.shepherd-theme-custom .shepherd-button {
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  transition: background 150ms ease, border-color 150ms ease, transform 120ms ease;
+}
+
+.shepherd-theme-custom .shepherd-button:hover {
+  background: hsl(var(--accent));
+}
+
+.shepherd-theme-custom .shepherd-button:active {
+  transform: translateY(1px);
+}
+
+/* Primary action (usually last button in each step) */
+.shepherd-theme-custom .shepherd-button:last-child {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+
+.shepherd-theme-custom .shepherd-button:last-child:hover {
+  filter: brightness(1.05);
+}
+
+/* Make the arrow match the popover bg */
+.shepherd-theme-custom.shepherd-element[data-popper-placement^='top'] .shepherd-arrow:before,
+.shepherd-theme-custom.shepherd-element[data-popper-placement^='bottom'] .shepherd-arrow:before,
+.shepherd-theme-custom.shepherd-element[data-popper-placement^='left'] .shepherd-arrow:before,
+.shepherd-theme-custom.shepherd-element[data-popper-placement^='right'] .shepherd-arrow:before {
+  background: hsl(var(--popover));
+}
+
+/* Softer overlay to match modern UI */
+.shepherd-modal-overlay-container.shepherd-modal-is-visible {
+  background: rgba(0, 0, 0, 0.45);
+}
+.dark .shepherd-modal-overlay-container.shepherd-modal-is-visible {
+  background: rgba(0, 0, 0, 0.6);
 }
