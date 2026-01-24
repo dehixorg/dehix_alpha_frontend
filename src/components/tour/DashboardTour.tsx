@@ -106,14 +106,13 @@ export default function DashboardTour({ startSignal, isReady }: Props) {
     });
 
     tour.on('complete', () => {
-  const key = `tour:dashboard:done:${(window as any).__uid || 'guest'}`;
-  localStorage.setItem(key, '1');
-});
-tour.on('cancel', () => {
-  const key = `tour:dashboard:done:${(window as any).__uid || 'guest'}`;
-  localStorage.setItem(key, '1');
-});
-
+      const key = `tour:dashboard:done:${(window as any).__uid || 'guest'}`;
+      localStorage.setItem(key, '1');
+    });
+    tour.on('cancel', () => {
+      const key = `tour:dashboard:done:${(window as any).__uid || 'guest'}`;
+      localStorage.setItem(key, '1');
+    });
 
     tourRef.current = tour;
 

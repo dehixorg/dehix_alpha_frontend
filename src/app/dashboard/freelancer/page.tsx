@@ -29,7 +29,6 @@ import {
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-
 import DashboardTour from '@/components/tour/DashboardTour';
 
 export default function Dashboard() {
@@ -82,20 +81,19 @@ export default function Dashboard() {
     String(totalRevenueValue).length > 12 ? 'lg:col-span-2' : '';
 
   useEffect(() => {
-  const key = `tour:dashboard:done:${user?.uid || 'guest'}`;
-  const done = localStorage.getItem(key);
-  if (!done) setStartTourSignal((x) => x + 1);
-}, [user?.uid]);
-
+    const key = `tour:dashboard:done:${user?.uid || 'guest'}`;
+    const done = localStorage.getItem(key);
+    if (!done) setStartTourSignal((x) => x + 1);
+  }, [user?.uid]);
 
   return (
     <div className="flex min-h-screen w-full flex-col" data-tour="page">
       {/* ✅ Anchor: Sidebar */}
-        <SidebarMenu
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          active="Dashboard"
-        />
+      <SidebarMenu
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        active="Dashboard"
+      />
 
       <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         {/* ✅ Anchor: Header */}
@@ -233,7 +231,9 @@ export default function Dashboard() {
               <StatItem
                 variant="card"
                 label="Completed Projects"
-                value={loadingStats ? '...' : statusCounts[StatusEnum.COMPLETED] || 0}
+                value={
+                  loadingStats ? '...' : statusCounts[StatusEnum.COMPLETED] || 0
+                }
                 icon={<CheckCircle className="h-5 w-5" />}
                 className="h-full min-w-0"
                 color="blue"

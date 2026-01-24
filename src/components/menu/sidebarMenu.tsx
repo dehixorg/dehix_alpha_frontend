@@ -284,7 +284,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   };
 
   return (
-    <aside  data-tour="sidebar" className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
+    <aside
+      data-tour="sidebar"
+      className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex"
+    >
       <div className="flex h-full min-h-0 flex-col">
         <ScrollArea className="flex-1 min-h-0">
           <nav className="flex flex-col items-center gap-4 px-2 py-5">
