@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Flame, Calendar, Trophy, Gift } from 'lucide-react';
 
@@ -20,7 +20,7 @@ interface StreakInfo {
   longestStreak: number;
   lastLoginDate: string | null;
   streakStartDate: string | null;
-  rewardAvailable: boolean;
+  claimableMilestones: number[]; // Array of milestones that can be claimed
 }
 
 interface StreakRewardResponse {
@@ -60,7 +60,7 @@ const fetchStreakInfo = async (): Promise<StreakInfo> => {
         longestStreak: 0,
         lastLoginDate: null,
         streakStartDate: null,
-        rewardAvailable: false,
+        claimableMilestones: [],
       };
     }
 
@@ -70,7 +70,7 @@ const fetchStreakInfo = async (): Promise<StreakInfo> => {
       longestStreak: streakData.longestStreak || 0,
       lastLoginDate: streakData.lastLoginDate || null,
       streakStartDate: streakData.streakStartDate || null,
-      rewardAvailable: streakData.rewardAvailable || false,
+      claimableMilestones: streakData.claimableMilestones || [],
     };
   } catch (error) {
     console.error('Error fetching streak info:', error);
@@ -78,9 +78,13 @@ const fetchStreakInfo = async (): Promise<StreakInfo> => {
   }
 };
 
-const claimStreakReward = async (): Promise<StreakRewardResponse> => {
+const claimStreakReward = async (
+  milestone?: number,
+): Promise<StreakRewardResponse> => {
   try {
-    const response = await axiosInstance.post('/streak/claim-reward', {});
+    const response = await axiosInstance.post('/streak/claim-reward', {
+      milestone,
+    });
     return response.data;
   } catch (error: any) {
     console.error('Error claiming streak reward:', error);
@@ -88,7 +92,7 @@ const claimStreakReward = async (): Promise<StreakRewardResponse> => {
     if (error.response?.status === 409) {
       throw new Error('Reward already claimed');
     } else if (error.response?.status === 400) {
-      throw new Error('No reward available');
+      throw new Error(error.response?.data?.message || 'No reward available');
     } else if (error.response?.status === 401) {
       throw new Error('Please log in to claim reward');
     } else {
@@ -109,7 +113,24 @@ const fetchStreakRewards = async (): Promise<StreakReward[]> => {
   }
 };
 
+const canClaimMilestone = async (milestone: number): Promise<boolean> => {
+  try {
+    const response = await axiosInstance.get(`/streak/can-claim/${milestone}`);
+    return response.data.canClaim;
+  } catch (error) {
+    console.error('Error checking if milestone can be claimed:', error);
+    return false;
+  }
+};
+
 export default function StreakPage() {
+  const [selectedMilestone, setSelectedMilestone] = useState<number | null>(
+    null,
+  );
+  const [claimingMilestone, setClaimingMilestone] = useState<number | null>(
+    null,
+  );
+
   // React Query Hooks
   const {
     data: streakData,
@@ -136,7 +157,7 @@ export default function StreakPage() {
   });
 
   const claimRewardMutation = useMutation({
-    mutationFn: claimStreakReward,
+    mutationFn: (milestone?: number) => claimStreakReward(milestone),
     onSuccess: async (data) => {
       // Prefer server-provided remaining connects to avoid drift
       const remaining = (data?.data as { remainingConnects?: number })
@@ -155,6 +176,7 @@ export default function StreakPage() {
 
       // Refetch streak data
       await refetch();
+      setClaimingMilestone(null);
 
       // Show success toast after refetch
       toast({
@@ -174,17 +196,20 @@ export default function StreakPage() {
         description: error.message || 'Failed to claim reward',
         variant: 'destructive',
       });
+
+      setClaimingMilestone(null);
     },
   });
 
   // Reward Claim Handler
-  const handleClaimReward = async () => {
+  const handleClaimReward = async (milestone?: number) => {
     if (!streakData) return;
 
+    setClaimingMilestone(milestone || streakData.currentStreak);
+
     try {
-      await claimRewardMutation.mutateAsync();
+      await claimRewardMutation.mutateAsync(milestone);
     } catch (error) {
-      // Error is already handled in onError callback
       console.error('Claim reward error:', error);
     }
   };
@@ -193,20 +218,21 @@ export default function StreakPage() {
   const getMilestoneStatus = (milestone: number) => {
     if (!streakData) return 'locked';
 
-    // Check if milestone is available to claim
-    // Must match exact milestone AND reward must be available
-    if (streakData.currentStreak === milestone && streakData.rewardAvailable) {
+    const canClaim = streakData.claimableMilestones.includes(milestone);
+
+    // If this milestone is in claimable list, it's available
+    if (canClaim) {
       return 'available';
     }
 
     // Check if milestone is already passed (user moved beyond it)
-    if (streakData.currentStreak > milestone) {
-      return 'claimed';
+    if (streakData.currentStreak > milestone && !canClaim) {
+      return 'claimed'; // Either claimed or outside 7-day window
     }
 
-    // Check if milestone is reached but reward not available (just claimed)
-    if (streakData.currentStreak === milestone && !streakData.rewardAvailable) {
-      return 'claimed';
+    // Check if milestone is reached but not yet in claimable list
+    if (streakData.currentStreak === milestone && !canClaim) {
+      return 'available'; // Current milestone is always available
     }
 
     // Otherwise locked (user hasn't reached this milestone yet)
@@ -218,9 +244,9 @@ export default function StreakPage() {
     return Math.min((streakData.currentStreak / milestone) * 100, 100);
   };
 
-  const canClaimMilestone = (milestone: number) => {
+  const isClaimable = (milestone: number) => {
     if (!streakData) return false;
-    return streakData.currentStreak === milestone && streakData.rewardAvailable;
+    return streakData.claimableMilestones.includes(milestone);
   };
 
   const formatDate = (dateString: string | null) => {
@@ -383,7 +409,7 @@ export default function StreakPage() {
           <h1 className="text-3xl font-bold mb-2">Login Streak</h1>
           <p className="text-muted-foreground">
             Build your streak by logging in daily and earn connect rewards at
-            milestones!
+            milestones! You can claim missed rewards within 7 days.
           </p>
         </div>
 
@@ -473,13 +499,14 @@ export default function StreakPage() {
                 .map((milestone) => {
                   const status = getMilestoneStatus(milestone.days);
                   const progress = getMilestoneProgress(milestone.days);
-                  const canClaim = canClaimMilestone(milestone.days);
+                  const claimable = isClaimable(milestone.days);
+                  const isPending = claimingMilestone === milestone.days;
 
                   return (
                     <div
                       key={milestone.days}
                       className={`border shadow-sm rounded-lg overflow-hidden bg-green-50 dark:bg-green-950/30 ${
-                        status === 'available'
+                        claimable
                           ? 'ring-2 ring-blue-500 ring-offset-2'
                           : status === 'claimed'
                             ? ''
@@ -490,7 +517,7 @@ export default function StreakPage() {
                         <div className="flex items-center gap-3">
                           <div
                             className={`p-2 rounded-lg ${
-                              status === 'available'
+                              claimable
                                 ? 'bg-blue-100 dark:bg-blue-900/50'
                                 : status === 'claimed'
                                   ? 'bg-green-100 dark:bg-green-900/50'
@@ -499,7 +526,7 @@ export default function StreakPage() {
                           >
                             <Gift
                               className={`h-5 w-5 ${
-                                status === 'available'
+                                claimable
                                   ? 'text-blue-600 dark:text-blue-400'
                                   : status === 'claimed'
                                     ? 'text-green-600 dark:text-green-400'
@@ -521,21 +548,21 @@ export default function StreakPage() {
                                 variant={
                                   status === 'claimed'
                                     ? 'default'
-                                    : status === 'available'
+                                    : claimable
                                       ? 'default'
                                       : 'secondary'
                                 }
                                 className={
                                   status === 'claimed'
                                     ? 'bg-green-500 hover:bg-green-600 text-white'
-                                    : status === 'available'
+                                    : claimable
                                       ? 'bg-blue-500 hover:bg-blue-600 text-white'
                                       : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                                 }
                               >
                                 {status === 'claimed'
                                   ? 'Reward Claimed'
-                                  : status === 'available'
+                                  : claimable
                                     ? 'Available'
                                     : 'Locked'}
                               </Badge>
@@ -551,17 +578,17 @@ export default function StreakPage() {
                             </div>
 
                             {/* Action Button */}
-                            {status === 'available' && (
+                            {claimable && (
                               <Button
-                                onClick={handleClaimReward}
+                                onClick={() =>
+                                  handleClaimReward(milestone.days)
+                                }
                                 disabled={
-                                  claimRewardMutation.isPending || !canClaim
+                                  isPending || claimRewardMutation.isPending
                                 }
                                 className="w-full mt-3"
                               >
-                                {claimRewardMutation.isPending
-                                  ? 'Claiming...'
-                                  : 'Claim Reward'}
+                                {isPending ? 'Claiming...' : 'Claim Reward'}
                               </Button>
                             )}
 
@@ -596,9 +623,13 @@ export default function StreakPage() {
               <h3 className="font-semibold">How it works:</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                 <li>Log in daily to build your streak</li>
-                <li>Reach configured milestones to earn rewards</li>
-                <li>Claim connect rewards when you hit each milestone</li>
-                <li>Missing a day will reset your current streak</li>
+                <li>Reach milestones to unlock rewards</li>
+                <li>Claim rewards immediately when you reach a milestone</li>
+                <li>
+                  Missed a reward? Claim it within 7 days of your last login
+                </li>
+                <li>Miss the 7-day window? The reward is forfeited</li>
+                <li>Missing a day resets your current streak</li>
                 <li>Your longest streak is always saved</li>
               </ul>
             </div>
