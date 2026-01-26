@@ -1,17 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Flame, Calendar, Trophy, Gift } from 'lucide-react';
+import { Flame, Calendar, Trophy, Gift, Check, Lock } from 'lucide-react';
 
 import { updateConnectsBalance } from '@/lib/updateConnects';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
+import StatCard from '@/components/shared/statCard';
 
 // TypeScript Interfaces
 interface StreakInfo {
@@ -20,7 +22,56 @@ interface StreakInfo {
   longestStreak: number;
   lastLoginDate: string | null;
   streakStartDate: string | null;
-  rewardAvailable: boolean;
+  claimableMilestones: number[]; // Array of milestones that can be claimed
+}
+
+function Illustration({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 420 220"
+      role="img"
+      aria-label="Streak illustration"
+      className={className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        x="1"
+        y="1"
+        width="418"
+        height="218"
+        rx="18"
+        className="fill-muted/40"
+      />
+      <path
+        d="M78 148c24-38 60-64 112-64 70 0 92 56 144 56 24 0 44-8 60-20"
+        className="stroke-muted-foreground/40"
+        strokeWidth="10"
+        strokeLinecap="round"
+      />
+      <path
+        d="M112 148c18-26 44-42 78-42 48 0 62 34 96 34 16 0 30-5 42-12"
+        className="stroke-primary/40"
+        strokeWidth="10"
+        strokeLinecap="round"
+      />
+      <path
+        d="M210 46c10 16 6 30-4 40-10 10-8 22 0 30"
+        className="stroke-orange-500/50"
+        strokeWidth="10"
+        strokeLinecap="round"
+      />
+      <circle cx="210" cy="124" r="10" className="fill-orange-500/50" />
+      <rect
+        x="1"
+        y="1"
+        width="418"
+        height="218"
+        rx="18"
+        className="stroke-border"
+      />
+    </svg>
+  );
 }
 
 interface StreakRewardResponse {
@@ -60,7 +111,7 @@ const fetchStreakInfo = async (): Promise<StreakInfo> => {
         longestStreak: 0,
         lastLoginDate: null,
         streakStartDate: null,
-        rewardAvailable: false,
+        claimableMilestones: [],
       };
     }
 
@@ -70,7 +121,7 @@ const fetchStreakInfo = async (): Promise<StreakInfo> => {
       longestStreak: streakData.longestStreak || 0,
       lastLoginDate: streakData.lastLoginDate || null,
       streakStartDate: streakData.streakStartDate || null,
-      rewardAvailable: streakData.rewardAvailable || false,
+      claimableMilestones: streakData.claimableMilestones || [],
     };
   } catch (error) {
     console.error('Error fetching streak info:', error);
@@ -78,9 +129,13 @@ const fetchStreakInfo = async (): Promise<StreakInfo> => {
   }
 };
 
-const claimStreakReward = async (): Promise<StreakRewardResponse> => {
+const claimStreakReward = async (
+  milestone?: number,
+): Promise<StreakRewardResponse> => {
   try {
-    const response = await axiosInstance.post('/streak/claim-reward', {});
+    const response = await axiosInstance.post('/streak/claim-reward', {
+      milestone,
+    });
     return response.data;
   } catch (error: any) {
     console.error('Error claiming streak reward:', error);
@@ -88,7 +143,7 @@ const claimStreakReward = async (): Promise<StreakRewardResponse> => {
     if (error.response?.status === 409) {
       throw new Error('Reward already claimed');
     } else if (error.response?.status === 400) {
-      throw new Error('No reward available');
+      throw new Error(error.response?.data?.message || 'No reward available');
     } else if (error.response?.status === 401) {
       throw new Error('Please log in to claim reward');
     } else {
@@ -110,6 +165,10 @@ const fetchStreakRewards = async (): Promise<StreakReward[]> => {
 };
 
 export default function StreakPage() {
+  const [claimingMilestone, setClaimingMilestone] = useState<number | null>(
+    null,
+  );
+
   // React Query Hooks
   const {
     data: streakData,
@@ -136,7 +195,7 @@ export default function StreakPage() {
   });
 
   const claimRewardMutation = useMutation({
-    mutationFn: claimStreakReward,
+    mutationFn: (milestone?: number) => claimStreakReward(milestone),
     onSuccess: async (data) => {
       // Prefer server-provided remaining connects to avoid drift
       const remaining = (data?.data as { remainingConnects?: number })
@@ -155,6 +214,7 @@ export default function StreakPage() {
 
       // Refetch streak data
       await refetch();
+      setClaimingMilestone(null);
 
       // Show success toast after refetch
       toast({
@@ -174,17 +234,20 @@ export default function StreakPage() {
         description: error.message || 'Failed to claim reward',
         variant: 'destructive',
       });
+
+      setClaimingMilestone(null);
     },
   });
 
   // Reward Claim Handler
-  const handleClaimReward = async () => {
+  const handleClaimReward = async (milestone?: number) => {
     if (!streakData) return;
 
+    setClaimingMilestone(milestone || streakData.currentStreak);
+
     try {
-      await claimRewardMutation.mutateAsync();
+      await claimRewardMutation.mutateAsync(milestone);
     } catch (error) {
-      // Error is already handled in onError callback
       console.error('Claim reward error:', error);
     }
   };
@@ -193,20 +256,21 @@ export default function StreakPage() {
   const getMilestoneStatus = (milestone: number) => {
     if (!streakData) return 'locked';
 
-    // Check if milestone is available to claim
-    // Must match exact milestone AND reward must be available
-    if (streakData.currentStreak === milestone && streakData.rewardAvailable) {
+    const canClaim = streakData.claimableMilestones.includes(milestone);
+
+    // If this milestone is in claimable list, it's available
+    if (canClaim) {
       return 'available';
     }
 
     // Check if milestone is already passed (user moved beyond it)
-    if (streakData.currentStreak > milestone) {
-      return 'claimed';
+    if (streakData.currentStreak > milestone && !canClaim) {
+      return 'claimed'; // Either claimed or outside 7-day window
     }
 
-    // Check if milestone is reached but reward not available (just claimed)
-    if (streakData.currentStreak === milestone && !streakData.rewardAvailable) {
-      return 'claimed';
+    // Check if milestone is reached but not yet in claimable list
+    if (streakData.currentStreak === milestone && !canClaim) {
+      return 'available'; // Current milestone is always available
     }
 
     // Otherwise locked (user hasn't reached this milestone yet)
@@ -218,9 +282,9 @@ export default function StreakPage() {
     return Math.min((streakData.currentStreak / milestone) * 100, 100);
   };
 
-  const canClaimMilestone = (milestone: number) => {
+  const isClaimable = (milestone: number) => {
     if (!streakData) return false;
-    return streakData.currentStreak === milestone && streakData.rewardAvailable;
+    return streakData.claimableMilestones.includes(milestone);
   };
 
   const formatDate = (dateString: string | null) => {
@@ -247,40 +311,37 @@ export default function StreakPage() {
           { label: 'Streak', link: '#' },
         ]}
         isKycCheck={true}
-        mainClassName="flex-1 overflow-y-auto p-4 md:p-6"
-        contentClassName="md:pl-[50px] flex-1 flex flex-col min-h-screen"
-        containerClassName="flex min-h-screen w-full bg-background"
       >
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Login Streak</h1>
-            <p className="text-muted-foreground">
-              Build your streak by logging in daily and earn connect rewards!
-            </p>
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Login Streak
+              </h1>
+              <p className="text-muted-foreground">
+                Build your streak by logging in daily and earn connect rewards.
+              </p>
+            </div>
           </div>
 
-          {/* Loading Skeleton */}
-          <Card className="animate-pulse">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Skeleton className="h-[104px]" />
+            <Skeleton className="h-[104px]" />
+            <Skeleton className="h-[104px]" />
+          </div>
+
+          <Card>
             <CardHeader>
-              <div className="h-6 bg-muted rounded w-1/3"></div>
+              <Skeleton className="h-6 w-40" />
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="h-16 bg-muted rounded"></div>
-                <div className="h-8 bg-muted rounded"></div>
+              <div className="grid gap-4 md:grid-cols-3">
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
               </div>
             </CardContent>
           </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="pt-6">
-                  <div className="h-24 bg-muted rounded"></div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
       </FreelancerSettingsLayout>
     );
@@ -297,26 +358,33 @@ export default function StreakPage() {
           { label: 'Streak', link: '#' },
         ]}
         isKycCheck={true}
-        mainClassName="flex-1 overflow-y-auto p-4 md:p-6"
-        contentClassName="md:pl-[50px] flex-1 flex flex-col min-h-screen"
-        containerClassName="flex min-h-screen w-full bg-background"
       >
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Login Streak</h1>
-            <p className="text-muted-foreground">
-              Build your streak by logging in daily and earn connect rewards!
-            </p>
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Login Streak
+              </h1>
+              <p className="text-muted-foreground">
+                Track your consistency and claim milestone rewards.
+              </p>
+            </div>
           </div>
 
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center space-y-4">
-                <p className="text-destructive">
-                  Failed to load streak data:{' '}
-                  {error?.message || 'Unknown error'}
-                </p>
-                <Button onClick={() => refetch()}>Retry</Button>
+              <div className="grid gap-6 md:grid-cols-[1.2fr_1fr] md:items-center">
+                <div>
+                  <p className="text-sm font-medium">Something went wrong</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Failed to load streak data:{' '}
+                    {error?.message || 'Unknown error'}
+                  </p>
+                  <div className="mt-4 flex gap-2">
+                    <Button onClick={() => refetch()}>Retry</Button>
+                  </div>
+                </div>
+                <Illustration className="w-full max-w-[420px] justify-self-end" />
               </div>
             </CardContent>
           </Card>
@@ -336,26 +404,29 @@ export default function StreakPage() {
           { label: 'Streak', link: '#' },
         ]}
         isKycCheck={true}
-        mainClassName="flex-1 overflow-y-auto p-4 md:p-6"
-        contentClassName="md:pl-[50px] flex-1 flex flex-col min-h-screen"
-        containerClassName="flex min-h-screen w-full bg-background"
       >
         <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Login Streak</h1>
-            <p className="text-muted-foreground">
-              Build your streak by logging in daily and earn connect rewards!
-            </p>
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Login Streak
+              </h1>
+              <p className="text-muted-foreground">
+                Build your streak by logging in daily and earn connect rewards.
+              </p>
+            </div>
           </div>
 
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center space-y-4">
-                <Flame className="w-16 h-16 mx-auto text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  No streak data available. Start your streak by logging in
-                  daily!
-                </p>
+              <div className="grid gap-6 md:grid-cols-[1.2fr_1fr] md:items-center">
+                <div>
+                  <p className="text-sm font-medium">No data yet</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Start your streak by logging in daily.
+                  </p>
+                </div>
+                <Illustration className="w-full max-w-[420px] justify-self-end" />
               </div>
             </CardContent>
           </Card>
@@ -373,84 +444,139 @@ export default function StreakPage() {
         { label: 'Streak', link: '#' },
       ]}
       isKycCheck={true}
-      mainClassName="flex-1 overflow-y-auto p-4 md:p-6"
-      contentClassName="md:pl-[50px] flex-1 flex flex-col min-h-screen"
-      containerClassName="flex min-h-screen w-full bg-background"
     >
-      <div className="space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Title */}
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Login Streak</h1>
-          <p className="text-muted-foreground">
-            Build your streak by logging in daily and earn connect rewards at
-            milestones!
-          </p>
+        <div className="flex items-center justify-between space-y-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Login Streak</h1>
+            <p className="text-muted-foreground">
+              Build your streak and claim connect rewards at milestones.
+            </p>
+          </div>
         </div>
 
-        {/* Streak Stats Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Flame className="w-6 h-6 text-orange-500" />
-              Your Streak Stats
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Current Streak */}
-              <div className="text-center space-y-2">
-                <div className="flex items-center justify-center gap-2">
-                  <Flame className="w-8 h-8 text-orange-500" />
-                  <span className="text-5xl font-bold text-orange-500">
-                    {streakData.currentStreak}
-                  </span>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold tracking-tight">Overview</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <StatCard
+              title="Current streak"
+              value={streakData.currentStreak}
+              additionalInfo={
+                streakData.currentStreak === 1
+                  ? 'day in a row'
+                  : 'days in a row'
+              }
+              icon={
+                <div className="rounded-lg border bg-orange-500/10 p-2">
+                  <Flame className="h-5 w-5 text-orange-600" />
                 </div>
-                <p className="text-sm text-muted-foreground">Current Streak</p>
-                <p className="text-xs text-muted-foreground">
-                  {streakData.currentStreak === 1 ? 'day' : 'days'} in a row
-                </p>
-              </div>
+              }
+              variant="accent"
+            />
+            <StatCard
+              title="Longest streak"
+              value={streakData.longestStreak}
+              additionalInfo={
+                streakData.longestStreak === 1 ? 'day best' : 'days best'
+              }
+              icon={
+                <div className="rounded-lg border bg-yellow-500/10 p-2">
+                  <Trophy className="h-5 w-5 text-yellow-600" />
+                </div>
+              }
+              variant="secondary"
+            />
+            <StatCard
+              title="Last login"
+              value={formatDate(streakData.lastLoginDate)}
+              additionalInfo="Most recent activity"
+              icon={
+                <div className="rounded-lg border bg-blue-500/10 p-2">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                </div>
+              }
+              variant="default"
+            />
+          </div>
+        </section>
 
-              {/* Divider */}
-              <div className="hidden md:block border-r border-border"></div>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold tracking-tight">
+              Next milestone
+            </h2>
+          </div>
+          <Card className="overflow-hidden">
+            <CardContent className="pt-6">
+              {(() => {
+                const ordered = (rewardsData || [])
+                  .slice()
+                  .sort((a, b) => a.days - b.days);
+                const next =
+                  ordered.find((m) => m.days > streakData.currentStreak) ||
+                  ordered[ordered.length - 1];
+                if (!next) {
+                  return (
+                    <div>
+                      <p className="text-sm font-medium">
+                        No rewards configured
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Rewards will appear here when configured.
+                      </p>
+                    </div>
+                  );
+                }
 
-              {/* Longest Streak & Last Login */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Trophy className="w-5 h-5 text-yellow-500" />
-                  <div>
-                    <p className="text-sm font-medium">Longest Streak</p>
-                    <p className="text-2xl font-bold">
-                      {streakData.longestStreak} days
+                const progress = getMilestoneProgress(next.days);
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm text-muted-foreground">Target</p>
+                        <p className="text-lg font-semibold truncate">
+                          {next.days} day streak
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="shrink-0">
+                        {next.reward} connects
+                      </Badge>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                    <p className="text-xs text-muted-foreground">
+                      {streakData.currentStreak} / {next.days} days
                     </p>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-blue-500" />
-                  <div>
-                    <p className="text-sm font-medium">Last Login</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(streakData.lastLoginDate)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        </section>
 
-        {/* Milestone Progress Section */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">Milestone Rewards</h2>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold tracking-tight">Rewards</h2>
+          </div>
+
           {isRewardsError ? (
             <Card>
               <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  <p className="text-destructive">
-                    Failed to load streak rewards:{' '}
-                    {(rewardsError as any)?.message || 'Unknown error'}
-                  </p>
-                  <Button onClick={() => refetchRewards()}>Retry</Button>
+                <div className="grid gap-6 md:grid-cols-[1.2fr_1fr] md:items-center">
+                  <div>
+                    <p className="text-sm font-medium">
+                      Could not load rewards
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {(rewardsError as any)?.message || 'Unknown error'}
+                    </p>
+                    <div className="mt-4">
+                      <Button onClick={() => refetchRewards()}>Retry</Button>
+                    </div>
+                  </div>
+                  <Illustration className="w-full max-w-[420px] justify-self-end" />
                 </div>
               </CardContent>
             </Card>
@@ -458,152 +584,172 @@ export default function StreakPage() {
             (!rewardsData || rewardsData.length === 0) ? (
             <Card>
               <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  <Gift className="w-16 h-16 mx-auto text-muted-foreground" />
-                  <p className="text-muted-foreground">
-                    No streak rewards configured yet. Check back later!
-                  </p>
+                <div className="grid gap-6 md:grid-cols-[1.2fr_1fr] md:items-center">
+                  <div>
+                    <p className="text-sm font-medium">No rewards yet</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Rewards will show up here when configured.
+                    </p>
+                  </div>
+                  <Illustration className="w-full max-w-[420px] justify-self-end" />
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {(rewardsData || [])
+                .slice()
                 .sort((a, b) => a.days - b.days)
                 .map((milestone) => {
                   const status = getMilestoneStatus(milestone.days);
                   const progress = getMilestoneProgress(milestone.days);
-                  const canClaim = canClaimMilestone(milestone.days);
+                  const claimable = isClaimable(milestone.days);
+                  const isPending = claimingMilestone === milestone.days;
+
+                  const badgeText =
+                    status === 'claimed'
+                      ? 'Claimed'
+                      : claimable
+                        ? 'Available'
+                        : 'Locked';
+                  const badgeVariant = claimable
+                    ? 'default'
+                    : status === 'claimed'
+                      ? 'secondary'
+                      : 'outline';
+
+                  const accentClass = claimable
+                    ? 'border-l-blue-500 bg-blue-500/5'
+                    : status === 'claimed'
+                      ? 'border-l-emerald-500 bg-emerald-500/5'
+                      : 'border-l-muted-foreground/30 bg-muted/20';
+                  const iconWrapClass = claimable
+                    ? 'border-blue-500/20 bg-blue-500/10'
+                    : status === 'claimed'
+                      ? 'border-emerald-500/20 bg-emerald-500/10'
+                      : 'border-muted-foreground/20 bg-muted/40';
+                  const iconClass = claimable
+                    ? 'text-blue-600'
+                    : status === 'claimed'
+                      ? 'text-emerald-600'
+                      : 'text-muted-foreground';
+                  const badgeClass = claimable
+                    ? 'bg-blue-600 hover:bg-blue-600 text-white'
+                    : status === 'claimed'
+                      ? 'bg-emerald-600 hover:bg-emerald-600 text-white'
+                      : '';
 
                   return (
-                    <div
+                    <Card
                       key={milestone.days}
-                      className={`border shadow-sm rounded-lg overflow-hidden bg-green-50 dark:bg-green-950/30 ${
-                        status === 'available'
-                          ? 'ring-2 ring-blue-500 ring-offset-2'
-                          : status === 'claimed'
-                            ? ''
-                            : 'opacity-75'
-                      }`}
+                      className={`relative overflow-hidden border-l-2 shadow-sm transition-colors ${accentClass}`}
                     >
-                      <div className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`p-2 rounded-lg ${
-                              status === 'available'
-                                ? 'bg-blue-100 dark:bg-blue-900/50'
-                                : status === 'claimed'
-                                  ? 'bg-green-100 dark:bg-green-900/50'
-                                  : 'bg-gray-100 dark:bg-gray-900/50'
-                            }`}
-                          >
-                            <Gift
-                              className={`h-5 w-5 ${
-                                status === 'available'
-                                  ? 'text-blue-600 dark:text-blue-400'
-                                  : status === 'claimed'
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : 'text-gray-500 dark:text-gray-400'
-                              }`}
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <p className="text-sm text-muted-foreground">
-                                  {milestone.days} Day Streak
-                                </p>
-                                <div className="text-lg font-semibold text-green-600 dark:text-green-400">
-                                  {milestone.reward} Connects
-                                </div>
+                      <CardHeader className="space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <CardTitle className="text-base truncate flex items-center gap-2">
+                              <div
+                                className={`rounded-md border p-2 inline-block ${iconWrapClass}`}
+                              >
+                                {status === 'claimed' ? (
+                                  <Check className={`h-4 w-4 ${iconClass}`} />
+                                ) : status === 'available' ? (
+                                  <Gift className={`h-4 w-4 ${iconClass}`} />
+                                ) : (
+                                  <Lock className={`h-4 w-4 ${iconClass}`} />
+                                )}
                               </div>
-                              <Badge
-                                variant={
-                                  status === 'claimed'
-                                    ? 'default'
-                                    : status === 'available'
-                                      ? 'default'
-                                      : 'secondary'
-                                }
-                                className={
-                                  status === 'claimed'
-                                    ? 'bg-green-500 hover:bg-green-600 text-white'
-                                    : status === 'available'
-                                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                                      : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                                }
-                              >
-                                {status === 'claimed'
-                                  ? 'Reward Claimed'
-                                  : status === 'available'
-                                    ? 'Available'
-                                    : 'Locked'}
-                              </Badge>
-                            </div>
-
-                            {/* Progress Bar */}
-                            <div className="mt-3 space-y-2">
-                              <Progress value={progress} className="h-2" />
-                              <p className="text-xs text-muted-foreground text-right">
-                                {streakData.currentStreak} / {milestone.days}{' '}
-                                days{' '}
-                              </p>
-                            </div>
-
-                            {/* Action Button */}
-                            {status === 'available' && (
-                              <Button
-                                onClick={handleClaimReward}
-                                disabled={
-                                  claimRewardMutation.isPending || !canClaim
-                                }
-                                className="w-full mt-3"
-                              >
-                                {claimRewardMutation.isPending
-                                  ? 'Claiming...'
-                                  : 'Claim Reward'}
-                              </Button>
-                            )}
-
-                            {status === 'claimed' && (
-                              <Button
-                                disabled={true}
-                                className="w-full mt-3 opacity-50 cursor-not-allowed"
-                              >
-                                Reward Claimed
-                              </Button>
-                            )}
-
-                            {status === 'locked' && (
-                              <p className="text-sm text-muted-foreground text-center mt-3">
-                                Keep logging in to unlock this reward
-                              </p>
-                            )}
+                              {milestone.days} day streak
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              {milestone.reward} connects
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={badgeVariant}
+                              className={badgeClass}
+                            >
+                              {badgeText}
+                            </Badge>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Progress value={progress} className="h-2" />
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              {streakData.currentStreak} / {milestone.days} days
+                            </span>
+                            <span>{Math.round(progress)}%</span>
+                          </div>
+                        </div>
+
+                        {claimable ? (
+                          <Button
+                            onClick={() => handleClaimReward(milestone.days)}
+                            disabled={
+                              isPending || claimRewardMutation.isPending
+                            }
+                            className="w-full"
+                          >
+                            {isPending ? 'Claiming...' : 'Claim reward'}
+                          </Button>
+                        ) : status === 'claimed' ? (
+                          <Button disabled className="w-full">
+                            Claimed
+                          </Button>
+                        ) : (
+                          <Button disabled variant="outline" className="w-full">
+                            Keep logging in
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
                   );
                 })}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* Info Section */}
-        <Card className="bg-muted/50">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <h3 className="font-semibold">How it works:</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                <li>Log in daily to build your streak</li>
-                <li>Reach configured milestones to earn rewards</li>
-                <li>Claim connect rewards when you hit each milestone</li>
-                <li>Missing a day will reset your current streak</li>
-                <li>Your longest streak is always saved</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold tracking-tight">Rules</h2>
+          </div>
+          <Card>
+            <CardContent className="pt-6 space-y-3 text-sm text-muted-foreground">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <p className="font-medium text-foreground">
+                    Build the streak
+                  </p>
+                  <p className="mt-1">
+                    Log in daily to increase your current streak.
+                  </p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <p className="font-medium text-foreground">Claim rewards</p>
+                  <p className="mt-1">
+                    Milestones unlock rewards you can claim.
+                  </p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <p className="font-medium text-foreground">Grace window</p>
+                  <p className="mt-1">
+                    Missed a reward? Claim it within 7 days.
+                  </p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <p className="font-medium text-foreground">Reset</p>
+                  <p className="mt-1">
+                    Missing a day resets your current streak.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </FreelancerSettingsLayout>
   );
