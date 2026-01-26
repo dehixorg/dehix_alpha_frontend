@@ -14,7 +14,7 @@ export const apiHelperService = {
   updateReportStatus: async (Id: string, status: string) => {
     return apiService({
       method: Api_Methods.PUT,
-      endpoint: `/report/${Id}`,
+      endpoint: `/reports/${Id}/status`,
       body: {
         status,
       },
@@ -66,6 +66,23 @@ export const apiHelperService = {
       method: Api_Methods.GET,
       endpoint: `/reports/user/${userId}`,
       params,
+    });
+  },
+
+  reportMessage: async (data: {
+    messageId: string;
+    conversationId: string;
+    messageSenderId: string;
+    messageSenderEmail?: string;
+    messageSenderUserName?: string;
+    messageContent: string;
+    messageTimestamp: string;
+    reason?: string;
+  }) => {
+    return apiService({
+      method: Api_Methods.POST,
+      endpoint: '/chat/messages/report',
+      body: data,
     });
   },
 };
