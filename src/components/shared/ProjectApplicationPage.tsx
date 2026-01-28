@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import {
   CheckCircle2,
   ChevronDown,
@@ -173,6 +174,8 @@ const ProjectApplicationForm = ({
     new Set<string>(),
   );
   const user = useSelector((state: RootState) => state.user);
+  const router = useRouter();
+
   const fetchFreelancerProfiles = useCallback(async () => {
     setIsLoadingProfiles(true);
     try {
@@ -290,7 +293,7 @@ const ProjectApplicationForm = ({
   const handleBidSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate profile selection
+    // Profile selection is optional - freelancers can bid with or without a profile
     if (!selectedProfile?._id) {
       notifyError('No profile selected for bidding');
       return;
@@ -440,7 +443,9 @@ const ProjectApplicationForm = ({
     }
   };
 
-  const hasAppliedToSelectedProfile = !selectedFreelancerProfile;
+  const hasAppliedToSelectedProfile = Boolean(
+    selectedProfile && isProfileApplied(selectedProfile._id),
+  );
 
   if (isLoading) {
     return (
@@ -612,9 +617,17 @@ const ProjectApplicationForm = ({
                 </Badge>
               </div>
               <div>
-                <h3 className="text-lg font-medium mb-4">
-                  Available Freelancer Profiles
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-medium">
+                      Available Freelancer Profiles
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Select a profile to showcase your expertise, or continue
+                      without one
+                    </p>
+                  </div>
+                </div>
                 {isLoadingProfiles ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {[1, 2, 3].map((i) => (
@@ -677,15 +690,36 @@ const ProjectApplicationForm = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 border rounded-lg">
-                    <UserX className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                    <h4 className="text-sm font-medium">
+                  <div className="text-center py-8 border rounded-lg bg-muted/20">
+                    <UserX className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                    <h4 className="text-sm font-medium mb-1">
                       No matching profiles found
                     </h4>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      We couldn&apos;t find any freelancer profiles that match
-                      this project&apos;s requirements.
+                    <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
+                      You can create a new{' '}
+                      {selectedProfile?.profileType?.toLowerCase()} profile to
+                      showcase your expertise, or continue without a profile.
                     </p>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() =>
+                          router.push('/freelancer/settings/profiles')
+                        }
+                        className="w-full sm:w-auto"
+                      >
+                        Go to Profile Settings
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedFreelancerProfile(null)}
+                        className="w-full sm:w-auto"
+                      >
+                        Continue Without Profile
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
