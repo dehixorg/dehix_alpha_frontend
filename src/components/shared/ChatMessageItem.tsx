@@ -8,17 +8,18 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { CheckCheck, Reply, Flag, MoreVertical, Copy } from 'lucide-react';
 
 import { EmojiPicker } from '../emojiPicker';
+
+
+import Reactions from './reactions';
+import { FileAttachment } from './fileAttachment';
+import { Conversation } from './chatList';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-import Reactions from './reactions';
-import { FileAttachment } from './fileAttachment';
-import { Conversation } from './chatList';
-
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
