@@ -45,6 +45,6 @@ export const badgeColors: { [key: string]: string } = {
     'bg-blue-500 text-black dark:text-white hover:text-black dark:hover:text-white',
   WORK: 'bg-green-500 text-black dark:text-white hover:text-black dark:hover:text-white',
   REMINDER:
-    'bg-yellow-500 text-black dark:text-white hover:text-black dark:hover:text-white',
+    'bg-yellow-500 text-black dark:bg-yellow-700 dark:text-white hover:text-black dark:hover:text-white',
   TASK: 'bg-red-500 text-black dark:text-white hover:text-black dark:hover:text-white',
 };

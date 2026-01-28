@@ -260,12 +260,24 @@ function ChatMessageItem({
 
   const handleCopyMessage = async () => {
     try {
-      // Extract plain text from HTML content
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = sanitizedContent;
-      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+      const plainText = (tempDiv.textContent || tempDiv.innerText || '').trim();
 
-      await navigator.clipboard.writeText(plainText);
+      const isVoice = message.voiceMessage?.type === 'voice';
+      const isMedia = isVoice || isImageUrl(message.content) || isDocUrl(message.content);
+
+      const copyValue = plainText || (isMedia ? message.content : '');
+      if (!copyValue) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Nothing to copy for this message.',
+        });
+        return;
+      }
+
+      await navigator.clipboard.writeText(copyValue);
       toast({
         title: 'Copied',
         description: 'Message copied to clipboard.',
@@ -279,6 +291,15 @@ function ChatMessageItem({
       });
     }
   };
+
+  const canCopyMessage = useMemo(() => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = sanitizedContent;
+    const plainText = (tempDiv.textContent || tempDiv.innerText || '').trim();
+    const isVoice = message.voiceMessage?.type === 'voice';
+    const isMedia = isVoice || isImageUrl(message.content) || isDocUrl(message.content);
+    return Boolean(plainText || (isMedia && message.content));
+  }, [message.content, message.voiceMessage?.type, sanitizedContent]);
 
   return (
     <div className="w-full" key={message.id}>
@@ -656,10 +677,12 @@ function ChatMessageItem({
                 </Tooltip>
               </TooltipProvider>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={handleCopyMessage}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  <span>Copy message</span>
-                </DropdownMenuItem>
+                {canCopyMessage && (
+                  <DropdownMenuItem onClick={handleCopyMessage}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    <span>Copy message</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={handleReportMessage}
                   disabled={isReporting}

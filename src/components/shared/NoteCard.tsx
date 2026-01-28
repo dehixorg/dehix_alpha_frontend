@@ -187,6 +187,7 @@ const NoteCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [editedTitle, setEditedTitle] = useState(note.title || '');
   const [editedContent, setEditedContent] = useState(note.content || '');
+  const [saveError, setSaveError] = useState<string>('');
   const [currentBgColor, setCurrentBgColor] = useState(
     note.bgColor || '#ffffff',
   );
@@ -225,6 +226,17 @@ const NoteCard = ({
     [note._id, onUpdateNoteLabel],
   );
 
+  const handleCancel = useCallback(() => {
+    setEditedTitle(note.title || '');
+    setEditedContent(note.content || '');
+    setCurrentBgColor(note.bgColor || '#ffffff');
+    setCurrentBanner(note.banner || '');
+    setCurrentLabel(note.type || undefined);
+    setSaveError('');
+    setIsExpanded(false);
+    setShowColorPicker(false);
+  }, [note]);
+
   const handleSave = useCallback(async () => {
     if (
       isExpanded &&
@@ -243,10 +255,17 @@ const NoteCard = ({
           banner: currentBanner,
           type: currentLabel,
         });
+        setSaveError('');
+        setIsExpanded(false);
+        setShowColorPicker(false);
+        return;
       } catch (error) {
         console.error('Error saving note:', error);
+        setSaveError('Failed to save note. Please try again.');
+        return;
       }
     }
+    setSaveError('');
     setIsExpanded(false);
     setShowColorPicker(false);
   }, [
@@ -303,10 +322,10 @@ const NoteCard = ({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
-        handleSave();
+        handleCancel();
       }
     },
-    [handleSave],
+    [handleCancel],
   );
 
   const handleColorChange = (color: string) => {
@@ -458,6 +477,9 @@ const NoteCard = ({
                   className={`w-full bg-transparent font-semibold text-lg leading-tight focus:outline-none placeholder:text-current placeholder:opacity-50 ${titleClass} ${hasBanner ? 'drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]' : ''}`}
                   placeholder="Title"
                 />
+                {saveError && (
+                  <p className="mt-2 text-sm text-destructive">{saveError}</p>
+                )}
               </CardHeader>
 
               <CardContent className="relative space-y-3 pb-2">
@@ -628,12 +650,20 @@ const NoteCard = ({
                         variant="ghost"
                         size="icon"
                         className={`h-9 w-9 ${buttonClass}`}
-                        onClick={() => {
-                          onUpdateNoteType(
-                            note._id,
-                            isArchive ? NoteType.NOTE : NoteType.ARCHIVE,
-                          );
-                          setIsExpanded(false);
+                        onClick={async () => {
+                          try {
+                            await onUpdateNoteType(
+                              note._id,
+                              isArchive ? NoteType.NOTE : NoteType.ARCHIVE,
+                            );
+                            setSaveError('');
+                            setIsExpanded(false);
+                          } catch (error) {
+                            console.error('Error updating note type:', error);
+                            setSaveError(
+                              'Failed to update note. Please try again.',
+                            );
+                          }
                         }}
                         title={isArchive ? 'Unarchive' : 'Archive'}
                       >
@@ -719,10 +749,7 @@ const NoteCard = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setIsExpanded(false);
-                        setShowColorPicker(false);
-                      }}
+                      onClick={handleCancel}
                       className={`h-9 px-4 font-medium ${buttonClass}`}
                     >
                       Cancel

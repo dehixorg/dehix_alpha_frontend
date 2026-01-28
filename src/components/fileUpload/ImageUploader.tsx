@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Pencil } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -37,6 +37,7 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
   const [localPreview, setLocalPreview] = useState<string>('');
   const [files, setFiles] = useState<File[] | undefined>(undefined);
+  const [error, setError] = useState<string>('');
 
   // Seed preview when receiving an existing File value or string URL
   useEffect(() => {
@@ -49,15 +50,18 @@ export default function ImageUploader({
       reader.readAsDataURL(value);
     } else if (typeof value === 'string') {
       setLocalPreview(value);
+      setError('');
     } else if (!value) {
       setLocalPreview('');
       setFiles(undefined);
+      setError('');
     }
   }, [value]);
 
   return (
     <div className={className}>
       {label && <p className="text-sm font-medium mb-2">{label}</p>}
+      {error && <p className="text-sm text-destructive mb-2">{error}</p>}
       <div className="flex flex-col items-center gap-4">
         <Dropzone
           maxSize={maxSize}
@@ -70,6 +74,7 @@ export default function ImageUploader({
             if (!original) {
               setFiles(undefined);
               setLocalPreview('');
+              setError('');
               onChange(null);
               return;
             }
@@ -80,6 +85,7 @@ export default function ImageUploader({
 
             onChange(file);
             setFiles([file]);
+            setError('');
             const reader = new FileReader();
             reader.onload = (e) => {
               if (typeof e.target?.result === 'string') {
@@ -88,7 +94,11 @@ export default function ImageUploader({
             };
             reader.readAsDataURL(file);
           }}
-          onError={() => {}}
+          onError={(err) => {
+            const message =
+              err instanceof Error ? err.message : 'Upload failed';
+            setError(message || 'Upload failed');
+          }}
           className="w-full"
         >
           <DropzoneEmptyState />
@@ -117,10 +127,11 @@ export default function ImageUploader({
                     onChange(null);
                     setLocalPreview('');
                     setFiles(undefined);
+                    setError('');
                   }}
                   aria-label="Remove image"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             )}

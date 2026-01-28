@@ -1024,6 +1024,29 @@ export function CardsChat({
                     </Tooltip>
                   )}
 
+                  {isSearchVisible && (
+                    <div className="flex sm:hidden items-center space-x-2">
+                      <Input
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        placeholder="Search in conversation..."
+                        className="w-40 rounded-full text-sm"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Close search"
+                        onClick={() => {
+                          setIsSearchVisible(false);
+                          setSearchValue('');
+                        }}
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  )}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -1095,21 +1118,19 @@ export function CardsChat({
 
                   {/* Mobile: everything in the three-dot menu */}
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="More options"
-                            className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                          >
-                            <MoreVertical className="h-5 w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">More</TooltipContent>
-                      </Tooltip>
-                    </DropdownMenuTrigger>
+                    <Tooltip>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="More options"
+                          className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        >
+                          <MoreVertical className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <TooltipContent side="bottom">More</TooltipContent>
+                    </Tooltip>
                     <DropdownMenuContent
                       align="end"
                       sideOffset={5}

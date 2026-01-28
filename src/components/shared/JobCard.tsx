@@ -210,34 +210,70 @@ const JobCard: React.FC<JobCardProps> = ({
     job.profiles && job.profiles.length > 0 ? job.profiles[0] : null;
 
   // Calculate average budget from all profiles
-  const calculateAverageBudget = () => {
+  const calculateAverageBudgets = () => {
     if (!job.profiles || job.profiles.length === 0) return null;
 
-    const budgetValues = job.profiles
+    const fixedValues = job.profiles
       .map((p) => {
-        if (p.budget?.type === 'FIXED' && p.budget.fixedAmount) {
+        if (p.budget?.type === 'FIXED' && p.budget.fixedAmount)
           return p.budget.fixedAmount;
-        } else if (p.budget?.type === 'HOURLY') {
-          if (p.budget.hourlyRate) {
-            return p.budget.hourlyRate;
-          } else if (p.budget.hourly?.minRate && p.budget.hourly?.maxRate) {
-            return (p.budget.hourly.minRate + p.budget.hourly.maxRate) / 2;
-          }
-        } else if (p.budget?.min && p.budget?.max) {
+        if (p.budget?.min && p.budget?.max)
           return (p.budget.min + p.budget.max) / 2;
-        }
         return null;
       })
-      .filter((value) => value !== null);
+      .filter((value): value is number => value !== null);
 
-    if (budgetValues.length === 0) return null;
+    const hourlyRates = job.profiles
+      .map((p) => {
+        if (p.budget?.type !== 'HOURLY') return null;
+        if (p.budget.hourlyRate) return p.budget.hourlyRate;
+        if (p.budget.hourly?.minRate && p.budget.hourly?.maxRate)
+          return (p.budget.hourly.minRate + p.budget.hourly.maxRate) / 2;
+        if (p.budget.hourly?.minRate) return p.budget.hourly.minRate;
+        return null;
+      })
+      .filter((value): value is number => value !== null);
 
-    const average =
-      budgetValues.reduce((sum, value) => sum + value, 0) / budgetValues.length;
-    return Math.round(average);
+    const hourlyTotals = job.profiles
+      .map((p) => {
+        if (p.budget?.type !== 'HOURLY') return null;
+        const hours = p.budget.hourly?.estimatedHours;
+        if (!hours) return null;
+        const rate = p.budget.hourlyRate
+          ? p.budget.hourlyRate
+          : p.budget.hourly?.minRate && p.budget.hourly?.maxRate
+            ? (p.budget.hourly.minRate + p.budget.hourly.maxRate) / 2
+            : p.budget.hourly?.minRate;
+        if (!rate) return null;
+        return rate * hours;
+      })
+      .filter((value): value is number => value !== null);
+
+    const averageFixed = fixedValues.length
+      ? Math.round(
+          fixedValues.reduce((sum, value) => sum + value, 0) /
+            fixedValues.length,
+        )
+      : null;
+
+    const averageHourly = hourlyRates.length
+      ? Math.round(
+          hourlyRates.reduce((sum, value) => sum + value, 0) /
+            hourlyRates.length,
+        )
+      : null;
+
+    const averageHourlyTotal = hourlyTotals.length
+      ? Math.round(
+          hourlyTotals.reduce((sum, value) => sum + value, 0) /
+            hourlyTotals.length,
+        )
+      : null;
+
+    return { averageFixed, averageHourly, averageHourlyTotal };
   };
 
-  const averageBudget = calculateAverageBudget();
+  const averageBudgets = calculateAverageBudgets();
 
   // Format date with type safety
   const formatDate = (dateString?: string | Date): string => {
@@ -433,20 +469,29 @@ const JobCard: React.FC<JobCardProps> = ({
                       Avg. Budget
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {averageBudget
-                        ? `$${averageBudget}`
-                        : profile?.budget?.type === 'FIXED'
-                          ? `$${profile.budget.fixedAmount}`
-                          : profile?.budget?.type === 'HOURLY'
-                            ? profile?.budget?.hourlyRate
-                              ? `$${profile.budget.hourlyRate}/hr`
-                              : profile?.budget?.hourly?.minRate &&
-                                  profile?.budget?.hourly?.maxRate
-                                ? `$${profile.budget.hourly.minRate} - $${profile.budget.hourly.maxRate}/hr`
-                                : 'Negotiable'
-                            : profile?.budget?.min && profile?.budget?.max
-                              ? `$${profile.budget.min} - $${profile.budget.max}`
-                              : 'Negotiable'}
+                      {averageBudgets?.averageFixed !== null &&
+                      averageBudgets?.averageFixed !== undefined
+                        ? `$${averageBudgets.averageFixed.toLocaleString()} (fixed)`
+                        : averageBudgets?.averageHourly !== null &&
+                            averageBudgets?.averageHourly !== undefined
+                          ? averageBudgets.averageHourlyTotal !== null &&
+                            averageBudgets.averageHourlyTotal !== undefined
+                            ? `$${averageBudgets.averageHourlyTotal.toLocaleString()} est. total • $${averageBudgets.averageHourly.toLocaleString()}/hr`
+                            : `$${averageBudgets.averageHourly.toLocaleString()}/hr`
+                          : profile?.budget?.type === 'FIXED'
+                            ? `$${profile.budget.fixedAmount?.toLocaleString()}`
+                            : profile?.budget?.type === 'HOURLY'
+                              ? profile?.budget?.hourlyRate
+                                ? `$${profile.budget.hourlyRate.toLocaleString()}/hr`
+                                : profile?.budget?.hourly?.minRate &&
+                                    profile?.budget?.hourly?.maxRate
+                                  ? `$${profile.budget.hourly.minRate.toLocaleString()} - $${profile.budget.hourly.maxRate.toLocaleString()}/hr`
+                                  : profile?.budget?.hourly?.minRate
+                                    ? `$${profile.budget.hourly.minRate.toLocaleString()}/hr`
+                                    : 'Negotiable'
+                              : profile?.budget?.min && profile?.budget?.max
+                                ? `$${profile.budget.min.toLocaleString()} - $${profile.budget.max.toLocaleString()}`
+                                : 'Negotiable'}
                     </p>
                   </div>
                 </div>

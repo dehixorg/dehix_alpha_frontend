@@ -33,6 +33,16 @@ export function DateTimePicker({
   disabled = false,
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
+  const reactId = React.useId();
+  const labelId = React.useMemo(() => {
+    const normalized = label
+      ? label
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9\-_]/g, '')
+      : 'date-time';
+    return `${reactId}-${normalized}-label`;
+  }, [label, reactId]);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     onDateChange?.(selectedDate);
@@ -41,8 +51,10 @@ export function DateTimePicker({
 
   return (
     <div className="flex flex-col gap-3">
-      <Label className="px-1">{label}</Label>
-      <div className="flex gap-2">
+      <Label id={labelId} className="px-1">
+        {label}
+      </Label>
+      <div className="flex gap-2" role="group" aria-labelledby={labelId}>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button

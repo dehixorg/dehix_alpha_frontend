@@ -44,7 +44,6 @@ const NotesContainer = ({
         {notes.map((note, index) => (
           <div key={note._id} data-note-index={index} className="touch-none">
             <NoteCard
-              key={note._id}
               note={note}
               onDragStart={() => handleDragStart(index)}
               onDragOver={(e) => {

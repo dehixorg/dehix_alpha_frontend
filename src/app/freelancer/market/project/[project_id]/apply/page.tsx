@@ -114,17 +114,17 @@ const Page = () => {
         return `$${profile.budget.fixedAmount.toLocaleString()} (Fixed)`;
       } else if (profile.budget?.type === 'HOURLY') {
         if (profile.budget.hourlyRate) {
-          return `$${profile.budget.hourlyRate}/hr`;
+          return `$${profile.budget.hourlyRate.toLocaleString()}/hr`;
         } else if (
           profile.budget.hourly?.minRate &&
           profile.budget.hourly?.maxRate
         ) {
-          return `$${profile.budget.hourly.minRate} - $${profile.budget.hourly.maxRate}/hr`;
+          return `$${profile.budget.hourly.minRate.toLocaleString()} - $${profile.budget.hourly.maxRate.toLocaleString()}/hr`;
         } else if (profile.budget.hourly?.minRate) {
-          return `$${profile.budget.hourly.minRate}/hr`;
+          return `$${profile.budget.hourly.minRate.toLocaleString()}/hr`;
         }
       } else if (profile.budget?.min && profile.budget?.max) {
-        return `$${profile.budget.min} - $${profile.budget.max}`;
+        return `$${profile.budget.min.toLocaleString()} - $${profile.budget.max.toLocaleString()}`;
       }
     }
 
@@ -133,9 +133,9 @@ const Page = () => {
       return `$${project.budget.fixedAmount.toLocaleString()} (Fixed)`;
     } else if (project.budget?.type === 'hourly') {
       if (project.budget.hourly?.minRate && project.budget.hourly?.maxRate) {
-        return `$${project.budget.hourly.minRate} - $${project.budget.hourly.maxRate}/hr`;
+        return `$${project.budget.hourly.minRate.toLocaleString()} - $${project.budget.hourly.maxRate.toLocaleString()}/hr`;
       } else if (project.budget.hourly?.minRate) {
-        return `$${project.budget.hourly.minRate}/hr`;
+        return `$${project.budget.hourly.minRate.toLocaleString()}/hr`;
       }
     }
 
