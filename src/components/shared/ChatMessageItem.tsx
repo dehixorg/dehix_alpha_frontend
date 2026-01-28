@@ -1,18 +1,25 @@
 'use client';
 
 /* eslint-disable prettier/prettier */
-import React, { RefObject, useMemo, memo } from 'react';
+import React, { RefObject, useMemo, memo, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
 import { formatDistanceToNow, format } from 'date-fns';
-import { CheckCheck, Reply } from 'lucide-react';
+import { CheckCheck, Reply, Flag, MoreVertical, Copy } from 'lucide-react';
 
 import { EmojiPicker } from '../emojiPicker';
+
 
 import Reactions from './reactions';
 import { FileAttachment } from './fileAttachment';
 import { Conversation } from './chatList';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -22,6 +29,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { apiHelperService } from '@/services/report';
 
 // Local helpers to keep component self-contained
 function formatChatTimestamp(timestamp: string) {
@@ -124,6 +133,9 @@ function ChatMessageItem({
   messagesEndRef,
   onOpenProfileSidebar,
 }: Props) {
+  const { toast } = useToast();
+  const [isReporting, setIsReporting] = useState(false);
+
   const formattedTimestamp = useMemo(
     () => formatChatTimestamp(message.timestamp),
     [message.timestamp],
@@ -200,6 +212,73 @@ function ChatMessageItem({
       }),
     [message.content],
   );
+
+  const handleReportMessage = async () => {
+    if (isReporting) return;
+
+    try {
+      setIsReporting(true);
+
+      // Get sender info from conversation
+      const senderInfo = conversation.participantDetails?.[message.senderId];
+      const messageSenderEmail = senderInfo?.email;
+      const messageSenderUserName = senderInfo?.userName;
+
+      const reportData = {
+        messageId: message.id,
+        conversationId: conversation.id || '',
+        messageSenderId: message.senderId,
+        messageSenderEmail,
+        messageSenderUserName,
+        messageContent: message.content,
+        messageTimestamp: message.timestamp,
+      };
+
+      const response = await apiHelperService.reportMessage(reportData);
+
+      if (response.success) {
+        toast({
+          title: 'Message Reported',
+          description:
+            'The message has been reported and will be reviewed by an admin.',
+        });
+      } else {
+        throw new Error(response.data?.message || 'Failed to report message');
+      }
+    } catch (error: any) {
+      console.error('Error reporting message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          error.message || 'Failed to report message. Please try again.',
+      });
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
+  const handleCopyMessage = async () => {
+    try {
+      // Extract plain text from HTML content
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = sanitizedContent;
+      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+      await navigator.clipboard.writeText(plainText);
+      toast({
+        title: 'Copied',
+        description: 'Message copied to clipboard.',
+      });
+    } catch (error) {
+      console.error('Error copying message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to copy message. Please try again.',
+      });
+    }
+  };
 
   return (
     <div className="w-full" key={message.id}>
@@ -551,6 +630,46 @@ function ChatMessageItem({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            <DropdownMenu>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20 focus-visible:ring-2 focus-visible:ring-offset-2',
+                          isSender
+                            ? 'text-[hsl(var(--foreground)_/_0.85)] dark:text-purple-300'
+                            : 'text-[hsl(var(--muted-foreground))]',
+                        )}
+                        aria-label="Message options"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={6}>
+                    More options
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={handleCopyMessage}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  <span>Copy message</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleReportMessage}
+                  disabled={isReporting}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Flag className="mr-2 h-4 w-4" />
+                  <span>Report message</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

@@ -38,7 +38,7 @@ export default function ImageUploader({
   const [localPreview, setLocalPreview] = useState<string>('');
   const [files, setFiles] = useState<File[] | undefined>(undefined);
 
-  // Seed preview when receiving an existing File value
+  // Seed preview when receiving an existing File value or string URL
   useEffect(() => {
     if (typeof File !== 'undefined' && value instanceof File) {
       const reader = new FileReader();
@@ -48,7 +48,7 @@ export default function ImageUploader({
       };
       reader.readAsDataURL(value);
     } else if (typeof value === 'string') {
-      setLocalPreview('');
+      setLocalPreview(value);
     } else if (!value) {
       setLocalPreview('');
       setFiles(undefined);
@@ -59,81 +59,73 @@ export default function ImageUploader({
     <div className={className}>
       {label && <p className="text-sm font-medium mb-2">{label}</p>}
       <div className="flex flex-col items-center gap-4">
-        {(value && typeof value === 'string') || localPreview ? (
-          <div className="relative">
-            <Image
-              src={typeof value === 'string' ? value : localPreview}
-              alt={label || 'Image'}
-              width={260}
-              height={160}
-              className="rounded-lg object-contain border shadow-sm"
-            />
-            <Button
-              type="button"
-              size="icon"
-              variant="secondary"
-              className="absolute top-2 right-2 rounded-full shadow"
-              onClick={() => {
-                onChange(null);
-                setLocalPreview('');
-                setFiles(undefined);
-              }}
-              aria-label="Change image"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          </div>
-        ) : (
-          <Dropzone
-            maxSize={maxSize}
-            minSize={minSize}
-            maxFiles={maxFiles}
-            accept={accept}
-            src={files}
-            onDrop={async (accepted) => {
-              const original = accepted?.[0];
-              if (!original) {
-                setFiles(undefined);
-                setLocalPreview('');
-                return;
+        <Dropzone
+          maxSize={maxSize}
+          minSize={minSize}
+          maxFiles={maxFiles}
+          accept={accept}
+          src={files}
+          onDrop={async (accepted) => {
+            const original = accepted?.[0];
+            if (!original) {
+              setFiles(undefined);
+              setLocalPreview('');
+              onChange(null);
+              return;
+            }
+
+            const file = await compressImageFile(original, {
+              maxBytes: maxSize,
+            });
+
+            onChange(file);
+            setFiles([file]);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              if (typeof e.target?.result === 'string') {
+                setLocalPreview(e.target.result);
               }
-
-              const file = await compressImageFile(original, {
-                maxBytes: maxSize,
-              });
-
-              onChange(file);
-              setFiles([file]);
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                if (typeof e.target?.result === 'string') {
-                  setLocalPreview(e.target.result);
-                }
-              };
-              reader.readAsDataURL(file);
-            }}
-            onError={() => {}}
-            className="w-full"
-          >
-            <DropzoneEmptyState />
-            <DropzoneContent>
-              {localPreview && (
+            };
+            reader.readAsDataURL(file);
+          }}
+          onError={() => {}}
+          className="w-full"
+        >
+          <DropzoneEmptyState />
+          <DropzoneContent>
+            {localPreview && (
+              <div className="relative w-full group">
                 <div
                   className={`relative w-full`}
                   style={{ height: `${previewHeight}px` }}
                 >
                   <Image
                     alt="Preview"
-                    className="absolute top-0 left-0 h-full w-full object-cover"
+                    className="absolute top-0 left-0 h-full w-full object-cover rounded-lg"
                     src={localPreview}
                     width={260}
                     height={260}
                   />
                 </div>
-              )}
-            </DropzoneContent>
-          </Dropzone>
-        )}
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="secondary"
+                  className="absolute top-2 right-2 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(null);
+                    setLocalPreview('');
+                    setFiles(undefined);
+                  }}
+                  aria-label="Remove image"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </DropzoneContent>
+        </Dropzone>
       </div>
     </div>
   );
