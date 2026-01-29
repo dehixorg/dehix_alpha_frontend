@@ -30,13 +30,15 @@ export function useDashboardTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'profile-completion',
       title: 'Profile completion',
       text: 'Complete your profile to unlock more features.',
       attachTo: { element: '[data-tour="profile-completion"]', on: 'bottom' },
       buttons: [
-        { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
       ],
     });
@@ -70,6 +72,12 @@ export function useDashboardTour(isReady: boolean) {
     });
 
     tourRef.current = tour;
+
+  return () => {
+    tourRef.current?.cancel();
+    tourRef.current = null;
+    dispatch(clearTour());
+  };
   }, [dispatch]);
 
   useEffect(() => {
@@ -79,7 +87,7 @@ export function useDashboardTour(isReady: boolean) {
     if (mode !== 'page') return;
     if (target !== 'dashboard') return;
 
-    if (el('[data-tour="sidebar"]') && el('[data-tour="profile-completion"]')) {
+    if (el('[data-tour="profile-completion"]')) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

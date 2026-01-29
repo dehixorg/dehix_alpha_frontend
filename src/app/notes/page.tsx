@@ -15,7 +15,6 @@ import { CreateNoteDialog } from '@/components/shared/CreateNoteDialog';
 import EmptyState from '@/components/shared/EmptyState';
 import NotesLayout from '@/components/layout/NotesLayout';
 import { useNotesTour } from '@/components/tour/useNotesTour';
-import useNotes from '@/hooks/useNotes';
 
 const Notes = () => {
   // Get userId from Redux

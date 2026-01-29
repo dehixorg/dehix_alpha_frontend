@@ -65,7 +65,7 @@ const Header: React.FC<HeaderProps> = ({
   const PAGE_TOUR_ROUTE_MAP: { path: string; target: TourTarget }[] = [
     { path: '/freelancer/project/current', target: 'current-projects' },
     { path: '/freelancer/interviewer/profile', target: 'interviewer-profile' },
-    { path: '/freelancer/interviewee/current', target: 'interviewee' },
+    { path: '/freelancer/interviewee', target: 'interviewee' },
     { path: '/freelancer/oracleDashboard', target: 'oracle-dashboard' },
     { path: '/freelancer/market', target: 'market' },
     { path: '/freelancer/talent', target: 'talent' },

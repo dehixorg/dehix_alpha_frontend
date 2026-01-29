@@ -1,8 +1,8 @@
+@import "shepherd.js/dist/css/shepherd.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "shepherd.js/dist/css/shepherd.css";
-
 
 @keyframes loopScroll {
   from {
@@ -222,9 +222,6 @@
   @apply bg-gradient-to-bl from-background/0 via-primary/5 to-primary/20;
 }
 
-
-/* ===== Shepherd css ===== */
-
 .shepherd-theme-custom .shepherd-content {
   background: hsl(var(--popover));
   color: hsl(var(--popover-foreground));
@@ -238,8 +235,6 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
 }
 
-/* ---------------- Header ---------------- */
-
 .shepherd-theme-custom .shepherd-header {
   background: hsl(var(--popover));
   border-bottom: 1px solid hsl(var(--border));
@@ -252,16 +247,12 @@
   font-size: 0.95rem;
 }
 
-/* ---------------- Body ---------------- */
-
 .shepherd-theme-custom .shepherd-text {
   color: hsl(var(--muted-foreground));
   padding: 12px 14px 0;
   font-size: 0.9rem;
   line-height: 1.35rem;
 }
-
-/* ---------------- Footer / Buttons ---------------- */
 
 .shepherd-theme-custom .shepherd-footer {
   background: hsl(var(--popover));
@@ -291,8 +282,6 @@
   border-color: hsl(var(--primary));
 }
 
-/* ---------------- Modal Overlay ---------------- */
-
 .shepherd-modal-overlay-container.shepherd-modal-is-visible {
   background: rgba(0, 0, 0, 0.45);
 }
@@ -301,28 +290,23 @@
   background: rgba(0, 0, 0, 0.6);
 }
 
-/* ---------------- Target Highlight ---------------- */
-
 .shepherd-enabled.shepherd-target {
   box-shadow:
     0 0 0 3px hsl(var(--primary) / 0.28),
     0 12px 30px rgba(0, 0, 0, 0.18);
 }
 
-/* Tooltip container MUST NOT clip arrow */
 .shepherd-theme-custom.shepherd-element {
   background: transparent !important;
   border-radius: 10px;
 }
 
-/* Arrow container */
 .shepherd-theme-custom .shepherd-arrow {
   width: 12px;
   height: 12px;
   z-index: 10;
 }
 
-/* Arrow shape */
 .shepherd-theme-custom .shepherd-arrow::before {
   content: '';
   position: absolute;
@@ -331,8 +315,6 @@
   background: hsl(var(--popover));
   transform: rotate(45deg);
 }
-
-/* ================= ARROW POSITION (VISUALLY CORRECT) ================= */
 
 .shepherd-theme-custom[data-popper-placement^='top'] .shepherd-arrow {
   bottom: -4px;
@@ -349,9 +331,6 @@
 .shepherd-theme-custom[data-popper-placement^='right'] .shepherd-arrow {
   left: -4px;
 }
-
-
-/* ---------------- Arrow Shadow ---------------- */
 
 .shepherd-theme-custom .shepherd-arrow {
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.18));

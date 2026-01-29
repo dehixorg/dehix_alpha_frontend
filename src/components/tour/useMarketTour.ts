@@ -36,6 +36,9 @@ export function useMarketTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'pm-market',
       title: 'Marketplace',
@@ -141,6 +144,12 @@ export function useMarketTour(isReady: boolean) {
     });
 
     tourRef.current = tour;
+
+    return () => {
+      tourRef.current?.cancel();
+      tourRef.current = null;
+      dispatch(clearTour());
+    };
   }, [dispatch]);
 
   useEffect(() => {

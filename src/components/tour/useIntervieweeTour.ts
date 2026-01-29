@@ -30,6 +30,9 @@ export function useIntervieweeTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'interviewee',
       title: 'Interviewee Profile',
@@ -48,13 +51,18 @@ export function useIntervieweeTour(isReady: boolean) {
     });
 
     tourRef.current = tour;
+
+    return () => {
+      tourRef.current?.cancel();
+      tourRef.current = null;
+      dispatch(clearTour());
+    };
   }, [dispatch]);
 
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
 
-    // ✅ page-only
     if (mode !== 'page') return;
     if (target !== 'interviewee') return;
 

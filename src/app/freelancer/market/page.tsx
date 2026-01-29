@@ -38,11 +38,15 @@ const Market: React.FC = () => {
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const customEvent = e as CustomEvent<'projects' | 'talent'>;
-      if (!customEvent.detail) return;
+    const customEvent = e as CustomEvent<unknown>;
 
+    if (
+      customEvent.detail === 'projects' ||
+      customEvent.detail === 'talent'
+    ) {
       setActiveTab(customEvent.detail);
-    };
+    }
+  };
 
     const root = document.querySelector('[data-tour="market-root"]');
     root?.addEventListener('market:switch-tab', handler);

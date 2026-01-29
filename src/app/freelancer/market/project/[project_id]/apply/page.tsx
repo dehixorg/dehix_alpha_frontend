@@ -104,7 +104,6 @@ const Page = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [project, setProject] = useState<ProjectData | null>(null);
-  const user = useSelector((state: RootState) => state.user);
 
   // Helper function to format budget display
   const formatBudgetDisplay = (project: ProjectData) => {

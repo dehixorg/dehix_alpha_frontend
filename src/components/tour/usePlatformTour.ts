@@ -30,6 +30,9 @@ export function usePlatformTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     //header
     tour.addStep({
       id: 'header-search',
@@ -212,6 +215,12 @@ export function usePlatformTour(isReady: boolean) {
     });
 
     tourRef.current = tour;
+
+    return () => {
+      tourRef.current?.cancel();
+      tourRef.current = null;
+      dispatch(clearTour());
+    };
   }, [dispatch]);
 
   useEffect(() => {
@@ -220,7 +229,6 @@ export function usePlatformTour(isReady: boolean) {
     if (mode !== 'platform') return;
     if (target !== 'navigation') return;
 
-    // minimal critical anchors
     if (
       el('[data-tour="search"]') &&
       el('[data-tour="header-profile"]') &&

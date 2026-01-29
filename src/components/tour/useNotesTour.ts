@@ -47,6 +47,12 @@ export function useNotesTour(isReady: boolean) {
     });
 
     tourRef.current = tour;
+
+    return () => {
+      tourRef.current?.cancel();
+      tourRef.current = null;
+      dispatch(clearTour());
+    };
   }, [dispatch]);
 
   useEffect(() => {

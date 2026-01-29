@@ -35,7 +35,7 @@ export function useInterviewerProfileTour(isReady: boolean) {
       title: 'Interview Profile',
       scrollTo: false,
       text: 'Manage your interview profile, active interviews, bids, and history here.',
-      attachTo: { element: '[data-tour="interviewer-profile"]' },
+      attachTo: { element: '[data-tour="interviewer-profile"]', on: 'bottom' },
       buttons: [
         {
           text: 'Got it',
@@ -48,6 +48,12 @@ export function useInterviewerProfileTour(isReady: boolean) {
     });
 
     tourRef.current = tour;
+
+    return () => {
+      tourRef.current?.cancel();
+      tourRef.current = null;
+      dispatch(clearTour());
+    };
   }, [dispatch]);
 
   useEffect(() => {
