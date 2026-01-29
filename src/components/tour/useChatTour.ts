@@ -18,43 +18,42 @@ export function useChatTour(isReady: boolean) {
   const dispatch = useDispatch();
 
   useEffect(() => {
-  if (tourRef.current) return;
+    if (tourRef.current) return;
 
-  const tour = new Shepherd.Tour({
-    useModalOverlay: true,
-    defaultStepOptions: {
-      arrow: true,
-      cancelIcon: { enabled: true },
-      scrollTo: { behavior: 'smooth', block: 'center' },
-      classes: 'shepherd-theme-custom',
-    },
-  });
-
-  tour.addStep({
-    id: 'chat',
-    title: 'Chat',
-    text: 'This is the chat section where you communicate with others.',
-    attachTo: { element: '[data-tour="chat"]', on: 'right' },
-    buttons: [
-      {
-        text: 'Got it',
-        action: () => {
-          tour.complete();
-          dispatch(clearTour());
-        },
+    const tour = new Shepherd.Tour({
+      useModalOverlay: true,
+      defaultStepOptions: {
+        arrow: true,
+        cancelIcon: { enabled: true },
+        scrollTo: { behavior: 'smooth', block: 'center' },
+        classes: 'shepherd-theme-custom',
       },
-    ],
-  });
+    });
 
-  tourRef.current = tour;
+    tour.addStep({
+      id: 'chat',
+      title: 'Chat',
+      text: 'This is the chat section where you communicate with others.',
+      attachTo: { element: '[data-tour="chat"]', on: 'right' },
+      buttons: [
+        {
+          text: 'Got it',
+          action: () => {
+            tour.complete();
+            dispatch(clearTour());
+          },
+        },
+      ],
+    });
 
-  return () => {
-    tourRef.current?.cancel();
-    tourRef.current = null;
-    dispatch(clearTour());
-  };
-}, [dispatch]);
+    tourRef.current = tour;
 
+    return () => {
+      tourRef.current?.cancel();
+      tourRef.current = null;
+      dispatch(clearTour());
+    };
+  }, [dispatch]);
 
   useEffect(() => {
     if (!trigger) return;

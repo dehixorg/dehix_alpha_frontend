@@ -38,9 +38,7 @@ export function useDashboardTour(isReady: boolean) {
       title: 'Profile completion',
       text: 'Complete your profile to unlock more features.',
       attachTo: { element: '[data-tour="profile-completion"]', on: 'bottom' },
-      buttons: [
-        { text: 'Next', action: tour.next },
-      ],
+      buttons: [{ text: 'Next', action: tour.next }],
     });
 
     tour.addStep({
@@ -73,11 +71,11 @@ export function useDashboardTour(isReady: boolean) {
 
     tourRef.current = tour;
 
-  return () => {
-    tourRef.current?.cancel();
-    tourRef.current = null;
-    dispatch(clearTour());
-  };
+    return () => {
+      tourRef.current?.cancel();
+      tourRef.current = null;
+      dispatch(clearTour());
+    };
   }, [dispatch]);
 
   useEffect(() => {
