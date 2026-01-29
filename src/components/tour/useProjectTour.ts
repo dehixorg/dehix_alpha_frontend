@@ -30,6 +30,9 @@ export function useProjectTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'current-projects',
       title: 'Your Projects',

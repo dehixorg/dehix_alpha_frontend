@@ -30,6 +30,9 @@ export function useChatTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'chat',
       title: 'Chat',

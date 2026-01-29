@@ -30,6 +30,9 @@ export function useInterviewerProfileTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'interviewer-profile',
       title: 'Interview Profile',

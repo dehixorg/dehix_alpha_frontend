@@ -30,6 +30,9 @@ export function useTalentTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'talent',
       title: 'Talent Marketplace',

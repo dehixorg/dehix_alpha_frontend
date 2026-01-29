@@ -30,6 +30,9 @@ export function useInvitationTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'project-invitations',
       title: 'Project Invitations',

@@ -30,6 +30,9 @@ export function useOracleTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'oracle',
       title: 'Oracle Dashboard',

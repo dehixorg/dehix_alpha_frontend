@@ -229,11 +229,26 @@ export function usePlatformTour(isReady: boolean) {
     if (mode !== 'platform') return;
     if (target !== 'navigation') return;
 
-    if (
-      el('[data-tour="search"]') &&
-      el('[data-tour="header-profile"]') &&
-      el('[data-tour="sidebar"]')
-    ) {
+    const requiredSelectors = [
+      '[data-tour="search"]',
+      '[data-tour="header-connects"]',
+      '[data-tour="header-notifications"]',
+      '[data-tour="header-profile"]',
+      '[data-tour="sidebar"]',
+      '[data-tour="nav-dashboard"]',
+      '[data-tour="nav-market"]',
+      '[data-tour="nav-invitations"]',
+      '[data-tour="nav-projects"]',
+      '[data-tour="nav-interviewer"]',
+      '[data-tour="nav-interviewee"]',
+      '[data-tour="nav-oracle"]',
+      '[data-tour="nav-talent"]',
+      '[data-tour="nav-leaderboard"]',
+      '[data-tour="nav-chat"]',
+      '[data-tour="nav-notes"]',
+    ];
+
+    if (requiredSelectors.every((s) => el(s))) {
       tourRef.current?.start();
       dispatch(clearTour());
     }

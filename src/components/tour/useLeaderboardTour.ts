@@ -30,6 +30,9 @@ export function useLeaderboardTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'leaderboard',
       title: 'Leaderboard',

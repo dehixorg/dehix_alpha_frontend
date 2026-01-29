@@ -30,6 +30,9 @@ export function useNotesTour(isReady: boolean) {
       },
     });
 
+    tour.on('cancel', () => dispatch(clearTour()));
+    tour.on('complete', () => dispatch(clearTour()));
+
     tour.addStep({
       id: 'notes',
       title: 'Notes',
