@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, CheckCircle, Clock, HelpCircle } from 'lucide-react';
+import { Activity, CheckCircle, Clock } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -28,17 +28,14 @@ import {
   CardHeader,
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import DashboardTour from '@/components/tour/DashboardTour';
+import { useDashboardTour } from '@/components/tour/useDashboardTour';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
-
-  // ✅ Shepherd: control tour start
-  const [startTourSignal, setStartTourSignal] = useState(0);
+  useDashboardTour(true);
 
   const fetchProjectData = async () => {
     setLoading(true);
@@ -80,15 +77,9 @@ export default function Dashboard() {
   const revenueSpanClass =
     String(totalRevenueValue).length > 12 ? 'lg:col-span-2' : '';
 
-  useEffect(() => {
-    const key = `tour:dashboard:done:${user?.uid || 'guest'}`;
-    const done = localStorage.getItem(key);
-    if (!done) setStartTourSignal((x) => x + 1);
-  }, [user?.uid]);
-
   return (
-    <div className="flex min-h-screen w-full flex-col" data-tour="page">
-      {/* ✅ Anchor: Sidebar */}
+    <div className="flex min-h-screen w-full flex-col">
+      {/* Anchor: Sidebar */}
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -96,8 +87,8 @@ export default function Dashboard() {
       />
 
       <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
-        {/* ✅ Anchor: Header */}
-        <div data-tour="header">
+        {/* Anchor: Header Components on header.tsx*/}
+        <div>
           <Header
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -108,24 +99,12 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* ✅ Founder demo button */}
-        <div className="px-4 sm:px-6 pt-2 flex justify-end">
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => setStartTourSignal((x) => x + 1)}
-          >
-            <HelpCircle className="h-4 w-4" />
-            Start Tour
-          </Button>
-        </div>
-
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3"
           data-tour="main"
         >
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            {/* ✅ Anchor: Welcome */}
+            {/* Anchor: Welcome */}
             <Card
               className="bg-gradient shadow-sm overflow-hidden"
               data-tour="welcome"
@@ -161,7 +140,7 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
 
-              {/* ✅ Anchor: Profile completion */}
+              {/* Anchor: Profile completion */}
               <div data-tour="profile-completion">
                 {user?.uid ? (
                   <ProfileCompletion userId={user.uid} />
@@ -174,7 +153,7 @@ export default function Dashboard() {
               </div>
             </Card>
 
-            {/* ✅ Anchor: Stats */}
+            {/* Anchor: Stats */}
             <div
               className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 grid-flow-row-dense"
               data-tour="stats"
@@ -243,20 +222,17 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* ✅ Anchor: Projects */}
+            {/* Anchor: Projects */}
             <div data-tour="projects">
               <ProjectTableCard projects={projects} loading={loading} />
             </div>
           </div>
 
-          {/* ✅ Anchor: Interviews */}
+          {/* Anchor: Interviews */}
           <div data-tour="interviews">
             <InterviewsSection />
           </div>
         </main>
-
-        {/* ✅ Tour runner */}
-        <DashboardTour startSignal={startTourSignal} isReady={!loading} />
       </div>
     </div>
   );

@@ -1,11 +1,14 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSelector } from 'react-redux';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProjectMarketTab from '@/components/market/ProjectMarketTab';
 import TalentMarketTab from '@/components/market/TalentMarketTab';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
+import { useMarketTour } from '@/components/tour/useMarketTour';
+import type { RootState } from '@/lib/store';
 
 const Market: React.FC = () => {
   const router = useRouter();
@@ -16,6 +19,8 @@ const Market: React.FC = () => {
       ? tabParam
       : 'projects';
   });
+  const user = useSelector((state: RootState) => state.user);
+  useMarketTour(true);
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -31,6 +36,22 @@ const Market: React.FC = () => {
     }
   }, [activeTab, router, searchParams]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<'projects' | 'talent'>;
+      if (!customEvent.detail) return;
+
+      setActiveTab(customEvent.detail);
+    };
+
+    const root = document.querySelector('[data-tour="market-root"]');
+    root?.addEventListener('market:switch-tab', handler);
+
+    return () => {
+      root?.removeEventListener('market:switch-tab', handler);
+    };
+  }, []);
+
   return (
     <FreelancerAppLayout
       active="Market"
@@ -41,16 +62,25 @@ const Market: React.FC = () => {
       ]}
       mainClassName="p-4 sm:px-8"
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        data-tour="market-root"
+        data-market-active={activeTab}
+      >
+        <TabsList className="mb-4" data-tour="market-tabs">
           <TabsTrigger value="projects">Project Market</TabsTrigger>
           <TabsTrigger value="talent">Talent Market</TabsTrigger>
         </TabsList>
         <TabsContent value="projects">
-          <ProjectMarketTab />
+          <div data-tour="market-projects-root">
+            <ProjectMarketTab />
+          </div>
         </TabsContent>
         <TabsContent value="talent">
-          <TalentMarketTab />
+          <div data-tour="market-talent-root">
+            <TalentMarketTab />
+          </div>
         </TabsContent>
       </Tabs>
     </FreelancerAppLayout>

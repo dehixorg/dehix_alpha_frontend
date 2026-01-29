@@ -104,6 +104,7 @@ const Page = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [project, setProject] = useState<ProjectData | null>(null);
+  const user = useSelector((state: RootState) => state.user);
 
   // Helper function to format budget display
   const formatBudgetDisplay = (project: ProjectData) => {
@@ -375,7 +376,10 @@ const Page = () => {
           className="space-y-8"
         >
           {/* Header Section */}
-          <div className="bg-gradient p-6 rounded-lg border">
+          <div
+            className="bg-gradient p-6 rounded-lg border"
+            data-tour="project-header"
+          >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="space-y-2">
                 <div className="flex flex-col space-y-1">
@@ -411,6 +415,7 @@ const Page = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Button
+                  data-tour="project-save"
                   variant="outline"
                   size="sm"
                   disabled={saving || !project}
@@ -436,7 +441,7 @@ const Page = () => {
             {/* Left Column - Project Details */}
             <div className="lg:col-span-6 space-y-6">
               {/* Project Overview Card */}
-              <Card>
+              <Card data-tour="project-overview">
                 <CardHeader className="bg-gradient p-6 rounded-t-lg border">
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg">Project Overview</CardTitle>
@@ -566,7 +571,10 @@ const Page = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="border-t pt-6">
+                  <div
+                    className="border-t pt-6"
+                    data-tour="project-description"
+                  >
                     <p className="text-muted-foreground leading-relaxed">
                       {project?.description || 'No description provided.'}
                     </p>
@@ -576,16 +584,21 @@ const Page = () => {
 
               {/* Application Form */}
               {project && (
-                <ProjectApplicationForm
-                  project={project}
-                  isLoading={isLoading}
-                  onCancel={handleCancel}
-                />
+                <div data-tour="project-apply-form">
+                  <ProjectApplicationForm
+                    project={project}
+                    isLoading={isLoading}
+                    onCancel={handleCancel}
+                  />
+                </div>
               )}
             </div>
 
             {/* Right Column - Application & Details */}
-            <div className="lg:col-span-4 space-y-6">
+            <div
+              className="lg:col-span-4 space-y-6"
+              data-tour="project-requirements"
+            >
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-emerald-500" />
                 <CardTitle className="text-lg">Requirements & Skills</CardTitle>

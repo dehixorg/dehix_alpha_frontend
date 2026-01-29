@@ -29,6 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import EmptyState from '@/components/shared/EmptyState';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
+import { useProjectTour } from '@/components/tour/useProjectTour';
 
 // Section header component
 function SectionHeader({
@@ -220,6 +221,7 @@ export default function ProjectPage() {
   const [projectType, setProjectType] = useState('FREELANCER');
   const [activeTab, setActiveTab] = useState('current');
   const [projectsRefreshTrigger, setProjectsRefreshTrigger] = useState(0);
+  useProjectTour(true);
 
   // Listen for task assignment updates
   useEffect(() => {
@@ -268,7 +270,7 @@ export default function ProjectPage() {
       containerClassName="flex min-h-screen w-full flex-col pb-10"
       mainClassName="flex-1"
     >
-      <div className="w-full p-4 sm:px-6 sm:py-2">
+      <div className="w-full p-4 sm:px-6 sm:py-2" data-tour="current-projects">
         <Card className="w-full">
           <CardHeader className="space-y-1 bg-gradient">
             <CardTitle className="text-2xl font-bold tracking-tight">

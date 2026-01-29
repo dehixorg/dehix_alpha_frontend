@@ -85,6 +85,7 @@ import { Verified } from 'lucide-react';
 import { ThemeToggle } from '../shared/themeToggle';
 //import { ChatList } from '../shared/chatList';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { usePlatformTour } from '../tour/usePlatformTour';
 
 import {
   Tooltip,
@@ -104,6 +105,9 @@ export interface MenuItem {
   href?: string;
   icon: React.ReactNode;
   label: string;
+
+  tourId?: string;
+
   subItems?: {
     href: string;
     icon: React.ReactNode;
@@ -143,6 +147,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   };
 
   const finalMenuItemsTop = [...menuItemsTop];
+  usePlatformTour(true);
 
   if (
     isKycCheck &&
@@ -261,6 +266,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
             <Link
               href={item.href ? item.href : ''}
               onClick={() => setActive(item.label)}
+              data-tour={item.tourId}
               className={`flex h-9 w-9 items-center justify-center rounded-lg ${
                 item.label === active || item.label === 'Dehix'
                   ? item.label === 'Dehix'
