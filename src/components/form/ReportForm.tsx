@@ -89,52 +89,33 @@ export function ReportForm({
       ) as File[];
       const failed: { index: number; name: string; error: string }[] = [];
 
-      // Upload images if any are selected
       if (images.length > 0) {
         for (let i = 0; i < images.length; i++) {
           const file = images[i];
           try {
-            // Try using the report service upload
             const response = await apiHelperService.uploadReportImage(file);
-
-            // Check if response has the correct structure
             if (response?.data?.data) {
               const imageData = response.data.data;
-
-              // Validate required fields
               if (imageData.Location && imageData.Key && imageData.Bucket) {
                 imageMetaArray.push({
                   Location: imageData.Location,
                   Key: imageData.Key,
                   Bucket: imageData.Bucket,
                 });
-              } else {
-                console.warn(
-                  `Image ${i + 1} missing required fields:`,
-                  imageData,
-                );
               }
-            } else {
-              console.warn(
-                `Image ${i + 1} invalid response structure:`,
-                response,
-              );
             }
           } catch (uploadError: any) {
             const errDetail =
               uploadError?.response?.data?.message ||
               uploadError?.message ||
               JSON.stringify(uploadError?.response?.data || uploadError);
-            console.error(`Failed to upload image ${i + 1}:`, uploadError);
             failed.push({ index: i, name: file.name, error: errDetail });
             notifyError(
               `Failed to upload image ${i + 1}${file?.name ? ` (${file.name})` : ''}: ${errDetail}`,
               'Image Upload Failed',
             );
-            // Continue with other images instead of failing completely
           }
         }
-
         setFailedUploads(failed);
       }
 
@@ -147,7 +128,6 @@ export function ReportForm({
 
       await apiHelperService.createReport(finalPayload);
 
-      // Reset form after successful submission
       form.reset();
       setImage1(null);
       setImage2(null);
@@ -155,8 +135,6 @@ export function ReportForm({
 
       await onSubmitted?.();
     } catch (error: any) {
-      console.error('Failed to submit report:', error);
-      console.error('Error details:', error?.response?.data || error);
       const details =
         error?.response?.data?.message ||
         error?.message ||
@@ -177,9 +155,7 @@ export function ReportForm({
     <div className="rounded-lg border-none shadow-none p-1">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {/* 🧾 Subject, Report Type & Role in One Row */}
           <div className="flex flex-wrap gap-4">
-            {/* Subject - 50% */}
             <div className="flex-[2] min-w-[200px]">
               <FormField
                 control={form.control}
@@ -205,7 +181,6 @@ export function ReportForm({
               />
             </div>
 
-            {/* Report Type - 25% */}
             <div className="flex-1 min-w-[150px]">
               <FormField
                 control={form.control}
@@ -219,7 +194,6 @@ export function ReportForm({
                       disabled
                     >
                       <FormControl>
-                        {/* CHANGE 1: Replaced `bg-gray-100` with `bg-muted` for disabled inputs */}
                         <SelectTrigger className="bg-muted cursor-not-allowed h-9">
                           <SelectValue />
                         </SelectTrigger>
@@ -236,7 +210,6 @@ export function ReportForm({
               />
             </div>
 
-            {/* Report Role - 25% */}
             <div className="flex-1 min-w-[150px]">
               <FormField
                 control={form.control}
@@ -250,7 +223,6 @@ export function ReportForm({
                       disabled
                     >
                       <FormControl>
-                        {/* CHANGE 1 (repeated): Replaced `bg-gray-100` with `bg-muted` */}
                         <SelectTrigger className="bg-muted cursor-not-allowed h-9">
                           <SelectValue />
                         </SelectTrigger>
@@ -268,7 +240,6 @@ export function ReportForm({
             </div>
           </div>
 
-          {/* 📄 Description */}
           <FormField
             control={form.control}
             name="description"
@@ -287,7 +258,6 @@ export function ReportForm({
             )}
           />
 
-          {/* 🔒 Hidden reportedId */}
           <FormField
             control={form.control}
             name="reportedId"
@@ -300,7 +270,6 @@ export function ReportForm({
             )}
           />
 
-          {/* 🖼 Image Upload */}
           <FormItem>
             <Label>Upload Screenshots (up to 3)</Label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -334,7 +303,6 @@ export function ReportForm({
             </FormDescription>
           </FormItem>
 
-          {/* 🚀 Submit Button */}
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting...' : 'Submit Report'}
           </Button>
