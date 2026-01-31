@@ -8,7 +8,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
-export function useChatTour(isReady: boolean) {
+function el(selector: string) {
+  return document.querySelector(selector);
+}
+
+export function useNotesTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const userType = useSelector((s: RootState) => s.user.type);
@@ -30,47 +34,27 @@ export function useChatTour(isReady: boolean) {
     tour.on('cancel', () => dispatch(clearTour()));
     tour.on('complete', () => dispatch(clearTour()));
 
-    if (userType === 'business') {
-      tour.addStep({
-        id: 'chat-main',
-        title: 'Chat section',
-        text: 'This is where your conversations happen. Select a chat to read messages, reply, and collaborate in real time.',
-        attachTo: {
-          element: '[data-tour="chat-main"]',
-          on: 'top',
-        },
-        buttons: [
-          {
-            text: 'Got it',
-            action: () => {
-              tour.complete();
-              dispatch(clearTour());
-            },
+    tour.addStep({
+      id: 'notes',
+      title: 'Notes',
+      text:
+        userType === 'business'
+          ? 'Use this space to keep business notes, ideas, and important references in one place.'
+          : 'Use this section to write down ideas, reminders, and personal notes.',
+      attachTo: {
+        element: '[data-tour="notes"]',
+        on: 'top',
+      },
+      buttons: [
+        {
+          text: 'Got it',
+          action: () => {
+            tour.complete();
+            dispatch(clearTour());
           },
-        ],
-      });
-    }
-
-    if (userType === 'freelancer') {
-      //   tour.addStep({
-      //     id: 'freelancer-invitation',
-      //     title: 'Project Invitations',
-      //     text: 'View and respond to project invitations sent to you by clients.',
-      //     attachTo: {
-      //       element: '[data-tour="freelancer-invitation"]',
-      //       on: 'top',
-      //     },
-      //     buttons: [
-      //       {
-      //         text: 'Got it',
-      //         action: () => {
-      //           tour.complete();
-      //           dispatch(clearTour());
-      //         },
-      //       },
-      //     ],
-      //   });
-    }
+        },
+      ],
+    });
 
     tourRef.current = tour;
 
@@ -85,8 +69,10 @@ export function useChatTour(isReady: boolean) {
     if (!trigger) return;
     if (!isReady) return;
     if (mode !== 'page') return;
-    if (target !== 'chat') return;
+    if (target !== 'notes') return;
 
-    tourRef.current?.start();
+    if (el('[data-tour="notes"]')) {
+      tourRef.current?.start();
+    }
   }, [trigger, mode, target, isReady, userType]);
 }

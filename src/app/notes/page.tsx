@@ -14,13 +14,14 @@ import { Card } from '@/components/ui/card';
 import { CreateNoteDialog } from '@/components/shared/CreateNoteDialog';
 import EmptyState from '@/components/shared/EmptyState';
 import NotesLayout from '@/components/layout/NotesLayout';
-import { useNotesTour } from '@/components/tour/useNotesTour';
+import { useNotesTour } from '@/components/tour/shared/useNotesTour';
 
 const Notes = () => {
   // Get userId from Redux
   const user = useSelector((state: any) => state.user);
   const userId = user.uid;
   const { notes, isLoading, fetchNotes, setNotes } = useFetchNotes(userId);
+  useNotesTour(true);
 
   useNotesTour(true);
 

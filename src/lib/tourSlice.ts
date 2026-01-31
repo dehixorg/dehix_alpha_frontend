@@ -1,6 +1,8 @@
+// src/lib/tourSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type TourMode = 'platform' | 'page';
+
 export type TourTarget =
   | 'dashboard'
   | 'market'

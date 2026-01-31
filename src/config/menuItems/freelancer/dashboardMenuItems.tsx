@@ -37,21 +37,25 @@ export const menuItemsTop: MenuItem[] = [
     href: '/dashboard/freelancer',
     icon: <Home className="h-5 w-5" />,
     label: 'Dashboard',
+    tourId: 'nav-dashboard',
   },
   {
     href: '/freelancer/market',
     icon: <Store className="h-5 w-5" />,
     label: 'Market',
+    tourId: 'nav-market',
   },
   {
     href: '/project-invitations',
     icon: <SendHorizontal className="h-5 w-5" />,
     label: 'Project Invitations',
+    tourId: 'nav-invitations',
   },
   {
     href: '/freelancer/project/current',
     icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
+    tourId: 'nav-projects',
   },
   {
     href: '#',
@@ -62,36 +66,43 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/interviewer',
     icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
+    tourId: 'nav-interviewer',
   },
   {
     href: '/freelancer/interviewee/current',
     icon: <CalendarClock className="h-5 w-5" />,
     label: 'Schedule Interviews',
+    tourId: 'nav-interviewee',
   },
   {
     href: '/freelancer/oracleDashboard',
     icon: <ShieldCheck className="h-5 w-5" />,
     label: 'Oracle',
+    tourId: 'nav-oracle',
   },
   {
     href: '/freelancer/talent',
     icon: <Sparkles className="h-5 w-5" />,
     label: 'Talent',
+    tourId: 'nav-talent',
   },
   {
     href: '/freelancer/leaderboard',
     icon: <Trophy className="h-5 w-5" />,
     label: 'Leaderboard',
+    tourId: 'nav-leaderboard',
   },
   {
     href: '/chat',
     icon: <MessageSquare className="h-5 w-5" />,
     label: 'Chats',
+    tourId: 'nav-chat',
   },
   {
     href: '/notes',
     icon: <StickyNote className="h-5 w-5" />,
     label: 'Notes',
+    tourId: 'nav-notes',
   },
 ];
 

@@ -15,7 +15,7 @@ import { DisplayConnectsDialog } from '../shared/DisplayConnectsDialog';
 import { Input } from '../ui/input';
 
 import { startTour } from '@/lib/tourSlice';
-import TourMenu from '@/components/tour/TourMenu';
+import TourMenu from '@/components/tour/shared/TourMenu';
 import { RootState } from '@/lib/store';
 import type { TourTarget } from '@/lib/tourSlice';
 
@@ -63,22 +63,28 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const PAGE_TOUR_ROUTE_MAP: { path: string; target: TourTarget }[] = [
-    { path: '/freelancer/project/current', target: 'current-projects' },
-    { path: '/freelancer/interviewer', target: 'interviewer-profile' },
-    { path: '/freelancer/interviewee', target: 'interviewee' },
-    { path: '/freelancer/oracleDashboard', target: 'oracle-dashboard' },
-    { path: '/freelancer/market', target: 'market' },
-    { path: '/freelancer/talent', target: 'talent' },
-    { path: '/freelancer/leaderboard', target: 'leaderboard' },
-    { path: '/dashboard/business', target: 'business-dashboard' },
-    { path: '/business/market', target: 'business-market' },
-    { path: '/business/projects', target: 'business-projects' },
-    { path: '/business/talent', target: 'business-talent' },
-    { path: '/project-invitations', target: 'project-invitations' },
-    { path: '/dashboard', target: 'dashboard' },
-    { path: '/chat', target: 'chat' },
-    { path: '/notes', target: 'notes' },
-  ];
+  // Freelancer
+  { path: '/freelancer/project/current', target: 'current-projects' },
+  { path: '/freelancer/interviewer', target: 'interviewer-profile' },
+  { path: '/freelancer/interviewee', target: 'interviewee' },
+  { path: '/freelancer/oracleDashboard', target: 'oracle-dashboard' },
+  { path: '/freelancer/market', target: 'market' },
+  { path: '/freelancer/talent', target: 'talent' },
+  { path: '/freelancer/leaderboard', target: 'leaderboard' },
+
+  // Business
+  { path: '/dashboard/business', target: 'business-dashboard' },
+  { path: '/business/market', target: 'business-market' },
+  { path: '/business/projects', target: 'business-projects' },
+  { path: '/business/talent', target: 'business-talent' },
+
+  // Shared
+  { path: '/project-invitations', target: 'project-invitations' },
+  { path: '/dashboard', target: 'dashboard' },
+  { path: '/chat', target: 'chat' },
+  { path: '/notes', target: 'notes' },
+];
+
 
   const getPageTarget = (): TourTarget | null => {
     return (

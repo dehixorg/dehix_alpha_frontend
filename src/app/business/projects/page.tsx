@@ -50,7 +50,7 @@ import { Card } from '@/components/ui/card';
 import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import EmptyState from '@/components/shared/EmptyState';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
-import { useBusinessProjectTour } from '@/components/tour/useBusinessProjectTour';
+import { useBusinessProjectTour } from '@/components/tour/business/useBusinessProjectTour';
 
 // Status configuration for table STATUS field type
 const PROJECT_STATUS_FORMATS = [

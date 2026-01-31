@@ -22,6 +22,7 @@ import {
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
 import Bids from '@/components/freelancer/interview/Bids';
 import { RootState } from '@/lib/store';
+import { useIntervieweeTour } from '@/components/tour/freelancer/useIntervieweeTour';
 
 export default function IntervieweePage() {
   const params = useParams();
@@ -31,6 +32,7 @@ export default function IntervieweePage() {
   // slug will be [] or ["current"], ["bids"], ["history"]
   const slug = Array.isArray(params?.slug) ? params.slug : [];
   const activeTab = slug[0] || 'current';
+  useIntervieweeTour(true);
 
   useEffect(() => {
     if (slug.length === 0) {
@@ -55,7 +57,7 @@ export default function IntervieweePage() {
           ]}
         />
         <main className="flex-1 px-4 sm:px-6 sm:py-2">
-          <div className="mx-auto w-full max-w-7xl">
+          <div className="mx-auto w-full max-w-7xl" data-tour="interviewee">
             <Card className="overflow-hidden">
               <CardHeader className="bg-gradient">
                 <CardTitle className="text-2xl font-bold tracking-tight">

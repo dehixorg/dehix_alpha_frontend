@@ -10,7 +10,7 @@ import FreelancerList from '@/components/business/market/FreelancerList';
 import { BusinessFilterSheet } from '@/components/business/market/BusinessFilterSheet';
 import BusinessFilterComponent from '@/components/business/market/BusinessFilterComponent';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
-import { useBusinessMarketTour } from '@/components/tour/useBusinessMarketTour';
+import { useBusinessMarketTour } from '@/components/tour/business/useBusinessMarketTour';
 
 export interface FilterState {
   location: string[];

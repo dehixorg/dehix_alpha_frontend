@@ -33,7 +33,8 @@ export function usePlatformTour(isReady: boolean) {
     tour.on('cancel', () => dispatch(clearTour()));
     tour.on('complete', () => dispatch(clearTour()));
 
-    //header
+    /* ================= HEADER ================= */
+
     tour.addStep({
       id: 'header-search',
       title: 'Global Search',
@@ -75,7 +76,8 @@ export function usePlatformTour(isReady: boolean) {
       ],
     });
 
-    //sidebar
+    /* ================= SIDEBAR ================= */
+
     tour.addStep({
       id: 'sidebar',
       title: 'Navigation Sidebar',
@@ -193,8 +195,8 @@ export function usePlatformTour(isReady: boolean) {
       '[data-tour="sidebar"]',
       '[data-tour="nav-dashboard"]',
       '[data-tour="nav-market"]',
-      '[data-tour="nav-invitations"]',
       '[data-tour="nav-projects"]',
+      '[data-tour="nav-invitations"]',
       '[data-tour="nav-talent"]',
       '[data-tour="nav-chat"]',
       '[data-tour="nav-notes"]',

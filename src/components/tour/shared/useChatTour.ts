@@ -8,7 +8,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
-export function useProjectInvitationTour(isReady: boolean) {
+function el(selector: string) {
+  return document.querySelector(selector);
+}
+
+export function useChatTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const userType = useSelector((s: RootState) => s.user.type);
@@ -32,12 +36,12 @@ export function useProjectInvitationTour(isReady: boolean) {
 
     if (userType === 'business') {
       tour.addStep({
-        id: 'business-invitation',
-        title: 'Project Invitations',
-        scrollTo: false,
-        text: 'Manage and track all your project invitations in one place. Review requests, respond quickly, and keep collaborations moving forward.',
+        id: 'chat-main',
+        title: 'Chats',
+        text:
+          'This is where you communicate with freelancers, discuss project details, and collaborate in real time.',
         attachTo: {
-          element: '[data-tour="business-invitation"]',
+          element: '[data-tour="chat-main"]',
           on: 'top',
         },
         buttons: [
@@ -54,11 +58,12 @@ export function useProjectInvitationTour(isReady: boolean) {
 
     if (userType === 'freelancer') {
       tour.addStep({
-        id: 'freelancer-invitation',
-        title: 'Project Invitations',
-        text: 'View and respond to project invitations sent to you by clients.',
+        id: 'chat-main',
+        title: 'Chats',
+        text:
+          'This is where you chat with clients, receive updates, and coordinate on projects.',
         attachTo: {
-          element: '[data-tour="freelancer-invitation"]',
+          element: '[data-tour="chat-main"]',
           on: 'top',
         },
         buttons: [
@@ -86,8 +91,10 @@ export function useProjectInvitationTour(isReady: boolean) {
     if (!trigger) return;
     if (!isReady) return;
     if (mode !== 'page') return;
-    if (target !== 'project-invitations') return;
+    if (target !== 'chat') return;
 
-    tourRef.current?.start();
+    if (el('[data-tour="chat-main"]')) {
+      tourRef.current?.start();
+    }
   }, [trigger, mode, target, isReady, userType]);
 }
