@@ -235,6 +235,19 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
 }
 
+.dark .shepherd-theme-custom .shepherd-header {
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.dark .shepherd-theme-custom .shepherd-arrow::before {
+  background: hsl(var(--background));
+}
+
+.dark .shepherd-theme-custom .shepherd-title {
+  color: hsl(var(--foreground));
+}
+
 .shepherd-theme-custom .shepherd-header {
   background: hsl(var(--popover));
   border-bottom: 1px solid hsl(var(--border));
@@ -338,4 +351,11 @@
 
 .dark .shepherd-theme-custom .shepherd-arrow {
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+}
+
+.dark .shepherd-theme-custom.shepherd-element
+  .shepherd-arrow::before {
+  background-color: hsl(var(--background)) !important;
+  box-shadow: 
+    0 0 0 1px hsl(var(--border)) inset;
 }
