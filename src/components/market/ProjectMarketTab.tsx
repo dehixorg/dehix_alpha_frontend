@@ -279,6 +279,21 @@ const ProjectMarketTab: React.FC = () => {
             if (jobRate > Number(appliedFilters.maxRate)) return false;
           }
 
+          // Apply bid-based filtering
+          const freelancerBidCount =
+            job.profiles?.filter((p: any) => bidProfiles.includes(p._id))
+              ?.length || 0;
+
+          // Rule 1: Hide single-profile projects if freelancer has already bid
+          if (job.profiles?.length === 1 && freelancerBidCount > 0) {
+            return false;
+          }
+
+          // Rule 2: Hide multi-profile projects if freelancer has bid on 3+ profiles
+          if ((job.profiles?.length ?? 0) > 3 && freelancerBidCount >= 3) {
+            return false;
+          }
+
           return true;
         });
 
@@ -308,7 +323,7 @@ const ProjectMarketTab: React.FC = () => {
         setIsLoading(false);
       }
     },
-    [user.uid, draftedProjects],
+    [user.uid, draftedProjects, bidProfiles],
   );
 
   // Effect to fetch jobs when filters change or component mounts
@@ -367,7 +382,7 @@ const ProjectMarketTab: React.FC = () => {
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [filters, user?.uid, fetchJobs]);
+  }, [filters, user?.uid, fetchJobs, bidProfiles]);
 
   const handleResize = () => {
     setIsLargeScreen(window.innerWidth >= 1024);
