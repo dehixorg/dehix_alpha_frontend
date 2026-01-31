@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Wallet } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
 import { MenuItem } from '../menu/sidebarMenu';
@@ -11,7 +14,10 @@ import { Button } from '../ui/button';
 import { DisplayConnectsDialog } from '../shared/DisplayConnectsDialog';
 import { Input } from '../ui/input';
 
+import { startTour } from '@/lib/tourSlice';
+import TourMenu from '@/components/tour/TourMenu';
 import { RootState } from '@/lib/store';
+import type { TourTarget } from '@/lib/tourSlice';
 
 interface HeaderProps {
   menuItemsTop: MenuItem[];
@@ -40,7 +46,9 @@ const Header: React.FC<HeaderProps> = ({
   setActiveConversation,
 }) => {
   const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const [connects, setConnects] = useState<number>(0);
+  const pathname = usePathname();
 
   const fetchConnects = async () => {
     try {
@@ -52,6 +60,31 @@ const Header: React.FC<HeaderProps> = ({
     } catch (error) {
       console.error('Error fetching connects:', error);
     }
+  };
+
+  const PAGE_TOUR_ROUTE_MAP: { path: string; target: TourTarget }[] = [
+    { path: '/freelancer/project/current', target: 'current-projects' },
+    { path: '/freelancer/interviewer', target: 'interviewer-profile' },
+    { path: '/freelancer/interviewee', target: 'interviewee' },
+    { path: '/freelancer/oracleDashboard', target: 'oracle-dashboard' },
+    { path: '/freelancer/market', target: 'market' },
+    { path: '/freelancer/talent', target: 'talent' },
+    { path: '/freelancer/leaderboard', target: 'leaderboard' },
+    { path: '/dashboard/business', target: 'business-dashboard' },
+    { path: '/business/market', target: 'business-market' },
+    { path: '/business/projects', target: 'business-projects' },
+    { path: '/business/talent', target: 'business-talent' },
+    { path: '/project-invitations', target: 'project-invitations' },
+    { path: '/dashboard', target: 'dashboard' },
+    { path: '/chat', target: 'chat' },
+    { path: '/notes', target: 'notes' },
+  ];
+
+  const getPageTarget = (): TourTarget | null => {
+    return (
+      PAGE_TOUR_ROUTE_MAP.find((route) => pathname.startsWith(route.path))
+        ?.target ?? null
+    );
   };
 
   useEffect(() => {
@@ -117,7 +150,7 @@ const Header: React.FC<HeaderProps> = ({
       <Breadcrumb items={breadcrumbItems || []} />
 
       <div className="ml-auto flex items-center gap-2">
-        <div className="relative hidden md:block">
+        <div className="relative hidden md:block" data-tour="search">
           <label htmlFor="global-search-input" className="sr-only">
             Search
           </label>
@@ -137,18 +170,40 @@ const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
+        {/* Platform Tour className="hidden md:block" */}
+        <div>
+          <TourMenu
+            onThisPageTour={() => {
+              const target = getPageTarget();
+              if (!target) return;
+              dispatch(startTour({ mode: 'page', target }));
+            }}
+            onFullPlatformTour={() => {
+              dispatch(startTour({ mode: 'platform', target: 'navigation' }));
+            }}
+          />
+        </div>
+
         {user?.uid ? (
-          <DisplayConnectsDialog userId={user.uid} connects={connects} />
+          <div data-tour="header-connects">
+            <DisplayConnectsDialog userId={user.uid} connects={connects} />
+          </div>
         ) : (
-          <Button variant="ghost" size="sm">
-            <Wallet className="h-4 w-4" />
-          </Button>
+          <div data-tour="header-connects">
+            <Button variant="ghost" size="sm">
+              <Wallet className="h-4 w-4" />
+            </Button>
+          </div>
         )}
         {/* Notification Button */}
-        <NotificationButton />
+        <div data-tour="header-notifications">
+          <NotificationButton />
+        </div>
 
         {/* Profile Dropdown */}
-        <DropdownProfile setConnects={setConnects} />
+        <div data-tour="header-profile">
+          <DropdownProfile setConnects={setConnects} />
+        </div>
       </div>
     </header>
   );

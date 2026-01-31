@@ -17,6 +17,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
+import { useBusinessTalentTour } from '@/components/tour/useBusinessTalentTour';
+
 interface Skill {
   _id: string;
   label: string;
@@ -69,6 +71,8 @@ export default function Talent() {
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [bootstrapLoading, setBootstrapLoading] = useState<boolean>(true);
   const bootstrapInFlightRef = useRef(false);
+
+  useBusinessTalentTour(true);
 
   const refreshBootstrap = useCallback(async () => {
     if (bootstrapInFlightRef.current) return;
@@ -209,11 +213,12 @@ export default function Talent() {
       mainClassName="p-0"
     >
       {/* Tabs Header */}
-      <div className="container px-4 py-4 ">
+      <div className="container px-4 py-4" data-tour="business-talent-header">
         <Tabs
           value={currentTab}
           onValueChange={handleTabChange}
           className="w-full"
+          data-tour="business-talent-tabs"
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">
@@ -229,7 +234,10 @@ export default function Talent() {
       </div>
 
       <div className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3 lg:items-start xl:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+        <div
+          className="space-y-6 lg:col-span-2"
+          data-tour="business-talent-skill-domain"
+        >
           <SkillDomainForm
             setFilterSkill={setFilterSkill}
             setFilterDomain={setFilterDomain}
@@ -252,7 +260,7 @@ export default function Talent() {
           </CardTitle>
 
           {/* Skill and Domain Filter */}
-          <div className="flex">
+          <div className="flex" data-tour="business-talent-filter">
             <Select onValueChange={setTalentFilter} value={talentFilter}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Skill or Domain" />
@@ -294,7 +302,10 @@ export default function Talent() {
               </SelectContent>
             </Select>
           </div>
-          <div className="lg:h-[75vh] h-[59vh] rounded-lg  overflow-y-scroll no-scrollbar">
+          <div
+            className="lg:h-[75vh] h-[59vh] rounded-lg  overflow-y-scroll no-scrollbar"
+            data-tour="business-talent-list"
+          >
             <TalentCard
               talentFilter={talentFilter}
               skillDomainData={skillDomainData}

@@ -50,6 +50,7 @@ import { Card } from '@/components/ui/card';
 import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import EmptyState from '@/components/shared/EmptyState';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
+import { useBusinessProjectTour } from '@/components/tour/useBusinessProjectTour';
 
 // Status configuration for table STATUS field type
 const PROJECT_STATUS_FORMATS = [
@@ -85,6 +86,8 @@ const BusinessProjectsPage: React.FC = () => {
     'createdAt',
   );
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  useBusinessProjectTour(true);
 
   // Get user data from Redux store
   const user = useSelector((state: RootState) => state.user);
@@ -234,7 +237,7 @@ const BusinessProjectsPage: React.FC = () => {
       contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
       mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8"
     >
-      <Card className="p-6 max-w-[92vw]">
+      <Card className="p-6 max-w-[92vw]" data-tour="business-projects">
         {/* Header section */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col space-y-2">
