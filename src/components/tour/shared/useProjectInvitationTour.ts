@@ -61,8 +61,7 @@ export function useProjectInvitationTour(isReady: boolean) {
       tour.addStep({
         id: 'freelancer-invitation',
         title: 'Project Invitations',
-        text:
-          'Here you can see projects where clients have directly invited you to apply.',
+        text: 'Here you can see projects where clients have directly invited you to apply.',
         attachTo: {
           element: '[data-tour="freelancer-invitation"]',
           on: 'top',

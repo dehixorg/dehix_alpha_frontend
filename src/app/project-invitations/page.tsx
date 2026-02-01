@@ -504,8 +504,12 @@ const ProjectInvitationsPage: React.FC = () => {
         />
 
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
-          <div className="w-full mx-auto" 
-              data-tour={isBusiness ? 'business-invitation' : 'freelancer-invitation'}>
+          <div
+            className="w-full mx-auto"
+            data-tour={
+              isBusiness ? 'business-invitation' : 'freelancer-invitation'
+            }
+          >
             <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-bold tracking-tight">

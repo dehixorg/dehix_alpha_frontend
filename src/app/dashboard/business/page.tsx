@@ -43,7 +43,7 @@ import StatItem from '@/components/shared/StatItem';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
-import { useBusinessDashboardTour } from '@/components/tour/useBusinessDashTour';
+import { useBusinessDashboardTour } from '@/components/tour/business/useBusinessDashTour';
 
 // Define the activity type
 // type Activity = {

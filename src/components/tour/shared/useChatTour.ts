@@ -38,8 +38,7 @@ export function useChatTour(isReady: boolean) {
       tour.addStep({
         id: 'chat-main',
         title: 'Chats',
-        text:
-          'This is where you communicate with freelancers, discuss project details, and collaborate in real time.',
+        text: 'This is where you communicate with freelancers, discuss project details, and collaborate in real time.',
         attachTo: {
           element: '[data-tour="chat-main"]',
           on: 'top',
@@ -60,8 +59,7 @@ export function useChatTour(isReady: boolean) {
       tour.addStep({
         id: 'chat-main',
         title: 'Chats',
-        text:
-          'This is where you chat with clients, receive updates, and coordinate on projects.',
+        text: 'This is where you chat with clients, receive updates, and coordinate on projects.',
         attachTo: {
           element: '[data-tour="chat-main"]',
           on: 'top',
