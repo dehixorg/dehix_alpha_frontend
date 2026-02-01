@@ -9,6 +9,7 @@ import ProjectVerification from '@/components/freelancer/oracleDashboard/Project
 import WorkExpVerification from '@/components/freelancer/oracleDashboard/WorkExpVerification';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
+import { useOracleTour } from '@/components/tour/useOracleTour';
 
 export default function OracleDashboardPage() {
   const router = useRouter();
@@ -29,6 +30,8 @@ export default function OracleDashboardPage() {
     router.push(`/freelancer/oracleDashboard/${tab}`);
   };
 
+  useOracleTour(true);
+
   return (
     <FreelancerAppLayout
       active="Oracle"
@@ -48,6 +51,7 @@ export default function OracleDashboardPage() {
           value={currentTabFromURL}
           onValueChange={handleTabChange}
           className="w-full"
+          data-tour="oracle"
         >
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="business" className="flex items-center gap-2">

@@ -444,7 +444,10 @@ const ProjectMarketTab: React.FC = () => {
           </span>
         </div>
         {!isLargeScreen && (
-          <div className="ml-auto flex items-center gap-2">
+          <div
+            className="ml-auto flex items-center gap-2"
+            data-tour="pm-filters-mobile"
+          >
             <FilterSheet
               filters={filters}
               setFilters={setFilters}
@@ -467,7 +470,10 @@ const ProjectMarketTab: React.FC = () => {
       <div className="flex flex-1">
         {/* Desktop Filters */}
         {isLargeScreen && (
-          <aside className="w-80 flex-shrink-0 pr-6">
+          <aside
+            className="w-80 flex-shrink-0 pr-6"
+            data-tour="pm-filters-desktop"
+          >
             <FilterComponent
               filters={filters}
               setFilters={setFilters}
@@ -486,7 +492,7 @@ const ProjectMarketTab: React.FC = () => {
           </aside>
         )}
         {/* Job Cards */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" data-tour="pm-job-cards">
           {isLoading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
