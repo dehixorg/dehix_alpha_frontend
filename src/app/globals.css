@@ -295,6 +295,23 @@
   border-color: hsl(var(--primary));
 }
 
+.shepherd-theme-custom .shepherd-cancel-icon {
+  color: hsl(var(--muted-foreground));
+  transition: color 150ms ease;
+}
+
+.shepherd-theme-custom .shepherd-cancel-icon:hover {
+  color: hsl(var(--destructive));
+}
+
+.dark .shepherd-theme-custom .shepherd-cancel-icon {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .shepherd-theme-custom .shepherd-cancel-icon:hover {
+  color: hsl(var(--destructive));
+}
+
 .shepherd-modal-overlay-container.shepherd-modal-is-visible {
   background: rgba(0, 0, 0, 0.45);
 }
