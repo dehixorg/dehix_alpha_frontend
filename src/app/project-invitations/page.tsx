@@ -66,7 +66,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import StatusDot from '@/components/shared/StatusDot';
 import { useAppSelector } from '@/lib/hooks';
 import { projectInvitationService } from '@/services/projectInvitation';
-import { useInvitationTour } from '@/components/tour/useInvitationTour';
+import { useProjectInvitationTour } from '@/components/tour/shared/useProjectInvitationTour';
 
 const ProjectInvitationsPage: React.FC = () => {
   const router = useRouter();
@@ -98,7 +98,9 @@ const ProjectInvitationsPage: React.FC = () => {
     'createdAt' | 'projectName' | 'freelancerName'
   >('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  useInvitationTour(true);
+  useProjectInvitationTour(true);
+
+  useProjectInvitationTour(true);
 
   useEffect(() => {
     const load = async () => {
@@ -501,11 +503,13 @@ const ProjectInvitationsPage: React.FC = () => {
           ]}
         />
 
-        <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0"
-          data-tour="project-invitations"
-        >
-          <div className="w-full mx-auto">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
+          <div
+            className="w-full mx-auto"
+            data-tour={
+              isBusiness ? 'business-invitation' : 'freelancer-invitation'
+            }
+          >
             <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-bold tracking-tight">

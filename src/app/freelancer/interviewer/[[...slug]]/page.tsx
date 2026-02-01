@@ -16,7 +16,7 @@ import InterviewProfile from '@/components/freelancer/interview/interviewProfile
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
 import InterviewerBids from '@/components/freelancer/interview/InterviewerBids';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
-import { useInterviewerProfileTour } from '@/components/tour/useInterviewTour';
+import { useInterviewerProfileTour } from '@/components/tour/freelancer/useInterviewTour';
 
 export default function InterviewerPage() {
   const params = useParams();

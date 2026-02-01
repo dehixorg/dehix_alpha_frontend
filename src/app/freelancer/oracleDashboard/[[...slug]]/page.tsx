@@ -9,7 +9,7 @@ import ProjectVerification from '@/components/freelancer/oracleDashboard/Project
 import WorkExpVerification from '@/components/freelancer/oracleDashboard/WorkExpVerification';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
-import { useOracleTour } from '@/components/tour/useOracleTour';
+import { useOracleTour } from '@/components/tour/freelancer/useOracleTour';
 
 export default function OracleDashboardPage() {
   const router = useRouter();

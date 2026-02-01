@@ -10,6 +10,7 @@ import FreelancerList from '@/components/business/market/FreelancerList';
 import { BusinessFilterSheet } from '@/components/business/market/BusinessFilterSheet';
 import BusinessFilterComponent from '@/components/business/market/BusinessFilterComponent';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
+import { useBusinessMarketTour } from '@/components/tour/business/useBusinessMarketTour';
 
 export interface FilterState {
   location: string[];
@@ -144,6 +145,8 @@ const Market: React.FC = () => {
     }
   }, []);
 
+  useBusinessMarketTour(true);
+
   useEffect(() => {
     async function fetchInitialData() {
       try {
@@ -194,7 +197,10 @@ const Market: React.FC = () => {
       <div className="flex flex-col sm:gap-4">
         <div className="p-4 sm:px-6">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col space-y-2">
+            <div
+              className="flex flex-col space-y-2"
+              data-tour="business-market-header"
+            >
               <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
                 Business Marketplace
               </h1>
@@ -204,7 +210,10 @@ const Market: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between px-1">
-              <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+              <span
+                className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto"
+                data-tour="business-market-results"
+              >
                 {freelancers.length}{' '}
                 {freelancers.length === 1 ? 'result' : 'results'}
               </span>
@@ -228,7 +237,10 @@ const Market: React.FC = () => {
         </div>
         <div className="flex flex-1 px-4 sm:px-8 pb-8">
           {isLargeScreen && (
-            <aside className="w-80 flex-shrink-0 pr-6">
+            <aside
+              className="w-80 flex-shrink-0 pr-6"
+              data-tour="business-market-filters"
+            >
               <BusinessFilterComponent
                 filters={filters}
                 onFilterChange={handleFilterChange}
@@ -242,7 +254,10 @@ const Market: React.FC = () => {
               />
             </aside>
           )}
-          <div className="flex-1 overflow-y-auto">
+          <div
+            className="flex-1 overflow-y-auto"
+            data-tour="business-market-list"
+          >
             <FreelancerList
               freelancers={freelancers}
               isLoading={isDataLoading}

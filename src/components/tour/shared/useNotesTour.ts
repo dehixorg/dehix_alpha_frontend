@@ -12,9 +12,10 @@ function el(selector: string) {
   return document.querySelector(selector);
 }
 
-export function useInvitationTour(isReady: boolean) {
+export function useNotesTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
+  const userType = useSelector((s: RootState) => s.user.type);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -34,10 +35,16 @@ export function useInvitationTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'project-invitations',
-      title: 'Project Invitations',
-      text: 'Here you can see projects where clients have directly invited you to apply.',
-      attachTo: { element: '[data-tour="project-invitations"]', on: 'bottom' },
+      id: 'notes',
+      title: 'Notes',
+      text:
+        userType === 'business'
+          ? 'Use this space to keep business notes, ideas, and important references in one place.'
+          : 'Use this section to write down ideas, reminders, and personal notes.',
+      attachTo: {
+        element: '[data-tour="notes"]',
+        on: 'top',
+      },
       buttons: [
         {
           text: 'Got it',
@@ -56,17 +63,16 @@ export function useInvitationTour(isReady: boolean) {
       tourRef.current = null;
       dispatch(clearTour());
     };
-  }, [dispatch]);
+  }, [dispatch, userType]);
 
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'project-invitations') return;
+    if (target !== 'notes') return;
 
-    if (el('[data-tour="project-invitations"]')) {
+    if (el('[data-tour="notes"]')) {
       tourRef.current?.start();
     }
-  }, [trigger, mode, target, isReady]);
+  }, [trigger, mode, target, isReady, userType]);
 }

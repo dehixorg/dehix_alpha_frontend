@@ -3,7 +3,7 @@ import React from 'react';
 
 import SkillDomainForm from '@/components/freelancer/talent/skilldomainForm';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
-import { useTalentTour } from '@/components/tour/useTalentTour';
+import { useTalentTour } from '@/components/tour/freelancer/useTalentTour';
 
 export default function Talent() {
   useTalentTour(true);

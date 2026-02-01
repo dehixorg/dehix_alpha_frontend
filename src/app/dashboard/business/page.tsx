@@ -43,6 +43,7 @@ import StatItem from '@/components/shared/StatItem';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
+import { useBusinessDashboardTour } from '@/components/tour/business/useBusinessDashTour';
 
 // Define the activity type
 // type Activity = {
@@ -79,6 +80,8 @@ export default function Dashboard() {
   const pendingProjects = responseData.filter(
     (project: any) => project.status !== StatusEnum.COMPLETED,
   );
+
+  useBusinessDashboardTour(true);
 
   // Sample data for the chart
   // const chartData = [
@@ -123,7 +126,7 @@ export default function Dashboard() {
       {/* Left Column */}
       <div className="grid auto-rows-max items-start gap-4 md:gap-6 lg:col-span-2">
         {/* Welcome Card */}
-        <Card className="bg-gradient shadow-sm">
+        <Card className="bg-gradient shadow-sm" data-tour="business-welcome">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
               <div>
@@ -190,7 +193,10 @@ export default function Dashboard() {
         </Card>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+        <div
+          className="grid gap-4 grid-cols-1 sm:grid-cols-3"
+          data-tour="business-stats"
+        >
           <StatItem
             variant="card"
             color="blue"
@@ -265,7 +271,11 @@ export default function Dashboard() {
               </CardContent>
             </Card> */}
         {/* Projects Section */}
-        <Tabs defaultValue="current" className="w-full">
+        <Tabs
+          defaultValue="current"
+          className="w-full"
+          data-tour="business-projects"
+        >
           <div className="flex items-center justify-between">
             <TabsList>
               <TabsTrigger value="current">Current Projects</TabsTrigger>
@@ -362,7 +372,7 @@ export default function Dashboard() {
       {/* Right Sidebar */}
       <div className="space-y-6">
         {/* Quick Actions */}
-        <Card className="bg-muted/20">
+        <Card className="bg-muted/20" data-tour="business-quick-actions">
           <CardHeader>
             <CardTitle className="text-lg">Quick Actions</CardTitle>
           </CardHeader>

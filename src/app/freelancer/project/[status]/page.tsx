@@ -29,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import EmptyState from '@/components/shared/EmptyState';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
-import { useProjectTour } from '@/components/tour/useProjectTour';
+import { useProjectTour } from '@/components/tour/freelancer/useProjectTour';
 
 // Section header component
 function SectionHeader({

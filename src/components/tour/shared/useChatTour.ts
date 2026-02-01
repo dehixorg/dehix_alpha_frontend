@@ -15,6 +15,7 @@ function el(selector: string) {
 export function useChatTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
+  const userType = useSelector((s: RootState) => s.user.type);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -33,21 +34,47 @@ export function useChatTour(isReady: boolean) {
     tour.on('cancel', () => dispatch(clearTour()));
     tour.on('complete', () => dispatch(clearTour()));
 
-    tour.addStep({
-      id: 'chat',
-      title: 'Chat',
-      text: 'This is the chat section where you communicate with others.',
-      attachTo: { element: '[data-tour="chat"]', on: 'right' },
-      buttons: [
-        {
-          text: 'Got it',
-          action: () => {
-            tour.complete();
-            dispatch(clearTour());
-          },
+    if (userType === 'business') {
+      tour.addStep({
+        id: 'chat-main',
+        title: 'Chats',
+        text: 'This is where you communicate with freelancers, discuss project details, and collaborate in real time.',
+        attachTo: {
+          element: '[data-tour="chat-main"]',
+          on: 'top',
         },
-      ],
-    });
+        buttons: [
+          {
+            text: 'Got it',
+            action: () => {
+              tour.complete();
+              dispatch(clearTour());
+            },
+          },
+        ],
+      });
+    }
+
+    if (userType === 'freelancer') {
+      tour.addStep({
+        id: 'chat-main',
+        title: 'Chats',
+        text: 'This is where you chat with clients, receive updates, and coordinate on projects.',
+        attachTo: {
+          element: '[data-tour="chat-main"]',
+          on: 'top',
+        },
+        buttons: [
+          {
+            text: 'Got it',
+            action: () => {
+              tour.complete();
+              dispatch(clearTour());
+            },
+          },
+        ],
+      });
+    }
 
     tourRef.current = tour;
 
@@ -56,17 +83,16 @@ export function useChatTour(isReady: boolean) {
       tourRef.current = null;
       dispatch(clearTour());
     };
-  }, [dispatch]);
+  }, [dispatch, userType]);
 
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
     if (target !== 'chat') return;
 
-    if (el('[data-tour="chat"]')) {
+    if (el('[data-tour="chat-main"]')) {
       tourRef.current?.start();
     }
-  }, [trigger, mode, target, isReady]);
+  }, [trigger, mode, target, isReady, userType]);
 }

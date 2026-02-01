@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProjectMarketTab from '@/components/market/ProjectMarketTab';
 import TalentMarketTab from '@/components/market/TalentMarketTab';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
-import { useMarketTour } from '@/components/tour/useMarketTour';
+import { useMarketTour } from '@/components/tour/freelancer/useMarketTour';
 
 const Market: React.FC = () => {
   const router = useRouter();

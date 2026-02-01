@@ -29,7 +29,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
-import { useChatTour } from '@/components/tour/useChatTour';
+import { useChatTour } from '@/components/tour/shared/useChatTour';
 
 const HomePage = () => {
   const router = useRouter();
@@ -77,6 +77,8 @@ const HomePage = () => {
   const toggleChatExpanded = () => {
     setIsChatExpanded((prev) => !prev);
   };
+
+  useChatTour(true);
 
   async function handleCreateGroupChat(
     selectedUsers: NewChatUser[],
@@ -555,7 +557,7 @@ const HomePage = () => {
           breadcrumbItems={[{ label: 'Chats', link: '/chat' }]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[96vh]">
+        <main className="h-[96vh]" data-tour="chat-main">
           {isMobile ? (
             <div className="h-full">
               {activeConversation

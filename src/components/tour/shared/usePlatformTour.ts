@@ -33,7 +33,8 @@ export function usePlatformTour(isReady: boolean) {
     tour.on('cancel', () => dispatch(clearTour()));
     tour.on('complete', () => dispatch(clearTour()));
 
-    //header
+    /* ================= HEADER ================= */
+
     tour.addStep({
       id: 'header-search',
       title: 'Global Search',
@@ -75,7 +76,8 @@ export function usePlatformTour(isReady: boolean) {
       ],
     });
 
-    //sidebar
+    /* ================= SIDEBAR ================= */
+
     tour.addStep({
       id: 'sidebar',
       title: 'Navigation Sidebar',
@@ -110,17 +112,6 @@ export function usePlatformTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'nav-invitations',
-      title: 'Project Invitations',
-      text: 'View and respond to project invitations here.',
-      attachTo: { element: '[data-tour="nav-invitations"]', on: 'right' },
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
       id: 'nav-projects',
       title: 'Projects',
       text: 'Manage your active and completed projects.',
@@ -132,32 +123,10 @@ export function usePlatformTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'nav-interviewer',
-      title: 'Interviews',
-      text: 'Conduct and manage interviews from here.',
-      attachTo: { element: '[data-tour="nav-interviewer"]', on: 'right' },
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'nav-interviewee',
-      title: 'Schedule Interviews',
-      text: 'View and schedule your interviews.',
-      attachTo: { element: '[data-tour="nav-interviewee"]', on: 'right' },
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'nav-oracle',
-      title: 'Oracle',
-      text: 'Access oracle tools and insights here.',
-      attachTo: { element: '[data-tour="nav-oracle"]', on: 'right' },
+      id: 'nav-invitations',
+      title: 'Project Invitations',
+      text: 'View and respond to project invitations here.',
+      attachTo: { element: '[data-tour="nav-invitations"]', on: 'right' },
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -169,17 +138,6 @@ export function usePlatformTour(isReady: boolean) {
       title: 'Talent',
       text: 'Explore and manage talent opportunities.',
       attachTo: { element: '[data-tour="nav-talent"]', on: 'right' },
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'nav-leaderboard',
-      title: 'Leaderboard',
-      text: 'See rankings and top performers here.',
-      attachTo: { element: '[data-tour="nav-leaderboard"]', on: 'right' },
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -237,13 +195,9 @@ export function usePlatformTour(isReady: boolean) {
       '[data-tour="sidebar"]',
       '[data-tour="nav-dashboard"]',
       '[data-tour="nav-market"]',
-      '[data-tour="nav-invitations"]',
       '[data-tour="nav-projects"]',
-      '[data-tour="nav-interviewer"]',
-      '[data-tour="nav-interviewee"]',
-      '[data-tour="nav-oracle"]',
+      '[data-tour="nav-invitations"]',
       '[data-tour="nav-talent"]',
-      '[data-tour="nav-leaderboard"]',
       '[data-tour="nav-chat"]',
       '[data-tour="nav-notes"]',
     ];

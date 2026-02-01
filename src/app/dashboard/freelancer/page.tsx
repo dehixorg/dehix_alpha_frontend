@@ -28,7 +28,7 @@ import {
   CardHeader,
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useDashboardTour } from '@/components/tour/useDashboardTour';
+import { useDashboardTour } from '@/components/tour/freelancer/useDashboardTour';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);

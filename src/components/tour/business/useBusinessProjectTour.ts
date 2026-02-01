@@ -8,11 +8,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
-function el(selector: string) {
-  return document.querySelector(selector);
-}
-
-export function useNotesTour(isReady: boolean) {
+export function useBusinessProjectTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -34,11 +30,16 @@ export function useNotesTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'notes',
-      title: 'Notes',
-      text: 'This is the notes section where you can save and manage your thoughts.',
-      attachTo: { element: '[data-tour="notes"]', on: 'top' },
+      id: 'business-projects',
+      title: 'Manage your projects',
+      scrollTo: false,
+      text: 'All your active and completed business projects are managed from here. Track progress, update details, and take action on projects easily.',
+      attachTo: {
+        element: '[data-tour="business-projects"]',
+        on: 'top',
+      },
       buttons: [
+        { text: 'Back', action: tour.back },
         {
           text: 'Got it',
           action: () => {
@@ -61,12 +62,9 @@ export function useNotesTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'notes') return;
+    if (target !== 'business-projects') return;
 
-    if (el('[data-tour="notes"]')) {
-      tourRef.current?.start();
-    }
+    tourRef.current?.start();
   }, [trigger, mode, target, isReady]);
 }

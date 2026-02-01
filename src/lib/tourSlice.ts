@@ -2,6 +2,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type TourMode = 'platform' | 'page';
+
 export type TourTarget =
   | 'dashboard'
   | 'market'
@@ -15,6 +16,10 @@ export type TourTarget =
   | 'chat'
   | 'notes'
   | 'navigation'
+  | 'business-dashboard'
+  | 'business-market'
+  | 'business-projects'
+  | 'business-talent'
   | null;
 
 export type TourState = {

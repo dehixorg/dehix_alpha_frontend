@@ -22,7 +22,7 @@ import {
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
 import Bids from '@/components/freelancer/interview/Bids';
 import { RootState } from '@/lib/store';
-import { useIntervieweeTour } from '@/components/tour/useIntervieweeTour';
+import { useIntervieweeTour } from '@/components/tour/freelancer/useIntervieweeTour';
 
 export default function IntervieweePage() {
   const params = useParams();

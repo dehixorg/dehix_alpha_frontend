@@ -39,7 +39,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
-import { useLeaderboardTour } from '@/components/tour/useLeaderboardTour';
+import { useLeaderboardTour } from '@/components/tour/freelancer/useLeaderboardTour';
 
 // Skeleton Loaders
 function CardGridSkeleton() {
