@@ -78,7 +78,7 @@ export default function Dashboard() {
       activeMenu="Dashboard"
       breadcrumbItems={[{ label: 'Freelancer', link: '/dashboard/freelancer' }]}
     >
-      <main
+      <div
         className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3"
         data-tour="main"
       >
@@ -206,7 +206,7 @@ export default function Dashboard() {
         <div data-tour="interviews">
           <InterviewsSection />
         </div>
-      </main>
+      </div>
     </FreelancerAppLayout>
   );
 }
