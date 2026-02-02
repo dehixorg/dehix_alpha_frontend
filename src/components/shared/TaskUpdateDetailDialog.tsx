@@ -113,7 +113,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
       acceptanceFreelancer,
     };
 
-    const url = `/milestones/${milestoneId}/story/${storyId}/task/${task._id}`;
+    const url = `/milestones/${milestoneId}/story/${storyId}/task/${task._id}/permission`;
 
     try {
       await axiosInstance.patch(url, payload);
