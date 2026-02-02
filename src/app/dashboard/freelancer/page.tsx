@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useDashboardTour } from '@/components/tour/freelancer/useDashboardTour';
+import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -78,33 +79,18 @@ export default function Dashboard() {
     String(totalRevenueValue).length > 12 ? 'lg:col-span-2' : '';
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      {/* Anchor: Sidebar */}
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Dashboard"
-      />
-
-      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
-        {/* Anchor: Header Components on header.tsx*/}
-        <div>
-          <Header
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            activeMenu="Dashboard"
-            breadcrumbItems={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-            ]}
-          />
-        </div>
-
+    <FreelancerAppLayout
+      active="Dashboard"
+      activeMenu="Dashboard"
+      breadcrumbItems={[
+        { label: 'Freelancer', link: '/dashboard/freelancer' },
+      ]}
+    >
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3"
           data-tour="main"
         >
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            {/* Anchor: Welcome */}
             <Card
               className="bg-gradient shadow-sm overflow-hidden"
               data-tour="welcome"
@@ -140,7 +126,6 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
 
-              {/* Anchor: Profile completion */}
               <div data-tour="profile-completion">
                 {user?.uid ? (
                   <ProfileCompletion userId={user.uid} />
@@ -153,7 +138,6 @@ export default function Dashboard() {
               </div>
             </Card>
 
-            {/* Anchor: Stats */}
             <div
               className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 grid-flow-row-dense"
               data-tour="stats"
@@ -222,18 +206,17 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Anchor: Projects */}
             <div data-tour="projects">
               <ProjectTableCard projects={projects} loading={loading} />
             </div>
           </div>
 
-          {/* Anchor: Interviews */}
           <div data-tour="interviews">
             <InterviewsSection />
           </div>
         </main>
-      </div>
-    </div>
+    </FreelancerAppLayout>
   );
 }
+
+
