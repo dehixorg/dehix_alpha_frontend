@@ -130,7 +130,7 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
     } else {
       onAdd(displayValue);
     }
-    setSearchQuery(''); // Clear search after selection
+    setSearchQuery('');
   };
 
   return (
@@ -160,7 +160,12 @@ const SelectTagPicker: React.FC<SelectTagPickerProps> = ({
               />
               <CommandEmpty>No items found.</CommandEmpty>
               <CommandList>
-                <ScrollArea className="h-60">
+                <ScrollArea
+                  className="h-60 overflow-y-auto"
+                  onWheel={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
                   <CommandGroup>
                     {filteredOptions.map((opt, idx) => {
                       const val = String(
