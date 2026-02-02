@@ -79,7 +79,7 @@ export default function Dashboard() {
       breadcrumbItems={[{ label: 'Freelancer', link: '/dashboard/freelancer' }]}
     >
       <div
-        className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3"
+        className="grid items-start gap-4 md:gap-8 lg:grid-cols-3 xl:grid-cols-3"
         data-tour="main"
       >
         <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
