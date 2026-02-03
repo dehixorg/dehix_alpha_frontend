@@ -5,7 +5,7 @@ import React, { RefObject, useMemo, memo, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
 import { formatDistanceToNow, format } from 'date-fns';
-import { CheckCheck, Reply, Flag, MoreVertical, Copy } from 'lucide-react';
+import { Reply, Flag, MoreVertical, Copy, Trash2, Pencil, RefreshCw, AlertCircle, Pin, PinOff } from 'lucide-react';
 
 import { EmojiPicker } from '../emojiPicker';
 
@@ -94,6 +94,8 @@ export type ChatMessage = {
     duration: number;
     type: 'voice';
   };
+  /** 'failed' when send fails – backend can set; UI shows retry/delete */
+  status?: 'sent' | 'failed';
 };
 
 type Props = {
@@ -115,6 +117,12 @@ type Props = {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
+  onDeleteMessage?: (messageId: string) => Promise<void>;
+  onEditMessage?: (messageId: string, content: string) => void;
+  onRetryMessage?: (messageId: string) => Promise<void>;
+  pinnedMessage?: { messageId: string; content?: string } | null;
+  onPinMessage?: (messageId: string, content: string) => Promise<void>;
+  onUnpinMessage?: () => Promise<void>;
 };
 
 function ChatMessageItem({
@@ -132,9 +140,16 @@ function ChatMessageItem({
   setReplyToMessageId,
   messagesEndRef,
   onOpenProfileSidebar,
+  onDeleteMessage,
+  onEditMessage,
+  onRetryMessage,
+  pinnedMessage,
+  onPinMessage,
+  onUnpinMessage,
 }: Props) {
   const { toast } = useToast();
   const [isReporting, setIsReporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const formattedTimestamp = useMemo(
     () => formatChatTimestamp(message.timestamp),
@@ -146,11 +161,28 @@ function ChatMessageItem({
   );
 
   const prev = messages[index - 1];
+  const next = messages[index + 1];
   const isNewDay = useMemo(() => {
     return (
       !prev || !isSameDay(new Date(prev.timestamp), new Date(message.timestamp))
     );
   }, [prev, message.timestamp]);
+
+  // Group consecutive messages from same sender: show avatar/name only once per group
+  const isFirstInGroup = useMemo(
+    () =>
+      !prev ||
+      prev.senderId !== message.senderId ||
+      !isSameDay(new Date(prev.timestamp), new Date(message.timestamp)),
+    [prev, message.senderId, message.timestamp],
+  );
+  const isLastInGroup = useMemo(
+    () =>
+      !next ||
+      next.senderId !== message.senderId ||
+      !isSameDay(new Date(next.timestamp), new Date(message.timestamp)),
+    [next, message.senderId, message.timestamp],
+  );
   const emojiInfo = useMemo(() => {
     if (
       message.voiceMessage ||
@@ -178,28 +210,43 @@ function ChatMessageItem({
     () => message.senderId === userId,
     [message.senderId, userId],
   );
+
+  // Edit allowed only for sender, within 1 hour, and for text-only messages
+  const canEditMessage = useMemo(() => {
+    if (!isSender || !onEditMessage) return false;
+    const msgTime = new Date(message.timestamp).getTime();
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    if (msgTime < oneHourAgo) return false;
+    if (message.voiceMessage?.type === 'voice') return false;
+    const hasFileOrImage = /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i.test(
+      message.content,
+    );
+    if (hasFileOrImage) return false;
+    return true;
+  }, [isSender, message.timestamp, message.content, message.voiceMessage, onEditMessage]);
+
   const isGroupChat = useMemo(
     () => conversation.type === 'group',
     [conversation.type],
   );
+  // In group chats, show sender name label; in 1:1 use participantDetails so avatar/name match header
   const showSenderName =
-    isGroupChat &&
-    (index === 0 || messages[index - 1]?.senderId !== message.senderId);
+    isGroupChat && !isSender;
   const senderName = useMemo(
     () =>
-      isGroupChat && !isSender
+      !isSender
         ? conversation.participantDetails?.[message.senderId]?.userName ||
           'Unknown User'
         : '',
-    [conversation.participantDetails, isGroupChat, isSender, message.senderId],
+    [conversation.participantDetails, isSender, message.senderId],
   );
 
   const senderAvatar = useMemo(
     () =>
-      isGroupChat && !isSender
+      !isSender
         ? conversation.participantDetails?.[message.senderId]?.profilePic || ''
         : '',
-    [conversation.participantDetails, isGroupChat, isSender, message.senderId],
+    [conversation.participantDetails, isSender, message.senderId],
   );
 
   const sanitizedContent = useMemo(
@@ -280,11 +327,39 @@ function ChatMessageItem({
     }
   };
 
+  const handleDeleteMessage = async () => {
+    if (isDeleting || !onDeleteMessage) return;
+
+    try {
+      setIsDeleting(true);
+      await onDeleteMessage(message.id);
+      toast({
+        title: 'Message deleted',
+        description: 'Your message has been removed.',
+      });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete message. Please try again.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEditMessage = () => {
+    if (canEditMessage && onEditMessage) {
+      onEditMessage(message.id, message.content);
+    }
+  };
+
   return (
     <div className="w-full" key={message.id}>
       {isNewDay && (
-        <div className="w-full flex justify-center my-2">
-          <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-0.5 rounded-full text-[hsl(var(--muted-foreground))]">
+        <div className="w-full flex justify-center py-2">
+          <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-1 rounded-full text-[hsl(var(--muted-foreground))]">
             {formatDateHeader(message.timestamp)}
           </span>
         </div>
@@ -292,7 +367,7 @@ function ChatMessageItem({
       <div
         id={message.id}
         className={cn(
-          'flex items-start group w-full mb-2',
+          'flex items-start group w-full mb-2 gap-2',
           isSender ? 'justify-end' : 'justify-start',
         )}
         onMouseEnter={() => onHoverChange(message.id)}
@@ -302,7 +377,11 @@ function ChatMessageItem({
           <div
             role="button"
             tabIndex={0}
-            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className={cn(
+              'flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 rounded-full',
+              // In group chats, always show avatar; in individual chats, only show for first in group
+              isGroupChat ? '' : (!isFirstInGroup && 'invisible w-8 h-8'),
+            )}
             onClick={() => {
               if (onOpenProfileSidebar) {
                 onOpenProfileSidebar(message.senderId, 'user', {
@@ -332,17 +411,17 @@ function ChatMessageItem({
           </div>
         )}
 
-        <div
-          id={`message-${message.id}`}
-          className={cn(
-            'flex flex-col',
-            isSender ? 'items-end' : 'items-start',
-            'max-w-[80%]',
-          )}
-        >
-          {isGroupChat && showSenderName && !isSender && (
-            <div className="mb-0.5">
-              <span className="text-xs font-medium text-muted-foreground">
+<div
+            id={`message-${message.id}`}
+            className={cn(
+              'flex flex-col min-w-0',
+              isSender ? 'items-end' : 'items-start',
+              'max-w-[85%] sm:max-w-[65%]',
+            )}
+          >
+          {isGroupChat && showSenderName && (
+            <div className="mb-1 px-1">
+              <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">
                 {senderName}
               </span>
             </div>
@@ -350,16 +429,29 @@ function ChatMessageItem({
 
           <div
             className={cn(
-              'flex w-max max-w-full flex-col gap-1 rounded-lg p-2 text-sm',
+              'flex max-w-full flex-col gap-1 text-sm',
+              // Border radius by group position: first/middle/last in group
+              isFirstInGroup && isLastInGroup && 'rounded-2xl',
+              isFirstInGroup && !isLastInGroup && (isSender ? 'rounded-tr-2xl rounded-br-md rounded-bl-2xl rounded-tl-2xl' : 'rounded-tl-2xl rounded-bl-md rounded-br-2xl rounded-tr-2xl'),
+              !isFirstInGroup && isLastInGroup && (isSender ? 'rounded-br-2xl rounded-bl-md rounded-tl-md rounded-tr-md' : 'rounded-bl-2xl rounded-tl-md rounded-tr-md rounded-br-md'),
+              !isFirstInGroup && !isLastInGroup && 'rounded-xl',
+              // Padding: 12px horizontal, 8px vertical (consistent spacing)
+              'px-3 py-2',
+              message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ||
+                isEmojiOnly ||
+                (message.voiceMessage && message.voiceMessage.type === 'voice')
+                ? 'overflow-hidden'
+                : 'overflow-visible',
               message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ||
                 isEmojiOnly ||
                 (message.voiceMessage && message.voiceMessage.type === 'voice')
                 ? isSender
-                  ? 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
-                  : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-tl-none'
+                  ? 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--foreground))]'
+                  : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))]'
                 : isSender
-                  ? 'bg-muted-foreground/20 dark:bg-muted-foreground/20 dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
-                  : 'bg-muted-foreground/20 dark:bg-muted-foreground/20 dark:text-[hsl(var(--secondary-foreground))] rounded-tl-none relative flex justify-center items-center pr-20 min-w-[180px]',
+                  ? 'bg-[hsl(var(--primary))]/15 dark:bg-[hsl(var(--primary))]/25 text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))] relative min-w-0'
+                  : 'bg-[hsl(var(--muted))] dark:bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] dark:text-[hsl(var(--secondary-foreground))] relative min-w-0',
+              message.status === 'failed' && 'border border-destructive/50',
             )}
             onClick={() => {
               if (message.replyTo) {
@@ -468,48 +560,61 @@ function ChatMessageItem({
                         />
                         <div className="absolute bottom-2 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded flex items-center space-x-1">
                           <span>{formattedTimestamp}</span>
-                          {isSender && (
-                            <CheckCheck className="w-3.5 h-3.5 ml-1" />
-                          )}
                         </div>
                       </div>
                     ) : message.content.match(
                         /\.(pdf|doc|docx|ppt|pptx)(\?|$)/i,
                       ) ? (
-                      <FileAttachment
-                        fileName={message.content.split('/').pop() || 'File'}
-                        fileUrl={message.content}
-                        fileType={message.content.split('.').pop() || 'file'}
-                      />
+                      <div className="flex flex-col gap-1">
+                        <FileAttachment
+                          fileName={message.content.split('/').pop() || 'File'}
+                          fileUrl={message.content}
+                          fileType={message.content.split('.').pop() || 'file'}
+                        />
+                        <div
+                          className={cn(
+                            'text-[10px] leading-none text-[hsl(var(--muted-foreground))]',
+                            isSender ? 'text-right' : 'text-left',
+                          )}
+                          aria-hidden
+                        >
+                          <span>{formattedTimestamp}</span>
+                        </div>
+                      </div>
                     ) : (
                       !message.voiceMessage &&
                       !message.content.match(
                         /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i,
                       ) && (
                         <>
-                          <div
-                            className={cn(
-                              'w-full break-words',
-                              isEmojiOnly &&
-                                'text-4xl leading-snug text-center',
-                            )}
-                            dangerouslySetInnerHTML={{
-                              __html: sanitizedContent,
-                            }}
-                          />
-                          {!isEmojiOnly && (
+                          {isEmojiOnly ? (
                             <div
                               className={cn(
-                                'absolute bottom-1 right-2 text-xs flex items-center space-x-1',
-                                isSender
-                                  ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
-                                  : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
+                                'w-full break-all overflow-wrap-anywhere',
+                                'text-4xl leading-snug text-center break-normal',
                               )}
-                            >
-                              <span>{formattedTimestamp}</span>
-                              {isSender && (
-                                <CheckCheck className="w-3.5 h-3.5" />
-                              )}
+                              style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                              dangerouslySetInnerHTML={{
+                                __html: sanitizedContent,
+                              }}
+                            />
+                          ) : (
+                            <div className="flex flex-row items-end gap-2 w-full min-w-0">
+                              <div
+                                className={cn(
+                                  'flex-1 min-w-0 break-all overflow-wrap-anywhere',
+                                )}
+                                style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                                dangerouslySetInnerHTML={{
+                                  __html: sanitizedContent,
+                                }}
+                              />
+                              <div
+                                className="flex flex-shrink-0 items-center text-[10px] leading-none text-[hsl(var(--muted-foreground))] whitespace-nowrap"
+                                aria-hidden
+                              >
+                                <span>{formattedTimestamp}</span>
+                              </div>
                             </div>
                           )}
                         </>
@@ -535,9 +640,6 @@ function ChatMessageItem({
                           />
                           <span className="text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap flex items-center min-w-[48px] justify-end">
                             {formattedTimestamp}
-                            {isSender && (
-                              <CheckCheck className="w-3.5 h-3.5 ml-1 align-middle text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300" />
-                            )}
                           </span>
                         </div>
                       )}
@@ -553,76 +655,122 @@ function ChatMessageItem({
               </Tooltip>
             </TooltipProvider>
 
-            <div className="absolute -bottom-3 left-2 z-10">
-              <Reactions
-                messageId={message.id}
-                reactions={message.reactions || {}}
-                toggleReaction={toggleReaction}
-              />
-            </div>
-
-            <div
-              className={cn(
-                'flex items-center text-xs mt-1',
-                isSender
-                  ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-500'
-                  : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
-                isSender ? 'justify-end' : 'justify-start',
-              )}
-            >
-              {isEmojiOnly &&
-                (isSingleEmoji ? (
-                  <div className="inline-flex items-center align-middle leading-none space-x-1 bg-[#c8a3ed] dark:bg-[#9966ccba] px-1.5 py-0.5 rounded text-[hsl(var(--foreground))]">
+<div
+            className={cn(
+              'flex items-center mt-0.5',
+              'text-[10px] leading-none text-[hsl(var(--muted-foreground))]',
+              isSender ? 'justify-end' : 'justify-start',
+            )}
+            aria-hidden
+          >
+            {isEmojiOnly &&
+              (isSingleEmoji ? (
+                  <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[hsl(var(--muted))] dark:bg-[hsl(var(--muted))]">
                     <span>{formattedTimestamp}</span>
-                    {isSender && <CheckCheck className="w-3.5 h-3.5" />}
                   </div>
                 ) : (
                   <>
                     <span>{formattedTimestamp}</span>
-                    {isSender && <CheckCheck className="w-3.5 h-3.5 ml-1" />}
                   </>
                 ))}
             </div>
           </div>
+
+          {Object.keys(message.reactions || {}).length > 0 && (
+            <div
+              className={cn(
+                'flex items-center gap-0.5 mt-1',
+                isSender ? 'justify-end' : 'justify-start',
+              )}
+            >
+              <Reactions
+                messageId={message.id}
+                reactions={message.reactions || {}}
+                toggleReaction={toggleReaction}
+                alignRight={isSender}
+              />
+            </div>
+          )}
+
+          {/* Failed message state – wire to backend when send fails */}
+          {isSender && message.status === 'failed' && (
+            <div
+              className={cn(
+                'flex items-center gap-2 mt-1.5 px-2 py-1.5 rounded-md bg-destructive/10 border border-destructive/30',
+                isSender ? 'justify-end' : 'justify-start',
+              )}
+            >
+              <AlertCircle className="h-3.5 w-3.5 text-destructive flex-shrink-0" aria-hidden />
+              <span className="text-xs text-destructive">Failed to send</span>
+              {onRetryMessage && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-1.5 text-xs text-destructive hover:bg-destructive/20"
+                  onClick={() => onRetryMessage(message.id)}
+                  aria-label="Retry sending"
+                >
+                  <RefreshCw className="h-3 w-3 mr-0.5" />
+                  Retry
+                </Button>
+              )}
+              {onDeleteMessage && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-1.5 text-xs text-destructive hover:bg-destructive/20"
+                  onClick={() => onDeleteMessage(message.id)}
+                  aria-label="Delete failed message"
+                >
+                  <Trash2 className="h-3 w-3 mr-0.5" />
+                  Delete
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         <div
           className={cn(
-            'flex items-center gap-1.5 pt-2 opacity-0 group-hover:opacity-100 transition-all duration-200',
+            'flex items-center gap-1.5 pt-1 opacity-0 group-hover:opacity-100 transition-all duration-200 relative z-10',
             isSender ? 'ml-2' : 'mr-2',
           )}
         >
           <div
             className={cn(
-              'flex items-center rounded-full border shadow-sm backdrop-blur-sm',
-              'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))]',
-              'dark:bg-[hsl(var(--accent)_/_0.15)] dark:text-[hsl(var(--accent-foreground))]',
+              'flex items-center gap-0.5 rounded-full border shadow-md px-0.5',
+              'bg-[hsl(var(--card))] border-[hsl(var(--border))]',
+              'dark:bg-[hsl(var(--card))] dark:border-[hsl(var(--border))]',
               isSender ? 'ml-[-40px] mt-[-20px]' : 'ml-[-60px]',
             )}
           >
-            {!isSender && (
-              <EmojiPicker
-                aria-label="Add reaction"
-                onSelect={(emoji: string) => toggleReaction(message.id, emoji)}
-                className="mr-0"
-              />
-            )}
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-flex">
+                    <EmojiPicker
+                      aria-label="Add reaction"
+                      onSelect={(emoji: string) => toggleReaction(message.id, emoji)}
+                      className="mr-0 h-7 w-7 rounded-full text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--foreground))] dark:text-[hsl(var(--primary))] dark:hover:bg-[hsl(var(--accent))] dark:hover:text-[hsl(var(--primary))] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={6}>
+                  React
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={cn(
-                      'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20 focus-visible:ring-2 focus-visible:ring-offset-2',
-                      isSender
-                        ? 'text-[hsl(var(--foreground)_/_0.85)] dark:text-purple-300'
-                        : 'text-[hsl(var(--muted-foreground))]',
-                    )}
+                    className="h-7 w-7 rounded-full text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--foreground))] dark:text-[hsl(var(--primary))] dark:hover:bg-[hsl(var(--accent))] dark:hover:text-[hsl(var(--primary))] focus-visible:ring-2 focus-visible:ring-offset-2"
                     onClick={() => setReplyToMessageId(message.id)}
                     aria-label="Reply to message"
                   >
-                    <Reply className="h-4 w-4" />
+                    <Reply className="h-4 w-4" strokeWidth={2.5} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top" sideOffset={6}>
@@ -638,15 +786,10 @@ function ChatMessageItem({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className={cn(
-                          'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20 focus-visible:ring-2 focus-visible:ring-offset-2',
-                          isSender
-                            ? 'text-[hsl(var(--foreground)_/_0.85)] dark:text-purple-300'
-                            : 'text-[hsl(var(--muted-foreground))]',
-                        )}
+                        className="h-7 w-7 rounded-full text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] dark:text-[hsl(var(--primary))] dark:hover:bg-[hsl(var(--accent))] focus-visible:ring-2 focus-visible:ring-offset-2"
                         aria-label="Message options"
                       >
-                        <MoreVertical className="h-4 w-4" />
+                        <MoreVertical className="h-4 w-4" strokeWidth={2} />
                       </Button>
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
@@ -655,19 +798,56 @@ function ChatMessageItem({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 bg-[hsl(var(--popover))]">
                 <DropdownMenuItem onClick={handleCopyMessage}>
                   <Copy className="mr-2 h-4 w-4" />
                   <span>Copy message</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleReportMessage}
-                  disabled={isReporting}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Flag className="mr-2 h-4 w-4" />
-                  <span>Report message</span>
-                </DropdownMenuItem>
+                {pinnedMessage?.messageId === message.id && onUnpinMessage && (
+                  <DropdownMenuItem onClick={() => onUnpinMessage()}>
+                    <PinOff className="mr-2 h-4 w-4" />
+                    <span>Unpin message</span>
+                  </DropdownMenuItem>
+                )}
+                {pinnedMessage?.messageId !== message.id && onPinMessage && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onPinMessage(
+                        message.id,
+                        typeof message.content === 'string' ? message.content : '',
+                      )
+                    }
+                  >
+                    <Pin className="mr-2 h-4 w-4" />
+                    <span>Pin message</span>
+                  </DropdownMenuItem>
+                )}
+                {canEditMessage && (
+                  <DropdownMenuItem onClick={handleEditMessage}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    <span>Edit message</span>
+                  </DropdownMenuItem>
+                )}
+                {isSender && onDeleteMessage && (
+                  <DropdownMenuItem
+                    onClick={handleDeleteMessage}
+                    disabled={isDeleting}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>{isDeleting ? 'Deleting...' : 'Delete message'}</span>
+                  </DropdownMenuItem>
+                )}
+                {!isSender && (
+                  <DropdownMenuItem
+                    onClick={handleReportMessage}
+                    disabled={isReporting}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Flag className="mr-2 h-4 w-4" />
+                    <span>Report message</span>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

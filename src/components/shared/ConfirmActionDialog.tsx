@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 interface ConfirmActionDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title: string;
   description: string;
   confirmButtonText?: string; // Optional: Default to "Confirm"
@@ -46,9 +46,9 @@ export function ConfirmActionDialog({
     return null;
   }
 
-  const handleConfirm = () => {
-    onConfirm();
-    // onClose(); // Dialog is typically closed by the caller after onConfirm promise resolves or action completes
+  const handleConfirm = async () => {
+    await onConfirm();
+    // Dialog is typically closed by the caller after onConfirm promise resolves or action completes
   };
 
   return (

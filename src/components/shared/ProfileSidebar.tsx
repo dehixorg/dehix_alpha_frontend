@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
-  VolumeX,
   ShieldX,
   Trash2,
   UserPlus,
@@ -15,6 +14,7 @@ import {
 import {
   doc,
   getDoc,
+  getDocFromServer,
   updateDoc,
   arrayUnion,
   arrayRemove,
@@ -28,6 +28,7 @@ import {
   getFirestore,
   serverTimestamp,
   FieldValue,
+  writeBatch,
 } from 'firebase/firestore';
 
 import { AddMembersDialog } from './AddMembersDialog';
@@ -37,24 +38,18 @@ import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 import { Conversation } from './chatList';
 
-// Simple file item type for shared files list
-export type FileItem = {
-  id: string;
-  name: string;
-  type: string;
-  size?: number | string;
-  url: string;
-};
-
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Card,
@@ -63,12 +58,20 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { RootState } from '@/lib/store';
-import { axiosInstance } from '@/lib/axiosinstance';
 import type { CombinedUser } from '@/hooks/useAllUsers';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { RootState } from '@/lib/store';
+import { addGroupSystemMessage } from '@/utils/common/firestoreUtils';
+import { cn } from '@/lib/utils';
+
+// Simple file item type for shared files list
+export type FileItem = {
+  id: string;
+  name: string;
+  type: string;
+  size?: number | string;
+  url: string;
+};
 
 export type ProfileUser = {
   _id: string;
@@ -98,6 +101,7 @@ export type ProfileGroup = {
   avatar?: string;
   description?: string;
   createdAt: string;
+  participants?: string[];
   members: ProfileGroupMember[];
   admins: string[];
   participantDetails?: {
@@ -118,6 +122,11 @@ interface ProfileSidebarProps {
   currentUser?: CombinedUser | null;
   initialData?: { userName?: string; email?: string; profilePic?: string };
   onConversationUpdate?: (conv: any) => void;
+  /** Called when user deletes chat so the parent can remove it from the sidebar list immediately */
+  onConversationRemovedFromList?: (conversationId: string) => void;
+  conversationId?: string | null; // For individual chats, this is the actual conversation ID
+  /** Current conversation (for mute state and optimistic updates) */
+  conversation?: Conversation | null;
 }
 
 export function ProfileSidebar({
@@ -127,7 +136,12 @@ export function ProfileSidebar({
   profileType,
   initialData,
   onConversationUpdate,
+  onConversationRemovedFromList,
+  conversationId,
 }: ProfileSidebarProps) {
+  // For groups, conversationId is same as profileId. For individual chats, conversationId is separate.
+  const effectiveConversationId =
+    profileType === 'group' ? profileId : conversationId;
   // State management
   const [profileData, setProfileData] = useState<
     ProfileUser | ProfileGroup | null
@@ -256,6 +270,11 @@ export function ProfileSidebar({
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
+  // const isMuted = !!(
+  //   user?.uid &&
+  //   effectiveConversationId &&
+  //   conversation?.mutedByUsers?.includes(user.uid)
+  // );
 
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
@@ -320,21 +339,24 @@ export function ProfileSidebar({
           }
         }
       } else if (profileType === 'group' && profileId) {
-        const conversationDoc = await getDoc(
+        const conversationDoc = await getDocFromServer(
           doc(db, 'conversations', profileId),
         );
         if (conversationDoc.exists()) {
           const groupData = conversationDoc.data();
-          const members = Object.entries(
-            groupData.participantDetails || {},
-          ).map(([id, details]: [string, any]) => ({
-            id,
-            userName: details.userName || 'Unknown Member',
-            profilePic: details.profilePic,
-            status: (Math.random() > 0.5 ? 'online' : 'offline') as
-              | 'online'
-              | 'offline',
-          }));
+          const participantIds = groupData.participants || [];
+          const detailsMap = groupData.participantDetails || {};
+          const members = participantIds.map((id: string) => {
+            const details = detailsMap[id] || {};
+            return {
+              id,
+              userName: details.userName || 'Unknown Member',
+              profilePic: details.profilePic,
+              status: (Math.random() > 0.5 ? 'online' : 'offline') as
+                | 'online'
+                | 'offline',
+            };
+          });
 
           const avatarUrl = initialData?.profilePic || groupData.avatar;
 
@@ -346,6 +368,7 @@ export function ProfileSidebar({
             description: groupData.description || '',
             avatar: avatarUrl,
             createdAt: groupData.createdAt || new Date().toISOString(),
+            participants: participantIds,
             members,
             admins: groupData.admins || [],
             participantDetails: groupData.participantDetails,
@@ -379,6 +402,12 @@ export function ProfileSidebar({
 
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
+
+        // Skip messages deleted by current user (WhatsApp-style)
+        const deletedFor = message.deletedFor as string[] | undefined;
+        if (deletedFor && deletedFor.includes(user?.uid || '')) {
+          return;
+        }
         let mediaUrl = '';
 
         if (
@@ -464,6 +493,12 @@ export function ProfileSidebar({
 
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
+
+        // Skip messages deleted by current user (WhatsApp-style)
+        const deletedFor = message.deletedFor as string[] | undefined;
+        if (deletedFor && deletedFor.includes(user?.uid || '')) {
+          return;
+        }
         if (
           Array.isArray(message.attachments) &&
           message.attachments.length > 0
@@ -534,10 +569,18 @@ export function ProfileSidebar({
         setIsLoadingMedia(true);
         setIsLoadingFiles(true);
 
+        // For individual chats, use conversationId for media/files. For groups, profileId is the conversation ID.
+        const mediaConversationId =
+          profileType === 'group' ? profileId : conversationId;
+
         await Promise.allSettled([
           internalFetchProfileData(),
-          fetchSharedMedia(profileId),
-          fetchSharedFiles(profileId),
+          mediaConversationId
+            ? fetchSharedMedia(mediaConversationId)
+            : Promise.resolve(),
+          mediaConversationId
+            ? fetchSharedFiles(mediaConversationId)
+            : Promise.resolve(),
           profileType === 'user'
             ? fetchBlockStatus(profileId)
             : Promise.resolve(),
@@ -556,7 +599,7 @@ export function ProfileSidebar({
     };
 
     executeFetches();
-  }, [isOpen, profileId, profileType, refreshKey]);
+  }, [isOpen, profileId, profileType, refreshKey, conversationId]);
 
   const handleAddMembersToGroup = async (
     selectedUsers: CombinedUser[],
@@ -583,24 +626,60 @@ export function ProfileSidebar({
     const groupDocRef = doc(db, 'conversations', groupId);
 
     try {
+      // Use Firebase UIDs so the group appears in each added user's chat list (Firestore query uses participants)
+      const newMemberIds = selectedUsers
+        .map((u) => u.firebaseUid ?? u.id)
+        .filter(Boolean) as string[];
       const updates: any = {
-        participants: arrayUnion(...selectedUsers.map((user) => user.id)),
+        participants: arrayUnion(...newMemberIds),
+        inboxFor: arrayUnion(...newMemberIds), // New members see the group (WhatsApp-style)
         updatedAt: serverTimestamp(),
       };
 
-      selectedUsers.forEach((user) => {
-        if (!user.id) return;
+      selectedUsers.forEach((member) => {
+        const uid = member.firebaseUid ?? member.id;
+        if (!uid) return;
 
-        updates[`participantDetails.${user.id}`] = {
-          userName: user.displayName || 'User',
-          email: user.email || '',
-          profilePic: user.profilePic || null,
-          userType: user.userType || 'user',
+        updates[`participantDetails.${uid}`] = {
+          userName: member.displayName || 'User',
+          email: member.email || '',
+          profilePic: member.profilePic || null,
+          userType: member.userType || 'user',
         };
       });
 
       await updateDoc(groupDocRef, updates);
+      // Admin-only system message for group membership changes
+      try {
+        const actor =
+          user?.displayName || user?.email || user?.uid || 'Someone';
+        const addedNames = selectedUsers
+          .map((u) => u.displayName || u.email || u.id)
+          .filter(Boolean)
+          .join(', ');
+        await addGroupSystemMessage(
+          groupId,
+          `${actor} added ${addedNames} to the group.`,
+          { event: 'member_added', actorId: user?.uid, addedIds: newMemberIds },
+        );
+      } catch {
+        // non-blocking
+      }
       setRefreshKey((prev) => prev + 1);
+      await internalFetchProfileData();
+
+      const updatedSnap = await getDocFromServer(groupDocRef);
+      if (updatedSnap.exists() && onConversationUpdate) {
+        const d = updatedSnap.data();
+        onConversationUpdate({
+          id: updatedSnap.id,
+          ...d,
+          participants: d?.participants || [],
+          participantDetails: d?.participantDetails || {},
+          groupName: d?.groupName,
+          type: 'group',
+        } as any);
+      }
 
       toast({
         title: 'Success',
@@ -742,9 +821,30 @@ export function ProfileSidebar({
     try {
       await updateDoc(groupDocRef, {
         participants: arrayRemove(memberIdToRemove),
+        inboxFor: arrayRemove(memberIdToRemove),
         [`participantDetails.${memberIdToRemove}`]: deleteField(),
         updatedAt: serverTimestamp(),
       });
+      // Admin-only system message for group membership changes
+      try {
+        const actor =
+          user?.displayName || user?.email || user?.uid || 'Someone';
+        const removedName =
+          (profileData as ProfileGroup)?.members?.find(
+            (m) => m.id === memberIdToRemove,
+          )?.userName || memberIdToRemove;
+        await addGroupSystemMessage(
+          profileId,
+          `${actor} removed ${removedName} from the group.`,
+          {
+            event: 'member_removed',
+            actorId: user?.uid,
+            removedId: memberIdToRemove,
+          },
+        );
+      } catch {
+        // non-blocking
+      }
       toast({ title: 'Success', description: 'Member removed successfully.' });
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
@@ -785,6 +885,12 @@ export function ProfileSidebar({
         title: 'Success',
         description: 'Group has been permanently deleted.',
       });
+
+      // Clear the active conversation in parent
+      if (onConversationUpdate) {
+        onConversationUpdate(null);
+      }
+
       onClose();
     } catch (error) {
       console.error('Error deleting group:', error);
@@ -794,6 +900,136 @@ export function ProfileSidebar({
         description: 'Failed to delete group. Please try again.',
       });
     } finally {
+      setIsConfirmDialogOpen(false);
+    }
+  };
+
+  const handleDeleteChat = async (conversationId: string) => {
+    if (!conversationId || !user?.uid) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Conversation ID or user information is missing.',
+      });
+      setIsConfirmDialogOpen(false);
+      return;
+    }
+
+    setConfirmDialogProps((prev) => ({ ...prev, isLoading: true }));
+
+    try {
+      // WhatsApp-style: Mark all messages as deleted for this user
+      const messagesRef = collection(
+        db,
+        `conversations/${conversationId}/messages`,
+      );
+      const messagesSnapshot = await getDocs(messagesRef);
+
+      const batch = writeBatch(db);
+      messagesSnapshot.docs.forEach((msgDoc) => {
+        batch.update(msgDoc.ref, {
+          deletedFor: arrayUnion(user.uid),
+        });
+      });
+      await batch.commit();
+
+      // Remove yourself from inboxFor so conversation disappears from your list
+      const conversationDocRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationDocRef, {
+        inboxFor: arrayRemove(user.uid),
+        // Mark conversation as deleted for this user so "New Chat" can create a fresh thread
+        deletedForUsers: arrayUnion(user.uid),
+        updatedAt: serverTimestamp(),
+      });
+
+      toast({
+        title: 'Chat Deleted',
+        description: 'The conversation has been removed from your chat list.',
+      });
+
+      // Remove from sidebar list immediately so it disappears (Firestore subscription may lag)
+      if (onConversationRemovedFromList) {
+        onConversationRemovedFromList(conversationId);
+      }
+      if (onConversationUpdate) {
+        onConversationUpdate(null);
+      }
+
+      setIsConfirmDialogOpen(false);
+      onClose();
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete chat. Please try again.',
+      });
+      setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+      setIsConfirmDialogOpen(false);
+    }
+  };
+
+  const handleClearChat = async (conversationId: string) => {
+    if (!conversationId || !user?.uid) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Conversation ID or user information is missing.',
+      });
+      setIsConfirmDialogOpen(false);
+      return;
+    }
+
+    setConfirmDialogProps((prev) => ({ ...prev, isLoading: true }));
+
+    try {
+      // WhatsApp-style: Mark all messages as deleted for this user (messages stay for others)
+      const messagesRef = collection(
+        db,
+        `conversations/${conversationId}/messages`,
+      );
+      const messagesSnapshot = await getDocs(messagesRef);
+
+      if (messagesSnapshot.empty) {
+        toast({
+          title: 'Chat Already Empty',
+          description: 'There are no messages to clear.',
+        });
+        setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+        setIsConfirmDialogOpen(false);
+        return;
+      }
+
+      // Mark all messages as deleted for this user
+      const batch = writeBatch(db);
+      messagesSnapshot.docs.forEach((msgDoc) => {
+        batch.update(msgDoc.ref, {
+          deletedFor: arrayUnion(user.uid),
+        });
+      });
+      await batch.commit();
+
+      // Clear local shared media/files and refresh
+      setSharedMedia([]);
+      setSharedFiles([]);
+      setRefreshKey((prev) => prev + 1);
+
+      toast({
+        title: 'Chat Cleared',
+        description:
+          'All messages have been cleared for you. The conversation remains in your list.',
+      });
+
+      setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
+      setIsConfirmDialogOpen(false);
+    } catch (error) {
+      console.error('Error clearing chat:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to clear chat. Please try again.',
+      });
+      setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
       setIsConfirmDialogOpen(false);
     }
   };
@@ -893,11 +1129,11 @@ export function ProfileSidebar({
     return (
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent
-          className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
+          className="w-[calc(100vw-20px)] sm:w-[350px] md:w-[400px] h-full max-h-screen bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl overflow-hidden"
           aria-labelledby="profile-sidebar-title"
           aria-describedby="profile-sidebar-description"
         >
-          <SheetHeader className="p-4 border-b border-[hsl(var(--border))] flex-row items-center">
+          <SheetHeader className="p-4 border-b border-[hsl(var(--border))] flex-row items-center flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -913,7 +1149,7 @@ export function ProfileSidebar({
               Shared Media
             </SheetTitle>
           </SheetHeader>
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-4">
               <SharedMediaDisplay mediaItems={sharedMedia} isExpanded />
             </div>
@@ -926,11 +1162,11 @@ export function ProfileSidebar({
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
-        className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
+        className="w-[calc(100vw-20px)] sm:w-[350px] md:w-[400px] h-full max-h-screen bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl overflow-hidden"
         aria-labelledby="profile-sidebar-title"
         aria-describedby="profile-sidebar-description"
       >
-        <SheetHeader className="p-4 border-b border-[hsl(var(--border))]">
+        <SheetHeader className="p-4 border-b border-[hsl(var(--border))] flex-shrink-0">
           <div className="flex items-center">
             <SheetTitle
               id="profile-sidebar-title"
@@ -943,7 +1179,7 @@ export function ProfileSidebar({
             </p>
           </div>
         </SheetHeader>
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-4 space-y-6">
             {loading && (
               <Card>
@@ -1215,13 +1451,15 @@ export function ProfileSidebar({
                         <CardTitle className="text-base">Actions</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
+                        {/*
                         <Button
                           variant="outline"
                           className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
-                          disabled
+                          disabled={!effectiveConversationId || !user?.uid}
                         >
                           <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
                         </Button>
+                        */}
                         <Button
                           variant="outline"
                           className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))]"
@@ -1267,14 +1505,50 @@ export function ProfileSidebar({
                         <Button
                           variant="outline"
                           className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
-                          disabled
+                          disabled={!effectiveConversationId}
+                          onClick={() => {
+                            if (effectiveConversationId) {
+                              setConfirmDialogProps({
+                                title: 'Clear Chat History?',
+                                description:
+                                  'This will permanently delete all messages in this conversation. This action cannot be undone.',
+                                onConfirm: async () => {
+                                  await handleClearChat(
+                                    effectiveConversationId,
+                                  );
+                                },
+                                confirmButtonText: 'Clear All Messages',
+                                confirmButtonVariant: 'destructive',
+                                isLoading: false,
+                              });
+                              setIsConfirmDialogOpen(true);
+                            }
+                          }}
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
                         </Button>
                         <Button
                           variant="destructive"
                           className="w-full justify-start"
-                          disabled
+                          disabled={!effectiveConversationId}
+                          onClick={() => {
+                            if (effectiveConversationId) {
+                              setConfirmDialogProps({
+                                title: 'Delete Conversation?',
+                                description:
+                                  'This will permanently delete this conversation and all its messages. This action cannot be undone.',
+                                onConfirm: async () => {
+                                  await handleDeleteChat(
+                                    effectiveConversationId,
+                                  );
+                                },
+                                confirmButtonText: 'Delete Conversation',
+                                confirmButtonVariant: 'destructive',
+                                isLoading: false,
+                              });
+                              setIsConfirmDialogOpen(true);
+                            }
+                          }}
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
                         </Button>
@@ -1295,14 +1569,7 @@ export function ProfileSidebar({
                           </CardDescription>
                         )}
                       </CardHeader>
-                      <CardContent>
-                        {(profileData as ProfileGroup).admins && (
-                          <div className="text-xs text-muted-foreground">
-                            Admins:{' '}
-                            {(profileData as ProfileGroup).admins.length}
-                          </div>
-                        )}
-                      </CardContent>
+                      <CardContent />
                     </Card>
 
                     <Card>
@@ -1315,7 +1582,7 @@ export function ProfileSidebar({
                       <CardContent className="p-0">
                         <ScrollArea className="max-h-80 px-2 overflow-y-auto">
                           {(profileData as ProfileGroup).members?.length ? (
-                            <ul className="divide-y divide-gray-200 bg-white dark:bg-gray-900 rounded-lg shadow-sm py-2">
+                            <ul className="divide-y divide-[hsl(var(--border))] bg-[hsl(var(--card))] rounded-lg shadow-sm py-2">
                               {(profileData as ProfileGroup).members.map(
                                 (member) => {
                                   const group = profileData as ProfileGroup;
@@ -1327,11 +1594,15 @@ export function ProfileSidebar({
                                   const canPerformAction =
                                     isCurrentUserAdmin &&
                                     user.uid !== member.id;
+                                  const isCurrentUser = user?.uid === member.id;
 
                                   return (
                                     <li
                                       key={member.id}
-                                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group"
+                                      className={cn(
+                                        'flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 group',
+                                        !isCurrentUser && 'bg-transparent',
+                                      )}
                                     >
                                       <Avatar className="w-8 h-8">
                                         <AvatarImage
@@ -1351,17 +1622,14 @@ export function ProfileSidebar({
                                             : 'bg-gray-400'
                                         }`}
                                       ></span>
-                                      <div className="flex-1 min-w-0">
+                                      <div className="flex-1 min-w-0 flex items-center gap-2">
                                         <span className="text-sm font-medium truncate">
                                           {member.userName}
                                         </span>
                                         {isMemberAdmin && (
-                                          <Badge
-                                            variant="outline"
-                                            className="ml-2 text-[10px] border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300 border"
-                                          >
+                                          <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded bg-[hsl(var(--primary)_/_0.15)] text-[hsl(var(--primary))] dark:bg-[hsl(var(--primary)_/_0.25)]">
                                             Admin
-                                          </Badge>
+                                          </span>
                                         )}
                                       </div>
                                       <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
@@ -1454,8 +1722,7 @@ export function ProfileSidebar({
                                 className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                 onClick={() => setIsAddMembersDialogOpen(true)}
                               >
-                                <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
-                                Members
+                                <UserPlus className="h-4 w-4 mr-2" /> Add Members
                               </Button>
                               <Button
                                 variant="outline"
@@ -1501,15 +1768,56 @@ export function ProfileSidebar({
                                       'conversations',
                                       profileId,
                                     );
+                                    const group = profileData as ProfileGroup;
+                                    const remainingParticipants = (
+                                      group.participants || []
+                                    ).filter((id: string) => id !== user.uid);
+                                    const remainingAdmins = (
+                                      group.admins || []
+                                    ).filter((id: string) => id !== user.uid);
+                                    // When last admin leaves: hand over to the oldest remaining member
+                                    // (first in participants = joined next after the main admin)
+                                    const nextAdmin =
+                                      remainingParticipants.length > 0
+                                        ? remainingParticipants[0]
+                                        : null;
+                                    const newAdmins =
+                                      remainingAdmins.length > 0
+                                        ? remainingAdmins
+                                        : nextAdmin
+                                          ? [nextAdmin]
+                                          : [];
                                     await updateDoc(groupRef, {
                                       [`participantDetails.${user.uid}`]:
                                         deleteField(),
                                       participants: arrayRemove(user.uid),
-                                      admins: arrayRemove(user.uid),
+                                      admins: newAdmins,
+                                      inboxFor: arrayRemove(user.uid),
                                       updatedAt: serverTimestamp(),
                                     });
+                                    // Admin-only system message for group membership changes
+                                    try {
+                                      const actor =
+                                        user?.displayName ||
+                                        user?.email ||
+                                        user?.uid ||
+                                        'Someone';
+                                      await addGroupSystemMessage(
+                                        profileId,
+                                        `${actor} left the group.`,
+                                        {
+                                          event: 'member_left',
+                                          actorId: user?.uid,
+                                          leftId: user?.uid,
+                                        },
+                                      );
+                                    } catch {
+                                      // non-blocking
+                                    }
 
                                     onClose();
+                                    if (onConversationUpdate)
+                                      onConversationUpdate(null);
 
                                     toast({
                                       title: 'Left group',

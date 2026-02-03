@@ -5,6 +5,7 @@ import { axiosInstance } from '@/lib/axiosinstance'; // Adjust path if necessary
 // Represents the structure from individual API endpoints like /freelancer or /business
 export interface ApiUser {
   _id: string;
+  firebase_id?: string; // Firebase Auth UID – use this for chat participants when present
   userName: string; // Login/unique username
   name?: string; // Could be a full name string if provided
   firstName?: string;
@@ -17,7 +18,9 @@ export interface ApiUser {
 
 // Represents the processed user data ready for UI
 export interface CombinedUser {
-  id: string; // Maps to _id
+  id: string; // Maps to _id (backend ID)
+  /** Firebase Auth UID – use this for chat participants/inboxFor so the other user sees the conversation */
+  firebaseUid?: string;
   displayName: string;
   email: string;
   profilePic?: string;
@@ -48,6 +51,8 @@ export const useAllUsers = () => {
         // Debug log
         const processedUsers = freelancerData.map((user) => ({
           id: user._id,
+          // Chat uses Firestore with Firebase UIDs; backend may return firebase_id (when _id differs)
+          firebaseUid: user.firebase_id ?? user._id,
           displayName: (user.firstName && user.lastName
             ? `${user.firstName} ${user.lastName}`
             : user.name || user.userName || 'Unnamed User'

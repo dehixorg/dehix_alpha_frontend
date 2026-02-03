@@ -29,28 +29,32 @@ export function FileAttachment({
     }
   };
 
-  const handleDownload = () => {
-    // Create a temporary link element
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName; // Optional: This sets the downloaded file name
-
-    // Append the link to the body (it needs to be in the DOM to trigger a click event)
-    document.body.appendChild(link);
-
-    // Programmatically click the link to trigger the download
-    link.click();
-
-    // Clean up by removing the link from the DOM
-    document.body.removeChild(link);
+  const handleDownload = async () => {
+    try {
+      // Fetch as blob so download works for cross-origin URLs (e.g. S3 in other chats)
+      const res = await fetch(fileUrl, { mode: 'cors' });
+      if (!res.ok) throw new Error('Fetch failed');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      // Fallback: open in new tab so user can save (e.g. when CORS blocks fetch)
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
-  // Truncate the file name if it's longer than 15 characters
+  // Truncate the file name if it's longer than 25 characters
   const truncatedFileName =
-    fileName.length > 15 ? fileName.substring(14, 28) + '...' : fileName;
+    fileName.length > 25 ? fileName.substring(0, 22) + '...' : fileName;
 
   return (
-    <div className="flex items-center space-x-3 p-2 bg-gray-500 rounded-md w-full max-w-md">
+    <div className="flex items-center space-x-3 p-2 bg-[hsl(var(--muted))] dark:bg-[hsl(var(--accent))] rounded-md w-full max-w-md">
       {/* File Icon */}
       <div className="text-2xl">{getFileIcon(fileType)}</div>
 

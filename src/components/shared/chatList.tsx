@@ -57,6 +57,21 @@ export interface Conversation extends DocumentData {
   createdAt?: string;
   updatedAt?: string;
   labels?: string[];
+  /** Unread message count (legacy) */
+  unreadCount?: number;
+  /** Per-user unread count (Firestore: unreadCountByUser[userId]) */
+  unreadCountByUser?: Record<string, number>;
+  /** User IDs who have this conversation in their inbox (WhatsApp-style: individual = creator until other messages) */
+  inboxFor?: string[];
+  /** User IDs who have muted this conversation (no notification sound/badge emphasis) */
+  mutedByUsers?: string[];
+  /** Single pinned message (WhatsApp-style); null when none */
+  pinnedMessage?: {
+    messageId: string;
+    pinnedAt: string;
+    pinnedBy: string;
+    content?: string;
+  } | null;
 }
 
 interface ChatListProps {
@@ -73,6 +88,8 @@ interface ChatListProps {
     },
   ) => void;
   onOpenNewChatDialog: () => void;
+  /** When each conversation was last opened (so unread glow goes away after seeing) */
+  lastReadAt?: Record<string, string>;
   // Optional handlers to start a new chat with a specific user
   onSelectUser?: (user: CombinedUser) => void | Promise<void>;
   openNewChat?: (user: CombinedUser) => void | Promise<void>;
@@ -84,6 +101,7 @@ export function ChatList({
   setConversation,
   onOpenProfileSidebar,
   onOpenNewChatDialog,
+  lastReadAt = {},
   onSelectUser,
   openNewChat,
 }: ChatListProps) {
@@ -449,26 +467,110 @@ export function ChatList({
             <>
               {displayedConversations.length > 0 ? (
                 displayedConversations.map((conversation) => {
-                  const lastUpdated =
-                    lastUpdatedTimes[conversation.id] || 'N/A';
+                  const lastUpdated = lastUpdatedTimes[conversation.id] ?? '—';
                   const isActive = active?.id === conversation.id;
+
+                  // Check if lastMessage was deleted by current user
+                  const lastMsgDeletedByMe =
+                    conversation.lastMessage &&
+                    (conversation.lastMessage as any).deletedFor &&
+                    Array.isArray(
+                      (conversation.lastMessage as any).deletedFor,
+                    ) &&
+                    (
+                      (conversation.lastMessage as any).deletedFor as string[]
+                    ).includes(currentUser.uid);
+
                   const { text: displayText, icon: displayIcon } =
-                    getLastMessagePreview(conversation.lastMessage);
+                    lastMsgDeletedByMe
+                      ? { text: 'No messages yet', icon: null }
+                      : getLastMessagePreview(conversation.lastMessage);
+
+                  const unreadCount =
+                    conversation.unreadCountByUser?.[currentUser.uid] ??
+                    conversation.unreadCount ??
+                    0;
+                  const lastFromOther =
+                    conversation.lastMessage &&
+                    conversation.lastMessage.senderId !== currentUser.uid &&
+                    !lastMsgDeletedByMe;
+
+                  // Determine if this conversation has unread messages
+                  let hasUnread = false;
+                  if (!isActive) {
+                    // If we have an unread count from backend, use that
+                    if (unreadCount > 0) {
+                      hasUnread = true;
+                    } else if (lastFromOther && conversation.lastMessage) {
+                      // Check if last message is newer than when we last read this conversation
+                      const readAt = lastReadAt[conversation.id];
+                      if (!readAt) {
+                        // Never opened this conversation
+                        hasUnread = true;
+                      } else {
+                        // Compare timestamps
+                        const lastMsgTime = conversation.lastMessage.timestamp;
+                        if (lastMsgTime != null) {
+                          let lastMsgMs: number;
+                          if (typeof lastMsgTime === 'string') {
+                            lastMsgMs = new Date(lastMsgTime).getTime();
+                          } else if (
+                            typeof lastMsgTime === 'object' &&
+                            lastMsgTime !== null &&
+                            'toDate' in lastMsgTime
+                          ) {
+                            lastMsgMs = (lastMsgTime as { toDate: () => Date })
+                              .toDate()
+                              .getTime();
+                          } else if (
+                            typeof lastMsgTime === 'object' &&
+                            lastMsgTime !== null &&
+                            'seconds' in lastMsgTime
+                          ) {
+                            lastMsgMs =
+                              ((lastMsgTime as { seconds: number }).seconds ??
+                                0) * 1000;
+                          } else {
+                            lastMsgMs = new Date(String(lastMsgTime)).getTime();
+                          }
+                          const readAtMs = new Date(readAt).getTime();
+                          hasUnread = lastMsgMs > readAtMs;
+                        }
+                      }
+                    }
+                  }
 
                   return (
                     <div
                       key={conversation.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open chat with ${conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find((p) => p !== currentUser.uid) || '']?.userName || 'User'}${hasUnread ? ', unread messages' : ''}`}
                       className={cn(
-                        'flex items-start p-3 rounded-lg cursor-pointer space-x-3 hover:bg-[#d6dae2a8] dark:hover:bg-[#35383b9e]',
-                        isActive && 'bg-[#d6dae2a8] dark:bg-[#35383b9e]',
+                        'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
+                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--card))]',
+                        isActive &&
+                          'bg-[hsl(var(--accent)_/_0.6)] dark:bg-[hsl(var(--accent)_/_0.4)]',
                       )}
                       onClick={() => setConversation(conversation)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setConversation(conversation);
+                        }
+                      }}
                     >
                       <div
-                        className="flex items-center space-x-3 flex-shrink-0"
-                        onClick={(e) => handleProfileIconClick(e, conversation)}
+                        className="flex items-center flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleProfileIconClick(e, conversation);
+                        }}
+                        role="button"
+                        tabIndex={-1}
+                        aria-label="View profile"
                       >
-                        <Avatar className="w-10 h-10 flex-shrink-0 mt-1">
+                        <Avatar className="w-10 h-10 flex-shrink-0">
                           <AvatarImage
                             src={
                               conversation.type === 'group'
@@ -501,9 +603,9 @@ export function ChatList({
                           </AvatarFallback>
                         </Avatar>
                       </div>
-                      <div className="flex-grow overflow-hidden">
-                        <div className="flex justify-between items-baseline">
-                          <p className="text-sm font-medium truncate">
+                      <div className="flex-grow min-w-0 overflow-hidden">
+                        <div className="flex justify-between items-baseline gap-2">
+                          <p className="text-sm truncate flex-1 text-[hsl(var(--foreground))] font-semibold">
                             {conversation.type === 'group'
                               ? conversation.groupName
                               : conversation.participantDetails?.[
@@ -512,19 +614,40 @@ export function ChatList({
                                   ) || ''
                                 ]?.userName || 'Chat User'}
                           </p>
-                          <p className="text-xs flex-shrink-0 ml-2">
-                            {lastUpdated}
-                          </p>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {unreadCount > 0 && !isActive && (
+                              <span
+                                className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[hsl(var(--primary))] text-[10px] font-semibold text-[hsl(var(--primary-foreground))]"
+                                aria-label={`${unreadCount} unread messages`}
+                              >
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                              </span>
+                            )}
+                            {hasUnread && unreadCount === 0 && (
+                              <span
+                                className="w-2 h-2 rounded-full bg-[hsl(var(--primary))] flex-shrink-0"
+                                aria-hidden
+                              />
+                            )}
+                            <p className="text-[10px] sm:text-xs tabular-nums text-[hsl(var(--muted-foreground))]">
+                              {lastUpdated}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-xs truncate flex items-center gap-1">
+                        <p className="text-xs truncate flex items-center gap-1 mt-0.5 text-[hsl(var(--muted-foreground))]">
                           {displayIcon ? (
-                            <span className="text-[hsl(var(--muted-foreground))]">
+                            <span
+                              className="flex-shrink-0 text-[hsl(var(--muted-foreground))]"
+                              aria-hidden
+                            >
                               {displayIcon}
                             </span>
                           ) : null}
-                          {displayText.length > 40
-                            ? displayText.substring(0, 40) + '...'
-                            : displayText}
+                          <span className="truncate">
+                            {displayText.length > 50
+                              ? displayText.substring(0, 50) + '…'
+                              : displayText}
+                          </span>
                         </p>
                       </div>
                     </div>

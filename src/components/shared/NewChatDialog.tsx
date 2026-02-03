@@ -180,7 +180,7 @@ export function NewChatDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto bg-[hsl(var(--card))]">
+      <DialogContent className="w-[calc(100vw-32px)] sm:max-w-[450px] max-h-[90vh] overflow-y-auto bg-[hsl(var(--card))]">
         <DialogHeader>
           <DialogTitle>Start a Conversation</DialogTitle>
           <DialogDescription>

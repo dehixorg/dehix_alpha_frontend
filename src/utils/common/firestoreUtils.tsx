@@ -16,9 +16,18 @@ import {
   writeBatch,
   runTransaction,
   updateDoc,
+  deleteDoc,
+  deleteField,
+  arrayUnion,
+  arrayRemove,
+  limit,
+  startAfter,
+  DocumentSnapshot,
+  increment,
 } from 'firebase/firestore';
 
 import { db } from '../../config/firebaseConfig';
+import { logger } from '../logger';
 
 /**
  * Subscribe to a single Firestore document for real-time updates.
@@ -87,10 +96,11 @@ export function subscribeToUserConversations(
   const collectionRef = collection(db, collectionPath);
 
   // Create a query that filters conversations where the participants array contains the userID
+  // and orders by the most recently updated conversation (so new chats/groups appear first)
   const filteredQuery = query(
     collectionRef,
     where('participants', 'array-contains', userID),
-    orderBy('timestamp', 'desc'),
+    orderBy('updatedAt', 'desc'),
   );
 
   // Subscribe to the query with onSnapshot
@@ -222,6 +232,47 @@ export async function updateConversationWithMessageTransaction(
       // Reference to the conversation document
       const conversationRef = doc(db, collectionPath, conversationId);
 
+      // Read conversation to check type and inboxFor (WhatsApp-style: recipient sees chat when they receive a message)
+      const convSnap = await transaction.get(conversationRef);
+      const convData = convSnap.exists() ? convSnap.data() : {};
+      const isIndividual = convData.type === 'individual';
+      const inboxFor = Array.isArray(convData.inboxFor)
+        ? [...convData.inboxFor]
+        : [];
+      const participants = Array.isArray(convData.participants)
+        ? convData.participants
+        : [];
+      const senderId = message?.senderId;
+
+      const conversationUpdate: Record<string, unknown> = {
+        lastMessage: message,
+        timestamp: datentime,
+      };
+
+      // For individual chats: ensure both sender and all participants are in inboxFor so recipient sees the conversation
+      if (isIndividual && participants.length > 0) {
+        const missingFromInbox = participants.filter(
+          (id: string) => !inboxFor.includes(id),
+        );
+        if (missingFromInbox.length > 0) {
+          conversationUpdate.inboxFor = arrayUnion(...missingFromInbox);
+          // If a user previously deleted this conversation, bring it back for them when a new message arrives
+          conversationUpdate.deletedForUsers = arrayRemove(...missingFromInbox);
+          conversationUpdate.updatedAt = serverTimestamp();
+        }
+      }
+
+      // Increment unread count for all participants except sender
+      if (senderId) {
+        participants.forEach((pid: string) => {
+          if (pid !== senderId) {
+            (conversationUpdate as any)[`unreadCountByUser.${pid}`] =
+              increment(1);
+          }
+        });
+      }
+      transaction.update(conversationRef, conversationUpdate);
+
       // Reference to the messages subcollection
       const messagesRef = collection(
         db,
@@ -230,14 +281,8 @@ export async function updateConversationWithMessageTransaction(
         'messages',
       );
 
-      // Update the conversation document with the last message and timestamp
-      transaction.update(conversationRef, {
-        lastMessage: message,
-        timestamp: datentime,
-      });
-
       // Add the message to the messages subcollection
-      const newMessageRef = doc(messagesRef); // Generate a new document ID for the message
+      const newMessageRef = doc(messagesRef);
       transaction.set(newMessageRef, {
         ...message,
         timestamp: datentime,
@@ -246,7 +291,7 @@ export async function updateConversationWithMessageTransaction(
 
     return 'Transaction successful';
   } catch (error) {
-    console.error('Transaction failed:', error);
+    logger.error('Transaction failed', error);
     throw error;
   }
 }
@@ -262,7 +307,7 @@ export async function setDataToFirestore(
   try {
     await setDoc(doc(db, collectionPath, docId), data);
   } catch (error) {
-    console.error('Error setting document:', (error as FirestoreError).message);
+    logger.error('Error setting document', (error as FirestoreError).message);
   }
 }
 
@@ -342,3 +387,287 @@ export const markAllNotificationsAsRead = async (userId: string) => {
     throw new Error('Failed to mark notifications as read');
   }
 };
+
+/**
+ * Delete a message from a conversation.
+ * Also updates the conversation's lastMessage if the deleted message was the last one.
+ */
+export async function deleteMessageFromConversation(
+  conversationId: string,
+  messageId: string,
+): Promise<void> {
+  try {
+    // Reference to the message document
+    const messageRef = doc(
+      db,
+      'conversations',
+      conversationId,
+      'messages',
+      messageId,
+    );
+
+    // Delete the message
+    await deleteDoc(messageRef);
+
+    // Optionally update the conversation's lastMessage
+    // Get the latest message after deletion
+    const messagesRef = collection(
+      db,
+      'conversations',
+      conversationId,
+      'messages',
+    );
+    const q = query(messagesRef, orderBy('timestamp', 'desc'));
+    const querySnapshot = await getDocs(q);
+
+    const conversationRef = doc(db, 'conversations', conversationId);
+
+    if (!querySnapshot.empty) {
+      // Update lastMessage to the new latest message
+      const latestMessage = querySnapshot.docs[0].data();
+      await updateDoc(conversationRef, {
+        lastMessage: latestMessage,
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      // No messages left, clear lastMessage
+      await updateDoc(conversationRef, {
+        lastMessage: null,
+        updatedAt: serverTimestamp(),
+      });
+    }
+  } catch (error) {
+    logger.error('Error deleting message', (error as FirestoreError).message);
+    throw error;
+  }
+}
+
+// --- Paginated messages (last 50, load more on scroll) ---
+const MESSAGES_PAGE_SIZE = 50;
+
+/**
+ * Subscribe to the last N messages of a conversation (real-time). Filter out messages deleted by userId.
+ * getOldestSnapshot() returns the snapshot of the oldest message in this page (for loadMoreMessages).
+ */
+export function subscribeToMessagesPaginated(
+  conversationId: string,
+  userId: string,
+  callback: (
+    messages: { id: string; [key: string]: any }[],
+    getOldestSnapshot: () => DocumentSnapshot<DocumentData> | null,
+  ) => void,
+  pageSize: number = MESSAGES_PAGE_SIZE,
+) {
+  const messagesRef = collection(
+    db,
+    'conversations',
+    conversationId,
+    'messages',
+  );
+  const q = query(messagesRef, orderBy('timestamp', 'desc'), limit(pageSize));
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .filter((msg) => {
+        const deletedFor = (msg as any).deletedFor as string[] | undefined;
+        return !deletedFor || !deletedFor.includes(userId);
+      });
+    const getOldestSnapshot = () =>
+      snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+    callback(data, getOldestSnapshot);
+  });
+}
+
+/**
+ * Load older messages (before the given document snapshot). Returns chronological order (oldest first).
+ */
+export async function loadMoreMessages(
+  conversationId: string,
+  userId: string,
+  lastDocSnapshot: DocumentSnapshot<DocumentData>,
+): Promise<{
+  messages: { id: string; [key: string]: any }[];
+  lastDoc: DocumentSnapshot<DocumentData> | null;
+}> {
+  const messagesRef = collection(
+    db,
+    'conversations',
+    conversationId,
+    'messages',
+  );
+  const q = query(
+    messagesRef,
+    orderBy('timestamp', 'desc'),
+    startAfter(lastDocSnapshot),
+    limit(MESSAGES_PAGE_SIZE),
+  );
+  const snapshot = await getDocs(q);
+  const messages = snapshot.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((msg) => {
+      const deletedFor = (msg as any).deletedFor as string[] | undefined;
+      return !deletedFor || !deletedFor.includes(userId);
+    });
+  const lastDoc = snapshot.docs[snapshot.docs.length - 1] ?? null;
+  return { messages, lastDoc };
+}
+
+// --- Typing indicator ---
+export function setUserTyping(
+  conversationId: string,
+  userId: string,
+  isTyping: boolean,
+): void {
+  const typingRef = doc(db, 'conversations', conversationId, 'typing', userId);
+  if (isTyping) {
+    setDoc(typingRef, { at: serverTimestamp() }).catch(() => {});
+  } else {
+    deleteDoc(typingRef).catch(() => {});
+  }
+}
+
+export function subscribeToTyping(
+  conversationId: string,
+  callback: (userIds: string[]) => void,
+): () => void {
+  const typingRef = collection(db, 'conversations', conversationId, 'typing');
+  const TYPING_TTL_MS = 8000;
+  return onSnapshot(typingRef, (snapshot) => {
+    const now = Date.now();
+    const userIds: string[] = [];
+    snapshot.docs.forEach((d) => {
+      const data = d.data() as {
+        at?: { toMillis?: () => number };
+        seconds?: number;
+      };
+      const atMs =
+        data?.at?.toMillis?.() ??
+        (data?.at && typeof (data.at as any).seconds === 'number'
+          ? (data.at as any).seconds * 1000
+          : 0);
+      // If at is 0 or very old, treat as "just wrote" (serverTimestamp may not be resolved yet) and include for TTL
+      const elapsed = atMs > 0 ? now - atMs : 0;
+      if (elapsed < TYPING_TTL_MS) userIds.push(d.id);
+    });
+    callback(userIds);
+  });
+}
+
+// --- Read receipts: mark conversation as read by user ---
+export async function updateConversationReadBy(
+  conversationId: string,
+  userId: string,
+): Promise<void> {
+  try {
+    const convRef = doc(db, 'conversations', conversationId);
+    await updateDoc(convRef, {
+      [`readBy.${userId}`]: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (e) {
+    logger.error('Error updating readBy', e);
+  }
+}
+
+// --- Unread count: reset when user opens conversation ---
+export async function resetUnreadCount(
+  conversationId: string,
+  userId: string,
+): Promise<void> {
+  try {
+    const convRef = doc(db, 'conversations', conversationId);
+    await updateDoc(convRef, {
+      [`unreadCountByUser.${userId}`]: 0,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (e) {
+    logger.error('Error resetting unread count', e);
+  }
+}
+
+// --- Mute: toggle conversation mute for a user (persisted in Firestore) ---
+export async function toggleConversationMute(
+  conversationId: string,
+  userId: string,
+  mute: boolean,
+): Promise<void> {
+  try {
+    const convRef = doc(db, 'conversations', conversationId);
+    if (mute) {
+      await updateDoc(convRef, {
+        mutedByUsers: arrayUnion(userId),
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      await updateDoc(convRef, {
+        mutedByUsers: arrayRemove(userId),
+        updatedAt: serverTimestamp(),
+      });
+    }
+  } catch (e) {
+    logger.error('Error toggling conversation mute', e);
+    throw e;
+  }
+}
+
+// --- Pin message: set or clear pinned message on conversation ---
+export async function pinMessage(
+  conversationId: string,
+  messageId: string,
+  content: string,
+  userId: string,
+): Promise<void> {
+  try {
+    const convRef = doc(db, 'conversations', conversationId);
+    await updateDoc(convRef, {
+      pinnedMessage: {
+        messageId,
+        pinnedAt: new Date().toISOString(),
+        pinnedBy: userId,
+        content: content?.slice(0, 200) || '',
+      },
+      updatedAt: serverTimestamp(),
+    });
+  } catch (e) {
+    logger.error('Error pinning message', e);
+    throw e;
+  }
+}
+
+export async function unpinMessage(conversationId: string): Promise<void> {
+  try {
+    const convRef = doc(db, 'conversations', conversationId);
+    await updateDoc(convRef, {
+      pinnedMessage: deleteField(),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (e) {
+    logger.error('Error unpinning message', e);
+    throw e;
+  }
+}
+
+// --- Group system messages (admins-only) ---
+export async function addGroupSystemMessage(
+  conversationId: string,
+  text: string,
+  meta?: Record<string, any>,
+): Promise<void> {
+  try {
+    const messagesRef = collection(
+      db,
+      'conversations',
+      conversationId,
+      'messages',
+    );
+    await addDoc(messagesRef, {
+      type: 'system',
+      adminsOnly: true,
+      content: text,
+      meta: meta || {},
+      timestamp: new Date().toISOString(),
+    });
+  } catch (e) {
+    logger.error('Error adding group system message', e);
+  }
+}

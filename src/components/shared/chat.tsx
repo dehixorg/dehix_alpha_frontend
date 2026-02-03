@@ -21,11 +21,14 @@ import {
   X,
   ArchiveRestore,
   Archive,
+  ArrowLeft,
+  ChevronDown,
+  Pin,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { doc, DocumentData, updateDoc } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
 import Image from 'next/image';
 
@@ -43,13 +46,13 @@ import {
   DropdownMenuItem,
 } from '../ui/dropdown-menu';
 import { Input } from '../ui/input';
-import { ScrollArea } from '../ui/scroll-area';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import ChatMessageItem from './ChatMessageItem';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Card,
   CardContent,
@@ -58,10 +61,19 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  subscribeToFirestoreCollection,
+  subscribeToMessagesPaginated,
+  loadMoreMessages,
   updateConversationWithMessageTransaction,
   updateDataInFirestore,
+  deleteMessageFromConversation,
+  setUserTyping,
+  subscribeToTyping,
+  updateConversationReadBy,
+  resetUnreadCount,
+  pinMessage as pinMessageFirestore,
+  unpinMessage as unpinMessageFirestore,
 } from '@/utils/common/firestoreUtils';
+import { logger } from '@/utils/logger';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/components/ui/use-toast';
@@ -125,6 +137,7 @@ interface CardsChatProps {
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
   onConversationUpdate?: (updatedConversation: Conversation) => void;
+  onBack?: () => void;
 }
 
 export function CardsChat({
@@ -133,6 +146,7 @@ export function CardsChat({
   onToggleExpand,
   onOpenProfileSidebar,
   onConversationUpdate,
+  onBack,
 }: CardsChatProps) {
   const { toast } = useToast();
   const [primaryUser, setPrimaryUser] = useState<User>({
@@ -145,18 +159,36 @@ export function CardsChat({
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const debouncedSearch = useDebounce(searchValue, 500); /* wait for .5 sec */
   const [messages, setMessages] = useState<DocumentData[]>([]);
+  const [headMessages, setHeadMessages] = useState<DocumentData[]>([]); // Older messages (load more)
+  const getOldestTailSnapshotRef = useRef<(() => unknown) | null>(null);
+  const oldestHeadSnapshotRef = useRef<unknown>(null);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [removedFailedIds, setRemovedFailedIds] = useState<string[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesScrollRef = useRef<HTMLDivElement | null>(null);
+  const [isScrolledUp, setIsScrolledUp] = useState(false);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
+  const [showNewMessagesPill, setShowNewMessagesPill] = useState(false);
+  const [unreadDividerId, setUnreadDividerId] = useState<string | null>(null);
+  const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [, setHoveredMessageId] = useState<string | null>(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
 
-  const prevMessagesLength = useRef(messages.length);
+  const prevMessagesLength = useRef(0);
+  const prevMessageIdsRef = useRef<Set<string>>(new Set());
+  const hasInitializedMessagesRef = useRef(false);
+  const prevLastMessageTimeRef = useRef<number>(0);
+  const trackingConversationIdRef = useRef<string | null>(null);
+  const didInitialScrollToBottomRef = useRef(false);
   const [, setOpenDrawer] = useState(false);
 
   // States for voice recording
@@ -269,7 +301,7 @@ export function CardsChat({
         };
         onOpenProfileSidebar(otherParticipantUid, 'user', initialUserData);
       } else {
-        console.error(
+        logger.error(
           'Could not determine the other participant in an individual chat for profile sidebar.',
         );
       }
@@ -301,7 +333,7 @@ export function CardsChat({
         }
       }
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, messages]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -316,17 +348,22 @@ export function CardsChat({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Subscribe to messages for this conversation and manage loading state
+  // Paginated messages: subscribe to last 50 (tail), head = older pages from "Load more"
   useEffect(() => {
-    if (!conversation?.id) return;
+    if (!conversation?.id || !user?.uid) return;
     setLoading(true);
-    const unsubscribe = subscribeToFirestoreCollection(
-      `conversations/${conversation.id}/messages/`,
-      (data) => {
-        setMessages(data);
+    setHeadMessages([]);
+    setHasMoreMessages(true);
+    oldestHeadSnapshotRef.current = null;
+    const unsubscribe = subscribeToMessagesPaginated(
+      conversation.id,
+      user.uid,
+      (tailData, getOldestSnapshot) => {
+        getOldestTailSnapshotRef.current = getOldestSnapshot;
+        setMessages(tailData);
         setLoading(false);
       },
-      'asc',
+      50,
     );
     return () => {
       try {
@@ -335,7 +372,123 @@ export function CardsChat({
         // no-op
       }
     };
+  }, [conversation?.id, user?.uid]);
+
+  // Typing indicator: subscribe to who is typing
+  useEffect(() => {
+    if (!conversation?.id) return;
+    const unsubTyping = subscribeToTyping(conversation.id, setTypingUserIds);
+    return () => {
+      try {
+        unsubTyping();
+      } catch {
+        // no-op
+      }
+    };
   }, [conversation?.id]);
+
+  // Mark conversation as read and reset unread when opened
+  useEffect(() => {
+    if (!conversation?.id || !user?.uid) return;
+    updateConversationReadBy(conversation.id, user.uid).catch(() => {});
+    resetUnreadCount(conversation.id, user.uid).catch(() => {});
+  }, [conversation?.id, user?.uid]);
+
+  // Clear new message indicators/messages immediately when switching chats (avoid pill on open)
+  useLayoutEffect(() => {
+    setNewMessagesCount(0);
+    setShowNewMessagesPill(false);
+    setUnreadDividerId(null);
+    setMessages([]);
+    setHeadMessages([]);
+    didInitialScrollToBottomRef.current = false;
+    // Reset tracking so initial load doesn't count as "new"
+    prevMessagesLength.current = 0;
+    prevMessageIdsRef.current = new Set();
+    hasInitializedMessagesRef.current = false;
+    prevLastMessageTimeRef.current = 0;
+    trackingConversationIdRef.current = conversation?.id ?? null;
+  }, [conversation?.id]);
+
+  // Always open the chat at the bottom (latest message) once the first page loads.
+  useEffect(() => {
+    if (!conversation?.id) return;
+    if (loading) return;
+    if (didInitialScrollToBottomRef.current) return;
+    // Only when we have messages (avoid scrolling on empty)
+    if (messages.length === 0 && headMessages.length === 0) return;
+    didInitialScrollToBottomRef.current = true;
+    // Use viewport so it works after load; "auto" to avoid jank on open
+    const viewport = messagesScrollRef.current;
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    }
+    setIsScrolledUp(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scroll once when messages load; messages ref would re-run too often
+  }, [conversation?.id, loading, messages.length, headMessages.length]);
+
+  const toTime = (t: unknown): number => {
+    if (!t) return 0;
+    if (typeof t === 'string') return new Date(t).getTime();
+    if (typeof t === 'object' && t !== null && 'toMillis' in t) return (t as { toMillis: () => number }).toMillis();
+    if (typeof t === 'object' && t !== null && 'seconds' in t) return ((t as { seconds: number }).seconds ?? 0) * 1000;
+    return new Date(String(t)).getTime();
+  };
+  const allMessagesRaw = [...headMessages, ...messages].sort(
+    (a, b) => toTime(a.timestamp) - toTime(b.timestamp),
+  );
+  const allMessages = allMessagesRaw.filter((m) => !removedFailedIds.includes(m.id as string));
+  const unreadDividerIndex =
+    unreadDividerId != null
+      ? allMessages.findIndex((m: any) => (m?.id as string) === unreadDividerId)
+      : -1;
+
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (!conversation?.id || !user?.uid) return;
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    const trimmed = (typeof input === 'string' ? input : '').trim();
+    if (trimmed.length > 0) {
+      typingTimeoutRef.current = setTimeout(() => {
+        setUserTyping(conversation.id, user.uid, true);
+        typingTimeoutRef.current = null;
+      }, 400);
+    } else {
+      setUserTyping(conversation.id, user.uid, false);
+    }
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      setUserTyping(conversation.id, user.uid, false);
+    };
+  }, [input, conversation?.id, user?.uid]);
+
+  const handleLoadMoreMessages = useCallback(async () => {
+    if (!conversation?.id || !user?.uid || loadingMore) return;
+    const getOldest = getOldestTailSnapshotRef.current;
+    const snapshot = (oldestHeadSnapshotRef.current ?? (getOldest ? getOldest() : null)) as import('firebase/firestore').DocumentSnapshot<DocumentData> | null;
+    if (!snapshot) return;
+    setLoadingMore(true);
+    try {
+      const { messages: older, lastDoc } = await loadMoreMessages(
+        conversation.id,
+        user.uid,
+        snapshot as import('firebase/firestore').DocumentSnapshot<DocumentData>,
+      );
+      if (lastDoc) oldestHeadSnapshotRef.current = lastDoc;
+      setHasMoreMessages(older.length >= 50);
+      setHeadMessages((prev) => [...older, ...prev]);
+    } catch {
+      setHasMoreMessages(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [conversation?.id, user?.uid, loadingMore]);
+
+  const clearTypingOnBlur = useCallback(() => {
+    if (conversation?.id && user?.uid) setUserTyping(conversation.id, user.uid, false);
+  }, [conversation?.id, user?.uid]);
 
   // Resolve and set primary user details for 1:1 chats
   useEffect(() => {
@@ -354,28 +507,136 @@ export function CardsChat({
     });
   }, [conversation, user.uid]);
 
+  // Track "new messages while scrolled up" robustly:
+  // - Never count initial load
+  // - Never count "load older messages" pagination (older messages prepended)
+  // - Only count appended newer messages from OTHER users while not at bottom
   useEffect(() => {
-    if (messages.length > prevMessagesLength.current) {
+    // If the conversation just changed, ignore any existing message state from the previous chat.
+    // This prevents showing the unread pill/line on open.
+    if (trackingConversationIdRef.current !== (conversation?.id ?? null)) {
+      trackingConversationIdRef.current = conversation?.id ?? null;
+      hasInitializedMessagesRef.current = false;
+      prevLastMessageTimeRef.current = 0;
+      prevMessageIdsRef.current = new Set();
+      prevMessagesLength.current = 0;
+      return;
+    }
+
+    const total = allMessages.length;
+    const currentLastTime =
+      total > 0 ? toTime((allMessages[total - 1] as any).timestamp) : 0;
+
+    // Initialize (first REAL snapshot for this conversation).
+    // IMPORTANT: don't treat our own "cleared state" (total === 0 right after switching chats)
+    // as initialization, otherwise the first real snapshot will be miscounted as "new messages".
+    if (!hasInitializedMessagesRef.current) {
+      if (total === 0) return;
+      hasInitializedMessagesRef.current = true;
+      prevLastMessageTimeRef.current = currentLastTime;
+      prevMessageIdsRef.current = new Set(
+        allMessages.map((m: any) => m.id as string),
+      );
+      prevMessagesLength.current = total;
+      return;
+    }
+
+    const prevLastTime = prevLastMessageTimeRef.current;
+    const appendedNewer = currentLastTime > prevLastTime;
+
+    // Update refs early (so we don't double-count on fast re-renders)
+    prevLastMessageTimeRef.current = Math.max(prevLastTime, currentLastTime);
+
+    const prevIds = prevMessageIdsRef.current;
+    const newlyAdded = allMessages.filter((m: any) => !prevIds.has(m.id as string));
+
+    // Always update IDs snapshot
+    prevMessageIdsRef.current = new Set(allMessages.map((m: any) => m.id as string));
+    prevMessagesLength.current = total;
+
+    // Ignore non-appends (typically pagination / reorder)
+    if (!appendedNewer) return;
+
+    const newlyAddedFromOthers = newlyAdded.filter((m: any) => {
+      const senderId = m?.senderId as string | undefined;
+      if (!senderId || senderId === user?.uid) return false;
+      const t = toTime(m?.timestamp);
+      return t >= prevLastTime;
+    });
+
+    if (newlyAddedFromOthers.length === 0) return;
+
+    const el = messagesScrollRef.current;
+    const threshold = 100;
+    const nearBottom = !!el && el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+
+    // If user is at bottom, follow conversation and don't show indicators.
+    if (nearBottom && el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+      return;
+    }
+
+    // User is not at bottom: show indicators.
+    setIsScrolledUp(true);
+    setNewMessagesCount((n) => n + newlyAddedFromOthers.length);
+    setUnreadDividerId((prev) => prev ?? (newlyAddedFromOthers[0]?.id as string));
+    setShowNewMessagesPill(true);
+  }, [allMessages, unreadDividerId, user?.uid, conversation?.id]);
+
+  const scrollDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const handleMessagesScroll = useCallback(() => {
+    if (scrollDebounceRef.current) clearTimeout(scrollDebounceRef.current);
+    scrollDebounceRef.current = setTimeout(() => {
+      const el = messagesScrollRef.current;
+      if (!el) return;
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const threshold = 100;
+      const nearBottom = scrollHeight - scrollTop - clientHeight < threshold;
+      if (nearBottom) {
+        setIsScrolledUp(false);
+        // Pill disappears when user scrolls to bottom; line stays until they send
+        setShowNewMessagesPill(false);
+      } else {
+        setIsScrolledUp(true);
+      }
+      scrollDebounceRef.current = null;
+    }, 100);
+  }, []);
+
+  const scrollToBottom = () => {
+    const viewport = messagesScrollRef.current;
+    if (viewport) {
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+    } else {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-    prevMessagesLength.current = messages.length;
-  }, [messages.length]);
+    setIsScrolledUp(false);
+    // Pill disappears when user jumps to bottom; line stays until they send
+    setShowNewMessagesPill(false);
+  };
 
   async function sendMessage(
     conversation: Conversation,
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
-    // --- ADD THIS CHECK ---
+    if (!conversation?.id || !user?.uid) return;
     if (conversation.blocked?.status === true) {
       toast({
         variant: 'destructive',
         title: 'Action Denied',
         description: 'You cannot send messages to a blocked conversation.',
       });
-      return; // Stop the function
+      return;
     }
-    // --- END OF CHECK ---
+    // User is sending a message: clear unread indicators immediately (UX)
+    if (newMessagesCount > 0) {
+      setNewMessagesCount(0);
+      setShowNewMessagesPill(false);
+    }
+    if (unreadDividerId) {
+      setUnreadDividerId(null);
+    }
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
@@ -394,20 +655,16 @@ export function CardsChat({
       if (result === 'Transaction successful') {
         setInput('');
         setIsSending(false);
+        // Clear new message indicators when user sends a message
+        setNewMessagesCount(0);
+        setUnreadDividerId(null);
       } else {
-        console.error('Failed to send message - unexpected result:', result);
+        logger.error('Failed to send message - unexpected result:', result);
         throw new Error(`Failed to send message: ${result}`);
       }
     } catch (error: any) {
-      console.error('Error sending message:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        conversationId: conversation?.id,
-        messageContent: message.content,
-        hasVoiceMessage: !!message.voiceMessage,
-      });
-      throw error; // Re-throw the error so it can be caught by the calling function
+      logger.error('Error sending message:', error?.message, error?.stack);
+      throw error;
     } finally {
       setIsSending(false);
     }
@@ -475,7 +732,7 @@ export function CardsChat({
           description: 'File uploaded successfully',
         });
       } catch (error: any) {
-        console.error('Error uploading file:', {
+        logger.error('Error uploading file:', {
           error: error.message,
           code: error.code,
           response: error.response?.data,
@@ -520,7 +777,7 @@ export function CardsChat({
 
       sendMessage(conversation, message, setInput);
     } catch (error) {
-      console.error('Error creating meet:', error);
+      logger.error('Error creating meet:', error);
     }
   }
 
@@ -606,7 +863,7 @@ export function CardsChat({
         description: 'Speak into your microphone.',
       });
     } catch (err) {
-      console.error('Error accessing microphone:', err);
+      logger.error('Error accessing microphone:', err);
       toast({
         variant: 'destructive',
         title: 'Microphone Error',
@@ -700,8 +957,8 @@ export function CardsChat({
 
       toast({ title: 'Success', description: 'Voice message sent!' });
     } catch (error: any) {
-      console.error('Error sending voice message:', error);
-      console.error('Error details:', {
+      logger.error('Error sending voice message:', error);
+      logger.error('Error details:', {
         message: error.message,
         stack: error.stack,
         code: error.code,
@@ -792,6 +1049,140 @@ export function CardsChat({
     );
   }
 
+  // Delete message handler (also removes failed/optimistic messages from UI on error)
+  async function handleDeleteMessage(messageId: string): Promise<void> {
+    if (!conversation?.id) return;
+    try {
+      await deleteMessageFromConversation(conversation.id, messageId);
+      // If the deleted message was pinned, clear the pin
+      if (conversation.pinnedMessage?.messageId === messageId && onConversationUpdate) {
+        try {
+          await unpinMessageFirestore(conversation.id);
+          onConversationUpdate({
+            ...conversation,
+            pinnedMessage: undefined,
+          });
+        } catch (err) {
+          logger.error('Error unpinning deleted message', err);
+        }
+      }
+    } catch {
+      setRemovedFailedIds((prev) => (prev.includes(messageId) ? prev : [...prev, messageId]));
+    }
+  }
+
+  /** Retry failed message – delete failed and re-send */
+  async function handleRetryMessage(messageId: string): Promise<void> {
+    const msg = allMessagesRaw.find((m: any) => m.id === messageId);
+    if (!msg || !conversation?.id || msg.senderId !== user?.uid) return;
+    try {
+      try {
+        await deleteMessageFromConversation(conversation.id, messageId);
+      } catch {
+        // Message may not exist in Firestore if it failed before write
+      }
+      await sendMessage(
+        conversation,
+        {
+          senderId: user.uid,
+          content: msg.content,
+          timestamp: new Date().toISOString(),
+          replyTo: msg.replyTo || null,
+        },
+        setInput,
+      );
+      toast({ title: 'Message resent' });
+    } catch (error) {
+      logger.error('Error retrying message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to resend',
+        description: 'Please try again.',
+      });
+    }
+  }
+
+  // Start editing: put message content in composer
+  function handleStartEdit(messageId: string, content: string): void {
+    setReplyToMessageId('');
+    setEditingMessageId(messageId);
+    setInput(content);
+    requestAnimationFrame(() => {
+      if (composerRef.current) {
+        composerRef.current.innerHTML = content;
+        composerRef.current.focus();
+      }
+    });
+  }
+
+  // Update message in Firestore
+  async function handleUpdateMessage(messageId: string, newContent: string): Promise<void> {
+    if (!conversation?.id) return;
+
+    try {
+      await updateDataInFirestore(
+        `conversations/${conversation.id}/messages`,
+        messageId,
+        { content: newContent },
+      );
+      setEditingMessageId(null);
+      setInput('');
+      if (composerRef.current) composerRef.current.innerHTML = '';
+      toast({ title: 'Message updated', description: 'Your message has been edited.' });
+    } catch (error) {
+      logger.error('Error updating message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update message. Please try again.',
+      });
+      throw error;
+    }
+  }
+
+  async function handlePinMessage(messageId: string, content: string): Promise<void> {
+    if (!conversation?.id || !user?.uid || !onConversationUpdate) return;
+    try {
+      await pinMessageFirestore(conversation.id, messageId, content, user.uid);
+      onConversationUpdate({
+        ...conversation,
+        pinnedMessage: {
+          messageId,
+          pinnedAt: new Date().toISOString(),
+          pinnedBy: user.uid,
+          content: (content || '').slice(0, 200),
+        },
+      });
+      toast({ title: 'Message pinned' });
+    } catch (error) {
+      logger.error('Error pinning message', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to pin',
+        description: 'Please try again.',
+      });
+    }
+  }
+
+  async function handleUnpinMessage(): Promise<void> {
+    if (!conversation?.id || !onConversationUpdate) return;
+    try {
+      await unpinMessageFirestore(conversation.id);
+      onConversationUpdate({
+        ...conversation,
+        pinnedMessage: undefined,
+      });
+      toast({ title: 'Message unpinned' });
+    } catch (error) {
+      logger.error('Error unpinning message', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to unpin',
+        description: 'Please try again.',
+      });
+    }
+  }
+
   // --- ADD THIS LOGIC ---
   // 1. Determine if the current conversation is blocked
   const isBlocked = conversation?.blocked?.status === true;
@@ -846,7 +1237,7 @@ export function CardsChat({
         title: `Conversation ${newState === 'archived' ? 'Archived' : 'Unarchived'}`,
       });
     } catch (error) {
-      console.error('Error toggling archive state:', error);
+      logger.error('Error toggling archive state:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -930,14 +1321,28 @@ export function CardsChat({
         </Card>
       ) : (
         <>
-          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-none sm:rounded-xl">
-            <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-t-xl">
-              <button
-                onClick={handleHeaderClick}
-                className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
-                aria-label="View profile information"
-              >
-                <Avatar className="w-10 h-10">
+          <Card className="col-span-3 flex flex-col h-full w-full min-w-0  bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-none sm:rounded-xl">
+            {/* Chat header: consistent 16px/24px spacing, clear divider */}
+            <CardHeader className="flex flex-row items-center justify-between gap-4 py-4 px-4 sm:px-6 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-b border-[hsl(var(--border))] shadow-sm rounded-none sm:rounded-t-xl">
+              <div className="flex items-center min-w-0 flex-1">
+                {/* Back button for mobile */}
+                {onBack && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onBack}
+                    className="flex-shrink-0 sm:hidden mr-2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2"
+                    aria-label="Go back to chat list"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                )}
+                <button
+                  onClick={handleHeaderClick}
+                  className="flex items-center gap-3 text-left hover:bg-[hsl(var(--accent)_/_0.5)] rounded-lg px-2 py-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 min-w-0"
+                  aria-label="View profile information"
+                >
+                <Avatar className="w-10 h-10 flex-shrink-0">
                   <AvatarImage
                     src={
                       conversation.type === 'group'
@@ -962,22 +1367,22 @@ export function CardsChat({
                       : 'P'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="cursor-pointer">
-                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))] hover:underline">
+                <div className="cursor-pointer min-w-0 text-left">
+                  <p className="text-base font-semibold leading-tight text-[hsl(var(--card-foreground))] truncate hover:underline">
                     {conversation.type === 'group'
                       ? conversation.groupName
                       : primaryUser.userName || 'Chat'}
                   </p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))] hover:underline">
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] truncate hover:underline">
                     {conversation.type === 'group'
-                      ? `${Object.keys(conversation.participantDetails || {}).length} members`
+                      ? `${(conversation.participants?.length ?? 0)} members`
                       : primaryUser.email || 'Click to view profile'}
                   </p>
                 </div>
               </button>
-              {/* create a search bar input here to take input from user to search conversation */}
+              </div>
               <TooltipProvider>
-                <div className="flex items-center space-x-0.5 sm:space-x-1">
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0" role="toolbar" aria-label="Chat actions">
                   {/* Desktop controls */}
                   {isSearchVisible ? (
                     <div className="hidden sm:flex items-center space-x-2">
@@ -985,7 +1390,7 @@ export function CardsChat({
                         value={searchValue}
                         onChange={(e) => setSearchValue(e.target.value)}
                         placeholder="Search in conversation..."
-                        className="w-40 sm:w-56 rounded-full text-sm"
+                        className="w-32 sm:w-40 md:w-56 rounded-full text-sm"
                       />
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -1074,7 +1479,7 @@ export function CardsChat({
                           if (onToggleExpand) {
                             onToggleExpand();
                           } else {
-                            console.error(
+                            logger.error(
                               '[CardsChat] onToggleExpand is undefined!',
                             );
                           }
@@ -1113,7 +1518,7 @@ export function CardsChat({
                     <DropdownMenuContent
                       align="end"
                       sideOffset={5}
-                      className="w-52 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+                      className="w-52 bg-[hsl(var(--popover))]"
                     >
                       <DropdownMenuItem
                         onClick={() => setIsSearchVisible((v) => !v)}
@@ -1147,7 +1552,7 @@ export function CardsChat({
                           if (onToggleExpand) {
                             onToggleExpand();
                           } else {
-                            console.error(
+                            logger.error(
                               '[CardsChat] onToggleExpand is undefined!',
                             );
                           }
@@ -1188,7 +1593,7 @@ export function CardsChat({
                     <DropdownMenuContent
                       align="end"
                       sideOffset={5}
-                      className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+                      className="w-48 bg-[hsl(var(--popover))]"
                     >
                       <DropdownMenuItem
                         onClick={() => setOpenReport(true)}
@@ -1202,56 +1607,245 @@ export function CardsChat({
                 </div>
               </TooltipProvider>
             </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
-              <ScrollArea className="flex flex-col space-y-3">
-                {messages.map((message, index) => (
-                  <ChatMessageItem
-                    key={message.id}
-                    message={message as any}
-                    index={index}
-                    messages={messages as any}
-                    userId={user.uid}
-                    conversation={conversation}
-                    onHoverChange={(id) => setHoveredMessageId(id)}
-                    setModalImage={setModalImage}
-                    audioRefs={audioRefs}
-                    handleLoadedMetadata={handleLoadedMetadata}
-                    handlePlay={handlePlay}
-                    toggleReaction={toggleReaction}
-                    setReplyToMessageId={setReplyToMessageId}
-                    messagesEndRef={messagesEndRef}
-                    onOpenProfileSidebar={onOpenProfileSidebar}
-                  />
-                ))}
+            {/* Mobile search bar */}
+            {isSearchVisible && (
+              <div className="sm:hidden flex items-center gap-2 p-2 border-b border-[hsl(var(--border))] bg-[hsl(var(--card))]">
+                <Input
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  placeholder="Search in conversation..."
+                  className="flex-1 rounded-full text-sm"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Close search"
+                  onClick={() => {
+                    setIsSearchVisible(false);
+                    setSearchValue('');
+                  }}
+                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            <CardContent className="relative flex-1 flex flex-col min-h-0 py-4 px-1 sm:px-2 bg-[hsl(var(--background))]">
+              {/* New message pill – click to jump to latest */}
+              {showNewMessagesPill && newMessagesCount > 0 && (
+                <button
+                  type="button"
+                  onClick={scrollToBottom}
+                  className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-medium shadow-lg hover:bg-[hsl(var(--primary))]/90 transition-colors pointer-events-auto"
+                  aria-label={`${newMessagesCount} new messages`}
+                >
+                  {newMessagesCount} new{' '}
+                  {newMessagesCount === 1 ? 'message' : 'messages'}
+                </button>
+              )}
+              {/* Pinned message header – fixed at top, does not scroll */}
+              {conversation.pinnedMessage && (
+                <div className="flex-shrink-0 flex items-center gap-2 px-2 py-1.5 rounded-lg bg-[hsl(var(--muted))] dark:bg-[hsl(var(--accent)_/_0.3)] border border-[hsl(var(--border))] mx-1 mb-2">
+                  <Pin className="h-4 w-4 flex-shrink-0 text-[hsl(var(--muted-foreground))]" />
+                  <button
+                    type="button"
+                    className="flex-1 min-w-0 text-left hover:opacity-80"
+                    onClick={() => {
+                      const el = document.getElementById(`message-${conversation.pinnedMessage?.messageId}`);
+                      el?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    <p className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Pinned message</p>
+                    <p className="text-sm text-[hsl(var(--foreground))] truncate">{conversation.pinnedMessage.content || 'Photo or file'}</p>
+                  </button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="flex-shrink-0 text-xs"
+                    onClick={() => handleUnpinMessage()}
+                    aria-label="Unpin message"
+                  >
+                    Unpin
+                  </Button>
+                </div>
+              )}
+              <ScrollArea
+                viewportRef={messagesScrollRef}
+                onViewportScroll={handleMessagesScroll}
+                className="flex-1 min-h-0"
+                viewportClassName="overflow-x-hidden"
+              >
+                <div className="flex flex-col gap-2 py-2 pl-2">
+                {hasMoreMessages && (messages.length >= 50 || headMessages.length > 0) && (
+                  <div className="flex justify-center py-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleLoadMoreMessages}
+                      disabled={loadingMore}
+                      className="text-[hsl(var(--muted-foreground))]"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <LoaderCircle className="h-4 w-4 animate-spin mr-1 inline" />
+                          Loading...
+                        </>
+                      ) : (
+                        'Load older messages'
+                      )}
+                    </Button>
+                  </div>
+                )}
+                {allMessages.length === 0 && !loading && (
+                  <div className="flex flex-col items-center justify-center py-12 text-center text-[hsl(var(--muted-foreground))] text-sm" role="status" aria-label="No messages">
+                    <p>No messages yet.</p>
+                    <p className="mt-1">Send a message to start the conversation.</p>
+                  </div>
+                )}
+                {allMessages.map((message, index) => {
+                  const showUnreadDivider =
+                    unreadDividerIndex !== -1 && index === unreadDividerIndex;
+                  const isAdmin =
+                    Array.isArray(conversation.admins) &&
+                    conversation.admins.includes(user.uid);
+                  const isAdminsOnly = (message as any)?.adminsOnly === true;
+                  if (isAdminsOnly && !isAdmin) return null;
+                  const isSystem = (message as any)?.type === 'system';
+                  return (
+                    <React.Fragment key={message.id}>
+                      {showUnreadDivider && (
+                        <div className="flex items-center gap-2 py-2">
+                          <div className="flex-1 h-px bg-[hsl(var(--border))]" />
+                          <span className="px-2 text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap">
+                            {newMessagesCount} new{' '}
+                            {newMessagesCount === 1 ? 'message' : 'messages'}
+                          </span>
+                          <div className="flex-1 h-px bg-[hsl(var(--border))]" />
+                        </div>
+                      )}
+                      {isSystem ? (
+                        <div className="flex justify-center py-2">
+                          <span className="px-3 py-1 rounded-full text-xs bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border border-[hsl(var(--border))] max-w-[90%] truncate">
+                            {(message as any)?.content || 'System update'}
+                          </span>
+                        </div>
+                      ) : (
+                        <ChatMessageItem
+                          message={message as any}
+                          index={index}
+                          messages={allMessages as any}
+                          userId={user.uid}
+                          conversation={conversation}
+                          onHoverChange={(id) => setHoveredMessageId(id)}
+                          setModalImage={setModalImage}
+                          audioRefs={audioRefs}
+                          handleLoadedMetadata={handleLoadedMetadata}
+                          handlePlay={handlePlay}
+                          toggleReaction={toggleReaction}
+                          setReplyToMessageId={setReplyToMessageId}
+                          messagesEndRef={messagesEndRef}
+                          onOpenProfileSidebar={onOpenProfileSidebar}
+                          onDeleteMessage={handleDeleteMessage}
+                          onEditMessage={handleStartEdit}
+                          onRetryMessage={handleRetryMessage}
+                          pinnedMessage={conversation.pinnedMessage}
+                          onPinMessage={handlePinMessage}
+                          onUnpinMessage={handleUnpinMessage}
+                        />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+                  </div>
               </ScrollArea>
+
+              {/* Scroll-to-bottom button */}
+              {isScrolledUp && newMessagesCount === 0 && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  onClick={scrollToBottom}
+                  className="absolute bottom-4 right-4 z-10 h-10 w-10 rounded-full shadow-lg"
+                  aria-label="Scroll to bottom"
+                >
+                  <ChevronDown className="h-5 w-5" />
+                </Button>
+              )}
+
+              {/* Typing indicator – only show OTHER people typing (not yourself) */}
+              {(() => {
+                const otherTypingIds = (typingUserIds || []).filter((id) => id !== user?.uid);
+                if (otherTypingIds.length === 0) return null;
+                return (
+                  <div className="px-2 py-1.5 text-xs text-[hsl(var(--muted-foreground))] italic flex items-center gap-1">
+                    <span className="flex gap-0.5">
+                      <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </span>
+                    {otherTypingIds.length === 1
+                      ? (conversation.participantDetails?.[otherTypingIds[0]]?.userName || 'Someone') + ' is typing...'
+                      : 'Several people are typing...'}
+                  </div>
+                );
+              })()}
             </CardContent>
-            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-b-xl">
+            <CardFooter className="bg-[hsl(var(--card))] p-4 border-t border-[hsl(var(--border))] shadow-sm rounded-none sm:rounded-b-xl overflow-hidden w-full min-w-0">
               {isBlocked ? (
                 // If blocked, show this message
-                <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                <div className="flex h-full w-full items-center justify-center rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-4 text-center text-sm text-[hsl(var(--muted-foreground))]">
                   <p>{blockMessage}</p>
                 </div>
               ) : (
                 <form
-                  onSubmit={(event) => {
+                  onSubmit={async (event) => {
                     event.preventDefault();
                     if (input.trim().length === 0) return;
+                    if (editingMessageId) {
+                      await handleUpdateMessage(editingMessageId, input);
+                      return;
+                    }
                     const newMessage = {
                       senderId: user.uid,
                       content: input,
                       timestamp: new Date().toISOString(),
                       replyTo: replyToMessageId || null,
                     };
+                    clearTypingOnBlur();
                     sendMessage(conversation, newMessage, setInput);
                     setReplyToMessageId('');
                   }}
-                  className="flex flex-col w-full space-y-2"
+                  className="flex flex-col w-full min-w-0 gap-3"
                   aria-label="Message input form"
                 >
+                  {editingMessageId && (
+                    <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7] w-full min-w-0">
+                      <span className="text-sm text-[hsl(var(--muted-foreground))]">
+                        Editing message
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-full"
+                        aria-label="Cancel edit"
+                        onClick={() => {
+                          setEditingMessageId(null);
+                          setInput('');
+                          if (composerRef.current) composerRef.current.innerHTML = '';
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                   {replyToMessageId && (
-                    <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
+                    <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7] w-full min-w-0 overflow-hidden">
                       {(() => {
-                        const replyMsg = messages.find(
+                        const replyMsg = allMessages.find(
                           (msg) => msg.id === replyToMessageId,
                         ) as any;
                         const raw = replyMsg?.content || '';
@@ -1305,11 +1899,11 @@ export function CardsChat({
                       </Button>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
+                  <div className="flex items-center gap-2 w-full min-w-0">
+                    <div className="chat-input-wrapper flex-1 min-w-0 flex items-end gap-3 rounded-xl border-0 bg-[hsl(var(--input))] px-1 shadow-none ring-0 focus-within:ring-0 focus-within:border-0">
                       <div
-                        className="absolute inset-y-0 flex items-center justify-center 
-                    pl-0.1 z-10"
+                        className="flex-shrink-0 self-center pl-2 pr-1 py-1.5"
+                        aria-hidden
                       >
                         <EmojiPicker
                           aria-label="Insert emoji"
@@ -1322,7 +1916,8 @@ export function CardsChat({
                         aria-label="Type a message"
                         aria-placeholder="Type a message..."
                         data-placeholder="Type a message..."
-                        className="pl-12 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                        className="chat-composer-input flex-1 min-w-0 min-h-[40px] max-h-48 py-2.5 pl-1 pr-3 overflow-y-auto overflow-x-hidden w-full break-words bg-transparent text-[hsl(var(--foreground))] text-sm outline-none border-0 ring-0 empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                        onBlur={clearTypingOnBlur}
                         onInput={(e) => {
                           const html = (e.currentTarget as HTMLElement)
                             .innerHTML;
@@ -1355,6 +1950,10 @@ export function CardsChat({
                                   'class',
                                 ],
                               });
+                              if (editingMessageId) {
+                                handleUpdateMessage(editingMessageId, sanitized);
+                                return;
+                              }
                               const newMessage = {
                                 senderId: user.uid,
                                 content: sanitized,
@@ -1375,10 +1974,10 @@ export function CardsChat({
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="rounded-full bg-[#96c] hover:bg-[#96c]/90 text-white disabled:bg-[#96c]/50"
+                      className="rounded-full border-0 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-[hsl(var(--primary-foreground))] disabled:opacity-50 focus-visible:ring-0 focus-visible:ring-offset-0 flex-shrink-0"
                       disabled={!input.trim().length || isSending}
-                      aria-label="Send message"
-                      onClick={() => {
+                      aria-label={editingMessageId ? 'Update message' : 'Send message'}
+                      onClick={async () => {
                         const html = composerRef.current?.innerHTML || '';
                         const textContent =
                           composerRef.current?.innerText || '';
@@ -1395,7 +1994,18 @@ export function CardsChat({
                             'span',
                             'a',
                           ],
+                          ALLOWED_ATTR: [
+                            'href',
+                            'target',
+                            'rel',
+                            'style',
+                            'class',
+                          ],
                         });
+                        if (editingMessageId) {
+                          await handleUpdateMessage(editingMessageId, sanitized);
+                          return;
+                        }
                         const newMessage = {
                           senderId: user.uid,
                           content: sanitized,
@@ -1416,6 +2026,7 @@ export function CardsChat({
                     </Button>
                   </div>
                   <div className="flex items-center space-x-1">
+                    {/* Desktop: Always visible formatting buttons */}
                     <Button
                       type="button"
                       variant="ghost"
@@ -1423,7 +2034,7 @@ export function CardsChat({
                       onClick={handleBold}
                       title="Bold"
                       aria-label="Bold"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
                     >
                       {' '}
                       <Bold className="h-4 w-4" />{' '}
@@ -1435,7 +2046,7 @@ export function CardsChat({
                       onClick={handleitalics}
                       title="Italic"
                       aria-label="Italic"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
                     >
                       {' '}
                       <Italic className="h-4 w-4" />{' '}
@@ -1447,12 +2058,13 @@ export function CardsChat({
                       onClick={handleUnderline}
                       title="Underline"
                       aria-label="Underline"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
                     >
                       {' '}
                       <Underline className="h-4 w-4" />{' '}
                     </Button>
 
+                    {/* Mobile: Toggle button for formatting options */}
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -1463,7 +2075,7 @@ export function CardsChat({
                             onClick={toggleFormattingOptions}
                             title="Formatting options"
                             aria-label="Formatting options"
-                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
+                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                           >
                             {' '}
                             <Text className="h-4 w-4" />{' '}
@@ -1475,8 +2087,9 @@ export function CardsChat({
                       </Tooltip>
                     </TooltipProvider>
 
+                    {/* Mobile: Expandable formatting options */}
                     {showFormattingOptions && (
-                      <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] rounded-md">
+                      <div className="flex md:hidden items-center space-x-1 bg-[hsl(var(--muted))] dark:bg-[hsl(var(--accent))] rounded-md">
                         <Button
                           type="button"
                           variant="ghost"

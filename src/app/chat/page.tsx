@@ -1,8 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  doc,
+} from 'firebase/firestore';
 import { MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -35,8 +43,11 @@ const HomePage = () => {
   const searchParams = useSearchParams();
   const user = useSelector((state: RootState) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const allConversationsRef = useRef<Conversation[]>([]); // Raw list (before inboxFor filter) for existence check
+  const removedConversationIdsRef = useRef<Set<string>>(new Set()); // User deleted these from sidebar; keep them out even if subscription returns stale data
   const [activeConversation, setActiveConversation] =
     useState<Conversation | null>(null);
+  const [lastReadAt, setLastReadAt] = useState<Record<string, string>>({}); // conversationId -> ISO timestamp when last opened (so unread glow goes away after seeing)
   const [loading, setLoading] = useState(true);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -71,9 +82,67 @@ const HomePage = () => {
     setProfileSidebarInitialData(undefined);
   };
 
+  // Handle conversation update from ProfileSidebar (mute, delete, etc.)
+  const handleConversationUpdate = useCallback(
+    (conv: Conversation | null) => {
+      setActiveConversation(conv);
+      if (conv === null) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('c');
+        router.push(url.pathname + url.search, { scroll: false });
+      } else {
+        // Keep list in sync (e.g. mute state) so chat list row updates immediately
+        setConversations((prev) =>
+          prev.map((c) => (c.id === conv.id ? { ...c, ...conv } : c)),
+        );
+      }
+    },
+    [router],
+  );
+
+  // Remove conversation from sidebar list when user deletes chat (optimistic + keep it out when subscription fires with stale data)
+  const handleConversationRemovedFromList = useCallback(
+    (conversationId: string) => {
+      removedConversationIdsRef.current.add(conversationId);
+      setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+      setActiveConversation((prev) =>
+        prev?.id === conversationId ? null : prev,
+      );
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('c') === conversationId) {
+        url.searchParams.delete('c');
+        router.push(url.pathname + url.search, { scroll: false });
+      }
+    },
+    [router],
+  );
+
   const toggleChatExpanded = () => {
     setIsChatExpanded((prev) => !prev);
   };
+
+  // Mark conversation as "read" when user opens it so unread glow goes away and stays away until new message
+  useEffect(() => {
+    if (activeConversation?.id) {
+      // Small delay to ensure timestamp is definitely after the last message
+      const timer = setTimeout(() => {
+        setLastReadAt((prev) => ({
+          ...prev,
+          [activeConversation.id]: new Date().toISOString(),
+        }));
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeConversation?.id]);
+
+  // Handle back button on mobile - clear active conversation and URL param
+  const handleBackToList = useCallback(() => {
+    setActiveConversation(null);
+    // Clear the URL parameter
+    const url = new URL(window.location.href);
+    url.searchParams.delete('c');
+    router.replace(url.pathname + url.search, { scroll: false });
+  }, [router]);
 
   async function handleCreateGroupChat(
     selectedUsers: NewChatUser[],
@@ -93,8 +162,21 @@ const HomePage = () => {
       return;
     }
 
-    const allParticipantIds = [user.uid, ...selectedUsers.map((u) => u.id)];
-    const participantDetails = {
+    // Use Firebase UIDs so the conversation appears in each user's chat list (Firestore query uses participants)
+    const otherUids = selectedUsers
+      .map((u) => u.firebaseUid ?? u.id)
+      .filter(Boolean) as string[];
+    const allParticipantIds = [user.uid, ...otherUids];
+    const participantDetails: Record<
+      string,
+      {
+        userName: string;
+        profilePic: string | null;
+        email: string | null;
+        userType?: string;
+        viewState: string;
+      }
+    > = {
       [user.uid]: {
         userName: user.displayName || user.email,
         profilePic: user.photoURL || null,
@@ -104,7 +186,9 @@ const HomePage = () => {
       },
     };
     selectedUsers.forEach((selected: any) => {
-      participantDetails[selected.id] = {
+      const uid = selected.firebaseUid ?? selected.id;
+      if (!uid) return;
+      participantDetails[uid] = {
         userName: selected.displayName,
         profilePic: selected.profilePic || null,
         email: selected.email || null,
@@ -120,6 +204,7 @@ const HomePage = () => {
       participants: allParticipantIds,
       participantDetails: participantDetails,
       type: 'group' as const,
+      inboxFor: allParticipantIds, // All members see the group (WhatsApp-style)
       admins: [user.uid],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -195,25 +280,55 @@ const HomePage = () => {
         return null;
       }
 
-      // Check if conversation already exists
-      const existingConv = conversations.find(
+      // Only "existing" = same person AND you haven't deleted it.
+      const existingConv = allConversationsRef.current.find(
         (conv) =>
           conv.type === 'individual' &&
-          conv.participants.includes(selectedUser.id),
+          conv.participants.includes(selectedUser.id) &&
+          // If you deleted it before (even if inboxFor is missing on legacy docs), don't reuse
+          !(
+            Array.isArray((conv as any).deletedForUsers) &&
+            ((conv as any).deletedForUsers as string[]).includes(user.uid)
+          ) &&
+          (!conv.inboxFor || conv.inboxFor.includes(user.uid)), // not in inboxFor = you deleted it → don't reuse
       );
 
       if (existingConv) {
+        if (
+          existingConv.inboxFor &&
+          !existingConv.inboxFor.includes(user.uid)
+        ) {
+          // Other user created this chat; add current user to inboxFor so they see it
+          try {
+            await updateDoc(doc(db, 'conversations', existingConv.id), {
+              inboxFor: arrayUnion(user.uid),
+              deletedForUsers: arrayRemove(user.uid),
+              updatedAt: serverTimestamp(),
+            });
+          } catch (e) {
+            console.error('Failed to add user to inboxFor', e);
+          }
+        }
         setActiveConversation(existingConv);
+        setConversations((prev) => {
+          const inList = prev.some((c) => c.id === existingConv.id);
+          if (!inList) return [...prev, existingConv];
+          return prev;
+        });
+        const url = new URL(window.location.href);
+        url.searchParams.set('c', existingConv.id);
+        router.push(url.pathname + url.search, { scroll: false });
         setIsNewChatDialogOpen(false);
         notifySuccess('Conversation already exists, switching to it.', 'Info');
         return existingConv;
       }
 
-      // Create new conversation
+      // Create new conversation (WhatsApp-style: visible only to creator until the other user messages)
       try {
         const newConvData = {
           participants: [user.uid, selectedUser.id].sort(),
           type: 'individual' as const,
+          inboxFor: [user.uid], // Only creator sees it until the other user sends a message
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           lastMessage: null,
@@ -261,7 +376,7 @@ const HomePage = () => {
         return null;
       }
     },
-    [conversations, user],
+    [user, router],
   );
 
   // Handle URL parameters for opening specific chats or starting new ones
@@ -331,16 +446,35 @@ const HomePage = () => {
       (data) => {
         if (!isMounted) return;
         const typedData = data as Conversation[];
-        setConversations(typedData);
+        allConversationsRef.current = typedData; // Keep raw list for "existing conversation" check
+        // WhatsApp-style: individual chats only visible to users in inboxFor; groups visible to all participants
+        const visibleConversations = typedData
+          .filter(
+            (conv) =>
+              conv.type !== 'individual' ||
+              !conv.inboxFor ||
+              conv.inboxFor.includes(user.uid),
+          )
+          // If user deleted this conversation, don't show it until a new message re-adds them
+          .filter(
+            (conv) =>
+              !(
+                Array.isArray((conv as any).deletedForUsers) &&
+                ((conv as any).deletedForUsers as string[]).includes(user.uid)
+              ),
+          )
+          .filter((conv) => !removedConversationIdsRef.current.has(conv.id)); // Never re-add conversations user deleted from sidebar (subscription can return stale data)
+        setConversations(visibleConversations);
 
         const convId = searchParams?.get('c');
         if (convId) {
-          const match = typedData.find((c) => c.id === convId) || null;
+          const match =
+            visibleConversations.find((c) => c.id === convId) || null;
           setActiveConversation(match);
         } else if (!isMobile) {
           // Desktop default behavior: auto-select first conversation.
-          if (typedData.length > 0 && !searchParams?.get('userId')) {
-            setActiveConversation((prev) => prev ?? typedData[0]);
+          if (visibleConversations.length > 0 && !searchParams?.get('userId')) {
+            setActiveConversation((prev) => prev ?? visibleConversations[0]);
           }
         } else {
           // Mobile behavior: show list first (no active chat) unless URL explicitly selects one.
@@ -384,13 +518,11 @@ const HomePage = () => {
   const handleSelectConversation = useCallback(
     (conv: Conversation) => {
       setActiveConversation(conv);
-      if (isMobile) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('c', conv.id);
-        router.push(url.pathname + url.search, { scroll: false });
-      }
+      const url = new URL(window.location.href);
+      url.searchParams.set('c', conv.id);
+      router.push(url.pathname + url.search, { scroll: false });
     },
-    [isMobile, router],
+    [router],
   );
 
   let chatListComponentContent;
@@ -425,6 +557,7 @@ const HomePage = () => {
         setConversation={handleSelectConversation}
         onOpenProfileSidebar={handleOpenProfileSidebar}
         onOpenNewChatDialog={() => setIsNewChatDialogOpen(true)}
+        lastReadAt={lastReadAt}
       />
     );
   } else {
@@ -500,6 +633,7 @@ const HomePage = () => {
         onToggleExpand={toggleChatExpanded}
         onOpenProfileSidebar={handleOpenProfileSidebar}
         onConversationUpdate={setActiveConversation}
+        onBack={isMobile ? handleBackToList : undefined}
       />
     );
   } else if (!loading && conversations.length > 0) {
@@ -536,7 +670,7 @@ const HomePage = () => {
         }
         active="Chats"
       />
-      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14 overflow-hidden">
+      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={
             user.type === 'business'
@@ -552,7 +686,7 @@ const HomePage = () => {
           breadcrumbItems={[{ label: 'Chats', link: '/chat' }]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[96vh]">
+        <main className="h-[96vh] overflow-hidden min-h-0">
           {isMobile ? (
             <div className="h-full">
               {activeConversation
@@ -574,7 +708,20 @@ const HomePage = () => {
           profileId={profileSidebarId}
           profileType={profileSidebarType}
           initialData={profileSidebarInitialData}
-          onConversationUpdate={setActiveConversation}
+          onConversationUpdate={handleConversationUpdate}
+          onConversationRemovedFromList={handleConversationRemovedFromList}
+          conversationId={activeConversation?.id}
+          conversation={
+            profileSidebarId && profileSidebarType
+              ? profileSidebarType === 'group'
+                ? (conversations.find((c) => c.id === profileSidebarId) ?? null)
+                : (conversations.find(
+                    (c) =>
+                      c.type === 'individual' &&
+                      c.participants?.includes(profileSidebarId),
+                  ) ?? null)
+              : null
+          }
         />
         {user && (
           <NewChatDialog

@@ -155,6 +155,62 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Visible keyboard focus for accessibility (dark mode safe) */
+  :focus-visible {
+    @apply outline-none ring-2 ring-[hsl(var(--ring))] ring-offset-2 ring-offset-background;
+  }
+
+  /* Chat input: no border, no focus ring (user requested clean input area) */
+  .chat-input-wrapper,
+  .chat-input-wrapper *,
+  .chat-composer-input:focus-visible {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Outgoing message bubble: pointed tail at top-right (WhatsApp-style) */
+  .chat-outgoing-tail {
+    position: relative;
+    overflow: visible;
+  }
+  .chat-outgoing-tail::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -5px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-color: transparent transparent transparent hsl(var(--primary) / 0.15);
+  }
+  .dark .chat-outgoing-tail::after {
+    border-color: transparent transparent transparent hsl(var(--primary) / 0.25);
+  }
+
+  /* Text selection styling for light mode */
+  ::selection {
+    background-color: #3b82f6;
+    color: #ffffff;
+  }
+
+  ::-moz-selection {
+    background-color: #3b82f6;
+    color: #ffffff;
+  }
+
+  /* Text selection styling for dark mode */
+  .dark ::selection {
+    background-color: #60a5fa;
+    color: #1e293b;
+  }
+
+  .dark ::-moz-selection {
+    background-color: #60a5fa;
+    color: #1e293b;
+  }
 }
 
 @layer utilities {
