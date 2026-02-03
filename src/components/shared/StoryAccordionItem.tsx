@@ -269,7 +269,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
         payload,
       );
       notifySuccess('Update permission approved!');
@@ -312,7 +312,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
         payload,
       );
       notifySuccess('Update permission rejected!');
