@@ -87,39 +87,33 @@ export default function ProfilesPage() {
   }, [user.uid]);
 
   const fetchSkillsAndDomains = useCallback(async () => {
-    if (!user.uid) return;
-
     try {
-      const freelancerResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}`,
-      );
+      const skillsRes = await axiosInstance.get('/skills');
+      const domainsRes = await axiosInstance.get('/domain');
 
-      const freelancerData = freelancerResponse.data.data || {};
+      const skillsData = skillsRes.data.data || [];
+      const domainsData = domainsRes.data.data || [];
 
-      const attributes: any[] = Array.isArray(freelancerData.attributes)
-        ? freelancerData.attributes
-        : [];
+      const skillsForOptions = skillsData.map((item: any) => ({
+        ...item,
+        label: item.label || item.name || '',
+        name: item.label || item.name || '',
+      }));
 
-      const skillsForOptions = attributes
-        .filter((item: any) => item?.type === 'SKILL')
-        .map((item: any) => ({
-          ...item,
-          label: item.label || item.name || '',
-        }));
-
-      const domainsForOptions = attributes
-        .filter((item: any) => item?.type === 'DOMAIN')
-        .map((item: any) => ({
-          ...item,
-          label: item.label || item.name || '',
-        }));
+      const domainsForOptions = domainsData.map((item: any) => ({
+        ...item,
+        label: item.label || item.name || '',
+        name: item.label || item.name || '',
+      }));
 
       setSkillsOptions(skillsForOptions);
       setDomainsOptions(domainsForOptions);
     } catch (error) {
       console.error('Error fetching skills and domains:', error);
+      setSkillsOptions([]);
+      setDomainsOptions([]);
     }
-  }, [user.uid]);
+  }, []);
 
   useEffect(() => {
     fetchProfiles();
