@@ -8,6 +8,27 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useBusinessTalentTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -37,6 +58,7 @@ export function useBusinessTalentTour(isReady: boolean) {
         element: '[data-tour="business-talent-header"]',
         on: 'bottom',
       },
+      when: withProgress(tour),
       buttons: [
         {
           text: 'Skip',
@@ -60,6 +82,7 @@ export function useBusinessTalentTour(isReady: boolean) {
         element: '[data-tour="business-talent-tabs"]',
         on: 'bottom',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -74,6 +97,7 @@ export function useBusinessTalentTour(isReady: boolean) {
         element: '[data-tour="business-talent-skill-domain"]',
         on: 'right',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -88,6 +112,7 @@ export function useBusinessTalentTour(isReady: boolean) {
         element: '[data-tour="business-talent-filter"]',
         on: 'bottom',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -102,6 +127,7 @@ export function useBusinessTalentTour(isReady: boolean) {
         element: '[data-tour="business-talent-list"]',
         on: 'left',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {

@@ -12,6 +12,27 @@ function el(selector: string) {
   return document.querySelector(selector);
 }
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useIntervieweeTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -39,6 +60,7 @@ export function useIntervieweeTour(isReady: boolean) {
       scrollTo: false,
       text: 'Manage your interview profile, availability, and interview history here.',
       attachTo: { element: '[data-tour="interviewee"]', on: 'top' },
+      when: withProgress(tour),
       buttons: [
         {
           text: 'Got it',

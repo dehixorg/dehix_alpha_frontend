@@ -8,6 +8,27 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useBusinessDashboardTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -34,6 +55,7 @@ export function useBusinessDashboardTour(isReady: boolean) {
       title: 'Welcome',
       text: 'This is your business dashboard overview.',
       attachTo: { element: '[data-tour="business-welcome"]', on: 'bottom' },
+      when: withProgress(tour),
       buttons: [
         {
           text: 'Skip',
@@ -54,6 +76,7 @@ export function useBusinessDashboardTour(isReady: boolean) {
       title: 'Stats',
       text: 'Track your projects and progress here.',
       attachTo: { element: '[data-tour="business-stats"]', on: 'bottom' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -65,6 +88,7 @@ export function useBusinessDashboardTour(isReady: boolean) {
       title: 'Projects',
       text: 'Manage your current and completed projects here.',
       attachTo: { element: '[data-tour="business-projects"]', on: 'top' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -76,6 +100,7 @@ export function useBusinessDashboardTour(isReady: boolean) {
       title: 'Quick actions',
       text: 'Create and manage projects quickly from here.',
       attachTo: { element: '[data-tour="business-quick-actions"]', on: 'left' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Got it', action: tour.complete },
