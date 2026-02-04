@@ -85,7 +85,10 @@ const Header: React.FC<HeaderProps> = ({
     { path: '/notes', target: 'notes' },
 
     // Freelancer Settings
-    { path: '/freelancer/settings/personal-info', target: 'personal-info-form' },
+    {
+      path: '/freelancer/settings/personal-info',
+      target: 'personal-info-form',
+    },
     { path: '/freelancer/settings/profile', target: 'experience' },
     { path: '/freelancer/settings/kyc', target: 'kyc' },
     { path: '/freelancer/settings/levels-badges', target: 'level-badges' },
@@ -196,14 +199,16 @@ const Header: React.FC<HeaderProps> = ({
               dispatch(startTour({ mode: 'page', target }));
             }}
             onFullPlatformTour={() => {
-              const isSettingsPage = pathname.startsWith('/freelancer/settings');
+              const isSettingsPage = pathname.startsWith(
+                '/freelancer/settings',
+              );
 
-  dispatch(
-    startTour({
-      mode: 'platform',
-      target: isSettingsPage ? 'sidebar' : 'navigation',
-    })
-  );
+              dispatch(
+                startTour({
+                  mode: 'platform',
+                  target: isSettingsPage ? 'sidebar' : 'navigation',
+                }),
+              );
             }}
           />
         </div>

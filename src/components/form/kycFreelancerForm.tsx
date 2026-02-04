@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 
 import { Card } from '../ui/card';
+import { useKycTour } from '../tour/freelancer-profile/useKycTour';
 
 import LiveCaptureField from './register/livecapture';
 import KYCDetailsView from './KYCDetailsView';
@@ -37,7 +38,6 @@ import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import KycStatusAlert from '@/components/shared/KycStatusAlert';
-import { useKycTour } from '../tour/freelancer-profile/useKycTour';
 
 const profileFormSchema = z.object({
   aadharOrGovtId: z
@@ -433,7 +433,10 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   useKycTour(true);
 
   return (
-    <Card className="p-6 md:p-8 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto" data-tour="kyc">
+    <Card
+      className="p-6 md:p-8 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto"
+      data-tour="kyc"
+    >
       <div className="flex justify-between items-center mb-4 md:mb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold">KYC Verification</h2>

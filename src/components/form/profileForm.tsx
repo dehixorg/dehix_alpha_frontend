@@ -18,6 +18,7 @@ import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
+import { usePersonalInfoTour } from '../tour/freelancer-profile/usePersonalInfo';
 
 import CoverLetterTextarea from './CoverLetterTextarea';
 
@@ -45,7 +46,6 @@ import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { usePersonalInfoTour } from '../tour/freelancer-profile/usePersonalInfo';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {

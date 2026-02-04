@@ -53,168 +53,168 @@ export function useProfilePlatformTour(isReady: boolean) {
     tour.on('cancel', () => dispatch(clearTour()));
     tour.on('complete', () => dispatch(clearTour()));
 
-tour.addStep({
-  id: 'sidebar',
-  title: 'Settings Menu',
-  text: 'Use this sidebar to navigate all your freelancer settings.',
-  attachTo: {
-    element: '[data-tour="sidebar"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    {
-      text: 'Next',
-      action: tour.next,
-    },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar',
+      title: 'Settings Menu',
+      text: 'Use this sidebar to navigate all your freelancer settings.',
+      attachTo: {
+        element: '[data-tour="sidebar"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-personal-info',
-  title: 'Personal Information',
-  text: 'Start here to fill in your basic personal details.',
-  attachTo: {
-    element: '[data-tour="sidebar-personal-info"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    { text: 'Back', action: tour.back },
-    { text: 'Next', action: tour.next },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar-personal-info',
+      title: 'Personal Information',
+      text: 'Start here to fill in your basic personal details.',
+      attachTo: {
+        element: '[data-tour="sidebar-personal-info"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-profile',
-  title: 'My Profile',
-  text: 'Manage your public profile and how clients see you.',
-  attachTo: {
-    element: '[data-tour="sidebar-profile"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    { text: 'Back', action: tour.back },
-    { text: 'Next', action: tour.next },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar-profile',
+      title: 'My Profile',
+      text: 'Manage your public profile and how clients see you.',
+      attachTo: {
+        element: '[data-tour="sidebar-profile"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-kyc',
-  title: 'KYC Verification',
-  text: 'Complete KYC to unlock payments and higher limits.',
-  attachTo: {
-    element: '[data-tour="sidebar-kyc"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    { text: 'Back', action: tour.back },
-    { text: 'Next', action: tour.next },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar-kyc',
+      title: 'KYC Verification',
+      text: 'Complete KYC to unlock payments and higher limits.',
+      attachTo: {
+        element: '[data-tour="sidebar-kyc"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-levels',
-  title: 'Levels & Badges',
-  text: 'Track your progress and unlock new freelancer levels.',
-  attachTo: {
-    element: '[data-tour="sidebar-levels"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    { text: 'Back', action: tour.back },
-    { text: 'Next', action: tour.next },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar-levels',
+      title: 'Levels & Badges',
+      text: 'Track your progress and unlock new freelancer levels.',
+      attachTo: {
+        element: '[data-tour="sidebar-levels"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-streak',
-  title: 'Streak',
-  text: 'Maintain activity streaks to boost your visibility.',
-  attachTo: {
-    element: '[data-tour="sidebar-streak"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    { text: 'Back', action: tour.back },
-    { text: 'Next', action: tour.next },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar-streak',
+      title: 'Streak',
+      text: 'Maintain activity streaks to boost your visibility.',
+      attachTo: {
+        element: '[data-tour="sidebar-streak"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-transactions',
-  title: 'Transactions',
-  text: 'View all your earnings, withdrawals, and payment history.',
-  attachTo: {
-    element: '[data-tour="sidebar-transactions"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    { text: 'Back', action: tour.back },
-    { text: 'Next', action: tour.next },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar-transactions',
+      title: 'Transactions',
+      text: 'View all your earnings, withdrawals, and payment history.',
+      attachTo: {
+        element: '[data-tour="sidebar-transactions"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-profiles',
-  title: 'Profiles',
-  text: 'Manage multiple profiles for different roles or skills.',
-  attachTo: {
-    element: '[data-tour="sidebar-profiles"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    { text: 'Back', action: tour.back },
-    { text: 'Next', action: tour.next },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar-profiles',
+      title: 'Profiles',
+      text: 'Manage multiple profiles for different roles or skills.',
+      attachTo: {
+        element: '[data-tour="sidebar-profiles"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-resume',
-  title: 'Resume',
-  text: 'Upload and manage your resume for quick applications.',
-  attachTo: {
-    element: '[data-tour="sidebar-resume"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    { text: 'Back', action: tour.back },
-    { text: 'Next', action: tour.next },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar-resume',
+      title: 'Resume',
+      text: 'Upload and manage your resume for quick applications.',
+      attachTo: {
+        element: '[data-tour="sidebar-resume"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-feedback',
-  title: 'Feedback',
-  text: 'Share your experience and help us improve the platform.',
-  attachTo: {
-    element: '[data-tour="sidebar-feedback"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
-    { text: 'Back', action: tour.back },
-    { text: 'Next', action: tour.next },
-  ],
-});
+    tour.addStep({
+      id: 'sidebar-feedback',
+      title: 'Feedback',
+      text: 'Share your experience and help us improve the platform.',
+      attachTo: {
+        element: '[data-tour="sidebar-feedback"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-tour.addStep({
-  id: 'sidebar-reports',
-  title: 'Reports',
-  text: 'View platform reports and account summaries.',
-  attachTo: {
-    element: '[data-tour="sidebar-reports"]',
-    on: 'right',
-  },
-  when: withProgress(tour),
-  buttons: [
+    tour.addStep({
+      id: 'sidebar-reports',
+      title: 'Reports',
+      text: 'View platform reports and account summaries.',
+      attachTo: {
+        element: '[data-tour="sidebar-reports"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
         { text: 'Back', action: tour.back },
         {
           text: 'Got it',
@@ -224,7 +224,7 @@ tour.addStep({
           },
         },
       ],
-});
+    });
 
     tourRef.current = tour;
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+
 import { usePlatformTour } from '@/components/tour/shared/usePlatformTour';
 import { useProfilePlatformTour } from '@/components/tour/freelancer-profile/useProfilePlatformTour';
 

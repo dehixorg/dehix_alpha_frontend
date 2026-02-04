@@ -18,7 +18,7 @@ export type TourTarget =
   | 'notes'
   | 'navigation'
 
-  // Freelancer settings 
+  // Freelancer settings
   | 'personal-info-form'
   | 'experience'
   | 'kyc'
@@ -37,7 +37,6 @@ export type TourTarget =
   | 'business-projects'
   | 'business-talent'
   | null;
-
 
 export type TourState = {
   trigger: number;
