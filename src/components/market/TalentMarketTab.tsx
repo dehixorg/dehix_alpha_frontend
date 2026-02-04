@@ -45,6 +45,7 @@ interface Project {
   companyName?: string;
   email?: string;
   url?: string[];
+  bookmarked?: boolean;
   profiles?: Array<{
     domain?: string;
     domain_id?: string;
@@ -94,7 +95,12 @@ interface FilterState {
 
 const getActiveFilterCount = (filters: FilterState) => {
   // For Talent Market, only domain and skills filters are relevant
-  return (filters.domain?.length || 0) + (filters.skills?.length || 0);
+  return (
+    (filters.domain?.length || 0) +
+    (filters.skills?.length || 0) +
+    (filters.projectDomain?.length || 0) +
+    (filters.favourites ? 1 : 0)
+  );
 };
 
 // API types
@@ -107,6 +113,7 @@ interface TalentMarketItem {
   talentName?: string;
   domainId?: string;
   domainName?: string;
+  type?: 'SKILL' | 'DOMAIN';
   description?: string;
   experience?: string;
   status?: string;
@@ -247,8 +254,24 @@ const TalentMarketTab: React.FC = () => {
       const name =
         it.skillName || it.domainName || it.talentName || 'Opportunity';
       const nameId = it.skillId || it.domainId || it.talentId || '';
-      const skills = it.skillName ? [it.skillName] : [];
-      const pdomains = it.domainName ? [it.domainName] : [];
+
+      // Talent market items use talentName and type field
+      // type can be 'SKILL' or 'DOMAIN'
+      const skills: string[] = [];
+      const pdomains: string[] = [];
+
+      if (it.talentName) {
+        // Check the type field to determine if it's a skill or domain
+        if (it.type === 'SKILL' || it.skillName) {
+          skills.push(it.talentName);
+        } else if (it.type === 'DOMAIN' || it.domainName) {
+          pdomains.push(it.talentName);
+        } else {
+          // If no type specified, add to skills as fallback
+          skills.push(it.talentName);
+        }
+      }
+
       return {
         _id: it._id,
         projectName: name,
@@ -260,6 +283,7 @@ const TalentMarketTab: React.FC = () => {
         createdAt: it.createdAt,
         updatedAt: it.updatedAt,
         status: it.status,
+        bookmarked: it.bookmarked,
         profiles: [
           {
             experience: it.experience ? Number(it.experience) : undefined,
@@ -275,15 +299,50 @@ const TalentMarketTab: React.FC = () => {
     });
 
     const f = filters;
+
     const filtered = mapped.filter((job) => {
-      if (f.domain?.length > 0 && job.projectDomain?.length) {
-        const ok = f.domain.some((d) => job.projectDomain!.includes(d));
+      // Domain filter - case insensitive
+      if (f.domain?.length > 0) {
+        if (!job.projectDomain || job.projectDomain.length === 0) return false;
+        const ok = f.domain.some((d) =>
+          job.projectDomain!.some(
+            (pd) =>
+              pd.toLowerCase().includes(d.toLowerCase()) ||
+              d.toLowerCase().includes(pd.toLowerCase()),
+          ),
+        );
         if (!ok) return false;
       }
-      if (f.skills?.length > 0 && job.skillsRequired?.length) {
-        const ok = f.skills.some((s) => job.skillsRequired!.includes(s));
+      // Project Domain filter - case insensitive
+      if (f.projectDomain?.length > 0) {
+        if (!job.projectDomain || job.projectDomain.length === 0) return false;
+        const ok = f.projectDomain.some((d) =>
+          job.projectDomain!.some(
+            (pd) =>
+              pd.toLowerCase().includes(d.toLowerCase()) ||
+              d.toLowerCase().includes(pd.toLowerCase()),
+          ),
+        );
         if (!ok) return false;
       }
+      // Skills filter - case insensitive
+      if (f.skills?.length > 0) {
+        if (!job.skillsRequired || job.skillsRequired.length === 0)
+          return false;
+        const ok = f.skills.some((s) =>
+          job.skillsRequired!.some(
+            (js) =>
+              js.toLowerCase().includes(s.toLowerCase()) ||
+              s.toLowerCase().includes(js.toLowerCase()),
+          ),
+        );
+        if (!ok) return false;
+      }
+      // Favourites Data
+      if (f.favourites) {
+        if (!job.bookmarked) return false;
+      }
+
       const q = searchQuery.trim().toLowerCase();
       if (q) {
         const hay = `${job.projectName} ${job.description || ''}`.toLowerCase();
@@ -362,7 +421,10 @@ const TalentMarketTab: React.FC = () => {
           </span>
         </div>
         {!isLargeScreen && (
-          <div className="ml-auto flex items-center gap-2">
+          <div
+            className="ml-auto flex items-center gap-2"
+            data-tour="tm-filters-mobile"
+          >
             <FilterSheet
               filters={filters}
               setFilters={setFilters}
@@ -384,7 +446,10 @@ const TalentMarketTab: React.FC = () => {
 
       <div className="flex flex-1">
         {isLargeScreen && (
-          <aside className="w-80 flex-shrink-0 pr-6 sticky top-20">
+          <aside
+            className="w-80 flex-shrink-0 pr-6 sticky top-20"
+            data-tour="tm-filters-desktop"
+          >
             <FilterComponent
               filters={filters}
               setFilters={setFilters}
@@ -403,7 +468,7 @@ const TalentMarketTab: React.FC = () => {
           </aside>
         )}
 
-        <div className="flex-1">
+        <div className="flex-1" data-tour="tm-job-cards">
           {isAnyLoading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (

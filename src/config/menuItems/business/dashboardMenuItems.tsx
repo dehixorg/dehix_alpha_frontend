@@ -33,36 +33,43 @@ export const menuItemsTop: MenuItem[] = [
     href: '/dashboard/business',
     icon: <Home className="h-5 w-5" />,
     label: 'Dashboard',
+    tourId: 'nav-dashboard',
   },
   {
     href: '/business/market',
     icon: <ShoppingCart className="h-5 w-5" />,
     label: 'Market',
+    tourId: 'nav-market',
   },
   {
     href: '/business/projects',
     icon: <FolderOpen className="h-5 w-5" />,
     label: 'Projects',
+    tourId: 'nav-projects',
   },
   {
     href: '/project-invitations',
     icon: <SendHorizontal className="h-5 w-5" />,
     label: 'Project Invitations',
+    tourId: 'nav-invitations',
   },
   {
     href: '/business/talent',
     icon: <Users2 className="h-5 w-5" />,
     label: 'Talent',
+    tourId: 'nav-talent',
   },
   {
     href: '/chat',
     icon: <MessageSquare className="h-5 w-5" />,
     label: 'Chats',
+    tourId: 'nav-chat',
   },
   {
     href: '/notes',
     icon: <StickyNote className="h-5 w-5" />,
     label: 'Notes',
+    tourId: 'nav-notes',
   },
 ];
 

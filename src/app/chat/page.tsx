@@ -37,6 +37,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
+import { useChatTour } from '@/components/tour/shared/useChatTour';
 
 const HomePage = () => {
   const router = useRouter();
@@ -65,6 +66,8 @@ const HomePage = () => {
 
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
+
+  useChatTour(true);
 
   const handleOpenProfileSidebar = (
     id: string,
@@ -656,7 +659,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col" data-tour="chat">
       <SidebarMenu
         menuItemsTop={
           user.type === 'business'

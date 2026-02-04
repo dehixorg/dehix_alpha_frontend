@@ -34,7 +34,6 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
             <TableHead>Description</TableHead>
             <TableHead className="w-[120px]">Type</TableHead>
             <TableHead className="w-[120px] text-right">Amount</TableHead>
-            <TableHead className="w-[120px] text-right">Balance</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -90,13 +89,6 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                   >
                     {isCredit ? '+' : ''}
                     {transaction.amount}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="font-mono text-sm">
-                    {transaction.balance !== undefined
-                      ? transaction.balance
-                      : '-'}
                   </div>
                 </TableCell>
               </TableRow>

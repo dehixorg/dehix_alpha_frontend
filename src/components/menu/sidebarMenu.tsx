@@ -85,6 +85,7 @@ import { Verified } from 'lucide-react';
 import { ThemeToggle } from '../shared/themeToggle';
 //import { ChatList } from '../shared/chatList';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { usePlatformTour } from '../tour/shared/usePlatformTour';
 
 import {
   Tooltip,
@@ -104,6 +105,7 @@ export interface MenuItem {
   href?: string;
   icon: React.ReactNode;
   label: string;
+  tourId?: string;
   subItems?: {
     href: string;
     icon: React.ReactNode;
@@ -143,6 +145,9 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   };
 
   const finalMenuItemsTop = [...menuItemsTop];
+  usePlatformTour(true);
+
+  usePlatformTour(true);
 
   if (
     isKycCheck &&
@@ -261,6 +266,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
             <Link
               href={item.href ? item.href : ''}
               onClick={() => setActive(item.label)}
+              data-tour={item.tourId}
               className={`flex h-9 w-9 items-center justify-center rounded-lg ${
                 item.label === active || item.label === 'Dehix'
                   ? item.label === 'Dehix'
@@ -284,7 +290,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
+    <aside
+      className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex"
+      data-tour="sidebar"
+    >
       <div className="flex h-full min-h-0 flex-col">
         <ScrollArea className="flex-1 min-h-0">
           <nav className="flex flex-col items-center gap-4 px-2 py-5">
