@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { use, useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
@@ -32,6 +32,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
+import { useLevelTour } from '@/components/tour/freelancer-profile/useLevelTour';
 
 // Define the base interface for gamification items
 interface GamificationItemBase {
@@ -269,6 +270,8 @@ export default function LevelsAndBadgesPage() {
   const [checkingEligibility, setCheckingEligibility] = useState<
     Record<string, boolean>
   >({});
+
+  useLevelTour(true);
 
   // Memoize the calculateDisplayLevel function
   const calculateDisplayLevel = useCallback((priority: number): number => {
@@ -699,6 +702,7 @@ export default function LevelsAndBadgesPage() {
 
   // Render the component
   return (
+    <div data-tour="level-badges">
     <FreelancerSettingsLayout
       active="Levels & Badges"
       activeMenu="Levels & Badges"
@@ -1166,5 +1170,6 @@ export default function LevelsAndBadgesPage() {
         </CardContent>
       </Card>
     </FreelancerSettingsLayout>
+    </div>
   );
 }

@@ -31,6 +31,7 @@ import { TransactionSummaryComponent } from '@/components/transactions/Transacti
 import { TransactionFiltersSheet } from '@/components/transactions/TransactionFiltersSheet';
 import { TransactionExportDropdown } from '@/components/transactions/TransactionExportDropdown';
 import { TransactionTable } from '@/components/transactions/TransactionTable';
+import { useTransactionTour } from '@/components/tour/freelancer-profile/useTransactionTour';
 
 export default function TransactionsPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -115,6 +116,8 @@ export default function TransactionsPage() {
     { label: 'Settings', link: '#' },
     { label: 'Transactions', link: '#' },
   ];
+
+  useTransactionTour(true);
 
   // Loading State
   if (isLoading) {
@@ -334,7 +337,7 @@ export default function TransactionsPage() {
       breadcrumbItems={breadcrumbItems}
       isKycCheck={true}
     >
-      <div className="space-y-6">
+      <div className="space-y-6" data-tour="transaction">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-3">

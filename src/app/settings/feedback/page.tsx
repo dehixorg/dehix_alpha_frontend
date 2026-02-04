@@ -35,6 +35,7 @@ import { StarRating } from '@/components/ui/star-rating';
 import { Textarea } from '@/components/ui/textarea';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { useFeedbackTour } from '@/components/tour/freelancer-profile/useFeedbackTour';
 
 type UserType = 'freelancer' | 'business';
 
@@ -234,6 +235,8 @@ export default function FeedbackPage() {
     }
   };
 
+  useFeedbackTour(true);
+
   const renderQuestion = (campaign: Campaign, question: Question) => {
     const answer = answers[campaign.campaignId]?.[question.questionId];
 
@@ -316,6 +319,7 @@ export default function FeedbackPage() {
   };
 
   return (
+    <div  data-tour="feedback" >
     <SettingsAppLayout
       active="Feedback"
       activeMenu="Feedback"
@@ -523,5 +527,6 @@ export default function FeedbackPage() {
         </div>
       </div>
     </SettingsAppLayout>
+    </div>
   );
 }

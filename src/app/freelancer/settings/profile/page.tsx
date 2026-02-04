@@ -26,6 +26,7 @@ import ProjectCard from '@/components/cards/freelancerProjectCard';
 import { AddProject } from '@/components/dialogs/addProject';
 import ProjectDetailsDialog from '@/components/dialogs/projectDetailsDialog';
 import EditProjectDialog from '@/components/dialogs/editProjectDialog';
+import { useExperienceTour } from '@/components/tour/freelancer-profile/useExperienceTour';
 
 export default function FreelancerProfileSettings() {
   const user = useSelector((state: RootState) => state.user);
@@ -140,6 +141,8 @@ export default function FreelancerProfileSettings() {
     setSelectedProject(null);
   };
 
+  useExperienceTour(true);
+
   return (
     <FreelancerSettingsLayout
       active="My Profile"
@@ -151,7 +154,7 @@ export default function FreelancerProfileSettings() {
       isKycCheck={true}
       contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14"
     >
-      <div className="w-full mx-auto">
+      <div className="w-full mx-auto" data-tour="experience">
         <div className="card rounded-xl border shadow-sm overflow-hidden">
           <Tabs
             value={activeTab}

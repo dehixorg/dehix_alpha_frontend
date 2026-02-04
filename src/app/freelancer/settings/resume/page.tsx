@@ -13,6 +13,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ResumeInfoCard from '@/components/cards/resumeInfoCard';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/shared/EmptyState';
+import { useResumeTour } from '@/components/tour/freelancer-profile/useResumeTour';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
@@ -90,7 +91,10 @@ export default function Resume() {
     );
   }
 
-  return (
+  useResumeTour(true);
+
+  return ( 
+    <div data-tour="resume">
     <FreelancerSettingsLayout
       active="Resume"
       activeMenu="Resume"
@@ -138,5 +142,6 @@ export default function Resume() {
         </div>
       )}
     </FreelancerSettingsLayout>
+    </div>
   );
 }

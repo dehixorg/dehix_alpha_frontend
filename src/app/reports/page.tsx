@@ -19,6 +19,7 @@ import PastReportsTab from '@/components/report-tabs/PastReportsTab';
 import { ReportInfo } from '@/config/report/defaultReportInfo';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { notifySuccess } from '@/utils/toastMessage';
+import { useReportsTour } from '@/components/tour/freelancer-profile/useReportsTour';
 
 export default function NewReportPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -58,7 +59,10 @@ export default function NewReportPage() {
     return true;
   };
 
+  useReportsTour(true);
+
   return (
+    <div data-tour="reports">
     <SettingsAppLayout
       active="Reports"
       activeMenu="Reports"
@@ -135,5 +139,6 @@ export default function NewReportPage() {
         </div>
       </div>
     </SettingsAppLayout>
+    </div>
   );
 }

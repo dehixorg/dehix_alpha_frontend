@@ -45,6 +45,7 @@ import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { usePersonalInfoTour } from '../tour/freelancer-profile/usePersonalInfo';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -141,6 +142,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     },
     mode: 'all',
   });
+
+  usePersonalInfoTour(true);
 
   const handleAddCustomSkill = async () => {
     if (!customSkill.label.trim()) {
@@ -766,7 +769,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-6" data-tour="personal-info-form">
       {/* Page Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-xl md:text-2xl font-semibold tracking-tight flex items-center gap-2">
