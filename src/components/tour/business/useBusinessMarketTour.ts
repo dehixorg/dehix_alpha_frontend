@@ -37,22 +37,20 @@ export function useBusinessMarketTour(isReady: boolean) {
         element: '[data-tour="business-market-header"]',
         on: 'bottom',
       },
-      buttons: [{ text: 'Next', action: tour.next }],
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
-
-    // tour.addStep({
-    //   id: 'business-market-results',
-    //   title: 'Search results',
-    //   text: 'This shows how many freelancers match your current filters.',
-    //   attachTo: {
-    //     element: '[data-tour="business-market-results"]',
-    //     on: 'left',
-    //   },
-    //   buttons: [
-    //     { text: 'Back', action: tour.back },
-    //     { text: 'Next', action: tour.next },
-    //   ],
-    // });
 
     tour.addStep({
       id: 'business-market-filters',

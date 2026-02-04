@@ -38,7 +38,19 @@ export function useDashboardTour(isReady: boolean) {
       title: 'Profile completion',
       text: 'Complete your profile to unlock more features.',
       attachTo: { element: '[data-tour="profile-completion"]', on: 'bottom' },
-      buttons: [{ text: 'Next', action: tour.next }],
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep({

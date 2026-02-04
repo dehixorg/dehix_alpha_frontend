@@ -37,7 +37,19 @@ export function useBusinessTalentTour(isReady: boolean) {
         element: '[data-tour="business-talent-header"]',
         on: 'bottom',
       },
-      buttons: [{ text: 'Next', action: tour.next }],
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep({

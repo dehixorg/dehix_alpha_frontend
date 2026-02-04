@@ -44,7 +44,19 @@ export function useMarketTour(isReady: boolean) {
       title: 'Marketplace',
       text: 'This is the marketplace where you find your next opportunity.',
       attachTo: { element: '[data-tour="pm-market"]', on: 'top' },
-      buttons: [{ text: 'Next', action: tour.next }],
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep({

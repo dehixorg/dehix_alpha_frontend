@@ -34,7 +34,19 @@ export function useBusinessDashboardTour(isReady: boolean) {
       title: 'Welcome',
       text: 'This is your business dashboard overview.',
       attachTo: { element: '[data-tour="business-welcome"]', on: 'bottom' },
-      buttons: [{ text: 'Next', action: tour.next }],
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep({

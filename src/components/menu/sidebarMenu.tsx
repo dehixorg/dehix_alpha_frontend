@@ -145,7 +145,6 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   };
 
   const finalMenuItemsTop = [...menuItemsTop];
-  usePlatformTour(true);
 
   usePlatformTour(true);
 

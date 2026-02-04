@@ -98,7 +98,6 @@ const ProjectInvitationsPage: React.FC = () => {
     'createdAt' | 'projectName' | 'freelancerName'
   >('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  useProjectInvitationTour(true);
 
   useProjectInvitationTour(true);
 
