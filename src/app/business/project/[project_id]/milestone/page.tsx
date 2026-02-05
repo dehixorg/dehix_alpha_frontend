@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
 
@@ -44,7 +44,6 @@ interface Project {
 
 const Page = () => {
   const { project_id } = useParams<{ project_id: string }>();
-  const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
 
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -63,13 +62,37 @@ const Page = () => {
       }
 
       try {
+        // Generate a unique session key
+        const sessionKey = crypto.randomUUID();
+
+        // Fetch freelancer details to get complete user information
+        let freelancerData;
         try {
-          await axiosInstance.get(`/public/freelancer/${freelancerId}`);
+          const response = await axiosInstance.get(
+            `/public/freelancer/${freelancerId}`,
+          );
+          freelancerData = response.data?.data?.data || response.data?.data;
         } catch (error) {
           console.error('Failed to fetch freelancer details:', error);
+          notifyError('Failed to fetch freelancer details.', 'Error');
+          return;
         }
 
-        router.push('/chat');
+        // Create chat data object
+        const chatData = {
+          newChat: true,
+          userId: freelancerId,
+          userName: freelancerName,
+          userEmail: freelancerData?.email || '',
+          userPhoto: freelancerData?.profilePic || null,
+          userType: 'freelancer',
+        };
+
+        // Store in localStorage (accessible across tabs)
+        localStorage.setItem(sessionKey, JSON.stringify(chatData));
+
+        // Open in new tab
+        window.open(`/chat?session=${sessionKey}`, '_blank');
 
         notifySuccess(`Opening chat with ${freelancerName}...`, 'Chat');
       } catch (error) {
@@ -77,7 +100,7 @@ const Page = () => {
         notifyError('Failed to open chat. Please try again.', 'Error');
       }
     },
-    [router, user],
+    [user],
   );
 
   const handleGroupCreated = () => {
