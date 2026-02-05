@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
 import {
@@ -317,16 +317,34 @@ export function ChatList({
     setActiveView('inbox');
   };
 
-  const displayedConversations = conversations
-    .filter((conversation) => {
+  // Create a stable key for conversations to prevent re-rendering issues
+  const getConversationKey = useCallback((conversation: Conversation) => {
+    // Use conversation ID plus a combination of timestamp and lastMessage content for stability
+    const timestamp =
+      conversation.timestamp ||
+      conversation.lastMessage?.timestamp ||
+      conversation.createdAt ||
+      '0';
+    const lastMessageContent = conversation.lastMessage?.content || 'none';
+    const lastMessageTime = conversation.lastMessage?.timestamp || 'none';
+    return `${conversation.id}-${timestamp}-${lastMessageContent}-${lastMessageTime}`;
+  }, []);
+
+  const displayedConversations = useMemo(() => {
+    // First filter by view state (inbox/archived)
+    const filteredByView = conversations.filter((conversation) => {
       const userDetails = conversation.participantDetails?.[currentUser.uid];
       if (activeView === 'archived') {
         return userDetails?.viewState === 'archived';
       } else {
         return userDetails?.viewState !== 'archived';
       }
-    })
-    .filter((conversation) => {
+    });
+
+    // Then filter by search term
+    const filteredBySearch = filteredByView.filter((conversation) => {
+      if (!searchTerm.trim()) return true;
+
       const name =
         conversation.groupName ||
         conversation.participantDetails?.[
@@ -336,11 +354,47 @@ export function ChatList({
       const lastMessageContent = getLastMessagePreview(
         conversation.lastMessage,
       ).text;
+      const searchLower = searchTerm.toLowerCase();
+
       return (
-        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
+        name.toLowerCase().includes(searchLower) ||
+        lastMessageContent.toLowerCase().includes(searchLower)
       );
     });
+
+    // Sort conversations by timestamp (most recent first) for stable ordering
+    return filteredBySearch.sort((a, b) => {
+      const getTime = (conv: Conversation) => {
+        // Try timestamp first, then lastMessage.timestamp, then createdAt
+        if (conv.timestamp) {
+          return new Date(conv.timestamp).getTime();
+        }
+        if (conv.lastMessage?.timestamp) {
+          const time = conv.lastMessage.timestamp;
+          if (typeof time === 'string') {
+            return new Date(time).getTime();
+          } else if (typeof time === 'object' && time !== null) {
+            if ('toDate' in time) {
+              return (time as { toDate: () => Date }).toDate().getTime();
+            } else if ('seconds' in time) {
+              return (time as { seconds: number }).seconds * 1000;
+            }
+          }
+          return new Date(String(time)).getTime();
+        }
+        if (conv.createdAt) {
+          return new Date(conv.createdAt).getTime();
+        }
+        return 0; // Fallback for conversations without timestamps
+      };
+
+      const timeA = getTime(a);
+      const timeB = getTime(b);
+
+      // Sort by time descending (newest first)
+      return timeB - timeA;
+    });
+  }, [conversations, activeView, searchTerm, currentUser.uid]);
 
   return (
     <div className="flex flex-col h-full bg-[hsl(var(--card))]">
@@ -542,7 +596,7 @@ export function ChatList({
 
                   return (
                     <div
-                      key={conversation.id}
+                      key={getConversationKey(conversation)}
                       role="button"
                       tabIndex={0}
                       aria-label={`Open chat with ${conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find((p) => p !== currentUser.uid) || '']?.userName || 'User'}${hasUnread ? ', unread messages' : ''}`}

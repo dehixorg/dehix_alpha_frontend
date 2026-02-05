@@ -1722,7 +1722,8 @@ export function ProfileSidebar({
                                 className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                 onClick={() => setIsAddMembersDialogOpen(true)}
                               >
-                                <UserPlus className="h-4 w-4 mr-2" /> Add Members
+                                <UserPlus className="h-4 w-4 mr-2" /> Add
+                                Members
                               </Button>
                               <Button
                                 variant="outline"
