@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable prettier/prettier */
-import React, { RefObject, useMemo, memo, useState } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, RefObject, memo } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -150,6 +150,7 @@ function ChatMessageItem({
   const { toast } = useToast();
   const [isReporting, setIsReporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const formattedTimestamp = useMemo(
     () => formatChatTimestamp(message.timestamp),
@@ -211,11 +212,34 @@ function ChatMessageItem({
     [message.senderId, userId],
   );
 
+  const [now, setNow] = useState(Date.now());
+
+  // Only run timer if message is potentially editable
+  useEffect(() => {
+    // Quick check: Skip timer if message is definitely not editable
+    if (!isSender || !onEditMessage) return;
+    if (message.voiceMessage?.type === 'voice') return;
+
+    const hasFileOrImage = /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i.test(
+      message.content
+    );
+    if (hasFileOrImage) return;
+
+    // Check if message is already too old (>1 hour)
+    const msgTime = new Date(message.timestamp).getTime();
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    if (msgTime < oneHourAgo) return;
+
+    // Message is editable, start timer
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, [isSender, onEditMessage, message.voiceMessage, message.content, message.timestamp]);
+
   // Edit allowed only for sender, within 1 hour, and for text-only messages
   const canEditMessage = useMemo(() => {
     if (!isSender || !onEditMessage) return false;
     const msgTime = new Date(message.timestamp).getTime();
-    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    const oneHourAgo = now - 60 * 60 * 1000;
     if (msgTime < oneHourAgo) return false;
     if (message.voiceMessage?.type === 'voice') return false;
     const hasFileOrImage = /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i.test(
@@ -223,7 +247,7 @@ function ChatMessageItem({
     );
     if (hasFileOrImage) return false;
     return true;
-  }, [isSender, message.timestamp, message.content, message.voiceMessage, onEditMessage]);
+  }, [isSender, message.timestamp, message.content, message.voiceMessage, onEditMessage, now]);
 
   const isGroupChat = useMemo(
     () => conversation.type === 'group',
@@ -236,7 +260,7 @@ function ChatMessageItem({
     () =>
       !isSender
         ? conversation.participantDetails?.[message.senderId]?.userName ||
-          'Unknown User'
+        'Unknown User'
         : '',
     [conversation.participantDetails, isSender, message.senderId],
   );
@@ -411,14 +435,14 @@ function ChatMessageItem({
           </div>
         )}
 
-<div
-            id={`message-${message.id}`}
-            className={cn(
-              'flex flex-col min-w-0',
-              isSender ? 'items-end' : 'items-start',
-              'max-w-[85%] sm:max-w-[65%]',
-            )}
-          >
+        <div
+          id={`message-${message.id}`}
+          className={cn(
+            'flex flex-col min-w-0',
+            isSender ? 'items-end' : 'items-start',
+            'max-w-[85%] sm:max-w-[65%]',
+          )}
+        >
           {isGroupChat && showSenderName && (
             <div className="mb-1 px-1">
               <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">
@@ -431,20 +455,20 @@ function ChatMessageItem({
             className={cn(
               'flex max-w-full flex-col gap-1 text-sm',
               // Border radius by group position: first/middle/last in group
-              isFirstInGroup && isLastInGroup && 'rounded-2xl',
-              isFirstInGroup && !isLastInGroup && (isSender ? 'rounded-tr-2xl rounded-br-md rounded-bl-2xl rounded-tl-2xl' : 'rounded-tl-2xl rounded-bl-md rounded-br-2xl rounded-tr-2xl'),
-              !isFirstInGroup && isLastInGroup && (isSender ? 'rounded-br-2xl rounded-bl-md rounded-tl-md rounded-tr-md' : 'rounded-bl-2xl rounded-tl-md rounded-tr-md rounded-br-md'),
-              !isFirstInGroup && !isLastInGroup && 'rounded-xl',
+              // Simplified and consistent bubble shapes (WhatsApp-style)
+              'rounded-lg', // Base rounded corners
+              isSender ? 'rounded-tr-none' : 'rounded-tl-none', // Sharp corner for the "tail" side by default
+              // If grouped (not first), round the corner that would have had the tail
+              !isFirstInGroup && (isSender ? 'rounded-tr-lg' : 'rounded-tl-lg'),
+              // If grouped (not last), keep the corner rounded (no special tail connection needed, handled by spacing)
               // Padding: 12px horizontal, 8px vertical (consistent spacing)
               'px-3 py-2',
               message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ||
-                isEmojiOnly ||
-                (message.voiceMessage && message.voiceMessage.type === 'voice')
+                isEmojiOnly
                 ? 'overflow-hidden'
                 : 'overflow-visible',
               message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ||
-                isEmojiOnly ||
-                (message.voiceMessage && message.voiceMessage.type === 'voice')
+                isEmojiOnly
                 ? isSender
                   ? 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--foreground))]'
                   : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))]'
@@ -517,12 +541,12 @@ function ChatMessageItem({
                                 : isDocUrl(raw)
                                   ? 'Document'
                                   : getMessagePreviewLabel(
-                                      raw,
-                                      replyMsg.voiceMessage,
-                                    )
-                                      .replace(/<[^>]*>/g, '')
-                                      .replace(/&nbsp;/g, ' ')
-                                      .trim();
+                                    raw,
+                                    replyMsg.voiceMessage,
+                                  )
+                                    .replace(/<[^>]*>/g, '')
+                                    .replace(/&nbsp;/g, ' ')
+                                    .trim();
 
                             return (
                               <div className="flex items-center gap-2 min-w-0">
@@ -563,8 +587,8 @@ function ChatMessageItem({
                         </div>
                       </div>
                     ) : message.content.match(
-                        /\.(pdf|doc|docx|ppt|pptx)(\?|$)/i,
-                      ) ? (
+                      /\.(pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                    ) ? (
                       <div className="flex flex-col gap-1">
                         <FileAttachment
                           fileName={message.content.split('/').pop() || 'File'}
@@ -623,7 +647,7 @@ function ChatMessageItem({
 
                     {message.voiceMessage &&
                       message.voiceMessage.type === 'voice' && (
-                        <div className="mt-2 flex items-center space-x-2 max-w-full">
+                        <div className="flex items-center gap-2 min-w-[200px]">
                           <audio
                             ref={(el) => {
                               audioRefs.current[message.id] = el;
@@ -632,13 +656,13 @@ function ChatMessageItem({
                             src={message.content}
                             controls
                             preload="metadata"
-                            className="h-10 w-40 sm:w-44 md:w-56 lg:w-64 rounded-md"
+                            className="h-8 w-full max-w-[240px] rounded-md"
                             onLoadedMetadata={() =>
                               handleLoadedMetadata(message.id)
                             }
                             onPlay={() => handlePlay(message.id)}
                           />
-                          <span className="text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap flex items-center min-w-[48px] justify-end">
+                          <span className="text-[10px] text-[hsl(var(--muted-foreground))] whitespace-nowrap self-end mb-1">
                             {formattedTimestamp}
                           </span>
                         </div>
@@ -655,16 +679,16 @@ function ChatMessageItem({
               </Tooltip>
             </TooltipProvider>
 
-<div
-            className={cn(
-              'flex items-center mt-0.5',
-              'text-[10px] leading-none text-[hsl(var(--muted-foreground))]',
-              isSender ? 'justify-end' : 'justify-start',
-            )}
-            aria-hidden
-          >
-            {isEmojiOnly &&
-              (isSingleEmoji ? (
+            <div
+              className={cn(
+                'flex items-center mt-0.5',
+                'text-[10px] leading-none text-[hsl(var(--muted-foreground))]',
+                isSender ? 'justify-end' : 'justify-start',
+              )}
+              aria-hidden
+            >
+              {isEmojiOnly &&
+                (isSingleEmoji ? (
                   <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[hsl(var(--muted))] dark:bg-[hsl(var(--muted))]">
                     <span>{formattedTimestamp}</span>
                   </div>
@@ -707,7 +731,23 @@ function ChatMessageItem({
                   variant="ghost"
                   size="sm"
                   className="h-6 px-1.5 text-xs text-destructive hover:bg-destructive/20"
-                  onClick={() => onRetryMessage(message.id)}
+                  onClick={async () => {
+                    if (isRetrying) return;
+                    try {
+                      setIsRetrying(true);
+                      await onRetryMessage(message.id);
+                    } catch (err) {
+                      console.error('Error retrying message:', err);
+                      toast({
+                        variant: 'destructive',
+                        title: 'Retry failed',
+                        description: 'Please try again.',
+                      });
+                    } finally {
+                      setIsRetrying(false);
+                    }
+                  }}
+                  disabled={isRetrying}
                   aria-label="Retry sending"
                 >
                   <RefreshCw className="h-3 w-3 mr-0.5" />
@@ -719,7 +759,8 @@ function ChatMessageItem({
                   variant="ghost"
                   size="sm"
                   className="h-6 px-1.5 text-xs text-destructive hover:bg-destructive/20"
-                  onClick={() => onDeleteMessage(message.id)}
+                  onClick={() => handleDeleteMessage()}
+                  disabled={isDeleting}
                   aria-label="Delete failed message"
                 >
                   <Trash2 className="h-3 w-3 mr-0.5" />

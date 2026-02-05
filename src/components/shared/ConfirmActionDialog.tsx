@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LoaderCircle } from 'lucide-react';
 
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { logger } from '@/utils/logger';
 
 interface ConfirmActionDialogProps {
   isOpen: boolean;
@@ -42,13 +43,30 @@ export function ConfirmActionDialog({
   confirmButtonVariant = 'destructive',
   isLoading = false,
 }: ConfirmActionDialogProps) {
+  const [localBusy, setLocalBusy] = useState(false);
+  const busy = isLoading || localBusy;
+
+  // Reset local loading state when dialog opens
+  useEffect(() => {
+    if (isOpen) setLocalBusy(false);
+  }, [isOpen]);
+
   if (!isOpen) {
     return null;
   }
 
   const handleConfirm = async () => {
-    await onConfirm();
-    // Dialog is typically closed by the caller after onConfirm promise resolves or action completes
+    try {
+      setLocalBusy(true);
+      await onConfirm();
+      // Dialog is typically closed by the caller after onConfirm promise resolves
+    } catch (error) {
+      logger.error('ConfirmActionDialog.onConfirm failed', error);
+      // Close dialog on error so user isn't stuck
+      onClose();
+    } finally {
+      setLocalBusy(false);
+    }
   };
 
   return (
@@ -90,7 +108,7 @@ export function ConfirmActionDialog({
             type="button"
             variant={confirmButtonVariant}
             onClick={handleConfirm}
-            disabled={isLoading}
+            disabled={busy}
             className={cn(
               confirmButtonVariant === 'destructive' &&
                 'bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:bg-[hsl(var(--destructive)_/_0.9)]',
@@ -98,7 +116,7 @@ export function ConfirmActionDialog({
                 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-hover))]',
             )}
           >
-            {isLoading ? (
+            {busy ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />
             ) : (
               confirmButtonText

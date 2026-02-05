@@ -32,6 +32,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import DOMPurify from 'dompurify';
 import Image from 'next/image';
 
+import { useDebounce } from '@/hooks/use-debounce';
+
 import { EmojiPicker } from '../emojiPicker';
 import {
   Tooltip,
@@ -89,20 +91,7 @@ import {
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { db } from '@/config/firebaseConfig';
 
-function useDebounce<T>(value: T, delay: number = 500): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-    return () => {
-      clearTimeout(handler); // cleanup on value change or unmount
-    };
-  }, [value, delay]); // Add [value, delay] as dependencies
-
-  return debouncedValue;
-}
 
 type User = {
   userName: string;
@@ -123,6 +112,9 @@ type Message = {
     duration: number;
     type: 'voice';
   };
+  type?: 'system' | 'text' | 'image' | 'file';
+  adminsOnly?: boolean;
+  deletedFor?: string[];
 };
 
 interface CardsChatProps {
@@ -368,8 +360,8 @@ export function CardsChat({
     return () => {
       try {
         if (typeof unsubscribe === 'function') unsubscribe();
-      } catch {
-        // no-op
+      } catch (e) {
+        console.debug('Messages subscription cleanup error:', e);
       }
     };
   }, [conversation?.id, user?.uid]);
@@ -381,8 +373,8 @@ export function CardsChat({
     return () => {
       try {
         unsubTyping();
-      } catch {
-        // no-op
+      } catch (e) {
+        console.debug('Typing subscription cleanup error:', e);
       }
     };
   }, [conversation?.id]);
@@ -390,9 +382,14 @@ export function CardsChat({
   // Mark conversation as read and reset unread when opened
   useEffect(() => {
     if (!conversation?.id || !user?.uid) return;
-    updateConversationReadBy(conversation.id, user.uid).catch(() => {});
-    resetUnreadCount(conversation.id, user.uid).catch(() => {});
+    updateConversationReadBy(conversation.id, user.uid).catch((err) => {
+      logger.error(`Error in updateConversationReadBy for conversation ${conversation.id}, user ${user.uid}:`, err);
+    });
+    resetUnreadCount(conversation.id, user.uid).catch((err) => {
+      logger.error(`Error in resetUnreadCount for conversation ${conversation.id}, user ${user.uid}:`, err);
+    });
   }, [conversation?.id, user?.uid]);
+
 
   // Clear new message indicators/messages immediately when switching chats (avoid pill on open)
   useLayoutEffect(() => {
@@ -439,28 +436,34 @@ export function CardsChat({
   const allMessagesRaw = [...headMessages, ...messages].sort(
     (a, b) => toTime(a.timestamp) - toTime(b.timestamp),
   );
-  const allMessages = allMessagesRaw.filter((m) => !removedFailedIds.includes(m.id as string));
+  const allMessages = allMessagesRaw.filter((m) => !removedFailedIds.includes(m.id));
   const unreadDividerIndex =
     unreadDividerId != null
-      ? allMessages.findIndex((m: any) => (m?.id as string) === unreadDividerId)
+      ? allMessages.findIndex((m) => m?.id === unreadDividerId)
       : -1;
 
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     if (!conversation?.id || !user?.uid) return;
+    // Capture IDs at effect start to avoid stale closure in cleanup
+    const cid = conversation.id;
+    const uid = user.uid;
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     const trimmed = (typeof input === 'string' ? input : '').trim();
     if (trimmed.length > 0) {
+      // Set typing indicator immediately when user starts typing
+      setUserTyping(cid, uid, true);
+      // Clear typing indicator after 400ms of inactivity
       typingTimeoutRef.current = setTimeout(() => {
-        setUserTyping(conversation.id, user.uid, true);
+        setUserTyping(cid, uid, false);
         typingTimeoutRef.current = null;
       }, 400);
     } else {
-      setUserTyping(conversation.id, user.uid, false);
+      setUserTyping(cid, uid, false);
     }
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      setUserTyping(conversation.id, user.uid, false);
+      if (cid && uid) setUserTyping(cid, uid, false);
     };
   }, [input, conversation?.id, user?.uid]);
 
@@ -525,7 +528,7 @@ export function CardsChat({
 
     const total = allMessages.length;
     const currentLastTime =
-      total > 0 ? toTime((allMessages[total - 1] as any).timestamp) : 0;
+      total > 0 ? toTime(allMessages[total - 1].timestamp) : 0;
 
     // Initialize (first REAL snapshot for this conversation).
     // IMPORTANT: don't treat our own "cleared state" (total === 0 right after switching chats)
@@ -535,7 +538,7 @@ export function CardsChat({
       hasInitializedMessagesRef.current = true;
       prevLastMessageTimeRef.current = currentLastTime;
       prevMessageIdsRef.current = new Set(
-        allMessages.map((m: any) => m.id as string),
+        allMessages.map((m) => m.id),
       );
       prevMessagesLength.current = total;
       return;
@@ -548,17 +551,17 @@ export function CardsChat({
     prevLastMessageTimeRef.current = Math.max(prevLastTime, currentLastTime);
 
     const prevIds = prevMessageIdsRef.current;
-    const newlyAdded = allMessages.filter((m: any) => !prevIds.has(m.id as string));
+    const newlyAdded = allMessages.filter((m) => !prevIds.has(m.id));
 
     // Always update IDs snapshot
-    prevMessageIdsRef.current = new Set(allMessages.map((m: any) => m.id as string));
+    prevMessageIdsRef.current = new Set(allMessages.map((m) => m.id));
     prevMessagesLength.current = total;
 
     // Ignore non-appends (typically pagination / reorder)
     if (!appendedNewer) return;
 
-    const newlyAddedFromOthers = newlyAdded.filter((m: any) => {
-      const senderId = m?.senderId as string | undefined;
+    const newlyAddedFromOthers = newlyAdded.filter((m) => {
+      const senderId = m?.senderId;
       if (!senderId || senderId === user?.uid) return false;
       const t = toTime(m?.timestamp);
       return t >= prevLastTime;
@@ -579,7 +582,7 @@ export function CardsChat({
     // User is not at bottom: show indicators.
     setIsScrolledUp(true);
     setNewMessagesCount((n) => n + newlyAddedFromOthers.length);
-    setUnreadDividerId((prev) => prev ?? (newlyAddedFromOthers[0]?.id as string));
+    setUnreadDividerId((prev) => prev ?? newlyAddedFromOthers[0]?.id);
     setShowNewMessagesPill(true);
   }, [allMessages, unreadDividerId, user?.uid, conversation?.id]);
 
@@ -629,14 +632,20 @@ export function CardsChat({
       });
       return;
     }
-    // User is sending a message: clear unread indicators immediately (UX)
-    if (newMessagesCount > 0) {
-      setNewMessagesCount(0);
-      setShowNewMessagesPill(false);
-    }
-    if (unreadDividerId) {
-      setUnreadDividerId(null);
-    }
+
+    // Centralized sanitization: ensure all message content is sanitized before processing
+    const sanitizedMessage = {
+      ...message,
+      content: message.content
+        ? DOMPurify.sanitize(message.content, {
+          ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'br', 'div', 'span', 'a'],
+          ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+          KEEP_CONTENT: true,
+        })
+        : message.content,
+    };
+
+
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
@@ -645,7 +654,7 @@ export function CardsChat({
         'conversations',
         conversation?.id,
         {
-          ...message,
+          ...sanitizedMessage,
           timestamp: datentime,
           replyTo: replyToMessageId || null,
         },
@@ -655,9 +664,14 @@ export function CardsChat({
       if (result === 'Transaction successful') {
         setInput('');
         setIsSending(false);
-        // Clear new message indicators when user sends a message
-        setNewMessagesCount(0);
-        setUnreadDividerId(null);
+        // Clear unread indicators after successful send
+        if (newMessagesCount > 0) {
+          setNewMessagesCount(0);
+          setShowNewMessagesPill(false);
+        }
+        if (unreadDividerId) {
+          setUnreadDividerId(null);
+        }
       } else {
         logger.error('Failed to send message - unexpected result:', result);
         throw new Error(`Failed to send message: ${result}`);
@@ -775,9 +789,14 @@ export function CardsChat({
         timestamp: new Date().toISOString(),
       };
 
-      sendMessage(conversation, message, setInput);
+      await sendMessage(conversation, message, setInput);
     } catch (error) {
       logger.error('Error creating meet:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to create meeting. Please try again.',
+      });
     }
   }
 
@@ -1053,11 +1072,12 @@ export function CardsChat({
   async function handleDeleteMessage(messageId: string): Promise<void> {
     if (!conversation?.id) return;
     try {
-      await deleteMessageFromConversation(conversation.id, messageId);
+      if (!user?.uid) return;
+      await deleteMessageFromConversation(conversation.id, messageId, user.uid);
       // If the deleted message was pinned, clear the pin
       if (conversation.pinnedMessage?.messageId === messageId && onConversationUpdate) {
         try {
-          await unpinMessageFirestore(conversation.id);
+          await unpinMessageFirestore(conversation.id, user.uid);
           onConversationUpdate({
             ...conversation,
             pinnedMessage: undefined,
@@ -1066,31 +1086,40 @@ export function CardsChat({
           logger.error('Error unpinning deleted message', err);
         }
       }
-    } catch {
-      setRemovedFailedIds((prev) => (prev.includes(messageId) ? prev : [...prev, messageId]));
+    } catch (error) {
+      logger.error('Delete message failed', error);
+      toast({
+        variant: 'destructive',
+        title: 'Deletion Failed',
+        description: 'Could not delete message. Please try again.',
+      });
+      // Do NOT add to removedFailedIds - we want it to remain visible so user knows it exists
+      // setRemovedFailedIds((prev) => (prev.includes(messageId) ? prev : [...prev, messageId]));
     }
   }
 
   /** Retry failed message – delete failed and re-send */
   async function handleRetryMessage(messageId: string): Promise<void> {
-    const msg = allMessagesRaw.find((m: any) => m.id === messageId);
+    const msg = allMessagesRaw.find((m) => m.id === messageId);
     if (!msg || !conversation?.id || msg.senderId !== user?.uid) return;
     try {
       try {
-        await deleteMessageFromConversation(conversation.id, messageId);
+        if (!user?.uid) return;
+        await deleteMessageFromConversation(conversation.id, messageId, user.uid);
       } catch {
         // Message may not exist in Firestore if it failed before write
       }
-      await sendMessage(
-        conversation,
-        {
-          senderId: user.uid,
-          content: msg.content,
-          timestamp: new Date().toISOString(),
-          replyTo: msg.replyTo || null,
-        },
-        setInput,
-      );
+
+      // Preserve ALL metadata from original message (excluding id, timestamp, editedAt)
+      const { id, timestamp, editedAt, ...originalMetadata } = msg;
+
+      const messageData = {
+        ...originalMetadata,  // Preserve all original metadata (type, voiceMessage, adminsOnly, deletedFor, attachments, etc.)
+        senderId: user.uid,   // Ensure sender is current user
+        timestamp: new Date().toISOString(),  // Fresh timestamp
+      };
+
+      await sendMessage(conversation, messageData, setInput);
       toast({ title: 'Message resent' });
     } catch (error) {
       logger.error('Error retrying message:', error);
@@ -1109,7 +1138,12 @@ export function CardsChat({
     setInput(content);
     requestAnimationFrame(() => {
       if (composerRef.current) {
-        composerRef.current.innerHTML = content;
+        // Sanitize content to prevent XSS when setting innerHTML
+        const sanitized = DOMPurify.sanitize(content, {
+          ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'br', 'div', 'span', 'a'],
+          ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class'],
+        });
+        composerRef.current.innerHTML = sanitized;
         composerRef.current.focus();
       }
     });
@@ -1119,11 +1153,20 @@ export function CardsChat({
   async function handleUpdateMessage(messageId: string, newContent: string): Promise<void> {
     if (!conversation?.id) return;
 
+    // Sanitize content to prevent stored XSS
+    const sanitized = DOMPurify.sanitize(newContent, {
+      ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'br', 'div', 'span', 'a'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class'],
+    });
+
     try {
       await updateDataInFirestore(
         `conversations/${conversation.id}/messages`,
         messageId,
-        { content: newContent },
+        {
+          content: sanitized,
+          editedAt: new Date().toISOString()
+        },
       );
       setEditingMessageId(null);
       setInput('');
@@ -1136,7 +1179,6 @@ export function CardsChat({
         title: 'Error',
         description: 'Failed to update message. Please try again.',
       });
-      throw error;
     }
   }
 
@@ -1165,9 +1207,9 @@ export function CardsChat({
   }
 
   async function handleUnpinMessage(): Promise<void> {
-    if (!conversation?.id || !onConversationUpdate) return;
+    if (!conversation?.id || !onConversationUpdate || !user?.uid) return;
     try {
-      await unpinMessageFirestore(conversation.id);
+      await unpinMessageFirestore(conversation.id, user.uid);
       onConversationUpdate({
         ...conversation,
         pinnedMessage: undefined,
@@ -1342,44 +1384,44 @@ export function CardsChat({
                   className="flex items-center gap-3 text-left hover:bg-[hsl(var(--accent)_/_0.5)] rounded-lg px-2 py-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 min-w-0"
                   aria-label="View profile information"
                 >
-                <Avatar className="w-10 h-10 flex-shrink-0">
-                  <AvatarImage
-                    src={
-                      conversation.type === 'group'
-                        ? conversation.avatar || ''
-                        : primaryUser.profilePic
-                    }
-                    alt={
-                      conversation.type === 'group'
+                  <Avatar className="w-10 h-10 flex-shrink-0">
+                    <AvatarImage
+                      src={
+                        conversation.type === 'group'
+                          ? conversation.avatar || ''
+                          : primaryUser.profilePic
+                      }
+                      alt={
+                        conversation.type === 'group'
+                          ? conversation.groupName
+                          : primaryUser.userName || 'User'
+                      }
+                    />
+                    <AvatarFallback className="bg-[#d7dae0] dark:bg-[#35383b9e] text-[hsl(var(--foreground))]">
+                      {(
+                        conversation.type === 'group'
+                          ? conversation.groupName
+                          : primaryUser.userName
+                      )
+                        ? conversation.type === 'group'
+                          ? conversation.groupName?.charAt(0).toUpperCase()
+                          : primaryUser.userName?.charAt(0).toUpperCase()
+                        : 'P'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="cursor-pointer min-w-0 text-left">
+                    <p className="text-base font-semibold leading-tight text-[hsl(var(--card-foreground))] truncate hover:underline">
+                      {conversation.type === 'group'
                         ? conversation.groupName
-                        : primaryUser.userName || 'User'
-                    }
-                  />
-                  <AvatarFallback className="bg-[#d7dae0] dark:bg-[#35383b9e] text-[hsl(var(--foreground))]">
-                    {(
-                      conversation.type === 'group'
-                        ? conversation.groupName
-                        : primaryUser.userName
-                    )
-                      ? conversation.type === 'group'
-                        ? conversation.groupName?.charAt(0).toUpperCase()
-                        : primaryUser.userName?.charAt(0).toUpperCase()
-                      : 'P'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="cursor-pointer min-w-0 text-left">
-                  <p className="text-base font-semibold leading-tight text-[hsl(var(--card-foreground))] truncate hover:underline">
-                    {conversation.type === 'group'
-                      ? conversation.groupName
-                      : primaryUser.userName || 'Chat'}
-                  </p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))] truncate hover:underline">
-                    {conversation.type === 'group'
-                      ? `${(conversation.participants?.length ?? 0)} members`
-                      : primaryUser.email || 'Click to view profile'}
-                  </p>
-                </div>
-              </button>
+                        : primaryUser.userName || 'Chat'}
+                    </p>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))] truncate hover:underline">
+                      {conversation.type === 'group'
+                        ? `${(conversation.participants?.length ?? 0)} members`
+                        : primaryUser.email || 'Click to view profile'}
+                    </p>
+                  </div>
+                </button>
               </div>
               <TooltipProvider>
                 <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0" role="toolbar" aria-label="Chat actions">
@@ -1651,8 +1693,18 @@ export function CardsChat({
                     type="button"
                     className="flex-1 min-w-0 text-left hover:opacity-80"
                     onClick={() => {
-                      const el = document.getElementById(`message-${conversation.pinnedMessage?.messageId}`);
-                      el?.scrollIntoView({ behavior: 'smooth' });
+                      const pinnedId = conversation.pinnedMessage?.messageId;
+                      if (!pinnedId) return;
+                      const el = document.getElementById(`message-${pinnedId}`);
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                      } else {
+                        toast({
+                          title: 'Pinned message not loaded',
+                          description:
+                            'Load older messages above to view the pinned message.',
+                        });
+                      }
                     }}
                   >
                     <p className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Pinned message</p>
@@ -1677,88 +1729,88 @@ export function CardsChat({
                 viewportClassName="overflow-x-hidden"
               >
                 <div className="flex flex-col gap-2 py-2 pl-2">
-                {hasMoreMessages && (messages.length >= 50 || headMessages.length > 0) && (
-                  <div className="flex justify-center py-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleLoadMoreMessages}
-                      disabled={loadingMore}
-                      className="text-[hsl(var(--muted-foreground))]"
-                    >
-                      {loadingMore ? (
-                        <>
-                          <LoaderCircle className="h-4 w-4 animate-spin mr-1 inline" />
-                          Loading...
-                        </>
-                      ) : (
-                        'Load older messages'
-                      )}
-                    </Button>
-                  </div>
-                )}
-                {allMessages.length === 0 && !loading && (
-                  <div className="flex flex-col items-center justify-center py-12 text-center text-[hsl(var(--muted-foreground))] text-sm" role="status" aria-label="No messages">
-                    <p>No messages yet.</p>
-                    <p className="mt-1">Send a message to start the conversation.</p>
-                  </div>
-                )}
-                {allMessages.map((message, index) => {
-                  const showUnreadDivider =
-                    unreadDividerIndex !== -1 && index === unreadDividerIndex;
-                  const isAdmin =
-                    Array.isArray(conversation.admins) &&
-                    conversation.admins.includes(user.uid);
-                  const isAdminsOnly = (message as any)?.adminsOnly === true;
-                  if (isAdminsOnly && !isAdmin) return null;
-                  const isSystem = (message as any)?.type === 'system';
-                  return (
-                    <React.Fragment key={message.id}>
-                      {showUnreadDivider && (
-                        <div className="flex items-center gap-2 py-2">
-                          <div className="flex-1 h-px bg-[hsl(var(--border))]" />
-                          <span className="px-2 text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap">
-                            {newMessagesCount} new{' '}
-                            {newMessagesCount === 1 ? 'message' : 'messages'}
-                          </span>
-                          <div className="flex-1 h-px bg-[hsl(var(--border))]" />
-                        </div>
-                      )}
-                      {isSystem ? (
-                        <div className="flex justify-center py-2">
-                          <span className="px-3 py-1 rounded-full text-xs bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border border-[hsl(var(--border))] max-w-[90%] truncate">
-                            {(message as any)?.content || 'System update'}
-                          </span>
-                        </div>
-                      ) : (
-                        <ChatMessageItem
-                          message={message as any}
-                          index={index}
-                          messages={allMessages as any}
-                          userId={user.uid}
-                          conversation={conversation}
-                          onHoverChange={(id) => setHoveredMessageId(id)}
-                          setModalImage={setModalImage}
-                          audioRefs={audioRefs}
-                          handleLoadedMetadata={handleLoadedMetadata}
-                          handlePlay={handlePlay}
-                          toggleReaction={toggleReaction}
-                          setReplyToMessageId={setReplyToMessageId}
-                          messagesEndRef={messagesEndRef}
-                          onOpenProfileSidebar={onOpenProfileSidebar}
-                          onDeleteMessage={handleDeleteMessage}
-                          onEditMessage={handleStartEdit}
-                          onRetryMessage={handleRetryMessage}
-                          pinnedMessage={conversation.pinnedMessage}
-                          onPinMessage={handlePinMessage}
-                          onUnpinMessage={handleUnpinMessage}
-                        />
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-                  </div>
+                  {hasMoreMessages && (messages.length >= 50 || headMessages.length > 0) && (
+                    <div className="flex justify-center py-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleLoadMoreMessages}
+                        disabled={loadingMore}
+                        className="text-[hsl(var(--muted-foreground))]"
+                      >
+                        {loadingMore ? (
+                          <>
+                            <LoaderCircle className="h-4 w-4 animate-spin mr-1 inline" />
+                            Loading...
+                          </>
+                        ) : (
+                          'Load older messages'
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                  {allMessages.length === 0 && !loading && (
+                    <div className="flex flex-col items-center justify-center py-12 text-center text-[hsl(var(--muted-foreground))] text-sm" role="status" aria-label="No messages">
+                      <p>No messages yet.</p>
+                      <p className="mt-1">Send a message to start the conversation.</p>
+                    </div>
+                  )}
+                  {allMessages.map((message, index) => {
+                    const showUnreadDivider =
+                      unreadDividerIndex !== -1 && index === unreadDividerIndex;
+                    const isAdmin =
+                      Array.isArray(conversation.admins) &&
+                      conversation.admins.includes(user.uid);
+                    const isAdminsOnly = message?.adminsOnly === true;
+                    if (isAdminsOnly && !isAdmin) return null;
+                    const isSystem = message?.type === 'system';
+                    return (
+                      <React.Fragment key={message.id}>
+                        {showUnreadDivider && (
+                          <div className="flex items-center gap-2 py-2">
+                            <div className="flex-1 h-px bg-[hsl(var(--border))]" />
+                            <span className="px-2 text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap">
+                              {newMessagesCount} new{' '}
+                              {newMessagesCount === 1 ? 'message' : 'messages'}
+                            </span>
+                            <div className="flex-1 h-px bg-[hsl(var(--border))]" />
+                          </div>
+                        )}
+                        {isSystem ? (
+                          <div className="flex justify-center py-2">
+                            <span className="px-3 py-1 rounded-full text-xs bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border border-[hsl(var(--border))] max-w-[90%] truncate">
+                              {message?.content || 'System update'}
+                            </span>
+                          </div>
+                        ) : (
+                          <ChatMessageItem
+                            message={message as Message}
+                            index={index}
+                            messages={allMessages as Message[]}
+                            userId={user.uid}
+                            conversation={conversation}
+                            onHoverChange={(id) => setHoveredMessageId(id)}
+                            setModalImage={setModalImage}
+                            audioRefs={audioRefs}
+                            handleLoadedMetadata={handleLoadedMetadata}
+                            handlePlay={handlePlay}
+                            toggleReaction={toggleReaction}
+                            setReplyToMessageId={setReplyToMessageId}
+                            messagesEndRef={messagesEndRef}
+                            onOpenProfileSidebar={onOpenProfileSidebar}
+                            onDeleteMessage={handleDeleteMessage}
+                            onEditMessage={handleStartEdit}
+                            onRetryMessage={handleRetryMessage}
+                            pinnedMessage={conversation.pinnedMessage}
+                            onPinMessage={handlePinMessage}
+                            onUnpinMessage={handleUnpinMessage}
+                          />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
               </ScrollArea>
 
               {/* Scroll-to-bottom button */}
@@ -1805,7 +1857,11 @@ export function CardsChat({
                     event.preventDefault();
                     if (input.trim().length === 0) return;
                     if (editingMessageId) {
-                      await handleUpdateMessage(editingMessageId, input);
+                      const sanitized = DOMPurify.sanitize(input, {
+                        ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'br', 'div', 'span', 'a'],
+                        ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class'],
+                      });
+                      await handleUpdateMessage(editingMessageId, sanitized);
                       return;
                     }
                     const newMessage = {
@@ -1815,7 +1871,16 @@ export function CardsChat({
                       replyTo: replyToMessageId || null,
                     };
                     clearTypingOnBlur();
-                    sendMessage(conversation, newMessage, setInput);
+                    try {
+                      await sendMessage(conversation, newMessage, setInput);
+                    } catch (error) {
+                      logger.error('Error sending message:', error);
+                      toast({
+                        variant: 'destructive',
+                        title: 'Error',
+                        description: 'Failed to send message. Please try again.',
+                      });
+                    }
                     setReplyToMessageId('');
                   }}
                   className="flex flex-col w-full min-w-0 gap-3"
@@ -1847,7 +1912,7 @@ export function CardsChat({
                       {(() => {
                         const replyMsg = allMessages.find(
                           (msg) => msg.id === replyToMessageId,
-                        ) as any;
+                        );
                         const raw = replyMsg?.content || '';
 
                         const isImage = /\.(jpeg|jpg|gif|png)(\?|$)/i.test(raw);
@@ -1863,10 +1928,10 @@ export function CardsChat({
                             : isFile
                               ? 'Document'
                               : raw
-                                  .replace(/<[^>]*>/g, '')
-                                  .replace(/&nbsp;/g, ' ')
-                                  .replace(/\*|__/g, '')
-                                  .trim() || 'Message';
+                                .replace(/<[^>]*>/g, '')
+                                .replace(/&nbsp;/g, ' ')
+                                .replace(/\*|__/g, '')
+                                .trim() || 'Message';
 
                         return (
                           <div className="flex items-center gap-2 min-w-0">
@@ -1916,14 +1981,14 @@ export function CardsChat({
                         aria-label="Type a message"
                         aria-placeholder="Type a message..."
                         data-placeholder="Type a message..."
-                        className="chat-composer-input flex-1 min-w-0 min-h-[40px] max-h-48 py-2.5 pl-1 pr-3 overflow-y-auto overflow-x-hidden w-full break-words bg-transparent text-[hsl(var(--foreground))] text-sm outline-none border-0 ring-0 empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                        className="chat-composer-input flex-1 min-w-0 min-h-[40px] max-h-48 py-2.5 pl-1 pr-3 overflow-y-auto overflow-x-hidden w-full break-words bg-transparent text-[hsl(var(--foreground))] text-sm outline-none border-0 ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
                         onBlur={clearTypingOnBlur}
                         onInput={(e) => {
                           const html = (e.currentTarget as HTMLElement)
                             .innerHTML;
                           setInput(html);
                         }}
-                        onKeyDown={(e) => {
+                        onKeyDown={async (e) => {
                           if (e.key === 'Enter' && !e.shiftKey && !isSending) {
                             e.preventDefault();
                             const html = composerRef.current?.innerHTML || '';
@@ -1951,7 +2016,7 @@ export function CardsChat({
                                 ],
                               });
                               if (editingMessageId) {
-                                handleUpdateMessage(editingMessageId, sanitized);
+                                await handleUpdateMessage(editingMessageId, sanitized);
                                 return;
                               }
                               const newMessage = {
@@ -1960,7 +2025,16 @@ export function CardsChat({
                                 timestamp: new Date().toISOString(),
                                 replyTo: replyToMessageId || null,
                               };
-                              sendMessage(conversation, newMessage, setInput);
+                              try {
+                                await sendMessage(conversation, newMessage, setInput);
+                              } catch (error) {
+                                logger.error('Error sending message:', error);
+                                toast({
+                                  variant: 'destructive',
+                                  title: 'Error',
+                                  description: 'Failed to send message. Please try again.',
+                                });
+                              }
                               setReplyToMessageId('');
                               composerRef.current!.innerHTML = '';
                               setInput('');
@@ -2012,7 +2086,16 @@ export function CardsChat({
                           timestamp: new Date().toISOString(),
                           replyTo: replyToMessageId || null,
                         };
-                        sendMessage(conversation, newMessage, setInput);
+                        try {
+                          await sendMessage(conversation, newMessage, setInput);
+                        } catch (error) {
+                          logger.error('Error sending message:', error);
+                          toast({
+                            variant: 'destructive',
+                            title: 'Error',
+                            description: 'Failed to send message. Please try again.',
+                          });
+                        }
                         setReplyToMessageId('');
                         composerRef.current!.innerHTML = '';
                         setInput('');

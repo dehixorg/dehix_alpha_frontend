@@ -18,6 +18,7 @@
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -26,6 +27,7 @@
 .shimmer-bar {
   animation: shimmer 2s infinite linear;
 }
+
 /* globals.css */
 
 @layer base {
@@ -94,12 +96,14 @@
         inset 0 0 0 2px hsl(262 83% 58% / 0.12);
       transform: scale(1);
     }
+
     50% {
       box-shadow:
         0 10px 30px hsl(262 83% 58% / 0.3),
         inset 0 0 0 2px hsl(262 83% 58% / 0.22);
       transform: scale(1.01);
     }
+
     100% {
       box-shadow:
         0 6px 24px hsl(262 83% 58% / 0.22),
@@ -163,13 +167,16 @@
     @apply outline-none ring-2 ring-[hsl(var(--ring))] ring-offset-2 ring-offset-background;
   }
 
-  /* Chat input: no border, no focus ring (user requested clean input area) */
-  .chat-input-wrapper,
-  .chat-input-wrapper *,
+  /* Chat input: borderless wrapper; accessible focus only on composer */
+  .chat-input-wrapper {
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
+
   .chat-composer-input:focus-visible {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
   }
 
   /* Outgoing message bubble: pointed tail at top-right (WhatsApp-style) */
@@ -177,6 +184,7 @@
     position: relative;
     overflow: visible;
   }
+
   .chat-outgoing-tail::after {
     content: '';
     position: absolute;
@@ -188,6 +196,7 @@
     border-width: 5px 0 5px 5px;
     border-color: transparent transparent transparent hsl(var(--primary) / 0.15);
   }
+
   .dark .chat-outgoing-tail::after {
     border-color: transparent transparent transparent hsl(var(--primary) / 0.25);
   }
@@ -219,12 +228,16 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   /* Hide scrollbar for IE, Edge and Firefox */
   .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 }
+
 @layer utilities {
   .line-bg {
     background-color: hsl(var(--line-color-light));
@@ -253,11 +266,9 @@
   }
 
   .dynamic-card {
-    background: linear-gradient(
-      135deg,
-      rgba(240, 240, 240, 0.8),
-      rgba(240, 240, 240, 0.6)
-    );
+    background: linear-gradient(135deg,
+        rgba(240, 240, 240, 0.8),
+        rgba(240, 240, 240, 0.6));
     color: var(--foreground);
   }
 
@@ -426,9 +437,8 @@
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
 }
 
-.dark .shepherd-theme-custom.shepherd-element
-  .shepherd-arrow::before {
+.dark .shepherd-theme-custom.shepherd-element .shepherd-arrow::before {
   background-color: hsl(var(--background)) !important;
-  box-shadow: 
+  box-shadow:
     0 0 0 1px hsl(var(--border)) inset;
 }

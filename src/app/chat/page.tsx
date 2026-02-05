@@ -38,6 +38,7 @@ import {
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 import { useChatTour } from '@/components/tour/shared/useChatTour';
+import { logger } from '@/utils/logger';
 
 const HomePage = () => {
   const router = useRouter();
@@ -127,14 +128,12 @@ const HomePage = () => {
   // Mark conversation as "read" when user opens it so unread glow goes away and stays away until new message
   useEffect(() => {
     if (activeConversation?.id) {
-      // Small delay to ensure timestamp is definitely after the last message
-      const timer = setTimeout(() => {
-        setLastReadAt((prev) => ({
-          ...prev,
-          [activeConversation.id]: new Date().toISOString(),
-        }));
-      }, 100);
-      return () => clearTimeout(timer);
+      // Mark as read at current time so any future messages will show as unread
+      const readTimestamp = new Date().toISOString();
+      setLastReadAt((prev) => ({
+        ...prev,
+        [activeConversation.id]: readTimestamp,
+      }));
     }
   }, [activeConversation?.id]);
 
@@ -165,37 +164,37 @@ const HomePage = () => {
       return;
     }
 
-    // Use Firebase UIDs so the conversation appears in each user's chat list (Firestore query uses participants)
+    // Get participant IDs (user ID is same as Firebase UID in this system)
     const otherUids = selectedUsers
-      .map((u) => u.firebaseUid ?? u.id)
+      .map((u) => u.id)
       .filter(Boolean) as string[];
     const allParticipantIds = [user.uid, ...otherUids];
     const participantDetails: Record<
       string,
       {
         userName: string;
-        profilePic: string | null;
-        email: string | null;
-        userType?: string;
-        viewState: string;
+        profilePic?: string;
+        email?: string;
+        userType?: 'freelancer' | 'business';
+        viewState?: 'archived' | 'inbox';
       }
     > = {
       [user.uid]: {
-        userName: user.displayName || user.email,
-        profilePic: user.photoURL || null,
-        email: user.email || null,
-        userType: user.type,
+        userName: user.displayName || user.email || 'User',
+        profilePic: user.photoURL || undefined,
+        email: user.email || undefined,
+        userType: (user.type as 'freelancer' | 'business') || undefined,
         viewState: 'inbox',
       },
     };
-    selectedUsers.forEach((selected: any) => {
-      const uid = selected.firebaseUid ?? selected.id;
+    selectedUsers.forEach((selected) => {
+      const uid = selected.id;
       if (!uid) return;
       participantDetails[uid] = {
-        userName: selected.displayName,
-        profilePic: selected.profilePic || null,
-        email: selected.email || null,
-        userType: selected.userType,
+        userName: selected.displayName || 'User',
+        profilePic: selected.profilePic || undefined,
+        email: selected.email || undefined,
+        userType: (selected.userType as 'freelancer' | 'business') || undefined,
         viewState: 'inbox',
       };
     });
@@ -252,9 +251,15 @@ const HomePage = () => {
       };
 
       setActiveConversation(groupDataForState);
+
+      // Update URL to reflect new group conversation
+      const url = new URL(window.location.href);
+      url.searchParams.set('c', docRef.id);
+      router.push(url.pathname + url.search, { scroll: false });
+
       setIsNewChatDialogOpen(false);
     } catch (error) {
-      console.error('Error creating group chat: ', error);
+      logger.error('Error creating group chat: ', error);
       notifyError('Failed to create group.', 'Error');
     }
   }
@@ -288,12 +293,11 @@ const HomePage = () => {
         (conv) =>
           conv.type === 'individual' &&
           conv.participants.includes(selectedUser.id) &&
-          // If you deleted it before (even if inboxFor is missing on legacy docs), don't reuse
+          // If user deleted this conversation (explicitly in deletedForUsers), don't reuse
           !(
-            Array.isArray((conv as any).deletedForUsers) &&
-            ((conv as any).deletedForUsers as string[]).includes(user.uid)
-          ) &&
-          (!conv.inboxFor || conv.inboxFor.includes(user.uid)), // not in inboxFor = you deleted it → don't reuse
+            Array.isArray((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers) &&
+            ((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers as string[]).includes(user.uid)
+          ),
       );
 
       if (existingConv) {
@@ -309,7 +313,13 @@ const HomePage = () => {
               updatedAt: serverTimestamp(),
             });
           } catch (e) {
-            console.error('Failed to add user to inboxFor', e);
+            logger.error('Failed to add user to inboxFor', e);
+            notifyError(
+              'Failed to open conversation. Please try again.',
+              'Error'
+            );
+            // Don't proceed with setting active conversation to prevent misleading UI state
+            return null;
           }
         }
         setActiveConversation(existingConv);
@@ -373,7 +383,7 @@ const HomePage = () => {
         );
         return newConversation;
       } catch (error) {
-        console.error('Error creating conversation:', error);
+        logger.error('Error creating conversation:', error);
         notifyError('Failed to start chat', 'Error');
         setIsNewChatDialogOpen(false);
         return null;
@@ -432,11 +442,11 @@ const HomePage = () => {
         }
       }
     } catch (error) {
-      console.error('Error processing chat session:', error);
+      logger.error('Error processing chat session:', error);
     }
   }, [searchParams, user?.uid, loading, conversations, handleStartNewChat]);
 
-  // Load all conversations
+  // Subscription Effect: Loads conversations and keeps them in sync
   useEffect(() => {
     if (!user?.uid) return;
 
@@ -450,7 +460,22 @@ const HomePage = () => {
         if (!isMounted) return;
         const typedData = data as Conversation[];
         allConversationsRef.current = typedData; // Keep raw list for "existing conversation" check
-        // WhatsApp-style: individual chats only visible to users in inboxFor; groups visible to all participants
+
+        // Clear removedConversationIdsRef for conversations that should re-appear
+        typedData.forEach((conv) => {
+          const isInUserInbox =
+            conv.type === 'group' ||
+            (conv.inboxFor && conv.inboxFor.includes(user.uid));
+          const isNotDeleted = !(
+            Array.isArray((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers) &&
+            ((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers as string[]).includes(user.uid)
+          );
+          if (isInUserInbox && isNotDeleted) {
+            removedConversationIdsRef.current.delete(conv.id);
+          }
+        });
+
+        // Filter visible conversations
         const visibleConversations = typedData
           .filter(
             (conv) =>
@@ -458,65 +483,83 @@ const HomePage = () => {
               !conv.inboxFor ||
               conv.inboxFor.includes(user.uid),
           )
-          // If user deleted this conversation, don't show it until a new message re-adds them
           .filter(
             (conv) =>
               !(
-                Array.isArray((conv as any).deletedForUsers) &&
-                ((conv as any).deletedForUsers as string[]).includes(user.uid)
+                Array.isArray((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers) &&
+                ((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers as string[]).includes(user.uid)
               ),
           )
-          .filter((conv) => !removedConversationIdsRef.current.has(conv.id)); // Never re-add conversations user deleted from sidebar (subscription can return stale data)
-        setConversations(visibleConversations);
+          .filter((conv) => !removedConversationIdsRef.current.has(conv.id));
 
-        const convId = searchParams?.get('c');
-        if (convId) {
-          const match =
-            visibleConversations.find((c) => c.id === convId) || null;
-          setActiveConversation(match);
-        } else if (!isMobile) {
-          // Desktop default behavior: auto-select first conversation.
-          if (visibleConversations.length > 0 && !searchParams?.get('userId')) {
-            setActiveConversation((prev) => prev ?? visibleConversations[0]);
-          }
-        } else {
-          // Mobile behavior: show list first (no active chat) unless URL explicitly selects one.
-          setActiveConversation(null);
-        }
+        setConversations((prev) => {
+          if (prev.length !== visibleConversations.length) return visibleConversations;
+          const prevMap = new Map(prev.map(c => [c.id, c]));
+          const hasChanges = visibleConversations.some((newConv) => {
+            const oldConv = prevMap.get(newConv.id);
+            return !oldConv ||
+              oldConv.updatedAt !== newConv.updatedAt ||
+              oldConv.lastMessage?.timestamp !== newConv.lastMessage?.timestamp;
+          });
+          return hasChanges ? visibleConversations : prev;
+        });
 
+        // Only set loading to false here, but DON'T select active conversation yet.
+        // Selection is handled in the separate effect below.
         setLoading(false);
       },
     );
 
     return () => {
       isMounted = false;
-      if (unsubscribe) unsubscribe();
+      if (unsubscribe) {
+        try {
+          unsubscribe();
+        } catch (e) {
+          console.debug('Conversations subscription cleanup error:', e);
+        }
+      }
     };
-  }, [user?.uid, searchParams, isMobile]);
+  }, [user?.uid]); // Only depend on user.uid, NOT searchParams
 
+  // Selection Effect: Handles active conversation selection based on URL or defaults
   useEffect(() => {
-    const convId = searchParams?.get('c');
-    if (!conversations.length) return;
-
-    if (convId) {
-      const match = conversations.find((c) => c.id === convId) || null;
-      setActiveConversation(match);
+    if (loading || conversations.length === 0) {
+      // If still loading or no conversations, rely on default behavior or wait
+      // But if explicitly "done loading" and empty, we might need to clear active
+      if (!loading && conversations.length === 0) {
+        setActiveConversation(null);
+      }
       return;
     }
 
-    if (
-      !isMobile &&
-      !loading &&
-      conversations.length > 0 &&
-      !activeConversation
-    ) {
-      setActiveConversation(conversations[0]);
-    }
+    const convId = searchParams?.get('c');
 
-    if (isMobile && !convId) {
-      setActiveConversation(null);
+    if (convId) {
+      // URL has priority
+      // If currently active matches URL, do nothing (prevent flicker)
+      if (activeConversation?.id === convId) return;
+
+      const match = conversations.find((c) => c.id === convId) || null;
+      if (match) {
+        setActiveConversation(match);
+      }
+      // Note: If ID in URL is valid but not found in list (e.g. deleted/hidden), 
+      // we might want to fetch it individually or handle error. 
+      // For now, adhering to previous logic behavior (just don't select if not found).
+
+    } else if (!isMobile) {
+      // Desktop default: pick first if nothing selected
+      if (!activeConversation && !searchParams?.get('userId')) {
+        setActiveConversation(conversations[0]);
+      }
+    } else {
+      // Mobile default (list view): no active conversation unless URL specified
+      if (!activeConversation) setActiveConversation(null);
     }
-  }, [loading, conversations, activeConversation, searchParams, isMobile]);
+  }, [conversations, searchParams, isMobile, loading]);
+
+
 
   const handleSelectConversation = useCallback(
     (conv: Conversation) => {
@@ -574,7 +617,7 @@ const HomePage = () => {
             Start a Chat
           </Button>
         }
-        className="h-[80vh] border-0 bg-transparent py-8 m-2"
+        className="h-[80dvh] border-0 bg-transparent py-8 m-2"
       />
     );
   }
@@ -689,7 +732,7 @@ const HomePage = () => {
           breadcrumbItems={[{ label: 'Chats', link: '/chat' }]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[96vh] overflow-hidden min-h-0">
+        <main className="h-[96dvh] overflow-hidden min-h-0">
           {isMobile ? (
             <div className="h-full">
               {activeConversation
@@ -714,17 +757,7 @@ const HomePage = () => {
           onConversationUpdate={handleConversationUpdate}
           onConversationRemovedFromList={handleConversationRemovedFromList}
           conversationId={activeConversation?.id}
-          conversation={
-            profileSidebarId && profileSidebarType
-              ? profileSidebarType === 'group'
-                ? (conversations.find((c) => c.id === profileSidebarId) ?? null)
-                : (conversations.find(
-                    (c) =>
-                      c.type === 'individual' &&
-                      c.participants?.includes(profileSidebarId),
-                  ) ?? null)
-              : null
-          }
+
         />
         {user && (
           <NewChatDialog
@@ -741,3 +774,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

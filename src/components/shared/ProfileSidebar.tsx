@@ -29,6 +29,7 @@ import {
   serverTimestamp,
   FieldValue,
   writeBatch,
+  runTransaction,
 } from 'firebase/firestore';
 
 import { AddMembersDialog } from './AddMembersDialog';
@@ -63,6 +64,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { addGroupSystemMessage } from '@/utils/common/firestoreUtils';
 import { cn } from '@/lib/utils';
+import { logger } from '@/utils/logger';
 
 // Simple file item type for shared files list
 export type FileItem = {
@@ -74,7 +76,6 @@ export type FileItem = {
 };
 
 export type ProfileUser = {
-  _id: string;
   id: string;
   userName: string;
   name: string;
@@ -95,7 +96,6 @@ export type ProfileGroupMember = {
 };
 
 export type ProfileGroup = {
-  _id: string;
   id: string;
   groupName: string;
   avatar?: string;
@@ -138,6 +138,7 @@ export function ProfileSidebar({
   onConversationUpdate,
   onConversationRemovedFromList,
   conversationId,
+  conversation,
 }: ProfileSidebarProps) {
   // For groups, conversationId is same as profileId. For individual chats, conversationId is separate.
   const effectiveConversationId =
@@ -241,7 +242,7 @@ export function ProfileSidebar({
 
       setEditingField(null);
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', error);
       toast({
         title: 'Error',
         description: 'Failed to update profile. Please try again.',
@@ -279,7 +280,7 @@ export function ProfileSidebar({
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
     description: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
     confirmButtonText: 'Confirm',
     confirmButtonVariant: 'destructive' as
       | 'default'
@@ -302,7 +303,6 @@ export function ProfileSidebar({
 
     if (profileType === 'user' && initialData && profileId) {
       setProfileData({
-        _id: profileId,
         id: profileId,
         userName: initialData.userName || '',
         name: initialData.userName || '',
@@ -330,7 +330,6 @@ export function ProfileSidebar({
             displayName:
               initialData?.userName || apiData.userName || apiData.displayName,
             id: profileId,
-            _id: apiData._id || profileId,
             name: initialData?.userName || apiData.name || apiData.userName,
           });
         } else {
@@ -348,20 +347,19 @@ export function ProfileSidebar({
           const detailsMap = groupData.participantDetails || {};
           const members = participantIds.map((id: string) => {
             const details = detailsMap[id] || {};
+            const statusFromDetails =
+              (details as { status?: 'online' | 'offline' }).status;
             return {
               id,
               userName: details.userName || 'Unknown Member',
               profilePic: details.profilePic,
-              status: (Math.random() > 0.5 ? 'online' : 'offline') as
-                | 'online'
-                | 'offline',
+              status: (statusFromDetails ?? 'offline') as 'online' | 'offline',
             };
           });
 
           const avatarUrl = initialData?.profilePic || groupData.avatar;
 
           setProfileData({
-            _id: conversationDoc.id,
             id: conversationDoc.id,
             groupName: groupData.groupName || 'Unnamed Group',
             displayName: groupData.groupName || 'Unnamed Group',
@@ -378,7 +376,7 @@ export function ProfileSidebar({
         }
       }
     } catch (error: any) {
-      console.error('Error fetching profile data:', error);
+      logger.error('Error fetching profile data:', error);
       setError('Failed to load profile data.');
     } finally {
       setLoading(false);
@@ -460,14 +458,14 @@ export function ProfileSidebar({
               fileName: fileName,
             });
           } catch (e) {
-            console.error('Could not parse media URL:', e);
+            logger.error('Could not parse media URL:', e);
           }
         }
       });
 
       setSharedMedia(extractedMedia);
     } catch (error) {
-      console.error('Error fetching shared media:', error);
+      logger.error('Error fetching shared media:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -519,7 +517,7 @@ export function ProfileSidebar({
 
       setSharedFiles(extractedFiles);
     } catch (error) {
-      console.error('Error fetching shared files:', error);
+      logger.error('Error fetching shared files:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -555,7 +553,7 @@ export function ProfileSidebar({
         }
       });
     } catch (error) {
-      console.error('Error fetching block status:', error);
+      logger.error('Error fetching block status:', error);
     }
   };
 
@@ -628,7 +626,7 @@ export function ProfileSidebar({
     try {
       // Use Firebase UIDs so the group appears in each added user's chat list (Firestore query uses participants)
       const newMemberIds = selectedUsers
-        .map((u) => u.firebaseUid ?? u.id)
+        .map((u) => u.id)
         .filter(Boolean) as string[];
       const updates: any = {
         participants: arrayUnion(...newMemberIds),
@@ -637,7 +635,7 @@ export function ProfileSidebar({
       };
 
       selectedUsers.forEach((member) => {
-        const uid = member.firebaseUid ?? member.id;
+        const uid = member.id;
         if (!uid) return;
 
         updates[`participantDetails.${uid}`] = {
@@ -661,6 +659,7 @@ export function ProfileSidebar({
           groupId,
           `${actor} added ${addedNames} to the group.`,
           { event: 'member_added', actorId: user?.uid, addedIds: newMemberIds },
+          user?.uid,
         );
       } catch {
         // non-blocking
@@ -686,7 +685,7 @@ export function ProfileSidebar({
         description: `${selectedUsers.length} member(s) added successfully.`,
       });
     } catch (error) {
-      console.error('Error adding members:', error);
+      logger.error('Error adding members:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -755,7 +754,7 @@ export function ProfileSidebar({
       });
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
-      console.error('Error updating group info:', error);
+      logger.error('Error updating group info:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -790,7 +789,7 @@ export function ProfileSidebar({
       setRefreshKey((prev) => prev + 1);
       return newInviteLink;
     } catch (error) {
-      console.error('Error generating and saving invite link:', error);
+      logger.error('Error generating and saving invite link:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -841,14 +840,34 @@ export function ProfileSidebar({
             actorId: user?.uid,
             removedId: memberIdToRemove,
           },
+          user?.uid,
         );
       } catch {
         // non-blocking
       }
       toast({ title: 'Success', description: 'Member removed successfully.' });
+
+      // Update parent state with the new conversation data (optimistic update since we don't return the full object from API)
+      if (onConversationUpdate && profileId && profileData && profileType === 'group') {
+        const group = profileData as ProfileGroup;
+        const updatedParticipants = (group.participants || []).filter((p: string) => p !== memberIdToRemove);
+        const updatedConversation: any = {
+          id: profileId,
+          participants: updatedParticipants,
+          participantDetails: { ...group.participantDetails },
+          type: 'group',
+          groupName: group.groupName,
+          admins: group.admins,
+        };
+        // Remove the member from details if present
+        if (updatedConversation.participantDetails && updatedConversation.participantDetails[memberIdToRemove]) {
+          delete updatedConversation.participantDetails[memberIdToRemove];
+        }
+        onConversationUpdate(updatedConversation);
+      }
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
-      console.error('Error removing member:', error);
+      logger.error('Error removing member:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -893,7 +912,7 @@ export function ProfileSidebar({
 
       onClose();
     } catch (error) {
-      console.error('Error deleting group:', error);
+      logger.error('Error deleting group:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -925,13 +944,19 @@ export function ProfileSidebar({
       );
       const messagesSnapshot = await getDocs(messagesRef);
 
-      const batch = writeBatch(db);
-      messagesSnapshot.docs.forEach((msgDoc) => {
-        batch.update(msgDoc.ref, {
-          deletedFor: arrayUnion(user.uid),
+      // Chunk batch operations to avoid Firestore 500-operation limit
+      const BATCH_SIZE = 500;
+      const docs = messagesSnapshot.docs;
+      for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+        const chunk = docs.slice(i, i + BATCH_SIZE);
+        const batch = writeBatch(db);
+        chunk.forEach((msgDoc) => {
+          batch.update(msgDoc.ref, {
+            deletedFor: arrayUnion(user.uid),
+          });
         });
-      });
-      await batch.commit();
+        await batch.commit();
+      }
 
       // Remove yourself from inboxFor so conversation disappears from your list
       const conversationDocRef = doc(db, 'conversations', conversationId);
@@ -958,14 +983,14 @@ export function ProfileSidebar({
       setIsConfirmDialogOpen(false);
       onClose();
     } catch (error) {
-      console.error('Error deleting chat:', error);
+      logger.error('Error deleting chat:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Failed to delete chat. Please try again.',
       });
       setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
-      setIsConfirmDialogOpen(false);
+      // Keep dialog open on failure so user can retry
     }
   };
 
@@ -1000,14 +1025,19 @@ export function ProfileSidebar({
         return;
       }
 
-      // Mark all messages as deleted for this user
-      const batch = writeBatch(db);
-      messagesSnapshot.docs.forEach((msgDoc) => {
-        batch.update(msgDoc.ref, {
-          deletedFor: arrayUnion(user.uid),
+      // Mark all messages as deleted for this user (chunk to avoid 500-op limit)
+      const BATCH_SIZE = 500;
+      const docs = messagesSnapshot.docs;
+      for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+        const chunk = docs.slice(i, i + BATCH_SIZE);
+        const batch = writeBatch(db);
+        chunk.forEach((msgDoc) => {
+          batch.update(msgDoc.ref, {
+            deletedFor: arrayUnion(user.uid),
+          });
         });
-      });
-      await batch.commit();
+        await batch.commit();
+      }
 
       // Clear local shared media/files and refresh
       setSharedMedia([]);
@@ -1023,14 +1053,14 @@ export function ProfileSidebar({
       setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
       setIsConfirmDialogOpen(false);
     } catch (error) {
-      console.error('Error clearing chat:', error);
+      logger.error('Error clearing chat:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Failed to clear chat. Please try again.',
       });
       setConfirmDialogProps((prev) => ({ ...prev, isLoading: false }));
-      setIsConfirmDialogOpen(false);
+      // Keep dialog open on failure so user can retry
     }
   };
 
@@ -1107,7 +1137,7 @@ export function ProfileSidebar({
       ).data() as Conversation;
       onConversationUpdate({ ...currentConvData, id: conversationDocRef.id });
     } catch (error) {
-      console.error('Error updating block status:', error);
+      logger.error('Error updating block status:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -1216,7 +1246,7 @@ export function ProfileSidebar({
                           src={(profileData as ProfileGroup).avatar || ''}
                           alt={profileData.displayName}
                           onError={(e) => {
-                            console.error('Error loading group avatar:', e);
+                            logger.error('Error loading group avatar:', e);
                           }}
                         />
                       ) : (
@@ -1224,7 +1254,7 @@ export function ProfileSidebar({
                           src={(profileData as ProfileUser).profilePic || ''}
                           alt={profileData.displayName}
                           onError={(e) => {
-                            console.error('Error loading user avatar:', e);
+                            logger.error('Error loading user avatar:', e);
                           }}
                         />
                       )}
@@ -1451,15 +1481,7 @@ export function ProfileSidebar({
                         <CardTitle className="text-base">Actions</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
-                        {/*
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
-                          disabled={!effectiveConversationId || !user?.uid}
-                        >
-                          <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
-                        </Button>
-                        */}
+
                         <Button
                           variant="outline"
                           className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))]"
@@ -1496,7 +1518,7 @@ export function ProfileSidebar({
                         >
                           <ShieldX className="h-4 w-4 mr-2" />
                           {blockStatus.isBlocked &&
-                          blockStatus.blockedBy === user?.uid
+                            blockStatus.blockedBy === user?.uid
                             ? 'Unblock User'
                             : blockStatus.isBlocked
                               ? 'Blocked by User'
@@ -1509,9 +1531,9 @@ export function ProfileSidebar({
                           onClick={() => {
                             if (effectiveConversationId) {
                               setConfirmDialogProps({
-                                title: 'Clear Chat History?',
+                                title: 'Clear Chat',
                                 description:
-                                  'This will permanently delete all messages in this conversation. This action cannot be undone.',
+                                  'This will remove messages from your view; other participants will still see them. This action cannot be undone for your account.',
                                 onConfirm: async () => {
                                   await handleClearChat(
                                     effectiveConversationId,
@@ -1534,9 +1556,9 @@ export function ProfileSidebar({
                           onClick={() => {
                             if (effectiveConversationId) {
                               setConfirmDialogProps({
-                                title: 'Delete Conversation?',
+                                title: 'Delete Chat',
                                 description:
-                                  'This will permanently delete this conversation and all its messages. This action cannot be undone.',
+                                  'This will remove messages from your view; other participants will still see them. This action cannot be undone for your account.',
                                 onConfirm: async () => {
                                   await handleDeleteChat(
                                     effectiveConversationId,
@@ -1616,11 +1638,10 @@ export function ProfileSidebar({
                                         </AvatarFallback>
                                       </Avatar>
                                       <span
-                                        className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${
-                                          member.status === 'online'
-                                            ? 'bg-green-500'
-                                            : 'bg-gray-400'
-                                        }`}
+                                        className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${member.status === 'online'
+                                          ? 'bg-green-500'
+                                          : 'bg-gray-400'
+                                          }`}
                                       ></span>
                                       <div className="flex-1 min-w-0 flex items-center gap-2">
                                         <span className="text-sm font-medium truncate">
@@ -1736,16 +1757,16 @@ export function ProfileSidebar({
                               </Button>
                               {(profileData as ProfileGroup).inviteLink !==
                                 undefined && (
-                                <Button
-                                  variant="outline"
-                                  className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
-                                  onClick={() =>
-                                    setIsInviteLinkDialogOpen(true)
-                                  }
-                                >
-                                  <Link2 className="h-4 w-4 mr-2" /> Invite Link
-                                </Button>
-                              )}
+                                  <Button
+                                    variant="outline"
+                                    className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
+                                    onClick={() =>
+                                      setIsInviteLinkDialogOpen(true)
+                                    }
+                                  >
+                                    <Link2 className="h-4 w-4 mr-2" /> Invite Link
+                                  </Button>
+                                )}
                             </>
                           )}
                         <Button
@@ -1768,32 +1789,40 @@ export function ProfileSidebar({
                                       'conversations',
                                       profileId,
                                     );
-                                    const group = profileData as ProfileGroup;
-                                    const remainingParticipants = (
-                                      group.participants || []
-                                    ).filter((id: string) => id !== user.uid);
-                                    const remainingAdmins = (
-                                      group.admins || []
-                                    ).filter((id: string) => id !== user.uid);
-                                    // When last admin leaves: hand over to the oldest remaining member
-                                    // (first in participants = joined next after the main admin)
-                                    const nextAdmin =
-                                      remainingParticipants.length > 0
-                                        ? remainingParticipants[0]
-                                        : null;
-                                    const newAdmins =
-                                      remainingAdmins.length > 0
-                                        ? remainingAdmins
-                                        : nextAdmin
-                                          ? [nextAdmin]
-                                          : [];
-                                    await updateDoc(groupRef, {
-                                      [`participantDetails.${user.uid}`]:
-                                        deleteField(),
-                                      participants: arrayRemove(user.uid),
-                                      admins: newAdmins,
-                                      inboxFor: arrayRemove(user.uid),
-                                      updatedAt: serverTimestamp(),
+
+                                    // Atomic transaction: remove user and promote new admin if needed
+                                    await runTransaction(db, async (transaction) => {
+                                      // Read current state
+                                      const groupSnap = await transaction.get(groupRef);
+                                      if (!groupSnap.exists()) {
+                                        throw new Error('Group not found');
+                                      }
+
+                                      const data = groupSnap.data();
+                                      const currentParticipants: string[] = data.participants || [];
+                                      const currentAdmins: string[] = data.admins || [];
+                                      const currentInboxFor: string[] = data.inboxFor || [];
+
+                                      // Compute new arrays manually (fully atomic - no arrayRemove/arrayUnion mix)
+                                      const newParticipants = currentParticipants.filter((p) => p !== user.uid);
+                                      const newInboxFor = currentInboxFor.filter((p) => p !== user.uid);
+
+                                      // ALWAYS remove the leaving user from admins
+                                      let newAdmins = currentAdmins.filter((a) => a !== user.uid);
+
+                                      // Promote first remaining participant ONLY if no admins left
+                                      if (newAdmins.length === 0 && newParticipants.length > 0) {
+                                        newAdmins = [newParticipants[0]];
+                                      }
+
+                                      // Single atomic update with computed arrays
+                                      transaction.update(groupRef, {
+                                        participants: newParticipants,
+                                        admins: newAdmins,
+                                        inboxFor: newInboxFor,
+                                        [`participantDetails.${user.uid}`]: deleteField(),
+                                        updatedAt: serverTimestamp(),
+                                      });
                                     });
                                     // Admin-only system message for group membership changes
                                     try {
@@ -1810,6 +1839,7 @@ export function ProfileSidebar({
                                           actorId: user?.uid,
                                           leftId: user?.uid,
                                         },
+                                        user?.uid,
                                       );
                                     } catch {
                                       // non-blocking
@@ -1826,7 +1856,7 @@ export function ProfileSidebar({
                                     });
                                   }
                                 } catch (error) {
-                                  console.error('Error leaving group:', error);
+                                  logger.error('Error leaving group:', error);
                                   toast({
                                     title: 'Error',
                                     description:
@@ -1881,57 +1911,59 @@ export function ProfileSidebar({
           </div>
         </ScrollArea>
       </SheetContent>
-      {profileData && profileType === 'group' && (
-        <>
-          <AddMembersDialog
-            isOpen={isAddMembersDialogOpen}
-            onClose={() => setIsAddMembersDialogOpen(false)}
-            onAddMembers={(selectedUserIds) => {
-              if (profileData && profileData.id && profileType === 'group') {
-                handleAddMembersToGroup(
-                  selectedUserIds,
-                  (profileData as ProfileGroup).id,
-                );
+      {
+        profileData && profileType === 'group' && (
+          <>
+            <AddMembersDialog
+              isOpen={isAddMembersDialogOpen}
+              onClose={() => setIsAddMembersDialogOpen(false)}
+              onAddMembers={(selectedUserIds) => {
+                if (profileData && profileData.id && profileType === 'group') {
+                  handleAddMembersToGroup(
+                    selectedUserIds,
+                    (profileData as ProfileGroup).id,
+                  );
+                }
+                setIsAddMembersDialogOpen(false);
+              }}
+              currentMemberIds={
+                (profileData as ProfileGroup).members?.map((m) => m.id) || []
               }
-              setIsAddMembersDialogOpen(false);
-            }}
-            currentMemberIds={
-              (profileData as ProfileGroup).members?.map((m) => m.id) || []
-            }
-            groupId={(profileData as ProfileGroup).id}
-          />
-          <ChangeGroupInfoDialog
-            isOpen={isChangeGroupInfoDialogOpen}
-            onClose={() => setIsChangeGroupInfoDialogOpen(false)}
-            onSave={(newName, newAvatarUrl) => {
-              if (profileData && profileData.id && profileType === 'group') {
-                handleSaveGroupInfo(
-                  newName,
-                  newAvatarUrl,
-                  (profileData as ProfileGroup).id,
-                );
-              }
-            }}
-            currentName={(profileData as ProfileGroup).displayName || ''}
-            currentAvatarUrl={(profileData as ProfileGroup).avatar}
-            groupId={(profileData as ProfileGroup).id}
-          />
-          <InviteLinkDialog
-            isOpen={isInviteLinkDialogOpen}
-            onClose={() => setIsInviteLinkDialogOpen(false)}
-            onGenerateLink={async () => {
-              if (profileData && profileData.id && profileType === 'group') {
-                return handleGenerateInviteLink(
-                  (profileData as ProfileGroup).id,
-                );
-              }
-              return null;
-            }}
-            currentInviteLink={(profileData as ProfileGroup).inviteLink}
-            groupName={(profileData as ProfileGroup).displayName || 'the group'}
-          />
-        </>
-      )}
+              groupId={(profileData as ProfileGroup).id}
+            />
+            <ChangeGroupInfoDialog
+              isOpen={isChangeGroupInfoDialogOpen}
+              onClose={() => setIsChangeGroupInfoDialogOpen(false)}
+              onSave={(newName, newAvatarUrl) => {
+                if (profileData && profileData.id && profileType === 'group') {
+                  handleSaveGroupInfo(
+                    newName,
+                    newAvatarUrl,
+                    (profileData as ProfileGroup).id,
+                  );
+                }
+              }}
+              currentName={(profileData as ProfileGroup).displayName || ''}
+              currentAvatarUrl={(profileData as ProfileGroup).avatar}
+              groupId={(profileData as ProfileGroup).id}
+            />
+            <InviteLinkDialog
+              isOpen={isInviteLinkDialogOpen}
+              onClose={() => setIsInviteLinkDialogOpen(false)}
+              onGenerateLink={async () => {
+                if (profileData && profileData.id && profileType === 'group') {
+                  return handleGenerateInviteLink(
+                    (profileData as ProfileGroup).id,
+                  );
+                }
+                return null;
+              }}
+              currentInviteLink={(profileData as ProfileGroup).inviteLink}
+              groupName={(profileData as ProfileGroup).displayName || 'the group'}
+            />
+          </>
+        )
+      }
       <ConfirmActionDialog
         isOpen={isConfirmDialogOpen}
         onClose={() => setIsConfirmDialogOpen(false)}
@@ -1942,3 +1974,4 @@ export function ProfileSidebar({
 }
 
 export default ProfileSidebar;
+

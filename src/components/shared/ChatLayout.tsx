@@ -22,12 +22,19 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
   onOpenProfileSidebar,
 }) => {
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+
+  // Use static default to prevent SSR hydration mismatch. Compute actual size in useEffect.
   const [defaultSidebarSize, setDefaultSidebarSize] = useState(25);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const mq = window.matchMedia('(min-width: 640px) and (max-width: 1024px)');
+
+    // Set initial size based on media query after mount
+    setDefaultSidebarSize(mq.matches ? 22 : 25);
+
     const handler = () => setDefaultSidebarSize(mq.matches ? 22 : 25);
-    handler();
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
@@ -66,8 +73,8 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
           {/* Pass onOpenProfileSidebar to chatListComponent if it's a React element that can accept it */}
           {React.isValidElement(chatListComponent)
             ? React.cloneElement(chatListComponent as React.ReactElement<any>, {
-                onOpenProfileSidebar,
-              })
+              onOpenProfileSidebar,
+            })
             : chatListComponent}
         </aside>
       </Panel>
@@ -89,9 +96,9 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
           {/* Pass onOpenProfileSidebar to chatWindowComponent if it's a React element that can accept it */}
           {React.isValidElement(chatWindowComponent)
             ? React.cloneElement(
-                chatWindowComponent as React.ReactElement<any>,
-                { onOpenProfileSidebar },
-              )
+              chatWindowComponent as React.ReactElement<any>,
+              { onOpenProfileSidebar },
+            )
             : chatWindowComponent}
         </main>
       </Panel>

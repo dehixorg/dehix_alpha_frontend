@@ -19,7 +19,7 @@ export interface ApiUser {
 // Represents the processed user data ready for UI
 export interface CombinedUser {
   id: string; // Maps to _id (backend ID)
-  /** Firebase Auth UID – use this for chat participants/inboxFor so the other user sees the conversation */
+  /** Firebase Auth UID – use this for chat participants/inbox so the other user sees the conversation */
   firebaseUid?: string;
   displayName: string;
   email: string;
@@ -52,7 +52,8 @@ export const useAllUsers = () => {
         const processedUsers = freelancerData.map((user) => ({
           id: user._id,
           // Chat uses Firestore with Firebase UIDs; backend may return firebase_id (when _id differs)
-          firebaseUid: user.firebase_id ?? user._id,
+          // Fix: Handle empty string firebase_id by falling back to _id
+          firebaseUid: (user.firebase_id || user._id),
           displayName: (user.firstName && user.lastName
             ? `${user.firstName} ${user.lastName}`
             : user.name || user.userName || 'Unnamed User'
@@ -78,8 +79,8 @@ export const useAllUsers = () => {
       console.error('Error fetching freelancer users:', e);
       setError(
         e.response?.data?.message ||
-          e.message ||
-          'An unexpected error occurred while fetching freelancers.',
+        e.message ||
+        'An unexpected error occurred while fetching freelancers.',
       );
       setUsers([]);
     } finally {

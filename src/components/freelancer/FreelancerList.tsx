@@ -319,10 +319,16 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
     // Cleanup function
     return () => {
       if (unsubscribeGroups) {
-        unsubscribeGroups();
+        try {
+          unsubscribeGroups();
+        } catch (e) {
+          console.debug('Groups subscription cleanup error:', e);
+        }
       }
     };
+
   }, [fetchFreelancers, fetchGroups, user?.uid, isBusinessUser, projectId]);
+
 
   return (
     <Card

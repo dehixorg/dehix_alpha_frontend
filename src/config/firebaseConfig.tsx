@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 // import { getAnalytics } from 'firebase/analytics'
 // TODO: Add SDKs for Firebase products that you want to use
@@ -19,9 +19,19 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC__APP_ID,
 };
 
-// Initialize Firebase
+// Initialize Firestore
 export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+const isBrowser = typeof window !== 'undefined';
+
+export const db = initializeFirestore(app, {
+  localCache: isBrowser
+    ? persistentLocalCache({
+      tabManager: persistentMultipleTabManager(),
+    })
+    : undefined,
+  ignoreUndefinedProperties: true,
+});
 
 const auth = getAuth(app);
 auth.useDeviceLanguage();

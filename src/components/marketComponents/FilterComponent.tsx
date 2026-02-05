@@ -182,144 +182,146 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
           filters.consultant ||
           filters.minRate ||
           filters.maxRate) && (
-          <div
-            className="mt-3 flex flex-wrap gap-2"
-            aria-label="Active filters"
-          >
-            {filters.jobType.map((t) => (
-              <Badge
-                key={`t-${t}`}
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
-                {t}
-                <button
-                  className="ml-1 rounded hover:bg-muted px-1"
-                  aria-label={`Remove ${t}`}
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      jobType: prev.jobType.filter((x) => x !== t),
-                    }))
-                  }
+            <div
+              className="mt-3 flex flex-wrap gap-2"
+              aria-label="Active filters"
+            >
+              {filters.jobType.map((t) => (
+                <Badge
+                  key={`t-${t}`}
+                  variant="secondary"
+                  className="flex items-center gap-1"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-            {filters.domain.map((d) => (
-              <Badge
-                key={`d-${d}`}
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
-                {d}
-                <button
-                  className="ml-1 rounded hover:bg-muted px-1"
-                  aria-label={`Remove ${d}`}
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      domain: prev.domain.filter((x) => x !== d),
-                    }))
-                  }
+                  {t}
+                  <button
+                    className="ml-1 rounded hover:bg-muted px-1"
+                    aria-label={`Remove ${t}`}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        jobType: prev.jobType.filter((x) => x !== t),
+                      }))
+                    }
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {filters.domain.map((d) => (
+                <Badge
+                  key={`d-${d}`}
+                  variant="secondary"
+                  className="flex items-center gap-1"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-            {filters.projectDomain.map((pd) => (
-              <Badge
-                key={`pd-${pd}`}
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
-                {pd}
-                <button
-                  className="ml-1 rounded hover:bg-muted px-1"
-                  aria-label={`Remove ${pd}`}
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      projectDomain: prev.projectDomain.filter((x) => x !== pd),
-                    }))
-                  }
+                  {d}
+                  <button
+                    className="ml-1 rounded hover:bg-muted px-1"
+                    aria-label={`Remove ${d}`}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        domain: prev.domain.filter((x) => x !== d),
+                      }))
+                    }
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {filters.projectDomain.map((pd) => (
+                <Badge
+                  key={`pd-${pd}`}
+                  variant="secondary"
+                  className="flex items-center gap-1"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-            {filters.skills.map((s) => (
-              <Badge
-                key={`s-${s}`}
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
-                {s}
-                <button
-                  className="ml-1 rounded hover:bg-muted px-1"
-                  aria-label={`Remove ${s}`}
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      skills: prev.skills.filter((x) => x !== s),
-                    }))
-                  }
+                  {pd}
+                  <button
+                    className="ml-1 rounded hover:bg-muted px-1"
+                    aria-label={`Remove ${pd}`}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        projectDomain: prev.projectDomain.filter((x) => x !== pd),
+                      }))
+                    }
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {filters.skills.map((s) => (
+                <Badge
+                  key={`s-${s}`}
+                  variant="secondary"
+                  className="flex items-center gap-1"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-            {filters.favourites && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                Drafts only
-                <button
-                  className="ml-1 rounded hover:bg-muted px-1"
-                  aria-label="Disable drafts only"
-                  onClick={() =>
-                    setFilters((prev) => ({ ...prev, favourites: false }))
-                  }
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-            {filters.consultant && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                Consultation
-                <button
-                  className="ml-1 rounded hover:bg-muted px-1"
-                  aria-label="Disable consultation"
-                  onClick={() =>
-                    setFilters((prev) => ({ ...prev, consultant: false }))
-                  }
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-            {(filters.minRate || filters.maxRate) && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                {filters.minRate ? `$${filters.minRate}` : ''}
-                {filters.minRate && filters.maxRate ? '–' : ''}
-                {filters.maxRate ? `$${filters.maxRate}` : ''}
-                <button
-                  className="ml-1 rounded hover:bg-muted px-1"
-                  aria-label="Clear budget range"
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      minRate: '',
-                      maxRate: '',
-                    }))
-                  }
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-          </div>
-        )}
+                  {s}
+                  <button
+                    className="ml-1 rounded hover:bg-muted px-1"
+                    aria-label={`Remove ${s}`}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        skills: prev.skills.filter((x) => x !== s),
+                      }))
+                    }
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {filters.favourites && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Drafts only
+                  <button
+                    className="ml-1 rounded hover:bg-muted px-1"
+                    aria-label="Disable drafts only"
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, favourites: false }))
+                    }
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {filters.consultant && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Consultation
+                  <button
+                    className="ml-1 rounded hover:bg-muted px-1"
+                    aria-label="Disable consultation"
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, consultant: false }))
+                    }
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {(filters.minRate || filters.maxRate) && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {filters.minRate && filters.maxRate
+                    ? `$${filters.minRate}–$${filters.maxRate}`
+                    : filters.minRate
+                      ? `From $${filters.minRate}`
+                      : `Up to $${filters.maxRate}`}
+                  <button
+                    className="ml-1 rounded hover:bg-muted px-1"
+                    aria-label="Clear budget range"
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        minRate: '',
+                        maxRate: '',
+                      }))
+                    }
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+            </div>
+          )}
       </div>
       <ScrollArea className="flex-1 min-h-0 max-h-[calc(100vh-12rem)] px-4 pb-2 pt-4">
         <Accordion
@@ -564,8 +566,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                                     projectDomain: checked
                                       ? [...prev.projectDomain, domain]
                                       : prev.projectDomain.filter(
-                                          (d) => d !== domain,
-                                        ),
+                                        (d) => d !== domain,
+                                      ),
                                   }));
                                 }}
                                 className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"

@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -143,16 +143,7 @@ const TalentMarketCard: React.FC<Props> = ({
       </CardHeader>
 
       <CardContent className="px-6 py-3">
-        <div className="flex flex-wrap gap-2 mb-3">
-          {item.experience && (
-            <Badge variant="secondary">Exp: {item.experience}+ yrs</Badge>
-          )}
-          {typeof item.freelancerRequired === 'number' && (
-            <Badge variant="secondary">
-              Required: {item.freelancerRequired}
-            </Badge>
-          )}
-        </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
@@ -207,14 +198,7 @@ const TalentMarketCard: React.FC<Props> = ({
       </CardContent>
 
       <CardFooter className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4">
-          <div className="text-sm text-muted-foreground">
-            {updated && (
-              <span className="hidden sm:inline-flex items-center ml-2">
-                Updated {updated}
-              </span>
-            )}
-          </div>
+        <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center w-full gap-4">
           <div className="flex gap-3 w-full sm:w-auto">
             <Button variant="outline" onClick={onNotInterested}>
               Not Interested

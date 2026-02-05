@@ -32,7 +32,7 @@ export const EmojiPicker = ({
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
         <Button
-          className={`h-7 w-7 rounded-full text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] dark:text-[hsl(var(--primary))] dark:hover:bg-[hsl(var(--accent))] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none ${className}`}
+          className={`h-7 w-7 rounded-full text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] dark:text-[hsl(var(--primary))] dark:hover:bg-[hsl(var(--accent))] focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-1 ${className}`}
           variant="ghost"
           size="icon"
           aria-label={ariaLabel}

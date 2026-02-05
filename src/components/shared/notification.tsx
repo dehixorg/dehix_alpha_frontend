@@ -53,21 +53,38 @@ export const NotificationButton = () => {
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
+    let isMounted = true; // Guard against unmount during async setup
 
     // Set up real-time listener for user notifications
     if (user?.uid) {
-      unsubscribe = subscribeToUserNotifications(user.uid, (data) => {
-        setNotifications(data);
-      });
+      unsubscribe = subscribeToUserNotifications(
+        user.uid,
+        (data) => {
+          if (isMounted) {
+            setNotifications(data);
+          }
+        },
+        (error) => {
+          // Log error but don't crash
+          console.error('Notification subscription error:', error);
+        },
+      );
     }
 
     // Clean up the listener when the component is unmounted
     return () => {
+      isMounted = false;
       if (unsubscribe) {
-        unsubscribe(); // Call unsubscribe only if it is defined
+        try {
+          unsubscribe();
+        } catch (e) {
+          // Silently handle cleanup errors (Firestore internal state issues)
+          console.warn('Notification unsubscribe cleanup error:', e);
+        }
       }
     };
-  }, [user]);
+  }, [user?.uid]);
+
 
   // Reset showAll when popover closes
   const handlePopoverClose = () => {

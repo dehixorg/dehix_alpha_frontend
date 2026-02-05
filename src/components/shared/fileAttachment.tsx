@@ -1,7 +1,8 @@
-import React from 'react';
-import { Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 interface FileAttachmentProps {
   fileName: string;
@@ -9,11 +10,29 @@ interface FileAttachmentProps {
   fileType: string;
 }
 
+// Allowed protocols for security
+const ALLOWED_PROTOCOLS = ['http:', 'https:', 'blob:', 'data:'];
+
+/**
+ * Validates that the URL uses a safe protocol.
+ * Returns true if safe, false otherwise.
+ */
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return ALLOWED_PROTOCOLS.includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
 export function FileAttachment({
   fileName,
   fileUrl,
   fileType,
 }: FileAttachmentProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const getFileIcon = (type: string) => {
     switch (type) {
       case 'pdf':
@@ -30,6 +49,19 @@ export function FileAttachment({
   };
 
   const handleDownload = async () => {
+    // Validate URL before any network/browser action
+    if (!fileUrl || !isSafeUrl(fileUrl)) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid File URL',
+        description: 'The file URL is invalid or uses an unsafe protocol.',
+      });
+      return;
+    }
+
+    if (isDownloading) return; // Prevent repeated clicks
+
+    setIsDownloading(true);
     try {
       // Fetch as blob so download works for cross-origin URLs (e.g. S3 in other chats)
       const res = await fetch(fileUrl, { mode: 'cors' });
@@ -45,7 +77,26 @@ export function FileAttachment({
       URL.revokeObjectURL(blobUrl);
     } catch {
       // Fallback: open in new tab so user can save (e.g. when CORS blocks fetch)
-      window.open(fileUrl, '_blank', 'noopener,noreferrer');
+      // Re-validate before fallback window.open
+      if (!isSafeUrl(fileUrl)) {
+        toast({
+          variant: 'destructive',
+          title: 'Download Failed',
+          description: 'The file URL uses an unsafe protocol.',
+        });
+        return;
+      }
+      const newWindow = window.open(fileUrl, '_blank', 'noopener,noreferrer');
+      if (!newWindow) {
+        // Popup was blocked - provide user-friendly feedback
+        toast({
+          variant: 'destructive',
+          title: 'Popup Blocked',
+          description: `Your browser blocked the download popup. Please allow popups for this site.`,
+        });
+      }
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -73,8 +124,13 @@ export function FileAttachment({
         size="icon"
         onClick={handleDownload}
         title="Download"
+        disabled={isDownloading}
       >
-        <Download className="h-4 w-4" />
+        {isDownloading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Download className="h-4 w-4" />
+        )}
       </Button>
     </div>
   );
