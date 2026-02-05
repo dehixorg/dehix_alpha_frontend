@@ -225,7 +225,7 @@ const ChatListItem = React.memo<{
       conversation.type === 'group'
         ? conversation.groupName
         : conversation.participantDetails?.[otherParticipantId]?.userName ||
-          'Chat User';
+        'Chat User';
 
     const profilePic =
       conversation.type === 'group'
@@ -242,7 +242,7 @@ const ChatListItem = React.memo<{
           'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--card))]',
           isActive &&
-            'bg-[hsl(var(--accent)_/_0.6)] dark:bg-[hsl(var(--accent)_/_0.4)]',
+          'bg-[hsl(var(--accent)_/_0.6)] dark:bg-[hsl(var(--accent)_/_0.4)]',
         )}
         onClick={() => setConversation(conversation)}
         onKeyDown={(e) => {
@@ -342,6 +342,30 @@ export function ChatList({
 
   // No local getLastMessagePreview - using shared utility from chatUtils.ts
 
+  const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
+    e.stopPropagation();
+    if (!onOpenProfileSidebar) return;
+    if (conv.type === 'group') {
+      onOpenProfileSidebar(conv.id, 'group', {
+        userName: conv.groupName || 'Group',
+        profilePic: conv.avatar,
+      });
+    } else {
+      const otherParticipantUid = conv.participants.find(
+        (p) => p !== currentUser.uid,
+      );
+      if (otherParticipantUid) {
+        const participantDetails =
+          conv.participantDetails?.[otherParticipantUid];
+        onOpenProfileSidebar(otherParticipantUid, 'user', {
+          userName: participantDetails?.userName,
+          email: participantDetails?.email,
+          profilePic: participantDetails?.profilePic,
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     const term = userSearchTerm.trim().toLowerCase();
     if (term.length < 3) {
@@ -397,16 +421,34 @@ export function ChatList({
     setActiveView('inbox');
   };
 
-  const displayedConversations = conversations
-    .filter((conversation) => {
+  // Create a stable key for conversations to prevent re-rendering issues
+  const getConversationKey = useCallback((conversation: Conversation) => {
+    // Use conversation ID plus a combination of timestamp and lastMessage content for stability
+    const timestamp =
+      conversation.timestamp ||
+      conversation.lastMessage?.timestamp ||
+      conversation.createdAt ||
+      '0';
+    const lastMessageContent = conversation.lastMessage?.content || 'none';
+    const lastMessageTime = conversation.lastMessage?.timestamp || 'none';
+    return `${conversation.id}-${timestamp}-${lastMessageContent}-${lastMessageTime}`;
+  }, []);
+
+  const displayedConversations = useMemo(() => {
+    // First filter by view state (inbox/archived)
+    const filteredByView = conversations.filter((conversation) => {
       const userDetails = conversation.participantDetails?.[currentUser.uid];
       if (activeView === 'archived') {
         return userDetails?.viewState === 'archived';
       } else {
         return userDetails?.viewState !== 'archived';
       }
-    })
-    .filter((conversation) => {
+    });
+
+    // Then filter by search term
+    const filteredBySearch = filteredByView.filter((conversation) => {
+      if (!searchTerm.trim()) return true;
+
       const name =
         conversation.groupName ||
         conversation.participantDetails?.[
@@ -416,11 +458,47 @@ export function ChatList({
       const lastMessageContent = getLastMessagePreview(
         conversation.lastMessage,
       ).text;
+      const searchLower = searchTerm.toLowerCase();
+
       return (
-        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
+        name.toLowerCase().includes(searchLower) ||
+        lastMessageContent.toLowerCase().includes(searchLower)
       );
     });
+
+    // Sort conversations by timestamp (most recent first) for stable ordering
+    return filteredBySearch.sort((a, b) => {
+      const getTime = (conv: Conversation) => {
+        // Try timestamp first, then lastMessage.timestamp, then createdAt
+        if (conv.timestamp) {
+          return new Date(conv.timestamp).getTime();
+        }
+        if (conv.lastMessage?.timestamp) {
+          const time = conv.lastMessage.timestamp;
+          if (typeof time === 'string') {
+            return new Date(time).getTime();
+          } else if (typeof time === 'object' && time !== null) {
+            if ('toDate' in time) {
+              return (time as { toDate: () => Date }).toDate().getTime();
+            } else if ('seconds' in time) {
+              return (time as { seconds: number }).seconds * 1000;
+            }
+          }
+          return new Date(String(time)).getTime();
+        }
+        if (conv.createdAt) {
+          return new Date(conv.createdAt).getTime();
+        }
+        return 0; // Fallback for conversations without timestamps
+      };
+
+      const timeA = getTime(a);
+      const timeB = getTime(b);
+
+      // Sort by time descending (newest first)
+      return timeB - timeA;
+    });
+  }, [conversations, activeView, searchTerm, currentUser.uid]);
 
   return (
     <div className="flex flex-col h-full bg-[hsl(var(--card))]">
@@ -546,18 +624,194 @@ export function ChatList({
           ) : (
             <>
               {displayedConversations.length > 0 ? (
-                displayedConversations.map((conversation) => (
-                  <ChatListItem
-                    key={conversation.id}
-                    conversation={conversation}
-                    isActive={active?.id === conversation.id}
-                    currentUser={currentUser}
-                    lastReadAt={lastReadAt}
-                    setConversation={setConversation}
-                    onOpenProfileSidebar={onOpenProfileSidebar}
-                    lastUpdated={lastUpdatedTimes[conversation.id] ?? '—'}
-                  />
-                ))
+                displayedConversations.map((conversation) => {
+                  const lastUpdated = lastUpdatedTimes[conversation.id] ?? '—';
+                  const isActive = active?.id === conversation.id;
+
+                  // Check if lastMessage was deleted by current user
+                  const lastMsgDeletedByMe =
+                    conversation.lastMessage &&
+                    (conversation.lastMessage as any).deletedFor &&
+                    Array.isArray(
+                      (conversation.lastMessage as any).deletedFor,
+                    ) &&
+                    (
+                      (conversation.lastMessage as any).deletedFor as string[]
+                    ).includes(currentUser.uid);
+
+                  const { text: displayText, icon: displayIcon } =
+                    lastMsgDeletedByMe
+                      ? { text: 'No messages yet', icon: null }
+                      : getLastMessagePreview(conversation.lastMessage);
+
+                  const unreadCount =
+                    conversation.unreadCountByUser?.[currentUser.uid] ??
+                    conversation.unreadCount ??
+                    0;
+                  const lastFromOther =
+                    conversation.lastMessage &&
+                    conversation.lastMessage.senderId !== currentUser.uid &&
+                    !lastMsgDeletedByMe;
+
+                  // Determine if this conversation has unread messages
+                  let hasUnread = false;
+                  if (!isActive) {
+                    // If we have an unread count from backend, use that
+                    if (unreadCount > 0) {
+                      hasUnread = true;
+                    } else if (lastFromOther && conversation.lastMessage) {
+                      // Check if last message is newer than when we last read this conversation
+                      const readAt = lastReadAt[conversation.id];
+                      if (!readAt) {
+                        // Never opened this conversation
+                        hasUnread = true;
+                      } else {
+                        // Compare timestamps
+                        const lastMsgTime = conversation.lastMessage.timestamp;
+                        if (lastMsgTime != null) {
+                          let lastMsgMs: number;
+                          if (typeof lastMsgTime === 'string') {
+                            lastMsgMs = new Date(lastMsgTime).getTime();
+                          } else if (
+                            typeof lastMsgTime === 'object' &&
+                            lastMsgTime !== null &&
+                            'toDate' in lastMsgTime
+                          ) {
+                            lastMsgMs = (lastMsgTime as { toDate: () => Date })
+                              .toDate()
+                              .getTime();
+                          } else if (
+                            typeof lastMsgTime === 'object' &&
+                            lastMsgTime !== null &&
+                            'seconds' in lastMsgTime
+                          ) {
+                            lastMsgMs =
+                              ((lastMsgTime as { seconds: number }).seconds ??
+                                0) * 1000;
+                          } else {
+                            lastMsgMs = new Date(String(lastMsgTime)).getTime();
+                          }
+                          const readAtMs = new Date(readAt).getTime();
+                          hasUnread = lastMsgMs > readAtMs;
+                        }
+                      }
+                    }
+                  }
+
+                  return (
+                    <div
+                      key={getConversationKey(conversation)}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open chat with ${conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find((p) => p !== currentUser.uid) || '']?.userName || 'User'}${hasUnread ? ', unread messages' : ''}`}
+                      className={cn(
+                        'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
+                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--card))]',
+                        isActive &&
+                        'bg-[hsl(var(--accent)_/_0.6)] dark:bg-[hsl(var(--accent)_/_0.4)]',
+                      )}
+                      onClick={() => setConversation(conversation)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setConversation(conversation);
+                        }
+                      }}
+                    >
+                      <div
+                        className="flex items-center flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleProfileIconClick(e, conversation);
+                        }}
+                        role="button"
+                        tabIndex={-1}
+                        aria-label="View profile"
+                      >
+                        <Avatar className="w-10 h-10 flex-shrink-0">
+                          <AvatarImage
+                            src={
+                              conversation.type === 'group'
+                                ? conversation.avatar
+                                : conversation.participantDetails?.[
+                                  conversation.participants.find(
+                                    (p) => p !== currentUser.uid,
+                                  ) || ''
+                                ]?.profilePic
+                            }
+                            alt={
+                              conversation.type === 'group'
+                                ? conversation.groupName
+                                : conversation.participantDetails?.[
+                                  conversation.participants.find(
+                                    (p) => p !== currentUser.uid,
+                                  ) || ''
+                                ]?.userName
+                            }
+                          />
+                          <AvatarFallback>
+                            {(conversation.type === 'group'
+                              ? conversation.groupName?.charAt(0)
+                              : conversation.participantDetails?.[
+                                conversation.participants.find(
+                                  (p) => p !== currentUser.uid,
+                                ) || ''
+                              ]?.userName?.charAt(0)
+                            )?.toUpperCase() || 'P'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <div className="flex-grow min-w-0 overflow-hidden">
+                        <div className="flex justify-between items-baseline gap-2">
+                          <p className="text-sm truncate flex-1 text-[hsl(var(--foreground))] font-semibold">
+                            {conversation.type === 'group'
+                              ? conversation.groupName
+                              : conversation.participantDetails?.[
+                                conversation.participants.find(
+                                  (p) => p !== currentUser.uid,
+                                ) || ''
+                              ]?.userName || 'Chat User'}
+                          </p>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {unreadCount > 0 && !isActive && (
+                              <span
+                                className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[hsl(var(--primary))] text-[10px] font-semibold text-[hsl(var(--primary-foreground))]"
+                                aria-label={`${unreadCount} unread messages`}
+                              >
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                              </span>
+                            )}
+                            {hasUnread && unreadCount === 0 && (
+                              <span
+                                className="w-2 h-2 rounded-full bg-[hsl(var(--primary))] flex-shrink-0"
+                                aria-hidden
+                              />
+                            )}
+                            <p className="text-[10px] sm:text-xs tabular-nums text-[hsl(var(--muted-foreground))]">
+                              {lastUpdated}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-xs truncate flex items-center gap-1 mt-0.5 text-[hsl(var(--muted-foreground))]">
+                          {displayIcon ? (
+                            <span
+                              className="flex-shrink-0 text-[hsl(var(--muted-foreground))]"
+                              aria-hidden
+                            >
+                              {displayIcon}
+                            </span>
+                          ) : null}
+                          <span className="truncate">
+                            {displayText.length > 50
+                              ? displayText.substring(0, 50) + '…'
+                              : displayText}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+
               ) : (
                 <EmptyState
                   icon={

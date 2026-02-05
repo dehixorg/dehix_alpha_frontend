@@ -162,6 +162,7 @@ function ChatMessageItem({
   );
 
   const prev = messages[index - 1];
+  const next = messages[index + 1];
   const isNewDay = useMemo(() => {
     return (
       !prev || !isSameDay(new Date(prev.timestamp), new Date(message.timestamp))
@@ -176,6 +177,15 @@ function ChatMessageItem({
       !isSameDay(new Date(prev.timestamp), new Date(message.timestamp)),
     [prev, message.senderId, message.timestamp],
   );
+
+  const isLastInGroup = useMemo(
+    () =>
+      !next ||
+      next.senderId !== message.senderId ||
+      !isSameDay(new Date(next.timestamp), new Date(message.timestamp)),
+    [next, message.senderId, message.timestamp],
+  );
+
   // Removed unused isLastInGroup variable to fix lint warning
   const emojiInfo = useMemo(() => {
     if (
@@ -246,9 +256,6 @@ function ChatMessageItem({
     () => conversation.type === 'group',
     [conversation.type],
   );
-  // In group chats, show sender name label; in 1:1 use participantDetails so avatar/name match header
-  const showSenderName =
-    isGroupChat && !isSender;
   const senderName = useMemo(
     () =>
       !isSender
@@ -391,41 +398,50 @@ function ChatMessageItem({
         onMouseLeave={() => onHoverChange(null)}
       >
         {!isSender && (
-          <div
-            role="button"
-            tabIndex={0}
-            className={cn(
-              'flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 rounded-full',
-              // In group chats, always show avatar; in individual chats, only show for first in group
-              isGroupChat ? '' : (!isFirstInGroup && 'invisible w-8 h-8'),
-            )}
-            onClick={() => {
-              if (onOpenProfileSidebar) {
-                onOpenProfileSidebar(message.senderId, 'user', {
-                  userName: senderName,
-                  profilePic: senderAvatar,
-                });
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                if (onOpenProfileSidebar) {
-                  onOpenProfileSidebar(message.senderId, 'user', {
-                    userName: senderName,
-                    profilePic: senderAvatar,
-                  });
-                }
-              }
-            }}
-          >
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={senderAvatar} alt={senderName} />
-              <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
-                {senderName ? senderName.charAt(0).toUpperCase() : 'U'}
-              </AvatarFallback>
-            </Avatar>
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className={cn(
+                    'flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 rounded-full',
+                    // In group chats, always show avatar; in individual chats, only show for first in group
+                    isGroupChat ? '' : (!isFirstInGroup && 'invisible w-8 h-8'),
+                  )}
+                  onClick={() => {
+                    if (onOpenProfileSidebar) {
+                      onOpenProfileSidebar(message.senderId, 'user', {
+                        userName: senderName,
+                        profilePic: senderAvatar,
+                      });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (onOpenProfileSidebar) {
+                        onOpenProfileSidebar(message.senderId, 'user', {
+                          userName: senderName,
+                          profilePic: senderAvatar,
+                        });
+                      }
+                    }
+                  }}
+                >
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={senderAvatar} alt={senderName} />
+                    <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
+                      {senderName ? senderName.charAt(0).toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">
+                <p>{senderName}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
 
         <div
@@ -447,13 +463,11 @@ function ChatMessageItem({
           <div
             className={cn(
               'flex max-w-full flex-col gap-1 text-sm',
-              // Border radius by group position: first/middle/last in group
-              // Simplified and consistent bubble shapes (WhatsApp-style)
-              'rounded-lg', // Base rounded corners
-              isSender ? 'rounded-tr-none' : 'rounded-tl-none', // Sharp corner for the "tail" side by default
-              // If grouped (not first), round the corner that would have had the tail
-              !isFirstInGroup && (isSender ? 'rounded-tr-lg' : 'rounded-tl-lg'),
-              // If grouped (not last), keep the corner rounded (no special tail connection needed, handled by spacing)
+              // Consistent rounded corners for all message bubbles
+              isFirstInGroup && isLastInGroup && 'rounded-[18px]',
+              isFirstInGroup && !isLastInGroup && (isSender ? 'rounded-t-[18px] rounded-b-[12px]' : 'rounded-t-[18px] rounded-b-[12px]'),
+              !isFirstInGroup && isLastInGroup && (isSender ? 'rounded-t-[12px] rounded-b-[18px]' : 'rounded-t-[12px] rounded-b-[18px]'),
+              !isFirstInGroup && !isLastInGroup && 'rounded-[12px]',
               // Padding: 12px horizontal, 8px vertical (consistent spacing)
               'px-3 py-2',
               message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ||
