@@ -10,6 +10,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
 import NetworkProvider from '@/utils/NetworkProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { WalletProvider } from '@/providers/WalletProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,25 +27,27 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <StoreProvider>
-          <QueryProvider>
-            <AuthProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                <TooltipProvider>
-                  <NetworkProvider>
-                    {children}
-                    <Toaster />
-                  </NetworkProvider>
-                </TooltipProvider>
-              </ThemeProvider>
-            </AuthProvider>
-          </QueryProvider>
-        </StoreProvider>
+        <WalletProvider>
+          <StoreProvider>
+            <QueryProvider>
+              <AuthProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  <TooltipProvider>
+                    <NetworkProvider>
+                      {children}
+                      <Toaster />
+                    </NetworkProvider>
+                  </TooltipProvider>
+                </ThemeProvider>
+              </AuthProvider>
+            </QueryProvider>
+          </StoreProvider>
+        </WalletProvider>
       </body>
     </html>
   );

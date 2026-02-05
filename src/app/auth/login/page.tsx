@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import Cookies from 'js-cookie';
 import { UserCredential } from 'firebase/auth';
-import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
+import { LoaderCircle, Chrome, Key, Eye, EyeOff, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -17,6 +17,7 @@ import { getUserData, loginGoogleUser, loginUser } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
 import { axiosInstance } from '@/lib/axiosinstance';
 import OtpLogin from '@/components/shared/otpDialog';
+import { WalletConnectButton } from '@/components/WalletConnectButton';
 import {
   Dialog,
   DialogContent,
@@ -307,6 +308,17 @@ export default function Login() {
                 )}{' '}
                 Google Login
               </Button>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-muted-foreground/20" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or connect with
+                  </span>
+                </div>
+              </div>
+              <WalletConnectButton />
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
