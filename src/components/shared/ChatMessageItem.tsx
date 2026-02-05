@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable prettier/prettier */
-import React, { useState, useRef, useEffect, useMemo, useCallback, RefObject, memo } from 'react';
+import React, { useState, useEffect, useMemo, RefObject, memo } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -162,7 +162,6 @@ function ChatMessageItem({
   );
 
   const prev = messages[index - 1];
-  const next = messages[index + 1];
   const isNewDay = useMemo(() => {
     return (
       !prev || !isSameDay(new Date(prev.timestamp), new Date(message.timestamp))
@@ -177,13 +176,7 @@ function ChatMessageItem({
       !isSameDay(new Date(prev.timestamp), new Date(message.timestamp)),
     [prev, message.senderId, message.timestamp],
   );
-  const isLastInGroup = useMemo(
-    () =>
-      !next ||
-      next.senderId !== message.senderId ||
-      !isSameDay(new Date(next.timestamp), new Date(message.timestamp)),
-    [next, message.senderId, message.timestamp],
-  );
+  // Removed unused isLastInGroup variable to fix lint warning
   const emojiInfo = useMemo(() => {
     if (
       message.voiceMessage ||

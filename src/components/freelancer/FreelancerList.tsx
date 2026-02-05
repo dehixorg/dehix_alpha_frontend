@@ -326,9 +326,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
         }
       }
     };
-
   }, [fetchFreelancers, fetchGroups, user?.uid, isBusinessUser, projectId]);
-
 
   return (
     <Card

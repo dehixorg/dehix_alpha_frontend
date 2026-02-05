@@ -73,8 +73,8 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
           {/* Pass onOpenProfileSidebar to chatListComponent if it's a React element that can accept it */}
           {React.isValidElement(chatListComponent)
             ? React.cloneElement(chatListComponent as React.ReactElement<any>, {
-              onOpenProfileSidebar,
-            })
+                onOpenProfileSidebar,
+              })
             : chatListComponent}
         </aside>
       </Panel>
@@ -96,9 +96,9 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
           {/* Pass onOpenProfileSidebar to chatWindowComponent if it's a React element that can accept it */}
           {React.isValidElement(chatWindowComponent)
             ? React.cloneElement(
-              chatWindowComponent as React.ReactElement<any>,
-              { onOpenProfileSidebar },
-            )
+                chatWindowComponent as React.ReactElement<any>,
+                { onOpenProfileSidebar },
+              )
             : chatWindowComponent}
         </main>
       </Panel>

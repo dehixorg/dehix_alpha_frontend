@@ -1,7 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 // import { getAnalytics } from 'firebase/analytics'
 // TODO: Add SDKs for Firebase products that you want to use
@@ -27,8 +31,8 @@ const isBrowser = typeof window !== 'undefined';
 export const db = initializeFirestore(app, {
   localCache: isBrowser
     ? persistentLocalCache({
-      tabManager: persistentMultipleTabManager(),
-    })
+        tabManager: persistentMultipleTabManager(),
+      })
     : undefined,
   ignoreUndefinedProperties: true,
 });

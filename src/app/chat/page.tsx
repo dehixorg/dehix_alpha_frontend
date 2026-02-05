@@ -295,8 +295,14 @@ const HomePage = () => {
           conv.participants.includes(selectedUser.id) &&
           // If user deleted this conversation (explicitly in deletedForUsers), don't reuse
           !(
-            Array.isArray((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers) &&
-            ((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers as string[]).includes(user.uid)
+            Array.isArray(
+              (conv as Conversation & { deletedForUsers?: string[] })
+                .deletedForUsers,
+            ) &&
+            (
+              (conv as Conversation & { deletedForUsers?: string[] })
+                .deletedForUsers as string[]
+            ).includes(user.uid)
           ),
       );
 
@@ -316,7 +322,7 @@ const HomePage = () => {
             logger.error('Failed to add user to inboxFor', e);
             notifyError(
               'Failed to open conversation. Please try again.',
-              'Error'
+              'Error',
             );
             // Don't proceed with setting active conversation to prevent misleading UI state
             return null;
@@ -467,8 +473,14 @@ const HomePage = () => {
             conv.type === 'group' ||
             (conv.inboxFor && conv.inboxFor.includes(user.uid));
           const isNotDeleted = !(
-            Array.isArray((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers) &&
-            ((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers as string[]).includes(user.uid)
+            Array.isArray(
+              (conv as Conversation & { deletedForUsers?: string[] })
+                .deletedForUsers,
+            ) &&
+            (
+              (conv as Conversation & { deletedForUsers?: string[] })
+                .deletedForUsers as string[]
+            ).includes(user.uid)
           );
           if (isInUserInbox && isNotDeleted) {
             removedConversationIdsRef.current.delete(conv.id);
@@ -486,20 +498,29 @@ const HomePage = () => {
           .filter(
             (conv) =>
               !(
-                Array.isArray((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers) &&
-                ((conv as Conversation & { deletedForUsers?: string[] }).deletedForUsers as string[]).includes(user.uid)
+                Array.isArray(
+                  (conv as Conversation & { deletedForUsers?: string[] })
+                    .deletedForUsers,
+                ) &&
+                (
+                  (conv as Conversation & { deletedForUsers?: string[] })
+                    .deletedForUsers as string[]
+                ).includes(user.uid)
               ),
           )
           .filter((conv) => !removedConversationIdsRef.current.has(conv.id));
 
         setConversations((prev) => {
-          if (prev.length !== visibleConversations.length) return visibleConversations;
-          const prevMap = new Map(prev.map(c => [c.id, c]));
+          if (prev.length !== visibleConversations.length)
+            return visibleConversations;
+          const prevMap = new Map(prev.map((c) => [c.id, c]));
           const hasChanges = visibleConversations.some((newConv) => {
             const oldConv = prevMap.get(newConv.id);
-            return !oldConv ||
+            return (
+              !oldConv ||
               oldConv.updatedAt !== newConv.updatedAt ||
-              oldConv.lastMessage?.timestamp !== newConv.lastMessage?.timestamp;
+              oldConv.lastMessage?.timestamp !== newConv.lastMessage?.timestamp
+            );
           });
           return hasChanges ? visibleConversations : prev;
         });
@@ -544,10 +565,9 @@ const HomePage = () => {
       if (match) {
         setActiveConversation(match);
       }
-      // Note: If ID in URL is valid but not found in list (e.g. deleted/hidden), 
-      // we might want to fetch it individually or handle error. 
+      // Note: If ID in URL is valid but not found in list (e.g. deleted/hidden),
+      // we might want to fetch it individually or handle error.
       // For now, adhering to previous logic behavior (just don't select if not found).
-
     } else if (!isMobile) {
       // Desktop default: pick first if nothing selected
       if (!activeConversation && !searchParams?.get('userId')) {
@@ -558,8 +578,6 @@ const HomePage = () => {
       if (!activeConversation) setActiveConversation(null);
     }
   }, [conversations, searchParams, isMobile, loading]);
-
-
 
   const handleSelectConversation = useCallback(
     (conv: Conversation) => {
@@ -757,7 +775,6 @@ const HomePage = () => {
           onConversationUpdate={handleConversationUpdate}
           onConversationRemovedFromList={handleConversationRemovedFromList}
           conversationId={activeConversation?.id}
-
         />
         {user && (
           <NewChatDialog
@@ -774,4 +791,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-

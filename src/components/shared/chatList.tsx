@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
-import { getLastMessagePreview } from '@/utils/common/chatUtils';
 import {
   MessageSquare,
   Search,
@@ -9,17 +8,12 @@ import {
   Loader2,
   Archive,
   ArrowLeft,
-  Image as ImageIcon,
-  Video,
-  FileText,
-  Mic,
-  Music2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
+import { getLastMessagePreview } from '@/utils/common/chatUtils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { RootState } from '@/lib/store';
@@ -111,157 +105,208 @@ const ChatListItem = React.memo<{
   currentUser: { uid: string };
   lastReadAt: Record<string, string>;
   setConversation: (conv: Conversation) => void;
-  onOpenProfileSidebar?: (id: string, type: 'user' | 'group', initialDetails?: { userName?: string; email?: string; profilePic?: string; }) => void;
+  onOpenProfileSidebar?: (
+    id: string,
+    type: 'user' | 'group',
+    initialDetails?: { userName?: string; email?: string; profilePic?: string },
+  ) => void;
   lastUpdated?: string;
-}>(({ conversation, isActive, currentUser, lastReadAt, setConversation, onOpenProfileSidebar, lastUpdated }) => {
-
-  const lastMessagePreview = useMemo(() => getLastMessagePreview(conversation.lastMessage), [conversation.lastMessage]);
-  const handleProfileIconClick = useCallback((e: React.MouseEvent | React.KeyboardEvent, conv: Conversation) => {
-    e.stopPropagation();
-    if (!onOpenProfileSidebar) return;
-    if (conv.type === 'group') {
-      onOpenProfileSidebar(conv.id, 'group', {
-        userName: conv.groupName || 'Group',
-        profilePic: conv.avatar,
-      });
-    } else {
-      const otherParticipantUid = conv.participants.find((p) => p !== currentUser.uid);
-      if (otherParticipantUid) {
-        const participantDetails = conv.participantDetails?.[otherParticipantUid];
-        onOpenProfileSidebar(otherParticipantUid, 'user', {
-          userName: participantDetails?.userName,
-          email: participantDetails?.email,
-          profilePic: participantDetails?.profilePic,
-        });
-      }
-    }
-  }, [currentUser.uid, onOpenProfileSidebar]);
-
-  // Calculate logic for unread, last deleted, etc.
-  const lastMsgDeletedByMe =
-    conversation.lastMessage &&
-    conversation.lastMessage.deletedFor &&
-    Array.isArray(conversation.lastMessage.deletedFor) &&
-    conversation.lastMessage.deletedFor.includes(currentUser.uid);
-
-  const { text: displayText, icon: displayIcon } = lastMsgDeletedByMe
-    ? { text: 'No messages yet', icon: null }
-    : lastMessagePreview;
-
-  const unreadCount =
-    conversation.unreadCountByUser?.[currentUser.uid] ??
-    conversation.unreadCount ??
-    0;
-
-  const lastFromOther =
-    conversation.lastMessage &&
-    conversation.lastMessage.senderId !== currentUser.uid &&
-    !lastMsgDeletedByMe;
-
-  const hasUnread = useMemo(() => {
-    if (isActive) return false;
-    if (unreadCount > 0) return true;
-
-    if (lastFromOther && conversation.lastMessage) {
-      const readAt = lastReadAt[conversation.id];
-      if (!readAt) return true;
-
-      const lastMsgTime = conversation.lastMessage.timestamp;
-      if (lastMsgTime != null) {
-        let lastMsgMs: number = 0;
-        if (typeof lastMsgTime === 'string') {
-          lastMsgMs = new Date(lastMsgTime).getTime();
-        } else if (typeof lastMsgTime === 'object' && lastMsgTime !== null && 'toDate' in lastMsgTime) {
-          lastMsgMs = (lastMsgTime as { toDate: () => Date }).toDate().getTime();
-        } else if (typeof lastMsgTime === 'object' && lastMsgTime !== null && 'seconds' in lastMsgTime) {
-          lastMsgMs = ((lastMsgTime as { seconds: number }).seconds ?? 0) * 1000;
+}>(
+  ({
+    conversation,
+    isActive,
+    currentUser,
+    lastReadAt,
+    setConversation,
+    onOpenProfileSidebar,
+    lastUpdated,
+  }) => {
+    const lastMessagePreview = useMemo(
+      () => getLastMessagePreview(conversation.lastMessage),
+      [conversation.lastMessage],
+    );
+    const handleProfileIconClick = useCallback(
+      (e: React.MouseEvent | React.KeyboardEvent, conv: Conversation) => {
+        e.stopPropagation();
+        if (!onOpenProfileSidebar) return;
+        if (conv.type === 'group') {
+          onOpenProfileSidebar(conv.id, 'group', {
+            userName: conv.groupName || 'Group',
+            profilePic: conv.avatar,
+          });
         } else {
-          lastMsgMs = new Date(String(lastMsgTime)).getTime();
+          const otherParticipantUid = conv.participants.find(
+            (p) => p !== currentUser.uid,
+          );
+          if (otherParticipantUid) {
+            const participantDetails =
+              conv.participantDetails?.[otherParticipantUid];
+            onOpenProfileSidebar(otherParticipantUid, 'user', {
+              userName: participantDetails?.userName,
+              email: participantDetails?.email,
+              profilePic: participantDetails?.profilePic,
+            });
+          }
         }
-        const readAtMs = new Date(readAt).getTime();
-        if (Number.isNaN(lastMsgMs) || Number.isNaN(readAtMs)) return true;
-        return lastMsgMs > readAtMs;
+      },
+      [currentUser.uid, onOpenProfileSidebar],
+    );
+
+    // Calculate logic for unread, last deleted, etc.
+    const lastMsgDeletedByMe =
+      conversation.lastMessage &&
+      conversation.lastMessage.deletedFor &&
+      Array.isArray(conversation.lastMessage.deletedFor) &&
+      conversation.lastMessage.deletedFor.includes(currentUser.uid);
+
+    const { text: displayText, icon: displayIcon } = lastMsgDeletedByMe
+      ? { text: 'No messages yet', icon: null }
+      : lastMessagePreview;
+
+    const unreadCount =
+      conversation.unreadCountByUser?.[currentUser.uid] ??
+      conversation.unreadCount ??
+      0;
+
+    const lastFromOther =
+      conversation.lastMessage &&
+      conversation.lastMessage.senderId !== currentUser.uid &&
+      !lastMsgDeletedByMe;
+
+    const hasUnread = useMemo(() => {
+      if (isActive) return false;
+      if (unreadCount > 0) return true;
+
+      if (lastFromOther && conversation.lastMessage) {
+        const readAt = lastReadAt[conversation.id];
+        if (!readAt) return true;
+
+        const lastMsgTime = conversation.lastMessage.timestamp;
+        if (lastMsgTime != null) {
+          let lastMsgMs: number = 0;
+          if (typeof lastMsgTime === 'string') {
+            lastMsgMs = new Date(lastMsgTime).getTime();
+          } else if (
+            typeof lastMsgTime === 'object' &&
+            lastMsgTime !== null &&
+            'toDate' in lastMsgTime
+          ) {
+            lastMsgMs = (lastMsgTime as { toDate: () => Date })
+              .toDate()
+              .getTime();
+          } else if (
+            typeof lastMsgTime === 'object' &&
+            lastMsgTime !== null &&
+            'seconds' in lastMsgTime
+          ) {
+            lastMsgMs =
+              ((lastMsgTime as { seconds: number }).seconds ?? 0) * 1000;
+          } else {
+            lastMsgMs = new Date(String(lastMsgTime)).getTime();
+          }
+          const readAtMs = new Date(readAt).getTime();
+          if (Number.isNaN(lastMsgMs) || Number.isNaN(readAtMs)) return true;
+          return lastMsgMs > readAtMs;
+        }
       }
-    }
-    return false;
-  }, [conversation.id, conversation.lastMessage, lastReadAt, isActive, unreadCount, lastFromOther]);
+      return false;
+    }, [
+      conversation.id,
+      conversation.lastMessage,
+      lastReadAt,
+      isActive,
+      unreadCount,
+      lastFromOther,
+    ]);
 
-  const otherParticipantId = conversation.participants.find((p) => p !== currentUser.uid) || '';
-  const displayName = conversation.type === 'group'
-    ? conversation.groupName
-    : conversation.participantDetails?.[otherParticipantId]?.userName || 'Chat User';
+    const otherParticipantId =
+      conversation.participants.find((p) => p !== currentUser.uid) || '';
+    const displayName =
+      conversation.type === 'group'
+        ? conversation.groupName
+        : conversation.participantDetails?.[otherParticipantId]?.userName ||
+          'Chat User';
 
-  const profilePic = conversation.type === 'group'
-    ? conversation.avatar
-    : conversation.participantDetails?.[otherParticipantId]?.profilePic;
+    const profilePic =
+      conversation.type === 'group'
+        ? conversation.avatar
+        : conversation.participantDetails?.[otherParticipantId]?.profilePic;
 
-  return (
-    <div
-      key={conversation.id}
-      role="button"
-      tabIndex={0}
-      aria-label={`Open chat with ${displayName}${hasUnread ? ', unread messages' : ''}`}
-      className={cn(
-        'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--card))]',
-        isActive && 'bg-[hsl(var(--accent)_/_0.6)] dark:bg-[hsl(var(--accent)_/_0.4)]',
-      )}
-      onClick={() => setConversation(conversation)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          setConversation(conversation);
-        }
-      }}
-    >
+    return (
       <div
-        className="flex items-center flex-shrink-0"
-        onClick={(e) => handleProfileIconClick(e, conversation)}
+        key={conversation.id}
         role="button"
         tabIndex={0}
-        aria-label="View profile"
+        aria-label={`Open chat with ${displayName}${hasUnread ? ', unread messages' : ''}`}
+        className={cn(
+          'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--card))]',
+          isActive &&
+            'bg-[hsl(var(--accent)_/_0.6)] dark:bg-[hsl(var(--accent)_/_0.4)]',
+        )}
+        onClick={() => setConversation(conversation)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            e.stopPropagation();
-            handleProfileIconClick(e, conversation);
+            setConversation(conversation);
           }
         }}
       >
-        <Avatar className="w-10 h-10 flex-shrink-0">
-          <AvatarImage src={profilePic} alt={displayName} />
-          <AvatarFallback>{displayName?.charAt(0)?.toUpperCase() || 'P'}</AvatarFallback>
-        </Avatar>
-      </div>
-      <div className="flex-grow min-w-0 overflow-hidden">
-        <div className="flex justify-between items-baseline gap-2">
-          <p className="text-sm truncate flex-1 text-[hsl(var(--foreground))] font-semibold">
-            {displayName}
-          </p>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {unreadCount > 0 && !isActive && (
-              <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[hsl(var(--primary))] text-[10px] font-semibold text-[hsl(var(--primary-foreground))]">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-            {hasUnread && unreadCount === 0 && (
-              <span className="w-2 h-2 rounded-full bg-[hsl(var(--primary))] flex-shrink-0" />
-            )}
-            <p className="text-[10px] sm:text-xs tabular-nums text-[hsl(var(--muted-foreground))]">
-              {lastUpdated ?? '—'}
-            </p>
-          </div>
+        <div
+          className="flex items-center flex-shrink-0"
+          onClick={(e) => handleProfileIconClick(e, conversation)}
+          role="button"
+          tabIndex={0}
+          aria-label="View profile"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              handleProfileIconClick(e, conversation);
+            }
+          }}
+        >
+          <Avatar className="w-10 h-10 flex-shrink-0">
+            <AvatarImage src={profilePic} alt={displayName} />
+            <AvatarFallback>
+              {displayName?.charAt(0)?.toUpperCase() || 'P'}
+            </AvatarFallback>
+          </Avatar>
         </div>
-        <p className="text-xs truncate flex items-center gap-1 mt-0.5 text-[hsl(var(--muted-foreground))]">
-          {displayIcon && <span className="flex-shrink-0">{displayIcon}</span>}
-          <span className="truncate">
-            {displayText.length > 50 ? displayText.substring(0, 50) + '…' : displayText}
-          </span>
-        </p>
+        <div className="flex-grow min-w-0 overflow-hidden">
+          <div className="flex justify-between items-baseline gap-2">
+            <p className="text-sm truncate flex-1 text-[hsl(var(--foreground))] font-semibold">
+              {displayName}
+            </p>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {unreadCount > 0 && !isActive && (
+                <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[hsl(var(--primary))] text-[10px] font-semibold text-[hsl(var(--primary-foreground))]">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+              {hasUnread && unreadCount === 0 && (
+                <span className="w-2 h-2 rounded-full bg-[hsl(var(--primary))] flex-shrink-0" />
+              )}
+              <p className="text-[10px] sm:text-xs tabular-nums text-[hsl(var(--muted-foreground))]">
+                {lastUpdated ?? '—'}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs truncate flex items-center gap-1 mt-0.5 text-[hsl(var(--muted-foreground))]">
+            {displayIcon && (
+              <span className="flex-shrink-0">{displayIcon}</span>
+            )}
+            <span className="truncate">
+              {displayText.length > 50
+                ? displayText.substring(0, 50) + '…'
+                : displayText}
+            </span>
+          </p>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 ChatListItem.displayName = 'ChatListItem';
 
@@ -295,30 +340,7 @@ export function ChatList({
 
   // No local getLastMessagePreview - using shared utility from chatUtils.ts
 
-
-  const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
-    e.stopPropagation();
-    if (!onOpenProfileSidebar) return;
-    if (conv.type === 'group') {
-      onOpenProfileSidebar(conv.id, 'group', {
-        userName: conv.groupName || 'Group',
-        profilePic: conv.avatar,
-      });
-    } else {
-      const otherParticipantUid = conv.participants.find(
-        (p) => p !== currentUser.uid,
-      );
-      if (otherParticipantUid) {
-        const participantDetails =
-          conv.participantDetails?.[otherParticipantUid];
-        onOpenProfileSidebar(otherParticipantUid, 'user', {
-          userName: participantDetails?.userName,
-          email: participantDetails?.email,
-          profilePic: participantDetails?.profilePic,
-        });
-      }
-    }
-  };
+  // No local getLastMessagePreview - using shared utility from chatUtils.ts
 
   useEffect(() => {
     const term = userSearchTerm.trim().toLowerCase();

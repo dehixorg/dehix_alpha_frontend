@@ -138,7 +138,7 @@ export function ProfileSidebar({
   onConversationUpdate,
   onConversationRemovedFromList,
   conversationId,
-  conversation,
+  // conversation, // Removed unused prop to fix lint warning
 }: ProfileSidebarProps) {
   // For groups, conversationId is same as profileId. For individual chats, conversationId is separate.
   const effectiveConversationId =
@@ -280,7 +280,7 @@ export function ProfileSidebar({
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
     description: '',
-    onConfirm: () => { },
+    onConfirm: () => {},
     confirmButtonText: 'Confirm',
     confirmButtonVariant: 'destructive' as
       | 'default'
@@ -347,8 +347,9 @@ export function ProfileSidebar({
           const detailsMap = groupData.participantDetails || {};
           const members = participantIds.map((id: string) => {
             const details = detailsMap[id] || {};
-            const statusFromDetails =
-              (details as { status?: 'online' | 'offline' }).status;
+            const statusFromDetails = (
+              details as { status?: 'online' | 'offline' }
+            ).status;
             return {
               id,
               userName: details.userName || 'Unknown Member',
@@ -848,9 +849,16 @@ export function ProfileSidebar({
       toast({ title: 'Success', description: 'Member removed successfully.' });
 
       // Update parent state with the new conversation data (optimistic update since we don't return the full object from API)
-      if (onConversationUpdate && profileId && profileData && profileType === 'group') {
+      if (
+        onConversationUpdate &&
+        profileId &&
+        profileData &&
+        profileType === 'group'
+      ) {
         const group = profileData as ProfileGroup;
-        const updatedParticipants = (group.participants || []).filter((p: string) => p !== memberIdToRemove);
+        const updatedParticipants = (group.participants || []).filter(
+          (p: string) => p !== memberIdToRemove,
+        );
         const updatedConversation: any = {
           id: profileId,
           participants: updatedParticipants,
@@ -860,7 +868,10 @@ export function ProfileSidebar({
           admins: group.admins,
         };
         // Remove the member from details if present
-        if (updatedConversation.participantDetails && updatedConversation.participantDetails[memberIdToRemove]) {
+        if (
+          updatedConversation.participantDetails &&
+          updatedConversation.participantDetails[memberIdToRemove]
+        ) {
           delete updatedConversation.participantDetails[memberIdToRemove];
         }
         onConversationUpdate(updatedConversation);
@@ -1481,7 +1492,6 @@ export function ProfileSidebar({
                         <CardTitle className="text-base">Actions</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
-
                         <Button
                           variant="outline"
                           className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))]"
@@ -1518,7 +1528,7 @@ export function ProfileSidebar({
                         >
                           <ShieldX className="h-4 w-4 mr-2" />
                           {blockStatus.isBlocked &&
-                            blockStatus.blockedBy === user?.uid
+                          blockStatus.blockedBy === user?.uid
                             ? 'Unblock User'
                             : blockStatus.isBlocked
                               ? 'Blocked by User'
@@ -1638,10 +1648,11 @@ export function ProfileSidebar({
                                         </AvatarFallback>
                                       </Avatar>
                                       <span
-                                        className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${member.status === 'online'
-                                          ? 'bg-green-500'
-                                          : 'bg-gray-400'
-                                          }`}
+                                        className={`h-2 w-2 rounded-full mr-1 mt-0.5 ${
+                                          member.status === 'online'
+                                            ? 'bg-green-500'
+                                            : 'bg-gray-400'
+                                        }`}
                                       ></span>
                                       <div className="flex-1 min-w-0 flex items-center gap-2">
                                         <span className="text-sm font-medium truncate">
@@ -1743,7 +1754,8 @@ export function ProfileSidebar({
                                 className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
                                 onClick={() => setIsAddMembersDialogOpen(true)}
                               >
-                                <UserPlus className="h-4 w-4 mr-2" /> Add Members
+                                <UserPlus className="h-4 w-4 mr-2" /> Add
+                                Members
                               </Button>
                               <Button
                                 variant="outline"
@@ -1757,16 +1769,16 @@ export function ProfileSidebar({
                               </Button>
                               {(profileData as ProfileGroup).inviteLink !==
                                 undefined && (
-                                  <Button
-                                    variant="outline"
-                                    className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
-                                    onClick={() =>
-                                      setIsInviteLinkDialogOpen(true)
-                                    }
-                                  >
-                                    <Link2 className="h-4 w-4 mr-2" /> Invite Link
-                                  </Button>
-                                )}
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
+                                  onClick={() =>
+                                    setIsInviteLinkDialogOpen(true)
+                                  }
+                                >
+                                  <Link2 className="h-4 w-4 mr-2" /> Invite Link
+                                </Button>
+                              )}
                             </>
                           )}
                         <Button
@@ -1791,39 +1803,58 @@ export function ProfileSidebar({
                                     );
 
                                     // Atomic transaction: remove user and promote new admin if needed
-                                    await runTransaction(db, async (transaction) => {
-                                      // Read current state
-                                      const groupSnap = await transaction.get(groupRef);
-                                      if (!groupSnap.exists()) {
-                                        throw new Error('Group not found');
-                                      }
+                                    await runTransaction(
+                                      db,
+                                      async (transaction) => {
+                                        // Read current state
+                                        const groupSnap =
+                                          await transaction.get(groupRef);
+                                        if (!groupSnap.exists()) {
+                                          throw new Error('Group not found');
+                                        }
 
-                                      const data = groupSnap.data();
-                                      const currentParticipants: string[] = data.participants || [];
-                                      const currentAdmins: string[] = data.admins || [];
-                                      const currentInboxFor: string[] = data.inboxFor || [];
+                                        const data = groupSnap.data();
+                                        const currentParticipants: string[] =
+                                          data.participants || [];
+                                        const currentAdmins: string[] =
+                                          data.admins || [];
+                                        const currentInboxFor: string[] =
+                                          data.inboxFor || [];
 
-                                      // Compute new arrays manually (fully atomic - no arrayRemove/arrayUnion mix)
-                                      const newParticipants = currentParticipants.filter((p) => p !== user.uid);
-                                      const newInboxFor = currentInboxFor.filter((p) => p !== user.uid);
+                                        // Compute new arrays manually (fully atomic - no arrayRemove/arrayUnion mix)
+                                        const newParticipants =
+                                          currentParticipants.filter(
+                                            (p) => p !== user.uid,
+                                          );
+                                        const newInboxFor =
+                                          currentInboxFor.filter(
+                                            (p) => p !== user.uid,
+                                          );
 
-                                      // ALWAYS remove the leaving user from admins
-                                      let newAdmins = currentAdmins.filter((a) => a !== user.uid);
+                                        // ALWAYS remove the leaving user from admins
+                                        let newAdmins = currentAdmins.filter(
+                                          (a) => a !== user.uid,
+                                        );
 
-                                      // Promote first remaining participant ONLY if no admins left
-                                      if (newAdmins.length === 0 && newParticipants.length > 0) {
-                                        newAdmins = [newParticipants[0]];
-                                      }
+                                        // Promote first remaining participant ONLY if no admins left
+                                        if (
+                                          newAdmins.length === 0 &&
+                                          newParticipants.length > 0
+                                        ) {
+                                          newAdmins = [newParticipants[0]];
+                                        }
 
-                                      // Single atomic update with computed arrays
-                                      transaction.update(groupRef, {
-                                        participants: newParticipants,
-                                        admins: newAdmins,
-                                        inboxFor: newInboxFor,
-                                        [`participantDetails.${user.uid}`]: deleteField(),
-                                        updatedAt: serverTimestamp(),
-                                      });
-                                    });
+                                        // Single atomic update with computed arrays
+                                        transaction.update(groupRef, {
+                                          participants: newParticipants,
+                                          admins: newAdmins,
+                                          inboxFor: newInboxFor,
+                                          [`participantDetails.${user.uid}`]:
+                                            deleteField(),
+                                          updatedAt: serverTimestamp(),
+                                        });
+                                      },
+                                    );
                                     // Admin-only system message for group membership changes
                                     try {
                                       const actor =
@@ -1911,59 +1942,57 @@ export function ProfileSidebar({
           </div>
         </ScrollArea>
       </SheetContent>
-      {
-        profileData && profileType === 'group' && (
-          <>
-            <AddMembersDialog
-              isOpen={isAddMembersDialogOpen}
-              onClose={() => setIsAddMembersDialogOpen(false)}
-              onAddMembers={(selectedUserIds) => {
-                if (profileData && profileData.id && profileType === 'group') {
-                  handleAddMembersToGroup(
-                    selectedUserIds,
-                    (profileData as ProfileGroup).id,
-                  );
-                }
-                setIsAddMembersDialogOpen(false);
-              }}
-              currentMemberIds={
-                (profileData as ProfileGroup).members?.map((m) => m.id) || []
+      {profileData && profileType === 'group' && (
+        <>
+          <AddMembersDialog
+            isOpen={isAddMembersDialogOpen}
+            onClose={() => setIsAddMembersDialogOpen(false)}
+            onAddMembers={(selectedUserIds) => {
+              if (profileData && profileData.id && profileType === 'group') {
+                handleAddMembersToGroup(
+                  selectedUserIds,
+                  (profileData as ProfileGroup).id,
+                );
               }
-              groupId={(profileData as ProfileGroup).id}
-            />
-            <ChangeGroupInfoDialog
-              isOpen={isChangeGroupInfoDialogOpen}
-              onClose={() => setIsChangeGroupInfoDialogOpen(false)}
-              onSave={(newName, newAvatarUrl) => {
-                if (profileData && profileData.id && profileType === 'group') {
-                  handleSaveGroupInfo(
-                    newName,
-                    newAvatarUrl,
-                    (profileData as ProfileGroup).id,
-                  );
-                }
-              }}
-              currentName={(profileData as ProfileGroup).displayName || ''}
-              currentAvatarUrl={(profileData as ProfileGroup).avatar}
-              groupId={(profileData as ProfileGroup).id}
-            />
-            <InviteLinkDialog
-              isOpen={isInviteLinkDialogOpen}
-              onClose={() => setIsInviteLinkDialogOpen(false)}
-              onGenerateLink={async () => {
-                if (profileData && profileData.id && profileType === 'group') {
-                  return handleGenerateInviteLink(
-                    (profileData as ProfileGroup).id,
-                  );
-                }
-                return null;
-              }}
-              currentInviteLink={(profileData as ProfileGroup).inviteLink}
-              groupName={(profileData as ProfileGroup).displayName || 'the group'}
-            />
-          </>
-        )
-      }
+              setIsAddMembersDialogOpen(false);
+            }}
+            currentMemberIds={
+              (profileData as ProfileGroup).members?.map((m) => m.id) || []
+            }
+            groupId={(profileData as ProfileGroup).id}
+          />
+          <ChangeGroupInfoDialog
+            isOpen={isChangeGroupInfoDialogOpen}
+            onClose={() => setIsChangeGroupInfoDialogOpen(false)}
+            onSave={(newName, newAvatarUrl) => {
+              if (profileData && profileData.id && profileType === 'group') {
+                handleSaveGroupInfo(
+                  newName,
+                  newAvatarUrl,
+                  (profileData as ProfileGroup).id,
+                );
+              }
+            }}
+            currentName={(profileData as ProfileGroup).displayName || ''}
+            currentAvatarUrl={(profileData as ProfileGroup).avatar}
+            groupId={(profileData as ProfileGroup).id}
+          />
+          <InviteLinkDialog
+            isOpen={isInviteLinkDialogOpen}
+            onClose={() => setIsInviteLinkDialogOpen(false)}
+            onGenerateLink={async () => {
+              if (profileData && profileData.id && profileType === 'group') {
+                return handleGenerateInviteLink(
+                  (profileData as ProfileGroup).id,
+                );
+              }
+              return null;
+            }}
+            currentInviteLink={(profileData as ProfileGroup).inviteLink}
+            groupName={(profileData as ProfileGroup).displayName || 'the group'}
+          />
+        </>
+      )}
       <ConfirmActionDialog
         isOpen={isConfirmDialogOpen}
         onClose={() => setIsConfirmDialogOpen(false)}
@@ -1974,4 +2003,3 @@ export function ProfileSidebar({
 }
 
 export default ProfileSidebar;
-

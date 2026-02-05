@@ -85,7 +85,6 @@ export const NotificationButton = () => {
     };
   }, [user?.uid]);
 
-
   // Reset showAll when popover closes
   const handlePopoverClose = () => {
     setShowAll(false);

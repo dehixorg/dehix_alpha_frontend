@@ -32,7 +32,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import DOMPurify from 'dompurify';
 import Image from 'next/image';
 
-import { useDebounce } from '@/hooks/use-debounce';
 
 import { EmojiPicker } from '../emojiPicker';
 import {
@@ -52,6 +51,7 @@ import { Input } from '../ui/input';
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import ChatMessageItem from './ChatMessageItem';
 
+import { useDebounce } from '@/hooks/use-debounce';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -156,7 +156,7 @@ export function CardsChat({
   const oldestHeadSnapshotRef = useRef<unknown>(null);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [removedFailedIds, setRemovedFailedIds] = useState<string[]>([]);
+  const [removedFailedIds] = useState<string[]>([]); // Removed unused setter setRemovedFailedIds
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -1111,6 +1111,7 @@ export function CardsChat({
       }
 
       // Preserve ALL metadata from original message (excluding id, timestamp, editedAt)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id, timestamp, editedAt, ...originalMetadata } = msg;
 
       const messageData = {

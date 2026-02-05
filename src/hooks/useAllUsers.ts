@@ -53,7 +53,7 @@ export const useAllUsers = () => {
           id: user._id,
           // Chat uses Firestore with Firebase UIDs; backend may return firebase_id (when _id differs)
           // Fix: Handle empty string firebase_id by falling back to _id
-          firebaseUid: (user.firebase_id || user._id),
+          firebaseUid: user.firebase_id || user._id,
           displayName: (user.firstName && user.lastName
             ? `${user.firstName} ${user.lastName}`
             : user.name || user.userName || 'Unnamed User'
@@ -79,8 +79,8 @@ export const useAllUsers = () => {
       console.error('Error fetching freelancer users:', e);
       setError(
         e.response?.data?.message ||
-        e.message ||
-        'An unexpected error occurred while fetching freelancers.',
+          e.message ||
+          'An unexpected error occurred while fetching freelancers.',
       );
       setUsers([]);
     } finally {
