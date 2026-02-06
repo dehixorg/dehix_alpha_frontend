@@ -54,12 +54,12 @@ export function useProfilesTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'profile center',
+      id: 'profiles-center',
       title: 'Profile Center',
       text: 'Create and manage profiles to showcase your expertise.',
-      scrollTo: false,
       attachTo: { element: '[data-tour="profiles-center"]', on: 'top' },
       when: withProgress(tour),
+      scrollTo: false,
       buttons: [
         { text: 'Back', action: tour.back },
         {

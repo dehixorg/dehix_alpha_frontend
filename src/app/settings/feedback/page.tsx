@@ -319,7 +319,6 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div data-tour="feedback">
       <SettingsAppLayout
         active="Feedback"
         activeMenu="Feedback"
@@ -331,7 +330,7 @@ export default function FeedbackPage() {
         ]}
         mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8"
       >
-        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="grid gap-4 lg:grid-cols-[1fr_360px]" data-tour="feedback">
           <div className="space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -532,6 +531,5 @@ export default function FeedbackPage() {
           </div>
         </div>
       </SettingsAppLayout>
-    </div>
   );
 }

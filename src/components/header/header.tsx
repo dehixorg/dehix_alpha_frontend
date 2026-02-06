@@ -85,19 +85,16 @@ const Header: React.FC<HeaderProps> = ({
     { path: '/notes', target: 'notes' },
 
     // Freelancer Settings
-    {
-      path: '/freelancer/settings/personal-info',
-      target: 'personal-info-form',
-    },
+    { path: '/freelancer/settings/personal-info', target: 'personal-info-form'},
+    { path: '/freelancer/settings/profiles', target: 'profiles-center' },
     { path: '/freelancer/settings/profile', target: 'experience' },
     { path: '/freelancer/settings/kyc', target: 'kyc' },
     { path: '/freelancer/settings/levels-badges', target: 'level-badges' },
     { path: '/freelancer/settings/streak', target: 'streak' },
     { path: '/freelancer/settings/transactions', target: 'transaction' },
-    { path: '/freelancer/settings/profiles', target: 'profiles-center' },
     { path: '/freelancer/settings/resume', target: 'resume' },
-    { path: '/freelancer/settings/feedback', target: 'feedback' },
-    { path: '/freelancer/settings/reports', target: 'reports' },
+    { path: '/settings/feedback', target: 'feedback' },
+    { path: '/reports', target: 'reports' },
   ];
 
   const getPageTarget = (): TourTarget | null => {
@@ -190,7 +187,7 @@ const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        {/* Platform Tour className="hidden md:block" */}
+        {/* Platform Tour */}
         <div>
           <TourMenu
             onThisPageTour={() => {
@@ -198,10 +195,12 @@ const Header: React.FC<HeaderProps> = ({
               if (!target) return;
               dispatch(startTour({ mode: 'page', target }));
             }}
+
             onFullPlatformTour={() => {
-              const isSettingsPage = pathname.startsWith(
-                '/freelancer/settings',
-              );
+              const isSettingsPage =
+                pathname.startsWith('/freelancer/settings') ||
+                pathname.startsWith('/reports') ||
+                pathname.startsWith('/settings/feedback');
 
               dispatch(
                 startTour({

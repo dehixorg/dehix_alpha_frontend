@@ -8,12 +8,14 @@ import { useProfilePlatformTour } from '@/components/tour/freelancer-profile/use
 export default function SidebarTourController() {
   const pathname = usePathname();
 
-  const isSettingsPage = pathname.startsWith('/freelancer/settings');
+  const isSettingsPage = 
+    pathname.startsWith('/freelancer/settings') ||
+    pathname.startsWith('/reports') ||
+    pathname.startsWith('/settings/feedback');
 
   if (isSettingsPage) {
     return <ProfileSidebarTour />;
   }
-
   return <PlatformNavigationTour />;
 }
 
