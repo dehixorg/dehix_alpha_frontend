@@ -85,7 +85,10 @@ const Header: React.FC<HeaderProps> = ({
     { path: '/notes', target: 'notes' },
 
     // Freelancer Settings
-    { path: '/freelancer/settings/personal-info', target: 'personal-info-form'},
+    {
+      path: '/freelancer/settings/personal-info',
+      target: 'personal-info-form',
+    },
     { path: '/freelancer/settings/profiles', target: 'profiles-center' },
     { path: '/freelancer/settings/profile', target: 'experience' },
     { path: '/freelancer/settings/kyc', target: 'kyc' },
@@ -195,7 +198,6 @@ const Header: React.FC<HeaderProps> = ({
               if (!target) return;
               dispatch(startTour({ mode: 'page', target }));
             }}
-
             onFullPlatformTour={() => {
               const isSettingsPage =
                 pathname.startsWith('/freelancer/settings') ||

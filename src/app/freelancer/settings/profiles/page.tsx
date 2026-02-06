@@ -297,7 +297,9 @@ export default function ProfilesPage() {
         mainClassName="grid flex-1 items-start p-4 sm:px-6 sm:py-0 md:gap-8"
       >
         <div
-          className="w-full mx-auto max-w-[92vw]" data-tour="profiles-center">
+          className="w-full mx-auto max-w-[92vw]"
+          data-tour="profiles-center"
+        >
           <div className="flex flex-col gap-2 mb-6">
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" /> Profiles Center
