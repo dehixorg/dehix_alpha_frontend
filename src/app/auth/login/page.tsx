@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import Cookies from 'js-cookie';
 import { UserCredential } from 'firebase/auth';
-import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
+import { LoaderCircle, Chrome, Key, Eye, EyeOff, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -307,6 +307,7 @@ export default function Login() {
                 )}{' '}
                 Google Login
               </Button>
+              {/* Wallet connect removed from login page */}
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
