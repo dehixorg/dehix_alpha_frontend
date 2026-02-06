@@ -9,6 +9,7 @@ import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
 import { Button } from '../ui/button';
 import { DisplayConnectsDialog } from '../shared/DisplayConnectsDialog';
+import { WalletConnectButton } from '../WalletConnectButton';
 import { Input } from '../ui/input';
 
 import { RootState } from '@/lib/store';
@@ -137,6 +138,7 @@ const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
+        {user?.uid && <WalletConnectButton />}
         {user?.uid ? (
           <DisplayConnectsDialog userId={user.uid} connects={connects} />
         ) : (
