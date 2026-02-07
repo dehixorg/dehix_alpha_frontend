@@ -199,23 +199,9 @@ export default function ProfileDetailPage() {
       );
       const attributesData = attributesResponse.data.data || {};
 
-      const skills = (attributesData.skills || []).map((attr: any) => ({
-        _id: attr.type_id,
-        label: attr.name,
-        name: attr.name,
-        type_id: attr.type_id,
-        experience: attr.experience,
-        level: attr.level,
-      }));
+      const skills = (attributesData.skills || []) as any[];
 
-      const domains = (attributesData.domains || []).map((attr: any) => ({
-        _id: attr.type_id,
-        label: attr.name,
-        name: attr.name,
-        type_id: attr.type_id,
-        experience: attr.experience,
-        level: attr.level,
-      }));
+      const domains = (attributesData.domains || []) as any[];
 
       setSkillsOptions(skills);
       setDomainsOptions(domains);
@@ -331,7 +317,9 @@ export default function ProfileDetailPage() {
     if (!skillId || !skillsOptions || skillsOptions.length === 0) {
       return skillId || '';
     }
-    const skill = skillsOptions.find((s: any) => s._id === skillId);
+    const skill = skillsOptions.find(
+      (s: any) => s._id === skillId || s.type_id === skillId,
+    );
     return skill ? skill.label || skill.name : skillId;
   };
 
@@ -339,7 +327,9 @@ export default function ProfileDetailPage() {
     if (!domainId || !domainsOptions || domainsOptions.length === 0) {
       return domainId || '';
     }
-    const domain = domainsOptions.find((d: any) => d._id === domainId);
+    const domain = domainsOptions.find(
+      (d: any) => d._id === domainId || d.type_id === domainId,
+    );
     return domain ? domain.label || domain.name : domainId;
   };
 
@@ -959,7 +949,7 @@ export default function ProfileDetailPage() {
                     (s: any) => (s.label || s.name) === value,
                   );
                   if (!selectedSkill) return;
-                  const id = selectedSkill._id;
+                  const id = selectedSkill._id || selectedSkill.type_id;
                   if ((editingProfileData.skills || []).includes(id)) return;
                   setEditingProfileData((prev: any) => ({
                     ...prev,
@@ -970,7 +960,7 @@ export default function ProfileDetailPage() {
                   const skill = freelancerSkillsOptions.find(
                     (s: any) => (s.label || s.name) === name,
                   );
-                  const id = skill?._id;
+                  const id = skill?._id || skill?.type_id;
                   if (!id) return;
                   setEditingProfileData((prev: any) => ({
                     ...prev,
@@ -991,7 +981,7 @@ export default function ProfileDetailPage() {
                     (d: any) => (d.label || d.name) === value,
                   );
                   if (!selectedDomain) return;
-                  const id = selectedDomain._id;
+                  const id = selectedDomain._id || selectedDomain.type_id;
                   if ((editingProfileData.domains || []).includes(id)) return;
                   setEditingProfileData((prev: any) => ({
                     ...prev,
@@ -1002,7 +992,7 @@ export default function ProfileDetailPage() {
                   const domain = freelancerDomainsOptions.find(
                     (d: any) => (d.label || d.name) === name,
                   );
-                  const id = domain?._id;
+                  const id = domain?._id || domain?.type_id;
                   if (!id) return;
                   setEditingProfileData((prev: any) => ({
                     ...prev,
