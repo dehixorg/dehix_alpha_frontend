@@ -193,27 +193,29 @@ export default function ProfileDetailPage() {
     if (!user.uid) return;
 
     try {
-      const freelancerResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}`,
+      // Fetch skills and domains from freelancer's attributes using the new endpoint
+      const attributesResponse = await axiosInstance.get(
+        `/freelancer/${user.uid}/profile-attributes`,
       );
-      const freelancerData = freelancerResponse.data.data || {};
-      const freelancerAttributes = freelancerData.attributes || [];
+      const attributesData = attributesResponse.data.data || {};
 
-      const skills = freelancerAttributes
-        .filter((attr: any) => attr.type === 'SKILL')
-        .map((attr: any) => ({
-          _id: attr.type_id,
-          label: attr.name,
-          name: attr.name,
-        }));
+      const skills = (attributesData.skills || []).map((attr: any) => ({
+        _id: attr.type_id,
+        label: attr.name,
+        name: attr.name,
+        type_id: attr.type_id,
+        experience: attr.experience,
+        level: attr.level,
+      }));
 
-      const domains = freelancerAttributes
-        .filter((attr: any) => attr.type === 'DOMAIN')
-        .map((attr: any) => ({
-          _id: attr.type_id,
-          label: attr.name,
-          name: attr.name,
-        }));
+      const domains = (attributesData.domains || []).map((attr: any) => ({
+        _id: attr.type_id,
+        label: attr.name,
+        name: attr.name,
+        type_id: attr.type_id,
+        experience: attr.experience,
+        level: attr.level,
+      }));
 
       setSkillsOptions(skills);
       setDomainsOptions(domains);
