@@ -255,31 +255,11 @@
   padding: 12px 14px;
 }
 
-.shepherd-theme-custom .shepherd-title {
-  color: hsl(var(--foreground));
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.shepherd-theme-custom .shepherd-text {
-  color: hsl(var(--muted-foreground));
-  padding: 12px 14px 0;
-  font-size: 0.9rem;
-  line-height: 1.35rem;
-}
-
-.shepherd-theme-custom .shepherd-footer {
-  background: hsl(var(--popover));
-  padding: 12px 14px 14px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
 .shepherd-theme-custom .shepherd-button {
   border-radius: 10px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   font-size: 0.875rem;
+  font-weight: 500;
   border: 1px solid hsl(var(--border));
   background: hsl(var(--secondary));
   color: hsl(var(--secondary-foreground));
@@ -294,6 +274,7 @@
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   border-color: hsl(var(--primary));
+  box-shadow: 0 6px 18px hsl(var(--primary) / 0.35);
 }
 
 .shepherd-theme-custom .shepherd-cancel-icon {
@@ -379,19 +360,8 @@
     0 0 0 1px hsl(var(--border)) inset;
 }
 
-.shepherd-theme-custom .shepherd-content {
-  border-radius: 14px;
-  padding: 0;
-  box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.12),
-    0 0 0 1px hsl(var(--border));
-}
-
-.shepherd-theme-custom .shepherd-header {
-  padding: 14px 18px;
-}
-
 .shepherd-theme-custom .shepherd-title {
+  color: hsl(var(--foreground));
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -413,35 +383,10 @@
   color: hsl(var(--foreground));
 }
 
-.shepherd-theme-custom .shepherd-footer {
-  padding: 14px 18px 16px;
-}
-
-.shepherd-theme-custom .shepherd-button {
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-weight: 500;
-}
-
-.shepherd-theme-custom .shepherd-button:last-child {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  box-shadow: 0 6px 18px hsl(var(--primary) / 0.35);
-}
-
-.shepherd-theme-custom .shepherd-arrow::before {
-  background: hsl(var(--popover));
-}
-
 .shepherd-enabled.shepherd-target {
   outline: 3px solid hsl(var(--primary) / 0.55);
   outline-offset: 4px;
   border-radius: 10px;
-}
-
-.shepherd-theme-custom .shepherd-footer {
-  position: relative;
-  padding-left: 120px; 
 }
 
 .shepherd-theme-custom .shepherd-text .shepherd-step-indicator {
@@ -450,7 +395,13 @@
 
 .shepherd-theme-custom .shepherd-footer {
   position: relative;
+  padding: 14px 18px 16px;
   padding-left: 120px; 
+  background: hsl(var(--popover));
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  align-items: center;
 }
 
 .shepherd-theme-custom .shepherd-footer::before {
@@ -476,13 +427,3 @@
   white-space: nowrap;
 }
 
-.shepherd-footer {
-  position: absolute;
-
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-
-  padding: 12px 1px 19px;
-}

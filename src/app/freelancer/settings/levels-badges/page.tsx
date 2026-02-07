@@ -271,8 +271,6 @@ export default function LevelsAndBadgesPage() {
     Record<string, boolean>
   >({});
 
-  useLevelTour(true);
-
   // Memoize the calculateDisplayLevel function
   const calculateDisplayLevel = useCallback((priority: number): number => {
     // If priority is 0, it's level 1
@@ -535,6 +533,8 @@ export default function LevelsAndBadgesPage() {
     queryKey: ['gamification-status'],
     queryFn: fetchStatus,
   });
+
+  useLevelTour(!statusLoading);
 
   // Calculate progress to next level
   const calculateProgress = (): { progress: number; nextLevel?: LevelItem } => {

@@ -347,7 +347,6 @@ export default function CurrentComponent({
           className="py-8"
           title="No interviews found"
           description="Try adjusting your search or filters."
-          data-tour="interviewee-empty"
         />
       );
     }

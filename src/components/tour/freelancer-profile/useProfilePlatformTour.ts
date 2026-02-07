@@ -64,6 +64,13 @@ export function useProfilePlatformTour(isReady: boolean) {
       when: withProgress(tour),
       buttons: [
         {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
           text: 'Next',
           action: tour.next,
         },

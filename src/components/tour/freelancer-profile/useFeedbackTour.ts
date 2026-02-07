@@ -38,7 +38,7 @@ export function useFeedbackTour(isReady: boolean) {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // if (tourRef.current) return;
+    if (tourRef.current) return;
 
     const tour = new Shepherd.Tour({
       useModalOverlay: true,
