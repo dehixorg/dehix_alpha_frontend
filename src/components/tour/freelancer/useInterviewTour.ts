@@ -55,95 +55,94 @@ export function useInterviewerProfileTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-  id: 'interviewer-header',
-  title: 'Interviews',
-  text: 'Apply as an interviewer, manage your profile, and track interviews from here.',
-  attachTo: {
-    element: '[data-tour="interviewer-header"]',
-    on: 'bottom',
-  },
-  when: withProgress(tour),
-  buttons: [
-    {
-      text: 'Skip',
-      action: () => {
-        tour.cancel();
-        dispatch(clearTour());
+      id: 'interviewer-header',
+      title: 'Interviews',
+      text: 'Apply as an interviewer, manage your profile, and track interviews from here.',
+      attachTo: {
+        element: '[data-tour="interviewer-header"]',
+        on: 'bottom',
       },
-    },
-    {
-      text: 'Next',
-      action: tour.next,
-    },
-  ],
-});
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
+    });
 
-tour.addStep({
-  id: 'interview-lifecycle',
-  title: 'Interview Lifecycle',
-  text: 'Start with your profile. Once approved, you can manage active interviews, bids, and view your history here.',
-  attachTo: {
-    element: '[data-tour="interviewer-tabs"]',
-    on: 'bottom',
-  },
-  when: withProgress(tour),
-  buttons: [
-    {
-      text: 'Back',
-      action: tour.back,
-    },
-    {
-      text: 'Next',
-      action: tour.next,
-    },
-  ],
-});
-
-tour.addStep({
-  id: 'apply-interviewer',
-  title: 'Apply as an Interviewer',
-  text: 'Apply using your verified skills or domains. Once approved, you can start taking interviews.',
-  attachTo: {
-    element: '[data-tour="apply-interviewer"]',
-    on: 'bottom',
-  },
-  when: withProgress(tour),
-  buttons: [
-    {
-      text: 'Back',
-      action: tour.back,
-    },
-    {
-      text: 'Next',
-      action: tour.next,
-    },
-  ],
-});
-
-tour.addStep({
-  id: 'manage-availability',
-  title: 'Manage Availability',
-  text: 'Set when you are available to take interviews after approval. This helps companies schedule you faster.',
-  attachTo: {
-    element: '[data-tour="manage-availability"]',
-    on: 'bottom',
-  },
-  when: withProgress(tour),
-  buttons: [
-    {
-      text: 'Back',
-      action: tour.back,
-    },
-    {
-      text: 'Got it',
-      action: () => {
-        tour.complete();
-        dispatch(clearTour());
+    tour.addStep({
+      id: 'interview-lifecycle',
+      title: 'Interview Lifecycle',
+      text: 'Start with your profile. Once approved, you can manage active interviews, bids, and view your history here.',
+      attachTo: {
+        element: '[data-tour="interviewer-tabs"]',
+        on: 'bottom',
       },
-    },
-  ],
-});
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Back',
+          action: tour.back,
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
+    });
 
+    tour.addStep({
+      id: 'apply-interviewer',
+      title: 'Apply as an Interviewer',
+      text: 'Apply using your verified skills or domains. Once approved, you can start taking interviews.',
+      attachTo: {
+        element: '[data-tour="apply-interviewer"]',
+        on: 'bottom',
+      },
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Back',
+          action: tour.back,
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
+    });
+
+    tour.addStep({
+      id: 'manage-availability',
+      title: 'Manage Availability',
+      text: 'Set when you are available to take interviews after approval. This helps companies schedule you faster.',
+      attachTo: {
+        element: '[data-tour="manage-availability"]',
+        on: 'bottom',
+      },
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Back',
+          action: tour.back,
+        },
+        {
+          text: 'Got it',
+          action: () => {
+            tour.complete();
+            dispatch(clearTour());
+          },
+        },
+      ],
+    });
 
     tourRef.current = tour;
 

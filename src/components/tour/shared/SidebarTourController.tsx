@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 import { useSelector } from 'react-redux';
 
 import { RootState } from '@/lib/store';
-
 import { usePlatformTour } from '@/components/tour/shared/usePlatformTour';
 import { useProfilePlatformTour } from '@/components/tour/freelancer-profile/useProfilePlatformTour';
 import { useSettingsTour } from '@/components/tour/business-profile/useSettingsTour';

@@ -55,10 +55,6 @@ export function useTransactionsTour(isReady: boolean) {
       title: 'Business Transaction History',
       scrollTo: false,
       text: 'View all your connect transactions and balance changes',
-    //   attachTo: {
-    //     element: '[data-tour="business-projects"]',
-    //     on: 'top',
-    //   },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

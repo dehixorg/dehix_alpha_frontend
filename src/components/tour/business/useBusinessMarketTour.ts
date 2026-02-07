@@ -54,10 +54,6 @@ export function useBusinessMarketTour(isReady: boolean) {
       id: 'business-market-header',
       title: 'Business Marketplace',
       text: 'Browse and discover freelancers for your business needs.',
-      // attachTo: {
-      //   element: '[data-tour="business-market-header"]',
-      //   on: 'bottom',
-      // },
       when: withProgress(tour),
       buttons: [
         {

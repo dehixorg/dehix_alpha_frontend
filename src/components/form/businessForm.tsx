@@ -266,7 +266,10 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" data-tour="business-readonly-fields">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+            data-tour="business-readonly-fields"
+          >
             <div className="space-y-2">
               <Label>Email</Label>
               <FormField
@@ -456,7 +459,12 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               />
             </div>
           </div>
-          <Button className="w-full" type="submit" disabled={loading} data-tour="save">
+          <Button
+            className="w-full"
+            type="submit"
+            disabled={loading}
+            data-tour="save"
+          >
             <Save className="h-4 w-4 mr-2" />
             {loading ? 'Saving...' : 'Save Changes'}
           </Button>

@@ -54,10 +54,6 @@ export function useBusinessTalentTour(isReady: boolean) {
       id: 'business-talent-header',
       title: 'Hire Talent',
       text: 'This is your talent hub where you can discover, review, and manage candidates for your business needs.',
-      // attachTo: {
-      //   element: '[data-tour="business-talent-header"]',
-      //   on: 'bottom',
-      // },
       when: withProgress(tour),
       buttons: [
         {

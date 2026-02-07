@@ -621,7 +621,7 @@ const InterviewProfile: React.FC = () => {
                   variant="outline"
                   className="flex items-center gap-2"
                   onClick={openAvailability}
-                  type="button" 
+                  type="button"
                   data-tour="manage-availability"
                 >
                   <Settings2 className="h-4 w-4" />

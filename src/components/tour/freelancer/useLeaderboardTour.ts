@@ -59,7 +59,6 @@ export function useLeaderboardTour(isReady: boolean) {
       title: 'Leaderboard',
       scrollTo: false,
       text: 'This leaderboard shows rankings based on performance.',
-      // attachTo: { element: '[data-tour="leaderboard"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         {

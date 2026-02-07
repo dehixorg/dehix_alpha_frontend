@@ -58,7 +58,6 @@ export function useFeedbackTour(isReady: boolean) {
       title: 'Feedback',
       text: 'Submit your feedback here.',
       scrollTo: false,
-      // attachTo: { element: '[data-tour="feedback"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

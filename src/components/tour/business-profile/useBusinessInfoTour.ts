@@ -53,16 +53,12 @@ export function useBusinessInfoTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-  id: 'business-info',
+      id: 'business-info',
       title: 'Business Information',
       scrollTo: false,
       text: 'Keep your business profile accurate. It helps freelancers trust and recognize you.',
-    //   attachTo: {
-    //     element: '[data-tour="business-projects"]',
-    //     on: 'top',
-    //   },
-    when: withProgress(tour),
-  buttons: [
+      when: withProgress(tour),
+      buttons: [
         {
           text: 'Skip',
           action: () => {
@@ -75,56 +71,56 @@ export function useBusinessInfoTour(isReady: boolean) {
           action: tour.next,
         },
       ],
-});
+    });
 
     tour.addStep({
       id: 'business-profile-picture',
-  title: 'Profile Picture',
-  text: 'Upload or change your profile picture here. The image is saved automatically — no need to click save.',
-  attachTo: {
-    element: '[data-tour="profile-picture"]',
-    on: 'bottom',
-  },
+      title: 'Profile Picture',
+      text: 'Upload or change your profile picture here. The image is saved automatically — no need to click save.',
+      attachTo: {
+        element: '[data-tour="profile-picture"]',
+        on: 'bottom',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
-        {text: 'Next', action: tour.next}
+        { text: 'Next', action: tour.next },
       ],
     });
 
     tour.addStep({
-  id: 'business-readonly-fields',
-  title: 'Contact Information',
-  text: 'Email and phone number are non-editable, enter it carefully.',
-  attachTo: {
-    element: '[data-tour="business-readonly-fields"]',
-    on: 'top',
-  },
-  buttons: [
-        { text: 'Back', action: tour.back },
-        {text: 'Next', action: tour.next}
-      ],
-});
-
-  tour.addStep({
-  id: 'save-changes',
-  title: 'Save Changes',
-  text: 'Use this button to save updates made on this page. Profile picture uploads are saved automatically.',
-  attachTo: {
-    element: '[data-tour="save"]',
-    on: 'top',
-  },
-  buttons: [
-    { text: 'Back', action: tour.back },
-    {
-      text: 'Got it',
-      action: () => {
-        tour.complete();
-        dispatch(clearTour());
+      id: 'business-readonly-fields',
+      title: 'Contact Information',
+      text: 'Email and phone number are non-editable, enter it carefully.',
+      attachTo: {
+        element: '[data-tour="business-readonly-fields"]',
+        on: 'top',
       },
-    },
-  ],
-});
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'save-changes',
+      title: 'Save Changes',
+      text: 'Use this button to save updates made on this page. Profile picture uploads are saved automatically.',
+      attachTo: {
+        element: '[data-tour="save"]',
+        on: 'top',
+      },
+      buttons: [
+        { text: 'Back', action: tour.back },
+        {
+          text: 'Got it',
+          action: () => {
+            tour.complete();
+            dispatch(clearTour());
+          },
+        },
+      ],
+    });
 
     tourRef.current = tour;
 

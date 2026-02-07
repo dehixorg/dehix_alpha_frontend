@@ -55,12 +55,12 @@ export function useSettingsTour(isReady: boolean) {
 
     tour.addStep({
       id: 'settings-sidebar',
-  title: 'Settings Navigation',
-  text: 'Use this sidebar to manage your business settings, compliance, and reports.',
-  attachTo: {
-    element: '[data-tour="sidebar"]',
-    on: 'right',
-  },
+      title: 'Settings Navigation',
+      text: 'Use this sidebar to manage your business settings, compliance, and reports.',
+      attachTo: {
+        element: '[data-tour="sidebar"]',
+        on: 'right',
+      },
       when: withProgress(tour),
       buttons: [
         {
@@ -79,12 +79,12 @@ export function useSettingsTour(isReady: boolean) {
 
     tour.addStep({
       id: 'settings-business-info',
-  title: 'Business Information',
-  text: 'Update your company details and basic information used across the platform.',
-  attachTo: {
-    element: '[data-tour="settings-business-info"]',
-    on: 'right',
-  },
+      title: 'Business Information',
+      text: 'Update your company details and basic information used across the platform.',
+      attachTo: {
+        element: '[data-tour="settings-business-info"]',
+        on: 'right',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -93,13 +93,13 @@ export function useSettingsTour(isReady: boolean) {
     });
 
     tour.addStep({
-     id: 'settings-kyc',
-  title: 'Compliance & Verification',
-  text: 'Complete verification to enable full access to platform features.',
-  attachTo: {
-    element: '[data-tour="settings-kyc"]',
-    on: 'right',
-  },
+      id: 'settings-kyc',
+      title: 'Compliance & Verification',
+      text: 'Complete verification to enable full access to platform features.',
+      attachTo: {
+        element: '[data-tour="settings-kyc"]',
+        on: 'right',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -109,12 +109,12 @@ export function useSettingsTour(isReady: boolean) {
 
     tour.addStep({
       id: 'settings-transactions',
-  title: 'Transactions',
-  text: 'View invoices, payments, and financial records related to your projects.',
-  attachTo: {
-    element: '[data-tour="settings-transactions"]',
-    on: 'right',
-  },
+      title: 'Transactions',
+      text: 'View invoices, payments, and financial records related to your projects.',
+      attachTo: {
+        element: '[data-tour="settings-transactions"]',
+        on: 'right',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -139,12 +139,12 @@ export function useSettingsTour(isReady: boolean) {
 
     tour.addStep({
       id: 'settings-reports',
-  title: 'Reports & Issues',
-  text: 'Access reports and important updates related to your account and projects.',
-  attachTo: {
-    element: '[data-tour="settings-reports"]',
-    on: 'right',
-  },
+      title: 'Reports & Issues',
+      text: 'Access reports and important updates related to your account and projects.',
+      attachTo: {
+        element: '[data-tour="settings-reports"]',
+        on: 'right',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

@@ -61,11 +61,14 @@ export default function InterviewerPage() {
               onValueChange={(val) =>
                 router.push(`/freelancer/interviewer/${val}`)
               }
-              className="w-full" 
+              className="w-full"
             >
               <div className="border-b px-2 sm:px-6">
                 <div className="max-w-full overflow-x-auto no-scrollbar">
-                  <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap" data-tour="interviewer-tabs">
+                  <TabsList
+                    className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap"
+                    data-tour="interviewer-tabs"
+                  >
                     <TabsTrigger
                       value="profile"
                       className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"

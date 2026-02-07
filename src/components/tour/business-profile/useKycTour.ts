@@ -55,10 +55,6 @@ export function useKycTour(isReady: boolean) {
       title: 'Business KYC Verification',
       scrollTo: false,
       text: 'Please Complete the Mandatory KYC and earn reward.',
-    //   attachTo: {
-    //     element: '[data-tour="business-projects"]',
-    //     on: 'top',
-    //   },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

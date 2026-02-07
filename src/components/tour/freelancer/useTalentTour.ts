@@ -59,17 +59,17 @@ export function useTalentTour(isReady: boolean) {
       title: 'Talent Marketplace',
       text: 'Explore professionals, review profiles, and connect with talent here.',
       when: withProgress(tour),
-          buttons: [
-            {
-              text: 'Skip',
-              action: () => {
-                tour.cancel();
-                dispatch(clearTour());
-              },
-            },
-            {text: 'Next', action: tour.next },
-          ],
-        });
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
     tour.addStep({
       id: 'skill',
