@@ -64,30 +64,116 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 // Schema for form validation using zod
 const projectFormSchema = z
   .object({
-    projectName: z.string().min(1, { message: 'Project name is required.' }),
-    description: z.string().min(1, { message: 'Description is required.' }),
+    projectName: z
+      .string()
+      .min(1, { message: 'Project name is required.' })
+      .min(3, { message: 'Project name must be at least 3 characters.' })
+      .max(100, { message: 'Project name cannot exceed 100 characters.' })
+      .regex(/^[a-zA-Z0-9\s&.,/'-]+$/, {
+        message: 'Project name contains invalid characters.',
+      }),
+    description: z
+      .string()
+      .min(1, { message: 'Description is required.' })
+      .min(50, { message: 'Description must be at least 50 characters.' })
+      .max(2000, { message: 'Description cannot exceed 2000 characters.' }),
     githubLink: z
       .string()
-      .url({ message: 'GitHub Repositry link must be a valid URL.' })
       .optional()
-      .refine((url) => (url ? url.startsWith('https://github.com/') : true), {
-        message: 'GitHub repository URL must start with https://github.com/',
-      }),
+      .refine(
+        (url) => {
+          if (!url || url.trim() === '') return true;
+          try {
+            const parsed = new URL(url);
+            return (
+              parsed.protocol === 'https:' &&
+              (parsed.hostname === 'github.com' ||
+                parsed.hostname === 'www.github.com')
+            );
+          } catch {
+            return false;
+          }
+        },
+        {
+          message:
+            'GitHub repository URL must be a valid URL starting with https://github.com/',
+        },
+      ),
     liveDemoLink: z
       .string()
       .min(1, { message: 'Live demo link is required.' })
-      .url({ message: 'Live demo link must be a valid URL.' }),
+      .url({ message: 'Live demo link must be a valid URL.' })
+      .refine(
+        (url) => {
+          try {
+            const parsed = new URL(url);
+            return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+          } catch {
+            return false;
+          }
+        },
+        { message: 'Live demo link must be a valid HTTP/HTTPS URL.' },
+      ),
     thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
-    start: z.string().min(1, { message: 'Start date is required.' }),
-    end: z.string().min(1, { message: 'End date is required.' }),
-    refer: z.string().min(1, { message: 'Reference is required.' }),
+    start: z
+      .string()
+      .min(1, { message: 'Start date is required.' })
+      .refine(
+        (date) => {
+          try {
+            const startDate = new Date(date);
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+            return startDate <= today;
+          } catch {
+            return false;
+          }
+        },
+        {
+          message: 'Start date cannot be in the future.',
+        },
+      ),
+    end: z
+      .string()
+      .min(1, { message: 'End date is required.' })
+      .refine(
+        (date) => {
+          try {
+            const endDate = new Date(date);
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+            return endDate <= today;
+          } catch {
+            return false;
+          }
+        },
+        {
+          message: 'End date cannot be in the future.',
+        },
+      ),
+    refer: z
+      .string()
+      .min(1, { message: 'Reference is required.' })
+      .min(3, { message: 'Reference must be at least 3 characters.' })
+      .max(200, { message: 'Reference cannot exceed 200 characters.' }),
     techUsed: z
       .array(z.string())
-      .min(1, { message: 'At least one technology is required.' }),
-    role: z.string().min(1, { message: 'Role is required.' }),
+      .min(1, { message: 'At least one technology is required.' })
+      .max(20, { message: 'Cannot add more than 20 technologies.' }),
+    role: z
+      .string()
+      .min(1, { message: 'Role is required.' })
+      .min(3, { message: 'Role must be at least 3 characters.' })
+      .max(100, { message: 'Role cannot exceed 100 characters.' })
+      .regex(/^[a-zA-Z0-9\s&.,/'-]+$/, {
+        message: 'Role contains invalid characters.',
+      }),
     projectType: z.string().optional(),
     verificationStatus: z.string().optional(),
-    comments: z.string().optional(),
+    comments: z
+      .string()
+      .max(1000, { message: 'Comments cannot exceed 1000 characters.' })
+      .optional(),
   })
   .refine(
     (data) => {
@@ -145,43 +231,27 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   });
 
   // Field validation for Step 1
-  const validateStep1 = () => {
-    const { projectName, description, start, end } = form.getValues();
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-
-    // Check if required fields are filled
-    if (!projectName || !description || !start || !end) {
-      notifyError(
-        'Please fill all required fields in Step 1.',
-        'Missing fields',
-      );
-      return false;
-    }
-
-    // Validate date relationship
-    if (startDate >= endDate) {
-      form.setError('end', {
-        type: 'manual',
-        message: 'Start Date must be before End Date',
-      });
-      return false;
-    }
-
-    // Check if at least one skill is added
-    if (currSkills.length === 0) {
-      notifyError('Please add at least one skill.', 'Skills required');
-      return false;
-    }
-
-    return true;
-  };
-
-  const nextStep = () => {
+  const nextStep = async () => {
     if (step === 1) {
-      if (validateStep1()) {
-        setStep(2);
+      // Trigger validation for step 1 fields to show inline errors
+      const isValid = await form.trigger([
+        'projectName',
+        'description',
+        'start',
+        'end',
+      ]);
+
+      // Check if at least one skill is added (not a form field, so needs separate check)
+      if (!isValid) {
+        return; // Form validation failed, inline errors are already shown
       }
+
+      if (currSkills.length === 0) {
+        notifyError('Please add at least one skill.', 'Skills required');
+        return;
+      }
+
+      setStep(2);
     }
   };
 
