@@ -120,49 +120,56 @@ const ProfilePictureUpload = ({
         />
 
         <div className="relative flex flex-col items-center">
-          <label htmlFor="file-input" className="cursor-pointer relative">
-            {previewUrl ? (
-              <Image
-                width={112}
-                height={112}
-                src={previewUrl}
-                alt="Avatar Preview"
-                className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
-              />
-            ) : profile && profile.trim() !== '' ? (
-              <Image
-                width={112}
-                height={112}
-                src={profile}
-                alt="Avatar Preview"
-                className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
-              />
-            ) : (
-              <div className="w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center">
-                <UserCircle className="h-8 w-8 text-gray-400" />
-              </div>
-            )}
-            <Button
-              variant="outline"
-              type="button"
-              size="icon"
-              className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-black border border-gray-300 flex items-center justify-center shadow-md"
-              onClick={() => {
-                if (previewUrl) {
-                  setPreviewUrl(null);
-                } else {
-                  fileInputRef.current?.click();
-                }
-              }}
-            >
-              {previewUrl ? (
-                <Minus className="h-4 w-4 text-gray-400" />
-              ) : (
-                <Plus className="h-4 w-4 text-gray-400" />
-              )}
-            </Button>
-          </label>
+  <div className="relative">
+    <div
+      className="w-28 h-28 rounded-full overflow-hidden"
+      data-tour="profile-picture"
+    >
+      {previewUrl ? (
+        <Image
+          width={112}
+          height={112}
+          src={previewUrl}
+          alt="Avatar Preview"
+          className="w-28 h-28 object-cover"
+        />
+      ) : profile && profile.trim() !== '' ? (
+        <Image
+          width={112}
+          height={112}
+          src={profile}
+          alt="Avatar Preview"
+          className="w-28 h-28 object-cover"
+        />
+      ) : (
+        <div className="w-28 h-28 bg-gray-700 flex items-center justify-center">
+          <UserCircle className="h-8 w-8 text-gray-400" />
         </div>
+      )}
+    </div>
+
+    <Button
+      variant="outline"
+      type="button"
+      size="icon"
+      className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-black border border-gray-300 flex items-center justify-center shadow-md"
+      onClick={() => {
+        if (previewUrl) {
+          setPreviewUrl(null);
+        } else {
+          fileInputRef.current?.click();
+        }
+      }}
+    >
+      {previewUrl ? (
+        <Minus className="h-4 w-4 text-gray-400" />
+      ) : (
+        <Plus className="h-4 w-4 text-gray-400" />
+      )}
+    </Button>
+  </div>
+</div>
+
 
         {previewUrl && (
           <Button

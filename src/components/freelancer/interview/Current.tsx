@@ -347,6 +347,7 @@ export default function CurrentComponent({
           className="py-8"
           title="No interviews found"
           description="Try adjusting your search or filters."
+          data-tour="interviewee-empty"
         />
       );
     }
@@ -453,7 +454,7 @@ export default function CurrentComponent({
       <div className="flex flex-col gap-4 md:gap-6 p-4 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="w-full sm:w-48">
+            <div className="w-full sm:w-48" data-tour="all">
               <Select value={filter} onValueChange={(v) => setFilter(v as any)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter" />
@@ -467,7 +468,7 @@ export default function CurrentComponent({
             </div>
 
             <div className="relative w-full sm:w-80">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
               <Input
                 placeholder="Search interviews..."
                 value={searchQuery}
@@ -489,6 +490,7 @@ export default function CurrentComponent({
                   size="sm"
                   className="h-9 gap-2"
                   type="button"
+                  data-tour="table"
                 >
                   <Table className="h-4 w-4" />
                   Table
@@ -522,7 +524,7 @@ export default function CurrentComponent({
               const preview = todayItems.slice(0, 3);
 
               return (
-                <Card className="overflow-hidden">
+                <Card className="overflow-hidden" data-tour="interviewee-empty">
                   <CardHeader className="gap-1">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -635,6 +637,7 @@ export default function CurrentComponent({
           : null}
 
         {!enableViewToggle || view === 'cards' ? (
+          <div data-tour="interviewee-sections">
           <Accordion type="single" collapsible defaultValue={sections[0].key}>
             {sections.map((section, idx) => {
               const items = normalizeList(grouped[section.key]);
@@ -722,6 +725,7 @@ export default function CurrentComponent({
               );
             })}
           </Accordion>
+          </div>
         ) : (
           renderTable()
         )}

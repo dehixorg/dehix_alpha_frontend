@@ -94,6 +94,18 @@ export function useDashboardTour(isReady: boolean) {
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'interview',
+      title: 'Interview Schedule',
+      text: 'Your upcoming meetings and interview slots.',
+      attachTo: { element: '[data-tour="interviews"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
         {
           text: 'Got it',
           action: () => {

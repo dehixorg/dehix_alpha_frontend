@@ -186,7 +186,7 @@ export default function FreelancerProfileSettings() {
                     <span className="hidden sm:inline">Projects</span>
                   </TabsTrigger>
                 </TabsList>
-                <div className="flex items-center gap-2 ml-auto overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-2 ml-auto overflow-x-auto no-scrollbar" data-tour="add-details">
                   {activeTab === 'experience' && (
                     <AddExperience
                       onFormSubmit={() => setExpRefreshKey((v) => v + 1)}

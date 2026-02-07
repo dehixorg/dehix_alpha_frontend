@@ -58,7 +58,7 @@ export function useReportsTour(isReady: boolean) {
       title: 'Reports Center',
       text: 'Generate and manage your reports in one place.',
       scrollTo: false,
-      attachTo: { element: '[data-tour="reports"]', on: 'top' },
+      // attachTo: { element: '[data-tour="reports"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

@@ -57,11 +57,40 @@ export function useTalentTour(isReady: boolean) {
     tour.addStep({
       id: 'talent',
       title: 'Talent Marketplace',
-      scrollTo: false,
       text: 'Explore professionals, review profiles, and connect with talent here.',
-      attachTo: { element: '[data-tour="talent"]', on: 'top' },
+      when: withProgress(tour),
+          buttons: [
+            {
+              text: 'Skip',
+              action: () => {
+                tour.cancel();
+                dispatch(clearTour());
+              },
+            },
+            {text: 'Next', action: tour.next },
+          ],
+        });
+
+    tour.addStep({
+      id: 'skill',
+      title: 'Add Dehix Skill',
+      text: 'Choose one of your profile skills, set your seniority level, and define your expected monthly pay. This helps clients understand where you shine.',
+      attachTo: { element: '[data-tour="skill"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'domain',
+      title: 'Add Dehix Domain',
+      text: 'Select one of your profile domains, set your seniority level, and define your expected monthly pay for domain-based work.',
+      attachTo: { element: '[data-tour="domain"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
         {
           text: 'Got it',
           action: () => {

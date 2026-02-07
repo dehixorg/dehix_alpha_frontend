@@ -58,7 +58,7 @@ export function useKycTour(isReady: boolean) {
       title: 'KYC Verification',
       text: 'Verify your identity with e-kyc.',
       scrollTo: false,
-      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      // attachTo: { element: '[data-tour="kyc"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

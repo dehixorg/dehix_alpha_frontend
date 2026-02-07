@@ -769,7 +769,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-6" data-tour="personal-info-form">
+    <Card className="p-6">
       {/* Page Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-xl md:text-2xl font-semibold tracking-tight flex items-center gap-2">
@@ -830,6 +830,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 </FormItem>
               )}
             />
+            <div data-tour="non-editable-field">
             <FormField
               control={form.control}
               name="username"
@@ -876,6 +877,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 </FormItem>
               )}
             />
+            </div>
             <FormField
               control={form.control}
               name="description"
@@ -938,7 +940,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           </div>
 
           <Separator className="my-6 bg-muted-foreground/20" />
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-1 md:col-span-2"  data-tour="skills-domains">
             <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
               <Tags className="h-4 w-4" /> Skills & Domains
             </h3>
@@ -1058,7 +1060,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             </div>
           </div>
           <div className="col-span-1 md:col-span-2 mt-6">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading} data-tour="profile-save">
               <Save className="h-4 w-4 mr-2" />
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>

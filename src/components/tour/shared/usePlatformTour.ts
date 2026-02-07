@@ -104,7 +104,7 @@ export function usePlatformTour(isReady: boolean) {
       id: 'header-profile',
       title: 'Profile & Settings',
       text: 'Manage your account and preferences here.',
-      attachTo: { element: '[data-tour="header-profile"]', on: 'left' },
+      attachTo: { element: '[data-tour="header-profile"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

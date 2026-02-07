@@ -55,22 +55,113 @@ export function useIntervieweeTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'interviewee',
-      title: 'Interviewee Profile',
-      scrollTo: false,
-      text: 'Manage your interview profile, availability, and interview history here.',
-      attachTo: { element: '[data-tour="interviewee"]', on: 'top' },
-      when: withProgress(tour),
-      buttons: [
-        {
-          text: 'Got it',
-          action: () => {
-            tour.complete();
-            dispatch(clearTour());
-          },
-        },
-      ],
-    });
+  id: 'interviewee-header',
+  title: 'Interviewee',
+  text: 'Track your current interviews, bids, and interview history from this page.',
+  attachTo: {
+    element: '[data-tour="interviewee-header"]',
+    on: 'bottom',
+  },
+  when: withProgress(tour),
+  buttons: [
+    {
+      text: 'Skip',
+      action: () => {
+        tour.cancel();
+        dispatch(clearTour());
+      },
+    },
+    {
+      text: 'Next',
+      action: tour.next,
+    },
+  ],
+});
+
+tour.addStep({
+  id: 'interviewee-tabs',
+  title: 'Interview Stages',
+  text: 'Switch between current interviews, bids you have placed, and your past interview history.',
+  attachTo: { element: '[data-tour="tab-list"]', on: 'bottom' },
+  when: withProgress(tour),
+  buttons: [
+    { text: 'Back', action: tour.back },
+    { text: 'Next', action: tour.next },
+  ],
+});
+
+tour.addStep({
+  id: 'interviewee-filter',
+  title: 'Filter Interviews',
+  text: 'Use this filter to view interviews by category or type.',
+  attachTo: { element: '[data-tour="all"]', on: 'bottom' },
+  when: withProgress(tour),
+  buttons: [
+    { text: 'Back', action: tour.back },
+    { text: 'Next', action: tour.next },
+  ],
+});
+
+// tour.addStep({
+//   id: 'interviewee-search',
+//   title: 'Search Interviews',
+//   text: 'Search interviews by role, company, or interviewer name.',
+//   attachTo: { element: '[data-tour="search"]', on: 'bottom' },
+//   when: withProgress(tour),
+//   buttons: [
+//     { text: 'Back', action: tour.back },
+//     { text: 'Next', action: tour.next },
+//   ],
+// });
+
+tour.addStep({
+  id: 'interviewee-view-toggle',
+  title: 'Change View',
+  text: 'Switch between table and card views based on how you prefer to browse interviews.',
+  attachTo: { element: '[data-tour="table"]', on: 'left' },
+  when: withProgress(tour),
+  buttons: [
+    { text: 'Back', action: tour.back },
+    { text: 'Next', action: tour.next },
+  ],
+});
+
+tour.addStep({
+  id: 'interviewee-empty',
+  title: 'Recent Interviews',
+  text: 'Your scheduled interviews will appear here once they are created or assigned.',
+  attachTo: {
+    element: '[data-tour="interviewee-empty"]',
+    on: 'top',
+  },
+  when: withProgress(tour),
+  buttons: [
+    { text: 'Back', action: tour.back },
+    { text: 'Next', action: tour.next },
+  ],
+});
+
+tour.addStep({
+  id: 'interviewee-sections',
+  title: 'Interview Categories',
+  text: 'Your interviews are grouped by purpose — talent, interviewer, projects, peer sessions, hiring, and growth.',
+  attachTo: {
+    element: '[data-tour="interviewee-sections"]',
+    on: 'top',
+  },
+  when: withProgress(tour),
+  buttons: [
+    { text: 'Back', action: tour.back },
+    {
+      text: 'Got it',
+      action: () => {
+        tour.complete();
+        dispatch(clearTour());
+      },
+    },
+  ],
+});
+
 
     tourRef.current = tour;
 

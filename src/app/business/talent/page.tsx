@@ -234,10 +234,7 @@ export default function Talent() {
       </div>
 
       <div className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3 lg:items-start xl:grid-cols-3">
-        <div
-          className="space-y-6 lg:col-span-2"
-          data-tour="business-talent-skill-domain"
-        >
+        <div className="space-y-6 lg:col-span-2">
           <SkillDomainForm
             setFilterSkill={setFilterSkill}
             setFilterDomain={setFilterDomain}

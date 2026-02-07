@@ -54,10 +54,10 @@ export function useBusinessTalentTour(isReady: boolean) {
       id: 'business-talent-header',
       title: 'Hire Talent',
       text: 'This is your talent hub where you can discover, review, and manage candidates for your business needs.',
-      attachTo: {
-        element: '[data-tour="business-talent-header"]',
-        on: 'bottom',
-      },
+      // attachTo: {
+      //   element: '[data-tour="business-talent-header"]',
+      //   on: 'bottom',
+      // },
       when: withProgress(tour),
       buttons: [
         {
@@ -90,12 +90,12 @@ export function useBusinessTalentTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'business-talent-skill-domain',
-      title: 'Skill & Domain Selection',
-      text: 'Choose the skills and domains you are hiring for to refine the talent shown to you.',
+      id: 'hire-talent-skill',
+      title: 'Fill the Requirements',
+      text: 'Select required skills and domains here to find candidates with the right technical expertise.',
       attachTo: {
-        element: '[data-tour="business-talent-skill-domain"]',
-        on: 'right',
+        element: '[data-tour="requirements"]',
+        on: 'bottom',
       },
       when: withProgress(tour),
       buttons: [
@@ -125,7 +125,7 @@ export function useBusinessTalentTour(isReady: boolean) {
       text: 'Browse through talent profiles here and take action to connect or move forward with the right candidates.',
       attachTo: {
         element: '[data-tour="business-talent-list"]',
-        on: 'left',
+        on: 'top',
       },
       when: withProgress(tour),
       buttons: [

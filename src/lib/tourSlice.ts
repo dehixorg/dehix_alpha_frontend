@@ -36,6 +36,11 @@ export type TourTarget =
   | 'business-market'
   | 'business-projects'
   | 'business-talent'
+
+  // Business settings
+  | 'business-transactions'
+  | 'business-info'
+  | 'business-kyc'
   | null;
 
 export type TourState = {

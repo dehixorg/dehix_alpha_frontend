@@ -62,10 +62,10 @@ export function useNotesTour(isReady: boolean) {
         userType === 'business'
           ? 'Use this space to keep business notes, ideas, and important references in one place.'
           : 'Use this section to write down ideas, reminders, and personal notes.',
-      attachTo: {
-        element: '[data-tour="notes"]',
-        on: 'top',
-      },
+      // attachTo: {
+      //   element: '[data-tour="notes"]',
+      //   on: 'top',
+      // },
       when: withProgress(tour),
       buttons: [
         {

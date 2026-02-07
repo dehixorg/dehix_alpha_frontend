@@ -60,10 +60,10 @@ export function useChatTour(isReady: boolean) {
         id: 'chat-main',
         title: 'Chats',
         text: 'This is where you communicate with freelancers, discuss project details, and collaborate in real time.',
-        attachTo: {
-          element: '[data-tour="chat-main"]',
-          on: 'top',
-        },
+        // attachTo: {
+        //   element: '[data-tour="chat-main"]',
+        //   on: 'top',
+        // },
         when: withProgress(tour),
         buttons: [
           {
@@ -82,10 +82,10 @@ export function useChatTour(isReady: boolean) {
         id: 'chat-main',
         title: 'Chats',
         text: 'This is where you chat with clients, receive updates, and coordinate on projects.',
-        attachTo: {
-          element: '[data-tour="chat-main"]',
-          on: 'top',
-        },
+        // attachTo: {
+        //   element: '[data-tour="chat-main"]',
+        //   on: 'top',
+        // },
         when: withProgress(tour),
         buttons: [
           {

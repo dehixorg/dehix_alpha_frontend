@@ -85,10 +85,7 @@ const Header: React.FC<HeaderProps> = ({
     { path: '/notes', target: 'notes' },
 
     // Freelancer Settings
-    {
-      path: '/freelancer/settings/personal-info',
-      target: 'personal-info-form',
-    },
+    { path: '/freelancer/settings/personal-info', target: 'personal-info-form' },
     { path: '/freelancer/settings/profiles', target: 'profiles-center' },
     { path: '/freelancer/settings/profile', target: 'experience' },
     { path: '/freelancer/settings/kyc', target: 'kyc' },
@@ -98,6 +95,11 @@ const Header: React.FC<HeaderProps> = ({
     { path: '/freelancer/settings/resume', target: 'resume' },
     { path: '/settings/feedback', target: 'feedback' },
     { path: '/reports', target: 'reports' },
+
+    // Business Settings
+     { path: '/business/settings/business-info', target: 'business-info' },
+     { path: '/business/settings/kyc', target: 'business-kyc' },
+     { path: '/business/settings/transactions', target: 'business-transactions' },
   ];
 
   const getPageTarget = (): TourTarget | null => {
@@ -199,18 +201,25 @@ const Header: React.FC<HeaderProps> = ({
               dispatch(startTour({ mode: 'page', target }));
             }}
             onFullPlatformTour={() => {
-              const isSettingsPage =
-                pathname.startsWith('/freelancer/settings') ||
-                pathname.startsWith('/reports') ||
-                pathname.startsWith('/settings/feedback');
+  const isFreelancerSettings =
+    pathname.startsWith('/freelancer/settings') ||
+    pathname.startsWith('/reports') ||
+    pathname.startsWith('/settings/feedback');
 
-              dispatch(
-                startTour({
-                  mode: 'platform',
-                  target: isSettingsPage ? 'sidebar' : 'navigation',
-                }),
-              );
-            }}
+  const isBusinessSettings =
+    pathname.startsWith('/business/settings');
+
+  dispatch(
+    startTour({
+      mode: 'platform',
+      target:
+        isFreelancerSettings || isBusinessSettings
+          ? 'sidebar'
+          : 'navigation',
+    }),
+  );
+}}
+
           />
         </div>
 

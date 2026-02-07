@@ -55,10 +55,10 @@ export function useBusinessProjectTour(isReady: boolean) {
       title: 'Manage your projects',
       scrollTo: false,
       text: 'All your active and completed business projects are managed from here. Track progress, update details, and take action on projects easily.',
-      attachTo: {
-        element: '[data-tour="business-projects"]',
-        on: 'top',
-      },
+      // attachTo: {
+      //   element: '[data-tour="business-projects"]',
+      //   on: 'top',
+      // },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

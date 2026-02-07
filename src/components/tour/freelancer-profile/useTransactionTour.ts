@@ -58,7 +58,7 @@ export function useTransactionTour(isReady: boolean) {
       title: 'Transaction History',
       text: 'Track your connect transactions and balance changes.',
       scrollTo: false,
-      attachTo: { element: '[data-tour="transaction"]', on: 'top' },
+      // attachTo: { element: '[data-tour="transaction"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

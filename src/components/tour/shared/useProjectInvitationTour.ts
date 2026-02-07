@@ -62,10 +62,10 @@ export function useProjectInvitationTour(isReady: boolean) {
         text:
           'Manage and track all your project invitations in one place. ' +
           'Review requests, respond quickly, and keep collaborations moving forward.',
-        attachTo: {
-          element: '[data-tour="business-invitation"]',
-          on: 'top',
-        },
+        // attachTo: {
+        //   element: '[data-tour="business-invitation"]',
+        //   on: 'top',
+        // },
         when: withProgress(tour),
         buttons: [
           {
@@ -84,10 +84,10 @@ export function useProjectInvitationTour(isReady: boolean) {
         id: 'freelancer-invitation',
         title: 'Project Invitations',
         text: 'Here you can see projects where clients have directly invited you to apply.',
-        attachTo: {
-          element: '[data-tour="freelancer-invitation"]',
-          on: 'top',
-        },
+        // attachTo: {
+        //   element: '[data-tour="freelancer-invitation"]',
+        //   on: 'top',
+        // },
         when: withProgress(tour),
         buttons: [
           {

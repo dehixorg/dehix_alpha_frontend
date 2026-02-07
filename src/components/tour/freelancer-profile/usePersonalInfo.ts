@@ -54,23 +54,75 @@ export function usePersonalInfoTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'personal info',
-      title: 'Personal Information',
-      text: 'Complete your profile to get faster clients.',
-      attachTo: { element: '[data-tour="personal-info-form"]', on: 'top' },
-      when: withProgress(tour),
-      scrollTo: false,
-      buttons: [
-        { text: 'Back', action: tour.back },
-        {
-          text: 'Got it',
+  id: 'personal-info-intro',
+  title: 'Personal Information',
+  text: 'Keep your profile details updated so businesses can find and trust you faster.',
+  when: withProgress(tour),
+  buttons: [
+    {
+          text: 'Skip',
           action: () => {
-            tour.complete();
+            tour.cancel();
             dispatch(clearTour());
           },
         },
-      ],
-    });
+    { text: 'Next', action: tour.next }],
+});
+
+tour.addStep({
+  id: 'profile-picture',
+  title: 'Profile picture',
+  text: 'Upload or change your profile picture here. Changes are saved instantly — no need to click Save.',
+  attachTo: { element: '[data-tour="profile-picture"]', on: 'bottom' },
+  when: withProgress(tour),
+  buttons: [
+    { text: 'Back', action: tour.back },
+    { text: 'Next', action: tour.next }],
+});
+
+tour.addStep({
+  id: 'non-editable',
+  title: 'Locked fields',
+  text: 'These details are verified and cannot be edited for security reasons.',
+  attachTo: { element: '[data-tour="non-editable-field"]', on: 'top' },
+  when: withProgress(tour),
+  buttons: [
+    { text: 'Back', action: tour.back },
+    { text: 'Next', action: tour.next }],
+});
+
+tour.addStep({
+  id: 'skills-domains',
+  title: 'Skills & Domains',
+  text: 'Add or update your skills and domains here. These details can be saved here too and used for matching.',
+  attachTo: {
+    element: '[data-tour="skills-domains"]',
+    on: 'top',
+  },
+  when: withProgress(tour),
+  buttons: [
+    { text: 'Back', action: tour.back },
+    { text: 'Next', action: tour.next }],
+});
+
+tour.addStep({
+  id: 'save-profile',
+  title: 'Save updates',
+  text: 'Update your skills and domains here to improve visibility and matching.',
+  attachTo: { element: '[data-tour="profile-save"]', on: 'top' },
+  when: withProgress(tour),
+  buttons: [
+    { text: 'Back', action: tour.back },
+    {
+      text: 'Got it',
+      action: () => {
+        tour.complete();
+        dispatch(clearTour());
+      },
+    },
+  ],
+});
+
 
     tourRef.current = tour;
 
@@ -88,7 +140,7 @@ export function usePersonalInfoTour(isReady: boolean) {
     if (mode !== 'page') return;
     if (target !== 'personal-info-form') return;
 
-    if (el('[data-tour="personal-info-form"]')) {
+    if (el('[data-tour="non-editable-field"]')) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

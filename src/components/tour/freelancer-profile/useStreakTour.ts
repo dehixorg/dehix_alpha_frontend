@@ -58,7 +58,7 @@ export function useStreakTour(isReady: boolean) {
       title: 'Login Streak',
       text: 'Build your streak and claim connect rewards at milestones.',
       scrollTo: false,
-      attachTo: { element: '[data-tour="streak"]', on: 'top' },
+      // attachTo: { element: '[data-tour="streak"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

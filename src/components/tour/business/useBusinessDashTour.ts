@@ -96,6 +96,21 @@ export function useBusinessDashboardTour(isReady: boolean) {
     });
 
     tour.addStep({
+  id: 'create-project-primary',
+  title: 'Create Your First Project',
+  text: 'Start by creating a project. This is where you define your requirements and begin collaborating.',
+  attachTo: {
+    element: '[data-tour="create-project-primary"]',
+    on: 'top',
+  },
+  when: withProgress(tour),
+  buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+});
+
+    tour.addStep({
       id: 'actions',
       title: 'Quick actions',
       text: 'Create and manage projects quickly from here.',

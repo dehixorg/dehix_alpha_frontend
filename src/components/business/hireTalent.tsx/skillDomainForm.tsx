@@ -249,7 +249,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <CardTitle className="text-lg">Requirements</CardTitle>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" data-tour="requirements">
               <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
               <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
             </div>

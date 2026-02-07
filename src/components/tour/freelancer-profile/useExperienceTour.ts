@@ -57,9 +57,29 @@ export function useExperienceTour(isReady: boolean) {
       id: 'professional experience',
       title: 'Academic and Work experience',
       text: 'Fill your academic and work details correctly.',
-      attachTo: { element: '[data-tour="experience"]', on: 'top' },
+      // attachTo: { element: '[data-tour="experience"]', on: 'top' },
       when: withProgress(tour),
-      scrollTo: false,
+          buttons: [
+            {
+              text: 'Skip',
+              action: () => {
+                tour.cancel();
+                dispatch(clearTour());
+              },
+            },
+            {
+              text: 'Next',
+              action: tour.next,
+            },
+          ],
+        });
+
+    tour.addStep({
+      id: 'add',
+      title: 'Add Experience',
+      text: 'Add your professional experience from here.',
+      attachTo: { element: '[data-tour="add-details"]', on: 'bottom' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {

@@ -8,9 +8,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
-function el(selector: string) {
-  return document.querySelector(selector);
-}
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,7 +29,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useResumeTour(isReady: boolean) {
+export function useTransactionsTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -54,11 +51,14 @@ export function useResumeTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'resume',
-      title: 'Resume',
-      text: 'Upload your resume.',
+      id: 'business-transactions',
+      title: 'Business Transaction History',
       scrollTo: false,
-      // attachTo: { element: '[data-tour="resume"]', on: 'top' },
+      text: 'View all your connect transactions and balance changes',
+    //   attachTo: {
+    //     element: '[data-tour="business-projects"]',
+    //     on: 'top',
+    //   },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -84,12 +84,9 @@ export function useResumeTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'resume') return;
+    if (target !== 'business-transactions') return;
 
-    if (el('[data-tour="resume"]')) {
-      tourRef.current?.start();
-    }
+    tourRef.current?.start();
   }, [trigger, mode, target, isReady]);
 }

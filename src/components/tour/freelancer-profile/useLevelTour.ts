@@ -58,7 +58,7 @@ export function useLevelTour(isReady: boolean) {
       title: 'Level & Badges',
       text: 'Track your progress and earn rewards as you complete tasks and level up.',
       scrollTo: false,
-      attachTo: { element: '[data-tour="level-badges"]', on: 'top' },
+      // attachTo: { element: '[data-tour="level-badges"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

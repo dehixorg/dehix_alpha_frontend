@@ -8,6 +8,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
+function el(selector: string) {
+  return document.querySelector(selector);
+}
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -29,7 +32,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useBusinessMarketTour(isReady: boolean) {
+export function useSettingsTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -51,13 +54,13 @@ export function useBusinessMarketTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'business-market-header',
-      title: 'Business Marketplace',
-      text: 'Browse and discover freelancers for your business needs.',
-      // attachTo: {
-      //   element: '[data-tour="business-market-header"]',
-      //   on: 'bottom',
-      // },
+      id: 'settings-sidebar',
+  title: 'Settings Navigation',
+  text: 'Use this sidebar to manage your business settings, compliance, and reports.',
+  attachTo: {
+    element: '[data-tour="sidebar"]',
+    on: 'right',
+  },
       when: withProgress(tour),
       buttons: [
         {
@@ -75,12 +78,56 @@ export function useBusinessMarketTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'business-market-filters',
-      title: 'Filters',
-      scrollTo: false,
-      text: 'Use filters to narrow down freelancers by skills, experience, and location.',
+      id: 'settings-business-info',
+  title: 'Business Information',
+  text: 'Update your company details and basic information used across the platform.',
+  attachTo: {
+    element: '[data-tour="settings-business-info"]',
+    on: 'right',
+  },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+     id: 'settings-kyc',
+  title: 'Compliance & Verification',
+  text: 'Complete verification to enable full access to platform features.',
+  attachTo: {
+    element: '[data-tour="settings-kyc"]',
+    on: 'right',
+  },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'settings-transactions',
+  title: 'Transactions',
+  text: 'View invoices, payments, and financial records related to your projects.',
+  attachTo: {
+    element: '[data-tour="settings-transactions"]',
+    on: 'right',
+  },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'settings-feedback',
+      title: 'Feedback',
+      text: 'Share your experience and help us improve the platform.',
       attachTo: {
-        element: '[data-tour="business-market-filters"]',
+        element: '[data-tour="settings-feedback"]',
         on: 'right',
       },
       when: withProgress(tour),
@@ -91,14 +138,13 @@ export function useBusinessMarketTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'business-market-list',
-      title: 'Freelancer list',
-      scrollTo: false,
-      text: 'Explore freelancer profiles and choose the best fit for your project.',
-      attachTo: {
-        element: '[data-tour="business-market-list"]',
-        on: 'top',
-      },
+      id: 'settings-reports',
+  title: 'Reports & Issues',
+  text: 'Access reports and important updates related to your account and projects.',
+  attachTo: {
+    element: '[data-tour="settings-reports"]',
+    on: 'right',
+  },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -124,9 +170,12 @@ export function useBusinessMarketTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-    if (mode !== 'page') return;
-    if (target !== 'business-market') return;
 
-    tourRef.current?.start();
+    if (mode !== 'platform') return;
+    if (target !== 'sidebar') return;
+
+    if (el('[data-tour="sidebar"]')) {
+      tourRef.current?.start();
+    }
   }, [trigger, mode, target, isReady]);
 }

@@ -58,7 +58,7 @@ export function useProjectTour(isReady: boolean) {
       id: 'current-projects',
       title: 'Your Projects',
       text: 'Track your projects by status and respond to invitations here.',
-      attachTo: { element: '[data-tour="current-projects"]', on: 'top' },
+      // attachTo: { element: '[data-tour="current-projects"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         {

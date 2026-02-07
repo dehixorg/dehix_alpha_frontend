@@ -8,9 +8,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
-function el(selector: string) {
-  return document.querySelector(selector);
-}
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,7 +29,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useResumeTour(isReady: boolean) {
+export function useBusinessInfoTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -47,6 +44,8 @@ export function useResumeTour(isReady: boolean) {
         cancelIcon: { enabled: true },
         scrollTo: { behavior: 'smooth', block: 'center' },
         classes: 'shepherd-theme-custom',
+        modalOverlayOpeningRadius: 9999,
+        modalOverlayOpeningPadding: 8,
       },
     });
 
@@ -54,23 +53,78 @@ export function useResumeTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'resume',
-      title: 'Resume',
-      text: 'Upload your resume.',
+  id: 'business-info',
+      title: 'Business Information',
       scrollTo: false,
-      // attachTo: { element: '[data-tour="resume"]', on: 'top' },
-      when: withProgress(tour),
-      buttons: [
-        { text: 'Back', action: tour.back },
+      text: 'Keep your business profile accurate. It helps freelancers trust and recognize you.',
+    //   attachTo: {
+    //     element: '[data-tour="business-projects"]',
+    //     on: 'top',
+    //   },
+    when: withProgress(tour),
+  buttons: [
         {
-          text: 'Got it',
+          text: 'Skip',
           action: () => {
-            tour.complete();
+            tour.cancel();
             dispatch(clearTour());
           },
         },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
+});
+
+    tour.addStep({
+      id: 'business-profile-picture',
+  title: 'Profile Picture',
+  text: 'Upload or change your profile picture here. The image is saved automatically — no need to click save.',
+  attachTo: {
+    element: '[data-tour="profile-picture"]',
+    on: 'bottom',
+  },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        {text: 'Next', action: tour.next}
       ],
     });
+
+    tour.addStep({
+  id: 'business-readonly-fields',
+  title: 'Contact Information',
+  text: 'Email and phone number are non-editable, enter it carefully.',
+  attachTo: {
+    element: '[data-tour="business-readonly-fields"]',
+    on: 'top',
+  },
+  buttons: [
+        { text: 'Back', action: tour.back },
+        {text: 'Next', action: tour.next}
+      ],
+});
+
+  tour.addStep({
+  id: 'save-changes',
+  title: 'Save Changes',
+  text: 'Use this button to save updates made on this page. Profile picture uploads are saved automatically.',
+  attachTo: {
+    element: '[data-tour="save"]',
+    on: 'top',
+  },
+  buttons: [
+    { text: 'Back', action: tour.back },
+    {
+      text: 'Got it',
+      action: () => {
+        tour.complete();
+        dispatch(clearTour());
+      },
+    },
+  ],
+});
 
     tourRef.current = tour;
 
@@ -84,12 +138,9 @@ export function useResumeTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'resume') return;
+    if (target !== 'business-info') return;
 
-    if (el('[data-tour="resume"]')) {
-      tourRef.current?.start();
-    }
+    tourRef.current?.start();
   }, [trigger, mode, target, isReady]);
 }
