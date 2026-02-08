@@ -101,10 +101,22 @@ const projectFormSchema = z
       ),
     liveDemoLink: z
       .string()
-      .min(1, { message: 'Live demo link is required.' })
-      .url({ message: 'Live demo link must be a valid URL.' })
+      .optional()
       .refine(
         (url) => {
+          if (!url || url.trim() === '') return true;
+          try {
+            new URL(url);
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        { message: 'Live demo link must be a valid URL.' },
+      )
+      .refine(
+        (url) => {
+          if (!url || url.trim() === '') return true;
           try {
             const parsed = new URL(url);
             return parsed.protocol === 'https:' || parsed.protocol === 'http:';
@@ -118,6 +130,7 @@ const projectFormSchema = z
     start: z
       .string()
       .min(1, { message: 'Start date is required.' })
+      .datetime()
       .refine(
         (date) => {
           try {
@@ -136,6 +149,7 @@ const projectFormSchema = z
     end: z
       .string()
       .min(1, { message: 'End date is required.' })
+      .datetime()
       .refine(
         (date) => {
           try {
@@ -244,6 +258,25 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       // Check if at least one skill is added (not a form field, so needs separate check)
       if (!isValid) {
         return; // Form validation failed, inline errors are already shown
+      }
+
+      // Cross-field validation: start date must be before end date
+      const formValues = form.getValues();
+      const { start, end } = formValues;
+      if (start && end) {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        if (startDate >= endDate) {
+          form.setError('end', {
+            type: 'manual',
+            message: 'End date must be after start date.',
+          });
+          notifyError(
+            'End date must be after start date.',
+            'Invalid Date Range',
+          );
+          return;
+        }
       }
 
       if (currSkills.length === 0) {
