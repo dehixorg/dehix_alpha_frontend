@@ -541,7 +541,7 @@ const HomePage = () => {
         }
         active="Chats"
       />
-      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14 overflow-hidden">
+      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={
             user.type === 'business'
