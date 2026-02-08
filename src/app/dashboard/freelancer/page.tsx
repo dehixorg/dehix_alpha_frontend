@@ -55,9 +55,22 @@ export default function Dashboard() {
       [StatusEnum.COMPLETED]: 0,
       [StatusEnum.REJECTED]: 0,
     };
+
+    // Track unique project IDs for each status to avoid counting duplicate bids on the same project
+    const uniqueProjectIds: Record<StatusEnum, Set<string>> = {
+      [StatusEnum.ACTIVE]: new Set(),
+      [StatusEnum.PENDING]: new Set(),
+      [StatusEnum.COMPLETED]: new Set(),
+      [StatusEnum.REJECTED]: new Set(),
+    };
+
     for (const p of projects) {
       if (p.status && counts[p.status as StatusEnum] !== undefined) {
-        counts[p.status as StatusEnum] += 1;
+        // Only count if this project hasn't been counted for this status yet
+        if (!uniqueProjectIds[p.status as StatusEnum].has(p._id)) {
+          uniqueProjectIds[p.status as StatusEnum].add(p._id);
+          counts[p.status as StatusEnum] += 1;
+        }
       }
     }
     return counts;
