@@ -275,15 +275,15 @@ const HomePage = () => {
     const sessionKey = searchParams.get('session');
     if (!sessionKey) return;
 
-    // Get the chat data from session storage
-    const chatDataStr = sessionStorage.getItem(sessionKey);
+    // Get the chat data from localStorage (accessible across tabs)
+    const chatDataStr = localStorage.getItem(sessionKey);
     if (!chatDataStr) return;
 
     try {
       const chatData = JSON.parse(chatDataStr);
 
       // Clear the session data after reading it
-      sessionStorage.removeItem(sessionKey);
+      localStorage.removeItem(sessionKey);
 
       // Clear the URL parameter using Next.js router to maintain consistency
       const url = new URL(window.location.href);
@@ -539,7 +539,7 @@ const HomePage = () => {
         }
         active="Chats"
       />
-      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14 overflow-hidden">
+      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={
             user.type === 'business'

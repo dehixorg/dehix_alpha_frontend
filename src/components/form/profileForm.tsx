@@ -964,9 +964,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setDialogType('skill');
                     setIsDialogOpen(true);
                   }}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs w-fit self-start"
                 >
-                  + Not able to find your skill?
+                  + Add custom skill
                 </Button>
               </div>
               <div className="col-span-1">
@@ -989,9 +989,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setDialogType('domain');
                     setIsDialogOpen(true);
                   }}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs w-fit self-start"
                 >
-                  + Not able to find your domain?
+                  + Add custom domain
                 </Button>
               </div>
               <div className="col-span-1">
@@ -1014,9 +1014,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setDialogType('projectDomain');
                     setIsDialogOpen(true);
                   }}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs w-fit self-start"
                 >
-                  + Not able to find your project domain?
+                  + Add custom project domain
                 </Button>
               </div>
             </div>
