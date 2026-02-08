@@ -546,7 +546,7 @@ const ProjectApplicationForm = ({
                                     </p>
                                     <p className="text-xs text-amber-800 dark:text-amber-300/90">
                                       You can only bid on 3 profiles per
-                                      project. You've reached the limit.
+                                      project. You&apos;ve reached the limit.
                                     </p>
                                   </div>
                                 </div>
