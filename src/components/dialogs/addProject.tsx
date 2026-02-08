@@ -96,7 +96,7 @@ const projectFormSchema = z
           message: 'Live demo link must be a valid URL.',
         },
       ),
-    thumbnail: z.string().optional(), // .min(1, { message: 'Project thumbnail is required.' }),
+    thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
     refer: z.string().min(1, { message: 'Reference is required.' }),
@@ -592,7 +592,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                   )}
                 />
 
-                {/* <FormField
+                <FormField
                   control={form.control}
                   name="thumbnail"
                   render={({ field }) => (
@@ -606,7 +606,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormMessage />
                     </FormItem>
                   )}
-                /> */}
+                />
 
                 <FormField
                   control={form.control}
