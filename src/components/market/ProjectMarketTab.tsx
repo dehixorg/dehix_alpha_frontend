@@ -1,6 +1,5 @@
 'use client';
-import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Search } from 'lucide-react';
 
@@ -17,6 +16,7 @@ import { FilterSheet } from '@/components/market/FilterSheet';
 import { useToast } from '@/components/ui/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import EmptyState from '@/components/shared/EmptyState';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface FilterState {
   projects: string[];
@@ -150,7 +150,8 @@ const ProjectMarketTab: React.FC = () => {
   const [domains, setDomains] = useState<string[]>([]);
   const [projectDomains, setProjectDomains] = useState<string[]>([]);
   const [bidProfiles, setBidProfiles] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   const fetchBidData = useCallback(async () => {
     try {
@@ -182,7 +183,7 @@ const ProjectMarketTab: React.FC = () => {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        setIsLoading(true);
+        // setIsLoading(true);
         const skillsRes = await axiosInstance.get('/skills');
         setSkills(skillsRes.data.data.map((s: any) => s.label));
         const domainsRes = await axiosInstance.get('/domain');
@@ -193,7 +194,7 @@ const ProjectMarketTab: React.FC = () => {
         console.error('Error loading filters', err);
         notifyError('Failed to load filter options.');
       } finally {
-        setIsLoading(false);
+        // setIsLoading(false);
       }
     };
     fetchFilterOptions();
@@ -214,116 +215,107 @@ const ProjectMarketTab: React.FC = () => {
     });
   }, []);
 
+  const filteredJobs = useMemo(() => {
+    return jobs
+      .filter((job: Project) => {
+        // Filter out completed projects
+        if (job.status?.toLowerCase() === 'completed') return false;
+
+        // Apply favourites filter if enabled
+        if (filters.favourites && !draftedProjects.includes(job._id)) {
+          return false;
+        }
+
+        // Apply consultant filter if enabled
+        if (filters.consultant) {
+          const hasConsultantRole = job.profiles?.some(
+            (profile) => profile.profileType?.toUpperCase() === 'CONSULTANT',
+          );
+          if (!hasConsultantRole) return false;
+        }
+
+        // Apply domain filter
+        if (filters.domain?.length > 0 && job.projectDomain) {
+          const hasMatchingDomain = filters.domain.some((d) =>
+            job.projectDomain?.includes(d),
+          );
+          if (!hasMatchingDomain) return false;
+        }
+
+        // Apply skills filter
+        if (filters.skills?.length > 0 && job.skillsRequired) {
+          const hasMatchingSkill = filters.skills.some((skill) =>
+            job.skillsRequired?.includes(skill),
+          );
+          if (!hasMatchingSkill) return false;
+        }
+
+        // Apply project domain filter
+        if (filters.projectDomain?.length > 0 && job.projectDomain) {
+          const hasMatchingProjectDomain = filters.projectDomain.some((pd) =>
+            job.projectDomain?.includes(pd),
+          );
+          if (!hasMatchingProjectDomain) return false;
+        }
+
+        // Apply rate filters
+        const jobRate = job.profiles?.[0]?.rate;
+        if (filters.minRate && jobRate) {
+          if (jobRate < Number(filters.minRate)) return false;
+        }
+        if (filters.maxRate && jobRate) {
+          if (jobRate > Number(filters.maxRate)) return false;
+        }
+
+        // Apply bid-based filtering
+        const freelancerBidCount =
+          job.profiles?.filter((p: any) => bidProfiles.includes(p._id))
+            ?.length || 0;
+
+        // Rule 1: Hide single-profile projects if freelancer has already bid
+        if (job.profiles?.length === 1 && freelancerBidCount > 0) {
+          return false;
+        }
+
+        // Rule 2: Hide multi-profile projects if freelancer has bid on 3+ profiles
+        if ((job.profiles?.length ?? 0) > 3 && freelancerBidCount >= 3) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+  }, [jobs, filters, draftedProjects, bidProfiles]);
+
   // Fetch jobs when filters change or component mounts
   const fetchJobs = useCallback(
     async (options: FilterState) => {
-      const appliedFilters = options;
       try {
         setIsLoading(true);
-        const query = constructQueryString(appliedFilters);
+        const query = constructQueryString(options);
 
         const jobsRes = await axiosInstance.get(
           `/project/freelancer/${user.uid}${query ? `?${query}` : ''}`,
         );
 
-        const allJobs = jobsRes.data?.data || [];
-
-        // Apply client-side filtering
-        const filteredJobs = allJobs.filter((job: Project) => {
-          // Filter out completed projects
-          if (job.status?.toLowerCase() === 'completed') return false;
-
-          // Apply favourites filter if enabled
-          if (appliedFilters.favourites && !draftedProjects.includes(job._id)) {
-            return false;
-          }
-
-          // Apply consultant filter if enabled
-          if (appliedFilters.consultant) {
-            const hasConsultantRole = job.profiles?.some(
-              (profile) => profile.profileType?.toUpperCase() === 'CONSULTANT',
-            );
-            if (!hasConsultantRole) return false;
-          }
-
-          // Apply domain filter
-          if (appliedFilters.domain?.length > 0 && job.projectDomain) {
-            const hasMatchingDomain = appliedFilters.domain.some((d) =>
-              job.projectDomain?.includes(d),
-            );
-            if (!hasMatchingDomain) return false;
-          }
-
-          // Apply skills filter
-          if (appliedFilters.skills?.length > 0 && job.skillsRequired) {
-            const hasMatchingSkill = appliedFilters.skills.some((skill) =>
-              job.skillsRequired?.includes(skill),
-            );
-            if (!hasMatchingSkill) return false;
-          }
-
-          // Apply project domain filter
-          if (appliedFilters.projectDomain?.length > 0 && job.projectDomain) {
-            const hasMatchingProjectDomain = appliedFilters.projectDomain.some(
-              (pd) => job.projectDomain?.includes(pd),
-            );
-            if (!hasMatchingProjectDomain) return false;
-          }
-
-          // Apply rate filters
-          const jobRate = job.profiles?.[0]?.rate;
-          if (appliedFilters.minRate && jobRate) {
-            if (jobRate < Number(appliedFilters.minRate)) return false;
-          }
-          if (appliedFilters.maxRate && jobRate) {
-            if (jobRate > Number(appliedFilters.maxRate)) return false;
-          }
-
-          // Apply bid-based filtering
-          const freelancerBidCount =
-            job.profiles?.filter((p: any) => bidProfiles.includes(p._id))
-              ?.length || 0;
-
-          // Rule 1: Hide single-profile projects if freelancer has already bid
-          if (job.profiles?.length === 1 && freelancerBidCount > 0) {
-            return false;
-          }
-
-          // Rule 2: Hide multi-profile projects if freelancer has bid on 3+ profiles
-          if ((job.profiles?.length ?? 0) > 3 && freelancerBidCount >= 3) {
-            return false;
-          }
-
-          return true;
-        });
-
-        // Sort by creation date (newest first)
-        filteredJobs.sort((a: Project, b: Project) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-        });
-
-        setJobs(filteredJobs);
+        setJobs(jobsRes.data?.data || []);
       } catch (err) {
-        // Type guard to check if it's an Error object
-        if (err instanceof Error) {
-          if (err.name !== 'AbortError') {
-            console.error('Fetch jobs error:', err);
-            notifyError('Failed to load job listings.');
-          }
-        } else {
-          // Handle non-Error objects
+        if (err instanceof Error && err.name !== 'AbortError') {
+          console.error('Fetch jobs error:', err);
+          notifyError('Failed to load job listings.');
+        } else if (!(err instanceof Error)) {
           console.error('An unknown error occurred:', err);
-          notifyError(
-            'An unexpected error occurred while loading job listings.',
-          );
+          notifyError('An unexpected error occurred while loading job listings.');
         }
       } finally {
         setIsLoading(false);
       }
     },
-    [user.uid, draftedProjects, bidProfiles],
+    [user.uid],
   );
 
   // Effect to fetch jobs when filters change or component mounts
@@ -374,6 +366,7 @@ const ProjectMarketTab: React.FC = () => {
       }
     };
 
+    setIsLoading(true);
     // Add a small debounce to prevent too many API calls
     const timer = setTimeout(fetchData, 300);
 
@@ -455,7 +448,7 @@ const ProjectMarketTab: React.FC = () => {
         </div>
         <div className="flex items-center justify-between px-1">
           <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
-            {jobs.length} {jobs.length === 1 ? 'result' : 'results'}
+            {filteredJobs.length} {filteredJobs.length === 1 ? 'result' : 'results'}
           </span>
         </div>
         {!isLargeScreen && (
@@ -508,77 +501,91 @@ const ProjectMarketTab: React.FC = () => {
         )}
         {/* Job Cards */}
         <div className="flex-1 overflow-y-auto" data-tour="pm-job-cards">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <Card
-                  key={i}
-                  className="overflow-hidden hover:shadow-md transition-shadow"
-                >
-                  <CardContent className="p-6">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-start">
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-5 w-16 rounded-full" />
+          <TooltipProvider>
+            {isLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card
+                    key={i}
+                    className="overflow-hidden hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-6">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <Skeleton className="h-6 w-3/4" />
+                          <Skeleton className="h-5 w-16 rounded-full" />
+                        </div>
+                        <Skeleton className="h-4 w-1/2" />
+                        <div className="flex flex-wrap gap-2">
+                          {[...Array(3)].map((_, i) => (
+                            <Skeleton key={i} className="h-6 w-20 rounded-full" />
+                          ))}
+                        </div>
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-2/3" />
+                        </div>
+                        <div className="flex justify-between items-center pt-4">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-9 w-28" />
+                        </div>
                       </div>
-                      <Skeleton className="h-4 w-1/2" />
-                      <div className="flex flex-wrap gap-2">
-                        {[...Array(3)].map((_, i) => (
-                          <Skeleton key={i} className="h-6 w-20 rounded-full" />
-                        ))}
-                      </div>
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-2/3" />
-                      </div>
-                      <div className="flex justify-between items-center pt-4">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-9 w-28" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : jobs.length > 0 ? (
-            <div className="grid gap-4">
-              {jobs.map((job) => (
-                <JobCard
-                  key={job._id}
-                  job={job}
-                  onNotInterested={() => handleRemoveJob(job._id)}
-                  bidCount={
-                    Array.isArray(job.profiles)
-                      ? job.profiles.filter((p: any) =>
-                          bidProfiles.includes(p._id),
-                        ).length
-                      : 0
-                  }
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon={<Search className="h-16 w-16 text-muted-foreground/50" />}
-              title="No projects found"
-              description={
-                activeFilterCount > 0
-                  ? "We couldn't find any projects matching your current filters."
-                  : 'There are currently no projects available. Check back later!'
-              }
-              actions={
-                activeFilterCount > 0 ? (
-                  <Button variant="outline" onClick={handleReset}>
-                    Clear all filters
-                  </Button>
-                ) : (
-                  <Button onClick={() => window.location.reload()}>
-                    Refresh page
-                  </Button>
-                )
-              }
-            />
-          )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredJobs.length > 0 ? (
+              <div className="grid gap-4">
+                {filteredJobs.slice(0, visibleCount).map((job) => (
+                  <JobCard
+                    key={job._id}
+                    job={job}
+                    onNotInterested={() => handleRemoveJob(job._id)}
+                    bidCount={
+                      Array.isArray(job.profiles)
+                        ? job.profiles.filter((p: any) =>
+                            bidProfiles.includes(p._id),
+                          ).length
+                        : 0
+                    }
+                  />
+                ))}
+                {visibleCount < filteredJobs.length && (
+                  <div className="flex justify-center pt-4 pb-8">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setVisibleCount((prev) => prev + 10)}
+                      className="min-w-[200px]"
+                    >
+                      Load More Projects
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<Search className="h-16 w-16 text-muted-foreground/50" />}
+                title="No projects found"
+                description={
+                  activeFilterCount > 0
+                    ? "We couldn't find any projects matching your current filters."
+                    : 'There are currently no projects available. Check back later!'
+                }
+                actions={
+                  activeFilterCount > 0 ? (
+                    <Button variant="outline" onClick={handleReset}>
+                      Clear all filters
+                    </Button>
+                  ) : (
+                    <Button onClick={() => window.location.reload()}>
+                      Refresh page
+                    </Button>
+                  )
+                }
+              />
+            )}
+          </TooltipProvider>
         </div>
       </div>
     </div>
