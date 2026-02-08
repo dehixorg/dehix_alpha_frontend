@@ -626,7 +626,7 @@ const InterviewProfile: React.FC = () => {
                   Manage availability
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col">
+              <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col h-full">
                 <SheetHeader className="px-6 pt-6">
                   <SheetTitle>Availability settings</SheetTitle>
                   <SheetDescription>
@@ -634,7 +634,7 @@ const InterviewProfile: React.FC = () => {
                   </SheetDescription>
                 </SheetHeader>
 
-                <ScrollArea className="flex-1 px-6 py-4">
+                <ScrollArea className="flex-1 min-h-0 px-6 py-4">
                   <div className="grid gap-6">
                     <div className="grid gap-4">
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
