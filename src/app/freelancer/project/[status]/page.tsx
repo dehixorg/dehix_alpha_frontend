@@ -65,7 +65,7 @@ function FilterToggle({
   id?: string;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border bg-card px-2 py-1.5 sm:gap-3 sm:px-3 sm:py-2">
+    <div className="flex items-center gap-2 rounded-lg border bg-card px-2 py-1.5 sm:gap-3 sm:px-3 sm:py-2 mx-auto sm:ml-auto sm:mr-0">
       <Badge
         variant={projectType === 'FREELANCER' ? 'default' : 'outline'}
         className="text-[10px] sm:text-sm px-1.5 py-0.5 sm:px-2.5 sm:py-1"
