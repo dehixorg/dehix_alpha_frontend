@@ -1,5 +1,11 @@
 'use client';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Search } from 'lucide-react';
 
@@ -309,7 +315,9 @@ const ProjectMarketTab: React.FC = () => {
           notifyError('Failed to load job listings.');
         } else if (!(err instanceof Error)) {
           console.error('An unknown error occurred:', err);
-          notifyError('An unexpected error occurred while loading job listings.');
+          notifyError(
+            'An unexpected error occurred while loading job listings.',
+          );
         }
       } finally {
         setIsLoading(false);
@@ -448,7 +456,8 @@ const ProjectMarketTab: React.FC = () => {
         </div>
         <div className="flex items-center justify-between px-1">
           <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
-            {filteredJobs.length} {filteredJobs.length === 1 ? 'result' : 'results'}
+            {filteredJobs.length}{' '}
+            {filteredJobs.length === 1 ? 'result' : 'results'}
           </span>
         </div>
         {!isLargeScreen && (
@@ -518,7 +527,10 @@ const ProjectMarketTab: React.FC = () => {
                         <Skeleton className="h-4 w-1/2" />
                         <div className="flex flex-wrap gap-2">
                           {[...Array(3)].map((_, i) => (
-                            <Skeleton key={i} className="h-6 w-20 rounded-full" />
+                            <Skeleton
+                              key={i}
+                              className="h-6 w-20 rounded-full"
+                            />
                           ))}
                         </div>
                         <div className="space-y-2">
