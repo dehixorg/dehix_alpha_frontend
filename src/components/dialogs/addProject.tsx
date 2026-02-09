@@ -68,15 +68,34 @@ const projectFormSchema = z
     description: z.string().min(1, { message: 'Description is required.' }),
     githubLink: z
       .string()
-      .url({ message: 'GitHub Repositry link must be a valid URL.' })
       .optional()
-      .refine((url) => (url ? url.startsWith('https://github.com/') : true), {
-        message: 'GitHub repository URL must start with https://github.com/',
-      }),
+      .or(z.literal(''))
+      .refine(
+        (val) => {
+          if (!val || val === '') return true;
+          return (
+            z.string().url().safeParse(val).success &&
+            val.startsWith('https://github.com/')
+          );
+        },
+        {
+          message:
+            'GitHub repository link must be a valid URL starting with https://github.com/',
+        },
+      ),
     liveDemoLink: z
       .string()
-      .min(1, { message: 'Live demo link is required.' })
-      .url({ message: 'Live demo link must be a valid URL.' }),
+      .optional()
+      .or(z.literal(''))
+      .refine(
+        (val) => {
+          if (!val || val === '') return true;
+          return z.string().url().safeParse(val).success;
+        },
+        {
+          message: 'Live demo link must be a valid URL.',
+        },
+      ),
     thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
