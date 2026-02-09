@@ -282,7 +282,8 @@ export function CardsChat({
   React.useEffect(() => {
     const onSelectionChange = () => setTick((t) => t + 1);
     document.addEventListener('selectionchange', onSelectionChange);
-    return () => document.removeEventListener('selectionchange', onSelectionChange);
+    return () =>
+      document.removeEventListener('selectionchange', onSelectionChange);
   }, []);
 
   const isFormatActive = (command: string) => {
