@@ -268,17 +268,14 @@ const ProjectMarketTab: React.FC = () => {
         const profileRates =
           job.profiles?.map((p) => p.rate).filter((rate) => rate != null) || [];
 
-        if (filters.minRate && profileRates.length > 0) {
-          const hasRateInRange = profileRates.some(
-            (rate) => rate >= Number(filters.minRate),
-          );
-          if (!hasRateInRange) return false;
-        }
-
-        if (filters.maxRate && profileRates.length > 0) {
-          const hasRateInRange = profileRates.some(
-            (rate) => rate <= Number(filters.maxRate),
-          );
+        if (filters.minRate || filters.maxRate) {
+          const hasRateInRange = profileRates.some((rate) => {
+            const minRate = filters.minRate ? Number(filters.minRate) : 0;
+            const maxRate = filters.maxRate
+              ? Number(filters.maxRate)
+              : Infinity;
+            return rate >= minRate && rate <= maxRate;
+          });
           if (!hasRateInRange) return false;
         }
 
@@ -388,7 +385,6 @@ const ProjectMarketTab: React.FC = () => {
       }
     };
 
-    setIsLoading(true);
     // Add a small debounce to prevent too many API calls
     const timer = setTimeout(fetchData, 300);
 
