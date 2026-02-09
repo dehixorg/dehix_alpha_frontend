@@ -240,20 +240,12 @@ const ProjectMarketTab: React.FC = () => {
           if (!hasConsultantRole) return false;
         }
 
-        // Apply domain filter
-        if (filters.domain?.length > 0 && job.projectDomain) {
+        // Apply domain filter (freelancer profile domains)
+        if (filters.domain?.length > 0 && job.profiles?.length) {
           const hasMatchingDomain = filters.domain.some((d) =>
-            job.projectDomain?.includes(d),
+            job.profiles?.some((p) => p.domain === d),
           );
           if (!hasMatchingDomain) return false;
-        }
-
-        // Apply skills filter
-        if (filters.skills?.length > 0 && job.skillsRequired) {
-          const hasMatchingSkill = filters.skills.some((skill) =>
-            job.skillsRequired?.includes(skill),
-          );
-          if (!hasMatchingSkill) return false;
         }
 
         // Apply project domain filter
@@ -264,13 +256,30 @@ const ProjectMarketTab: React.FC = () => {
           if (!hasMatchingProjectDomain) return false;
         }
 
-        // Apply rate filters
-        const jobRate = job.profiles?.[0]?.rate;
-        if (filters.minRate && jobRate) {
-          if (jobRate < Number(filters.minRate)) return false;
+        // Apply skills filter
+        if (filters.skills?.length > 0 && job.skillsRequired) {
+          const hasMatchingSkill = filters.skills.some((skill) =>
+            job.skillsRequired?.includes(skill),
+          );
+          if (!hasMatchingSkill) return false;
         }
-        if (filters.maxRate && jobRate) {
-          if (jobRate > Number(filters.maxRate)) return false;
+
+        // Apply rate filters
+        const profileRates =
+          job.profiles?.map((p) => p.rate).filter((rate) => rate != null) || [];
+
+        if (filters.minRate && profileRates.length > 0) {
+          const hasRateInRange = profileRates.some(
+            (rate) => rate >= Number(filters.minRate),
+          );
+          if (!hasRateInRange) return false;
+        }
+
+        if (filters.maxRate && profileRates.length > 0) {
+          const hasRateInRange = profileRates.some(
+            (rate) => rate <= Number(filters.maxRate),
+          );
+          if (!hasRateInRange) return false;
         }
 
         // Apply bid-based filtering
@@ -325,6 +334,11 @@ const ProjectMarketTab: React.FC = () => {
     },
     [user.uid],
   );
+
+  // Reset visibleCount when filters change
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [filters]);
 
   // Effect to fetch jobs when filters change or component mounts
   useEffect(() => {
