@@ -80,51 +80,32 @@ const projectFormSchema = z
     githubLink: z
       .string()
       .optional()
+      .or(z.literal(''))
       .refine(
-        (url) => {
-          if (!url || url.trim() === '') return true;
-          try {
-            const parsed = new URL(url);
-            return (
-              parsed.protocol === 'https:' &&
-              (parsed.hostname === 'github.com' ||
-                parsed.hostname === 'www.github.com')
-            );
-          } catch {
-            return false;
-          }
+        (val) => {
+          if (!val || val === '') return true;
+          return (
+            z.string().url().safeParse(val).success &&
+            val.startsWith('https://github.com/')
+          );
         },
         {
           message:
-            'GitHub repository URL must be a valid URL starting with https://github.com/',
+            'GitHub repository link must be a valid URL starting with https://github.com/',
         },
       ),
     liveDemoLink: z
       .string()
       .optional()
+      .or(z.literal(''))
       .refine(
-        (url) => {
-          if (!url || url.trim() === '') return true;
-          try {
-            new URL(url);
-            return true;
-          } catch {
-            return false;
-          }
+        (val) => {
+          if (!val || val === '') return true;
+          return z.string().url().safeParse(val).success;
         },
-        { message: 'Live demo link must be a valid URL.' },
-      )
-      .refine(
-        (url) => {
-          if (!url || url.trim() === '') return true;
-          try {
-            const parsed = new URL(url);
-            return parsed.protocol === 'https:' || parsed.protocol === 'http:';
-          } catch {
-            return false;
-          }
+        {
+          message: 'Live demo link must be a valid URL.',
         },
-        { message: 'Live demo link must be a valid HTTP/HTTPS URL.' },
       ),
     thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
     start: z

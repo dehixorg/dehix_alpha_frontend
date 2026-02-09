@@ -16,10 +16,9 @@ import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
+import { ScrollArea } from '../ui/scroll-area';
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
-
-import CoverLetterTextarea from './CoverLetterTextarea';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -77,10 +76,10 @@ const profileFormSchema = z.object({
           .trim()
           .split(/\s+/)
           .filter((word) => word.length > 0).length;
-        return wordCount >= 500;
+        return wordCount >= 200;
       },
       {
-        message: 'Cover letter must contain at least 500 words when provided.',
+        message: 'Cover letter must contain at least 200 words when provided.',
       },
     ),
   description: z.string().max(500, {
@@ -959,9 +958,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setDialogType('skill');
                     setIsDialogOpen(true);
                   }}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs w-fit self-start"
                 >
-                  + Not able to find your skill?
+                  + Add custom skill
                 </Button>
               </div>
               <div className="col-span-1">
@@ -984,9 +983,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setDialogType('domain');
                     setIsDialogOpen(true);
                   }}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs w-fit self-start"
                 >
-                  + Not able to find your domain?
+                  + Add custom domain
                 </Button>
               </div>
               <div className="col-span-1">
@@ -1009,9 +1008,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setDialogType('projectDomain');
                     setIsDialogOpen(true);
                   }}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs w-fit self-start"
                 >
-                  + Not able to find your project domain?
+                  + Add custom project domain
                 </Button>
               </div>
             </div>
@@ -1042,13 +1041,24 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     <FormLabel className="ml-2">
                       Cover Letter (Optional)
                     </FormLabel>
-                    <div className="w-full">
-                      <CoverLetterTextarea
-                        value={field.value || ''}
-                        onChange={field.onChange}
-                        error={fieldState.error?.message}
-                      />
-                    </div>
+                    <FormControl>
+                      <div className="w-full">
+                        <ScrollArea className="h-[200px] w-full rounded-md border p-3">
+                          <Textarea
+                            placeholder="Write your cover letter here... (minimum 200 words)"
+                            className="min-h-fit resize-none border-0 focus-visible:ring-0 p-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                            style={{ overflow: 'auto' }}
+                            rows={15}
+                            {...field}
+                          />
+                        </ScrollArea>
+                        {fieldState.error && (
+                          <p className="text-sm font-medium text-destructive mt-2">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </div>
+                    </FormControl>
                   </FormItem>
                 )}
               />
