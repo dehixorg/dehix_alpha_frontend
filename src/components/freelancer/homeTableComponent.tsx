@@ -72,10 +72,19 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
 }) => {
   const router = useRouter();
   const [currentTab, setCurrentTab] = useState<StatusEnum>(StatusEnum.ACTIVE);
-  const getVisibleProjects = (tab: StatusEnum) =>
-    projects.filter(
+  const getVisibleProjects = (tab: StatusEnum) => {
+    const filteredProjects = projects.filter(
       (p) => String(p.status ?? '').toUpperCase() === tab.toUpperCase(),
     );
+
+    // Remove duplicate projects - keep only the first occurrence of each unique project ID
+    const uniqueProjects = filteredProjects.filter(
+      (project, index, self) =>
+        index === self.findIndex((p) => p._id === project._id),
+    );
+
+    return uniqueProjects;
+  };
 
   const renderTable = (list: Project[]) => (
     <div className="w-full overflow-x-auto">

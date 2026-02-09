@@ -64,7 +64,7 @@ const skillSchema = z.object({
   experience: z
     .string()
     .nonempty('Please enter your experience')
-    .regex(/^\d+$/, 'Experience must be a number'),
+    .regex(/^\d+(\.\d+)?$/, 'Experience must be a number'),
   monthlyPay: z
     .string()
     .nonempty('Please enter your monthly pay')

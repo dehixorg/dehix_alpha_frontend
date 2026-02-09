@@ -705,14 +705,29 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                         id="desktop-min-rate"
                         placeholder="0"
                         type="number"
+                        min="0"
                         className="pl-8 h-9"
                         value={filters.minRate}
-                        onChange={(e) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            minRate: e.target.value,
-                          }))
-                        }
+                        onKeyDown={(e) => {
+                          if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                            e.preventDefault();
+                          }
+                        }}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const numValue = parseFloat(value);
+                          if (
+                            value === '' ||
+                            (!value.includes('-') &&
+                              !isNaN(numValue) &&
+                              numValue >= 0)
+                          ) {
+                            setFilters((prev) => ({
+                              ...prev,
+                              minRate: value,
+                            }));
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -729,14 +744,29 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                         id="desktop-max-rate"
                         placeholder="1000"
                         type="number"
+                        min="0"
                         className="pl-8 h-9"
                         value={filters.maxRate}
-                        onChange={(e) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            maxRate: e.target.value,
-                          }))
-                        }
+                        onKeyDown={(e) => {
+                          if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                            e.preventDefault();
+                          }
+                        }}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const numValue = parseFloat(value);
+                          if (
+                            value === '' ||
+                            (!value.includes('-') &&
+                              !isNaN(numValue) &&
+                              numValue >= 0)
+                          ) {
+                            setFilters((prev) => ({
+                              ...prev,
+                              maxRate: value,
+                            }));
+                          }
+                        }}
                       />
                     </div>
                   </div>
