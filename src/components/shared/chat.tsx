@@ -285,6 +285,17 @@ export function CardsChat({
     : false;
   };
 
+  useEffect(() => {
+  const onSelectionChange = () => {
+    setTick(t => t + 1);
+  };
+
+  document.addEventListener('selectionchange', onSelectionChange);
+  return () =>
+    document.removeEventListener('selectionchange', onSelectionChange);
+}, []);
+
+
 
   useEffect(() => {
     if (debouncedSearch.trim() && messages) {
