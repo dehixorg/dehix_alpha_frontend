@@ -279,23 +279,17 @@ export function CardsChat({
   //Bold, italics and underline button should be highlighted when selected in chat
   const [, setTick] = React.useState(0);
 
+  React.useEffect(() => {
+    const onSelectionChange = () => setTick((t) => t + 1);
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () => document.removeEventListener('selectionchange', onSelectionChange);
+  }, []);
+
   const isFormatActive = (command: string) => {
-  return typeof document !== 'undefined'
-    ? document.queryCommandState(command)
-    : false;
+    return typeof document !== 'undefined'
+      ? document.queryCommandState(command)
+      : false;
   };
-
-  useEffect(() => {
-  const onSelectionChange = () => {
-    setTick(t => t + 1);
-  };
-
-  document.addEventListener('selectionchange', onSelectionChange);
-  return () =>
-    document.removeEventListener('selectionchange', onSelectionChange);
-}, []);
-
-
 
   useEffect(() => {
     if (debouncedSearch.trim() && messages) {
