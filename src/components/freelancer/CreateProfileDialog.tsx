@@ -303,7 +303,9 @@ export default function CreateProfileDialog({
                       if (
                         selectedSkill &&
                         !newProfileSkills.some(
-                          (s: any) => s._id === selectedSkill._id,
+                          (s: any) =>
+                            (s._id || s.type_id) ===
+                            (selectedSkill._id || selectedSkill.type_id),
                         )
                       ) {
                         setNewProfileSkills([
@@ -314,6 +316,13 @@ export default function CreateProfileDialog({
                           },
                         ]);
                       }
+                    }}
+                    onRemove={(name: string) => {
+                      setNewProfileSkills(
+                        newProfileSkills.filter(
+                          (skill: any) => (skill.label || skill.name) !== name,
+                        ),
+                      );
                     }}
                     optionLabelKey="label"
                     selectedNameKey="name"
@@ -342,7 +351,9 @@ export default function CreateProfileDialog({
                       if (
                         selectedDomain &&
                         !newProfileDomains.some(
-                          (d: any) => d._id === selectedDomain._id,
+                          (d: any) =>
+                            (d._id || d.type_id) ===
+                            (selectedDomain._id || selectedDomain.type_id),
                         )
                       ) {
                         setNewProfileDomains([
@@ -353,6 +364,14 @@ export default function CreateProfileDialog({
                           },
                         ]);
                       }
+                    }}
+                    onRemove={(name: string) => {
+                      setNewProfileDomains(
+                        newProfileDomains.filter(
+                          (domain: any) =>
+                            (domain.label || domain.name) !== name,
+                        ),
+                      );
                     }}
                     optionLabelKey="label"
                     selectedNameKey="name"
