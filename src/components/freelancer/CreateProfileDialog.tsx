@@ -422,13 +422,13 @@ export default function CreateProfileDialog({
 
               <Separator />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <div className="space-y-2">
                   <Label
                     htmlFor="github-link"
                     className="flex items-center gap-2"
                   >
-                    GitHub
+                    <Github className="h-4 w-4" /> GitHub
                   </Label>
                   <FormField
                     control={form.control}
@@ -436,7 +436,7 @@ export default function CreateProfileDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <InputGroup>
+                          <InputGroup className="h-10">
                             <InputGroupText>
                               <Github className="h-4 w-4" />
                             </InputGroupText>
@@ -457,7 +457,7 @@ export default function CreateProfileDialog({
                   />
                 </div>
 
-                <div className="space-y-2 mt-2">
+                <div className="space-y-2">
                   <Label
                     htmlFor="availability"
                     className="flex items-center gap-2"
@@ -477,7 +477,7 @@ export default function CreateProfileDialog({
                               setNewProfileAvailability(value);
                             }}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="h-10">
                               <SelectValue placeholder="Select availability" />
                             </SelectTrigger>
                             <SelectContent>
