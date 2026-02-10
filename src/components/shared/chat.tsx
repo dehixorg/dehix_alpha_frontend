@@ -276,6 +276,22 @@ export function CardsChat({
     }
   };
 
+  //Bold, italics and underline button should be highlighted when selected in chat
+  const [, setTick] = React.useState(0);
+
+  React.useEffect(() => {
+    const onSelectionChange = () => setTick((t) => t + 1);
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () =>
+      document.removeEventListener('selectionchange', onSelectionChange);
+  }, []);
+
+  const isFormatActive = (command: string) => {
+    return typeof document !== 'undefined'
+      ? document.queryCommandState(command)
+      : false;
+  };
+
   useEffect(() => {
     if (debouncedSearch.trim() && messages) {
       /* logic to filter out the conversation/message of the chat */
@@ -530,6 +546,7 @@ export function CardsChat({
   function handleBold() {
     composerRef.current?.focus();
     document.execCommand('bold');
+    setTick((t) => t + 1);
   }
 
   /**
@@ -538,6 +555,7 @@ export function CardsChat({
   const handleUnderline = () => {
     composerRef.current?.focus();
     document.execCommand('underline');
+    setTick((t) => t + 1);
   };
 
   /**
@@ -546,6 +564,7 @@ export function CardsChat({
   function handleitalics() {
     composerRef.current?.focus();
     document.execCommand('italic');
+    setTick((t) => t + 1);
   }
 
   const toggleFormattingOptions = () => {
@@ -1423,7 +1442,11 @@ export function CardsChat({
                       onClick={handleBold}
                       title="Bold"
                       aria-label="Bold"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className={
+                        isFormatActive('bold')
+                            ? 'bg-accent text-foreground'
+                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                      }
                     >
                       {' '}
                       <Bold className="h-4 w-4" />{' '}
@@ -1435,7 +1458,11 @@ export function CardsChat({
                       onClick={handleitalics}
                       title="Italic"
                       aria-label="Italic"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className={
+                        isFormatActive('italic')
+                            ? 'bg-accent text-foreground'
+                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                      }
                     >
                       {' '}
                       <Italic className="h-4 w-4" />{' '}
@@ -1447,7 +1474,11 @@ export function CardsChat({
                       onClick={handleUnderline}
                       title="Underline"
                       aria-label="Underline"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className={
+                        isFormatActive('underline')
+                            ? 'bg-accent text-foreground'
+                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                      }
                     >
                       {' '}
                       <Underline className="h-4 w-4" />{' '}
