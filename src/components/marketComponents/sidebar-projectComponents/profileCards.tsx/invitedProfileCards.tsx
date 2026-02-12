@@ -47,6 +47,9 @@ interface Talent {
   personalWebsite?: string;
   description?: string;
   workExperience?: number;
+  application?: {
+    status?: 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
+  };
 }
 interface ProfileCardsProps {
   talents: Talent[];
@@ -116,6 +119,25 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
     </Card>
   );
 
+  const statusLabelMap: Record<string, string> = {
+  INVITED: 'Invited',
+  SELECTED: 'Accepted',
+  REJECTED: 'Rejected',
+  APPLIED: 'Applied',
+};
+
+const statusStyleMap: Record<string, string> = {
+  INVITED:
+    'bg-amber-500/10 text-amber-700 dark:text-amber-200 border-amber-500/20',
+  SELECTED:
+    'bg-green-500/10 text-green-700 dark:text-green-200 border-green-500/20',
+  REJECTED:
+    'bg-red-500/10 text-red-700 dark:text-red-200 border-red-500/20',
+  APPLIED:
+    'bg-blue-500/10 text-blue-700 dark:text-blue-200 border-blue-500/20',
+};
+
+
   return (
     <div className="grid grid-cols-1 gap-6">
       {loading ? (
@@ -159,13 +181,22 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                     )}
                   </div>
                 </div>
-                <Badge
-                  variant="secondary"
-                  className="flex items-center gap-1 rounded-full text-xs font-medium px-3 py-1 bg-amber-500/10 text-amber-700 dark:text-amber-200 border border-amber-500/20"
-                >
-                  <Clock className="h-3 w-3" />
-                  Invited
-                </Badge>
+
+                {(() => {
+                  const rawStatus = talent.application?.status ?? 'INVITED';
+                  const label = statusLabelMap[rawStatus] ?? rawStatus;
+                  const style = statusStyleMap[rawStatus] ?? statusStyleMap.INVITED;
+
+                return (
+                  <Badge
+                    variant="secondary"
+                    className={`flex items-center gap-1 rounded-full text-xs font-medium px-3 py-1 border ${style}`}
+                  >
+                    <Clock className="h-3 w-3" />
+                    {label}
+                  </Badge>
+                );
+              })()}
               </div>
             </CardHeader>
             <CardContent className="px-6 py-3">
