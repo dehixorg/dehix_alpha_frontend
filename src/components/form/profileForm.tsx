@@ -524,13 +524,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     try {
       await axiosInstance.delete(`/freelancer/skill/${skillId}`);
       notifySuccess('Skill removed successfully.');
+      // Refetch user data to ensure sync with backend
+      const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
+      const tmpSkills: any[] = [];
+      userResponse.data.data.attributes.forEach((attr: any) => {
+        if (attr.type === 'SKILL') {
+          tmpSkills.push(attr);
+        }
+      });
+      setCurrSkills([...tmpSkills]);
     } catch (error: any) {
       console.error(
         'Failed to remove skill:',
         error.response?.data || error.message,
       );
       notifyError('Failed to remove skill. Please try again.');
-      // 6. Revert local state on failure
+      // 7. Revert local state on failure
       setCurrSkills(originalSkills);
     }
   };
@@ -564,6 +573,26 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     try {
       await axiosInstance.delete(`/freelancer/domain/${domainId}`);
       notifySuccess('Domain removed successfully.');
+      // Refetch user data to ensure sync with backend
+      const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
+      const domainsResponse = await axiosInstance.get('/domain/all');
+      const tmpDomains: any[] = [];
+      userResponse.data.data.attributes.forEach((attr: any) => {
+        if (attr.type === 'DOMAIN') {
+          tmpDomains.push(attr);
+        }
+      });
+      const transformedDomains = tmpDomains.map((domain: any) => {
+        const matchingDomain = domainsResponse.data.data.find(
+          (d: any) => d._id === domain.type_id || d.label === domain.name,
+        );
+        return {
+          ...domain,
+          type_id: matchingDomain?._id ?? domain.type_id ?? domain.name,
+          name: matchingDomain?.label ?? domain.name,
+        };
+      });
+      setCurrDomains([...transformedDomains]);
     } catch (error: any) {
       console.error(
         'Failed to remove domain:',
@@ -604,6 +633,27 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         `/freelancer/project-domain/${projectDomainId}`,
       );
       notifySuccess('Project Domain removed successfully.');
+      // Refetch user data to ensure sync with backend
+      const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
+      const projectDomainResponse =
+        await axiosInstance.get('/projectdomain/all');
+      const transformedProjectDomains = (
+        userResponse.data.data.projectDomain || []
+      )
+        .map((pd: any) => {
+          const matchingProjectDomain = projectDomainResponse.data.data.find(
+            (p: any) => p._id === pd.type_id || p.label === pd.name,
+          );
+          return {
+            ...pd,
+            name: matchingProjectDomain?.label ?? pd.name,
+          };
+        })
+        .filter(
+          (pd: any, index: number, self: any[]) =>
+            self.findIndex((item: any) => item.name === pd.name) === index,
+        );
+      setCurrProjectDomains([...transformedProjectDomains]);
     } catch (error: any) {
       console.error(
         'Failed to remove project domain:',
