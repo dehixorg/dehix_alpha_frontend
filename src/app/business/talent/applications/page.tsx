@@ -37,15 +37,22 @@ export default function Page() {
 
   const allowed = new Set(['invited', 'accepted', 'rejected', 'applications']);
   const initialStatusFilter = allowed.has(statusParam)
-    ? (statusParam as 'invited' | 'accepted' | 'rejected' | 'applications' | undefined)
-    : undefined ;
+    ? (statusParam as
+        | 'invited'
+        | 'accepted'
+        | 'rejected'
+        | 'applications'
+        | undefined)
+    : undefined;
 
   const activeTab = 'applications' as const;
   const [statusFilter, setStatusFilter] = useState<
     'invited' | 'accepted' | 'rejected' | 'applications' | undefined
   >(initialStatusFilter);
 
-  const [talentFilter, setTalentFilter] = useState<string | undefined>(undefined);
+  const [talentFilter, setTalentFilter] = useState<string | undefined>(
+    undefined,
+  );
   const [talentOptions, setTalentOptions] = useState<
     { label: string; value: string }[]
   >([]);
@@ -107,7 +114,8 @@ export default function Page() {
         setTalentOptions(nextUniqueTalentOptions);
 
         const firstHireId = nextUniqueTalentOptions[0]?.value;
-        const effectiveHireId = talentFilter !== undefined ? talentFilter : firstHireId;
+        const effectiveHireId =
+          talentFilter !== undefined ? talentFilter : firstHireId;
 
         if (!effectiveHireId) {
           setTabApplications([]);
@@ -116,16 +124,16 @@ export default function Page() {
 
         type Status = 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
         let desiredStatus: Status | undefined;
-        
-        if (statusFilter){
-          desiredStatus = 
+
+        if (statusFilter) {
+          desiredStatus =
             statusFilter === 'accepted'
               ? 'SELECTED'
               : statusFilter === 'rejected'
-              ? 'REJECTED'
-              : statusFilter === 'applications'
-              ? 'APPLIED'
-              : 'INVITED';
+                ? 'REJECTED'
+                : statusFilter === 'applications'
+                  ? 'APPLIED'
+                  : 'INVITED';
         }
 
         const applicationsResponse = await axiosInstance.get(

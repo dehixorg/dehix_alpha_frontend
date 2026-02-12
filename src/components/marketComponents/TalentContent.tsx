@@ -209,9 +209,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
     } else if (activeTab === 'applications') {
       const selected = statusFilter ?? 'all';
 
-      const activeFilterCount =
-        (statusFilter ? 1 : 0) +
-        (talentFilter ? 1 : 0);
+      const activeFilterCount = (statusFilter ? 1 : 0) + (talentFilter ? 1 : 0);
 
       const handleReset = () => {
         onTalentFilterChange?.(undefined);
@@ -409,8 +407,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
 
                                       if (next === true)
                                         onTalentFilterChange(opt.value);
-                                      else 
-                                        onTalentFilterChange(undefined);
+                                      else onTalentFilterChange(undefined);
                                     }}
                                     className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                   />
