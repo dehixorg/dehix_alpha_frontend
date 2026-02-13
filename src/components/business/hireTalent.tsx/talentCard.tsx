@@ -201,21 +201,31 @@ const TalentCard: React.FC<TalentCardProps> = ({
         const res = await axiosInstance.get('/business/hire-dehixtalent');
         const hireTalentData = res?.data?.data || [];
 
-        const filterSkills: SkillOption[] = (hireTalentData || [])
+        // Deduplicate skills by label using Map for O(n) performance
+        const skillsMap = new Map<string, SkillOption>();
+        (hireTalentData || [])
           .filter((item: any) => item?.type === 'SKILL' && item?.visible)
-          .map((item: any) => ({
-            _id: item?.talentId || item?._id,
-            label: item?.talentName || '',
-          }))
-          .filter((s: any) => Boolean(s?._id) && Boolean(s?.label));
+          .forEach((item: any) => {
+            const label = item?.talentName || '';
+            const _id = item?.talentId || item?._id;
+            if (label && _id && !skillsMap.has(label)) {
+              skillsMap.set(label, { _id, label });
+            }
+          });
+        const filterSkills: SkillOption[] = Array.from(skillsMap.values());
 
-        const filterDomains: DomainOption[] = (hireTalentData || [])
+        // Deduplicate domains by label using Map for O(n) performance
+        const domainsMap = new Map<string, DomainOption>();
+        (hireTalentData || [])
           .filter((item: any) => item?.type === 'DOMAIN' && item?.visible)
-          .map((item: any) => ({
-            _id: item?.talentId || item?._id,
-            label: item?.talentName || '',
-          }))
-          .filter((d: any) => Boolean(d?._id) && Boolean(d?.label));
+          .forEach((item: any) => {
+            const label = item?.talentName || '';
+            const _id = item?.talentId || item?._id;
+            if (label && _id && !domainsMap.has(label)) {
+              domainsMap.set(label, { _id, label });
+            }
+          });
+        const filterDomains: DomainOption[] = Array.from(domainsMap.values());
 
         const formatted: SkillDomainData[] = (hireTalentData || [])
           .map((item: any) => ({
