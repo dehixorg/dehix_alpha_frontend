@@ -1,4 +1,5 @@
 'use client';
+
 import { usePathname, useRouter } from 'next/navigation';
 import { Users2, FileText } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -168,7 +169,7 @@ export default function Talent() {
           }
         });
       const fetchedFilterSkills: Skill[] = Array.from(skillsMap.values());
-      
+
       // Deduplicate domains by label using Map for O(n) performance
       const domainsMap = new Map<string, Domain>();
       hires
@@ -324,7 +325,7 @@ export default function Talent() {
             </Select>
           </div>
           <div
-            className="lg:h-[75vh] h-[59vh] rounded-lg  overflow-y-scroll no-scrollbar"
+            className="lg:h-[75vh] h-[59vh] rounded-lg overflow-y-scroll no-scrollbar"
             data-tour="business-talent-list"
           >
             <TalentCard
