@@ -260,8 +260,8 @@ export default function BusinessFilterComponent({
             experiences,
             'experience',
             '',
-            () => { },
-            () => { },
+            () => {},
+            () => {},
             <UserCheck className="h-4 w-4 text-muted-foreground" />,
             false,
           )}
@@ -271,8 +271,8 @@ export default function BusinessFilterComponent({
             jobTypes,
             'jobType',
             '',
-            () => { },
-            () => { },
+            () => {},
+            () => {},
             <Briefcase className="h-4 w-4 text-muted-foreground" />,
             false,
           )}
@@ -282,8 +282,8 @@ export default function BusinessFilterComponent({
             locations,
             'location',
             '',
-            () => { },
-            () => { },
+            () => {},
+            () => {},
             <MapPin className="h-4 w-4 text-muted-foreground" />,
             false,
           )}
@@ -317,13 +317,21 @@ export default function BusinessFilterComponent({
                       placeholder="0"
                       value={filters.minRate}
                       onKeyDown={(e) => {
-                        if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+                        if (
+                          e.key === '-' ||
+                          e.key === 'e' ||
+                          e.key === 'E' ||
+                          e.key === '+'
+                        ) {
                           e.preventDefault();
                         }
                       }}
                       onPaste={(e) => {
                         const pastedText = e.clipboardData.getData('text');
-                        if (pastedText.includes('-') || parseFloat(pastedText) < 0) {
+                        if (
+                          pastedText.includes('-') ||
+                          parseFloat(pastedText) < 0
+                        ) {
                           e.preventDefault();
                         }
                       }}
@@ -347,14 +355,21 @@ export default function BusinessFilterComponent({
                       placeholder="1000"
                       value={filters.maxRate}
                       onKeyDown={(e) => {
-                        if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+                        if (
+                          e.key === '-' ||
+                          e.key === 'e' ||
+                          e.key === 'E' ||
+                          e.key === '+'
+                        ) {
                           e.preventDefault();
                         }
                       }}
                       onPaste={(e) => {
-
                         const pastedText = e.clipboardData.getData('text');
-                        if (pastedText.includes('-') || parseFloat(pastedText) < 0) {
+                        if (
+                          pastedText.includes('-') ||
+                          parseFloat(pastedText) < 0
+                        ) {
                           e.preventDefault();
                         }
                       }}
