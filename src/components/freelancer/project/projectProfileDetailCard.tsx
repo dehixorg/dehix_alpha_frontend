@@ -56,21 +56,18 @@ export function ProjectProfileDetailCard({
   skills,
   experience,
   minConnect,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   description,
   email,
   status,
   startDate,
   endDate,
   className,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   domain_id,
   ...props
 }: CardProps) {
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
   const params = useParams();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
   const [exist, setExist] = useState(false);
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
