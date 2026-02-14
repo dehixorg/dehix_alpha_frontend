@@ -187,14 +187,9 @@ const businessRegisterSchema = z
       .string()
       .url('Invalid URL')
       .optional()
-      .refine(
-        (value) =>
-          !value || LINKEDIN_REGEX.test(value),
-        {
-          message:
-            'Enter a valid LinkedIn profile or company page URL',
-        },
-      ),
+      .refine((value) => !value || LINKEDIN_REGEX.test(value), {
+        message: 'Enter a valid LinkedIn profile or company page URL',
+      }),
     personalWebsite: z
       .string()
       .optional()
