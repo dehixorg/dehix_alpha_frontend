@@ -91,7 +91,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
       companyName: '',
       companySize: '',
       position: '',
-      linkedin: '',
+      linkedin: undefined,
       website: '',
     },
     mode: 'all',
