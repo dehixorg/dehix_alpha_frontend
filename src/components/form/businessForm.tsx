@@ -67,7 +67,7 @@ const profileFormSchema = z.object({
   linkedin: z
     .string()
     .url({ message: 'Must be a valid URL.' })
-    .refine((url) => url || LINKEDIN_REGEX.test(url), {
+    .refine((url) => !url || LINKEDIN_REGEX.test(url), {
       message: 'Enter a valid LinkedIn profile or company page URL',
     })
     .optional(),
