@@ -45,6 +45,9 @@ import { Type } from '@/utils/enum';
 import { setUser } from '@/lib/userSlice';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
+const LINKEDIN_REGEX =
+  /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\/(in|company)\/[a-zA-Z0-9-_%]+\/?$/;
+
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
     message: 'First Name must be at least 2 characters.',
@@ -66,10 +69,9 @@ const profileFormSchema = z.object({
     .url({ message: 'Must be a valid URL.' })
     .refine(
       (url) =>
-        url.includes('linkedin.com/in/') ||
-        url.includes('linkedin.com/company/'),
+        url || LINKEDIN_REGEX.test(url),
       {
-        message: 'LinkedIn URL must start with: https://www.linkedin.com/in/',
+        message: 'Enter a valid LinkedIn profile or company page URL',
       },
     )
     .optional(),

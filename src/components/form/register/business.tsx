@@ -169,6 +169,9 @@ const Stepper = ({ currentStep = 0 }: StepperProps) => {
   );
 };
 
+const LINKEDIN_REGEX =
+  /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\/(in|company)\/[a-zA-Z0-9-_%]+\/?$/;
+
 const businessRegisterSchema = z
   .object({
     firstName: z.string().min(1, 'First name is required'),
@@ -186,11 +189,10 @@ const businessRegisterSchema = z
       .optional()
       .refine(
         (value) =>
-          !value ||
-          /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/.test(value),
+          !value || LINKEDIN_REGEX.test(value),
         {
           message:
-            'LinkedIn URL must start with "https://www.linkedin.com/in/" and have a valid username',
+            'Enter a valid LinkedIn profile or company page URL',
         },
       ),
     personalWebsite: z
@@ -765,7 +767,7 @@ function BusinessRegisterForm({
                           </InputGroupText>
                           <InputGroupInput
                             type="url"
-                            placeholder="https://www.linkedin.com/in/username"
+                            placeholder="https://www.linkedin.com"
                             {...field}
                             value={field.value ?? ''}
                           />
