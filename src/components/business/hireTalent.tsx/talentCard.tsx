@@ -167,6 +167,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
   const scrollContainerRef = useRef<any>(null);
+  const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(
+    null,
+  );
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>(
     skillDomainDataProp || [],
   );
@@ -194,6 +197,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
       ) as HTMLElement;
       if (element) {
         scrollContainerRef.current = element;
+        setScrollContainer(element);
       }
     };
 
@@ -1129,7 +1133,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           isLoading={loading}
           next={fetchTalentData}
           threshold={0.1}
-          root={scrollContainerRef.current}
+          root={scrollContainer}
           rootMargin="200px"
         >
           {loading && (
