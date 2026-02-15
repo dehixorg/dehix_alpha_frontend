@@ -38,8 +38,8 @@ interface TokenRequest {
   _id: string;
   amount: number | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  createdAt: string;
-  [key: string]: any;
+  dateTime: string;
+  // [key: string]: any;
 }
 
 interface DisplayConnectsDialogProps {
@@ -62,7 +62,7 @@ export const DisplayConnectsDialog = React.forwardRef<
       setLoading(true);
       const response = await axiosInstance.get(`/token-request/user/${userId}`);
 
-      const newData = response.data.data || [];
+      const newData = (response.data.data || []) as TokenRequest[];
       const currentConnects = parseInt(
         localStorage.getItem('DHX_CONNECTS') || '0',
         10,
@@ -98,6 +98,12 @@ export const DisplayConnectsDialog = React.forwardRef<
         );
       }
 
+      newData.sort(
+        (a, b) =>
+          new Date(b.dateTime).getTime() -
+          new Date(a.dateTime).getTime(),
+        );
+
       setData(newData);
       setFilteredData(newData);
 
@@ -131,23 +137,7 @@ export const DisplayConnectsDialog = React.forwardRef<
     } finally {
       setLoading(false);
     }
-  }, [userId]);
-
-  const handleNewConnectRequest = useCallback((event: Event) => {
-    const newConnect = (event as CustomEvent).detail;
-    setData((prevData) => {
-      const updatedData = [newConnect, ...prevData];
-      setFilteredData(updatedData);
-      return updatedData;
-    });
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('newConnectRequest', handleNewConnectRequest);
-    return () => {
-      window.removeEventListener('newConnectRequest', handleNewConnectRequest);
-    };
-  }, [handleNewConnectRequest]);
+  }, [userId])
 
   useEffect(() => {
     if (open) fetchConnectsRequest();
@@ -356,7 +346,7 @@ export const DisplayConnectsDialog = React.forwardRef<
                               </div>
                             </TableCell>
                             <TableCell className="text-right text-sm text-muted-foreground">
-                              {formatDate(item.createdAt)}
+                              {formatDate(item.dateTime)}
                             </TableCell>
                           </TableRow>
                         ))
