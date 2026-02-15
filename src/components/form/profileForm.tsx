@@ -520,11 +520,23 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     );
     setCurrSkills(updatedSkillsList);
 
-    // 5. Call the new DELETE endpoint
+    // 5. Call the DELETE endpoint
     try {
       await axiosInstance.delete(`/freelancer/skill/${skillId}`);
       notifySuccess('Skill removed successfully.');
-      // Refetch user data to ensure sync with backend
+    } catch (error: any) {
+      console.error(
+        'Failed to remove skill:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to remove skill. Please try again.');
+      // Revert local state on delete failure
+      setCurrSkills(originalSkills);
+      return;
+    }
+
+    // Refetch user data to ensure sync with backend
+    try {
       const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
       const tmpSkills: any[] = [];
       userResponse.data.data.attributes.forEach((attr: any) => {
@@ -538,9 +550,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to remove skill:',
         error.response?.data || error.message,
       );
-      notifyError('Failed to remove skill. Please try again.');
-      // 7. Revert local state on failure
-      setCurrSkills(originalSkills);
+      // Don't revert - the delete succeeded, just log the refetch failure
     }
   };
 
@@ -573,7 +583,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     try {
       await axiosInstance.delete(`/freelancer/domain/${domainId}`);
       notifySuccess('Domain removed successfully.');
-      // Refetch user data to ensure sync with backend
+    } catch (error: any) {
+      console.error(
+        'Failed to remove domain:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to remove domain. Please try again.');
+      setCurrDomains(originalDomains);
+      return;
+    }
+
+    // Refetch user data to ensure sync with backend
+    try {
       const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
       const domainsResponse = await axiosInstance.get('/domain/all');
       const tmpDomains: any[] = [];
@@ -598,8 +619,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to remove domain:',
         error.response?.data || error.message,
       );
-      notifyError('Failed to remove domain. Please try again.');
-      setCurrDomains(originalDomains);
+      // Don't revert - the delete succeeded, just log the refetch failure
     }
   };
   const handleDeleteProjDomain = async (projectDomainToDelete: string) => {
@@ -633,7 +653,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         `/freelancer/project-domain/${projectDomainId}`,
       );
       notifySuccess('Project Domain removed successfully.');
-      // Refetch user data to ensure sync with backend
+    } catch (error: any) {
+      console.error(
+        'Failed to remove project domain:',
+        error.response?.data || error.message,
+      );
+      notifyError('Failed to remove project domain. Please try again.');
+      setCurrProjectDomains(originalProjectDomains);
+      return;
+    }
+
+    // Refetch user data to ensure sync with backend
+    try {
       const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
       const projectDomainResponse =
         await axiosInstance.get('/projectdomain/all');
@@ -659,8 +690,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         'Failed to remove project domain:',
         error.response?.data || error.message,
       );
-      notifyError('Failed to remove project domain. Please try again.');
-      setCurrProjectDomains(originalProjectDomains);
+      // Don't revert - the delete succeeded, just log the refetch failure
     }
   };
 
