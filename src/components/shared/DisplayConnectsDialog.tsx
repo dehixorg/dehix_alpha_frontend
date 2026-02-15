@@ -100,9 +100,8 @@ export const DisplayConnectsDialog = React.forwardRef<
 
       newData.sort(
         (a, b) =>
-          new Date(b.dateTime).getTime() -
-          new Date(a.dateTime).getTime(),
-        );
+          new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(),
+      );
 
       setData(newData);
       setFilteredData(newData);
@@ -137,7 +136,7 @@ export const DisplayConnectsDialog = React.forwardRef<
     } finally {
       setLoading(false);
     }
-  }, [userId])
+  }, [userId]);
 
   useEffect(() => {
     if (open) fetchConnectsRequest();
