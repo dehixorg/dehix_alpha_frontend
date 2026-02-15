@@ -36,13 +36,11 @@ interface ProjectProfileDetailCardProps {
   experience: number;
   minConnect: number;
   rate: number;
-  description: string;
   email?: string;
   status?: StatusEnum;
   startDate?: string;
   endDate?: string;
   className?: string;
-  domain_id: string;
   // business_id: string;
 }
 
@@ -56,19 +54,16 @@ export function ProjectProfileDetailCard({
   skills,
   experience,
   minConnect,
-  description,
   email,
   status,
   startDate,
   endDate,
   className,
-  domain_id,
   ...props
 }: CardProps) {
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
   const params = useParams();
-  const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
   const [exist, setExist] = useState(false);
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
 
@@ -86,7 +81,7 @@ export function ProjectProfileDetailCard({
         const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
         const allBids = response.data.data;
 
-        // Filter bids for the current project and get unique profile IDs
+        // Filter bids for the current project
         const projectBids = allBids.filter(
           (bid: any) => bid.project_id === params.project_id,
         );
@@ -94,8 +89,6 @@ export function ProjectProfileDetailCard({
         const uniqueProfileIds = profileIds.filter(
           (id: string, index: number) => profileIds.indexOf(id) === index,
         );
-
-        setBidProfiles(uniqueProfileIds);
 
         // Check if current profile is already bid on
         setExist(uniqueProfileIds.includes(_id));
