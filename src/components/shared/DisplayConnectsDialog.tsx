@@ -60,12 +60,7 @@ export const DisplayConnectsDialog = React.forwardRef<
   const fetchConnectsRequest = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(
-        `/token-request/user/${userId}`,
-        {
-          params: { latestConnects: true },
-        },
-      );
+      const response = await axiosInstance.get(`/token-request/user/${userId}`);
 
       const newData = response.data.data || [];
       const currentConnects = parseInt(
@@ -141,7 +136,7 @@ export const DisplayConnectsDialog = React.forwardRef<
   const handleNewConnectRequest = useCallback((event: Event) => {
     const newConnect = (event as CustomEvent).detail;
     setData((prevData) => {
-      const updatedData = [newConnect, ...prevData.slice(0, 2)];
+      const updatedData = [newConnect, ...prevData];
       setFilteredData(updatedData);
       return updatedData;
     });
@@ -392,7 +387,8 @@ export const DisplayConnectsDialog = React.forwardRef<
           {/* Footer */}
           <div className="p-3 border-t bg-muted/20 flex justify-between items-center">
             <p className="text-xs text-muted-foreground">
-              Showing {filteredData.length} of {data.length} requests
+              Showing {filteredData.length} request
+              {filteredData.length !== 1 ? 's' : ''}
             </p>
             <Button
               variant="ghost"
