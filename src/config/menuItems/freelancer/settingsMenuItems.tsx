@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 
+import SBTHexagon from '@/components/icons/SBTHexagon';
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
 export const menuItemsTop: MenuItem[] = [
@@ -83,6 +84,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/reports',
     icon: <FileWarning className="h-5 w-5" />,
     label: 'Reports',
+  },
+  {
+    href: '/sbt-transactions',
+    icon: <SBTHexagon className="h-5 w-5" />,
+    label: 'SBT',
   },
 ];
 

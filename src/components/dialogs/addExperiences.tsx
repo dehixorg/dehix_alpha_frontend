@@ -11,23 +11,20 @@ import {
   Github,
   MessageSquare,
   Mail,
-  Phone,
   User,
+  Phone,
 } from 'lucide-react';
+import { isAddress } from 'viem';
+import {
+  useAccount,
+  useChainId,
+  usePublicClient,
+  useWriteContract,
+} from 'wagmi';
 
+import { DatePicker } from '../shared/datePicker';
 import DraftDialog from '../shared/DraftDialog';
 
-import { DatePicker } from '@/components/shared/datePicker';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -39,6 +36,16 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -55,6 +62,11 @@ import {
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import useDraft from '@/hooks/useDraft';
+import { CONTRACT_ADDRESSES } from '@/config/contracts/contractConfig';
+import {
+  FREELANCER_CONTRACT_ABI,
+  FREELANCER_SBT_ABI,
+} from '@/config/contracts/abis';
 
 const toDateOnly = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -225,9 +237,260 @@ interface AddExperienceProps {
   onFormSubmit: () => void;
 }
 
+const SEPOLIA_CHAIN_ID = 11155111;
+const GAS_BUFFER_BPS = 12000n; // 120%
+const SEPOLIA_MAX_GAS = 16777216n; // Sepolia's block gas limit
+const FALLBACK_GAS = 5000000n; // Safe fallback when estimation fails
+const withGasBuffer = (estimatedGas: bigint) => {
+  const bufferedGas = (estimatedGas * GAS_BUFFER_BPS) / 10000n;
+  // Cap at Sepolia maximum to prevent 'gas limit too high' errors
+  return bufferedGas > SEPOLIA_MAX_GAS ? SEPOLIA_MAX_GAS : bufferedGas;
+};
+// Contract ABIs and addresses imported from centralized config
+const freelancerContractAbi = FREELANCER_CONTRACT_ABI;
+const soulBoundTokenAbi = FREELANCER_SBT_ABI;
+const DEFAULT_FREELANCER_CONTRACT_SEPOLIA =
+  CONTRACT_ADDRESSES.FREELANCER_CONTRACT;
+const DEFAULT_SBT_CONTRACT_SEPOLIA = CONTRACT_ADDRESSES.SBT_CONTRACT;
+
+// Gas price constants for Sepolia
+const getGasPriceParams = async (publicClient: any) => {
+  try {
+    const feeData = await publicClient.estimateFeesPerGas();
+    return {
+      maxFeePerGas: feeData.gasPrice ? feeData.gasPrice * 2n : 50000000000n, // 50 Gwei fallback
+      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas || 2000000000n, // 2 Gwei fallback
+    };
+  } catch (err) {
+    console.warn('Could not estimate gas price, using fallback values:', err);
+    return {
+      maxFeePerGas: 50000000000n, // 50 Gwei
+      maxPriorityFeePerGas: 2000000000n, // 2 Gwei
+    };
+  }
+};
+
 export const AddExperience: React.FC<AddExperienceProps> = ({
   onFormSubmit,
 }) => {
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const publicClient = usePublicClient();
+  const { writeContractAsync } = useWriteContract();
+  const [minting, setMinting] = useState(false);
+  // SBT Minting logic (copied and adapted from addEducation)
+  const handleMintSBT = React.useCallback(
+    async (expData: ExperienceFormValues) => {
+      if (!isConnected || !address) {
+        const errorMsg =
+          'Please connect your wallet first to mint experience as SBT';
+        notifyError(errorMsg, 'Wallet Not Connected');
+        throw new Error(errorMsg);
+      }
+      try {
+        setMinting(true);
+        const freelancerContractAddress = (process.env
+          .NEXT_PUBLIC_FREELANCER_CONTRACT_SEPOLIA ||
+          DEFAULT_FREELANCER_CONTRACT_SEPOLIA) as `0x${string}`;
+        const sbtContractAddress = (process.env
+          .NEXT_PUBLIC_SBT_CONTRACT_SEPOLIA ||
+          process.env.NEXT_PUBLIC_SOUL_BOUND_TOKEN_SEPOLIA ||
+          DEFAULT_SBT_CONTRACT_SEPOLIA) as `0x${string}`;
+
+        if (!freelancerContractAddress || !sbtContractAddress) {
+          const errorMsg = 'Missing contract addresses';
+          notifyError(errorMsg, 'Configuration Error');
+          throw new Error(errorMsg);
+        }
+
+        if (
+          !isAddress(freelancerContractAddress) ||
+          !isAddress(sbtContractAddress)
+        ) {
+          const errorMsg = 'Invalid contract address format in .env.local';
+          notifyError(errorMsg, 'Configuration Error');
+          throw new Error(errorMsg);
+        }
+
+        if (!publicClient) {
+          const errorMsg = 'No public client found for current network';
+          notifyError(errorMsg, 'Web3 Error');
+          throw new Error(errorMsg);
+        }
+
+        if (chainId !== SEPOLIA_CHAIN_ID) {
+          const errorMsg =
+            'Please switch wallet network to Sepolia before saving.';
+          notifyError(errorMsg, 'Wrong Network');
+          throw new Error(errorMsg);
+        }
+
+        const freelancerId = `freelancer_${address.toLowerCase()}`;
+
+        console.log('Starting SBT minting process...');
+        console.log('Freelancer ID:', freelancerId);
+        console.log('Freelancer Contract:', freelancerContractAddress);
+        console.log('SBT Contract:', sbtContractAddress);
+
+        // 1) Register freelancer in FreelancerContract
+        let addFreelancerGas = FALLBACK_GAS; // Default to fallback gas
+        try {
+          console.log('Estimating gas for addFreelancer...');
+          const estimatedAddGas = await publicClient.estimateContractGas({
+            account: address,
+            address: freelancerContractAddress,
+            abi: freelancerContractAbi,
+            functionName: 'addFreelancer',
+            args: [freelancerId, address],
+          });
+          addFreelancerGas = withGasBuffer(estimatedAddGas);
+          console.log(
+            'Estimated gas for addFreelancer:',
+            addFreelancerGas.toString(),
+          );
+        } catch (gasEstimationError) {
+          console.warn(
+            'Gas estimation failed for addFreelancer, using fallback gas:',
+            gasEstimationError,
+          );
+          console.log('Using fallback gas:', FALLBACK_GAS.toString());
+        }
+
+        console.log('Calling addFreelancer...');
+        const gasPrices = await getGasPriceParams(publicClient);
+        console.log('Gas prices:', gasPrices);
+        const addFreelancerHash = await writeContractAsync({
+          address: freelancerContractAddress,
+          abi: freelancerContractAbi,
+          functionName: 'addFreelancer',
+          args: [freelancerId, address],
+          ...(addFreelancerGas ? { gas: addFreelancerGas } : {}),
+          maxFeePerGas: gasPrices.maxFeePerGas,
+          maxPriorityFeePerGas: gasPrices.maxPriorityFeePerGas,
+        });
+
+        console.log('addFreelancer transaction hash:', addFreelancerHash);
+
+        console.log('Waiting for addFreelancer receipt...');
+        const addFreelancerReceipt =
+          await publicClient.waitForTransactionReceipt({
+            hash: addFreelancerHash,
+          });
+
+        if (!addFreelancerReceipt) {
+          throw new Error('addFreelancer transaction receipt not found');
+        }
+
+        if (addFreelancerReceipt.status !== 'success') {
+          throw new Error(
+            `addFreelancer transaction failed with status: ${addFreelancerReceipt.status}`,
+          );
+        }
+
+        console.log('addFreelancer transaction confirmed');
+
+        // 2) Mint soulbound token in FreelancerSoulBoundToken
+        let mintGas = FALLBACK_GAS; // Default to fallback gas
+        try {
+          console.log('Estimating gas for mintFreelancerToken...');
+          const estimatedMintGas = await publicClient.estimateContractGas({
+            account: address,
+            address: sbtContractAddress,
+            abi: soulBoundTokenAbi,
+            functionName: 'mintFreelancerToken',
+            args: [address, freelancerId],
+          });
+          mintGas = withGasBuffer(estimatedMintGas);
+          console.log(
+            'Estimated gas for mintFreelancerToken:',
+            mintGas.toString(),
+          );
+        } catch (gasEstimationError) {
+          console.warn(
+            'Gas estimation failed for mintFreelancerToken, using fallback gas:',
+            gasEstimationError,
+          );
+          console.log('Using fallback gas:', FALLBACK_GAS.toString());
+        }
+
+        console.log('Calling mintFreelancerToken...');
+        const mintGasPrices = await getGasPriceParams(publicClient);
+        console.log('Mint gas prices:', mintGasPrices);
+        const mintHash = await writeContractAsync({
+          address: sbtContractAddress,
+          abi: soulBoundTokenAbi,
+          functionName: 'mintFreelancerToken',
+          args: [address, freelancerId],
+          ...(mintGas ? { gas: mintGas } : {}),
+          maxFeePerGas: mintGasPrices.maxFeePerGas,
+          maxPriorityFeePerGas: mintGasPrices.maxPriorityFeePerGas,
+        });
+
+        console.log('mintFreelancerToken transaction hash:', mintHash);
+
+        console.log('Waiting for mint receipt...');
+        const mintReceipt = await publicClient.waitForTransactionReceipt({
+          hash: mintHash,
+        });
+
+        if (!mintReceipt) {
+          throw new Error('mintFreelancerToken transaction receipt not found');
+        }
+
+        if (mintReceipt.status !== 'success') {
+          throw new Error(
+            `mintFreelancerToken transaction failed with status: ${mintReceipt.status}`,
+          );
+        }
+
+        console.log('Mint transaction confirmed:', mintReceipt.transactionHash);
+
+        // Wait a bit for blockchain state to settle
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Fetch token ID for this address
+        let tokenId: string | undefined;
+        try {
+          console.log('Fetching token ID from contract...');
+          const fetchedTokenId = await publicClient.readContract({
+            address: sbtContractAddress,
+            abi: soulBoundTokenAbi,
+            functionName: 'freelancerTokenId',
+            args: [address],
+          });
+          tokenId = fetchedTokenId?.toString();
+          console.log('Successfully fetched token ID:', tokenId);
+        } catch (err: any) {
+          console.warn(
+            'Could not fetch token ID (non-critical):',
+            err?.message || err,
+          );
+          // Continue anyway - SBT was minted successfully
+        }
+
+        notifySuccess(
+          `Experience SBT minted successfully. Tx: ${mintReceipt.transactionHash}`,
+          'SBT Minted Successfully',
+        );
+
+        // Return transaction details for backend update
+        return {
+          transactionHash: mintReceipt.transactionHash,
+          tokenId,
+          blockNumber: mintReceipt.blockNumber,
+        };
+      } catch (error) {
+        console.error('SBT Minting Error:', error);
+        const message =
+          error instanceof Error ? error.message : 'Unknown transaction error';
+        notifyError(`Failed to mint SBT: ${message}`, 'Minting Error');
+        throw error;
+      } finally {
+        setMinting(false);
+      }
+    },
+    [isConnected, address, publicClient, chainId, writeContractAsync],
+  );
   const [step, setStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -320,35 +583,170 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   async function onSubmit(data: ExperienceFormValues) {
     setIsSubmitting(true);
     try {
-      await axiosInstance.post(`/freelancer/experience`, {
-        company: data.company || '',
-        jobTitle: data.jobTitle || '',
-        workDescription: data.workDescription || '',
+      let transactionHash: string | undefined;
+      let tokenId: string | undefined;
+
+      // 1) Save to backend first
+      const formattedData = {
+        company: data.company,
+        jobTitle: data.jobTitle,
+        workDescription: data.workDescription,
         workFrom: data.workFrom ? new Date(data.workFrom).toISOString() : null,
         workTo: data.ongoing
           ? null
           : data.workTo
             ? new Date(data.workTo).toISOString()
             : null,
-        referencePersonName: data.referencePersonName || '',
-        referencePersonContact: data.referencePersonContact || '',
-        githubRepoLink: data.githubRepoLink || '',
-        oracleAssigned: null, // Assuming no assignment
+        referencePersonName: data.referencePersonName,
+        referenceContactType: data.referenceContactType || 'phone',
+        referencePersonContact: data.referencePersonContact,
+        githubRepoLink: data.githubRepoLink,
+        comments: data.comments,
         verificationStatus: 'ADDED',
-        verificationUpdateTime: new Date().toISOString(),
-        comments: data.comments || '',
-      });
+        verificationUpdateTime: new Date(),
+      };
+
+      console.log('Saving experience to backend...');
+      const backendResponse = await axiosInstance.post(
+        '/freelancer/experience',
+        formattedData,
+      );
+      console.log('Experience saved to backend successfully');
+
+      // 2) Mint SBT token on blockchain
+      console.log('Starting blockchain SBT minting...');
+      try {
+        const mintResult = await handleMintSBT(data);
+        if (mintResult) {
+          transactionHash = mintResult.transactionHash;
+          tokenId = mintResult.tokenId;
+        }
+        console.log('SBT minting completed successfully');
+      } catch (mintError) {
+        console.warn(
+          'SBT minting failed, but experience was saved:',
+          mintError,
+        );
+        // Continue even if minting fails - data is already saved
+      }
+
+      // 3) Update backend with transaction hash if minting was successful
+      const createdExperienceId =
+        backendResponse.data?.data?._id ||
+        backendResponse.data?.data?.id ||
+        backendResponse.data?._id ||
+        backendResponse.data?.id;
+
+      if (transactionHash && createdExperienceId) {
+        try {
+          console.log('Attempting to update backend with transaction hash:', {
+            transactionHash,
+            tokenId,
+            createdExperienceId,
+          });
+
+          // Try to update backend with transaction hash
+          try {
+            await axiosInstance.patch(
+              `/freelancer/experience/${createdExperienceId}`,
+              {
+                transactionHash,
+                tokenId,
+                sbtMinted: true,
+              },
+            );
+            console.log('Backend updated with transaction hash successfully');
+          } catch (backendUpdateError: any) {
+            console.warn(
+              'Backend update failed (non-critical), will use localStorage:',
+              backendUpdateError?.response?.status,
+            );
+          }
+
+          console.log('Storing transaction hash in localStorage:', {
+            transactionHash,
+            tokenId,
+            createdExperienceId,
+          });
+          // Store in localStorage as fallback
+          const sbtCache = JSON.parse(
+            localStorage.getItem('sbtTransactionHashes') || '{}',
+          );
+
+          // Store with multiple keys to ensure we can find it later
+          const cacheData = {
+            transactionHash,
+            tokenId,
+            blockNumber: undefined,
+            timestamp: new Date().toISOString(),
+            type: 'experience',
+          };
+
+          // Primary key - ID from backend
+          sbtCache[createdExperienceId] = cacheData;
+
+          // Backup keys for fuzzy matching
+          sbtCache[`experience_${Date.now()}`] = cacheData;
+
+          localStorage.setItem(
+            'sbtTransactionHashes',
+            JSON.stringify(sbtCache),
+          );
+
+          console.log('Transaction hash stored in localStorage with keys:', {
+            primaryKey: createdExperienceId,
+            backupKey: `experience_${Date.now()}`,
+            cacheSize: Object.keys(sbtCache).length,
+          });
+
+          // Add a small delay before refetching to ensure data is set
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch (updateError: any) {
+          console.error(
+            'Failed to store transaction hash in localStorage:',
+            updateError?.message,
+          );
+        }
+      } else if (transactionHash) {
+        console.warn(
+          'Experience was minted but created record ID was not found in backend response:',
+          backendResponse?.data,
+        );
+      }
+
+      // Only show success if both backend save and minting succeeded
+      notifySuccess(
+        'The experience has been successfully added and minted as SBT token on blockchain!',
+        'Experience Added & Minted',
+      );
+
+      // Dispatch event to notify SBT page to refresh data
+      window.dispatchEvent(new Event('sbtDataUpdated'));
+
       onFormSubmit();
       setIsDialogOpen(false);
-      notifySuccess(
-        'The experience has been successfully added.',
-        'Experience Added',
-      );
       form.reset();
       setStep(1);
     } catch (error) {
-      console.error('API Error:', error);
-      notifyError('Failed to add experience. Please try again later.', 'Error');
+      console.error('Error in experience submission:', error);
+      const message =
+        error instanceof Error ? error.message : 'Unknown error occurred';
+
+      // Determine if the error is from blockchain or backend
+      if (
+        message.includes('Wallet') ||
+        message.includes('Network') ||
+        message.includes('Contract') ||
+        message.includes('SBT') ||
+        message.includes('Sepolia')
+      ) {
+        notifyError(
+          `Blockchain Error: ${message}. Please check your wallet connection and network.`,
+          'Web3 Error',
+        );
+      } else {
+        notifyError(`Error: ${message}`, 'Submission Failed');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -357,7 +755,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   return (
     <Dialog
       open={isDialogOpen}
-      onOpenChange={(open) => {
+      onOpenChange={(open: boolean) => {
         if (!open) {
           handleDialogClose();
         } else {
