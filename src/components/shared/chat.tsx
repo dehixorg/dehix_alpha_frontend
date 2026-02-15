@@ -1288,10 +1288,10 @@ export function CardsChat({
                             : isFile
                               ? 'Document'
                               : raw
-                                  .replace(/<[^>]*>/g, '')
-                                  .replace(/&nbsp;/g, ' ')
-                                  .replace(/\*|__/g, '')
-                                  .trim() || 'Message';
+                                .replace(/<[^>]*>/g, '')
+                                .replace(/&nbsp;/g, ' ')
+                                .replace(/\*|__/g, '')
+                                .trim() || 'Message';
 
                         return (
                           <div className="flex items-center gap-2 min-w-0">
@@ -1444,8 +1444,8 @@ export function CardsChat({
                       aria-label="Bold"
                       className={
                         isFormatActive('bold')
-                            ? 'bg-accent text-foreground'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                          ? 'bg-accent text-foreground'
+                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
                       }
                     >
                       {' '}
@@ -1460,8 +1460,8 @@ export function CardsChat({
                       aria-label="Italic"
                       className={
                         isFormatActive('italic')
-                            ? 'bg-accent text-foreground'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                          ? 'bg-accent text-foreground'
+                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
                       }
                     >
                       {' '}
@@ -1476,8 +1476,8 @@ export function CardsChat({
                       aria-label="Underline"
                       className={
                         isFormatActive('underline')
-                            ? 'bg-accent text-foreground'
-                            : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                          ? 'bg-accent text-foreground'
+                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
                       }
                     >
                       {' '}
@@ -1685,7 +1685,7 @@ export function CardsChat({
               <DialogContent
                 className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
              z-[50] bg-background border border-border
-             shadow-2xl rounded-2xl max-w-xl w-full p-6
+             shadow-2xl rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6
              transition-transform duration-300 animate-in fade-in zoom-in-95"
               >
                 <DialogHeader></DialogHeader>

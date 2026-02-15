@@ -138,19 +138,31 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         );
         const hireTalentData = hireTalentResponse.data?.data || [];
 
-        const fetchedFilterSkills = (hireTalentData || [])
+        // Deduplicate skills by label using Map for O(n) performance
+        const skillsMap = new Map<string, Skill>();
+        (hireTalentData || [])
           .filter((item: any) => item.type === 'SKILL' && item.visible)
-          .map((item: any) => ({
-            _id: item.talentId || item._id,
-            label: item.talentName,
-          }));
+          .forEach((item: any) => {
+            const label = item.talentName || '';
+            const _id = item.talentId || item._id;
+            if (label && _id && !skillsMap.has(label)) {
+              skillsMap.set(label, { _id, label });
+            }
+          });
+        const fetchedFilterSkills = Array.from(skillsMap.values());
 
-        const fetchedFilterDomains = (hireTalentData || [])
+        // Deduplicate domains by label using Map for O(n) performance
+        const domainsMap = new Map<string, Domain>();
+        (hireTalentData || [])
           .filter((item: any) => item.type === 'DOMAIN' && item.visible)
-          .map((item: any) => ({
-            _id: item.talentId || item._id,
-            label: item.talentName,
-          }));
+          .forEach((item: any) => {
+            const label = item.talentName || '';
+            const _id = item.talentId || item._id;
+            if (label && _id && !domainsMap.has(label)) {
+              domainsMap.set(label, { _id, label });
+            }
+          });
+        const fetchedFilterDomains = Array.from(domainsMap.values());
 
         setFilterSkill(fetchedFilterSkills);
         setFilterDomain(fetchedFilterDomains);

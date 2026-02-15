@@ -427,9 +427,9 @@ export function CreateProjectBusinessForm() {
     const fetchData = async () => {
       try {
         const [projectDomainRes, domainRes, skillsRes] = await Promise.all([
-          axiosInstance.get('/projectdomain'),
-          axiosInstance.get('/domain'),
-          axiosInstance.get('/skills'),
+          axiosInstance.get('/projectdomain/all'),
+          axiosInstance.get('/domain/all'),
+          axiosInstance.get('/skills/all'),
         ]);
         setProjectDomains(
           projectDomainRes.data.data.map((d: any) => ({

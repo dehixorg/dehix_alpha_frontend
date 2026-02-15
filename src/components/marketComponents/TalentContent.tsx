@@ -49,10 +49,10 @@ interface TalentContentProps {
   loading: boolean;
   statusFilter?: 'invited' | 'accepted' | 'rejected' | 'applications';
   onStatusFilterChange?: (
-    value: 'invited' | 'accepted' | 'rejected' | 'applications',
+    value: 'invited' | 'accepted' | 'rejected' | 'applications' | undefined,
   ) => void;
   talentFilter?: string;
-  onTalentFilterChange?: (value: string) => void;
+  onTalentFilterChange?: (value: string | undefined) => void;
   talentOptions?: { label: string; value: string }[];
   onUpdateApplicationStatus?: (
     freelancerId: string,
@@ -207,15 +207,13 @@ const TalentContent: React.FC<TalentContentProps> = ({
         </div>
       );
     } else if (activeTab === 'applications') {
-      const selected = statusFilter || 'invited';
-      const defaultTalentId = (talentOptions || [])[0]?.value || '';
-      const activeFilterCount =
-        (defaultTalentId && talentFilter ? 1 : 0) +
-        (selected !== 'invited' ? 1 : 0);
+      const selected = statusFilter ?? 'all';
+
+      const activeFilterCount = (statusFilter ? 1 : 0) + (talentFilter ? 1 : 0);
 
       const handleReset = () => {
-        if (defaultTalentId) onTalentFilterChange?.(defaultTalentId);
-        onStatusFilterChange?.('invited');
+        onTalentFilterChange?.(undefined);
+        onStatusFilterChange?.(undefined);
       };
       const cards =
         selected === 'accepted' ? (
@@ -276,7 +274,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
                 <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">Status</span>
-                    {selected !== 'invited' && (
+                    {statusFilter && (
                       <Badge variant="secondary" className="h-4 px-1.5 text-xs">
                         1
                       </Badge>
@@ -286,7 +284,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
                 <AccordionContent className="py-2 px-1">
                   <ScrollArea className="h-full w-full pr-2">
                     <RadioGroup
-                      value={selected}
+                      value={statusFilter ?? ''}
                       onValueChange={(v) =>
                         onStatusFilterChange?.(
                           v as
@@ -405,10 +403,11 @@ const TalentContent: React.FC<TalentContentProps> = ({
                                     id={id}
                                     checked={checked}
                                     onCheckedChange={(next) => {
+                                      if (!onTalentFilterChange) return;
+
                                       if (next === true)
-                                        onTalentFilterChange?.(opt.value);
-                                      else if (defaultTalentId)
-                                        onTalentFilterChange?.(defaultTalentId);
+                                        onTalentFilterChange(opt.value);
+                                      else onTalentFilterChange(undefined);
                                     }}
                                     className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                   />
