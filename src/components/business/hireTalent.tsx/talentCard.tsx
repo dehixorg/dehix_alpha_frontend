@@ -166,6 +166,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
+  const scrollContainerRef = useRef<any>(null);
+  const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(
+    null,
+  );
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>(
     skillDomainDataProp || [],
   );
@@ -184,6 +188,31 @@ const TalentCard: React.FC<TalentCardProps> = ({
       setSkillDomainData(skillDomainDataProp);
     }
   }, [skillDomainDataProp]);
+
+  // Find the scrollable parent container
+  useEffect(() => {
+    const findScrollableParent = () => {
+      const element = document.querySelector(
+        '[data-tour="business-talent-list"]',
+      ) as HTMLElement;
+      if (element) {
+        scrollContainerRef.current = element;
+        setScrollContainer(element);
+      }
+    };
+
+    // Find immediately
+    findScrollableParent();
+
+    // Also try after a short delay
+    const timer1 = setTimeout(findScrollableParent, 100);
+    const timer2 = setTimeout(findScrollableParent, 500);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
 
   // Backward compatible: if parent does not provide hire list, fetch it once here.
   useEffect(() => {
@@ -367,7 +396,31 @@ const TalentCard: React.FC<TalentCardProps> = ({
   // This useEffect now triggers a new API call when filters change.
   useEffect(() => {
     resetAndFetchData();
-  }, [talentFilter, skillFilter, domainFilter]); // Trigger reset when filters change
+  }, [talentFilter, skillFilter, domainFilter, resetAndFetchData]); // Trigger reset when filters change
+
+  // Manual scroll detection as backup
+  useEffect(() => {
+    const scrollContainer = document.querySelector(
+      '[data-tour="business-talent-list"]',
+    ) as HTMLElement;
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      if (!hasMore || loading || isRequestInProgress.current) return;
+
+      const scrollTop = scrollContainer.scrollTop;
+      const scrollHeight = scrollContainer.scrollHeight;
+      const clientHeight = scrollContainer.clientHeight;
+
+      // Trigger when user is within 100px of bottom
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        fetchTalentData();
+      }
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loading, fetchTalentData]);
 
   const handleAddToLobby = async (freelancerId: string): Promise<boolean> => {
     const businessId = user?.uid;
@@ -1089,7 +1142,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
           hasMore={hasMore}
           isLoading={loading}
           next={fetchTalentData}
-          threshold={1}
+          threshold={0.1}
+          root={scrollContainer}
+          rootMargin="200px"
         >
           {loading && (
             <div className="flex flex-wrap justify-center gap-4 w-full mt-4">
