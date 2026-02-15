@@ -39,7 +39,7 @@ interface TokenRequest {
   amount: number | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   dateTime: string;
-  // [key: string]: any;
+  [key: string]: any;
 }
 
 interface DisplayConnectsDialogProps {
