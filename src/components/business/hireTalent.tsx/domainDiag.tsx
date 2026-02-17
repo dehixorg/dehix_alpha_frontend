@@ -20,6 +20,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -175,9 +176,9 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-3">
-            <label className="mb-1 block text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <Label className="mb-1 block text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Domain
-            </label>
+            </Label>
             <Controller
               control={control}
               name="label"
