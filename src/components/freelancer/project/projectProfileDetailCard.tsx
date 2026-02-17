@@ -36,13 +36,11 @@ interface ProjectProfileDetailCardProps {
   experience: number;
   minConnect: number;
   rate: number;
-  description: string;
   email?: string;
   status?: StatusEnum;
   startDate?: string;
   endDate?: string;
   className?: string;
-  domain_id: string;
   // business_id: string;
 }
 
@@ -86,7 +84,7 @@ export function ProjectProfileDetailCard({
         const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
         const allBids = response.data.data;
 
-        // Filter bids for the current project and get unique profile IDs
+        // Filter bids for the current project
         const projectBids = allBids.filter(
           (bid: any) => bid.project_id === params.project_id,
         );

@@ -39,7 +39,7 @@ interface TokenRequest {
   _id: string;
   amount: number | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  createdAt: string;
+  dateTime: string;
   [key: string]: any;
 }
 
@@ -62,14 +62,9 @@ export const DisplayConnectsDialog = React.forwardRef<
   const fetchConnectsRequest = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(
-        `/token-request/user/${userId}`,
-        {
-          params: { latestConnects: true },
-        },
-      );
+      const response = await axiosInstance.get(`/token-request/user/${userId}`);
 
-      const newData = response.data.data || [];
+      const newData = (response.data.data || []) as TokenRequest[];
       const currentConnects = parseInt(
         localStorage.getItem('DHX_CONNECTS') || '0',
         10,
@@ -136,22 +131,6 @@ export const DisplayConnectsDialog = React.forwardRef<
       setLoading(false);
     }
   }, [userId, userType]);
-
-  const handleNewConnectRequest = useCallback((event: Event) => {
-    const newConnect = (event as CustomEvent).detail;
-    setData((prevData) => {
-      const updatedData = [newConnect, ...prevData.slice(0, 2)];
-      setFilteredData(updatedData);
-      return updatedData;
-    });
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('newConnectRequest', handleNewConnectRequest);
-    return () => {
-      window.removeEventListener('newConnectRequest', handleNewConnectRequest);
-    };
-  }, [handleNewConnectRequest]);
 
   useEffect(() => {
     if (open) fetchConnectsRequest();
@@ -360,7 +339,7 @@ export const DisplayConnectsDialog = React.forwardRef<
                               </div>
                             </TableCell>
                             <TableCell className="text-right text-sm text-muted-foreground">
-                              {formatDate(item.createdAt)}
+                              {formatDate(item.dateTime)}
                             </TableCell>
                           </TableRow>
                         ))
@@ -391,7 +370,8 @@ export const DisplayConnectsDialog = React.forwardRef<
           {/* Footer */}
           <div className="p-3 border-t bg-muted/20 flex justify-between items-center">
             <p className="text-xs text-muted-foreground">
-              Showing {filteredData.length} of {data.length} requests
+              Showing {filteredData.length} request
+              {filteredData.length !== 1 ? 's' : ''}
             </p>
             <Button
               variant="ghost"

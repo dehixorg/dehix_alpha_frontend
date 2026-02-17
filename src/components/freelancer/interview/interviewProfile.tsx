@@ -6,6 +6,8 @@ import {
   Plus,
   Sparkles,
   Settings2,
+  Calendar,
+  Info,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -62,6 +64,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import type { RootState } from '@/lib/store';
+import TimeRangeSlider from '@/components/shared/TimeRangeSlider';
 
 const InterviewProfile: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
@@ -626,135 +629,230 @@ const InterviewProfile: React.FC = () => {
                   Manage availability
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col h-full">
-                <SheetHeader className="px-6 pt-6">
-                  <SheetTitle>Availability settings</SheetTitle>
-                  <SheetDescription>
-                    Configure when you are available for interviews.
+              <SheetContent className="w-full sm:max-w-xl p-0 flex flex-col h-full">
+                <SheetHeader className="px-6 pt-6 pb-4 border-b bg-gradient">
+                  <SheetTitle className="flex items-center gap-2 text-xl">
+                    <Calendar className="h-5 w-5" />
+                    Availability Settings
+                  </SheetTitle>
+                  <SheetDescription className="text-base">
+                    Configure your interview availability and preferences
                   </SheetDescription>
                 </SheetHeader>
 
                 <ScrollArea className="flex-1 min-h-0 px-6 py-4">
-                  <div className="grid gap-6">
-                    <div className="grid gap-4">
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div className="grid gap-2">
-                          <Label>Slot duration (min)</Label>
-                          <Input
-                            type="number"
-                            min={1}
-                            value={availability.slotDurationMinutes}
-                            onChange={(e) =>
-                              setAvailability((prev) => ({
-                                ...prev,
-                                slotDurationMinutes: Number(e.target.value),
-                              }))
-                            }
-                            disabled={availabilityLoading || availabilitySaving}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label>Buffer (min)</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            value={availability.bufferMinutes}
-                            onChange={(e) =>
-                              setAvailability((prev) => ({
-                                ...prev,
-                                bufferMinutes: Number(e.target.value),
-                              }))
-                            }
-                            disabled={availabilityLoading || availabilitySaving}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label>Min notice (min)</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            value={availability.minNoticeMinutes}
-                            onChange={(e) =>
-                              setAvailability((prev) => ({
-                                ...prev,
-                                minNoticeMinutes: Number(e.target.value),
-                              }))
-                            }
-                            disabled={availabilityLoading || availabilitySaving}
-                          />
+                  <div className="space-y-6">
+                    {/* Settings Overview */}
+                    <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                            Schedule Your Availability
+                          </h4>
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            Set your weekly availability and interview
+                            preferences to help candidates schedule interviews
+                            with you.
+                          </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid gap-3">
-                      <div className="text-sm font-medium">Weekly</div>
+                    {/* Time Settings */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        <h3 className="text-lg font-semibold">Time Settings</h3>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-2">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium flex items-center gap-1">
+                            Slot Duration
+                            <span className="text-xs text-gray-500">
+                              (minutes)
+                            </span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              min={15}
+                              max={180}
+                              step={15}
+                              value={availability.slotDurationMinutes}
+                              onChange={(e) =>
+                                setAvailability((prev) => ({
+                                  ...prev,
+                                  slotDurationMinutes: Number(e.target.value),
+                                }))
+                              }
+                              disabled={
+                                availabilityLoading || availabilitySaving
+                              }
+                              className="pr-12"
+                            />
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
+                              min
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium flex items-center gap-1">
+                            Buffer Time
+                            <span className="text-xs text-gray-500">
+                              (minutes)
+                            </span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={60}
+                              value={availability.bufferMinutes}
+                              onChange={(e) =>
+                                setAvailability((prev) => ({
+                                  ...prev,
+                                  bufferMinutes: Number(e.target.value),
+                                }))
+                              }
+                              disabled={
+                                availabilityLoading || availabilitySaving
+                              }
+                              className="pr-12"
+                            />
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
+                              min
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium flex items-center gap-1">
+                            Min Notice
+                            <span className="text-xs text-gray-500">
+                              (minutes)
+                            </span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={1440}
+                              value={availability.minNoticeMinutes}
+                              onChange={(e) =>
+                                setAvailability((prev) => ({
+                                  ...prev,
+                                  minNoticeMinutes: Number(e.target.value),
+                                }))
+                              }
+                              disabled={
+                                availabilityLoading || availabilitySaving
+                              }
+                              className="pr-12"
+                            />
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
+                              min
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
+                    {/* Weekly Schedule */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        <h3 className="text-lg font-semibold">
+                          Weekly Schedule
+                        </h3>
+                      </div>
                       <div className="grid gap-3">
                         {dayOrder.map((day) => {
                           const range = availability.weekly?.[day]?.[0];
                           const enabled = Boolean(range);
                           return (
-                            <div
+                            <Card
                               key={day}
-                              className="rounded-lg border p-3 grid gap-3"
+                              className={`border-l-4 transition-all duration-200 ${
+                                enabled
+                                  ? 'border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20'
+                                  : 'border-l-gray-300 dark:border-l-gray-600'
+                              }`}
                             >
-                              <div className="flex items-center justify-between">
-                                <div className="font-medium">
-                                  {dayLabel[day]}
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <div
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                        enabled
+                                          ? 'bg-blue-100 dark:bg-blue-900/30'
+                                          : 'bg-gray-100 dark:bg-gray-800'
+                                      }`}
+                                    >
+                                      <span
+                                        className={`text-sm font-bold ${
+                                          enabled
+                                            ? 'text-blue-600 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400'
+                                        }`}
+                                      >
+                                        {dayLabel[day].charAt(0)}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">
+                                        {dayLabel[day]}
+                                      </span>
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        {enabled ? 'Available' : 'Unavailable'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Label
+                                      className="text-xs text-muted-foreground cursor-pointer"
+                                      htmlFor={`switch-${day}`}
+                                    >
+                                      Available
+                                    </Label>
+                                    <Switch
+                                      id={`switch-${day}`}
+                                      checked={enabled}
+                                      onCheckedChange={(val) =>
+                                        toggleDayEnabled(day, Boolean(val))
+                                      }
+                                      disabled={
+                                        availabilityLoading ||
+                                        availabilitySaving
+                                      }
+                                    />
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <Label className="text-xs text-muted-foreground">
-                                    Available
-                                  </Label>
-                                  <Switch
-                                    checked={enabled}
-                                    onCheckedChange={(val) =>
-                                      toggleDayEnabled(day, Boolean(val))
-                                    }
-                                    disabled={
-                                      availabilityLoading || availabilitySaving
-                                    }
-                                  />
-                                </div>
-                              </div>
 
-                              {enabled ? (
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="grid gap-2">
-                                    <Label className="text-xs">Start</Label>
-                                    <Input
-                                      type="time"
-                                      value={range?.start || ''}
-                                      onChange={(e) =>
+                                {enabled && (
+                                  <div className="space-y-4">
+                                    <TimeRangeSlider
+                                      label="Available Time Range"
+                                      value={{
+                                        start: range?.start || '09:00',
+                                        end: range?.end || '17:00',
+                                      }}
+                                      onChange={(newValue) =>
                                         upsertSingleRangeForDay(day, {
-                                          start: e.target.value,
+                                          start: newValue.start,
+                                          end: newValue.end,
                                         })
                                       }
                                       disabled={
                                         availabilityLoading ||
                                         availabilitySaving
                                       }
+                                      min="06:00"
+                                      max="22:00"
                                     />
                                   </div>
-                                  <div className="grid gap-2">
-                                    <Label className="text-xs">End</Label>
-                                    <Input
-                                      type="time"
-                                      value={range?.end || ''}
-                                      onChange={(e) =>
-                                        upsertSingleRangeForDay(day, {
-                                          end: e.target.value,
-                                        })
-                                      }
-                                      disabled={
-                                        availabilityLoading ||
-                                        availabilitySaving
-                                      }
-                                    />
-                                  </div>
-                                </div>
-                              ) : null}
-                            </div>
+                                )}
+                              </CardContent>
+                            </Card>
                           );
                         })}
                       </div>
@@ -762,22 +860,33 @@ const InterviewProfile: React.FC = () => {
                   </div>
                 </ScrollArea>
 
-                <SheetFooter className="border-t px-6 py-4 flex-row gap-2">
-                  <Button
-                    variant="outline"
-                    type="button"
-                    onClick={() => setOpenAvailabilitySheet(false)}
-                    disabled={availabilitySaving}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={saveAvailability}
-                    disabled={availabilityLoading || availabilitySaving}
-                  >
-                    {availabilitySaving ? 'Saving...' : 'Save'}
-                  </Button>
+                <SheetFooter className="border-t px-6 py-4 bg-gray-50 dark:bg-gray-900">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full">
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpenAvailabilitySheet(false)}
+                      disabled={availabilitySaving}
+                      className="w-full sm:w-auto"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={saveAvailability}
+                      disabled={availabilityLoading || availabilitySaving}
+                    >
+                      {availabilitySaving ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-transparent rounded-full animate-spin mr-2" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Save Changes
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </SheetFooter>
               </SheetContent>
             </Sheet>

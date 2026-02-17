@@ -1,4 +1,5 @@
 'use client';
+
 import { usePathname, useRouter } from 'next/navigation';
 import { Users2, FileText } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -99,21 +100,31 @@ export default function Talent() {
       setDomains(nextDomains);
       setHireItems(nextHires);
 
-      const fetchedFilterSkills: Skill[] = (nextHires || [])
+      // Deduplicate skills by label using Map for O(n) performance
+      const skillsMap = new Map<string, Skill>();
+      (nextHires || [])
         .filter((item) => item?.type === 'SKILL' && item?.visible)
-        .map((item) => ({
-          _id: item?.talentId || item?._id,
-          label: item?.talentName || '',
-        }))
-        .filter((s) => Boolean(s._id) && Boolean(s.label));
+        .forEach((item) => {
+          const label = item?.talentName || '';
+          const _id = item?.talentId || item?._id;
+          if (label && _id && !skillsMap.has(label)) {
+            skillsMap.set(label, { _id, label });
+          }
+        });
+      const fetchedFilterSkills: Skill[] = Array.from(skillsMap.values());
 
-      const fetchedFilterDomains: Domain[] = (nextHires || [])
+      // Deduplicate domains by label using Map for O(n) performance
+      const domainsMap = new Map<string, Domain>();
+      (nextHires || [])
         .filter((item) => item?.type === 'DOMAIN' && item?.visible)
-        .map((item) => ({
-          _id: item?.talentId || item?._id,
-          label: item?.talentName || '',
-        }))
-        .filter((d) => Boolean(d._id) && Boolean(d.label));
+        .forEach((item) => {
+          const label = item?.talentName || '';
+          const _id = item?.talentId || item?._id;
+          if (label && _id && !domainsMap.has(label)) {
+            domainsMap.set(label, { _id, label });
+          }
+        });
+      const fetchedFilterDomains: Domain[] = Array.from(domainsMap.values());
 
       setFilterSkill(fetchedFilterSkills);
       setFilterDomain(fetchedFilterDomains);
@@ -146,20 +157,31 @@ export default function Talent() {
       setHireItems(cachedBusinessTalentBootstrap.hires);
 
       const hires = cachedBusinessTalentBootstrap.hires || [];
-      const fetchedFilterSkills: Skill[] = hires
+      // Deduplicate skills by label using Map for O(n) performance
+      const skillsMap = new Map<string, Skill>();
+      hires
         .filter((item) => item?.type === 'SKILL' && item?.visible)
-        .map((item) => ({
-          _id: item?.talentId || item?._id,
-          label: item?.talentName || '',
-        }))
-        .filter((s) => Boolean(s._id) && Boolean(s.label));
-      const fetchedFilterDomains: Domain[] = hires
+        .forEach((item) => {
+          const label = item?.talentName || '';
+          const _id = item?.talentId || item?._id;
+          if (label && _id && !skillsMap.has(label)) {
+            skillsMap.set(label, { _id, label });
+          }
+        });
+      const fetchedFilterSkills: Skill[] = Array.from(skillsMap.values());
+
+      // Deduplicate domains by label using Map for O(n) performance
+      const domainsMap = new Map<string, Domain>();
+      hires
         .filter((item) => item?.type === 'DOMAIN' && item?.visible)
-        .map((item) => ({
-          _id: item?.talentId || item?._id,
-          label: item?.talentName || '',
-        }))
-        .filter((d) => Boolean(d._id) && Boolean(d.label));
+        .forEach((item) => {
+          const label = item?.talentName || '';
+          const _id = item?.talentId || item?._id;
+          if (label && _id && !domainsMap.has(label)) {
+            domainsMap.set(label, { _id, label });
+          }
+        });
+      const fetchedFilterDomains: Domain[] = Array.from(domainsMap.values());
       setFilterSkill(fetchedFilterSkills);
       setFilterDomain(fetchedFilterDomains);
 
@@ -303,7 +325,7 @@ export default function Talent() {
             </Select>
           </div>
           <div
-            className="lg:h-[75vh] h-[59vh] rounded-lg  overflow-y-scroll no-scrollbar"
+            className="lg:h-[75vh] h-[59vh] rounded-lg overflow-y-scroll no-scrollbar"
             data-tour="business-talent-list"
           >
             <TalentCard
