@@ -98,20 +98,15 @@ export const DisplayConnectsDialog = React.forwardRef<
       });
 
       // Update processed requests in localStorage if there are new ones
-      if (hasUpdates) {
-        localStorage.setItem(
-          'PROCESSED_REQUESTS',
-          JSON.stringify(Array.from(updatedProcessedRequests)),
-        );
-      }
-
       setData(newData);
       setFilteredData(newData);
 
       if (newApprovedRequests.length > 0) {
         try {
+          let success = false;
           if (userType) {
-            await fetchAndUpdateConnects(userType);
+            const balance = await fetchAndUpdateConnects(userType);
+            success = balance !== null;
           } else {
             const totalNewConnects = newApprovedRequests.reduce(
               (sum: number, req: TokenRequest) => sum + Number(req.amount),
@@ -121,6 +116,14 @@ export const DisplayConnectsDialog = React.forwardRef<
             localStorage.setItem('DHX_CONNECTS', newTotal.toString());
             window.dispatchEvent(
               new CustomEvent('connectsUpdated', { detail: { newTotal } }),
+            );
+            success = true;
+          }
+
+          if (success && hasUpdates) {
+            localStorage.setItem(
+              'PROCESSED_REQUESTS',
+              JSON.stringify(Array.from(updatedProcessedRequests)),
             );
           }
         } catch (error) {

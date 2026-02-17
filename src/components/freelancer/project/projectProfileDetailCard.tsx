@@ -61,6 +61,8 @@ export function ProjectProfileDetailCard({
   startDate,
   endDate,
   className,
+  description: _description,
+  domain_id: _domain_id,
   ...props
 }: CardProps) {
   const user = useSelector((state: RootState) => state.user);
