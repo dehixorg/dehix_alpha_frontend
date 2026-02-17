@@ -20,6 +20,7 @@ import RequestConnectsDialog from './RequestConnectsDialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { fetchAndUpdateConnects } from '@/lib/updateConnects';
 import {
   Table,
   TableHeader,
@@ -45,12 +46,13 @@ interface TokenRequest {
 interface DisplayConnectsDialogProps {
   connects: number;
   userId: string;
+  userType?: 'freelancer' | 'business';
 }
 
 export const DisplayConnectsDialog = React.forwardRef<
   HTMLButtonElement,
   DisplayConnectsDialogProps
->(({ connects, userId }, ref) => {
+>(({ connects, userId, userType }, ref) => {
   const [filter, setFilter] = useState('ALL');
   const [filteredData, setFilteredData] = useState<TokenRequest[]>([]);
   const [data, setData] = useState<TokenRequest[]>([]);
@@ -107,28 +109,22 @@ export const DisplayConnectsDialog = React.forwardRef<
       setFilteredData(newData);
 
       if (newApprovedRequests.length > 0) {
-        const totalNewConnects = newApprovedRequests.reduce(
-          (sum: number, req: TokenRequest) => sum + Number(req.amount),
-          0,
-        );
-
         try {
-          await Promise.all(
-            newApprovedRequests.map((request) =>
-              axiosInstance.put(`/token-request/${request._id}/status`, {
-                status: 'APPROVED',
-                totalConnects: currentConnects,
-              }),
-            ),
-          );
-
-          const newTotal = currentConnects + totalNewConnects;
-          localStorage.setItem('DHX_CONNECTS', newTotal.toString());
-          window.dispatchEvent(
-            new CustomEvent('connectsUpdated', { detail: { newTotal } }),
-          );
+          if (userType) {
+            await fetchAndUpdateConnects(userType);
+          } else {
+            const totalNewConnects = newApprovedRequests.reduce(
+              (sum: number, req: TokenRequest) => sum + Number(req.amount),
+              0,
+            );
+            const newTotal = currentConnects + totalNewConnects;
+            localStorage.setItem('DHX_CONNECTS', newTotal.toString());
+            window.dispatchEvent(
+              new CustomEvent('connectsUpdated', { detail: { newTotal } }),
+            );
+          }
         } catch (error) {
-          console.error('Error updating token request status:', error);
+          console.error('Error syncing connects after approval:', error);
         }
       }
     } catch (error) {
@@ -136,7 +132,7 @@ export const DisplayConnectsDialog = React.forwardRef<
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, userType]);
 
   const handleNewConnectRequest = useCallback((event: Event) => {
     const newConnect = (event as CustomEvent).detail;

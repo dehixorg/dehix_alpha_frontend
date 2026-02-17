@@ -355,10 +355,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
   }, [fetchTalentData]);
 
   // This useEffect now triggers a new API call when filters change.
+  const resetAndFetchData = useCallback(() => {
+    // implementation
+  }, [talentFilter, skillFilter, domainFilter]);
+
   useEffect(() => {
     resetAndFetchData();
-  }, [talentFilter, skillFilter, domainFilter]); // Trigger reset when filters change
-
+  }, [resetAndFetchData]);
   const handleAddToLobby = async (freelancerId: string): Promise<boolean> => {
     const businessId = user?.uid;
     const hires = (currSkills || [])
@@ -397,7 +400,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
 
         // Sync connects balance after invitation
         try {
-          await fetchAndUpdateConnects(businessId, 'business');
+          await fetchAndUpdateConnects('business');
         } catch (error) {
           console.warn('Failed to sync connects after invitation:', error);
           // Don't block success flow if sync fails

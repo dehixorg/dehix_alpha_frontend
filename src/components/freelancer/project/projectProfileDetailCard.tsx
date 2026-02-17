@@ -56,19 +56,17 @@ export function ProjectProfileDetailCard({
   skills,
   experience,
   minConnect,
-  description,
   email,
   status,
   startDate,
   endDate,
   className,
-  domain_id,
   ...props
 }: CardProps) {
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
   const params = useParams();
-  const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
+  // const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Removed unused state
   const [exist, setExist] = useState(false);
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
 
@@ -94,8 +92,6 @@ export function ProjectProfileDetailCard({
         const uniqueProfileIds = profileIds.filter(
           (id: string, index: number) => profileIds.indexOf(id) === index,
         );
-
-        setBidProfiles(uniqueProfileIds);
 
         // Check if current profile is already bid on
         setExist(uniqueProfileIds.includes(_id));

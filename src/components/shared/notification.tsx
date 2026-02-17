@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { DocumentData } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 
 import { Badge } from '../ui/badge';
@@ -31,47 +30,101 @@ import {
   markAllNotificationsAsRead,
   subscribeToUserNotifications,
 } from '@/utils/common/firestoreUtils';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { fetchAndUpdateConnects } from '@/lib/updateConnects';
 
 export const NotificationButton = () => {
-  const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
   const [notifications, setNotifications] = useState<DocumentData[]>([]);
   const [showAll, setShowAll] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-
-  // Sort notifications by timestamp (latest first) and limit display
-  const sortedNotifications = notifications.sort(
+  const sortedNotifications = [...notifications].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
-
   const displayedNotifications = showAll
     ? sortedNotifications
     : sortedNotifications.slice(0, 5);
-
   const hasMoreNotifications = sortedNotifications.length > 5;
 
-  useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
+  // Merge incoming notifications with existing ones, deduplicating by id
+  const mergeNotifications = (
+    prev: DocumentData[],
+    incoming: DocumentData[],
+  ): DocumentData[] => {
+    const map = new Map<string, DocumentData>();
+    for (const n of prev) map.set(n.id, n);
+    for (const n of incoming) map.set(n.id, n); // incoming wins on conflict
+    return Array.from(map.values());
+  };
 
-    // Set up real-time listener for user notifications
-    if (user?.uid) {
+  const userType =
+    user?.type &&
+    ['freelancer', 'business'].includes(String(user.type).toLowerCase())
+      ? (String(user.type).toLowerCase() as 'freelancer' | 'business')
+      : undefined;
+
+  const maybeRefreshConnects = React.useCallback(
+    (list: DocumentData[]) => {
+      const hasConnectsApproved = list.some(
+        (n) =>
+          typeof n.message === 'string' &&
+          /connects.*approved|approved.*connects/i.test(n.message),
+      );
+      if (hasConnectsApproved && user?.uid && userType) {
+        fetchAndUpdateConnects(userType).catch(() => {});
+      }
+    },
+    [user?.uid, userType],
+  );
+
+  const fetchFromApi = React.useCallback(() => {
+    if (!user?.uid) return;
+    axiosInstance
+      .get('/token-request/me/notifications')
+      .then((r) => {
+        const list: DocumentData[] = r.data?.data ?? [];
+        if (list.length > 0) {
+          maybeRefreshConnects(list);
+          setNotifications((prev) => mergeNotifications(prev, list));
+        }
+      })
+      .catch(() => {});
+  }, [user?.uid, maybeRefreshConnects]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    // Firestore real-time (works when same Firebase project)
+    let unsubscribe: (() => void) | undefined;
+    try {
       unsubscribe = subscribeToUserNotifications(user.uid, (data) => {
-        setNotifications(data);
+        if (data.length > 0) {
+          maybeRefreshConnects(data);
+          setNotifications((prev) => mergeNotifications(prev, data));
+        }
       });
+    } catch {
+      // Firestore subscription failed - API polling is the fallback
     }
 
-    // Clean up the listener when the component is unmounted
-    return () => {
-      if (unsubscribe) {
-        unsubscribe(); // Call unsubscribe only if it is defined
-      }
-    };
-  }, [user]);
+    // API: fetch immediately + poll every 10s as reliable fallback
+    fetchFromApi();
+    const interval = setInterval(fetchFromApi, 10_000);
 
-  // Reset showAll when popover closes
-  const handlePopoverClose = () => {
-    setShowAll(false);
+    return () => {
+      unsubscribe?.();
+      clearInterval(interval);
+    };
+  }, [user?.uid, fetchFromApi, maybeRefreshConnects]);
+
+  // Refetch when popover opens; reset showAll when it closes
+  const handlePopoverChange = (open: boolean) => {
+    if (open) {
+      fetchFromApi(); // immediate fresh data when user clicks bell
+    } else {
+      setShowAll(false);
+    }
   };
 
   function iconGetter(entity: string): JSX.Element {
@@ -140,7 +193,7 @@ export const NotificationButton = () => {
   };
 
   return (
-    <Popover onOpenChange={(open) => !open && handlePopoverClose()}>
+    <Popover onOpenChange={handlePopoverChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -230,9 +283,8 @@ export const NotificationButton = () => {
             <div className="p-3 space-y-3">
               {displayedNotifications.map((notification: any) => (
                 <div
-                  onClick={() => router.push(notification.path)}
                   key={notification.id}
-                  className="rounded-lg py-3 px-3 cursor-pointer hover:bg-muted hover:opacity-75 transition border border-transparent hover:border-primary/20 bg-card"
+                  className="rounded-lg py-3 px-3 border border-transparent bg-card"
                 >
                   <div className="flex items-start space-x-3">
                     <div className="relative flex-shrink-0">
@@ -299,9 +351,11 @@ export const NotificationButton = () => {
                 className="w-full text-xs sm:text-sm"
                 onClick={async () => {
                   try {
-                    await markAllNotificationsAsRead(user.uid);
+                    await axiosInstance.put(
+                      '/token-request/me/notifications/read',
+                    );
+                    markAllNotificationsAsRead(user.uid).catch(() => {});
                   } finally {
-                    // Optimistically update UI
                     setNotifications((prev) =>
                       prev.map((n) => ({ ...n, isRead: true })),
                     );
