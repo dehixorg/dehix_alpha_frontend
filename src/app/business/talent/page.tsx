@@ -81,8 +81,8 @@ export default function Talent() {
     setBootstrapLoading(true);
     try {
       const [skillsRes, domainsRes, hiresRes] = await Promise.all([
-        axiosInstance.get('/skills'),
-        axiosInstance.get('/domain'),
+        axiosInstance.get('/skills/all'),
+        axiosInstance.get('/domain/all'),
         axiosInstance.get('/business/hire-dehixtalent'),
       ]);
 

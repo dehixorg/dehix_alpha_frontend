@@ -17,10 +17,14 @@ export const projectInvitationService = {
     });
   },
 
-  rejectInvitation: async (inviteId: string) => {
+  respondInvitation: async (
+    inviteId: string,
+    status: 'ACCEPTED' | 'REJECTED',
+  ) => {
     return apiService({
       method: Api_Methods.PATCH,
-      endpoint: `/freelancer/invite/${inviteId}/reject`,
+      endpoint: `/freelancer/invite/${inviteId}/respond`,
+      body: { status },
     });
   },
 };

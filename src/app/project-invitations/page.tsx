@@ -230,7 +230,10 @@ const ProjectInvitationsPage: React.FC = () => {
 
     setRejectingInviteId(inv._id);
     try {
-      const res = await projectInvitationService.rejectInvitation(inviteId);
+      const res = await projectInvitationService.respondInvitation(
+        inviteId,
+        'REJECTED',
+      );
       if (!res?.success) {
         const errorMessage =
           res?.data?.message ||
@@ -249,6 +252,11 @@ const ProjectInvitationsPage: React.FC = () => {
     } finally {
       setRejectingInviteId(null);
     }
+  };
+
+  const handleBidOnProject = (inv: ProjectInvitation) => {
+    if (!isFreelancer) return;
+    router.push(`/freelancer/market/project/${inv.projectId}/apply`);
   };
 
   const InvitationsContent = () => {
@@ -441,17 +449,27 @@ const ProjectInvitationsPage: React.FC = () => {
                     <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
                       {isFreelancer &&
                         inv.status === InvitationStatus.PENDING && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            disabled={rejectingInviteId === inv._id}
-                            onClick={() => handleRejectInvite(inv)}
-                          >
-                            <CircleX className="h-4 w-4" />
-                            {rejectingInviteId === inv._id
-                              ? 'Rejecting...'
-                              : 'Reject'}
-                          </Button>
+                          <>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleBidOnProject(inv)}
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                              Bid
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled={rejectingInviteId === inv._id}
+                              onClick={() => handleRejectInvite(inv)}
+                            >
+                              <CircleX className="h-4 w-4" />
+                              {rejectingInviteId === inv._id
+                                ? 'Rejecting...'
+                                : 'Reject'}
+                            </Button>
+                          </>
                         )}
                       {isBusiness && (
                         <Button
