@@ -76,10 +76,8 @@ export const DisplayConnectsDialog = React.forwardRef<
       );
 
       const newApprovedRequests: TokenRequest[] = [];
-      const updatedProcessedRequests = new Set(processedRequests);
-      let hasUpdates = false;
 
-      // Process new data
+      // Process new data - identify approved requests that haven't been processed yet
       newData.forEach((newItem: TokenRequest) => {
         // Only process approved requests that haven't been processed yet
         if (
@@ -87,8 +85,6 @@ export const DisplayConnectsDialog = React.forwardRef<
           !processedRequests.has(newItem._id)
         ) {
           newApprovedRequests.push(newItem);
-          updatedProcessedRequests.add(newItem._id);
-          hasUpdates = true;
         }
       });
 
@@ -115,7 +111,12 @@ export const DisplayConnectsDialog = React.forwardRef<
             success = true;
           }
 
-          if (success && hasUpdates) {
+          // Only update PROCESSED_REQUESTS after fetch succeeds
+          if (success) {
+            const updatedProcessedRequests = new Set(processedRequests);
+            newApprovedRequests.forEach((req) => {
+              updatedProcessedRequests.add(req._id);
+            });
             localStorage.setItem(
               'PROCESSED_REQUESTS',
               JSON.stringify(Array.from(updatedProcessedRequests)),

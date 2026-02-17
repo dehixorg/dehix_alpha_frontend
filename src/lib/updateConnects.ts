@@ -24,7 +24,6 @@ export const updateConnectsBalance = (newBalance: number): void => {
  * Returns the new balance so callers can update UI immediately.
  */
 export const fetchAndUpdateConnects = async (
-  userId: string,
   userType?: 'freelancer' | 'business',
 ): Promise<number | null> => {
   const endpoints: Array<'/freelancer/me' | '/business/me'> =

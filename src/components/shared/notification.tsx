@@ -12,6 +12,7 @@ import {
   User,
   UsersRound,
   ChevronDown,
+  AlertCircle,
 } from 'lucide-react';
 import { DocumentData } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
@@ -25,6 +26,7 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RootState } from '@/lib/store';
 import {
   markAllNotificationsAsRead,
@@ -65,31 +67,52 @@ export const NotificationButton = () => {
       : undefined;
 
   const processedNotificationIds = React.useRef(new Set<string>());
+  const processedConnectsApprovedIds = React.useRef(new Set<string>());
   const isMounted = React.useRef(true);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+  const [fetchError, setFetchError] = React.useState<string | null>(null);
 
   useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
+      abortControllerRef.current?.abort();
     };
   }, []);
 
   const maybeRefreshConnects = React.useCallback(
     (list: DocumentData[]) => {
+      if (!user?.uid || !userType) return;
+
       let needsRefresh = false;
+      const newConnectsApprovedIds: string[] = [];
+
       list.forEach((n) => {
+        // Skip if already processed
         if (processedNotificationIds.current.has(n.id)) return;
 
-        if (
+        // Check if this is a "connects approved" notification
+        const isConnectsApproved =
           typeof n.message === 'string' &&
-          /connects.*approved|approved.*connects/i.test(n.message)
-        ) {
-          needsRefresh = true;
+          /connects.*approved|approved.*connects/i.test(n.message);
+
+        if (isConnectsApproved) {
+          // Only refresh if we haven't already processed this connects-approved notification
+          if (!processedConnectsApprovedIds.current.has(n.id)) {
+            needsRefresh = true;
+            newConnectsApprovedIds.push(n.id);
+          }
         }
+
+        // Mark all notifications as processed
         processedNotificationIds.current.add(n.id);
       });
 
-      if (needsRefresh && user?.uid && userType) {
+      // Only call fetchAndUpdateConnects once for new connects-approved notifications
+      if (needsRefresh && newConnectsApprovedIds.length > 0) {
+        newConnectsApprovedIds.forEach((id) => {
+          processedConnectsApprovedIds.current.add(id);
+        });
         fetchAndUpdateConnects(userType).catch(() => {});
       }
     },
@@ -98,8 +121,15 @@ export const NotificationButton = () => {
 
   const fetchFromApi = React.useCallback(() => {
     if (!user?.uid) return;
+
+    // Cancel previous request if still in flight
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
     axiosInstance
-      .get('/token-request/me/notifications')
+      .get('/token-request/me/notifications', {
+        signal: abortControllerRef.current.signal,
+      })
       .then((r) => {
         if (!isMounted.current) return;
         const list: DocumentData[] = r.data?.data ?? [];
@@ -107,17 +137,20 @@ export const NotificationButton = () => {
           maybeRefreshConnects(list);
           setNotifications((prev) => mergeNotifications(prev, list));
         }
+        setFetchError(null);
       })
       .catch((error) => {
         if (!isMounted.current) return;
+        // Don't set error for aborted requests
+        if (error.name === 'AbortError' || error.name === 'CanceledError') {
+          return;
+        }
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          'Failed to fetch notifications';
         console.error('Failed to fetch notifications:', error);
-        // User-visible error: could show a toast, but for a background poller,
-        // it might be annoying. However, requirements say "expose a user-visible error state".
-        // We'll use a subtle console error or a toast if it's a manual fetch?
-        // Since this runs on interval, notifyError() every 10s is bad.
-        // I will log it. If user clicked bell (manual), maybe show toast?
-        // The requirement "expose a user-visible error state" is tricky for polling.
-        // I'll stick to logging to avoid UI spam, unless user interaction triggered it.
+        setFetchError(errorMessage);
       });
   }, [user?.uid, maybeRefreshConnects]);
 
@@ -250,6 +283,18 @@ export const NotificationButton = () => {
             {unreadCount} unread
           </Badge>
         </div>
+
+        {/* Error Display */}
+        {fetchError && (
+          <div className="px-4 pt-3">
+            <Alert variant="destructive" className="py-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                {fetchError}
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
 
         {/* Content Area - Scrollable */}
         {notifications.length === 0 ? (

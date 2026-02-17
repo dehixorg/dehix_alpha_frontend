@@ -36,11 +36,13 @@ interface ProjectProfileDetailCardProps {
   experience: number;
   minConnect: number;
   rate: number;
+  description?: string;
   email?: string;
   status?: StatusEnum;
   startDate?: string;
   endDate?: string;
   className?: string;
+  domain_id?: string;
   // business_id: string;
 }
 
@@ -59,7 +61,9 @@ export function ProjectProfileDetailCard({
   startDate,
   endDate,
   className,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   description: _description,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   domain_id: _domain_id,
   ...props
 }: CardProps) {
