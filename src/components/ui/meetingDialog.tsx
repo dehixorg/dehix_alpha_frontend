@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DateTimePicker } from '@/components/ui/date-picker';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { Plus, CalendarIcon, Users, X } from 'lucide-react';
@@ -145,7 +146,7 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -156,169 +157,171 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="summary">Meeting Title *</Label>
-                <Input
-                  id="summary"
-                  value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
-                  placeholder="Enter meeting title"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Provide a detailed description of the meeting"
-                  className="min-h-[80px] resize-none"
-                  rows={3}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Date and Time */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                Date and Time
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <DateTimePicker
-                  date={startDate}
-                  onDateChange={(date) => date && setStartDate(date)}
-                  time={startTime}
-                  onTimeChange={setStartTime}
-                  label="Start Date & Time *"
-                />
-
-                <DateTimePicker
-                  date={endDate}
-                  onDateChange={(date) => date && setEndDate(date)}
-                  time={endTime}
-                  onTimeChange={setEndTime}
-                  label="End Date & Time *"
-                />
-              </div>
-
-              {timeError && (
-                <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-                  {timeError}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Attendees */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Attendees
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {attendees.map((attendee, index) => (
-                <div className="flex items-center gap-2" key={index}>
+        <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
+          <form onSubmit={handleSubmit} className="space-y-6 py-4">
+            {/* Basic Information */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Basic Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="summary">Meeting Title *</Label>
                   <Input
-                    value={attendee}
-                    onChange={(e) =>
-                      handleAttendeeChange(index, e.target.value)
-                    }
-                    placeholder="Enter attendee email"
-                    type="email"
-                    className="flex-grow"
-                    required={index === 0}
+                    id="summary"
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    placeholder="Enter meeting title"
+                    required
                   />
-                  {attendees.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeAttendee(index)}
-                      className="flex-shrink-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {index === attendees.length - 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={addAttendee}
-                      className="flex-shrink-0"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
                 </div>
-              ))}
-              <p className="text-sm text-muted-foreground">
-                Add email addresses of meeting attendees
-              </p>
-            </CardContent>
-          </Card>
 
-          <DialogFooter className="flex justify-center pt-4">
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="min-w-[140px]"
-            >
-              {submitting ? 'Creating Meeting...' : 'Create Meeting'}
-            </Button>
-          </DialogFooter>
-        </form>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Provide a detailed description of the meeting"
+                    className="min-h-[80px] resize-none"
+                    rows={3}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-        {meetLink && (
-          <Card className="mt-4">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                <Label className="text-base font-medium">Meeting Link</Label>
-                <div className="flex gap-2">
-                  <Input value={meetLink} readOnly className="flex-grow" />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(meetLink);
-                        toast({
-                          title: 'Copied!',
-                          description: 'Meeting link copied to clipboard.',
-                        });
-                      } catch (error) {
-                        console.error('Failed to copy:', error);
-                        toast({
-                          variant: 'destructive',
-                          title: 'Copy failed',
-                          description: 'Please copy the link manually.',
-                        });
+            {/* Date and Time */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Date and Time
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <DateTimePicker
+                    date={startDate}
+                    onDateChange={(date) => date && setStartDate(date)}
+                    time={startTime}
+                    onTimeChange={setStartTime}
+                    label="Start Date & Time *"
+                  />
+
+                  <DateTimePicker
+                    date={endDate}
+                    onDateChange={(date) => date && setEndDate(date)}
+                    time={endTime}
+                    onTimeChange={setEndTime}
+                    label="End Date & Time *"
+                  />
+                </div>
+
+                {timeError && (
+                  <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                    {timeError}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Attendees */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Attendees
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {attendees.map((attendee, index) => (
+                  <div className="flex items-center gap-2" key={index}>
+                    <Input
+                      value={attendee}
+                      onChange={(e) =>
+                        handleAttendeeChange(index, e.target.value)
                       }
-                    }}
-                  >
-                    Copy
-                  </Button>
+                      placeholder="Enter attendee email"
+                      type="email"
+                      className="flex-grow"
+                      required={index === 0}
+                    />
+                    {attendees.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeAttendee(index)}
+                        className="flex-shrink-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {index === attendees.length - 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={addAttendee}
+                        className="flex-shrink-0"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <p className="text-sm text-muted-foreground">
+                  Add email addresses of meeting attendees
+                </p>
+              </CardContent>
+            </Card>
+
+            <DialogFooter className="flex justify-center pt-4">
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="min-w-[140px]"
+              >
+                {submitting ? 'Creating Meeting...' : 'Create Meeting'}
+              </Button>
+            </DialogFooter>
+          </form>
+
+          {meetLink && (
+            <Card className="mt-4">
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Meeting Link</Label>
+                  <div className="flex gap-2">
+                    <Input value={meetLink} readOnly className="flex-grow" />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(meetLink);
+                          toast({
+                            title: 'Copied!',
+                            description: 'Meeting link copied to clipboard.',
+                          });
+                        } catch (error) {
+                          console.error('Failed to copy:', error);
+                          toast({
+                            variant: 'destructive',
+                            title: 'Copy failed',
+                            description: 'Please copy the link manually.',
+                          });
+                        }
+                      }}
+                    >
+                      Copy
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
