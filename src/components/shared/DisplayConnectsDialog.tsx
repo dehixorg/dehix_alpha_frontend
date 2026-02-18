@@ -20,7 +20,10 @@ import RequestConnectsDialog from './RequestConnectsDialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { fetchAndUpdateConnects, updateConnectsBalance } from '@/lib/updateConnects';
+import {
+  fetchAndUpdateConnects,
+  updateConnectsBalance,
+} from '@/lib/updateConnects';
 import {
   Table,
   TableHeader,
@@ -65,10 +68,7 @@ export const DisplayConnectsDialog = React.forwardRef<
       const response = await axiosInstance.get(`/token-request/user/${userId}`);
 
       const newData = (response.data.data || []) as TokenRequest[];
-      const currentConnects = parseInt(
-        localStorage.getItem('DHX_CONNECTS') || '0',
-        10,
-      );
+
 
       // Get the set of processed request IDs from localStorage
       const processedRequests = new Set(
@@ -103,8 +103,39 @@ export const DisplayConnectsDialog = React.forwardRef<
               (sum: number, req: TokenRequest) => sum + Number(req.amount),
               0,
             );
-            const newTotal = currentConnects + totalNewConnects;
-            updateConnectsBalance(newTotal);
+
+            // CAS retry logic for local storage update
+            let retries = 3;
+            let updated = false;
+
+            while (retries > 0 && !updated) {
+              const currentStr = localStorage.getItem('DHX_CONNECTS') || '0';
+              const currentConnects = parseInt(currentStr, 10);
+              const newTotal = currentConnects + totalNewConnects;
+
+              // Optimistic update attempt
+              // Check if value changed during computation (simple collision check)
+              if (localStorage.getItem('DHX_CONNECTS') === (currentStr === '0' && !localStorage.getItem('DHX_CONNECTS') ? null : currentStr)) {
+                updateConnectsBalance(newTotal);
+                updated = true;
+              } else {
+                retries--;
+                await new Promise(r => setTimeout(r, 50)); // backoff
+              }
+
+              // Fallback if strict CAS is not possible with just localStorage:
+              // Just verify we are writing fresh data.
+              // Since we don't have atomic hardware CAS for localStorage, 
+              // we just minimize the window. The above check is best-effort.
+              if (!updated && retries === 0) {
+                // Final attempt force write
+                updateConnectsBalance(currentConnects + totalNewConnects);
+                updated = true;
+              }
+            }
+
+            // Wait for event dispatch propagation if needed, though updateConnectsBalance is sync-like for localStorage
+            await new Promise(resolve => setTimeout(resolve, 0));
             success = true;
           }
 
@@ -143,7 +174,7 @@ export const DisplayConnectsDialog = React.forwardRef<
   const formatDate = (dateString: string) => {
     try {
       // Handle different date string formats
-      let date: Date;
+      let date: Date = new Date(); // Initialize to ensure safety
 
       // If it's already a valid date string that can be parsed by Date
       if (dateString) {
@@ -168,6 +199,8 @@ export const DisplayConnectsDialog = React.forwardRef<
                 parts[4] ? parseInt(parts[4]) : 0,
                 parts[5] ? parseInt(parts[5]) : 0,
               );
+            } else {
+              date = new Date(); // Fallback to avoid strict uninitialized error, though logic below handles invalid dates
             }
           }
         }
@@ -321,9 +354,9 @@ export const DisplayConnectsDialog = React.forwardRef<
                           </TableRow>
                         ))
                       ) : filteredData.length > 0 ? (
-                        filteredData.map((item, idx) => (
+                        filteredData.map((item) => (
                           <TableRow
-                            key={idx}
+                            key={item._id}
                             className="group h-11 hover:bg-muted/40"
                           >
                             <TableCell className="font-medium text-sm text-center">

@@ -7,7 +7,8 @@ import { axiosInstance } from './axiosinstance';
 export const updateConnectsBalance = (newBalance: number): void => {
   try {
     // Ensure the balance is a valid number
-    const validBalance = Math.max(0, Number(newBalance));
+    const num = Number(newBalance);
+    const validBalance = Number.isFinite(num) ? Math.max(0, num) : 0;
 
     // Update localStorage
     localStorage.setItem('DHX_CONNECTS', validBalance.toString());

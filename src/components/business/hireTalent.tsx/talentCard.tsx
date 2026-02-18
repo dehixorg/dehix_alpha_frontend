@@ -72,22 +72,7 @@ interface ProfessionalInfo {
   verificationStatus?: string;
 }
 
-interface Education {
-  _id: string;
-  degree: string;
-  universityName: string;
-  fieldOfStudy: string;
-  startDate: string;
-  endDate: string;
-  grade: string;
-}
-interface Projects {
-  _id: string;
-  projectName: string;
-  githubLink: string;
-  techUsed: string[];
-  role: string;
-}
+
 
 interface DehixTalent {
   freelancer_id: any;
@@ -279,6 +264,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setFilterDomain?.(filterDomains);
       } catch (e) {
         // keep UI usable even if this fails
+        console.error('TalentCard: failed to fetch/update connects', e);
       }
     };
 
@@ -394,7 +380,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
   }, [fetchTalentData]);
 
   // This useEffect now triggers a new API call when filters change.
-
 
   useEffect(() => {
     resetAndFetchData();
@@ -710,8 +695,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                     target={talent.Github ? '_blank' : '_self'}
                                     rel="noopener noreferrer"
                                     className={`flex items-center gap-2 transition-all ${talent.Github
-                                        ? 'text-primary hover:text-primary/80'
-                                        : 'text-gray-500 cursor-default'
+                                      ? 'text-primary hover:text-primary/80'
+                                      : 'text-gray-500 cursor-default'
                                       }`}
                                     aria-label="GitHub profile"
                                   >
@@ -724,8 +709,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                     }
                                     rel="noopener noreferrer"
                                     className={`flex items-center gap-2 transition-all ${talent.LinkedIn
-                                        ? 'text-primary hover:text-primary/80'
-                                        : 'text-gray-500 cursor-default'
+                                      ? 'text-primary hover:text-primary/80'
+                                      : 'text-gray-500 cursor-default'
                                       }`}
                                     aria-label="LinkedIn profile"
                                   >
@@ -1090,28 +1075,29 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   </Button>
                 </div>
               </CardFooter>
-              {selectedTalent && (
-                <AddToLobbyDialog
-                  skillDomainData={skillDomainData}
-                  currSkills={currSkills}
-                  handleAddSkill={handleAddSkill}
-                  handleDeleteSkill={handleDeleteSkill}
-                  handleAddToLobby={handleAddToLobby}
-                  talent={selectedTalent}
-                  setTmpSkill={setTmpSkill}
-                  open={isDialogOpen}
-                  setOpen={(v: boolean) => {
-                    setIsDialogOpen(v);
-                    if (v) setOpenSheetId(null);
-                  }}
-                  isLoading={isLoading}
-                  setLoading={setIsLoading}
-                />
-              )}
               <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>
             </Card>
           );
         })}
+
+        {selectedTalent && (
+          <AddToLobbyDialog
+            skillDomainData={skillDomainData}
+            currSkills={currSkills}
+            handleAddSkill={handleAddSkill}
+            handleDeleteSkill={handleDeleteSkill}
+            handleAddToLobby={handleAddToLobby}
+            talent={selectedTalent}
+            setTmpSkill={setTmpSkill}
+            open={isDialogOpen}
+            setOpen={(v: boolean) => {
+              setIsDialogOpen(v);
+              if (v) setOpenSheetId(null);
+            }}
+            isLoading={isLoading}
+            setLoading={setIsLoading}
+          />
+        )}
         {/* ... (InfiniteScroll and loading skeleton) */}
         <InfiniteScroll
           hasMore={hasMore}

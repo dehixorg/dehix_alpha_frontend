@@ -73,15 +73,14 @@ export const NotificationButton = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
   const sortedNotifications = [...notifications].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    (a, b) => (getSafeDate(b.timestamp)?.getTime() ?? 0) - (getSafeDate(a.timestamp)?.getTime() ?? 0),
   );
   const displayedNotifications = showAll
     ? sortedNotifications
     : sortedNotifications.slice(0, 5);
   const hasMoreNotifications = sortedNotifications.length > 5;
 
-  // const [showAll, setShowAll] = useState(false); // keep existing state
-  // mergeNotifications moved outside
+
 
   const userType =
     user?.type &&
@@ -149,7 +148,7 @@ export const NotificationButton = () => {
       })
       .then((r) => {
         if (!isMounted.current) return;
-        const list: DocumentData[] = r.data?.data ?? [];
+        const list: DocumentData[] = (r.data?.data ?? []).filter((item: any) => item && item.id);
         if (list.length > 0) {
           maybeRefreshConnects(list);
           setNotifications((prev) => mergeNotifications(prev, list));
@@ -448,13 +447,22 @@ export const NotificationButton = () => {
                     await axiosInstance.put(
                       '/token-request/me/notifications/read',
                     );
-                    await markAllNotificationsAsRead(user.uid);
-                    // Only update local state on success
                     setNotifications((prev) =>
                       prev.map((n) => ({ ...n, isRead: true })),
                     );
+
+                    try {
+                      if (user?.uid) {
+                        await markAllNotificationsAsRead(user.uid);
+                      }
+                    } catch (firestoreError) {
+                      console.error('Firestore mark-read failed (non-blocking):', firestoreError);
+                    }
                   } catch (error) {
-                    console.error('Failed to mark notifications as read:', error);
+                    console.error(
+                      'Failed to mark notifications as read:',
+                      error,
+                    );
                     notifyError(
                       'Failed to mark notifications as read. Please try again.',
                     );
