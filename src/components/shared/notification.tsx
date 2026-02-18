@@ -34,6 +34,37 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { fetchAndUpdateConnects } from '@/lib/updateConnects';
+import { notifyError } from '@/utils/toastMessage';
+
+// Merge incoming notifications with existing ones, deduplicating by id
+const mergeNotifications = (
+  prev: DocumentData[],
+  incoming: DocumentData[],
+): DocumentData[] => {
+  const map = new Map<string, DocumentData>();
+  for (const n of prev) map.set(n.id, n);
+  for (const n of incoming) map.set(n.id, n); // incoming wins on conflict
+  return Array.from(map.values());
+};
+
+const getSafeDate = (timestamp: any): Date | null => {
+  if (!timestamp) return null;
+  // Handle Firestore Timestamp
+  if (typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  // Handle numeric seconds (likely Firestore seconds without toDate in some mocks/serials)
+  if (typeof timestamp === 'number' && timestamp < 1e12) {
+    return new Date(timestamp * 1000);
+  }
+  // Handle numeric millis
+  if (typeof timestamp === 'number') {
+    return new Date(timestamp);
+  }
+  // Handle string/Date
+  const d = new Date(timestamp);
+  return !isNaN(d.getTime()) ? d : null;
+};
 
 export const NotificationButton = () => {
   const user = useSelector((state: RootState) => state.user);
@@ -49,25 +80,16 @@ export const NotificationButton = () => {
     : sortedNotifications.slice(0, 5);
   const hasMoreNotifications = sortedNotifications.length > 5;
 
-  // Merge incoming notifications with existing ones, deduplicating by id
-  const mergeNotifications = (
-    prev: DocumentData[],
-    incoming: DocumentData[],
-  ): DocumentData[] => {
-    const map = new Map<string, DocumentData>();
-    for (const n of prev) map.set(n.id, n);
-    for (const n of incoming) map.set(n.id, n); // incoming wins on conflict
-    return Array.from(map.values());
-  };
+  // const [showAll, setShowAll] = useState(false); // keep existing state
+  // mergeNotifications moved outside
 
   const userType =
     user?.type &&
-    ['freelancer', 'business'].includes(String(user.type).toLowerCase())
+      ['freelancer', 'business'].includes(String(user.type).toLowerCase())
       ? (String(user.type).toLowerCase() as 'freelancer' | 'business')
       : undefined;
 
   const processedNotificationIds = React.useRef(new Set<string>());
-  const processedConnectsApprovedIds = React.useRef(new Set<string>());
   const isMounted = React.useRef(true);
   const abortControllerRef = React.useRef<AbortController | null>(null);
   const [fetchError, setFetchError] = React.useState<string | null>(null);
@@ -97,11 +119,8 @@ export const NotificationButton = () => {
           /connects.*approved|approved.*connects/i.test(n.message);
 
         if (isConnectsApproved) {
-          // Only refresh if we haven't already processed this connects-approved notification
-          if (!processedConnectsApprovedIds.current.has(n.id)) {
-            needsRefresh = true;
-            newConnectsApprovedIds.push(n.id);
-          }
+          needsRefresh = true;
+          newConnectsApprovedIds.push(n.id);
         }
 
         // Mark all notifications as processed
@@ -110,10 +129,8 @@ export const NotificationButton = () => {
 
       // Only call fetchAndUpdateConnects once for new connects-approved notifications
       if (needsRefresh && newConnectsApprovedIds.length > 0) {
-        newConnectsApprovedIds.forEach((id) => {
-          processedConnectsApprovedIds.current.add(id);
-        });
-        fetchAndUpdateConnects(userType).catch(() => {});
+        // IDs are already tracked in processedNotificationIds by the loop above
+        fetchAndUpdateConnects(userType).catch(() => { });
       }
     },
     [user?.uid, userType],
@@ -170,9 +187,9 @@ export const NotificationButton = () => {
       // Firestore subscription failed - API polling is the fallback
     }
 
-    // API: fetch immediately + poll every 10s as reliable fallback
+    // API: fetch immediately + poll every 45s as reliable fallback
     fetchFromApi();
-    const interval = setInterval(fetchFromApi, 10_000);
+    const interval = setInterval(fetchFromApi, 45_000);
 
     return () => {
       unsubscribe?.();
@@ -385,9 +402,12 @@ export const NotificationButton = () => {
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(notification.timestamp), {
-                          addSuffix: true,
-                        })}
+                        {(() => {
+                          const date = getSafeDate(notification.timestamp);
+                          return date
+                            ? formatDistanceToNow(date, { addSuffix: true })
+                            : '';
+                        })()}
                       </p>
                     </div>
                   </div>
@@ -428,10 +448,15 @@ export const NotificationButton = () => {
                     await axiosInstance.put(
                       '/token-request/me/notifications/read',
                     );
-                    markAllNotificationsAsRead(user.uid).catch(() => {});
-                  } finally {
+                    await markAllNotificationsAsRead(user.uid);
+                    // Only update local state on success
                     setNotifications((prev) =>
                       prev.map((n) => ({ ...n, isRead: true })),
+                    );
+                  } catch (error) {
+                    console.error('Failed to mark notifications as read:', error);
+                    notifyError(
+                      'Failed to mark notifications as read. Please try again.',
                     );
                   }
                 }}

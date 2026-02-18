@@ -70,7 +70,7 @@ export function ProjectProfileDetailCard({
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
   const params = useParams();
-  // const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Removed unused state
+
   const [exist, setExist] = useState(false);
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
 

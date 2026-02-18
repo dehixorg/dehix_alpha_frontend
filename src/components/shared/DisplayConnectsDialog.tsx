@@ -20,7 +20,7 @@ import RequestConnectsDialog from './RequestConnectsDialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { fetchAndUpdateConnects } from '@/lib/updateConnects';
+import { fetchAndUpdateConnects, updateConnectsBalance } from '@/lib/updateConnects';
 import {
   Table,
   TableHeader,
@@ -104,10 +104,7 @@ export const DisplayConnectsDialog = React.forwardRef<
               0,
             );
             const newTotal = currentConnects + totalNewConnects;
-            localStorage.setItem('DHX_CONNECTS', newTotal.toString());
-            window.dispatchEvent(
-              new CustomEvent('connectsUpdated', { detail: { newTotal } }),
-            );
+            updateConnectsBalance(newTotal);
             success = true;
           }
 
