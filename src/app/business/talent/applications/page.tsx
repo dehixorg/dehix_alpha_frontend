@@ -216,7 +216,8 @@ export default function Page() {
         console.error('Error fetching hire talent data:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load talent data. Please refresh the page or try again later.',
+          description:
+            'Failed to load talent data. Please refresh the page or try again later.',
           variant: 'destructive',
         });
       } finally {
