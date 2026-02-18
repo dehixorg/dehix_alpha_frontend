@@ -7,7 +7,8 @@ import { axiosInstance } from './axiosinstance';
 export const updateConnectsBalance = (newBalance: number): void => {
   try {
     // Ensure the balance is a valid number
-    const validBalance = Math.max(0, Number(newBalance));
+    const num = Number(newBalance);
+    const validBalance = Number.isFinite(num) ? Math.max(0, num) : 0;
 
     // Update localStorage
     localStorage.setItem('DHX_CONNECTS', validBalance.toString());
@@ -20,23 +21,33 @@ export const updateConnectsBalance = (newBalance: number): void => {
 };
 
 /**
- * Fetches the latest connects balance from the server and updates it locally
+ * Fetches the latest connects balance from the server and updates it locally.
+ * Returns the new balance so callers can update UI immediately.
  */
 export const fetchAndUpdateConnects = async (
-  userId: string,
-  userType: 'freelancer' | 'business',
-): Promise<void> => {
-  try {
-    const endpoint =
-      userType === 'freelancer' ? '/freelancer/me' : '/business/me';
-    const response = await axiosInstance.get(endpoint);
-    const connects = response.data?.data?.connects;
+  userType?: 'freelancer' | 'business',
+): Promise<number | null> => {
+  const endpoints: Array<'/freelancer/me' | '/business/me'> =
+    userType === 'business'
+      ? ['/business/me']
+      : userType === 'freelancer'
+        ? ['/freelancer/me']
+        : ['/freelancer/me', '/business/me'];
 
-    if (typeof connects === 'number') {
-      updateConnectsBalance(connects);
+  for (const endpoint of endpoints) {
+    try {
+      const response = await axiosInstance.get(endpoint);
+      const raw = response.data?.data?.connects;
+      const connects = raw != null ? Number(raw) : NaN;
+      if (!Number.isNaN(connects) && connects >= 0) {
+        updateConnectsBalance(connects);
+        return connects;
+      }
+    } catch {
+      // Per-endpoint failure: continue to next endpoint. Never throw.
     }
-  } catch (error) {
-    console.error('Failed to fetch and update connects:', error);
-    throw error;
   }
+
+  // Total failure: all endpoints attempted, none succeeded.
+  return null;
 };

@@ -72,23 +72,6 @@ interface ProfessionalInfo {
   verificationStatus?: string;
 }
 
-interface Education {
-  _id: string;
-  degree: string;
-  universityName: string;
-  fieldOfStudy: string;
-  startDate: string;
-  endDate: string;
-  grade: string;
-}
-interface Projects {
-  _id: string;
-  projectName: string;
-  githubLink: string;
-  techUsed: string[];
-  role: string;
-}
-
 interface DehixTalent {
   freelancer_id: any;
   type: string;
@@ -279,6 +262,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setFilterDomain?.(filterDomains);
       } catch (e) {
         // keep UI usable even if this fails
+        console.error('TalentCard: failed to fetch talent data', e);
       }
     };
 
@@ -394,34 +378,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
   }, [fetchTalentData]);
 
   // This useEffect now triggers a new API call when filters change.
+
   useEffect(() => {
     resetAndFetchData();
-  }, [talentFilter, skillFilter, domainFilter, resetAndFetchData]); // Trigger reset when filters change
-
-  // Manual scroll detection as backup
-  useEffect(() => {
-    const scrollContainer = document.querySelector(
-      '[data-tour="business-talent-list"]',
-    ) as HTMLElement;
-    if (!scrollContainer) return;
-
-    const handleScroll = () => {
-      if (!hasMore || loading || isRequestInProgress.current) return;
-
-      const scrollTop = scrollContainer.scrollTop;
-      const scrollHeight = scrollContainer.scrollHeight;
-      const clientHeight = scrollContainer.clientHeight;
-
-      // Trigger when user is within 100px of bottom
-      if (scrollTop + clientHeight >= scrollHeight - 100) {
-        fetchTalentData();
-      }
-    };
-
-    scrollContainer.addEventListener('scroll', handleScroll);
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loading, fetchTalentData]);
-
+  }, [resetAndFetchData]);
   const handleAddToLobby = async (freelancerId: string): Promise<boolean> => {
     const businessId = user?.uid;
     const hires = (currSkills || [])
@@ -458,13 +418,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
       if (response.status === 200) {
         notifySuccess('Invitation sent successfully', 'Success');
 
-        // Sync connects balance after invitation
-        try {
-          await fetchAndUpdateConnects(businessId, 'business');
-        } catch (error) {
+        // Sync connects balance after invitation (fire-and-forget)
+        fetchAndUpdateConnects('business').catch((error) => {
           console.warn('Failed to sync connects after invitation:', error);
-          // Don't block success flow if sync fails
-        }
+        });
 
         setCurrSkills([]);
         setInvitedTalents((prev) => {
@@ -1115,28 +1072,29 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   </Button>
                 </div>
               </CardFooter>
-              {selectedTalent && (
-                <AddToLobbyDialog
-                  skillDomainData={skillDomainData}
-                  currSkills={currSkills}
-                  handleAddSkill={handleAddSkill}
-                  handleDeleteSkill={handleDeleteSkill}
-                  handleAddToLobby={handleAddToLobby}
-                  talent={selectedTalent}
-                  setTmpSkill={setTmpSkill}
-                  open={isDialogOpen}
-                  setOpen={(v: boolean) => {
-                    setIsDialogOpen(v);
-                    if (v) setOpenSheetId(null);
-                  }}
-                  isLoading={isLoading}
-                  setLoading={setIsLoading}
-                />
-              )}
               <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>
             </Card>
           );
         })}
+
+        {selectedTalent && (
+          <AddToLobbyDialog
+            skillDomainData={skillDomainData}
+            currSkills={currSkills}
+            handleAddSkill={handleAddSkill}
+            handleDeleteSkill={handleDeleteSkill}
+            handleAddToLobby={handleAddToLobby}
+            talent={selectedTalent}
+            setTmpSkill={setTmpSkill}
+            open={isDialogOpen}
+            setOpen={(v: boolean) => {
+              setIsDialogOpen(v);
+              if (v) setOpenSheetId(null);
+            }}
+            isLoading={isLoading}
+            setLoading={setIsLoading}
+          />
+        )}
         {/* ... (InfiniteScroll and loading skeleton) */}
         <InfiniteScroll
           hasMore={hasMore}

@@ -12,10 +12,10 @@ import {
   User,
   UsersRound,
   ChevronDown,
+  AlertCircle,
 } from 'lucide-react';
 import { DocumentData } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 
 import { Badge } from '../ui/badge';
@@ -26,52 +26,185 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RootState } from '@/lib/store';
 import {
   markAllNotificationsAsRead,
   subscribeToUserNotifications,
 } from '@/utils/common/firestoreUtils';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { fetchAndUpdateConnects } from '@/lib/updateConnects';
+import { notifyError } from '@/utils/toastMessage';
+
+// Merge incoming notifications with existing ones, deduplicating by id
+const mergeNotifications = (
+  prev: DocumentData[],
+  incoming: DocumentData[],
+): DocumentData[] => {
+  const map = new Map<string, DocumentData>();
+  for (const n of prev) map.set(n.id, n);
+  for (const n of incoming) map.set(n.id, n); // incoming wins on conflict
+  return Array.from(map.values());
+};
+
+const getSafeDate = (timestamp: any): Date | null => {
+  if (!timestamp) return null;
+  // Handle Firestore Timestamp
+  if (typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  // Handle numeric seconds (likely Firestore seconds without toDate in some mocks/serials)
+  if (typeof timestamp === 'number' && timestamp < 1e12) {
+    return new Date(timestamp * 1000);
+  }
+  // Handle numeric millis
+  if (typeof timestamp === 'number') {
+    return new Date(timestamp);
+  }
+  // Handle string/Date
+  const d = new Date(timestamp);
+  return !isNaN(d.getTime()) ? d : null;
+};
 
 export const NotificationButton = () => {
-  const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
   const [notifications, setNotifications] = useState<DocumentData[]>([]);
   const [showAll, setShowAll] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-
-  // Sort notifications by timestamp (latest first) and limit display
-  const sortedNotifications = notifications.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  const sortedNotifications = [...notifications].sort(
+    (a, b) =>
+      (getSafeDate(b.timestamp)?.getTime() ?? 0) -
+      (getSafeDate(a.timestamp)?.getTime() ?? 0),
   );
-
   const displayedNotifications = showAll
     ? sortedNotifications
     : sortedNotifications.slice(0, 5);
-
   const hasMoreNotifications = sortedNotifications.length > 5;
 
-  useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
+  const userType =
+    user?.type &&
+    ['freelancer', 'business'].includes(String(user.type).toLowerCase())
+      ? (String(user.type).toLowerCase() as 'freelancer' | 'business')
+      : undefined;
 
-    // Set up real-time listener for user notifications
-    if (user?.uid) {
-      unsubscribe = subscribeToUserNotifications(user.uid, (data) => {
-        setNotifications(data);
+  const processedNotificationIds = React.useRef(new Set<string>());
+  const isMounted = React.useRef(true);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+  const [fetchError, setFetchError] = React.useState<string | null>(null);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  const maybeRefreshConnects = React.useCallback(
+    (list: DocumentData[]) => {
+      if (!user?.uid || !userType) return;
+
+      let needsRefresh = false;
+      const newConnectsApprovedIds: string[] = [];
+
+      list.forEach((n) => {
+        // Skip if already processed
+        if (processedNotificationIds.current.has(n.id)) return;
+
+        // Check if this is a "connects approved" notification
+        const isConnectsApproved =
+          typeof n.message === 'string' &&
+          /connects.*approved|approved.*connects/i.test(n.message);
+
+        if (isConnectsApproved) {
+          needsRefresh = true;
+          newConnectsApprovedIds.push(n.id);
+        }
+
+        // Mark all notifications as processed
+        processedNotificationIds.current.add(n.id);
       });
+
+      // Only call fetchAndUpdateConnects once for new connects-approved notifications
+      if (needsRefresh && newConnectsApprovedIds.length > 0) {
+        // IDs are already tracked in processedNotificationIds by the loop above
+        fetchAndUpdateConnects(userType).catch(() => {});
+      }
+    },
+    [user?.uid, userType],
+  );
+
+  const fetchFromApi = React.useCallback(() => {
+    if (!user?.uid) return;
+
+    // Cancel previous request if still in flight
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
+    axiosInstance
+      .get('/token-request/me/notifications', {
+        signal: abortControllerRef.current.signal,
+      })
+      .then((r) => {
+        if (!isMounted.current) return;
+        const list: DocumentData[] = (r.data?.data ?? []).filter(
+          (item: any) => item && item.id,
+        );
+        if (list.length > 0) {
+          maybeRefreshConnects(list);
+          setNotifications((prev) => mergeNotifications(prev, list));
+        }
+        setFetchError(null);
+      })
+      .catch((error) => {
+        if (!isMounted.current) return;
+        // Don't set error for aborted requests
+        if (error.name === 'AbortError' || error.name === 'CanceledError') {
+          return;
+        }
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          'Failed to fetch notifications';
+        console.error('Failed to fetch notifications:', error);
+        setFetchError(errorMessage);
+      });
+  }, [user?.uid, maybeRefreshConnects]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    // Firestore real-time (works when same Firebase project)
+    let unsubscribe: (() => void) | undefined;
+    try {
+      unsubscribe = subscribeToUserNotifications(user.uid, (data) => {
+        if (isMounted.current && data.length > 0) {
+          maybeRefreshConnects(data);
+          setNotifications((prev) => mergeNotifications(prev, data));
+        }
+      });
+    } catch {
+      // Firestore subscription failed - API polling is the fallback
     }
 
-    // Clean up the listener when the component is unmounted
-    return () => {
-      if (unsubscribe) {
-        unsubscribe(); // Call unsubscribe only if it is defined
-      }
-    };
-  }, [user]);
+    // API: fetch immediately + poll every 45s as reliable fallback
+    fetchFromApi();
+    const interval = setInterval(fetchFromApi, 45_000);
 
-  // Reset showAll when popover closes
-  const handlePopoverClose = () => {
-    setShowAll(false);
+    return () => {
+      unsubscribe?.();
+      clearInterval(interval);
+    };
+  }, [user?.uid, fetchFromApi, maybeRefreshConnects]);
+
+  // Refetch when popover opens; reset showAll when it closes
+  const handlePopoverChange = (open: boolean) => {
+    if (open) {
+      fetchFromApi(); // immediate fresh data when user clicks bell
+    } else {
+      setShowAll(false);
+    }
   };
 
   function iconGetter(entity: string): JSX.Element {
@@ -140,7 +273,7 @@ export const NotificationButton = () => {
   };
 
   return (
-    <Popover onOpenChange={(open) => !open && handlePopoverClose()}>
+    <Popover onOpenChange={handlePopoverChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -168,6 +301,18 @@ export const NotificationButton = () => {
             {unreadCount} unread
           </Badge>
         </div>
+
+        {/* Error Display */}
+        {fetchError && (
+          <div className="px-4 pt-3">
+            <Alert variant="destructive" className="py-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                {fetchError}
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
 
         {/* Content Area - Scrollable */}
         {notifications.length === 0 ? (
@@ -230,9 +375,8 @@ export const NotificationButton = () => {
             <div className="p-3 space-y-3">
               {displayedNotifications.map((notification: any) => (
                 <div
-                  onClick={() => router.push(notification.path)}
                   key={notification.id}
-                  className="rounded-lg py-3 px-3 cursor-pointer hover:bg-muted hover:opacity-75 transition border border-transparent hover:border-primary/20 bg-card"
+                  className="rounded-lg py-3 px-3 border border-transparent bg-card"
                 >
                   <div className="flex items-start space-x-3">
                     <div className="relative flex-shrink-0">
@@ -259,9 +403,12 @@ export const NotificationButton = () => {
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(notification.timestamp), {
-                          addSuffix: true,
-                        })}
+                        {(() => {
+                          const date = getSafeDate(notification.timestamp);
+                          return date
+                            ? formatDistanceToNow(date, { addSuffix: true })
+                            : '';
+                        })()}
                       </p>
                     </div>
                   </div>
@@ -299,11 +446,30 @@ export const NotificationButton = () => {
                 className="w-full text-xs sm:text-sm"
                 onClick={async () => {
                   try {
-                    await markAllNotificationsAsRead(user.uid);
-                  } finally {
-                    // Optimistically update UI
+                    await axiosInstance.put(
+                      '/token-request/me/notifications/read',
+                    );
                     setNotifications((prev) =>
                       prev.map((n) => ({ ...n, isRead: true })),
+                    );
+
+                    try {
+                      if (user?.uid) {
+                        await markAllNotificationsAsRead(user.uid);
+                      }
+                    } catch (firestoreError) {
+                      console.error(
+                        'Firestore mark-read failed (non-blocking):',
+                        firestoreError,
+                      );
+                    }
+                  } catch (error) {
+                    console.error(
+                      'Failed to mark notifications as read:',
+                      error,
+                    );
+                    notifyError(
+                      'Failed to mark notifications as read. Please try again.',
                     );
                   }
                 }}
