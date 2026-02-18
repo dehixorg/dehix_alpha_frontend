@@ -69,7 +69,6 @@ export const DisplayConnectsDialog = React.forwardRef<
 
       const newData = (response.data.data || []) as TokenRequest[];
 
-
       // Get the set of processed request IDs from localStorage
       const processedRequests = new Set(
         JSON.parse(localStorage.getItem('PROCESSED_REQUESTS') || '[]'),
@@ -115,17 +114,22 @@ export const DisplayConnectsDialog = React.forwardRef<
 
               // Optimistic update attempt
               // Check if value changed during computation (simple collision check)
-              if (localStorage.getItem('DHX_CONNECTS') === (currentStr === '0' && !localStorage.getItem('DHX_CONNECTS') ? null : currentStr)) {
+              if (
+                localStorage.getItem('DHX_CONNECTS') ===
+                (currentStr === '0' && !localStorage.getItem('DHX_CONNECTS')
+                  ? null
+                  : currentStr)
+              ) {
                 updateConnectsBalance(newTotal);
                 updated = true;
               } else {
                 retries--;
-                await new Promise(r => setTimeout(r, 50)); // backoff
+                await new Promise((r) => setTimeout(r, 50)); // backoff
               }
 
               // Fallback if strict CAS is not possible with just localStorage:
               // Just verify we are writing fresh data.
-              // Since we don't have atomic hardware CAS for localStorage, 
+              // Since we don't have atomic hardware CAS for localStorage,
               // we just minimize the window. The above check is best-effort.
               if (!updated && retries === 0) {
                 // Final attempt force write
@@ -135,7 +139,7 @@ export const DisplayConnectsDialog = React.forwardRef<
             }
 
             // Wait for event dispatch propagation if needed, though updateConnectsBalance is sync-like for localStorage
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await new Promise((resolve) => setTimeout(resolve, 0));
             success = true;
           }
 

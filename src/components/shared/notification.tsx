@@ -73,18 +73,18 @@ export const NotificationButton = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
   const sortedNotifications = [...notifications].sort(
-    (a, b) => (getSafeDate(b.timestamp)?.getTime() ?? 0) - (getSafeDate(a.timestamp)?.getTime() ?? 0),
+    (a, b) =>
+      (getSafeDate(b.timestamp)?.getTime() ?? 0) -
+      (getSafeDate(a.timestamp)?.getTime() ?? 0),
   );
   const displayedNotifications = showAll
     ? sortedNotifications
     : sortedNotifications.slice(0, 5);
   const hasMoreNotifications = sortedNotifications.length > 5;
 
-
-
   const userType =
     user?.type &&
-      ['freelancer', 'business'].includes(String(user.type).toLowerCase())
+    ['freelancer', 'business'].includes(String(user.type).toLowerCase())
       ? (String(user.type).toLowerCase() as 'freelancer' | 'business')
       : undefined;
 
@@ -129,7 +129,7 @@ export const NotificationButton = () => {
       // Only call fetchAndUpdateConnects once for new connects-approved notifications
       if (needsRefresh && newConnectsApprovedIds.length > 0) {
         // IDs are already tracked in processedNotificationIds by the loop above
-        fetchAndUpdateConnects(userType).catch(() => { });
+        fetchAndUpdateConnects(userType).catch(() => {});
       }
     },
     [user?.uid, userType],
@@ -148,7 +148,9 @@ export const NotificationButton = () => {
       })
       .then((r) => {
         if (!isMounted.current) return;
-        const list: DocumentData[] = (r.data?.data ?? []).filter((item: any) => item && item.id);
+        const list: DocumentData[] = (r.data?.data ?? []).filter(
+          (item: any) => item && item.id,
+        );
         if (list.length > 0) {
           maybeRefreshConnects(list);
           setNotifications((prev) => mergeNotifications(prev, list));
@@ -456,7 +458,10 @@ export const NotificationButton = () => {
                         await markAllNotificationsAsRead(user.uid);
                       }
                     } catch (firestoreError) {
-                      console.error('Firestore mark-read failed (non-blocking):', firestoreError);
+                      console.error(
+                        'Firestore mark-read failed (non-blocking):',
+                        firestoreError,
+                      );
                     }
                   } catch (error) {
                     console.error(

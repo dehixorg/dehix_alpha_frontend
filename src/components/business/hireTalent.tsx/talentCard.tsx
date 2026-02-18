@@ -72,8 +72,6 @@ interface ProfessionalInfo {
   verificationStatus?: string;
 }
 
-
-
 interface DehixTalent {
   freelancer_id: any;
   type: string;
@@ -264,7 +262,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setFilterDomain?.(filterDomains);
       } catch (e) {
         // keep UI usable even if this fails
-        console.error('TalentCard: failed to fetch/update connects', e);
+        console.error('TalentCard: failed to fetch talent data', e);
       }
     };
 
@@ -420,13 +418,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
       if (response.status === 200) {
         notifySuccess('Invitation sent successfully', 'Success');
 
-        // Sync connects balance after invitation
-        try {
-          await fetchAndUpdateConnects('business');
-        } catch (error) {
+        // Sync connects balance after invitation (fire-and-forget)
+        fetchAndUpdateConnects('business').catch((error) => {
           console.warn('Failed to sync connects after invitation:', error);
-          // Don't block success flow if sync fails
-        }
+        });
 
         setCurrSkills([]);
         setInvitedTalents((prev) => {
@@ -695,8 +690,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                     target={talent.Github ? '_blank' : '_self'}
                                     rel="noopener noreferrer"
                                     className={`flex items-center gap-2 transition-all ${talent.Github
-                                      ? 'text-primary hover:text-primary/80'
-                                      : 'text-gray-500 cursor-default'
+                                        ? 'text-primary hover:text-primary/80'
+                                        : 'text-gray-500 cursor-default'
                                       }`}
                                     aria-label="GitHub profile"
                                   >
@@ -709,8 +704,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                     }
                                     rel="noopener noreferrer"
                                     className={`flex items-center gap-2 transition-all ${talent.LinkedIn
-                                      ? 'text-primary hover:text-primary/80'
-                                      : 'text-gray-500 cursor-default'
+                                        ? 'text-primary hover:text-primary/80'
+                                        : 'text-gray-500 cursor-default'
                                       }`}
                                     aria-label="LinkedIn profile"
                                   >
