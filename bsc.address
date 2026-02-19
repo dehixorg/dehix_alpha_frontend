@@ -1,18 +1,44 @@
+# Dehix Alpha – BSC Testnet Deployment
+
 Network: BNB Smart Chain Testnet
 Chain ID: 97
+RPC: https://data-seed-prebsc-1-s1.binance.org:8545/
 
 
-FreelancerContract:
-0x15c013ABf5702D1930c37cb1131f6F1606797071
 
-StakingRewards:
-0xca89d5112a42d410b6373d65218A13F07931A838
+========================
+Core Contracts
+========================
 
-MyToken:
-0xaFdA611A3D1a10852F19309F9cAbe8FB794a4500
+FreelancerContract
+Address: 0x15c013ABf5702D1930c37cb1131f6F1606797071
+Tx Hash: 0x17b2e9b72225d8a93b205875b7f44757e78d62e8d2a73fc1e08f0e534c3f64f3
+Block: 91251085
 
-NDASoulBoundToken:
-0xC2B354554021F1c3E203c5f242a63Ce1f9C4e8a6
 
-FreelancerSoulBoundToken:
-0x73b8Ecfd44DA278f856E50e6A328c13bC8F5A5e3
+FreelancerSoulBoundToken
+Address: 0x73b8Ecfd44DA278f856E50e6A328c13bC8F5A5e3
+Tx Hash: 0x9a9ef9d73c73ec021f3ee162ba9880c924536e06e11f4e8c4649915c9a8303dc
+Block: 91251085
+
+
+NDASoulBoundToken
+Address: 0xC2B354554021F1c3E203c5f242a63Ce1f9C4e8a6
+Tx Hash: 0xea2abb0912053d9160458c37dddd2f232e2a5c9d0ea577dd213c111dfebf42e2
+Block: 91251085
+
+
+========================
+Token & Rewards
+========================
+
+MyToken
+Address: 0xaFdA611A3D1a10852F19309F9cAbe8FB794a4500
+Tx Hash: 0xcff2c2a2a0a7cc66a05bd4278ffa6b063a7d796400cfd4f68fe39b518a200fea
+Block: 91251084
+
+
+StakingRewards
+Address: 0xca89d5112a42d410b6373d65218A13F07931A838
+Tx Hash: 0x117c281138db328a909792ed69a25c92d46917409ef8956da9dcc19e1e2d8934
+Block: 91251084
