@@ -68,19 +68,10 @@ export default function TransactionsPage() {
     },
     enabled: !!user.uid,
     staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
   });
-
-  useEffect(() => {
-    const handleConnectsUpdate = () => {
-      refetch();
-    };
-
-    window.addEventListener('connectsUpdated', handleConnectsUpdate);
-
-    return () => {
-      window.removeEventListener('connectsUpdated', handleConnectsUpdate);
-    };
-  }, [refetch]);
 
   const handleApplyFilters = () => {
     // Convert Date to string for API
