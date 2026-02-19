@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import {
   Receipt,
   RefreshCw,
@@ -33,6 +34,7 @@ import { TransactionExportDropdown } from '@/components/transactions/Transaction
 import { TransactionTable } from '@/components/transactions/TransactionTable';
 
 export default function TransactionsPage() {
+  const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -308,11 +310,10 @@ export default function TransactionsPage() {
                     bids, hiring talent, and other platform activities.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-                    <Button variant="outline" className="gap-2">
-                      <ArrowUpDown className="h-4 w-4" />
-                      Learn about Connects
-                    </Button>
-                    <Button className="gap-2">
+                    <Button
+                      className="gap-2"
+                      onClick={() => router.push('/freelancer/market')}
+                    >
                       <TrendingUp className="h-4 w-4" />
                       Start Earning
                     </Button>
