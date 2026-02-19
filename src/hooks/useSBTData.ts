@@ -143,9 +143,9 @@ export const useSBTData = (): UseSBTDataReturn => {
 
           let matchedEvent = item.tokenId
             ? mintEvents.find(
-              (event) =>
-                event.tokenId === item.tokenId && !usedTx.has(event.txHash),
-            )
+                (event) =>
+                  event.tokenId === item.tokenId && !usedTx.has(event.txHash),
+              )
             : undefined;
 
           if (!matchedEvent) {
