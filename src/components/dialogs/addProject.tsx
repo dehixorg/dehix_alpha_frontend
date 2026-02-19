@@ -909,10 +909,11 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                                           }
                                         >
                                           <Check
-                                            className={`mr-2 h-4 w-4 ${currSkills.includes(skill.label)
+                                            className={`mr-2 h-4 w-4 ${
+                                              currSkills.includes(skill.label)
                                                 ? 'opacity-100'
                                                 : 'opacity-0'
-                                              }`}
+                                            }`}
                                           />
                                           {skill.label}
                                         </CommandItem>
