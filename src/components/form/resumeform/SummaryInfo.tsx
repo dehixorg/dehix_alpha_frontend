@@ -145,7 +145,8 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
                 placeholder="A brief, engaging text about yourself"
               />
               <p className="mt-1 text-xs text-muted-foreground text-right">
-                {summary.trim().split(/\s+/).filter(Boolean).length} / {WORD_LIMIT} words
+                {summary.trim().split(/\s+/).filter(Boolean).length} /{' '}
+                {WORD_LIMIT} words
               </p>
             </CardContent>
           </Card>
