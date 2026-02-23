@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Wallet } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -70,7 +70,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const refreshConnectsFromServer = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!user?.uid || !userType) return;
     try {
       const balance = await fetchAndUpdateConnects(userType);
       if (balance != null) setConnects(balance);
@@ -79,6 +79,12 @@ const Header: React.FC<HeaderProps> = ({
       fetchConnects();
     }
   }, [user?.uid, userType]);
+
+  // Stable ref to hold the latest callback without causing effect re-runs
+  const refreshRef = useRef(refreshConnectsFromServer);
+  useEffect(() => {
+    refreshRef.current = refreshConnectsFromServer;
+  }, [refreshConnectsFromServer]);
 
   const PAGE_TOUR_ROUTE_MAP: { path: string; target: TourTarget }[] = [
     // Freelancer
@@ -111,23 +117,21 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid || !userType) return;
     fetchConnects();
-    refreshConnectsFromServer();
-    const interval = setInterval(refreshConnectsFromServer, 15_000);
+    refreshRef.current();
     const updateConnects = () => fetchConnects();
     const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') refreshConnectsFromServer();
+      if (document.visibilityState === 'visible') refreshRef.current();
     };
     window.addEventListener('connectsUpdated', updateConnects);
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener('connectsUpdated', updateConnects);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [user?.uid, userType, refreshConnectsFromServer]);
+  }, [user?.uid, userType]);
 
   const [searchValue, setSearchValue] = useState('');
   const [, setSearchFocused] = useState(false);
