@@ -1,7 +1,6 @@
 import React from 'react';
 import { User, X, Mail, Phone, MapPin, Github, Linkedin } from 'lucide-react';
 
-import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -47,22 +46,6 @@ export const PersonalInfo: React.FC<PersonalInfoProps> = ({
       [field]: value,
     };
     setPersonalData(updatedPersonalData);
-  };
-
-  const handleAddPersonalInfo = () => {
-    setPersonalData([
-      ...personalData,
-      {
-        firstName: '',
-        lastName: '',
-        city: '',
-        country: '',
-        phoneNumber: '',
-        email: '',
-        github: '',
-        linkedin: '',
-      },
-    ]);
   };
 
   const handleRemovePersonalInfo = (index: number) => {
@@ -249,7 +232,6 @@ export const PersonalInfo: React.FC<PersonalInfoProps> = ({
           </Card>
         ))}
       </form>
-      <AddButton onClick={handleAddPersonalInfo} />
     </div>
   );
 };

@@ -1,7 +1,6 @@
 import React from 'react';
 import { GraduationCap, X, School } from 'lucide-react';
 
-import { AddButton } from '@/components/ui/AddButton';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import {
@@ -44,13 +43,6 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
     const updatedEducation = [...educationData];
     updatedEducation[index] = { ...updatedEducation[index], [field]: value };
     setEducationData(updatedEducation);
-  };
-
-  const handleAddEducation = () => {
-    setEducationData([
-      ...educationData,
-      { degree: '', school: '', startDate: '', endDate: '' },
-    ]);
   };
 
   const handleRemoveEducation = (index: number) => {
@@ -156,8 +148,6 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
           </Card>
         ))}
       </form>
-
-      <AddButton onClick={handleAddEducation} />
     </div>
   );
 };
