@@ -658,7 +658,8 @@ const TalentMarketTab: React.FC = () => {
                       : 'text-muted-foreground'
                   }
                 >
-                  {coverLetter.trim().length} / {MIN_COVER_LETTER} min – {MAX_COVER_LETTER} max
+                  {coverLetter.trim().length} / {MIN_COVER_LETTER} min –{' '}
+                  {MAX_COVER_LETTER} max
                 </span>
                 {MAX_COVER_LETTER - coverLetter.trim().length < 200 && (
                   <span className="text-muted-foreground">
