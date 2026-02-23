@@ -180,6 +180,9 @@ const TalentMarketTab: React.FC = () => {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
+  const MIN_COVER_LETTER = 200;
+  const MAX_COVER_LETTER = 500;
+
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
@@ -569,7 +572,7 @@ const TalentMarketTab: React.FC = () => {
               {selectedItem?.skillName || selectedItem?.domainName || 'Apply'}
             </DialogTitle>
             <DialogDescription>
-              Provide a cover letter (min 200 characters) and select a
+              Provide a cover letter (min 200 – max 500 characters) and select a
               professional profile to apply.
             </DialogDescription>
           </DialogHeader>
@@ -637,21 +640,29 @@ const TalentMarketTab: React.FC = () => {
                 rows={6}
                 placeholder="Describe why you're a great fit... (min 200 characters)"
                 value={coverLetter}
-                onChange={(e) => setCoverLetter(e.target.value)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const cleaned = raw
+                    .replace(/^\s+/, '')
+                    .replace(/ {10,}/g, ' ');
+                  if (cleaned.length <= MAX_COVER_LETTER) {
+                    setCoverLetter(cleaned);
+                  }
+                }}
               />
               <div className="flex items-center justify-between text-xs">
                 <span
                   className={
-                    coverLetter.trim().length < 200
+                    coverLetter.trim().length < MIN_COVER_LETTER
                       ? 'text-red-500'
                       : 'text-muted-foreground'
                   }
                 >
-                  {coverLetter.trim().length} / 200 min
+                  {coverLetter.trim().length} / {MIN_COVER_LETTER} min – {MAX_COVER_LETTER} max
                 </span>
-                {coverLetter.trim().length < 200 && (
-                  <span className="text-red-500">
-                    Minimum 200 characters required
+                {MAX_COVER_LETTER - coverLetter.trim().length < 200 && (
+                  <span className="text-muted-foreground">
+                    {MAX_COVER_LETTER - coverLetter.trim().length} remaining
                   </span>
                 )}
               </div>
@@ -699,7 +710,8 @@ const TalentMarketTab: React.FC = () => {
               disabled={
                 submitting ||
                 !selectedProfileId ||
-                coverLetter.trim().length < 200
+                coverLetter.trim().length < MIN_COVER_LETTER ||
+                coverLetter.trim().length > MAX_COVER_LETTER
               }
             >
               {submitting ? 'Submitting...' : 'Submit Application'}

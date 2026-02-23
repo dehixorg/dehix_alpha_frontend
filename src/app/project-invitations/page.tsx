@@ -301,20 +301,6 @@ const ProjectInvitationsPage: React.FC = () => {
                     ? 'Try adjusting your search or filter criteria.'
                     : "You haven't sent any project invitations yet."
                 }
-                actions={
-                  (search || statusFilter !== 'ALL') && (
-                    <Button
-                      variant="ghost"
-                      className="mt-4"
-                      onClick={() => {
-                        setSearch('');
-                        setStatusFilter('ALL');
-                      }}
-                    >
-                      Clear filters
-                    </Button>
-                  )
-                }
                 className="py-16 text-center"
               />
             </div>
@@ -601,6 +587,19 @@ const ProjectInvitationsPage: React.FC = () => {
                     <ArrowDownNarrowWide className="h-4 w-4" />
                   )}
                 </Button>
+
+                {(search || statusFilter !== 'ALL') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearch('');
+                      setStatusFilter('ALL');
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
               </div>
             </div>
 
