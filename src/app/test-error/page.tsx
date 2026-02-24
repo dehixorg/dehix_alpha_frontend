@@ -1,16 +1,19 @@
 'use client';
 import React, { useState } from 'react';
+
 import ErrorStateCard from '@/components/shared/ErrorStateCard';
 
 export default function ErrorTestPage() {
-  const [showError, setShowError] = useState<'network' | 'server' | 'general' | null>(null);
+  const [showError, setShowError] = useState<
+    'network' | 'server' | 'general' | null
+  >(null);
   const [isRetrying, setIsRetrying] = useState(false);
 
   const handleRetry = async () => {
     setIsRetrying(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsRetrying(false);
-    
+
     // Simulate successful retry
     setShowError(null);
     alert('Error resolved successfully!');
@@ -19,8 +22,10 @@ export default function ErrorTestPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-2xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Error Handling Test</h1>
-        
+        <h1 className="text-3xl font-bold text-center mb-8">
+          Error Handling Test
+        </h1>
+
         {/* Control Buttons */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
           <h2 className="text-xl font-semibold mb-4">Test Error Types</h2>
@@ -58,12 +63,20 @@ export default function ErrorTestPage() {
         {showError && (
           <ErrorStateCard
             type={showError}
-            title={showError === 'network' ? 'Network Connection Failed' : 
-                   showError === 'server' ? 'Server Error' : 
-                   'Something went wrong'}
-            message={showError === 'network' ? 'Unable to connect to the server. Please check your internet connection and try again.' :
-                   showError === 'server' ? 'The server is experiencing issues. Our team has been notified.' :
-                   'An unexpected error occurred. Please try again.'}
+            title={
+              showError === 'network'
+                ? 'Network Connection Failed'
+                : showError === 'server'
+                  ? 'Server Error'
+                  : 'Something went wrong'
+            }
+            message={
+              showError === 'network'
+                ? 'Unable to connect to the server. Please check your internet connection and try again.'
+                : showError === 'server'
+                  ? 'The server is experiencing issues. Our team has been notified.'
+                  : 'An unexpected error occurred. Please try again.'
+            }
             onRetry={handleRetry}
             isRetrying={isRetrying}
           />
@@ -76,7 +89,8 @@ export default function ErrorTestPage() {
               All Systems Working
             </h3>
             <p className="text-green-600 dark:text-green-400">
-              Click the buttons above to test different error types and verify the ErrorStateCard component.
+              Click the buttons above to test different error types and verify
+              the ErrorStateCard component.
             </p>
           </div>
         )}
@@ -87,7 +101,10 @@ export default function ErrorTestPage() {
             Fixed Issues
           </h3>
           <ul className="list-disc list-inside space-y-2 text-blue-700 dark:text-blue-300">
-            <li>✅ Error types are now correctly classified (network, server, general)</li>
+            <li>
+              ✅ Error types are now correctly classified (network, server,
+              general)
+            </li>
             <li>✅ Network errors show WiFi-off icon</li>
             <li>✅ Server errors show server-crash icon</li>
             <li>✅ General errors show alert-triangle icon</li>

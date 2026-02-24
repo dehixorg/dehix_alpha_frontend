@@ -590,20 +590,16 @@ const ProjectMarketTab: React.FC = () => {
                 icon={<Search className="h-16 w-16 text-muted-foreground/50" />}
                 title="No projects found"
                 description={
-                  activeFilterCount > 0
+                  jobs.length > 0 && activeFilterCount > 0
                     ? "We couldn't find any projects matching your current filters."
                     : 'There are currently no projects available. Check back later!'
                 }
                 actions={
-                  activeFilterCount > 0 ? (
+                  jobs.length > 0 && activeFilterCount > 0 ? (
                     <Button variant="outline" onClick={handleReset}>
                       Clear all filters
                     </Button>
-                  ) : (
-                    <Button onClick={() => window.location.reload()}>
-                      Refresh page
-                    </Button>
-                  )
+                  ) : null
                 }
               />
             )}

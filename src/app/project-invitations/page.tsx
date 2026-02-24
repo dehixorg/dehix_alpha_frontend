@@ -566,8 +566,8 @@ const ProjectInvitationsPage: React.FC = () => {
                     {(search || statusFilter !== 'ALL') && (
                       <>
                         <div className="h-px my-1 bg-border" />
-                        <SelectItem 
-                          value="clear-filters" 
+                        <SelectItem
+                          value="clear-filters"
                           className="text-red-600"
                         >
                           <div className="flex items-center">

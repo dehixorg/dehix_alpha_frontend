@@ -543,19 +543,15 @@ const TalentMarketTab: React.FC = () => {
                 No opportunities found
               </h3>
               <p className="text-muted-foreground max-w-md mb-6">
-                {activeFilterCount > 0
+                {items.length > 0 && activeFilterCount > 0
                   ? "We couldn't find any items matching your current filters."
                   : 'There are currently no items available. Check back later!'}
               </p>
-              {activeFilterCount > 0 ? (
+              {items.length > 0 && activeFilterCount > 0 ? (
                 <Button variant="outline" onClick={handleReset}>
                   Clear all filters
                 </Button>
-              ) : (
-                <Button onClick={() => window.location.reload()}>
-                  Refresh page
-                </Button>
-              )}
+              ) : null}
             </div>
           )}
         </div>
