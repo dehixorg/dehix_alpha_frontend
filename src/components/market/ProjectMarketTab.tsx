@@ -219,6 +219,7 @@ const ProjectMarketTab: React.FC = () => {
       favourites: false,
       consultant: false,
     });
+    setSearchQuery('');
   }, []);
 
   const filteredJobs = useMemo(() => {
@@ -300,8 +301,15 @@ const ProjectMarketTab: React.FC = () => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
+      })
+      .filter((job) => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return true;
+        const haystack =
+          `${job.projectName} ${job.description || ''}`.toLowerCase();
+        return haystack.includes(q);
       });
-  }, [jobs, filters, draftedProjects, bidProfiles]);
+  }, [jobs, filters, draftedProjects, bidProfiles, searchQuery]);
 
   // Fetch jobs when filters change or component mounts
   const fetchJobs = useCallback(
@@ -590,12 +598,14 @@ const ProjectMarketTab: React.FC = () => {
                 icon={<Search className="h-16 w-16 text-muted-foreground/50" />}
                 title="No projects found"
                 description={
-                  jobs.length > 0 && activeFilterCount > 0
+                  jobs.length > 0 &&
+                  (activeFilterCount > 0 || searchQuery.trim().length > 0)
                     ? "We couldn't find any projects matching your current filters."
                     : 'There are currently no projects available. Check back later!'
                 }
                 actions={
-                  jobs.length > 0 && activeFilterCount > 0 ? (
+                  jobs.length > 0 &&
+                  (activeFilterCount > 0 || searchQuery.trim().length > 0) ? (
                     <Button variant="outline" onClick={handleReset}>
                       Clear all filters
                     </Button>

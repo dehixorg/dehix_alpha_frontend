@@ -246,6 +246,7 @@ const TalentMarketTab: React.FC = () => {
       favourites: false,
       consultant: false,
     });
+    setSearchQuery('');
   }, []);
 
   // Map to JobCard-compatible Project and filter
@@ -543,11 +544,13 @@ const TalentMarketTab: React.FC = () => {
                 No opportunities found
               </h3>
               <p className="text-muted-foreground max-w-md mb-6">
-                {items.length > 0 && activeFilterCount > 0
+                {items.length > 0 &&
+                (activeFilterCount > 0 || searchQuery.trim().length > 0)
                   ? "We couldn't find any items matching your current filters."
                   : 'There are currently no items available. Check back later!'}
               </p>
-              {items.length > 0 && activeFilterCount > 0 ? (
+              {items.length > 0 &&
+              (activeFilterCount > 0 || searchQuery.trim().length > 0) ? (
                 <Button variant="outline" onClick={handleReset}>
                   Clear all filters
                 </Button>
