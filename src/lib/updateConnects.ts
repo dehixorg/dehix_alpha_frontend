@@ -9,12 +9,20 @@ export const updateConnectsBalance = (newBalance: number): void => {
     // Ensure the balance is a valid number
     const num = Number(newBalance);
     const validBalance = Number.isFinite(num) ? Math.max(0, num) : 0;
+    const prevRaw = localStorage.getItem('DHX_CONNECTS');
+    const prevNum = prevRaw != null ? Number(prevRaw) : NaN;
+    const prevValidBalance = Number.isFinite(prevNum)
+      ? Math.max(0, prevNum)
+      : 0;
+    const hasChanged = validBalance !== prevValidBalance;
 
     // Update localStorage
     localStorage.setItem('DHX_CONNECTS', validBalance.toString());
 
-    // Dispatch event to notify other components
-    window.dispatchEvent(new Event('connectsUpdated'));
+    // Dispatch event only when the balance value actually changes.
+    if (hasChanged) {
+      window.dispatchEvent(new Event('connectsUpdated'));
+    }
   } catch (error) {
     console.error('Failed to update connects balance:', error);
   }
