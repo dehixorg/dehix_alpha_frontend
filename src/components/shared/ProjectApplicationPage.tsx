@@ -138,8 +138,8 @@ const ProjectApplicationForm = ({
 }: ProjectApplicationFormProps) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [coverLetter, setCoverLetter] = useState<string>('');
-  const minChars = 500;
-  const maxChars = 2000;
+  const minChars = 200;
+  const maxChars = 500;
 
   // Helper function to format budget display
   const formatBudgetDisplay = (profile: Profile) => {
@@ -834,14 +834,6 @@ const ProjectApplicationForm = ({
                 </div>
 
                 <div className="mt-2">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                    <span>Minimum {minChars} characters</span>
-                    <span>
-                      {coverLetter.length < minChars
-                        ? `${minChars - coverLetter.length} more required`
-                        : 'Minimum reached'}
-                    </span>
-                  </div>
                   <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <motion.div
                       className={cn(
@@ -854,7 +846,7 @@ const ProjectApplicationForm = ({
                       )}
                       initial={{ width: '0%' }}
                       animate={{
-                        width: `${Math.min((coverLetter.length / maxChars) * 100, 100)}%`,
+                        width: `${Math.min((coverLetter.length / minChars) * 100, 100)}%`,
                         transition: { duration: 0.3, ease: 'easeOut' },
                       }}
                     />
