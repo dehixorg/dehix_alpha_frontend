@@ -19,8 +19,14 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
-import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CardContent } from '@/components/ui/card';
 import {
@@ -182,25 +188,31 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                 name="label"
                 render={({ field }) => (
                   <FormItem>
+                    <div className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Skill
+                    </div>
                     <FormControl>
-                      <SelectTagPicker
-                        label="Skill"
-                        options={skills}
-                        selected={field.value ? [{ name: field.value }] : []}
-                        onAdd={(val) => {
+                      <Select
+                        value={field.value}
+                        onValueChange={(val) => {
                           field.onChange(val);
                           const selectedSkill = skills.find(
                             (s) => s.label === val,
                           );
                           setValue('skillId', selectedSkill?._id || '');
                         }}
-                        onRemove={() => {
-                          field.onChange('');
-                          setValue('skillId', '');
-                        }}
-                        selectPlaceholder="Select a skill"
-                        searchPlaceholder="Search skills..."
-                      />
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a skill" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {skills.map((skill) => (
+                            <SelectItem key={skill._id} value={skill.label}>
+                              {skill.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

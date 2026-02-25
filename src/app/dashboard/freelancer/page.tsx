@@ -81,7 +81,7 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 
-  const totalRevenueValue = '$45,231.89';
+  const totalRevenueValue = '$0';
   const revenueSpanClass =
     String(totalRevenueValue).length > 12 ? 'lg:col-span-2' : '';
 
