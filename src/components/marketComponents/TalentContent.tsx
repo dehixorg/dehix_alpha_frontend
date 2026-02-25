@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { Loader2, Search, Sliders, X } from 'lucide-react';
 
 import InvitedProfileCards from './sidebar-projectComponents/profileCards.tsx/invitedProfileCards';
-import AcceptedProfileCards from './sidebar-projectComponents/profileCards.tsx/acceptedProfileCards';
 import RejectedProfileCards from './sidebar-projectComponents/profileCards.tsx/rejectedProfileCards';
 
 import { calculateExperience } from '@/components/marketComponents/TalentLayout'; //
@@ -216,20 +215,13 @@ const TalentContent: React.FC<TalentContentProps> = ({
         onStatusFilterChange?.(undefined);
       };
       const cards =
-        selected === 'accepted' ? (
-          <AcceptedProfileCards
-            talents={talents}
-            loading={loading}
-            calculateExperience={calculateExperience}
-          />
-        ) : selected === 'rejected' ? (
+        selected === 'rejected' ? (
           <RejectedProfileCards
             talents={talents}
             loading={loading}
             calculateExperience={calculateExperience}
           />
         ) : (
-          // invited + applications (applied) share the same card layout today
           <InvitedProfileCards
             talents={talents}
             loading={loading}

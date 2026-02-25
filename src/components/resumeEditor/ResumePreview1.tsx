@@ -66,6 +66,19 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
   return (
     <div className="flex justify-center w-full h-full rounded-md">
       <div
@@ -130,7 +143,7 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
                   {item.jobTitle} - {item.company}
                 </p>
                 <p className="text-xs text-gray-700">
-                  {item.startDate} to {item.endDate}
+                  {formatDate(item.startDate)} to {formatDate(item.endDate)}
                 </p>
                 <p className="text-sm text-gray-800 leading-relaxed mt-1">
                   {item.description}
@@ -155,7 +168,7 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
                   {item.degree} - {item.school}
                 </p>
                 <p className="text-xs text-gray-700">
-                  {item.startDate} to {item.endDate}
+                  {formatDate(item.startDate)} to {formatDate(item.endDate)}
                 </p>
               </div>
             ))}
