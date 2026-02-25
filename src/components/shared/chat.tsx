@@ -522,22 +522,12 @@ export function CardsChat({
   }
 
   async function handleCreateMeet() {
-    try {
-      const response = await axiosInstance.post('/meeting', {
-        participants: conversation.participants,
-      });
-
-      const meetLink = response.data.meetLink;
-      const message: Partial<Message> = {
-        senderId: user.uid,
-        content: `🔗 Join the Meet: [Click here](${meetLink})`,
-        timestamp: new Date().toISOString(),
-      };
-
-      sendMessage(conversation, message, setInput);
-    } catch (error) {
-      console.error('Error creating meet:', error);
-    }
+    // Video call functionality is currently disabled
+    toast({
+      title: "Feature Unavailable",
+      description: "This functionality is not available for now.",
+      variant: "default",
+    });
   }
 
   /**
@@ -1073,12 +1063,12 @@ export function CardsChat({
                         size="icon"
                         aria-label="Video call"
                         onClick={handleCreateMeet}
-                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] opacity-50 cursor-not-allowed"
                       >
                         <Video className="h-5 w-5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">Video call</TooltipContent>
+                    <TooltipContent side="bottom">This functionality is not available for now</TooltipContent>
                   </Tooltip>
 
                   <Tooltip>
@@ -1156,10 +1146,10 @@ export function CardsChat({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleCreateMeet}
-                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2 opacity-50"
                       >
                         <Video className="h-4 w-4" />
-                        <span className="text-sm font-medium">Video call</span>
+                        <span className="text-sm font-medium">Video call (Not available)</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
