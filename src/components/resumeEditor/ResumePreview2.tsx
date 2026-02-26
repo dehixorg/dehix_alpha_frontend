@@ -182,7 +182,9 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
                     </p>
                     {(person.city || person.country) && (
                       <p className="text-xs text-gray-700">
-                        {[person.city, person.country].filter(Boolean).join(', ')}
+                        {[person.city, person.country]
+                          .filter(Boolean)
+                          .join(', ')}
                       </p>
                     )}
                     <p className="text-xs text-gray-700">

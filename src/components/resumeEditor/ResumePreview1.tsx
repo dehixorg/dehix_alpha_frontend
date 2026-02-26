@@ -136,28 +136,61 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
                   {`${person.firstName} ${person.lastName}`}
                 </h1>
                 <p className="text-sm text-gray-800 leading-tight flex flex-wrap justify-center gap-x-2">
-                  <ResumeLink value={person.email} />
-                  <span className="select-none">—</span>
-                  <span>{person.phoneNumber}</span>
-                  {(person.city || person.country) && (
-                    <>
-                      <span className="select-none">—</span>
-                      <span>{[person.city, person.country].filter(Boolean).join(', ')}</span>
-                    </>
-                  )}
+                  {[
+                    person.email ? (
+                      <ResumeLink key="email" value={person.email} />
+                    ) : null,
+                    person.phoneNumber ? (
+                      <span key="phone">{person.phoneNumber}</span>
+                    ) : null,
+                    person.city || person.country ? (
+                      <span key="location">
+                        {[person.city, person.country]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </span>
+                    ) : null,
+                  ]
+                    .filter(Boolean)
+                    .reduce<React.ReactNode[]>((acc, el, i) => {
+                      if (i > 0)
+                        acc.push(
+                          <span key={`sep-${i}`} className="select-none">
+                            —
+                          </span>,
+                        );
+                      acc.push(el);
+                      return acc;
+                    }, [])}
                 </p>
                 <p className="text-sm text-gray-800 leading-tight flex flex-wrap justify-center gap-x-2">
-                  {person.github && (
-                    <>
-                      <ResumeLink value={person.github} label="GitHub" />
-                      <span className="select-none">—</span>
-                    </>
-                  )}
-                  {person.linkedin && (
-                    <>
-                      <ResumeLink value={person.linkedin} label="LinkedIn" />
-                    </>
-                  )}
+                  {[
+                    person.github ? (
+                      <ResumeLink
+                        key="github"
+                        value={person.github}
+                        label="GitHub"
+                      />
+                    ) : null,
+                    person.linkedin ? (
+                      <ResumeLink
+                        key="linkedin"
+                        value={person.linkedin}
+                        label="LinkedIn"
+                      />
+                    ) : null,
+                  ]
+                    .filter(Boolean)
+                    .reduce<React.ReactNode[]>((acc, el, i) => {
+                      if (i > 0)
+                        acc.push(
+                          <span key={`sep-${i}`} className="select-none">
+                            —
+                          </span>,
+                        );
+                      acc.push(el);
+                      return acc;
+                    }, [])}
                 </p>
               </div>
             ))}
