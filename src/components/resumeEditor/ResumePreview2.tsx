@@ -2,6 +2,37 @@ import React, { useRef } from 'react';
 
 // import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+
+const toHref = (value: string): string => {
+  if (!value) return '#';
+  const v = value.trim();
+  if (/^mailto:/i.test(v) || /^https?:\/\//i.test(v) || /^tel:/i.test(v))
+    return v;
+  if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `mailto:${v}`;
+  if (/^\+?[\d\s\-().]{7,}$/.test(v)) return `tel:${v.replace(/\s/g, '')}`;
+  if (/github\.com|linkedin\.com/i.test(v))
+    return v.startsWith('http') ? v : `https://${v}`;
+  return v.startsWith('http') ? v : `https://${v}`;
+};
+
+const ResumeLink: React.FC<{ value: string; label?: string }> = ({
+  value,
+  label,
+}) => {
+  if (!value) return null;
+  const href = toHref(value);
+  const isLocal = href.startsWith('mailto:') || href.startsWith('tel:');
+  return (
+    <a
+      href={href}
+      {...(!isLocal && { target: '_blank', rel: 'noopener noreferrer' })}
+      className="hover:underline hover:text-blue-600 transition-colors duration-150 cursor-pointer"
+      style={{ color: 'inherit' }}
+    >
+      {label || value}
+    </a>
+  );
+};
 // Add this interface near the top of both files
 interface SectionVisibility {
   personal: boolean;
@@ -34,6 +65,8 @@ interface ResumePreviewProps {
     email: string;
     github: string;
     linkedin: string;
+    city?: string;
+    country?: string;
   }[];
   projectData?: { title: string; description: string }[];
   skillData?: { skillName: string }[];
@@ -60,7 +93,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
   ],
   workExperienceData = [
     {
-      jobTitle: 'english teacher',
+      jobTitle: 'English Teacher',
       company: 'TechCorp Solutions',
       startDate: '2019',
       endDate: '2021',
@@ -68,7 +101,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
         'Developed scalable web applications and optimized system performance.',
     },
     {
-      jobTitle: 'Sql developer',
+      jobTitle: 'SQL Developer',
       company: 'Innovatech',
       startDate: '2021',
       endDate: '2023',
@@ -96,22 +129,24 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return dateString;
-    }
+    if (/^\d{4}$/.test(dateString.trim())) return dateString.trim();
+    const parts = dateString.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const d = parts
+      ? new Date(Date.UTC(+parts[1], +parts[2] - 1, +parts[3]))
+      : new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      timeZone: 'UTC',
+    });
   };
 
   return (
     <div className="flex justify-center w-full h-full rounded-md">
       <div
         ref={containerRef}
-        className="bg-white w-full max-w-[794px] flex rounded-md overflow-hidden  border border-gray-300"
+        className="bg-white w-full max-w-[794px] flex rounded-md overflow-hidden border border-gray-300"
         style={{
           boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)',
           minHeight: '297mm',
@@ -123,7 +158,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
         <div className="w-1/3 bg-white p-5 flex flex-col">
           {sectionVisibility.personal &&
             personalData.map((person, index) => (
-              <div key={index} className="mb-3">
+              <div key={index} className="mb-4">
                 <h1
                   className="text-2xl font-bold text-gray-900 mb-2"
                   style={{ color: headingColor }}
@@ -139,24 +174,29 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
                   </h2>
                   <Separator className="my-1 h-[1px] bg-gray-300" />
                   <div className="space-y-1 mt-2">
-                    <p className="text-xs text-gray-700 break-words">
-                      {person.email}
+                    <p className="text-xs text-gray-700">
+                      <ResumeLink value={person.email} />
                     </p>
-                    <p className="text-xs text-gray-700 break-words">
+                    <p className="text-xs text-gray-700">
                       {person.phoneNumber}
                     </p>
-                    <p className="text-xs text-gray-700 break-words">
-                      {person.linkedin}
+                    {(person.city || person.country) && (
+                      <p className="text-xs text-gray-700">
+                        {[person.city, person.country].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-700">
+                      <ResumeLink value={person.linkedin} label="LinkedIn" />
                     </p>
-                    <p className="text-xs text-gray-700 break-words">
-                      {person.github}
+                    <p className="text-xs text-gray-700">
+                      <ResumeLink value={person.github} label="GitHub" />
                     </p>
                   </div>
                 </div>
               </div>
             ))}
           {sectionVisibility.skills && skillData.length > 0 && (
-            <div className="mt-4">
+            <div className="mt-6">
               <h2
                 className="text-base font-semibold text-gray-900 mb-1"
                 style={{ color: headingColor }}
@@ -164,9 +204,9 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
                 Skills
               </h2>
               <Separator className="my-1 h-[1px] bg-gray-300" />
-              <div className="mt-2">
+              <div className="mt-2 grid grid-cols-1 gap-y-1">
                 {skillData.map((skill, index) => (
-                  <div key={index} className="text-xs text-gray-700 mb-1">
+                  <div key={index} className="text-xs text-gray-700">
                     • {skill.skillName}
                   </div>
                 ))}
@@ -193,7 +233,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
 
           {sectionVisibility.workExperience &&
             workExperienceData.length > 0 && (
-              <div className="mb-5">
+              <div className="mb-4">
                 <h2
                   className="text-base font-semibold text-gray-900 mb-1"
                   style={{ color: headingColor }}
@@ -223,7 +263,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
             )}
 
           {sectionVisibility.projects && projectData.length > 0 && (
-            <div className="mb-5">
+            <div className="mb-4">
               <h2
                 className="text-base font-semibold text-gray-900 mb-1"
                 style={{ color: headingColor }}
@@ -245,7 +285,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
           )}
 
           {sectionVisibility.education && educationData.length > 0 && (
-            <div className="mb-5">
+            <div className="mb-4">
               <h2
                 className="text-base font-semibold text-gray-900 mb-1"
                 style={{ color: headingColor }}
@@ -270,7 +310,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
           )}
 
           {sectionVisibility.achievements && achievementData.length > 0 && (
-            <div className="mb-5">
+            <div className="mb-4">
               <h2
                 className="text-base font-semibold text-gray-900 mb-1"
                 style={{ color: headingColor }}

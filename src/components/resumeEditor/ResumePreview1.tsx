@@ -5,6 +5,38 @@ import React, { useRef } from 'react';
 // import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
+// Normalises a raw string into an openable href
+const toHref = (value: string): string => {
+  if (!value) return '#';
+  const v = value.trim();
+  if (/^mailto:/i.test(v) || /^https?:\/\//i.test(v) || /^tel:/i.test(v))
+    return v;
+  if (/^[\w.+-]+@[\w-]+\.[a-z]{2,}$/i.test(v)) return `mailto:${v}`;
+  if (/^\+?[\d\s\-().]{7,}$/.test(v)) return `tel:${v.replace(/\s/g, '')}`;
+  // github / linkedin paths or full URLs
+  if (/github\.com|linkedin\.com/i.test(v))
+    return v.startsWith('http') ? v : `https://${v}`;
+  return v.startsWith('http') ? v : `https://${v}`;
+};
+
+const ResumeLink: React.FC<{ value: string; label?: string }> = ({
+  value,
+  label,
+}) => {
+  if (!value) return null;
+  return (
+    <a
+      href={toHref(value)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover:underline hover:text-blue-600 transition-colors duration-150 cursor-pointer"
+      style={{ color: 'inherit' }}
+    >
+      {label || value}
+    </a>
+  );
+};
+
 interface SectionVisibility {
   personal: boolean;
   summary: boolean;
@@ -36,6 +68,8 @@ interface ResumePreviewProps {
     email: string;
     github: string;
     linkedin: string;
+    city?: string;
+    country?: string;
   }[];
   projectData?: { title: string; description: string }[];
   skillData?: { skillName: string }[];
@@ -91,7 +125,7 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
           boxSizing: 'border-box',
         }}
       >
-        <div className="w-full text-center mb-2">
+        <div className="w-full text-center mb-4">
           {sectionVisibility.personal &&
             personalData.map((person, index) => (
               <div key={index}>
@@ -101,11 +135,29 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
                 >
                   {`${person.firstName} ${person.lastName}`}
                 </h1>
-                <p className="text-sm text-gray-800 leading-tight">
-                  {person.email} • {person.phoneNumber}
+                <p className="text-sm text-gray-800 leading-tight flex flex-wrap justify-center gap-x-2">
+                  <ResumeLink value={person.email} />
+                  <span className="select-none">—</span>
+                  <span>{person.phoneNumber}</span>
+                  {(person.city || person.country) && (
+                    <>
+                      <span className="select-none">—</span>
+                      <span>{[person.city, person.country].filter(Boolean).join(', ')}</span>
+                    </>
+                  )}
                 </p>
-                <p className="text-sm text-gray-800 leading-tight">
-                  {person.github} • {person.linkedin}
+                <p className="text-sm text-gray-800 leading-tight flex flex-wrap justify-center gap-x-2">
+                  {person.github && (
+                    <>
+                      <ResumeLink value={person.github} label="GitHub" />
+                      <span className="select-none">—</span>
+                    </>
+                  )}
+                  {person.linkedin && (
+                    <>
+                      <ResumeLink value={person.linkedin} label="LinkedIn" />
+                    </>
+                  )}
                 </p>
               </div>
             ))}
@@ -114,7 +166,7 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
         <Separator className="bg-gray-300 my-2" />
 
         {sectionVisibility.summary && summaryData.length > 0 && (
-          <div className="mb-3">
+          <div className="mb-4">
             <h2
               className="text-lg font-semibold text-gray-900 mb-1"
               style={{ color: headingColor }}
@@ -129,14 +181,14 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
         )}
 
         {sectionVisibility.workExperience && workExperienceData.length > 0 && (
-          <div className="mb-3">
+          <div className="mb-4">
             <h2
               className="text-lg font-semibold text-gray-900 mb-2"
               style={{ color: headingColor }}
             >
               Work Experience
             </h2>
-            <Separator className="mb-2 bg-gray-300" />
+            <Separator className="mb-3 bg-gray-300" />
             {workExperienceData.map((item, index) => (
               <div key={index} className="mb-3">
                 <p className="text-sm font-medium text-gray-900">
@@ -183,7 +235,7 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
             >
               Projects
             </h2>
-            <Separator className="mb-2 bg-gray-300" />
+            <Separator className="mb-3 bg-gray-300" />
             {projectData.map((project, index) => (
               <div key={index} className="mb-3">
                 <p className="text-sm font-medium text-gray-900">
@@ -203,8 +255,8 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
             >
               Skills
             </h2>
-            <Separator className="mb-2 bg-gray-300" />
-            <ul className="list-disc list-inside text-sm text-gray-800">
+            <Separator className="mb-3 bg-gray-300" />
+            <ul className="list-disc list-inside text-sm text-gray-800 sm:columns-2 sm:gap-x-6 [&>li]:break-inside-avoid">
               {skillData.map((skill, index) => (
                 <li key={index}>{skill.skillName}</li>
               ))}
@@ -220,8 +272,8 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
             >
               Achievements
             </h2>
-            <Separator className="mb-2 bg-gray-300" />
-            <ul className="list-disc list-inside text-sm text-gray-800">
+            <Separator className="mb-3 bg-gray-300" />
+            <ul className="list-disc list-inside text-sm text-gray-800 sm:columns-2 sm:gap-x-6 [&>li]:break-inside-avoid">
               {achievementData.map((achievement, index) => (
                 <li key={index}>{achievement.achievementName}</li>
               ))}
