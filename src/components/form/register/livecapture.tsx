@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Camera, RefreshCw, User2 } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
+import { FaceMesh } from '@mediapipe/face_mesh';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,15 +24,92 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [canShoot, setCanShoot] = useState(false);
+  const faceMeshRef = useRef<FaceMesh | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const [faceStatus, setFaceStatus] = useState<
+    'no-face' | 'multiple' | 'not-centered' | 'ok'
+  >('no-face');
   // Use a ref for the current object URL to avoid stale closures and leaks
   const objectUrlRef = useRef<string | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const isMediaSupported =
     typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
 
+  const startFaceDetection = () => {
+    const detect = async () => {
+      if (!videoRef.current || !faceMeshRef.current) return;
+
+      await faceMeshRef.current.send({
+        image: videoRef.current,
+      });
+
+      rafRef.current = requestAnimationFrame(detect);
+    };
+
+    detect();
+  };
+
+  const onFaceResults = (results: any) => {
+    if (!videoRef.current) return;
+
+    const faces = results.multiFaceLandmarks;
+
+    if (!faces || faces.length === 0) {
+      setFaceStatus('no-face');
+      setCanShoot(false);
+      return;
+    }
+
+    if (faces.length > 1) {
+      setFaceStatus('multiple');
+      setCanShoot(false);
+      return;
+    }
+
+    const landmarks = faces[0];
+
+    // eyes, nose, mouth
+    const requiredPoints = [33, 263, 1, 13];
+    const allVisible = requiredPoints.every((i) => {
+      const p = landmarks[i];
+      return p && p.x > 0 && p.x < 1 && p.y > 0 && p.y < 1;
+    });
+
+    if (!allVisible) {
+      setFaceStatus('not-centered');
+      setCanShoot(false);
+      return;
+    }
+
+    // face size (distance)
+    const leftCheek = landmarks[234];
+    const rightCheek = landmarks[454];
+    const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
+
+    if (faceWidth < 0.25 || faceWidth > 0.65) {
+      setFaceStatus('not-centered');
+      setCanShoot(false);
+      return;
+    }
+
+    // centering (nose)
+    const nose = landmarks[1];
+    const isCentered =
+      nose.x > 0.3 && nose.x < 0.7 && nose.y > 0.25 && nose.y < 0.75;
+
+    if (!isCentered) {
+      setFaceStatus('not-centered');
+      setCanShoot(false);
+      return;
+    }
+
+    setFaceStatus('ok');
+    setCanShoot(true);
+  };
+
   const startLiveCapture = async () => {
-    setIsCapturing(true);
     try {
+      setIsCapturing(true);
       setError(null);
       if (!isMediaSupported) throw new Error('Camera API not supported');
       // Request camera access with front camera preference
@@ -51,10 +129,26 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
         videoRef.current.setAttribute('playsinline', 'true');
         videoRef.current.muted = true;
         await videoRef.current.play();
+
+        faceMeshRef.current = new FaceMesh({
+          locateFile: (file) =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+        });
+
+        faceMeshRef.current.setOptions({
+          maxNumFaces: 1,
+          refineLandmarks: true,
+          minDetectionConfidence: 0.7,
+          minTrackingConfidence: 0.7,
+        });
+
+        faceMeshRef.current.onResults(onFaceResults);
+        startFaceDetection();
         // Wait for metadata to ensure width/height
         await new Promise((resolve) => {
           const onLoaded = () => {
-            setCanShoot((videoRef.current?.videoWidth || 0) > 0);
+            setCanShoot(false);
+            setFaceStatus('no-face');
             resolve(true);
           };
           if ((videoRef.current?.readyState || 0) >= 1) onLoaded();
@@ -117,6 +211,14 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
           setError('Failed to process captured image.');
         }
 
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+
+        faceMeshRef.current?.close();
+        faceMeshRef.current = null;
+
         // Stop the camera stream
         if (stream) {
           stream.getTracks().forEach((track) => track.stop());
@@ -131,6 +233,15 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
   useEffect(() => {
     return () => {
       if (stream) stream.getTracks().forEach((t) => t.stop());
+
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+
+      faceMeshRef.current?.close();
+      faceMeshRef.current = null;
+
       if (objectUrlRef.current) {
         URL.revokeObjectURL(objectUrlRef.current);
         objectUrlRef.current = null;
@@ -224,8 +335,18 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                           onClick={() => {
                             if (stream)
                               stream.getTracks().forEach((t) => t.stop());
+
+                            if (rafRef.current) {
+                              cancelAnimationFrame(rafRef.current);
+                              rafRef.current = null;
+                            }
+
+                            faceMeshRef.current?.close();
+                            faceMeshRef.current = null;
+
                             setIsCapturing(false);
                             setCanShoot(false);
+                            setFaceStatus('no-face');
                           }}
                         >
                           Stop
@@ -268,6 +389,16 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                       </div>
                     )}
                   </div>
+
+                  {isCapturing && (
+                    <p className="text-xs mt-2 text-center">
+                      {faceStatus === 'no-face' && 'No face detected'}
+                      {faceStatus === 'multiple' && 'Multiple faces detected'}
+                      {faceStatus === 'not-centered' &&
+                        'Align your full face in the circle'}
+                      {faceStatus === 'ok' && 'Face aligned ✓'}
+                    </p>
+                  )}
 
                   {/* Right: Captured preview only (no upload alternative) */}
                   <div className="space-y-3">
