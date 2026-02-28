@@ -300,6 +300,19 @@ export default function StreakPage() {
     }
   };
 
+  const calculateTotalEarnedConnects = () => {
+    if (!streakData || !rewardsData) return 0;
+
+    // Sum up rewards for milestones that have been claimed
+    // A milestone is claimed if: currentStreak > milestone.days AND milestone is NOT in claimableMilestones
+    return rewardsData.reduce((total, reward) => {
+      const isClaimed =
+        streakData.currentStreak > reward.days &&
+        !streakData.claimableMilestones.includes(reward.days);
+      return total + (isClaimed ? reward.reward : 0);
+    }, 0);
+  };
+
   // Loading State
   if (isLoading || isLoadingRewards) {
     return (
@@ -324,7 +337,7 @@ export default function StreakPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Skeleton className="h-[104px]" />
             <Skeleton className="h-[104px]" />
             <Skeleton className="h-[104px]" />
@@ -460,7 +473,7 @@ export default function StreakPage() {
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold tracking-tight">Overview</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               title="Current streak"
               value={streakData.currentStreak}
@@ -490,12 +503,16 @@ export default function StreakPage() {
               variant="secondary"
             />
             <StatCard
-              title="Last login"
-              value={formatDate(streakData.lastLoginDate)}
-              additionalInfo="Most recent activity"
+              title="Total earned"
+              value={calculateTotalEarnedConnects()}
+              additionalInfo={
+                calculateTotalEarnedConnects() === 1
+                  ? 'connect earned'
+                  : 'connects earned'
+              }
               icon={
-                <div className="rounded-lg border bg-blue-500/10 p-2">
-                  <Calendar className="h-5 w-5 text-blue-600" />
+                <div className="rounded-lg border bg-green-500/10 p-2">
+                  <Gift className="h-5 w-5 text-green-600" />
                 </div>
               }
               variant="default"
@@ -560,7 +577,6 @@ export default function StreakPage() {
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold tracking-tight">Rewards</h2>
           </div>
-
           {isRewardsError ? (
             <Card>
               <CardContent className="pt-6">
@@ -596,7 +612,7 @@ export default function StreakPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {(rewardsData || [])
                 .slice()
                 .sort((a, b) => a.days - b.days)
@@ -719,7 +735,7 @@ export default function StreakPage() {
           </div>
           <Card>
             <CardContent className="pt-6 space-y-3 text-sm text-muted-foreground">
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-lg border bg-muted/30 p-4">
                   <p className="font-medium text-foreground">
                     Build the streak
