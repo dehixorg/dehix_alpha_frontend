@@ -15,6 +15,7 @@ import {
   ArrowUpNarrowWide,
   Trash2,
   CircleX,
+  X,
 } from 'lucide-react';
 
 import {
@@ -527,7 +528,15 @@ const ProjectInvitationsPage: React.FC = () => {
               <div className="flex w-full items-center justify-start gap-2 sm:w-auto">
                 <Select
                   value={sortBy}
-                  onValueChange={(value) => setSortBy(value as any)}
+                  onValueChange={(value) => {
+                    if (value === 'clear-filters') {
+                      setSearch('');
+                      setStatusFilter('ALL');
+                      setSortBy('createdAt');
+                    } else {
+                      setSortBy(value as any);
+                    }
+                  }}
                 >
                   <SelectTrigger className="h-9 w-14 px-2 sm:w-auto sm:px-3">
                     <div className="flex w-full items-center justify-center gap-2 min-w-0 sm:justify-start">
@@ -572,6 +581,20 @@ const ProjectInvitationsPage: React.FC = () => {
                         </span>
                       </div>
                     </SelectItem>
+                    {(search || statusFilter !== 'ALL') && (
+                      <>
+                        <div className="h-px my-1 bg-border" />
+                        <SelectItem
+                          value="clear-filters"
+                          className="text-red-600"
+                        >
+                          <div className="flex items-center">
+                            <X className="h-4 w-4 mr-2" />
+                            <span>Clear Filters</span>
+                          </div>
+                        </SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
 
