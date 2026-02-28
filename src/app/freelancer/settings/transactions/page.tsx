@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -48,6 +48,7 @@ export default function TransactionsPage() {
   }>({});
   const [appliedFilters, setAppliedFilters] = useState<TransactionFilters>({});
   const [showFilters, setShowFilters] = useState(false);
+  const lastConnectsRefreshAtRef = useRef(0);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['transactions', 'freelancer', user.uid, page, appliedFilters],
@@ -68,17 +69,24 @@ export default function TransactionsPage() {
     },
     enabled: !!user.uid,
     staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
   });
 
   useEffect(() => {
-    const handleConnectsUpdate = () => {
+    const handleConnectsUpdated = () => {
+      const now = Date.now();
+      // Prevent rapid repeated API calls when multiple components emit
+      // connectsUpdated in quick succession for a single action.
+      if (now - lastConnectsRefreshAtRef.current < 1200) return;
+      lastConnectsRefreshAtRef.current = now;
       refetch();
     };
 
-    window.addEventListener('connectsUpdated', handleConnectsUpdate);
-
+    window.addEventListener('connectsUpdated', handleConnectsUpdated);
     return () => {
-      window.removeEventListener('connectsUpdated', handleConnectsUpdate);
+      window.removeEventListener('connectsUpdated', handleConnectsUpdated);
     };
   }, [refetch]);
 
