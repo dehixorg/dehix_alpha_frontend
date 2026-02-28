@@ -45,6 +45,10 @@ export async function middleware(request: NextRequest) {
   // Handle unauthenticated access
   if (!token) {
     url.pathname = '/auth/login';
+    // If userType cookie exists, the user had an active session → token expired
+    if (userType) {
+      url.searchParams.set('expired', 'true');
+    }
     return NextResponse.redirect(url);
   }
 

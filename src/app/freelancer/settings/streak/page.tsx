@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Flame, Calendar, Trophy, Gift, Check, Lock } from 'lucide-react';
+import { Flame, Trophy, Gift, Check, Lock } from 'lucide-react';
 
 import { updateConnectsBalance } from '@/lib/updateConnects';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -285,19 +285,6 @@ export default function StreakPage() {
   const isClaimable = (milestone: number) => {
     if (!streakData) return false;
     return streakData.claimableMilestones.includes(milestone);
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-    } catch {
-      return 'Invalid date';
-    }
   };
 
   const calculateTotalEarnedConnects = () => {

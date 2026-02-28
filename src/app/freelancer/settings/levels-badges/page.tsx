@@ -274,8 +274,8 @@ export default function LevelsAndBadgesPage() {
   const calculateDisplayLevel = useCallback((priority: number): number => {
     // If priority is 0, it's level 1
     if (priority === 0) return 1;
-    // Otherwise, divide by 10 to get the level number
-    return Math.floor(priority / 10) || 1;
+    // Otherwise, divide by 10 and add 1 to get level number
+    return Math.floor(priority / 10) + 1;
   }, []);
 
   // Claim badge mutation
@@ -407,7 +407,7 @@ export default function LevelsAndBadgesPage() {
     if (!currentLevel) return;
 
     const nextLevel = allLevels.find(
-      (l: LevelItem) => (l.priority || 0) === (currentLevel.priority || 0) + 1,
+      (l: LevelItem) => (l.priority || 0) === (currentLevel.priority || 0) + 10,
     );
 
     if (!nextLevel) {
@@ -982,7 +982,7 @@ export default function LevelsAndBadgesPage() {
               {filteredBadges.map((badge) => {
                 const badgeId = badge._id || badge.badge_id || '';
                 const isEarned = isBadgeEarned(badgeId);
-                const isNextBadge = badge.priority === maxEarnedPriority + 1;
+                const isNextBadge = badge.priority === maxEarnedPriority + 10;
                 const eligibility = eligibilityChecks[badgeId];
                 const isChecking = checkingEligibility[badgeId];
 
