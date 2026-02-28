@@ -62,7 +62,6 @@ import {
   updateConversationWithMessageTransaction,
   updateDataInFirestore,
 } from '@/utils/common/firestoreUtils';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/components/ui/use-toast';
 import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
