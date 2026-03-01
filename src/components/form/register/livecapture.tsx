@@ -138,6 +138,16 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
     }
   };
 
+  const stopFaceDetection = () => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+
+    faceMeshRef.current?.close();
+    faceMeshRef.current = null;
+  };
+
   const startLiveCapture = async () => {
     try {
       setIsCapturing(true);
@@ -242,13 +252,7 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
           setError('Failed to process captured image.');
         }
 
-        if (rafRef.current) {
-          cancelAnimationFrame(rafRef.current);
-          rafRef.current = null;
-        }
-
-        faceMeshRef.current?.close();
-        faceMeshRef.current = null;
+        stopFaceDetection();
 
         // Stop the camera stream
         if (stream) {
@@ -265,13 +269,7 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
     return () => {
       if (stream) stream.getTracks().forEach((t) => t.stop());
 
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-
-      faceMeshRef.current?.close();
-      faceMeshRef.current = null;
+      stopFaceDetection();
 
       if (objectUrlRef.current) {
         URL.revokeObjectURL(objectUrlRef.current);
@@ -367,14 +365,7 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                             if (stream)
                               stream.getTracks().forEach((t) => t.stop());
 
-                            if (rafRef.current) {
-                              cancelAnimationFrame(rafRef.current);
-                              rafRef.current = null;
-                            }
-
-                            faceMeshRef.current?.close();
-                            faceMeshRef.current = null;
-
+                            stopFaceDetection();
                             setIsCapturing(false);
                             setCanShoot(false);
                             setFaceStatus('no-face');
