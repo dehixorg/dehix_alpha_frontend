@@ -1036,7 +1036,16 @@ export default function LevelsAndBadgesPage() {
               </div>
             </CardHeader>
             <CardContent className="max-w-full">
-              {filteredBadges.length > 0 ? (
+              {allBadges.length > 0 &&
+              allBadges.every((b) => isBadgeEarned(b.badge_id!)) ? (
+                <div className="py-12">
+                  <EmptyState
+                    title="All badges claimed!"
+                    description="Congratulations! You have already claimed all the badges available. Check back later for new badges."
+                    Icon={Trophy}
+                  />
+                </div>
+              ) : filteredBadges.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredBadges.map((badge) => {
                     const badgeId = badge.badge_id || '';
