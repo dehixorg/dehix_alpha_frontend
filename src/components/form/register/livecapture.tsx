@@ -26,6 +26,7 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
   const [canShoot, setCanShoot] = useState(false);
   const faceMeshRef = useRef<FaceMesh | null>(null);
   const rafRef = useRef<number | null>(null);
+  const stableFrameCount = useRef(0);
   const [faceStatus, setFaceStatus] = useState<
     'no-face' | 'multiple' | 'not-centered' | 'ok'
   >('no-face');
@@ -50,17 +51,22 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
   };
 
   const onFaceResults = (results: any) => {
+    if (canShoot) return;
     if (!videoRef.current) return;
 
     const faces = results.multiFaceLandmarks;
 
+    // No face
     if (!faces || faces.length === 0) {
+      stableFrameCount.current = 0;
       setFaceStatus('no-face');
       setCanShoot(false);
       return;
     }
 
+    // Multiple faces
     if (faces.length > 1) {
+      stableFrameCount.current = 0;
       setFaceStatus('multiple');
       setCanShoot(false);
       return;
@@ -68,43 +74,68 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
 
     const landmarks = faces[0];
 
-    // eyes, nose, mouth
+    // Required facial features (mobile-safe edges)
     const requiredPoints = [33, 263, 1, 13];
     const allVisible = requiredPoints.every((i) => {
       const p = landmarks[i];
-      return p && p.x > 0 && p.x < 1 && p.y > 0 && p.y < 1;
+      return p && p.x > 0.05 && p.x < 0.95 && p.y > 0.05 && p.y < 0.95;
     });
 
     if (!allVisible) {
+      stableFrameCount.current = 0;
       setFaceStatus('not-centered');
       setCanShoot(false);
       return;
     }
 
-    // face size (distance)
+    // Side-face / profile rejection (yaw check)
+    const nose = landmarks[1];
+    const leftEye = landmarks[33];
+    const rightEye = landmarks[263];
+
+    const distLeft = Math.abs(nose.x - leftEye.x);
+    const distRight = Math.abs(nose.x - rightEye.x);
+
+    const yawRatio =
+      Math.min(distLeft, distRight) / Math.max(distLeft, distRight);
+
+    if (yawRatio < 0.55) {
+      stableFrameCount.current = 0;
+      setFaceStatus('not-centered');
+      setCanShoot(false);
+      return;
+    }
+
+    // Face size (distance)
     const leftCheek = landmarks[234];
     const rightCheek = landmarks[454];
     const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
 
-    if (faceWidth < 0.25 || faceWidth > 0.65) {
+    if (faceWidth < 0.18 || faceWidth > 0.75) {
+      stableFrameCount.current = 0;
       setFaceStatus('not-centered');
       setCanShoot(false);
       return;
     }
 
-    // centering (nose)
-    const nose = landmarks[1];
+    // Centering (relaxed for mobile)
     const isCentered =
-      nose.x > 0.3 && nose.x < 0.7 && nose.y > 0.25 && nose.y < 0.75;
+      nose.x > 0.2 && nose.x < 0.8 && nose.y > 0.2 && nose.y < 0.8;
 
     if (!isCentered) {
+      stableFrameCount.current = 0;
       setFaceStatus('not-centered');
       setCanShoot(false);
       return;
     }
 
-    setFaceStatus('ok');
-    setCanShoot(true);
+    // Stability window (prevents flicker)
+    stableFrameCount.current += 1;
+
+    if (stableFrameCount.current >= 8) {
+      setFaceStatus('ok');
+      setCanShoot(true);
+    }
   };
 
   const startLiveCapture = async () => {
