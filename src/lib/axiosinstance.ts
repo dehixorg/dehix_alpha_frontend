@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { auth } from '@/config/firebaseConfig';
 import Cookies from 'js-cookie';
 
+import { auth } from '@/config/firebaseConfig';
 
 // Create an Axios instance
 let axiosInstance: AxiosInstance = axios.create({
