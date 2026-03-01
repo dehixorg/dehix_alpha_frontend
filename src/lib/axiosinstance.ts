@@ -1,4 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { auth } from '@/config/firebaseConfig';
+import Cookies from 'js-cookie';
+
 
 // Create an Axios instance
 let axiosInstance: AxiosInstance = axios.create({
@@ -59,6 +62,54 @@ function attachInterceptors(instance: AxiosInstance) {
         // eslint-disable-next-line no-console
         console.error('Response error');
       }
+
+      // Handle 401 Unauthorized errors
+      const originalRequest = error.config;
+      if (
+        error.response?.status === 401 &&
+        !originalRequest._retry &&
+        !isCanceled
+      ) {
+        originalRequest._retry = true;
+
+        const refreshPromise = (async () => {
+          try {
+            const user = auth.currentUser;
+            if (user) {
+              const newToken = await user.getIdToken(true);
+              localStorage.setItem('token', newToken);
+              Cookies.set('token', newToken, {
+                expires: 1,
+                sameSite: 'Strict',
+              });
+
+              // Apply the new token to the original request
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+              // Re-initialize the instance if needed (though interceptors are shared)
+              // But we should ensure future requests use this token
+              if (instance === axiosInstance) {
+                initializeAxiosWithToken(newToken);
+              }
+
+              return axiosInstance(originalRequest);
+            }
+            throw new Error('No user found for refresh');
+          } catch (refreshError) {
+            console.error('Manual token refresh failed:', refreshError);
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              Cookies.remove('token');
+              window.location.href = '/auth/login';
+            }
+            return Promise.reject(refreshError);
+          }
+        })();
+
+        return refreshPromise;
+      }
+
       try {
         const requestId = (error?.config as any)?.metadata?.requestId as
           | string
