@@ -6,7 +6,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   Award,
   Check,
-  CheckCircle,
   Crown,
   Gift,
   Info,
@@ -28,7 +27,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -531,30 +529,6 @@ export default function LevelsAndBadgesPage() {
     queryFn: fetchStatus,
   });
 
-  // Calculate progress to next level
-  const calculateProgress = (): { progress: number; nextLevel?: LevelItem } => {
-    if (!currentLevel || !statusData?.data?.progress) return { progress: 0 };
-
-    const currentNum = currentLevel.levelNumber ?? 0;
-    const nextLevel = allLevels.find(
-      (l) => (l.levelNumber ?? 0) === currentNum + 1,
-    );
-
-    if (!nextLevel) return { progress: 100, nextLevel };
-
-    // Get progress data from the backend if available
-    const progressData = statusData.data.progress;
-    const currentPoints = progressData?.currentPoints || 0;
-    const requiredPoints = progressData?.requiredPoints || 100; // Default to 100 if not provided
-
-    const progress = Math.min(
-      Math.round((currentPoints / requiredPoints) * 100),
-      100,
-    );
-
-    return { progress, nextLevel };
-  };
-
   // Set current level and earned badges when status data changes
   useEffect(() => {
     if (statusData?.data && allBadgesFromInfo.length > 0) {
@@ -676,14 +650,6 @@ export default function LevelsAndBadgesPage() {
     if (levelNum < currentLevelNumber) return 'completed';
     if (levelNum === currentLevelNumber) return 'current';
     return 'locked';
-  };
-
-  const _unusedVars = {
-    calculateReward,
-    newLevel: undefined as unknown as LevelItem | undefined,
-    amount: 0,
-    index: 0,
-    _isPastLevel: false,
   };
 
   // Render the component
