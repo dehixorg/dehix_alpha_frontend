@@ -85,7 +85,6 @@ import { Verified } from 'lucide-react';
 import { ThemeToggle } from '../shared/themeToggle';
 //import { ChatList } from '../shared/chatList';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { usePlatformTour } from '../tour/shared/usePlatformTour';
 
 import {
   Tooltip,
@@ -100,6 +99,7 @@ import {
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { RootState } from '@/lib/store';
+import SidebarTourController from '@/components/tour/shared/SidebarTourController';
 
 export interface MenuItem {
   href?: string;
@@ -145,9 +145,6 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   };
 
   const finalMenuItemsTop = [...menuItemsTop];
-  usePlatformTour(true);
-
-  usePlatformTour(true);
 
   if (
     isKycCheck &&
@@ -237,7 +234,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       );
     }
 
-    // 👇 Handle buttons (onClick menu items)
+    // Handle buttons (onClick menu items)
     if (item.onClick) {
       return (
         <TooltipProvider>
@@ -258,7 +255,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       );
     }
 
-    // 👇 Handle normal links
+    // Handle normal links
     return (
       <TooltipProvider>
         <Tooltip>
@@ -290,35 +287,40 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   };
 
   return (
-    <aside
-      className="fixed inset-y-0 left-0 z-50 hidden w-14 flex-col border-r bg-background sm:flex"
-      data-tour="sidebar"
-    >
-      <div className="flex h-full min-h-0 flex-col">
-        <ScrollArea className="flex-1 min-h-0">
-          <nav className="flex flex-col items-center gap-4 px-2 py-5">
-            {finalMenuItemsTop.map((item, index) => (
-              <MenuIcon key={index} item={item} />
-            ))}
-            {active === 'Chats' &&
-              setActiveConversation &&
-              conversations &&
-              conversations.map((conv) => (
-                <ChatAvatar key={conv.id} conversation={conv} />
-              ))}
-          </nav>
-        </ScrollArea>
+    <>
+      <SidebarTourController />
 
-        <div className="mx-auto flex flex-col items-center gap-4 pb-5">
-          <ThemeToggle />
-          <nav className="flex flex-col items-center gap-4 px-2">
-            {menuItemsBottom.map((item, index) => (
-              <MenuIcon key={index} item={item} />
-            ))}
-          </nav>
+      <aside
+        className="fixed inset-y-0 left-0 z-50 hidden w-14 flex-col border-r bg-background sm:flex"
+        data-tour="sidebar"
+      >
+        <div className="flex h-full min-h-0 flex-col">
+          <ScrollArea className="flex-1 min-h-0">
+            <nav className="flex flex-col items-center gap-4 px-2 py-5">
+              {finalMenuItemsTop.map((item, index) => (
+                <MenuIcon key={index} item={item} />
+              ))}
+
+              {active === 'Chats' &&
+                setActiveConversation &&
+                conversations &&
+                conversations.map((conv) => (
+                  <ChatAvatar key={conv.id} conversation={conv} />
+                ))}
+            </nav>
+          </ScrollArea>
+
+          <div className="mx-auto flex flex-col items-center gap-4 pb-5">
+            <ThemeToggle />
+            <nav className="flex flex-col items-center gap-4 px-2">
+              {menuItemsBottom.map((item, index) => (
+                <MenuIcon key={index} item={item} />
+              ))}
+            </nav>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
 

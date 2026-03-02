@@ -8,10 +8,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
-function el(selector: string) {
-  return document.querySelector(selector);
-}
-
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -33,10 +29,9 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useNotesTour(isReady: boolean) {
+export function useKycTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
-  const userType = useSelector((s: RootState) => s.user.type);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -56,18 +51,13 @@ export function useNotesTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'notes',
-      title: 'Notes',
-      text:
-        userType === 'business'
-          ? 'Use this space to keep business notes, ideas, and important references in one place.'
-          : 'Use this section to write down ideas, reminders, and personal notes.',
-      // attachTo: {
-      //   element: '[data-tour="notes"]',
-      //   on: 'top',
-      // },
+      id: 'business-kyc',
+      title: 'Business KYC Verification',
+      scrollTo: false,
+      text: 'Please Complete the Mandatory KYC and earn reward.',
       when: withProgress(tour),
       buttons: [
+        { text: 'Back', action: tour.back },
         {
           text: 'Got it',
           action: () => {
@@ -85,16 +75,14 @@ export function useNotesTour(isReady: boolean) {
       tourRef.current = null;
       dispatch(clearTour());
     };
-  }, [dispatch, userType]);
+  }, [dispatch]);
 
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
     if (mode !== 'page') return;
-    if (target !== 'notes') return;
+    if (target !== 'business-kyc') return;
 
-    if (el('[data-tour="notes"]')) {
-      tourRef.current?.start();
-    }
-  }, [trigger, mode, target, isReady, userType]);
+    tourRef.current?.start();
+  }, [trigger, mode, target, isReady]);
 }

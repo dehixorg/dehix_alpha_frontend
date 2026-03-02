@@ -8,6 +8,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
+function el(selector: string) {
+  return document.querySelector(selector);
+}
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -29,7 +32,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useBusinessDashboardTour(isReady: boolean) {
+export function usePersonalInfoTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -51,10 +54,9 @@ export function useBusinessDashboardTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'welcome',
-      title: 'Welcome',
-      text: 'This is your business dashboard overview.',
-      attachTo: { element: '[data-tour="business-welcome"]', on: 'bottom' },
+      id: 'personal-info-intro',
+      title: 'Personal Information',
+      text: 'Keep your profile details updated so businesses can find and trust you faster.',
       when: withProgress(tour),
       buttons: [
         {
@@ -64,18 +66,15 @@ export function useBusinessDashboardTour(isReady: boolean) {
             dispatch(clearTour());
           },
         },
-        {
-          text: 'Next',
-          action: tour.next,
-        },
+        { text: 'Next', action: tour.next },
       ],
     });
 
     tour.addStep({
-      id: 'stats',
-      title: 'Stats',
-      text: 'Track your projects and progress here.',
-      attachTo: { element: '[data-tour="business-stats"]', on: 'bottom' },
+      id: 'profile-picture',
+      title: 'Profile picture',
+      text: 'Upload or change your profile picture here. Changes are saved instantly — no need to click Save.',
+      attachTo: { element: '[data-tour="profile-picture"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -84,10 +83,10 @@ export function useBusinessDashboardTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'projects',
-      title: 'Projects',
-      text: 'Manage your current and completed projects here.',
-      attachTo: { element: '[data-tour="business-projects"]', on: 'top' },
+      id: 'non-editable',
+      title: 'Locked fields',
+      text: 'These details are verified and cannot be edited for security reasons.',
+      attachTo: { element: '[data-tour="non-editable-field"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -96,11 +95,11 @@ export function useBusinessDashboardTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'create-project-primary',
-      title: 'Create Your First Project',
-      text: 'Start by creating a project. This is where you define your requirements and begin collaborating.',
+      id: 'skills-domains',
+      title: 'Skills & Domains',
+      text: 'Add or update your skills and domains here. These details can be saved here too and used for matching.',
       attachTo: {
-        element: '[data-tour="create-project-primary"]',
+        element: '[data-tour="skills-domains"]',
         on: 'top',
       },
       when: withProgress(tour),
@@ -111,14 +110,20 @@ export function useBusinessDashboardTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'actions',
-      title: 'Quick actions',
-      text: 'Create and manage projects quickly from here.',
-      attachTo: { element: '[data-tour="business-quick-actions"]', on: 'left' },
+      id: 'save-profile',
+      title: 'Save updates',
+      text: 'Update your skills and domains here to improve visibility and matching.',
+      attachTo: { element: '[data-tour="profile-save"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
-        { text: 'Got it', action: tour.complete },
+        {
+          text: 'Got it',
+          action: () => {
+            tour.complete();
+            dispatch(clearTour());
+          },
+        },
       ],
     });
 
@@ -132,10 +137,14 @@ export function useBusinessDashboardTour(isReady: boolean) {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!trigger || !isReady) return;
-    if (mode !== 'page') return;
-    if (target !== 'business-dashboard') return;
+    if (!trigger) return;
+    if (!isReady) return;
 
-    tourRef.current?.start();
+    if (mode !== 'page') return;
+    if (target !== 'personal-info-form') return;
+
+    if (el('[data-tour="non-editable-field"]')) {
+      tourRef.current?.start();
+    }
   }, [trigger, mode, target, isReady]);
 }

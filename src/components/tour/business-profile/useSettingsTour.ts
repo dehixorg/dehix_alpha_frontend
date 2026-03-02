@@ -8,6 +8,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
+function el(selector: string) {
+  return document.querySelector(selector);
+}
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -29,7 +32,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useBusinessDashboardTour(isReady: boolean) {
+export function useSettingsTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -51,10 +54,13 @@ export function useBusinessDashboardTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'welcome',
-      title: 'Welcome',
-      text: 'This is your business dashboard overview.',
-      attachTo: { element: '[data-tour="business-welcome"]', on: 'bottom' },
+      id: 'settings-sidebar',
+      title: 'Settings Navigation',
+      text: 'Use this sidebar to manage your business settings, compliance, and reports.',
+      attachTo: {
+        element: '[data-tour="sidebar"]',
+        on: 'right',
+      },
       when: withProgress(tour),
       buttons: [
         {
@@ -72,36 +78,12 @@ export function useBusinessDashboardTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'stats',
-      title: 'Stats',
-      text: 'Track your projects and progress here.',
-      attachTo: { element: '[data-tour="business-stats"]', on: 'bottom' },
-      when: withProgress(tour),
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'projects',
-      title: 'Projects',
-      text: 'Manage your current and completed projects here.',
-      attachTo: { element: '[data-tour="business-projects"]', on: 'top' },
-      when: withProgress(tour),
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'create-project-primary',
-      title: 'Create Your First Project',
-      text: 'Start by creating a project. This is where you define your requirements and begin collaborating.',
+      id: 'settings-business-info',
+      title: 'Business Information',
+      text: 'Update your company details and basic information used across the platform.',
       attachTo: {
-        element: '[data-tour="create-project-primary"]',
-        on: 'top',
+        element: '[data-tour="settings-business-info"]',
+        on: 'right',
       },
       when: withProgress(tour),
       buttons: [
@@ -111,14 +93,68 @@ export function useBusinessDashboardTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'actions',
-      title: 'Quick actions',
-      text: 'Create and manage projects quickly from here.',
-      attachTo: { element: '[data-tour="business-quick-actions"]', on: 'left' },
+      id: 'settings-kyc',
+      title: 'Compliance & Verification',
+      text: 'Complete verification to enable full access to platform features.',
+      attachTo: {
+        element: '[data-tour="settings-kyc"]',
+        on: 'right',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
-        { text: 'Got it', action: tour.complete },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'settings-transactions',
+      title: 'Transactions',
+      text: 'View invoices, payments, and financial records related to your projects.',
+      attachTo: {
+        element: '[data-tour="settings-transactions"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'settings-feedback',
+      title: 'Feedback',
+      text: 'Share your experience and help us improve the platform.',
+      attachTo: {
+        element: '[data-tour="settings-feedback"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'settings-reports',
+      title: 'Reports & Issues',
+      text: 'Access reports and important updates related to your account and projects.',
+      attachTo: {
+        element: '[data-tour="settings-reports"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        {
+          text: 'Got it',
+          action: () => {
+            tour.complete();
+            dispatch(clearTour());
+          },
+        },
       ],
     });
 
@@ -132,10 +168,14 @@ export function useBusinessDashboardTour(isReady: boolean) {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!trigger || !isReady) return;
-    if (mode !== 'page') return;
-    if (target !== 'business-dashboard') return;
+    if (!trigger) return;
+    if (!isReady) return;
 
-    tourRef.current?.start();
+    if (mode !== 'platform') return;
+    if (target !== 'sidebar') return;
+
+    if (el('[data-tour="sidebar"]')) {
+      tourRef.current?.start();
+    }
   }, [trigger, mode, target, isReady]);
 }

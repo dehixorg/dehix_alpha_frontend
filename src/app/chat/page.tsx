@@ -78,8 +78,6 @@ const HomePage = () => {
     setIsChatExpanded((prev) => !prev);
   };
 
-  useChatTour(true);
-
   async function handleCreateGroupChat(
     selectedUsers: NewChatUser[],
     groupName: string,

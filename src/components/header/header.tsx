@@ -107,6 +107,29 @@ const Header: React.FC<HeaderProps> = ({
     { path: '/dashboard', target: 'dashboard' },
     { path: '/chat', target: 'chat' },
     { path: '/notes', target: 'notes' },
+
+    // Freelancer Settings
+    {
+      path: '/freelancer/settings/personal-info',
+      target: 'personal-info-form',
+    },
+    { path: '/freelancer/settings/profiles', target: 'profiles-center' },
+    { path: '/freelancer/settings/profile', target: 'experience' },
+    { path: '/freelancer/settings/kyc', target: 'kyc' },
+    { path: '/freelancer/settings/levels-badges', target: 'level-badges' },
+    { path: '/freelancer/settings/streak', target: 'streak' },
+    { path: '/freelancer/settings/transactions', target: 'transaction' },
+    { path: '/freelancer/settings/resume', target: 'resume' },
+    { path: '/settings/feedback', target: 'feedback' },
+    { path: '/reports', target: 'reports' },
+
+    // Business Settings
+    { path: '/business/settings/business-info', target: 'business-info' },
+    { path: '/business/settings/kyc', target: 'business-kyc' },
+    {
+      path: '/business/settings/transactions',
+      target: 'business-transactions',
+    },
   ];
 
   const getPageTarget = (): TourTarget | null => {
@@ -204,7 +227,7 @@ const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        {/* Platform Tour className="hidden md:block" */}
+        {/* Platform Tour */}
         <div>
           <TourMenu
             onThisPageTour={() => {
@@ -213,7 +236,23 @@ const Header: React.FC<HeaderProps> = ({
               dispatch(startTour({ mode: 'page', target }));
             }}
             onFullPlatformTour={() => {
-              dispatch(startTour({ mode: 'platform', target: 'navigation' }));
+              const isFreelancerSettings =
+                pathname.startsWith('/freelancer/settings') ||
+                pathname.startsWith('/reports') ||
+                pathname.startsWith('/settings/feedback');
+
+              const isBusinessSettings =
+                pathname.startsWith('/business/settings');
+
+              dispatch(
+                startTour({
+                  mode: 'platform',
+                  target:
+                    isFreelancerSettings || isBusinessSettings
+                      ? 'sidebar'
+                      : 'navigation',
+                }),
+              );
             }}
           />
         </div>

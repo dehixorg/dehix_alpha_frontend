@@ -197,10 +197,7 @@ const Market: React.FC = () => {
       <div className="flex flex-col sm:gap-4">
         <div className="p-4 sm:px-6">
           <div className="flex items-center justify-between gap-3">
-            <div
-              className="flex flex-col space-y-2"
-              data-tour="business-market-header"
-            >
+            <div className="flex flex-col space-y-2">
               <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
                 Business Marketplace
               </h1>

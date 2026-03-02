@@ -4,6 +4,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 type TourMode = 'platform' | 'page';
 
 export type TourTarget =
+  // Freelancer main
   | 'dashboard'
   | 'market'
   | 'project-invitations'
@@ -16,10 +17,30 @@ export type TourTarget =
   | 'chat'
   | 'notes'
   | 'navigation'
+
+  // Freelancer settings
+  | 'personal-info-form'
+  | 'experience'
+  | 'kyc'
+  | 'level-badges'
+  | 'streak'
+  | 'transaction'
+  | 'profiles-center'
+  | 'resume'
+  | 'feedback'
+  | 'reports'
+  | 'sidebar'
+
+  // Business
   | 'business-dashboard'
   | 'business-market'
   | 'business-projects'
   | 'business-talent'
+
+  // Business settings
+  | 'business-transactions'
+  | 'business-info'
+  | 'business-kyc'
   | null;
 
 export type TourState = {
@@ -47,6 +68,7 @@ const tourSlice = createSlice({
       state.trigger += 1;
     },
     clearTour(state) {
+      state.mode = null;
       state.target = null;
     },
   },

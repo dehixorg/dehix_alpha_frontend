@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 
 import { Card } from '../ui/card';
+import { useKycTour } from '../tour/freelancer-profile/useKycTour';
 
 import LiveCaptureField from './register/livecapture';
 import KYCDetailsView from './KYCDetailsView';
@@ -429,8 +430,13 @@ export default function KYCForm({ user_id }: { user_id: string }) {
     (kycStatus || '').toUpperCase(),
   );
 
+  useKycTour(true);
+
   return (
-    <Card className="p-6 md:p-8 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto">
+    <Card
+      className="p-6 md:p-8 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto"
+      data-tour="kyc"
+    >
       <div className="flex justify-between items-center mb-4 md:mb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold">KYC Verification</h2>
