@@ -513,10 +513,11 @@ export default function LevelsAndBadgesPage() {
   };
 
   // Fetch public gamification info (no auth required)
-  const { data: gamificationInfo, isLoading: infoLoading } = useQuery<GamificationInfoResponse>({
-    queryKey: ['gamification-info'],
-    queryFn: fetchGamificationInfo,
-  });
+  const { data: gamificationInfo, isLoading: infoLoading } =
+    useQuery<GamificationInfoResponse>({
+      queryKey: ['gamification-info'],
+      queryFn: fetchGamificationInfo,
+    });
 
   // Fetch user's gamification status
   const {
