@@ -513,7 +513,7 @@ export default function LevelsAndBadgesPage() {
   };
 
   // Fetch public gamification info (no auth required)
-  const { data: gamificationInfo } = useQuery<GamificationInfoResponse>({
+  const { data: gamificationInfo, isLoading: infoLoading } = useQuery<GamificationInfoResponse>({
     queryKey: ['gamification-info'],
     queryFn: fetchGamificationInfo,
   });
@@ -535,14 +535,15 @@ export default function LevelsAndBadgesPage() {
       const enrichedEarnedBadges = (statusData.data.badges || [])
         .filter((b) => b.badge_id || b._id)
         .map((earnedBadge) => {
-          // Match info badge's badge_id (normalized from _id) against earned badge's badge_id
+          // Normalize: earned badges may have badge_id or only _id
+          const normalizedId = earnedBadge.badge_id || earnedBadge._id || '';
           const badgeInfo = allBadgesFromInfo.find(
-            (b) => b.badge_id === earnedBadge.badge_id,
+            (b) => b.badge_id === normalizedId,
           );
           return {
             ...badgeInfo,
             ...earnedBadge,
-            badge_id: earnedBadge.badge_id || badgeInfo?.badge_id || '',
+            badge_id: normalizedId || badgeInfo?.badge_id || '',
             isActive: earnedBadge.isActive ?? true,
             earnedAt: earnedBadge.earnedAt || new Date().toISOString(),
           };
@@ -569,7 +570,7 @@ export default function LevelsAndBadgesPage() {
   }, [gamificationInfo]);
 
   // Loading state
-  if (statusLoading) {
+  if (statusLoading || infoLoading) {
     return (
       <FreelancerSettingsLayout
         active="Levels & Badges"
