@@ -11,6 +11,26 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
 
 export function useDashboardTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
@@ -38,7 +58,20 @@ export function useDashboardTour(isReady: boolean) {
       title: 'Profile completion',
       text: 'Complete your profile to unlock more features.',
       attachTo: { element: '[data-tour="profile-completion"]', on: 'bottom' },
-      buttons: [{ text: 'Next', action: tour.next }],
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep({
@@ -46,6 +79,7 @@ export function useDashboardTour(isReady: boolean) {
       title: 'Stats overview',
       text: 'Track your progress and revenue here.',
       attachTo: { element: '[data-tour="stats"]', on: 'top' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -57,6 +91,19 @@ export function useDashboardTour(isReady: boolean) {
       title: 'Projects',
       text: 'Manage all your projects here.',
       attachTo: { element: '[data-tour="projects"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'interview',
+      title: 'Interview Schedule',
+      text: 'Your upcoming meetings and interview slots.',
+      attachTo: { element: '[data-tour="interviews"]', on: 'bottom' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {

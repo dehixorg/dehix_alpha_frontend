@@ -12,6 +12,27 @@ function el(selector: string) {
   return document.querySelector(selector);
 }
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useOracleTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -34,11 +55,42 @@ export function useOracleTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'oracle',
+      id: 'oracle-intro',
       title: 'Oracle Dashboard',
-      text: 'This dashboard gives you insights, actions, and key controls related to Oracle.',
-      attachTo: { element: '[data-tour="oracle"]', on: 'top' },
+      text: 'Review and manage verification requests across different categories from this dashboard.',
+      when: withProgress(tour),
       buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'oracle-business',
+      title: 'Business Verification',
+      text: 'View and review business verification requests submitted by companies.',
+      attachTo: { element: '[data-tour="oracle-page"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'oracle-tabs',
+      title: 'Verification Categories',
+      text: 'Use these tabs to switch between Business, Experience, Projects, and Education verifications.',
+      attachTo: { element: '[data-tour="oracle-tabs"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
         {
           text: 'Got it',
           action: () => {
@@ -65,7 +117,7 @@ export function useOracleTour(isReady: boolean) {
     if (mode !== 'page') return;
     if (target !== 'oracle-dashboard') return;
 
-    if (el('[data-tour="oracle"]')) {
+    if (el('[data-tour="oracle-page"]')) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

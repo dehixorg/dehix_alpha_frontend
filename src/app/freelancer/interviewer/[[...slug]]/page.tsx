@@ -46,7 +46,7 @@ export default function InterviewerPage() {
         data-tour="interviewer-profile"
       >
         <Card className="overflow-hidden">
-          <CardHeader className="bg-gradient">
+          <CardHeader className="bg-gradient" data-tour="interviewer-header">
             <CardTitle className="text-2xl font-bold tracking-tight">
               Interviews
             </CardTitle>
@@ -65,7 +65,10 @@ export default function InterviewerPage() {
             >
               <div className="border-b px-2 sm:px-6">
                 <div className="max-w-full overflow-x-auto no-scrollbar">
-                  <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                  <TabsList
+                    className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap"
+                    data-tour="interviewer-tabs"
+                  >
                     <TabsTrigger
                       value="profile"
                       className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"

@@ -12,6 +12,27 @@ function el(selector: string) {
   return document.querySelector(selector);
 }
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useProjectInvitationTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -41,10 +62,11 @@ export function useProjectInvitationTour(isReady: boolean) {
         text:
           'Manage and track all your project invitations in one place. ' +
           'Review requests, respond quickly, and keep collaborations moving forward.',
-        attachTo: {
-          element: '[data-tour="business-invitation"]',
-          on: 'top',
-        },
+        // attachTo: {
+        //   element: '[data-tour="business-invitation"]',
+        //   on: 'top',
+        // },
+        when: withProgress(tour),
         buttons: [
           {
             text: 'Got it',
@@ -62,10 +84,11 @@ export function useProjectInvitationTour(isReady: boolean) {
         id: 'freelancer-invitation',
         title: 'Project Invitations',
         text: 'Here you can see projects where clients have directly invited you to apply.',
-        attachTo: {
-          element: '[data-tour="freelancer-invitation"]',
-          on: 'top',
-        },
+        // attachTo: {
+        //   element: '[data-tour="freelancer-invitation"]',
+        //   on: 'top',
+        // },
+        when: withProgress(tour),
         buttons: [
           {
             text: 'Got it',

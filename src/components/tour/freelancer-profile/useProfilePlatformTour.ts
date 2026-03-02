@@ -11,13 +11,6 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
-
-function switchMarketTab(tab: 'projects' | 'talent') {
-  const root = document.querySelector('[data-tour="market-root"]');
-  if (!root) return;
-  root.dispatchEvent(new CustomEvent('market:switch-tab', { detail: tab }));
-}
-
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -39,7 +32,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useMarketTour(isReady: boolean) {
+export function useProfilePlatformTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -61,10 +54,13 @@ export function useMarketTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'pm-market',
-      title: 'Marketplace',
-      text: 'This is the marketplace where you find your next opportunity.',
-      attachTo: { element: '[data-tour="pm-market"]', on: 'top' },
+      id: 'sidebar',
+      title: 'Settings Menu',
+      text: 'Use this sidebar to navigate all your freelancer settings.',
+      attachTo: {
+        element: '[data-tour="sidebar"]',
+        on: 'right',
+      },
       when: withProgress(tour),
       buttons: [
         {
@@ -82,16 +78,13 @@ export function useMarketTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'market-filters-projects',
-      title: 'Filters',
-      text: 'Use filters to narrow down project results.',
+      id: 'sidebar-personal-info',
+      title: 'Personal Information',
+      text: 'Start here to fill in your basic personal details.',
       attachTo: {
-        element: el('[data-tour="pm-filter-trigger"]')
-          ? '[data-tour="pm-filter-trigger"]'
-          : '[data-tour="pm-filters-desktop"]',
-        on: 'left',
+        element: '[data-tour="sidebar-personal-info"]',
+        on: 'right',
       },
-      scrollTo: false,
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -100,63 +93,13 @@ export function useMarketTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'pm-job-cards',
-      title: 'Project Opportunities',
-      text: 'Apply for project-based opportunities here.',
-      attachTo: { element: '[data-tour="pm-job-cards"]', on: 'top' },
-      scrollTo: false,
-      when: withProgress(tour),
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'market-tabs',
-      title: 'Marketplace Tabs',
-      text: 'Switch between Project Market and Talent Market from here.',
-      attachTo: { element: '[data-tour="market-tabs"]', on: 'top' },
-      when: withProgress(tour),
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'switch-to-talent',
-      title: 'Talent Marketplace',
-      text: 'Now let’s explore the Talent marketplace.',
-      beforeShowPromise: () =>
-        new Promise((resolve) => {
-          switchMarketTab('talent');
-          setTimeout(resolve, 300);
-        }),
-      when: withProgress(tour),
-      buttons: [
-        {
-          text: 'Back',
-          action: () => {
-            switchMarketTab('projects');
-            tour.back();
-          },
-        },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'market-filters-talent',
-      title: 'Talent Filters',
-      text: 'Filter talent profiles based on your needs.',
+      id: 'sidebar-profile',
+      title: 'My Profile',
+      text: 'Manage your public profile and how clients see you.',
       attachTo: {
-        element: el('[data-tour="tm-filter-trigger"]')
-          ? '[data-tour="tm-filter-trigger"]'
-          : '[data-tour="tm-filters-desktop"]',
-        on: 'left',
+        element: '[data-tour="sidebar-profile"]',
+        on: 'right',
       },
-      scrollTo: false,
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -165,11 +108,118 @@ export function useMarketTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'tm-job-cards',
-      title: 'Talent Opportunities',
-      text: 'Browse and connect with talented professionals.',
-      attachTo: { element: '[data-tour="tm-job-cards"]', on: 'bottom' },
-      scrollTo: false,
+      id: 'sidebar-kyc',
+      title: 'KYC Verification',
+      text: 'Complete KYC to unlock payments and higher limits.',
+      attachTo: {
+        element: '[data-tour="sidebar-kyc"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'sidebar-levels',
+      title: 'Levels & Badges',
+      text: 'Track your progress and unlock new freelancer levels.',
+      attachTo: {
+        element: '[data-tour="sidebar-levels"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'sidebar-streak',
+      title: 'Streak',
+      text: 'Maintain activity streaks to boost your visibility.',
+      attachTo: {
+        element: '[data-tour="sidebar-streak"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'sidebar-transactions',
+      title: 'Transactions',
+      text: 'View all your earnings, withdrawals, and payment history.',
+      attachTo: {
+        element: '[data-tour="sidebar-transactions"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'sidebar-profiles',
+      title: 'Profiles',
+      text: 'Manage multiple profiles for different roles or skills.',
+      attachTo: {
+        element: '[data-tour="sidebar-profiles"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'sidebar-resume',
+      title: 'Resume',
+      text: 'Upload and manage your resume for quick applications.',
+      attachTo: {
+        element: '[data-tour="sidebar-resume"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'sidebar-feedback',
+      title: 'Feedback',
+      text: 'Share your experience and help us improve the platform.',
+      attachTo: {
+        element: '[data-tour="sidebar-feedback"]',
+        on: 'right',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'sidebar-reports',
+      title: 'Reports',
+      text: 'View platform reports and account summaries.',
+      attachTo: {
+        element: '[data-tour="sidebar-reports"]',
+        on: 'right',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -196,10 +246,10 @@ export function useMarketTour(isReady: boolean) {
     if (!trigger) return;
     if (!isReady) return;
 
-    if (mode !== 'page') return;
-    if (target !== 'market') return;
+    if (mode !== 'platform') return;
+    if (target !== 'sidebar') return;
 
-    if (el('[data-tour="market-tabs"]')) {
+    if (el('[data-tour="sidebar"]')) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

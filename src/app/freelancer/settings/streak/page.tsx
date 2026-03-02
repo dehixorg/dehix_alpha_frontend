@@ -14,6 +14,7 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
 import StatCard from '@/components/shared/statCard';
+import { useStreakTour } from '@/components/tour/freelancer-profile/useStreakTour';
 
 // TypeScript Interfaces
 interface StreakInfo {
@@ -300,6 +301,8 @@ export default function StreakPage() {
     }
   };
 
+  useStreakTour(true);
+
   const calculateTotalEarnedConnects = () => {
     if (!streakData || !rewardsData) return 0;
 
@@ -458,7 +461,7 @@ export default function StreakPage() {
       ]}
       isKycCheck={true}
     >
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6" data-tour="streak">
         {/* Page Title */}
         <div className="flex items-center justify-between space-y-2">
           <div>

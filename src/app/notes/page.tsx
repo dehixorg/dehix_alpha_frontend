@@ -21,7 +21,6 @@ const Notes = () => {
   const user = useSelector((state: any) => state.user);
   const userId = user.uid;
   const { notes, isLoading, fetchNotes, setNotes } = useFetchNotes(userId);
-  useNotesTour(true);
 
   useNotesTour(true);
 
