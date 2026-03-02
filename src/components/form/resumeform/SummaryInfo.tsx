@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 // import { useForm } from 'react-hook-form';
 import { NotebookText, X } from 'lucide-react';
 
-import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -50,10 +49,6 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
   };
 
   useEffect(() => {}, [workExperienceData]); // Logs data every time it updates
-
-  const handleAddSummary = () => {
-    setSummaryData([...summaryData, '']);
-  };
 
   const handleRemoveSummary = (index: number) => {
     const updatedSummaryData = summaryData.filter((_, i) => i !== index);
@@ -152,8 +147,6 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
           </Card>
         ))}
       </form>
-
-      <AddButton onClick={handleAddSummary} />
 
       {/* <div className="flex justify-center mt-4">
         <Button className="text-center bg-green-500 hover:bg-green-600 text-white">
