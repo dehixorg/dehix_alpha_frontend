@@ -12,6 +12,27 @@ function el(selector: string) {
   return document.querySelector(selector);
 }
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useChatTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -39,10 +60,11 @@ export function useChatTour(isReady: boolean) {
         id: 'chat-main',
         title: 'Chats',
         text: 'This is where you communicate with freelancers, discuss project details, and collaborate in real time.',
-        attachTo: {
-          element: '[data-tour="chat-main"]',
-          on: 'top',
-        },
+        // attachTo: {
+        //   element: '[data-tour="chat-main"]',
+        //   on: 'top',
+        // },
+        when: withProgress(tour),
         buttons: [
           {
             text: 'Got it',
@@ -60,10 +82,11 @@ export function useChatTour(isReady: boolean) {
         id: 'chat-main',
         title: 'Chats',
         text: 'This is where you chat with clients, receive updates, and coordinate on projects.',
-        attachTo: {
-          element: '[data-tour="chat-main"]',
-          on: 'top',
-        },
+        // attachTo: {
+        //   element: '[data-tour="chat-main"]',
+        //   on: 'top',
+        // },
+        when: withProgress(tour),
         buttons: [
           {
             text: 'Got it',

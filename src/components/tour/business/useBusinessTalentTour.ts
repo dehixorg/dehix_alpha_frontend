@@ -8,6 +8,27 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useBusinessTalentTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -33,11 +54,20 @@ export function useBusinessTalentTour(isReady: boolean) {
       id: 'business-talent-header',
       title: 'Hire Talent',
       text: 'This is your talent hub where you can discover, review, and manage candidates for your business needs.',
-      attachTo: {
-        element: '[data-tour="business-talent-header"]',
-        on: 'bottom',
-      },
-      buttons: [{ text: 'Next', action: tour.next }],
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep({
@@ -48,6 +78,7 @@ export function useBusinessTalentTour(isReady: boolean) {
         element: '[data-tour="business-talent-tabs"]',
         on: 'bottom',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -55,13 +86,14 @@ export function useBusinessTalentTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'business-talent-skill-domain',
-      title: 'Skill & Domain Selection',
-      text: 'Choose the skills and domains you are hiring for to refine the talent shown to you.',
+      id: 'hire-talent-skill',
+      title: 'Fill the Requirements',
+      text: 'Select required skills and domains here to find candidates with the right technical expertise.',
       attachTo: {
-        element: '[data-tour="business-talent-skill-domain"]',
-        on: 'right',
+        element: '[data-tour="requirements"]',
+        on: 'bottom',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -76,6 +108,7 @@ export function useBusinessTalentTour(isReady: boolean) {
         element: '[data-tour="business-talent-filter"]',
         on: 'bottom',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -88,8 +121,9 @@ export function useBusinessTalentTour(isReady: boolean) {
       text: 'Browse through talent profiles here and take action to connect or move forward with the right candidates.',
       attachTo: {
         element: '[data-tour="business-talent-list"]',
-        on: 'left',
+        on: 'top',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {

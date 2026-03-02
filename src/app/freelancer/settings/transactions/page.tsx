@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -32,6 +32,7 @@ import { TransactionSummaryComponent } from '@/components/transactions/Transacti
 import { TransactionFiltersSheet } from '@/components/transactions/TransactionFiltersSheet';
 import { TransactionExportDropdown } from '@/components/transactions/TransactionExportDropdown';
 import { TransactionTable } from '@/components/transactions/TransactionTable';
+import { useTransactionTour } from '@/components/tour/freelancer-profile/useTransactionTour';
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -48,6 +49,7 @@ export default function TransactionsPage() {
   }>({});
   const [appliedFilters, setAppliedFilters] = useState<TransactionFilters>({});
   const [showFilters, setShowFilters] = useState(false);
+  const lastConnectsRefreshAtRef = useRef(0);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['transactions', 'freelancer', user.uid, page, appliedFilters],
@@ -68,17 +70,24 @@ export default function TransactionsPage() {
     },
     enabled: !!user.uid,
     staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
   });
 
   useEffect(() => {
-    const handleConnectsUpdate = () => {
+    const handleConnectsUpdated = () => {
+      const now = Date.now();
+      // Prevent rapid repeated API calls when multiple components emit
+      // connectsUpdated in quick succession for a single action.
+      if (now - lastConnectsRefreshAtRef.current < 1200) return;
+      lastConnectsRefreshAtRef.current = now;
       refetch();
     };
 
-    window.addEventListener('connectsUpdated', handleConnectsUpdate);
-
+    window.addEventListener('connectsUpdated', handleConnectsUpdated);
     return () => {
-      window.removeEventListener('connectsUpdated', handleConnectsUpdate);
+      window.removeEventListener('connectsUpdated', handleConnectsUpdated);
     };
   }, [refetch]);
 
@@ -117,6 +126,8 @@ export default function TransactionsPage() {
     { label: 'Settings', link: '#' },
     { label: 'Transactions', link: '#' },
   ];
+
+  useTransactionTour(true);
 
   // Loading State
   if (isLoading) {
@@ -335,7 +346,7 @@ export default function TransactionsPage() {
       breadcrumbItems={breadcrumbItems}
       isKycCheck={true}
     >
-      <div className="space-y-6">
+      <div className="space-y-6" data-tour="transaction">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-3">

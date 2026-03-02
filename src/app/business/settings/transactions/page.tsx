@@ -46,6 +46,7 @@ import { fetchTransactions, TransactionFilters } from '@/services/apiService';
 import { TransactionSummaryComponent } from '@/components/transactions/TransactionSummary';
 import { TransactionExportDropdown } from '@/components/transactions/TransactionExportDropdown';
 import { TransactionTable } from '@/components/transactions/TransactionTable';
+import { useTransactionsTour } from '@/components/tour/business-profile/useTransactionsTour';
 
 export default function TransactionsPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -82,6 +83,8 @@ export default function TransactionsPage() {
     enabled: !!user.uid,
     staleTime: 1000 * 60 * 5,
   });
+
+  useTransactionsTour(true);
 
   useEffect(() => {
     const handleConnectsUpdate = () => {

@@ -120,28 +120,34 @@ const ProfilePictureUpload = ({
         />
 
         <div className="relative flex flex-col items-center">
-          <label htmlFor="file-input" className="cursor-pointer relative">
-            {previewUrl ? (
-              <Image
-                width={112}
-                height={112}
-                src={previewUrl}
-                alt="Avatar Preview"
-                className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
-              />
-            ) : profile && profile.trim() !== '' ? (
-              <Image
-                width={112}
-                height={112}
-                src={profile}
-                alt="Avatar Preview"
-                className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
-              />
-            ) : (
-              <div className="w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center">
-                <UserCircle className="h-8 w-8 text-gray-400" />
-              </div>
-            )}
+          <div className="relative">
+            <div
+              className="w-28 h-28 rounded-full overflow-hidden"
+              data-tour="profile-picture"
+            >
+              {previewUrl ? (
+                <Image
+                  width={112}
+                  height={112}
+                  src={previewUrl}
+                  alt="Avatar Preview"
+                  className="w-28 h-28 object-cover"
+                />
+              ) : profile && profile.trim() !== '' ? (
+                <Image
+                  width={112}
+                  height={112}
+                  src={profile}
+                  alt="Avatar Preview"
+                  className="w-28 h-28 object-cover"
+                />
+              ) : (
+                <div className="w-28 h-28 bg-gray-700 flex items-center justify-center">
+                  <UserCircle className="h-8 w-8 text-gray-400" />
+                </div>
+              )}
+            </div>
+
             <Button
               variant="outline"
               type="button"
@@ -161,7 +167,7 @@ const ProfilePictureUpload = ({
                 <Plus className="h-4 w-4 text-gray-400" />
               )}
             </Button>
-          </label>
+          </div>
         </div>
 
         {previewUrl && (

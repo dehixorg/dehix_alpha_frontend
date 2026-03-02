@@ -603,6 +603,7 @@ const InterviewProfile: React.FC = () => {
               className="flex items-center gap-2"
               onClick={openApply}
               disabled={interviewerLoading}
+              data-tour="apply-interviewer"
             >
               <Plus className="h-4 w-4" />
               Apply as interviewer
@@ -624,6 +625,7 @@ const InterviewProfile: React.FC = () => {
                   className="flex items-center gap-2"
                   onClick={openAvailability}
                   type="button"
+                  data-tour="manage-availability"
                 >
                   <Settings2 className="h-4 w-4" />
                   Manage availability

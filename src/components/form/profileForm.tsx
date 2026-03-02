@@ -19,6 +19,7 @@ import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
+import { usePersonalInfoTour } from '../tour/freelancer-profile/usePersonalInfo';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -140,6 +141,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     },
     mode: 'all',
   });
+
+  usePersonalInfoTour(true);
 
   const handleAddCustomSkill = async () => {
     if (!customSkill.label.trim()) {
@@ -826,52 +829,54 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <InputGroup>
-                      <InputGroupText>
-                        <AtSign className="h-4 w-4" />
-                      </InputGroupText>
-                      <InputGroupInput
-                        placeholder="Enter your username"
-                        {...field}
-                        readOnly
-                      />
-                    </InputGroup>
-                  </FormControl>
-                  <FormMessage />
-                  <FormDescription>Non editable field</FormDescription>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <InputGroup>
-                      <InputGroupText>
-                        <Mail className="h-4 w-4" />
-                      </InputGroupText>
-                      <InputGroupInput
-                        placeholder="Enter your email"
-                        {...field}
-                        readOnly
-                      />
-                    </InputGroup>
-                  </FormControl>
-                  <FormDescription>Non editable field</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div data-tour="non-editable-field">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <InputGroup>
+                        <InputGroupText>
+                          <AtSign className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your username"
+                          {...field}
+                          readOnly
+                        />
+                      </InputGroup>
+                    </FormControl>
+                    <FormMessage />
+                    <FormDescription>Non editable field</FormDescription>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <InputGroup>
+                        <InputGroupText>
+                          <Mail className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your email"
+                          {...field}
+                          readOnly
+                        />
+                      </InputGroup>
+                    </FormControl>
+                    <FormDescription>Non editable field</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="description"
@@ -934,7 +939,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           </div>
 
           <Separator className="my-6 bg-muted-foreground/20" />
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-1 md:col-span-2" data-tour="skills-domains">
             <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
               <Tags className="h-4 w-4" /> Skills & Domains
             </h3>
@@ -1065,7 +1070,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             </div>
           </div>
           <div className="col-span-1 md:col-span-2 mt-6">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+              data-tour="profile-save"
+            >
               <Save className="h-4 w-4 mr-2" />
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>

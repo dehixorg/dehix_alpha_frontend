@@ -18,6 +18,27 @@ function switchMarketTab(tab: 'projects' | 'talent') {
   root.dispatchEvent(new CustomEvent('market:switch-tab', { detail: tab }));
 }
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useMarketTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -44,7 +65,20 @@ export function useMarketTour(isReady: boolean) {
       title: 'Marketplace',
       text: 'This is the marketplace where you find your next opportunity.',
       attachTo: { element: '[data-tour="pm-market"]', on: 'top' },
-      buttons: [{ text: 'Next', action: tour.next }],
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep({
@@ -58,6 +92,7 @@ export function useMarketTour(isReady: boolean) {
         on: 'left',
       },
       scrollTo: false,
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -70,6 +105,7 @@ export function useMarketTour(isReady: boolean) {
       text: 'Apply for project-based opportunities here.',
       attachTo: { element: '[data-tour="pm-job-cards"]', on: 'top' },
       scrollTo: false,
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -81,6 +117,7 @@ export function useMarketTour(isReady: boolean) {
       title: 'Marketplace Tabs',
       text: 'Switch between Project Market and Talent Market from here.',
       attachTo: { element: '[data-tour="market-tabs"]', on: 'top' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -96,6 +133,7 @@ export function useMarketTour(isReady: boolean) {
           switchMarketTab('talent');
           setTimeout(resolve, 300);
         }),
+      when: withProgress(tour),
       buttons: [
         {
           text: 'Back',
@@ -119,6 +157,7 @@ export function useMarketTour(isReady: boolean) {
         on: 'left',
       },
       scrollTo: false,
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -131,6 +170,7 @@ export function useMarketTour(isReady: boolean) {
       text: 'Browse and connect with talented professionals.',
       attachTo: { element: '[data-tour="tm-job-cards"]', on: 'bottom' },
       scrollTo: false,
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {

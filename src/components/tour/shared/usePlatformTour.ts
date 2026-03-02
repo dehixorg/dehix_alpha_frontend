@@ -12,9 +12,31 @@ function el(selector: string) {
   return document.querySelector(selector);
 }
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function usePlatformTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
+  const userType = useSelector((s: RootState) => s.user.type);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -25,7 +47,7 @@ export function usePlatformTour(isReady: boolean) {
       defaultStepOptions: {
         arrow: true,
         cancelIcon: { enabled: true },
-        scrollTo: false,
+        scrollTo: { behavior: 'smooth', block: 'center' },
         classes: 'shepherd-theme-custom',
       },
     });
@@ -33,14 +55,25 @@ export function usePlatformTour(isReady: boolean) {
     tour.on('cancel', () => dispatch(clearTour()));
     tour.on('complete', () => dispatch(clearTour()));
 
-    /* ================= HEADER ================= */
-
     tour.addStep({
       id: 'header-search',
       title: 'Global Search',
       text: 'Search across the entire platform from here.',
       attachTo: { element: '[data-tour="search"]', on: 'bottom' },
-      buttons: [{ text: 'Next', action: tour.next }],
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep({
@@ -48,6 +81,7 @@ export function usePlatformTour(isReady: boolean) {
       title: 'Wallet & Connects',
       text: 'View and manage your connects here.',
       attachTo: { element: '[data-tour="header-connects"]', on: 'bottom' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -59,6 +93,7 @@ export function usePlatformTour(isReady: boolean) {
       title: 'Notifications',
       text: 'All important alerts and updates appear here.',
       attachTo: { element: '[data-tour="header-notifications"]', on: 'bottom' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -69,31 +104,31 @@ export function usePlatformTour(isReady: boolean) {
       id: 'header-profile',
       title: 'Profile & Settings',
       text: 'Manage your account and preferences here.',
-      attachTo: { element: '[data-tour="header-profile"]', on: 'left' },
+      attachTo: { element: '[data-tour="header-profile"]', on: 'bottom' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
       ],
     });
 
-    /* ================= SIDEBAR ================= */
-
-    tour.addStep({
-      id: 'sidebar',
-      title: 'Navigation Sidebar',
-      text: 'Use this sidebar to move across the platform.',
-      attachTo: { element: '[data-tour="sidebar"]', on: 'right' },
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
+    // tour.addStep({
+    //   id: 'sidebar',
+    //   title: 'Navigation Sidebar',
+    //   text: 'Use this sidebar to move across the platform.',
+    //   attachTo: { element: '[data-tour="sidebar"]', on: 'right' },
+    //   buttons: [
+    //     { text: 'Back', action: tour.back },
+    //     { text: 'Next', action: tour.next },
+    //   ],
+    // });
 
     tour.addStep({
       id: 'nav-dashboard',
       title: 'Dashboard',
       text: 'Your overview of activity, progress, and stats.',
       attachTo: { element: '[data-tour="nav-dashboard"]', on: 'right' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -105,50 +140,143 @@ export function usePlatformTour(isReady: boolean) {
       title: 'Marketplace',
       text: 'Explore projects, opportunities, and listings.',
       attachTo: { element: '[data-tour="nav-market"]', on: 'right' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
       ],
     });
 
-    tour.addStep({
-      id: 'nav-projects',
-      title: 'Projects',
-      text: 'Manage your active and completed projects.',
-      attachTo: { element: '[data-tour="nav-projects"]', on: 'right' },
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
+    if (userType === 'business') {
+      tour.addStep({
+        id: 'nav-projects',
+        title: 'Projects',
+        text: 'Manage your active and completed projects.',
+        attachTo: { element: '[data-tour="nav-projects"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
 
-    tour.addStep({
-      id: 'nav-invitations',
-      title: 'Project Invitations',
-      text: 'View and respond to project invitations here.',
-      attachTo: { element: '[data-tour="nav-invitations"]', on: 'right' },
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
+      tour.addStep({
+        id: 'nav-invitations',
+        title: 'Project Invitations',
+        text: 'View and respond to project invitations here.',
+        attachTo: { element: '[data-tour="nav-invitations"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
 
-    tour.addStep({
-      id: 'nav-talent',
-      title: 'Talent',
-      text: 'Explore and manage talent opportunities.',
-      attachTo: { element: '[data-tour="nav-talent"]', on: 'right' },
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
+      tour.addStep({
+        id: 'nav-talent',
+        title: 'Talent',
+        text: 'Explore and manage talent opportunities.',
+        attachTo: { element: '[data-tour="nav-talent"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+    }
+
+    if (userType === 'freelancer') {
+      tour.addStep({
+        id: 'nav-invitations',
+        title: 'Project Invitations',
+        text: 'View and respond to project invitations here.',
+        attachTo: { element: '[data-tour="nav-invitations"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
+        id: 'nav-projects',
+        title: 'Projects',
+        text: 'Manage your active and completed projects.',
+        attachTo: { element: '[data-tour="nav-projects"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
+        id: 'nav-interviewer',
+        title: 'Interviews',
+        text: 'Conduct and manage interviews from here.',
+        attachTo: { element: '[data-tour="nav-interviewer"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
+        id: 'nav-interviewee',
+        title: 'Schedule Interviews',
+        text: 'View and schedule your interviews.',
+        attachTo: { element: '[data-tour="nav-interviewee"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
+        id: 'nav-oracle',
+        title: 'Oracle',
+        text: 'Access oracle tools and insights here.',
+        attachTo: { element: '[data-tour="nav-oracle"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
+        id: 'nav-talent',
+        title: 'Talent',
+        text: 'Explore and manage talent opportunities.',
+        attachTo: { element: '[data-tour="nav-talent"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
+        id: 'nav-leaderboard',
+        title: 'Leaderboard',
+        text: 'See rankings and top performers here.',
+        attachTo: { element: '[data-tour="nav-leaderboard"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+    }
 
     tour.addStep({
       id: 'nav-chat',
       title: 'Chats',
       text: 'Communicate with teams and collaborators.',
       attachTo: { element: '[data-tour="nav-chat"]', on: 'right' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -160,6 +288,7 @@ export function usePlatformTour(isReady: boolean) {
       title: 'Notes',
       text: 'Keep personal notes and reminders here.',
       attachTo: { element: '[data-tour="nav-notes"]', on: 'right' },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
@@ -179,32 +308,24 @@ export function usePlatformTour(isReady: boolean) {
       tourRef.current = null;
       dispatch(clearTour());
     };
-  }, [dispatch]);
+  }, [dispatch, userType]);
 
   useEffect(() => {
-    if (!trigger) return;
-    if (!isReady) return;
-    if (mode !== 'platform') return;
-    if (target !== 'navigation') return;
+    if (!trigger || !isReady) return;
+    if (mode !== 'platform' || target !== 'navigation') return;
 
-    const requiredSelectors = [
+    const required = [
       '[data-tour="search"]',
-      '[data-tour="header-connects"]',
-      '[data-tour="header-notifications"]',
-      '[data-tour="header-profile"]',
       '[data-tour="sidebar"]',
       '[data-tour="nav-dashboard"]',
       '[data-tour="nav-market"]',
       '[data-tour="nav-projects"]',
-      '[data-tour="nav-invitations"]',
-      '[data-tour="nav-talent"]',
       '[data-tour="nav-chat"]',
       '[data-tour="nav-notes"]',
     ];
 
-    if (requiredSelectors.every((s) => el(s))) {
+    if (required.every(el)) {
       tourRef.current?.start();
-      dispatch(clearTour());
     }
-  }, [trigger, mode, target, isReady, dispatch]);
+  }, [trigger, mode, target, isReady]);
 }

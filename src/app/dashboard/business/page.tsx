@@ -380,7 +380,11 @@ export default function Dashboard() {
             <ProjectTypeDialog
               onOpenChange={setModalOpen}
               trigger={
-                <Button variant="outline" className="w-full justify-start">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  data-tour="create-project-primary"
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   New Project
                 </Button>
