@@ -31,7 +31,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
-import { useLevelTour } from '@/components/tour/freelancer-profile/useLevelTour';
 
 // Define the base interface for gamification items
 interface GamificationItemBase {
@@ -116,7 +115,6 @@ interface GamificationInfoResponse {
 // Fetch public gamification info (badges and levels)
 async function fetchGamificationInfo(): Promise<GamificationInfoResponse> {
   const response = await axiosInstance.get('/gamification/info');
-  console.log('the gamification info is', response);
   return response.data;
 }
 
@@ -655,45 +653,23 @@ export default function LevelsAndBadgesPage() {
 
   // Render the component
   return (
-    <div data-tour="level-badges">
-      <FreelancerSettingsLayout
-        active="Levels & Badges"
-        activeMenu="Levels & Badges"
-        breadcrumbItems={[
-          { label: 'Settings', link: '#' },
-          { label: 'Levels & Badges', link: '#' },
-        ]}
-        isKycCheck={true}
-      >
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Levels & Badges
-            </h1>
-            <p className="text-muted-foreground">
-              Track your progress and earn rewards as you complete tasks and
-              level up
-            </p>
-          </div>
-          {currentLevel && (
-            <Button
-              onClick={handleLevelUp}
-              disabled={levelUpMutation.isPending}
-              className="h-10"
-            >
-              {levelUpMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Leveling Up...
-                </>
-              ) : (
-                'Level Up!'
-              )}
-            </Button>
-          )}
+    <FreelancerSettingsLayout
+      active="Levels & Badges"
+      activeMenu="Levels & Badges"
+      breadcrumbItems={[
+        { label: 'Settings', link: '#' },
+        { label: 'Levels & Badges', link: '#' },
+      ]}
+      isKycCheck={true}
+    >
+      <div className="flex items-center justify-between space-y-2">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Levels & Badges</h1>
+          <p className="text-muted-foreground">
+            Track your progress and earn rewards as you complete tasks and level
+            up
+          </p>
         </div>
-
-        {/* Current Level Card */}
         {currentLevel && (
           <Button
             onClick={handleLevelUp}
