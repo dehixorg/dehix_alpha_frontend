@@ -112,12 +112,6 @@ export function BadgeDetailsDialog({
                 <p className="text-xs text-muted-foreground">Type</p>
                 <p className="text-sm font-medium">Badge</p>
               </div>
-              {badge.priority !== undefined && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Priority</p>
-                  <p className="text-sm font-medium">{badge.priority}</p>
-                </div>
-              )}
             </div>
           </div>
         </div>

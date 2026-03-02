@@ -82,7 +82,7 @@ interface StreakRewardResponse {
     transactionId: string;
     baseAmount: number;
     rewardMultiplier: number;
-    levelPriority: number;
+    levelNumber: number;
   };
 }
 

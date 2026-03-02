@@ -42,7 +42,6 @@ interface GamificationItemBase {
   imageUrl?: string;
   isActive?: boolean;
   type?: 'LEVEL' | 'BADGE';
-  priority?: number;
   earnedAt?: string;
   level_id?: string;
   badge_id?: string;
@@ -72,8 +71,8 @@ interface GamificationItemBase {
 // Interface for level items
 interface LevelItem extends GamificationItemBase {
   level_id: string;
-  priority: number;
   type: 'LEVEL';
+  levelNumber: number;
   rewardMultiplier?: number;
 }
 
@@ -84,7 +83,6 @@ interface BadgeItem extends GamificationItemBase {
   earnedAt?: string;
   isActive?: boolean;
   baseReward?: number;
-  priority?: number;
   imageUrl?: string;
 }
 
@@ -119,6 +117,7 @@ interface GamificationInfoResponse {
 // Fetch public gamification info (badges and levels)
 async function fetchGamificationInfo(): Promise<GamificationInfoResponse> {
   const response = await axiosInstance.get('/gamification/info');
+  console.log('the gamification info is', response);
   return response.data;
 }
 
@@ -126,6 +125,7 @@ async function fetchGamificationInfo(): Promise<GamificationInfoResponse> {
 async function fetchStatus(): Promise<GamificationStatusResponse> {
   try {
     const response = await axiosInstance.get('/freelancer/gamification/status');
+    console.log('the gamification status is', response);
     return response.data;
   } catch (error) {
     console.error('Error fetching gamification status:', error);
@@ -271,13 +271,14 @@ export default function LevelsAndBadgesPage() {
     Record<string, boolean>
   >({});
 
-  // Memoize the calculateDisplayLevel function
-  const calculateDisplayLevel = useCallback((priority: number): number => {
-    // If priority is 0, it's level 1
-    if (priority === 0) return 1;
-    // Otherwise, divide by 10 to get the level number
-    return Math.floor(priority / 10) || 1;
-  }, []);
+  // Calculate display level number from index in sorted levels array
+  const getDisplayLevelNumber = useCallback(
+    (levelId: string): number => {
+      const level = allLevels.find((l) => (l._id || l.level_id) === levelId);
+      return level?.levelNumber ?? 1;
+    },
+    [allLevels],
+  );
 
   // Claim badge mutation
   const claimBadgeMutation = useMutation<ClaimBadgeResponse, Error, string>({
@@ -407,8 +408,9 @@ export default function LevelsAndBadgesPage() {
   const handleLevelUp = async (): Promise<void> => {
     if (!currentLevel) return;
 
+    const currentNum = currentLevel.levelNumber ?? 0;
     const nextLevel = allLevels.find(
-      (l: LevelItem) => (l.priority || 0) === (currentLevel.priority || 0) + 1,
+      (l: LevelItem) => (l.levelNumber ?? 0) === currentNum + 1,
     );
 
     if (!nextLevel) {
@@ -419,11 +421,6 @@ export default function LevelsAndBadgesPage() {
       });
       return;
     }
-
-    const confirmed = window.confirm(
-      'Are you sure you want to level up? This action cannot be undone.',
-    );
-    if (!confirmed) return;
 
     try {
       await levelUpMutation.mutateAsync();
@@ -538,8 +535,9 @@ export default function LevelsAndBadgesPage() {
   const calculateProgress = (): { progress: number; nextLevel?: LevelItem } => {
     if (!currentLevel || !statusData?.data?.progress) return { progress: 0 };
 
+    const currentNum = currentLevel.levelNumber ?? 0;
     const nextLevel = allLevels.find(
-      (l) => (l.priority || 0) > (currentLevel.priority || 0),
+      (l) => (l.levelNumber ?? 0) === currentNum + 1,
     );
 
     if (!nextLevel) return { progress: 100, nextLevel };
@@ -665,40 +663,21 @@ export default function LevelsAndBadgesPage() {
   // Get collected (earned) badges only
   const collectedBadges = allBadges.filter((b) => isBadgeEarned(b.badge_id!));
 
-  // Find the highest priority badge that's been earned
-  const maxEarnedPriority = earnedBadges.reduce(
-    (max, badge) => ((badge.priority || 0) > max ? badge.priority || 0 : max),
-    0,
-  );
+  // Levels are already sorted by levelNumber from the backend
+  const sortedLevels = allLevels;
 
-  // Sort levels by priority (ascending)
-  const sortedLevels = [...allLevels].sort(
-    (a, b) => (a.priority || 0) - (b.priority || 0),
-  );
+  // Get the current level number from the backend
+  const currentLevelNumber = currentLevel?.levelNumber ?? 0;
 
-  // Get the highest priority earned badge (commented out as it's not currently used)
-  // const highestPriorityEarnedBadge = earnedBadges.find(
-  //   (badge) => badge.priority === maxEarnedPriority,
-  // );
-
-  // Get the current level number
-  const currentLevelNumber = currentLevel
-    ? calculateDisplayLevel(currentLevel.priority || 0)
-    : 0;
-
-  // Function to determine level status
-  const getLevelStatus = (levelPriority: number) => {
-    const levelNumber = calculateDisplayLevel(levelPriority);
-    if (levelNumber < currentLevelNumber) return 'completed';
-    if (levelNumber === currentLevelNumber) return 'current';
+  // Function to determine level status by levelNumber
+  const getLevelStatus = (level: LevelItem) => {
+    const levelNum = level.levelNumber ?? 0;
+    if (currentLevelNumber <= 0) return 'locked';
+    if (levelNum < currentLevelNumber) return 'completed';
+    if (levelNum === currentLevelNumber) return 'current';
     return 'locked';
   };
 
-  // Get the current level priority (commented out as it's not currently used)
-  // const currentLevelPriority = currentLevel?.priority || 0;
-
-  // Suppress unused variable warnings
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _unusedVars = {
     calculateReward,
     newLevel: undefined as unknown as LevelItem | undefined,
@@ -752,7 +731,10 @@ export default function LevelsAndBadgesPage() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Trophy className="h-4 w-4" />
               <span>
-                Level {calculateDisplayLevel(currentLevel.priority || 0)}
+                Level{' '}
+                {getDisplayLevelNumber(
+                  currentLevel._id || currentLevel.level_id,
+                )}
               </span>
             </div>
           )}
@@ -762,14 +744,11 @@ export default function LevelsAndBadgesPage() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {sortedLevels.map((level) => {
               const levelId = level._id || level.level_id || '';
-              const currentLevelPriority = currentLevel?.priority || 0;
-              const isCurrentLevel =
-                (level.priority || 0) === currentLevelPriority;
-              const isNextLevel =
-                (level.priority || 0) === currentLevelPriority + 1;
-              const isFutureLevel =
-                (level.priority || 0) > currentLevelPriority + 1;
-              const levelStatus = getLevelStatus(level.priority || 0);
+              const levelNum = level.levelNumber ?? 0;
+              const isCurrentLevel = levelNum === currentLevelNumber;
+              const isNextLevel = levelNum === currentLevelNumber + 1;
+              const isFutureLevel = levelNum > currentLevelNumber + 1;
+              const levelStatus = getLevelStatus(level);
 
               return (
                 <Card
@@ -789,7 +768,7 @@ export default function LevelsAndBadgesPage() {
                             variant="outline"
                             className={isCurrentLevel ? 'border-primary' : ''}
                           >
-                            Level {calculateDisplayLevel(level.priority || 0)}
+                            Level {level.levelNumber ?? '?'}
                           </Badge>
                         </div>
                         {level.description && (
@@ -834,54 +813,62 @@ export default function LevelsAndBadgesPage() {
                       </div>
                     )}
 
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Benefits:</h4>
-                      <ul className="space-y-1 text-sm text-muted-foreground">
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span>Access to higher-paying projects</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span>Priority customer support</span>
-                        </li>
-                        {level.rewardMultiplier && (
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                            <span>
-                              {level.rewardMultiplier}x reward multiplier on all
-                              tasks
-                            </span>
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-
                     {(isNextLevel || isFutureLevel) && level.criteria && (
                       <div className="space-y-1 border-t pt-3 text-xs text-muted-foreground">
                         <div className="font-medium">Requirements:</div>
                         <ul className="list-disc list-inside space-y-0.5">
-                          {level.criteria.minProjectApplications && (
-                            <li>
-                              Apply to {level.criteria.minProjectApplications}{' '}
-                              projects
-                            </li>
-                          )}
-                          {level.criteria.minSuccessfulProjects && (
-                            <li>
-                              Complete {level.criteria.minSuccessfulProjects}{' '}
-                              projects successfully
-                            </li>
-                          )}
-                          {level.criteria.minRating && (
-                            <li>
-                              Maintain a {level.criteria.minRating}+ rating
-                            </li>
-                          )}
-                          {level.criteria.verificationRequired && (
+                          {level.criteria.minProjectApplications != null &&
+                            level.criteria.minProjectApplications > 0 && (
+                              <li>
+                                Apply to {level.criteria.minProjectApplications}{' '}
+                                projects
+                              </li>
+                            )}
+                          {level.criteria.minBids != null &&
+                            level.criteria.minBids > 0 && (
+                              <li>
+                                Place at least {level.criteria.minBids} bids
+                              </li>
+                            )}
+                          {level.criteria.minLongestStreak != null &&
+                            level.criteria.minLongestStreak > 0 && (
+                              <li>
+                                Reach a {level.criteria.minLongestStreak}-day
+                                streak
+                              </li>
+                            )}
+                          {level.criteria.minVerifiedDehixTalent != null &&
+                            level.criteria.minVerifiedDehixTalent > 0 && (
+                              <li>
+                                Verify {level.criteria.minVerifiedDehixTalent}{' '}
+                                Dehix talent(s)
+                              </li>
+                            )}
+                          {level.criteria.minVerifiedInterviewTalents != null &&
+                            level.criteria.minVerifiedInterviewTalents > 0 && (
+                              <li>
+                                Verify{' '}
+                                {level.criteria.minVerifiedInterviewTalents}{' '}
+                                interview talent(s)
+                              </li>
+                            )}
+                          {level.criteria.minInterviewsTaken != null &&
+                            level.criteria.minInterviewsTaken > 0 && (
+                              <li>
+                                Complete {level.criteria.minInterviewsTaken}{' '}
+                                interviews
+                              </li>
+                            )}
+                          {level.criteria.minTalentHiring != null &&
+                            level.criteria.minTalentHiring > 0 && (
+                              <li>
+                                Hire {level.criteria.minTalentHiring} talent(s)
+                              </li>
+                            )}
+                          {level.criteria.requiresVerifiedProfile && (
                             <li>Complete profile verification</li>
                           )}
-                          {level.criteria.oracleRequired && (
+                          {level.criteria.requiresOracle && (
                             <li>Complete Oracle verification</li>
                           )}
                         </ul>
@@ -1068,8 +1055,7 @@ export default function LevelsAndBadgesPage() {
                                   {badge.name}
                                 </CardTitle>
                                 <CardDescription className="text-xs">
-                                  {badge.priority &&
-                                    `Priority: ${badge.priority}`}
+                                  {badge.description || ''}
                                 </CardDescription>
                               </div>
                               {isEarned ? (
@@ -1188,30 +1174,73 @@ export default function LevelsAndBadgesPage() {
                               <div className="text-xs text-muted-foreground space-y-1 border-t pt-2">
                                 <div className="font-medium">Requirements:</div>
                                 <ul className="list-disc list-inside space-y-0.5">
-                                  {badge.criteria.minProjectApplications && (
-                                    <li>
-                                      Apply to{' '}
-                                      {badge.criteria.minProjectApplications}{' '}
-                                      projects
-                                    </li>
-                                  )}
-                                  {badge.criteria.minSuccessfulProjects && (
-                                    <li>
-                                      Complete{' '}
-                                      {badge.criteria.minSuccessfulProjects}{' '}
-                                      projects successfully
-                                    </li>
-                                  )}
-                                  {badge.criteria.minRating && (
-                                    <li>
-                                      Maintain a {badge.criteria.minRating}+
-                                      rating
-                                    </li>
-                                  )}
-                                  {badge.criteria.verificationRequired && (
+                                  {badge.criteria.minProjectApplications !=
+                                    null &&
+                                    badge.criteria.minProjectApplications >
+                                      0 && (
+                                      <li>
+                                        Apply to{' '}
+                                        {badge.criteria.minProjectApplications}{' '}
+                                        projects
+                                      </li>
+                                    )}
+                                  {badge.criteria.minBids != null &&
+                                    badge.criteria.minBids > 0 && (
+                                      <li>
+                                        Place at least {badge.criteria.minBids}{' '}
+                                        bids
+                                      </li>
+                                    )}
+                                  {badge.criteria.minLongestStreak != null &&
+                                    badge.criteria.minLongestStreak > 0 && (
+                                      <li>
+                                        Reach a{' '}
+                                        {badge.criteria.minLongestStreak}-day
+                                        streak
+                                      </li>
+                                    )}
+                                  {badge.criteria.minVerifiedDehixTalent !=
+                                    null &&
+                                    badge.criteria.minVerifiedDehixTalent >
+                                      0 && (
+                                      <li>
+                                        Verify{' '}
+                                        {badge.criteria.minVerifiedDehixTalent}{' '}
+                                        Dehix talent(s)
+                                      </li>
+                                    )}
+                                  {badge.criteria.minVerifiedInterviewTalents !=
+                                    null &&
+                                    badge.criteria.minVerifiedInterviewTalents >
+                                      0 && (
+                                      <li>
+                                        Verify{' '}
+                                        {
+                                          badge.criteria
+                                            .minVerifiedInterviewTalents
+                                        }{' '}
+                                        interview talent(s)
+                                      </li>
+                                    )}
+                                  {badge.criteria.minInterviewsTaken != null &&
+                                    badge.criteria.minInterviewsTaken > 0 && (
+                                      <li>
+                                        Complete{' '}
+                                        {badge.criteria.minInterviewsTaken}{' '}
+                                        interviews
+                                      </li>
+                                    )}
+                                  {badge.criteria.minTalentHiring != null &&
+                                    badge.criteria.minTalentHiring > 0 && (
+                                      <li>
+                                        Hire {badge.criteria.minTalentHiring}{' '}
+                                        talent(s)
+                                      </li>
+                                    )}
+                                  {badge.criteria.requiresVerifiedProfile && (
                                     <li>Complete profile verification</li>
                                   )}
-                                  {badge.criteria.oracleRequired && (
+                                  {badge.criteria.requiresOracle && (
                                     <li>Complete Oracle verification</li>
                                   )}
                                 </ul>
