@@ -12,6 +12,8 @@ import {
   AlertCircle,
   SendHorizontal,
   X,
+  AlertTriangle,
+  Target,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -136,8 +138,8 @@ const ProjectApplicationForm = ({
 }: ProjectApplicationFormProps) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [coverLetter, setCoverLetter] = useState<string>('');
-  const minChars = 500;
-  const maxChars = 2000;
+  const minChars = 200;
+  const maxChars = 500;
 
   // Helper function to format budget display
   const formatBudgetDisplay = (profile: Profile) => {
@@ -225,6 +227,16 @@ const ProjectApplicationForm = ({
     if (isProfileApplied(profile._id)) {
       return; // Don't allow selecting already applied profiles
     }
+
+    // Check if already applied to 3 profiles
+    if (appliedProfiles.size >= 3) {
+      notifyError(
+        'You can bid on at most 3 profiles in a single project.',
+        'Maximum Applications Reached',
+      );
+      return;
+    }
+
     setSelectedProfile(profile);
     setBidAmount(profile.minConnect || 0);
     setSelectedFreelancerProfile(null);
@@ -304,6 +316,15 @@ const ProjectApplicationForm = ({
       notifyError(
         'You have already applied to this profile',
         'Already Applied',
+      );
+      return;
+    }
+
+    // Check if user has already applied to 3 profiles in this project
+    if (appliedProfiles.size >= 3) {
+      notifyError(
+        'You can bid on at most 3 profiles in a single project.',
+        'Maximum Applications Reached',
       );
       return;
     }
@@ -500,30 +521,67 @@ const ProjectApplicationForm = ({
                       {project.profiles && project.profiles.length > 0 ? (
                         <div className="p-2">
                           <div className="px-3 py-2">
-                            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                              Select Project Profile
-                            </h4>
-                            <div className="space-y-1">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Select Project Profile
+                              </h4>
+                              {appliedProfiles.size > 0 && (
+                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 border border-primary/20">
+                                  <Target className="h-3 w-3 text-primary" />
+                                  <span className="text-xs font-medium text-primary">
+                                    {appliedProfiles.size}/3 applied
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            {appliedProfiles.size >= 3 && (
+                              <div className="mb-3 p-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-2 border-amber-200 dark:border-amber-800/50 shadow-sm">
+                                <div className="flex items-start gap-2">
+                                  <div className="p-1 rounded-full bg-amber-500/20 mt-0.5">
+                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-200 mb-0.5">
+                                      Maximum Limit Reached
+                                    </p>
+                                    <p className="text-xs text-amber-800 dark:text-amber-300/90">
+                                      You can only bid on 3 profiles per
+                                      project. You&apos;ve reached the limit.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            <div className="space-y-1.5">
                               {project.profiles?.map((profile: Profile) => {
                                 if (!profile?._id) return null;
                                 const isApplied = isProfileApplied(profile._id);
+                                const isMaxReached =
+                                  appliedProfiles.size >= 3 && !isApplied;
                                 return (
                                   <div
                                     key={profile._id}
                                     className={cn(
-                                      'flex items-center justify-between p-2 rounded-md',
+                                      'flex items-center justify-between p-3 rounded-lg border transition-all duration-200',
                                       isApplied
-                                        ? 'opacity-70 bg-muted/30'
-                                        : 'hover:bg-accent cursor-pointer',
+                                        ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/50 opacity-80'
+                                        : isMaxReached
+                                          ? 'bg-muted/30 border-muted-foreground/20 opacity-60 cursor-not-allowed'
+                                          : 'hover:bg-accent/50 hover:border-primary/30 cursor-pointer border-border',
                                       selectedProfile &&
                                         (selectedProfile as Profile)._id ===
-                                          profile._id
-                                        ? 'bg-primary/10'
+                                          profile._id &&
+                                        !isApplied
+                                        ? 'bg-primary/10 border-primary/40 shadow-sm'
                                         : '',
                                     )}
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      if (!isApplied && profile?._id) {
+                                      if (
+                                        !isApplied &&
+                                        !isMaxReached &&
+                                        profile?._id
+                                      ) {
                                         handleProfileSelect(profile);
                                       }
                                     }}
@@ -541,6 +599,15 @@ const ProjectApplicationForm = ({
                                           >
                                             <CheckCircle2 className="h-3 w-3 mr-1" />
                                             Applied
+                                          </Badge>
+                                        )}
+                                        {isMaxReached && !isApplied && (
+                                          <Badge
+                                            variant="outline"
+                                            className="h-5 text-xs bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 font-medium"
+                                          >
+                                            <AlertTriangle className="h-3 w-3 mr-1" />
+                                            Max Limit
                                           </Badge>
                                         )}
                                       </div>
@@ -562,7 +629,7 @@ const ProjectApplicationForm = ({
                                       >
                                         {formatBudgetDisplay(profile)}
                                       </Badge>
-                                      {!isApplied && (
+                                      {!isApplied && !isMaxReached && (
                                         <Button
                                           size="sm"
                                           variant="outline"
@@ -767,14 +834,6 @@ const ProjectApplicationForm = ({
                 </div>
 
                 <div className="mt-2">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                    <span>Minimum {minChars} characters</span>
-                    <span>
-                      {coverLetter.length < minChars
-                        ? `${minChars - coverLetter.length} more required`
-                        : 'Minimum reached'}
-                    </span>
-                  </div>
                   <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <motion.div
                       className={cn(
@@ -787,7 +846,7 @@ const ProjectApplicationForm = ({
                       )}
                       initial={{ width: '0%' }}
                       animate={{
-                        width: `${Math.min((coverLetter.length / maxChars) * 100, 100)}%`,
+                        width: `${Math.min((coverLetter.length / minChars) * 100, 100)}%`,
                         transition: { duration: 0.3, ease: 'easeOut' },
                       }}
                     />

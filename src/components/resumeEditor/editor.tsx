@@ -529,6 +529,9 @@ export default function ResumeEditor({
     setIsGeneratingPDF(true);
     optimizePdfContent();
     try {
+      if ((document as any).fonts?.ready) {
+        await (document as any).fonts.ready;
+      }
       const element = resumeRef.current.querySelector(
         '.resumeContent',
       ) as HTMLElement;
@@ -592,6 +595,23 @@ export default function ResumeEditor({
         undefined,
         'FAST',
       );
+
+      // Overlay real clickable links — scale DOM px → PDF mm
+      // canvas.width = element.offsetWidth * scale(3), ratio = pdfWidth/canvas.width
+      // so: elementPx * scale * ratio = mm  →  elementPx * (canvas.width/element.offsetWidth) * ratio
+      const domToMm = (canvas.width / element.offsetWidth) * ratio;
+      const elemRect = element.getBoundingClientRect();
+      element.querySelectorAll('a[href]').forEach((anchor) => {
+        const href = anchor.getAttribute('href');
+        // skip empty, fragment, and phone links
+        if (!href || href === '#' || href.startsWith('tel:')) return;
+        const rect = anchor.getBoundingClientRect();
+        const x = xOffset + (rect.left - elemRect.left) * domToMm;
+        const y = yOffset + (rect.top - elemRect.top) * domToMm;
+        const w = rect.width * domToMm;
+        const h = rect.height * domToMm;
+        pdf.link(x, y, w, h, { url: href });
+      });
 
       if (imgPdfHeight > pdfHeight) {
         let heightLeft = imgPdfHeight;

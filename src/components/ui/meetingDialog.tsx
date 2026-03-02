@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { Plus, CalendarIcon, Users, X } from 'lucide-react';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 interface MeetingDialogProps {
   isOpen: boolean;
@@ -36,34 +36,43 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
   const [endTime, setEndTime] = useState<string>('10:00');
   const [attendees, setAttendees] = useState<string[]>(['']);
   const [submitting, setSubmitting] = useState(false);
-  const [meetLink, setMeetLink] = useState<string>('');
   const [timeError, setTimeError] = useState<string>('');
 
-  const DRAFT_KEY = 'DEHIX_MEETING_DRAFT';
-
   const handleCreateMeet = async (meetingData: object) => {
-    const response = await axiosInstance.post(`/meeting/admin`, meetingData);
-    console.log('RESPONSE', response);
+    const response = await axiosInstance.post(`/meeting`, meetingData);
+
+    const inviteStatus = response?.data?.inviteStatus;
+    if (inviteStatus && inviteStatus !== 'success') {
+      toast({
+        variant: 'destructive',
+        title: 'Meeting creation failed',
+        description:
+          response?.data?.message ||
+          'Failed to create meeting. Please try again.',
+      });
+      return;
+    }
+
     const link =
       response?.data?.data?.hangoutLink ||
       response?.data?.data?.htmlLink ||
       response?.data?.hangoutLink ||
+      response?.data?.meetLink ||
       response?.data?.link ||
       '';
 
-    if (link) {
-      setMeetLink(String(link));
+    if (link && link !== 'No calendar event created') {
       toast({
         title: 'Meeting created',
         description: 'Your meeting link is ready.',
       });
     } else {
       toast({
-        variant: 'destructive',
-        title: 'Meeting created, but no link returned',
-        description: 'Please check your calendar for the event link.',
+        title: 'Meeting scheduled',
+        description: 'Meeting created. Check your calendar for the link.',
       });
     }
+    onClose();
   };
 
   const validateTime = () => {
@@ -284,41 +293,6 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
             </Button>
           </DialogFooter>
         </form>
-
-        {meetLink && (
-          <Card className="mt-4">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                <Label className="text-base font-medium">Meeting Link</Label>
-                <div className="flex gap-2">
-                  <Input value={meetLink} readOnly className="flex-grow" />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(meetLink);
-                        toast({
-                          title: 'Copied!',
-                          description: 'Meeting link copied to clipboard.',
-                        });
-                      } catch (error) {
-                        console.error('Failed to copy:', error);
-                        toast({
-                          variant: 'destructive',
-                          title: 'Copy failed',
-                          description: 'Please copy the link manually.',
-                        });
-                      }
-                    }}
-                  >
-                    Copy
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </DialogContent>
     </Dialog>
   );

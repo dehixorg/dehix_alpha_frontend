@@ -62,7 +62,6 @@ import {
   updateConversationWithMessageTransaction,
   updateDataInFirestore,
 } from '@/utils/common/firestoreUtils';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/components/ui/use-toast';
 import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
@@ -274,6 +273,22 @@ export function CardsChat({
         );
       }
     }
+  };
+
+  //Bold, italics and underline button should be highlighted when selected in chat
+  const [, setTick] = React.useState(0);
+
+  React.useEffect(() => {
+    const onSelectionChange = () => setTick((t) => t + 1);
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () =>
+      document.removeEventListener('selectionchange', onSelectionChange);
+  }, []);
+
+  const isFormatActive = (command: string) => {
+    return typeof document !== 'undefined'
+      ? document.queryCommandState(command)
+      : false;
   };
 
   useEffect(() => {
@@ -506,22 +521,12 @@ export function CardsChat({
   }
 
   async function handleCreateMeet() {
-    try {
-      const response = await axiosInstance.post('/meeting', {
-        participants: conversation.participants,
-      });
-
-      const meetLink = response.data.meetLink;
-      const message: Partial<Message> = {
-        senderId: user.uid,
-        content: `🔗 Join the Meet: [Click here](${meetLink})`,
-        timestamp: new Date().toISOString(),
-      };
-
-      sendMessage(conversation, message, setInput);
-    } catch (error) {
-      console.error('Error creating meet:', error);
-    }
+    // Video call functionality is currently disabled
+    toast({
+      title: "Feature Unavailable",
+      description: "This functionality is not available for now.",
+      variant: "default",
+    });
   }
 
   /**
@@ -530,6 +535,7 @@ export function CardsChat({
   function handleBold() {
     composerRef.current?.focus();
     document.execCommand('bold');
+    setTick((t) => t + 1);
   }
 
   /**
@@ -538,6 +544,7 @@ export function CardsChat({
   const handleUnderline = () => {
     composerRef.current?.focus();
     document.execCommand('underline');
+    setTick((t) => t + 1);
   };
 
   /**
@@ -546,6 +553,7 @@ export function CardsChat({
   function handleitalics() {
     composerRef.current?.focus();
     document.execCommand('italic');
+    setTick((t) => t + 1);
   }
 
   const toggleFormattingOptions = () => {
@@ -1054,12 +1062,12 @@ export function CardsChat({
                         size="icon"
                         aria-label="Video call"
                         onClick={handleCreateMeet}
-                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] opacity-50 cursor-not-allowed"
                       >
                         <Video className="h-5 w-5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">Video call</TooltipContent>
+                    <TooltipContent side="bottom">This functionality is not available for now</TooltipContent>
                   </Tooltip>
 
                   <Tooltip>
@@ -1137,10 +1145,10 @@ export function CardsChat({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleCreateMeet}
-                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2 opacity-50"
                       >
                         <Video className="h-4 w-4" />
-                        <span className="text-sm font-medium">Video call</span>
+                        <span className="text-sm font-medium">Video call (Not available)</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
@@ -1269,10 +1277,10 @@ export function CardsChat({
                             : isFile
                               ? 'Document'
                               : raw
-                                  .replace(/<[^>]*>/g, '')
-                                  .replace(/&nbsp;/g, ' ')
-                                  .replace(/\*|__/g, '')
-                                  .trim() || 'Message';
+                                .replace(/<[^>]*>/g, '')
+                                .replace(/&nbsp;/g, ' ')
+                                .replace(/\*|__/g, '')
+                                .trim() || 'Message';
 
                         return (
                           <div className="flex items-center gap-2 min-w-0">
@@ -1423,7 +1431,11 @@ export function CardsChat({
                       onClick={handleBold}
                       title="Bold"
                       aria-label="Bold"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className={
+                        isFormatActive('bold')
+                          ? 'bg-accent text-foreground'
+                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                      }
                     >
                       {' '}
                       <Bold className="h-4 w-4" />{' '}
@@ -1435,7 +1447,11 @@ export function CardsChat({
                       onClick={handleitalics}
                       title="Italic"
                       aria-label="Italic"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className={
+                        isFormatActive('italic')
+                          ? 'bg-accent text-foreground'
+                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                      }
                     >
                       {' '}
                       <Italic className="h-4 w-4" />{' '}
@@ -1447,7 +1463,11 @@ export function CardsChat({
                       onClick={handleUnderline}
                       title="Underline"
                       aria-label="Underline"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className={
+                        isFormatActive('underline')
+                          ? 'bg-accent text-foreground'
+                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                      }
                     >
                       {' '}
                       <Underline className="h-4 w-4" />{' '}
@@ -1654,7 +1674,7 @@ export function CardsChat({
               <DialogContent
                 className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
              z-[50] bg-background border border-border
-             shadow-2xl rounded-2xl max-w-xl w-full p-6
+             shadow-2xl rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6
              transition-transform duration-300 animate-in fade-in zoom-in-95"
               >
                 <DialogHeader></DialogHeader>

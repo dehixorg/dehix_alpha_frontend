@@ -28,4 +28,7 @@ yarn-error.log*
 # Windows
 Thumbs.db
 // ...existing code...
+# Typescript
+*.tsbuildinfo
+
 eslint.config.js

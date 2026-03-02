@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Wallet } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -18,6 +18,7 @@ import { startTour } from '@/lib/tourSlice';
 import TourMenu from '@/components/tour/shared/TourMenu';
 import { RootState } from '@/lib/store';
 import type { TourTarget } from '@/lib/tourSlice';
+import { fetchAndUpdateConnects } from '@/lib/updateConnects';
 
 interface HeaderProps {
   menuItemsTop: MenuItem[];
@@ -50,6 +51,12 @@ const Header: React.FC<HeaderProps> = ({
   const [connects, setConnects] = useState<number>(0);
   const pathname = usePathname();
 
+  const userType =
+    user?.type &&
+    ['freelancer', 'business'].includes(String(user.type).toLowerCase())
+      ? (String(user.type).toLowerCase() as 'freelancer' | 'business')
+      : undefined;
+
   const fetchConnects = async () => {
     try {
       const data = localStorage.getItem('DHX_CONNECTS');
@@ -61,6 +68,23 @@ const Header: React.FC<HeaderProps> = ({
       console.error('Error fetching connects:', error);
     }
   };
+
+  const refreshConnectsFromServer = useCallback(async () => {
+    if (!user?.uid || !userType) return;
+    try {
+      const balance = await fetchAndUpdateConnects(userType);
+      if (balance != null) setConnects(balance);
+      else fetchConnects();
+    } catch {
+      fetchConnects();
+    }
+  }, [user?.uid, userType]);
+
+  // Stable ref to hold the latest callback without causing effect re-runs
+  const refreshRef = useRef(refreshConnectsFromServer);
+  useEffect(() => {
+    refreshRef.current = refreshConnectsFromServer;
+  }, [refreshConnectsFromServer]);
 
   const PAGE_TOUR_ROUTE_MAP: { path: string; target: TourTarget }[] = [
     // Freelancer
@@ -116,16 +140,21 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   useEffect(() => {
-    if (user?.uid) {
-      fetchConnects();
-    }
+    if (!user?.uid || !userType) return;
+    fetchConnects();
+    refreshRef.current();
     const updateConnects = () => fetchConnects();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshRef.current();
+    };
     window.addEventListener('connectsUpdated', updateConnects);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       window.removeEventListener('connectsUpdated', updateConnects);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [user?.uid]);
+  }, [user?.uid, userType]);
 
   const [searchValue, setSearchValue] = useState('');
   const [, setSearchFocused] = useState(false);
@@ -230,7 +259,11 @@ const Header: React.FC<HeaderProps> = ({
 
         {user?.uid ? (
           <div data-tour="header-connects">
-            <DisplayConnectsDialog userId={user.uid} connects={connects} />
+            <DisplayConnectsDialog
+              userId={user.uid}
+              connects={connects}
+              userType={userType}
+            />
           </div>
         ) : (
           <div data-tour="header-connects">

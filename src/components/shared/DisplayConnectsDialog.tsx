@@ -21,6 +21,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
+  fetchAndUpdateConnects,
+  updateConnectsBalance,
+} from '@/lib/updateConnects';
+import {
   Table,
   TableHeader,
   TableRow,
@@ -38,19 +42,20 @@ interface TokenRequest {
   _id: string;
   amount: number | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  createdAt: string;
+  dateTime: string;
   [key: string]: any;
 }
 
 interface DisplayConnectsDialogProps {
   connects: number;
   userId: string;
+  userType?: 'freelancer' | 'business';
 }
 
 export const DisplayConnectsDialog = React.forwardRef<
   HTMLButtonElement,
   DisplayConnectsDialogProps
->(({ connects, userId }, ref) => {
+>(({ connects, userId, userType }, ref) => {
   const [filter, setFilter] = useState('ALL');
   const [filteredData, setFilteredData] = useState<TokenRequest[]>([]);
   const [data, setData] = useState<TokenRequest[]>([]);
@@ -60,18 +65,9 @@ export const DisplayConnectsDialog = React.forwardRef<
   const fetchConnectsRequest = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(
-        `/token-request/user/${userId}`,
-        {
-          params: { latestConnects: true },
-        },
-      );
+      const response = await axiosInstance.get(`/token-request/user/${userId}`);
 
-      const newData = response.data.data || [];
-      const currentConnects = parseInt(
-        localStorage.getItem('DHX_CONNECTS') || '0',
-        10,
-      );
+      const newData = (response.data.data || []) as TokenRequest[];
 
       // Get the set of processed request IDs from localStorage
       const processedRequests = new Set(
@@ -79,10 +75,8 @@ export const DisplayConnectsDialog = React.forwardRef<
       );
 
       const newApprovedRequests: TokenRequest[] = [];
-      const updatedProcessedRequests = new Set(processedRequests);
-      let hasUpdates = false;
 
-      // Process new data
+      // Process new data - identify approved requests that haven't been processed yet
       newData.forEach((newItem: TokenRequest) => {
         // Only process approved requests that haven't been processed yet
         if (
@@ -90,45 +84,78 @@ export const DisplayConnectsDialog = React.forwardRef<
           !processedRequests.has(newItem._id)
         ) {
           newApprovedRequests.push(newItem);
-          updatedProcessedRequests.add(newItem._id);
-          hasUpdates = true;
         }
       });
 
       // Update processed requests in localStorage if there are new ones
-      if (hasUpdates) {
-        localStorage.setItem(
-          'PROCESSED_REQUESTS',
-          JSON.stringify(Array.from(updatedProcessedRequests)),
-        );
-      }
-
       setData(newData);
       setFilteredData(newData);
 
       if (newApprovedRequests.length > 0) {
-        const totalNewConnects = newApprovedRequests.reduce(
-          (sum: number, req: TokenRequest) => sum + Number(req.amount),
-          0,
-        );
-
         try {
-          await Promise.all(
-            newApprovedRequests.map((request) =>
-              axiosInstance.put(`/token-request/${request._id}/status`, {
-                status: 'APPROVED',
-                totalConnects: currentConnects,
-              }),
-            ),
-          );
+          let success = false;
+          if (userType) {
+            const balance = await fetchAndUpdateConnects(userType);
+            success = balance !== null;
+          } else {
+            const totalNewConnects = newApprovedRequests.reduce(
+              (sum: number, req: TokenRequest) => sum + Number(req.amount),
+              0,
+            );
 
-          const newTotal = currentConnects + totalNewConnects;
-          localStorage.setItem('DHX_CONNECTS', newTotal.toString());
-          window.dispatchEvent(
-            new CustomEvent('connectsUpdated', { detail: { newTotal } }),
-          );
+            // CAS retry logic for local storage update
+            let retries = 3;
+            let updated = false;
+
+            while (retries > 0 && !updated) {
+              const currentStr = localStorage.getItem('DHX_CONNECTS') || '0';
+              const currentConnects = parseInt(currentStr, 10);
+              const newTotal = currentConnects + totalNewConnects;
+
+              // Optimistic update attempt
+              // Check if value changed during computation (simple collision check)
+              if (
+                localStorage.getItem('DHX_CONNECTS') ===
+                (currentStr === '0' && !localStorage.getItem('DHX_CONNECTS')
+                  ? null
+                  : currentStr)
+              ) {
+                updateConnectsBalance(newTotal);
+                updated = true;
+              } else {
+                retries--;
+                await new Promise((r) => setTimeout(r, 50)); // backoff
+              }
+
+              // Fallback if strict CAS is not possible with just localStorage:
+              // Just verify we are writing fresh data.
+              // Since we don't have atomic hardware CAS for localStorage,
+              // we just minimize the window. The above check is best-effort.
+              if (!updated && retries === 0) {
+                // Final attempt force write
+                updateConnectsBalance(currentConnects + totalNewConnects);
+                updated = true;
+              }
+            }
+
+            // Wait for event dispatch propagation if needed, though updateConnectsBalance is sync-like for localStorage
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            success = true;
+          }
+
+          // Only update PROCESSED_REQUESTS after fetch succeeds
+          if (success) {
+            const updatedProcessedRequests = new Set(processedRequests);
+            newApprovedRequests.forEach((req) => {
+              updatedProcessedRequests.add(req._id);
+            });
+            localStorage.setItem(
+              'PROCESSED_REQUESTS',
+              JSON.stringify(Array.from(updatedProcessedRequests)),
+            );
+          }
         } catch (error) {
-          console.error('Error updating token request status:', error);
+          console.error('Error syncing connects after approval:', error);
         }
       }
     } catch (error) {
@@ -136,23 +163,7 @@ export const DisplayConnectsDialog = React.forwardRef<
     } finally {
       setLoading(false);
     }
-  }, [userId]);
-
-  const handleNewConnectRequest = useCallback((event: Event) => {
-    const newConnect = (event as CustomEvent).detail;
-    setData((prevData) => {
-      const updatedData = [newConnect, ...prevData.slice(0, 2)];
-      setFilteredData(updatedData);
-      return updatedData;
-    });
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('newConnectRequest', handleNewConnectRequest);
-    return () => {
-      window.removeEventListener('newConnectRequest', handleNewConnectRequest);
-    };
-  }, [handleNewConnectRequest]);
+  }, [userId, userType]);
 
   useEffect(() => {
     if (open) fetchConnectsRequest();
@@ -167,7 +178,7 @@ export const DisplayConnectsDialog = React.forwardRef<
   const formatDate = (dateString: string) => {
     try {
       // Handle different date string formats
-      let date: Date;
+      let date: Date = new Date(); // Initialize to ensure safety
 
       // If it's already a valid date string that can be parsed by Date
       if (dateString) {
@@ -192,6 +203,8 @@ export const DisplayConnectsDialog = React.forwardRef<
                 parts[4] ? parseInt(parts[4]) : 0,
                 parts[5] ? parseInt(parts[5]) : 0,
               );
+            } else {
+              date = new Date(); // Fallback to avoid strict uninitialized error, though logic below handles invalid dates
             }
           }
         }
@@ -345,9 +358,9 @@ export const DisplayConnectsDialog = React.forwardRef<
                           </TableRow>
                         ))
                       ) : filteredData.length > 0 ? (
-                        filteredData.map((item, idx) => (
+                        filteredData.map((item) => (
                           <TableRow
-                            key={idx}
+                            key={item._id}
                             className="group h-11 hover:bg-muted/40"
                           >
                             <TableCell className="font-medium text-sm text-center">
@@ -361,7 +374,7 @@ export const DisplayConnectsDialog = React.forwardRef<
                               </div>
                             </TableCell>
                             <TableCell className="text-right text-sm text-muted-foreground">
-                              {formatDate(item.createdAt)}
+                              {formatDate(item.dateTime)}
                             </TableCell>
                           </TableRow>
                         ))
@@ -392,7 +405,8 @@ export const DisplayConnectsDialog = React.forwardRef<
           {/* Footer */}
           <div className="p-3 border-t bg-muted/20 flex justify-between items-center">
             <p className="text-xs text-muted-foreground">
-              Showing {filteredData.length} of {data.length} requests
+              Showing {filteredData.length} request
+              {filteredData.length !== 1 ? 's' : ''}
             </p>
             <Button
               variant="ghost"

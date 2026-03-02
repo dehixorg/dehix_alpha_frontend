@@ -90,12 +90,17 @@ export default function ProfilesPage() {
   }, [user.uid]);
 
   const fetchSkillsAndDomains = useCallback(async () => {
-    try {
-      const skillsRes = await axiosInstance.get('/skills');
-      const domainsRes = await axiosInstance.get('/domain');
+    if (!user.uid) return;
 
-      const skillsData = skillsRes.data.data || [];
-      const domainsData = domainsRes.data.data || [];
+    try {
+      // Fetch skills and domains from freelancer's attributes
+      const response = await axiosInstance.get(
+        `/freelancer/${user.uid}/profile-attributes`,
+      );
+      const attributesData = response.data.data || {};
+
+      const skillsData = attributesData.skills || [];
+      const domainsData = attributesData.domains || [];
 
       const skillsForOptions = skillsData.map((item: any) => ({
         ...item,
@@ -116,7 +121,7 @@ export default function ProfilesPage() {
       setSkillsOptions([]);
       setDomainsOptions([]);
     }
-  }, []);
+  }, [user.uid]);
 
   useEffect(() => {
     fetchProfiles();

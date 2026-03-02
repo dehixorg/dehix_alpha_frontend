@@ -68,6 +68,7 @@ const tourSlice = createSlice({
       state.trigger += 1;
     },
     clearTour(state) {
+      state.mode = null;
       state.target = null;
     },
   },

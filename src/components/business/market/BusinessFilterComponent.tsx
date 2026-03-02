@@ -313,11 +313,34 @@ export default function BusinessFilterComponent({
                     <Input
                       id="min-rate"
                       type="number"
+                      min="0"
                       placeholder="0"
                       value={filters.minRate}
-                      onChange={(e) =>
-                        onFilterChange({ minRate: e.target.value })
-                      }
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === '-' ||
+                          e.key === 'e' ||
+                          e.key === 'E' ||
+                          e.key === '+'
+                        ) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onPaste={(e) => {
+                        const pastedText = e.clipboardData.getData('text');
+                        if (
+                          pastedText.includes('-') ||
+                          parseFloat(pastedText) < 0
+                        ) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || parseFloat(value) >= 0) {
+                          onFilterChange({ minRate: value });
+                        }
+                      }}
                       className="h-9"
                     />
                   </div>
@@ -328,11 +351,34 @@ export default function BusinessFilterComponent({
                     <Input
                       id="max-rate"
                       type="number"
+                      min="0"
                       placeholder="1000"
                       value={filters.maxRate}
-                      onChange={(e) =>
-                        onFilterChange({ maxRate: e.target.value })
-                      }
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === '-' ||
+                          e.key === 'e' ||
+                          e.key === 'E' ||
+                          e.key === '+'
+                        ) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onPaste={(e) => {
+                        const pastedText = e.clipboardData.getData('text');
+                        if (
+                          pastedText.includes('-') ||
+                          parseFloat(pastedText) < 0
+                        ) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || parseFloat(value) >= 0) {
+                          onFilterChange({ maxRate: value });
+                        }
+                      }}
                       className="h-9"
                     />
                   </div>
