@@ -169,7 +169,23 @@ function parseInput(resumeText: string): ParsedResume {
 
   try {
     const parsed = JSON.parse(resumeText.trim());
-    return { ...empty, ...parsed };
+    return {
+      personalData: Array.isArray(parsed.personalData)
+        ? parsed.personalData
+        : [],
+      workExperienceData: Array.isArray(parsed.workExperienceData)
+        ? parsed.workExperienceData
+        : [],
+      educationData: Array.isArray(parsed.educationData)
+        ? parsed.educationData
+        : [],
+      skills: Array.isArray(parsed.skills) ? parsed.skills : [],
+      achievements: Array.isArray(parsed.achievements)
+        ? parsed.achievements
+        : [],
+      summaryData: Array.isArray(parsed.summaryData) ? parsed.summaryData : [],
+      projectData: Array.isArray(parsed.projectData) ? parsed.projectData : [],
+    };
   } catch {
     return empty;
   }
@@ -190,7 +206,9 @@ function getAllText(r: ParsedResume): string {
   r.personalData.forEach((p) => {
     parts.push(p.firstName || '', p.lastName || '', p.email || '');
   });
-  r.summaryData.forEach((s) => parts.push(s));
+  r.summaryData.forEach((s) => {
+    parts.push(s);
+  });
   r.workExperienceData.forEach((w) => {
     parts.push(w.jobTitle || '', w.company || '', w.description || '');
   });
@@ -201,7 +219,9 @@ function getAllText(r: ParsedResume): string {
   r.projectData.forEach((p) => {
     parts.push(p.title || '', p.description || '');
   });
-  r.achievements.forEach((a) => parts.push(a.achievementName || ''));
+  r.achievements.forEach((a) => {
+    parts.push(a.achievementName || '');
+  });
   return parts.filter(Boolean).join(' ').toLowerCase();
 }
 
@@ -241,7 +261,7 @@ function scoreFormatting(r: ParsedResume): CategoryScore {
     .toLowerCase();
 
   const firstPersonMatches = (
-    descriptions.match(/\b(i |i'|me |my |myself)\b/g) || []
+    descriptions.match(/\b(i|me|my|myself)\b/gi) || []
   ).length;
   if (firstPersonMatches > 0) {
     score -= Math.min(25, firstPersonMatches * 5);

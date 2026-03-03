@@ -227,7 +227,6 @@ export default function ResumeEditor({
   // Track whether initial resume data has been loaded to avoid re-running
   // when skillOptions changes after the first successful load.
   const resumeLoadedRef = useRef(false);
-  const [resumeLoadNonce, setResumeLoadNonce] = useState(0);
 
   // Populate data from savedResume or initialResume
   useEffect(() => {
@@ -266,8 +265,8 @@ export default function ResumeEditor({
           if (skill._id) {
             skillMap.set(skill._id, {
               ...skill,
-              name: skill.label,
-              skillName: skill.label,
+              name: skill.label || skill.name || '',
+              skillName: skill.label || skill.name || '',
             });
           }
         });
@@ -288,8 +287,8 @@ export default function ResumeEditor({
               if (skill?._id) {
                 const skillData: Skill = {
                   ...skill,
-                  name: skill.label,
-                  skillName: skill.label,
+                  name: skill.label || skill.name || '',
+                  skillName: skill.label || skill.name || '',
                 };
                 skillMap.set(skill._id, skillData);
               }
@@ -347,18 +346,15 @@ export default function ResumeEditor({
         setSummaryData(
           resume.professionalSummary ? [resume.professionalSummary] : [],
         );
-        setSelectedTemplate(resume.selectedTemplate || 'ResumePreview2');
         resumeLoadedRef.current = true;
       } catch (error) {
         console.error('Error loading resume data:', error);
-        // allow retry
         resumeLoadedRef.current = false;
-        setResumeLoadNonce((n) => n + 1);
       }
     };
 
     loadResumeData();
-  }, [initialResume, skillOptions, resumeLoadNonce]);
+  }, [initialResume, skillOptions]);
 
   // PDF Optimization
   const optimizePdfContent = () => {
@@ -649,8 +645,15 @@ export default function ResumeEditor({
       }> = [];
       element.querySelectorAll('a[href]').forEach((anchor) => {
         const href = anchor.getAttribute('href');
-        // skip empty, fragment, and phone links
-        if (!href || href === '#' || href.startsWith('tel:')) return;
+        // skip empty, fragment, and unsafe links
+        const safeSchemes = ['https:', 'http:', 'mailto:'];
+        if (
+          !href ||
+          href === '#' ||
+          href.startsWith('tel:') ||
+          !safeSchemes.some((scheme) => href.startsWith(scheme))
+        )
+          return;
         const rect = anchor.getBoundingClientRect();
         const x = xOffset + (rect.left - elemRect.left) * domToMm;
         const yAbs = yOffset + (rect.top - elemRect.top) * domToMm;

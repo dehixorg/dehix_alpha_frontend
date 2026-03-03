@@ -194,9 +194,10 @@ export const AtsScore: React.FC<ResumeScoreProps> = ({
       try {
         setAiTips(await fetchAiTips(resumeId, text));
       } catch (err: unknown) {
-        const axiosMsg: string =
+        const axiosMsg = String(
           (err as any)?.response?.data?.message ||
-          (err instanceof Error ? err.message : 'Failed to get AI tips.');
+            (err instanceof Error ? err.message : 'Failed to get AI tips.'),
+        );
         if (
           axiosMsg.includes('invalid or expired') ||
           axiosMsg.includes('INVALID_API_KEY')
