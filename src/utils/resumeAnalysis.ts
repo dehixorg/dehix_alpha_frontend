@@ -192,13 +192,14 @@ function parseInput(resumeText: string): ParsedResume {
 }
 
 function getSkillNames(skills: Array<SkillEntry | string>): string[] {
-  return skills
+  const names = skills
     .map((s) => {
       if (typeof s === 'string') return s;
       return s?.label || s?.skillName || s?.name || '';
     })
     .filter(Boolean)
     .map((s) => s.toLowerCase().trim());
+  return Array.from(new Set(names));
 }
 
 function getAllText(r: ParsedResume): string {
