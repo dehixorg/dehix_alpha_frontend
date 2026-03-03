@@ -709,12 +709,6 @@ export async function fetchAiTips(
           ? {
               firstName: parsed.personalData[0].firstName || '',
               lastName: parsed.personalData[0].lastName || '',
-              email: parsed.personalData[0].email || '',
-              phone: parsed.personalData[0].phoneNumber || '',
-              city: parsed.personalData[0].city || '',
-              country: parsed.personalData[0].country || '',
-              linkedin: parsed.personalData[0].linkedin || '',
-              github: parsed.personalData[0].github || '',
             }
           : undefined,
         workExperience: (parsed.workExperienceData || []).map((w) => ({
