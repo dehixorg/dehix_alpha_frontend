@@ -216,7 +216,8 @@ export const AtsScore: React.FC<ResumeScoreProps> = ({
         ) {
           setAiError('AI is rate-limited. Wait 30 seconds and try again.');
         } else {
-          setAiError(axiosMsg);
+          setAiError('Failed to analyze resume. Please try again.');
+          console.error('[AI Tips Error]:', axiosMsg);
         }
       } finally {
         setAiLoading(false);

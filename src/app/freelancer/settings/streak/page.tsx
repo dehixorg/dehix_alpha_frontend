@@ -290,7 +290,7 @@ export default function StreakPage() {
     // A milestone is claimed if: currentStreak > milestone.days AND milestone is NOT in claimableMilestones
     return rewardsData.reduce((total, reward) => {
       const isClaimed =
-        streakData.currentStreak > reward.days &&
+        streakData.currentStreak >= reward.days &&
         !streakData.claimableMilestones.includes(reward.days);
       return total + (isClaimed ? reward.reward : 0);
     }, 0);

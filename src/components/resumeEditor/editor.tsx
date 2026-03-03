@@ -180,6 +180,11 @@ export default function ResumeEditor({
     initialResume?._id,
   );
 
+  // Sync savedResumeId whenever the editor is reused for a different resume
+  useEffect(() => {
+    setSavedResumeId(initialResume?._id);
+  }, [initialResume?._id]);
+
   const resumeText = useMemo(
     () =>
       JSON.stringify({
@@ -234,7 +239,6 @@ export default function ResumeEditor({
     // Only load once per initialResume — don't re-run when skillOptions changes
     if (resumeLoadedRef.current) return;
     if (!initialResume) return;
-    if (skillOptions.length === 0) return; // wait for skills to arrive
 
     const loadResumeData = async () => {
       const resume = initialResume;

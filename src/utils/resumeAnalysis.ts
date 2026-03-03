@@ -149,6 +149,11 @@ const BASELINE_FLOOR = 55;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Escapes regex special chars and matches as a whole word / phrase boundary. */
+const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const wordMatch = (text: string, kw: string): boolean =>
+  new RegExp(`(^|\\W)${escRe(kw)}(\\W|$)`).test(text);
+
 function parseInput(resumeText: string): ParsedResume {
   const empty: ParsedResume = {
     personalData: [],
@@ -271,7 +276,7 @@ function scoreFormatting(r: ParsedResume): CategoryScore {
 
   const hasContact =
     r.personalData.length > 0 &&
-    (r.personalData[0].email || r.personalData[0].phoneNumber);
+    !!(r.personalData[0].email && r.personalData[0].phoneNumber);
   if (!hasContact) {
     score -= 20;
     issues.push('Ensure contact information (email and phone) is present.');
@@ -403,10 +408,10 @@ function scoreImpact(r: ParsedResume): CategoryScore {
     .join(' ')
     .toLowerCase();
 
-  // Action verbs anywhere in all text (broader check)
+  // Action verbs anywhere in all text (whole-word match only)
   let actionVerbCount = 0;
   ACTION_VERBS.forEach((verb) => {
-    if (allDescText.includes(verb)) actionVerbCount++;
+    if (wordMatch(allDescText, verb)) actionVerbCount++;
   });
 
   // Quantified achievements — numbers with context
@@ -573,7 +578,7 @@ function scoreKeywordDensity(r: ParsedResume): CategoryScore {
   let foundCount = 0;
   const foundKeywords: string[] = [];
   techKeywords.forEach((kw) => {
-    if (allText.includes(kw)) {
+    if (wordMatch(allText, kw)) {
       foundCount++;
       foundKeywords.push(kw);
     }
@@ -593,7 +598,7 @@ function scoreKeywordDensity(r: ParsedResume): CategoryScore {
 
   let keywordsInDescriptions = 0;
   skillNames.forEach((skill) => {
-    if (descriptionText.includes(skill)) keywordsInDescriptions++;
+    if (wordMatch(descriptionText, skill)) keywordsInDescriptions++;
   });
   const contextScore = Math.min(30, keywordsInDescriptions * 6);
 
