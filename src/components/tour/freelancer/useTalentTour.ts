@@ -12,6 +12,27 @@ function el(selector: string) {
   return document.querySelector(selector);
 }
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useTalentTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -36,10 +57,40 @@ export function useTalentTour(isReady: boolean) {
     tour.addStep({
       id: 'talent',
       title: 'Talent Marketplace',
-      scrollTo: false,
       text: 'Explore professionals, review profiles, and connect with talent here.',
-      attachTo: { element: '[data-tour="talent"]', on: 'top' },
+      when: withProgress(tour),
       buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'skill',
+      title: 'Add Dehix Skill',
+      text: 'Choose one of your profile skills, set your seniority level, and define your expected monthly pay. This helps clients understand where you shine.',
+      attachTo: { element: '[data-tour="skill"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'domain',
+      title: 'Add Dehix Domain',
+      text: 'Select one of your profile domains, set your seniority level, and define your expected monthly pay for domain-based work.',
+      attachTo: { element: '[data-tour="domain"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
         {
           text: 'Got it',
           action: () => {

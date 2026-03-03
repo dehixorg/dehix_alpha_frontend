@@ -8,10 +8,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
-function el(selector: string) {
-  return document.querySelector(selector);
-}
-
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -33,10 +29,9 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useNotesTour(isReady: boolean) {
+export function useBusinessInfoTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
-  const userType = useSelector((s: RootState) => s.user.type);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -49,6 +44,8 @@ export function useNotesTour(isReady: boolean) {
         cancelIcon: { enabled: true },
         scrollTo: { behavior: 'smooth', block: 'center' },
         classes: 'shepherd-theme-custom',
+        modalOverlayOpeningRadius: 9999,
+        modalOverlayOpeningPadding: 8,
       },
     });
 
@@ -56,18 +53,65 @@ export function useNotesTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'notes',
-      title: 'Notes',
-      text:
-        userType === 'business'
-          ? 'Use this space to keep business notes, ideas, and important references in one place.'
-          : 'Use this section to write down ideas, reminders, and personal notes.',
-      // attachTo: {
-      //   element: '[data-tour="notes"]',
-      //   on: 'top',
-      // },
+      id: 'business-info',
+      title: 'Business Information',
+      scrollTo: false,
+      text: 'Keep your business profile accurate. It helps freelancers trust and recognize you.',
       when: withProgress(tour),
       buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
+    });
+
+    tour.addStep({
+      id: 'business-profile-picture',
+      title: 'Profile Picture',
+      text: 'Upload or change your profile picture here. The image is saved automatically — no need to click save.',
+      attachTo: {
+        element: '[data-tour="profile-picture"]',
+        on: 'bottom',
+      },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'business-readonly-fields',
+      title: 'Contact Information',
+      text: 'Email and phone number are non-editable, enter it carefully.',
+      attachTo: {
+        element: '[data-tour="business-readonly-fields"]',
+        on: 'top',
+      },
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'save-changes',
+      title: 'Save Changes',
+      text: 'Use this button to save updates made on this page. Profile picture uploads are saved automatically.',
+      attachTo: {
+        element: '[data-tour="save"]',
+        on: 'top',
+      },
+      buttons: [
+        { text: 'Back', action: tour.back },
         {
           text: 'Got it',
           action: () => {
@@ -85,16 +129,14 @@ export function useNotesTour(isReady: boolean) {
       tourRef.current = null;
       dispatch(clearTour());
     };
-  }, [dispatch, userType]);
+  }, [dispatch]);
 
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
     if (mode !== 'page') return;
-    if (target !== 'notes') return;
+    if (target !== 'business-info') return;
 
-    if (el('[data-tour="notes"]')) {
-      tourRef.current?.start();
-    }
-  }, [trigger, mode, target, isReady, userType]);
+    tourRef.current?.start();
+  }, [trigger, mode, target, isReady]);
 }

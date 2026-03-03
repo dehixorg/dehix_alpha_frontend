@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/lib/store';
 import { BusinessForm } from '@/components/form/businessForm';
 import BusinessSettingsLayout from '@/components/layout/BusinessSettingsLayout';
+import { useBusinessInfoTour } from '@/components/tour/business-profile/useBusinessInfoTour';
 
 export default function BusinessInfoPage() {
   const router = useRouter();
   const user = useAppSelector((state) => state.user);
+
+  useBusinessInfoTour(true);
 
   // Optional: Redirect if user is not authenticated
   useEffect(() => {

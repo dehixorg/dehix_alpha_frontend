@@ -8,6 +8,27 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import { clearTour } from '@/lib/tourSlice';
 
+function withProgress(tour: Tour) {
+  return {
+    show(this: any) {
+      const current = tour.steps.indexOf(this) + 1;
+      const total = tour.steps.length;
+
+      const footer = this.el?.querySelector('.shepherd-footer');
+      if (!footer) return;
+
+      let progress = footer.querySelector('.shepherd-progress');
+      if (!progress) {
+        progress = document.createElement('div');
+        progress.className = 'shepherd-progress';
+        footer.insertBefore(progress, footer.firstChild);
+      }
+
+      progress.textContent = `${current} / ${total}`;
+    },
+  };
+}
+
 export function useBusinessMarketTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
@@ -32,27 +53,22 @@ export function useBusinessMarketTour(isReady: boolean) {
     tour.addStep({
       id: 'business-market-header',
       title: 'Business Marketplace',
-      text: 'Browse and discover vetted freelancers for your business needs.',
-      attachTo: {
-        element: '[data-tour="business-market-header"]',
-        on: 'bottom',
-      },
-      buttons: [{ text: 'Next', action: tour.next }],
+      text: 'Browse and discover freelancers for your business needs.',
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
     });
-
-    // tour.addStep({
-    //   id: 'business-market-results',
-    //   title: 'Search results',
-    //   text: 'This shows how many freelancers match your current filters.',
-    //   attachTo: {
-    //     element: '[data-tour="business-market-results"]',
-    //     on: 'left',
-    //   },
-    //   buttons: [
-    //     { text: 'Back', action: tour.back },
-    //     { text: 'Next', action: tour.next },
-    //   ],
-    // });
 
     tour.addStep({
       id: 'business-market-filters',
@@ -63,6 +79,7 @@ export function useBusinessMarketTour(isReady: boolean) {
         element: '[data-tour="business-market-filters"]',
         on: 'right',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         { text: 'Next', action: tour.next },
@@ -78,6 +95,7 @@ export function useBusinessMarketTour(isReady: boolean) {
         element: '[data-tour="business-market-list"]',
         on: 'top',
       },
+      when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {

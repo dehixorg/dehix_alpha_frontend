@@ -178,6 +178,7 @@ const SkillDomainForm: React.FC = () => {
       <Button
         size="sm"
         className="bg-white text-black hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-gray-300"
+        data-tour="skill"
       >
         <Award className="h-4 w-4 mr-1" />
         Add Skill
@@ -187,7 +188,7 @@ const SkillDomainForm: React.FC = () => {
 
   const AddDomainBtn = () => (
     <DomainDialog domains={domains} onSuccess={triggerRefresh}>
-      <Button size="sm" variant="outline">
+      <Button size="sm" variant="outline" data-tour="domain">
         <Briefcase className="h-4 w-4 mr-1" />
         Add Domain
       </Button>

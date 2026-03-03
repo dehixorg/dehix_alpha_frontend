@@ -51,9 +51,11 @@ export default function OracleDashboardPage() {
           value={currentTabFromURL}
           onValueChange={handleTabChange}
           className="w-full"
-          data-tour="oracle"
         >
-          <TabsList className="grid w-full grid-cols-4 gap-2">
+          <TabsList
+            className="grid w-full grid-cols-4 gap-2"
+            data-tour="oracle-tabs"
+          >
             <TabsTrigger
               value="business"
               className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
@@ -84,7 +86,7 @@ export default function OracleDashboardPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="business">
+          <TabsContent value="business" data-tour="oracle-page">
             <BusinessVerification />
           </TabsContent>
           <TabsContent value="experience">
