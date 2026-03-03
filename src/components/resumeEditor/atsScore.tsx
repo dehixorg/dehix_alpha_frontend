@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { Bar } from 'react-chartjs-2';
-import { useTheme } from 'next-themes';
-import { Gauge, ClipboardList, Sparkles } from 'lucide-react';
+'use client';
+
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Chart as ChartJS,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+  Gauge,
+  Sparkles,
+  CheckCircle2,
+  AlertTriangle,
+  Lightbulb,
+  Tag,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  RefreshCw,
+} from 'lucide-react';
 
 import {
   Card,
@@ -21,560 +24,424 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  SCORE_MESSAGES,
-  ACTION_VERBS,
-  SCORE_THRESHOLDS,
-  ANALYSIS_WEIGHTS,
-  SCORING_RULES,
-} from '@/constants/resumeAnalysis';
-
-// Register required Chart.js components
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+  scoreResume,
+  fetchAiTips,
+  type RuleBasedResult,
+  type AiTipsResult,
+} from '@/utils/resumeAnalysis';
 
 interface ResumeScoreProps {
   name: string;
   resumeText: string;
-  jobKeywords: string[];
+  resumeId?: string;
 }
 
-// Improved resume analysis function (supports plain text or JSON-like string)
-const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
-  // 1) Try to parse structured resume input if provided as JSON string
-  let structured: any | null = null;
-  try {
-    const trimmed = (resumeText || '').trim();
-    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-      structured = JSON.parse(trimmed);
-    }
-  } catch {
-    structured = null;
-  }
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-  // 2) Build a normalized text corpus and capture section presence
-  let originalText = resumeText || '';
-  let normalizedLower = (resumeText || '').toLowerCase();
-  const hasSections = {
-    contact: false,
-    experience: false,
-    education: false,
-    skills: false,
-    summary: false,
-  };
-
-  if (structured && typeof structured === 'object') {
-    try {
-      const blocks: string[] = [];
-
-      // Personal/contact
-      const personal = structured.personalData || structured.personal || [];
-      if (Array.isArray(personal) && personal.length) {
-        hasSections.contact = true;
-        const p = personal[0] || {};
-        blocks.push(
-          [
-            p.firstName,
-            p.lastName,
-            p.email,
-            p.phoneNumber,
-            p.city,
-            p.country,
-            p.github,
-            p.linkedin,
-          ]
-            .filter(Boolean)
-            .join(' '),
-        );
-      }
-
-      // Summary
-      const summary = structured.summaryData || structured.summary || [];
-      if (Array.isArray(summary) && summary.length) {
-        hasSections.summary = true;
-        blocks.push(summary.join(' '));
-      }
-
-      // Experience
-      const exp = structured.workExperienceData || structured.experience || [];
-      if (Array.isArray(exp) && exp.length) {
-        hasSections.experience = true;
-        exp.forEach((e: any) =>
-          blocks.push(
-            [e.jobTitle, e.company, e.description].filter(Boolean).join(' '),
-          ),
-        );
-      }
-
-      // Education
-      const edu = structured.educationData || structured.education || [];
-      if (Array.isArray(edu) && edu.length) {
-        hasSections.education = true;
-        edu.forEach((e: any) =>
-          blocks.push([e.degree, e.school].filter(Boolean).join(' ')),
-        );
-      }
-
-      // Skills
-      const skills = structured.skills || [];
-      if (Array.isArray(skills) && skills.length) {
-        hasSections.skills = true;
-        blocks.push(
-          skills
-            .map((s: any) => s?.skillName || s)
-            .filter(Boolean)
-            .join(' '),
-        );
-      }
-
-      originalText = blocks.join('. ');
-      normalizedLower = originalText.toLowerCase();
-    } catch {
-      // Fallback to plain text handling
-      structured = null;
-    }
-  }
-
-  const text = normalizedLower;
-
-  // 3) Grammar and formatting analysis (use lower for patterns, original for capitalization)
-  const grammarScore = (() => {
-    let score = 100;
-
-    const grammarIssues = [
-      /\b(i|me|my)\b/g, // First person pronouns (should be avoided in bullets)
-      /\s{2,}/g, // Multiple spaces
-      /[.]{2,}/g, // Multiple periods
-      /[!]{2,}/g, // Multiple exclamation marks
-    ];
-
-    const penalties = [
-      SCORING_RULES.FIRST_PERSON_PENALTY,
-      SCORING_RULES.MULTIPLE_SPACES_PENALTY,
-      SCORING_RULES.MULTIPLE_PERIODS_PENALTY,
-      SCORING_RULES.MULTIPLE_EXCLAMATION_PENALTY,
-    ];
-
-    grammarIssues.forEach((pattern, index) => {
-      const matches = text.match(pattern);
-      if (matches) {
-        score -= matches.length * penalties[index];
-      }
-    });
-
-    // Capitalization after sentence boundaries based on original text
-    const sentencesOriginal = (originalText || '').split(/[.!?]+/);
-    let capitalizationErrors = 0;
-    sentencesOriginal.forEach((s) => {
-      const t = s.trim();
-      if (t.length > 0 && /[a-z]/.test(t[0])) {
-        capitalizationErrors++;
-      }
-    });
-    score -= capitalizationErrors * SCORING_RULES.CAPITALIZATION_PENALTY;
-
-    return Math.max(0, Math.min(100, score));
-  })();
-
-  // 4) Brevity analysis (use original text for sentence boundaries)
-  const brevityScore = (() => {
-    const words = text.split(/\s+/).filter((w) => w.length > 0);
-    const sentences = (originalText || '')
-      .split(/[.!?]+/)
-      .filter((s) => s.trim().length > 0);
-    if (sentences.length === 0) return 0;
-
-    const avgWordsPerSentence = words.length / sentences.length;
-    let score = 100;
-    if (avgWordsPerSentence > SCORING_RULES.IDEAL_SENTENCE_MAX) {
-      score -=
-        (avgWordsPerSentence - SCORING_RULES.IDEAL_SENTENCE_MAX) *
-        SCORING_RULES.LONG_SENTENCE_PENALTY;
-    } else if (avgWordsPerSentence < SCORING_RULES.IDEAL_SENTENCE_MIN) {
-      score -=
-        (SCORING_RULES.IDEAL_SENTENCE_MIN - avgWordsPerSentence) *
-        SCORING_RULES.SHORT_SENTENCE_PENALTY;
-    }
-
-    const longWords = words.filter(
-      (w) => w.length > SCORING_RULES.LONG_WORD_THRESHOLD,
-    );
-    score -= longWords.length * SCORING_RULES.LONG_WORD_PENALTY;
-    return Math.max(0, Math.min(100, score));
-  })();
-
-  // 5) Impact analysis (action verbs and quantifiable achievements)
-  const impactScore = (() => {
-    const numbers = text.match(/\d+(\.\d+)?(%|k|m|b|\$)?/g) || [];
-    const actionVerbMatches = ACTION_VERBS.filter((verb) =>
-      text.includes(verb),
-    ).length;
-    let score = 0;
-    score += Math.min(
-      SCORING_RULES.MAX_ACTION_VERB_SCORE,
-      actionVerbMatches * SCORING_RULES.ACTION_VERB_POINTS,
-    );
-    score += Math.min(
-      SCORING_RULES.MAX_QUANTIFIABLE_SCORE,
-      numbers.length * SCORING_RULES.QUANTIFIABLE_POINTS,
-    );
-    return Math.min(100, score);
-  })();
-
-  // 6) Sections analysis (prefer structured presence if available)
-  const sectionsScore = (() => {
-    let score = 0;
-    const lower = text;
-
-    const requiredMap = {
-      contact:
-        hasSections.contact ||
-        /contact|email|phone|linkedin|github/.test(lower),
-      experience:
-        hasSections.experience ||
-        /experience|employment|work history/.test(lower),
-      education:
-        hasSections.education || /education|degree|university/.test(lower),
-      skills:
-        hasSections.skills || /skills|technologies|tech stack/.test(lower),
-      summary: hasSections.summary || /summary|profile|objective/.test(lower),
-    } as const;
-
-    Object.values(requiredMap).forEach((present) => {
-      if (present) score += SCORING_RULES.REQUIRED_SECTION_POINTS;
-    });
-
-    // Optional: certifications, projects, awards
-    let optionalCount = 0;
-    const optionalCandidates = [
-      'certifications',
-      'projects',
-      'awards',
-      'volunteer',
-    ];
-    optionalCandidates.forEach((sec) => {
-      if (
-        lower.includes(sec) &&
-        optionalCount < SCORING_RULES.MAX_OPTIONAL_SECTIONS
-      ) {
-        score += SCORING_RULES.OPTIONAL_SECTION_POINTS;
-        optionalCount++;
-      }
-    });
-    return Math.min(100, score);
-  })();
-
-  // 7) Keyword matching with weights (skills get higher weight)
-  const keywordScore = (() => {
-    if (!jobKeywords || jobKeywords.length === 0) return 0;
-    const normalizedKeywords = Array.from(
-      new Set(
-        jobKeywords.map((k) => (k || '').toLowerCase().trim()).filter(Boolean),
-      ),
-    );
-    if (normalizedKeywords.length === 0) return 0;
-
-    // If structured, try to weight skills higher
-    let weightedMatches = 0;
-    let totalWeight = normalizedKeywords.length;
-    let skillsLower: string[] = [];
-    if (structured && Array.isArray(structured.skills)) {
-      skillsLower = structured.skills
-        .map((s: any) => (s?.skillName || s || '').toString().toLowerCase())
-        .filter(Boolean);
-    }
-
-    normalizedKeywords.forEach((kw) => {
-      const inText = text.includes(kw);
-      const inSkills = skillsLower.some((s) => s.includes(kw));
-      if (inSkills) {
-        weightedMatches += 2; // higher weight for explicit skills match
-        totalWeight += 1; // increase denominator due to extra weight slot
-      } else if (inText) {
-        weightedMatches += 1;
-      }
-    });
-
-    const ratio = weightedMatches / totalWeight;
-    return Math.min(
-      SCORING_RULES.KEYWORD_BONUS_MAX,
-      ratio * SCORING_RULES.KEYWORD_BONUS_MAX,
-    );
-  })();
-
-  // 8) Final score
-  const totalScore = Math.round(
-    grammarScore * ANALYSIS_WEIGHTS.GRAMMAR +
-      brevityScore * ANALYSIS_WEIGHTS.BREVITY +
-      impactScore * ANALYSIS_WEIGHTS.IMPACT +
-      sectionsScore * ANALYSIS_WEIGHTS.SECTIONS +
-      keywordScore * ANALYSIS_WEIGHTS.KEYWORDS,
-  );
-
-  return {
-    totalScore: Math.max(0, Math.min(100, totalScore)),
-    grammarScore: Math.round(grammarScore),
-    brevityScore: Math.round(brevityScore),
-    impactScore: Math.round(impactScore),
-    sectionsScore: Math.round(sectionsScore),
-    keywordMatches: Array.isArray(jobKeywords)
-      ? jobKeywords.filter((k) => text.includes((k || '').toLowerCase().trim()))
-          .length
-      : 0,
-    totalKeywords: Array.isArray(jobKeywords) ? jobKeywords.length : 0,
-  };
-};
-
-// Simple SVG circular progress to visualize the score
-const CircleProgress: React.FC<{ value: number }> = ({ value }) => {
-  const size = 128;
-  const stroke = 10;
+const ScoreRing: React.FC<{ value: number; isBaseline?: boolean }> = ({
+  value,
+  isBaseline,
+}) => {
+  const size = 140;
+  const stroke = 12;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(100, value));
   const offset = circumference * (1 - clamped / 100);
   const color =
-    clamped >= SCORE_THRESHOLDS.COLOR_GREEN
-      ? '#22c55e' // green-500
-      : clamped >= SCORE_THRESHOLDS.COLOR_YELLOW
-        ? '#eab308' // yellow-500
-        : '#ef4444'; // red-500
+    clamped >= 80 ? '#22c55e' : clamped >= 60 ? '#eab308' : '#ef4444';
+  const label =
+    clamped >= 80
+      ? 'Excellent'
+      : clamped >= 60
+        ? 'Good'
+        : isBaseline
+          ? 'Good Start'
+          : 'Needs Work';
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        stroke={
-          typeof window !== 'undefined' &&
-          document?.documentElement?.classList.contains('dark')
-            ? '#374151'
-            : '#E5E7EB'
-        }
-        strokeWidth={stroke}
-        fill="none"
-      />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        stroke={color}
-        strokeWidth={stroke}
-        strokeLinecap="round"
-        fill="none"
-        strokeDasharray={`${circumference} ${circumference}`}
-        strokeDashoffset={offset}
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-      />
-      <text
-        x="50%"
-        y="50%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        style={{ fontSize: '28px', fontWeight: 700, fill: color }}
-      >
-        {clamped}
-      </text>
-    </svg>
+    <div className="flex flex-col items-center shrink-0">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          className="stroke-muted"
+          strokeWidth={stroke}
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          fill="none"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={offset}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
+        />
+        <text
+          x="50%"
+          y="46%"
+          dominantBaseline="middle"
+          textAnchor="middle"
+          style={{ fontSize: '32px', fontWeight: 800, fill: color }}
+        >
+          {clamped}
+        </text>
+        <text
+          x="50%"
+          y="65%"
+          dominantBaseline="middle"
+          textAnchor="middle"
+          className="fill-muted-foreground"
+          style={{ fontSize: '11px', fontWeight: 500 }}
+        >
+          / 100
+        </text>
+      </svg>
+      <span className="mt-1 text-sm font-semibold" style={{ color }}>
+        {label}
+      </span>
+    </div>
   );
 };
+
+const ScoreBar: React.FC<{
+  label: string;
+  score: number;
+  feedback: string;
+}> = ({ label, score, feedback }) => {
+  const [open, setOpen] = useState(false);
+  const color =
+    score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+
+  return (
+    <div className="space-y-1.5">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between"
+      >
+        <span className="text-sm font-medium">{label}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold tabular-nums w-6 text-right">
+            {score}
+          </span>
+          {open ? (
+            <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          )}
+        </div>
+      </button>
+      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+        <div
+          className={`h-full ${color} transition-all duration-700 ease-out`}
+          style={{
+            width: `${score}%`,
+            borderRadius: score >= 100 ? '9999px' : '9999px 0 0 9999px',
+          }}
+        />
+      </div>
+      {open && (
+        <p className="text-xs text-muted-foreground pt-0.5 leading-relaxed">
+          {feedback}
+        </p>
+      )}
+    </div>
+  );
+};
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export const AtsScore: React.FC<ResumeScoreProps> = ({
   name,
   resumeText,
-  jobKeywords = [],
+  resumeId,
 }) => {
-  const [score, setScore] = useState<number | null>(null);
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
-  const [categories, setCategories] = useState({
-    grammar: 0,
-    brevity: 0,
-    impact: 0,
-    sections: 0,
-  });
-  const [keywordInfo, setKeywordInfo] = useState({ matches: 0, total: 0 });
+  const [scores, setScores] = useState<RuleBasedResult | null>(null);
+  const [aiTips, setAiTips] = useState<AiTipsResult | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
-  const handleAnalyzeResume = () => {
-    const analysis = analyzeResume(resumeText, jobKeywords);
-
-    setScore(analysis.totalScore);
-    setCategories({
-      grammar: analysis.grammarScore,
-      brevity: analysis.brevityScore,
-      impact: analysis.impactScore,
-      sections: analysis.sectionsScore,
-    });
-    setKeywordInfo({
-      matches: analysis.keywordMatches,
-      total: analysis.totalKeywords,
-    });
-  };
-
-  // Auto-calculate when resumeText or keywords change
+  // Recompute scores whenever resumeText changes
   useEffect(() => {
-    const text = (resumeText || '').trim();
-    if (text.length === 0) {
-      setScore(null);
-      setCategories({ grammar: 0, brevity: 0, impact: 0, sections: 0 });
-      setKeywordInfo({ matches: 0, total: (jobKeywords || []).length });
+    if (!resumeText?.trim()) {
+      setScores(null);
       return;
     }
-    handleAnalyzeResume();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resumeText, jobKeywords]);
+    try {
+      setScores(scoreResume(resumeText));
+    } catch {
+      setScores(null);
+    }
+  }, [resumeText]);
 
-  const getScoreMessage = (score: number) => {
-    if (score >= SCORE_THRESHOLDS.EXCELLENT) return SCORE_MESSAGES.EXCELLENT;
-    if (score >= SCORE_THRESHOLDS.GOOD) return SCORE_MESSAGES.GOOD;
-    if (score >= SCORE_THRESHOLDS.FAIR) return SCORE_MESSAGES.NEEDS_IMPROVEMENT;
-    return SCORE_MESSAGES.SIGNIFICANT_IMPROVEMENT;
-  };
-
-  const chartData = {
-    labels: ['Grammar', 'Brevity', 'Impact', 'Sections'],
-    datasets: [
-      {
-        label: 'Score',
-        data: [
-          categories.grammar,
-          categories.brevity,
-          categories.impact,
-          categories.sections,
-        ],
-        backgroundColor: isDarkMode
-          ? ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
-          : ['#60a5fa', '#34d399', '#fbbf24', '#a78bfa'],
-        borderColor: isDarkMode
-          ? ['#1d4ed8', '#047857', '#d97706', '#7c3aed']
-          : ['#2563eb', '#059669', '#f59e0b', '#8b5cf6'],
-        borderWidth: 2,
-        borderRadius: 6,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: {
-          color: isDarkMode ? '#e5e7eb' : '#374151',
-        },
-      },
-      x: {
-        ticks: {
-          color: isDarkMode ? '#e5e7eb' : '#374151',
-        },
-      },
+  // AI fetch — sends current form state so AI sees unsaved edits
+  const runAiFetch = useCallback(
+    async (text: string) => {
+      if (!resumeId) {
+        setAiError('Save your resume first to get AI tips.');
+        return;
+      }
+      setAiLoading(true);
+      setAiError(null);
+      setAiTips(null);
+      try {
+        setAiTips(await fetchAiTips(resumeId, text));
+      } catch (err: unknown) {
+        const axiosMsg: string =
+          (err as any)?.response?.data?.message ||
+          (err instanceof Error ? err.message : 'Failed to get AI tips.');
+        if (
+          axiosMsg.includes('invalid or expired') ||
+          axiosMsg.includes('INVALID_API_KEY')
+        ) {
+          setAiError(
+            'Gemini API key is invalid or expired. Ask your admin to update GEMINI_API_KEY on the server.',
+          );
+        } else if (
+          axiosMsg.includes('not configured') ||
+          axiosMsg.includes('SERVICE_UNAVAILABLE')
+        ) {
+          setAiError('AI service is not configured on the server.');
+        } else if (
+          axiosMsg.includes('429') ||
+          axiosMsg.includes('rate') ||
+          axiosMsg.includes('RATE_LIMITED')
+        ) {
+          setAiError('AI is rate-limited. Wait 30 seconds and try again.');
+        } else {
+          setAiError(axiosMsg);
+        }
+      } finally {
+        setAiLoading(false);
+      }
     },
-    plugins: {
-      legend: {
-        labels: {
-          color: isDarkMode ? '#e5e7eb' : '#374151',
-        },
-      },
-      tooltip: {
-        backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-        titleColor: isDarkMode ? '#ffffff' : '#000000',
-        bodyColor: isDarkMode ? '#ffffff' : '#000000',
-        borderColor: isDarkMode ? '#374151' : '#d1d5db',
-        borderWidth: 1,
-      },
-    },
-  };
+    [resumeId],
+  );
+
+  const handleGetAiTips = useCallback(
+    () => runAiFetch(resumeText),
+    [runAiFetch, resumeText],
+  );
+
+  // Refresh: re-score immediately + re-fetch AI tips
+  const handleRefresh = useCallback(() => {
+    if (resumeText?.trim()) {
+      try {
+        setScores(scoreResume(resumeText));
+      } catch {
+        /* keep existing */
+      }
+    }
+    if (resumeId) runAiFetch(resumeText);
+  }, [runAiFetch, resumeText, resumeId]);
+
+  if (!scores) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Gauge className="h-14 w-14 text-muted-foreground/30 mb-4" />
+        <p className="text-sm text-muted-foreground max-w-xs">
+          Add content to your resume to see your ATS score.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 sm:p-8">
-      <Card className="w-full max-w-4xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl sm:text-3xl flex items-center gap-2 justify-center">
-            <Gauge className="h-6 w-6" /> ATS Score
+    <div className="space-y-4">
+      {/* ── Rule-based Score Card ── */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Gauge className="h-5 w-5" /> ATS Score
+              </CardTitle>
+              <CardDescription className="mt-0.5">
+                {name ? `${name}'s resume` : 'Resume analysis'}
+              </CardDescription>
+            </div>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={aiLoading}
+              title="Re-check score and refresh AI tips"
+              className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {aiLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5" />
+              )}
+              {aiLoading ? 'Analyzing…' : 'Refresh'}
+            </button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-5">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <ScoreRing
+              value={scores.overallScore}
+              isBaseline={scores.isBaseline}
+            />
+            <div className="flex-1 space-y-3 w-full">
+              <ScoreBar
+                label="Formatting & Structure"
+                score={scores.categories.formatting.score}
+                feedback={scores.categories.formatting.feedback}
+              />
+              <ScoreBar
+                label="Content Quality"
+                score={scores.categories.contentQuality.score}
+                feedback={scores.categories.contentQuality.feedback}
+              />
+              <ScoreBar
+                label="Impact & Achievements"
+                score={scores.categories.impact.score}
+                feedback={scores.categories.impact.feedback}
+              />
+              <ScoreBar
+                label="Section Completeness"
+                score={scores.categories.completeness.score}
+                feedback={scores.categories.completeness.feedback}
+              />
+              <ScoreBar
+                label="Keyword Density"
+                score={scores.categories.keywordDensity.score}
+                feedback={scores.categories.keywordDensity.feedback}
+              />
+            </div>
+          </div>
+
+          {scores.isBaseline && (
+            <p className="text-xs text-center text-muted-foreground">
+              Structure looks good. To break 80+, add quantified achievements
+              and weave your skills into job descriptions.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── AI Tips Card ── */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-blue-500" /> AI Tips
           </CardTitle>
           <CardDescription>
-            {name
-              ? `${name}'s resume analysis`
-              : 'Analyze your resume quality and structure'}
+            {resumeId
+              ? 'Get specific feedback powered by Gemini AI based on your current edits.'
+              : 'Save your resume first to unlock AI tips.'}
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6">
-          {score === null ? (
-            <div className="flex flex-col items-center justify-center py-10">
-              <div className="h-20 w-20 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                <ClipboardList className="h-10 w-10" />
-              </div>
-              <p className="mt-4 text-sm text-muted-foreground max-w-md text-center">
-                Click Analyze to get grammar, brevity, impact, and section
-                completeness scores. Optionally provide keywords to check for
-                job match.
-              </p>
+        <CardContent className="space-y-4">
+          {aiError && (
+            <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/8 p-3 text-xs text-destructive">
+              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>{aiError}</span>
             </div>
-          ) : (
-            <>
-              <div className="flex flex-col items-center">
-                <CircleProgress value={score} />
-                <p className="mt-3 text-base sm:text-lg">
-                  Your resume scored{' '}
-                  <span className="font-semibold">{score} / 100</span>
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {getScoreMessage(score)}
-                </p>
-                {keywordInfo.total > 0 && (
-                  <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 mt-2">
-                    Keywords matched: {keywordInfo.matches}/{keywordInfo.total}
+          )}
+
+          {aiLoading && (
+            <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Gemini is analyzing your current resume…
+            </div>
+          )}
+
+          {aiTips && !aiLoading && (
+            <div className="space-y-4">
+              {aiTips.strengths.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-green-700 dark:text-green-400 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Strengths
                   </p>
-                )}
-              </div>
+                  {aiTips.strengths.map((s, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-2 rounded bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 px-3 py-1.5"
+                    >
+                      <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                      <span className="text-xs text-green-800 dark:text-green-300">
+                        {s}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="rounded-md border p-3 text-center">
-                  <div className="text-xs text-muted-foreground">Grammar</div>
-                  <div className="text-lg font-semibold">
-                    {categories.grammar}
-                  </div>
+              {aiTips.improvements.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-400 flex items-center gap-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5" /> Improvements
+                  </p>
+                  {aiTips.improvements.map((imp, i) => (
+                    <div key={i} className="rounded border px-3 py-2 space-y-1">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="h-3 w-3 text-yellow-500 mt-0.5 shrink-0" />
+                        <span className="text-xs font-medium">{imp.issue}</span>
+                      </div>
+                      <div className="flex items-start gap-2 ml-5">
+                        <Lightbulb className="h-3 w-3 text-blue-500 mt-0.5 shrink-0" />
+                        <span className="text-xs text-muted-foreground">
+                          {imp.fix}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="rounded-md border p-3 text-center">
-                  <div className="text-xs text-muted-foreground">Brevity</div>
-                  <div className="text-lg font-semibold">
-                    {categories.brevity}
-                  </div>
-                </div>
-                <div className="rounded-md border p-3 text-center">
-                  <div className="text-xs text-muted-foreground">Impact</div>
-                  <div className="text-lg font-semibold">
-                    {categories.impact}
-                  </div>
-                </div>
-                <div className="rounded-md border p-3 text-center">
-                  <div className="text-xs text-muted-foreground">Sections</div>
-                  <div className="text-lg font-semibold">
-                    {categories.sections}
-                  </div>
-                </div>
-              </div>
+              )}
 
-              <div className="w-full pt-2">
-                <div className="w-full h-66 flex items-center justify-center">
-                  <Bar data={chartData} options={chartOptions} />
+              {aiTips.suggestedKeywords.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                    <Tag className="h-3.5 w-3.5" /> Suggested Keywords
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {aiTips.suggestedKeywords.map((kw, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center rounded-full border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300"
+                      >
+                        + {kw}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </>
+              )}
+            </div>
           )}
         </CardContent>
 
-        <CardFooter className="flex justify-center gap-3">
-          {score === null ? (
-            <Button onClick={handleAnalyzeResume} className="">
-              <Sparkles className="mr-2 h-4 w-4" /> Analyze Resume
-            </Button>
-          ) : (
-            <Button onClick={handleAnalyzeResume} variant="outline">
-              <Sparkles className="mr-2 h-4 w-4" /> Analyze Again
-            </Button>
-          )}
+        <CardFooter>
+          <Button
+            onClick={handleGetAiTips}
+            disabled={aiLoading || !resumeId}
+            variant={aiTips ? 'outline' : 'default'}
+            size="sm"
+            className="w-full"
+          >
+            {aiLoading ? (
+              <>
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> Analyzing…
+              </>
+            ) : aiTips ? (
+              <>
+                <Sparkles className="mr-2 h-3.5 w-3.5" /> Refresh AI Tips
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-3.5 w-3.5" /> Get AI Tips
+              </>
+            )}
+          </Button>
         </CardFooter>
       </Card>
     </div>
