@@ -657,9 +657,11 @@ export default function ResumeEditor({
         const safeSchemes = ['https:', 'http:', 'mailto:'];
         if (
           !href ||
-          href === '#' ||
-          href.startsWith('tel:') ||
-          !safeSchemes.some((scheme) => href.startsWith(scheme))
+          href.trim() === '#' ||
+          href.trim().toLowerCase().startsWith('tel:') ||
+          !safeSchemes.some((scheme) =>
+            href.trim().toLowerCase().startsWith(scheme),
+          )
         )
           return;
         const rect = anchor.getBoundingClientRect();

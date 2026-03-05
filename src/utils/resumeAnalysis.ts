@@ -705,12 +705,20 @@ export async function fetchAiTips(
   // instead of stale database content
   if (currentResumeText) {
     try {
-      const parsed = JSON.parse(currentResumeText) as ParsedResume;
+      const parsed = parseInput(currentResumeText);
+      const primaryPerson = parsed.personalData[0];
+      const initials = [
+        primaryPerson?.firstName?.[0],
+        primaryPerson?.lastName?.[0],
+      ]
+        .filter(Boolean)
+        .join('')
+        .toUpperCase();
       body.resumeSnapshot = {
-        personalInfo: parsed.personalData?.[0]
+        personalInfo: primaryPerson
           ? {
-              firstName: parsed.personalData[0].firstName || '',
-              lastName: parsed.personalData[0].lastName || '',
+              initials: initials || undefined,
+              country: primaryPerson.country || undefined,
             }
           : undefined,
         workExperience: (parsed.workExperienceData || []).map((w) => ({
