@@ -262,7 +262,9 @@ function scoreFormatting(r: ParsedResume): CategoryScore {
     .toLowerCase();
 
   const firstPersonMatches = (
-    descriptions.match(/\b(i|me|my|myself)\b/gi) || []
+    descriptions.match(
+      /\b(i(?:'m| am)?|me|my|mine|myself|we|us|our|ours|ourselves)\b/gi,
+    ) || []
   ).length;
   if (firstPersonMatches > 0) {
     score -= Math.min(25, firstPersonMatches * 5);
@@ -462,10 +464,9 @@ function scoreImpact(r: ParsedResume): CategoryScore {
   }
   if (totalQuantified < 2) {
     issues.push(
-      'No quantified achievements found. Add numbers, percentages, or scale (e.g. "Reduced load time by 40%").',
+      'Few or no quantified achievements found. Add numbers, percentages, or scale (e.g. "Reduced load time by 40%").',
     );
   }
-
   if (issues.length === 0) {
     return {
       score: clamp(score),

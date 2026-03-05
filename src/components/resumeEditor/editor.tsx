@@ -149,11 +149,6 @@ export default function ResumeEditor({
     },
   ]);
 
-  interface Skill {
-    skillName: string;
-    _id?: string;
-    name?: string;
-  }
   const [skillData, setSkillData] = useState<Skill[]>([]);
   const [skillOptions, setSkillOptions] = useState<
     Array<{ _id?: string; name: string }>
@@ -239,10 +234,14 @@ export default function ResumeEditor({
     if (resumeLoadedRef.current) return;
     if (!initialResume) return;
 
+    let cancelled = false;
+
     const loadResumeData = async () => {
       const resume = initialResume;
 
       try {
+        if (cancelled) return;
+
         setPersonalData([
           {
             firstName: resume.personalInfo?.firstName ?? '',
@@ -298,6 +297,8 @@ export default function ResumeEditor({
           }
         }
 
+        if (cancelled) return;
+
         // Map all skills, using the skill map for lookups
         const mappedSkills = (resume.skills || [])
           .map((skill) => {
@@ -346,14 +347,21 @@ export default function ResumeEditor({
         setSummaryData(
           resume.professionalSummary ? [resume.professionalSummary] : [],
         );
-        resumeLoadedRef.current = true;
+        if (!cancelled) {
+          resumeLoadedRef.current = true;
+        }
       } catch (error) {
         console.error('Error loading resume data:', error);
-        resumeLoadedRef.current = false;
+        if (!cancelled) {
+          resumeLoadedRef.current = false;
+        }
       }
     };
 
     loadResumeData();
+    return () => {
+      cancelled = true;
+    };
   }, [initialResume, skillOptions]);
 
   // PDF Optimization
@@ -806,7 +814,9 @@ export default function ResumeEditor({
                         </button>
                         {i !== stepLabels.length - 1 && (
                           <span
-                            className={`h-px w-4 sm:w-8 ${isDone ? 'bg-primary' : 'bg-muted'}`}
+                            className={`h-px w-4 sm:w-8 ${
+                              isDone ? 'bg-primary' : 'bg-muted'
+                            }`}
                           />
                         )}
                       </div>

@@ -41,11 +41,11 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
 
   const handleInputChange = (index: number, value: string) => {
     const words = value.trim().split(/\s+/).filter(Boolean);
-
-    if (words.length > WORD_LIMIT) return;
+    const truncated =
+      words.length > WORD_LIMIT ? words.slice(0, WORD_LIMIT).join(' ') : value;
 
     const updatedSummaryData = [...summaryData];
-    updatedSummaryData[index] = value;
+    updatedSummaryData[index] = truncated;
     setSummaryData(updatedSummaryData);
   };
 
