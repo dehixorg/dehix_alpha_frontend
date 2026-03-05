@@ -15,6 +15,7 @@ import {
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 import VerifyDialog from './verifyDialog';
+import MeetingDialog from '@/components/ui/meetingDialog';
 
 import {
   Card,
@@ -84,6 +85,7 @@ const SkillDomainForm: React.FC = () => {
   const [visibility, setVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
+  const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -564,6 +566,7 @@ const SkillDomainForm: React.FC = () => {
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`Schedule interview for ${r.label}`}
+                                  onClick={() => setMeetingDialogOpen(true)}
                                 >
                                   <VideoIcon className="h-4 w-4" />
                                 </Button>
@@ -701,6 +704,10 @@ const SkillDomainForm: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      <MeetingDialog
+        isOpen={meetingDialogOpen}
+        onClose={() => setMeetingDialogOpen(false)}
+      />
     </section>
   );
 };
