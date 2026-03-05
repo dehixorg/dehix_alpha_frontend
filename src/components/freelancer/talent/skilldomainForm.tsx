@@ -15,8 +15,8 @@ import {
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 import VerifyDialog from './verifyDialog';
-import MeetingDialog from '@/components/ui/meetingDialog';
 
+import MeetingDialog from '@/components/ui/meetingDialog';
 import {
   Card,
   CardContent,
