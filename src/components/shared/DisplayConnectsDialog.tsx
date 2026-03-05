@@ -374,7 +374,7 @@ export const DisplayConnectsDialog = React.forwardRef<
                               </div>
                             </TableCell>
                             <TableCell className="text-right text-sm text-muted-foreground">
-                              {formatDate(item.dateTime)}
+                              {formatDate(item.createdAt)}
                             </TableCell>
                           </TableRow>
                         ))
@@ -406,7 +406,7 @@ export const DisplayConnectsDialog = React.forwardRef<
           <div className="p-3 border-t bg-muted/20 flex justify-between items-center">
             <p className="text-xs text-muted-foreground">
               Showing {filteredData.length} request
-              {filteredData.length !== 1 ? 's' : ''}
+              {filteredData.length > 1 ? 's' : ''}
             </p>
             <Button
               variant="ghost"

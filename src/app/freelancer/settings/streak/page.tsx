@@ -83,7 +83,7 @@ interface StreakRewardResponse {
     transactionId: string;
     baseAmount: number;
     rewardMultiplier: number;
-    levelPriority: number;
+    levelNumber: number;
   };
 }
 
@@ -317,32 +317,111 @@ export default function StreakPage() {
           <div className="flex items-center justify-between space-y-2">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                Login Streak
+                <Skeleton className="h-9 w-48" />
               </h1>
               <p className="text-muted-foreground">
-                Build your streak by logging in daily and earn connect rewards.
+                <Skeleton className="h-5 w-80 mt-2" />
               </p>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-[104px]" />
-            <Skeleton className="h-[104px]" />
-            <Skeleton className="h-[104px]" />
-          </div>
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold tracking-tight">
+                <Skeleton className="h-6 w-24" />
+              </h2>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Skeleton className="h-[104px]" />
+              <Skeleton className="h-[104px]" />
+              <Skeleton className="h-[104px]" />
+            </div>
+          </section>
 
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-40" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
-                <Skeleton className="h-28" />
-                <Skeleton className="h-28" />
-                <Skeleton className="h-28" />
-              </div>
-            </CardContent>
-          </Card>
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold tracking-tight">
+                <Skeleton className="h-6 w-32" />
+              </h2>
+            </div>
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <Skeleton className="h-6 w-40" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <Skeleton className="h-5 w-20" />
+                      <Skeleton className="h-6 w-32 mt-1" />
+                    </div>
+                    <Skeleton className="h-6 w-20" />
+                  </div>
+                  <Skeleton className="h-2 w-full" />
+                  <Skeleton className="h-4 w-24 mt-1" />
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold tracking-tight">
+                <Skeleton className="h-6 w-20" />
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[...Array(8)].map((_, i) => (
+                <Card key={i} className="relative overflow-hidden">
+                  <CardHeader className="space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <CardTitle className="text-base truncate flex items-center gap-2">
+                          <Skeleton className="h-8 w-8 rounded" />
+                          <Skeleton className="h-6 w-32" />
+                        </CardTitle>
+                        <Skeleton className="h-4 w-16 mt-1" />
+                      </div>
+                      <Skeleton className="h-6 w-16" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-2 w-full" />
+                      <div className="flex items-center justify-between text-xs">
+                        <Skeleton className="h-3 w-20" />
+                        <Skeleton className="h-3 w-8" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-9 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold tracking-tight">
+                <Skeleton className="h-6 w-16" />
+              </h2>
+            </div>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="rounded-lg border bg-muted/30 p-4">
+                      <Skeleton className="h-5 w-24 mb-2" />
+                      <Skeleton className="h-4 w-full" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
         </div>
       </FreelancerSettingsLayout>
     );
