@@ -604,11 +604,58 @@ export default function LevelsAndBadgesPage() {
         contentClassName="md:pl-[50px] flex-1 flex flex-col min-h-screen"
         containerClassName="flex min-h-screen w-full bg-background"
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto space-y-8">
           <div className="space-y-4">
             <Skeleton className="h-10 w-64" />
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-6 w-96" />
+          </div>
+
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2 mt-2" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-4 w-full mt-2" />
+              <Skeleton className="h-4 w-5/6 mt-2" />
+              <Skeleton className="h-4 w-4/6 mt-2" />
+            </CardContent>
+          </Card>
+
+          <div className="space-y-4">
+            <Skeleton className="h-9 w-32" />
+            <div className="space-y-4 relative">
+              <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border" />
+
               {[...Array(3)].map((_, i) => (
+                <div key={i} className="relative pl-12">
+                  <div className="absolute left-0 top-4 flex h-10 w-10 items-center justify-center rounded-full border-4 border-background bg-muted" />
+
+                  <Card>
+                    <CardHeader className="space-y-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <Skeleton className="h-6 w-48" />
+                          <Skeleton className="h-4 w-32 mt-2" />
+                        </div>
+                        <Skeleton className="h-6 w-20" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                      <Skeleton className="h-4 w-4/6" />
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Skeleton className="h-9 w-32" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[...Array(6)].map((_, i) => (
                 <Card key={i}>
                   <CardHeader>
                     <Skeleton className="h-6 w-3/4" />
@@ -623,13 +670,6 @@ export default function LevelsAndBadgesPage() {
               ))}
             </div>
           </div>
-          <Skeleton className="h-9 w-32" />
-        </div>
-        <Skeleton className="h-28 w-full" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-36 w-full" />
-          <Skeleton className="h-36 w-full" />
-          <Skeleton className="h-36 w-full" />
         </div>
       </FreelancerSettingsLayout>
     );
