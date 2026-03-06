@@ -174,10 +174,56 @@ export default function ResumeEditor({
   const [savedResumeId, setSavedResumeId] = useState<string | undefined>(
     initialResume?._id,
   );
-
   // Sync savedResumeId whenever the editor is reused for a different resume
   useEffect(() => {
     setSavedResumeId(initialResume?._id);
+    // Reset load guard when switching resumes
+    resumeLoadedRef.current = false;
+
+    if (!initialResume) {
+      // Clear data if no resume is provided (New create flow)
+      setPersonalData([
+        {
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phoneNumber: '123-456-7890',
+          city: 'New York',
+          country: 'USA',
+          github: 'github.com/john',
+          linkedin: 'linkedin.com/in/john',
+        },
+      ]);
+      setWorkExperienceData([
+        {
+          jobTitle: 'Software Engineer',
+          company: 'ABC Corp',
+          startDate: '2020-01-01',
+          endDate: '2023-01-01',
+          description: 'Worked on web applications.',
+        },
+      ]);
+      setEducationData([
+        {
+          degree: 'B.Sc. Computer Science',
+          school: 'XYZ University',
+          startDate: '2016-01-01',
+          endDate: '2020-01-01',
+        },
+      ]);
+      setSkillData([]);
+      setAchievementData([{ achievementName: 'Won Hackathon 2022' }]);
+      setProjectData([
+        {
+          title: 'Portfolio Website',
+          description: 'Built a personal portfolio website.',
+        },
+      ]);
+      setSummaryData([
+        'Motivated software engineer with experience in web development.',
+      ]);
+      setSelectedTemplate('ResumePreview2');
+    }
   }, [initialResume?._id]);
 
   const resumeText = useMemo(
@@ -222,12 +268,6 @@ export default function ResumeEditor({
   // Track whether initial resume data has been loaded to avoid re-running
   // when skillOptions changes after the first successful load.
   const resumeLoadedRef = useRef(false);
-
-  // Populate data from savedResume or initialResume
-  useEffect(() => {
-    // Reset load guard when switching resumes
-    resumeLoadedRef.current = false;
-  }, [initialResume?._id]);
 
   useEffect(() => {
     // Only load once per initialResume — don't re-run when skillOptions changes
@@ -803,12 +843,13 @@ export default function ResumeEditor({
                         <button
                           type="button"
                           onClick={() => setCurrentStep(i)}
-                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${isActive
+                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            isActive
                               ? 'bg-primary text-primary-foreground border-primary'
                               : isDone
                                 ? 'bg-secondary text-secondary-foreground border-secondary'
                                 : 'bg-background text-foreground/80 border-muted'
-                            }`}
+                          }`}
                           aria-current={isActive ? 'step' : undefined}
                         >
                           <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-[10px]">
@@ -818,8 +859,9 @@ export default function ResumeEditor({
                         </button>
                         {i !== stepLabels.length - 1 && (
                           <span
-                            className={`h-px w-4 sm:w-8 ${isDone ? 'bg-primary' : 'bg-muted'
-                              }`}
+                            className={`h-px w-4 sm:w-8 ${
+                              isDone ? 'bg-primary' : 'bg-muted'
+                            }`}
                           />
                         )}
                       </div>
