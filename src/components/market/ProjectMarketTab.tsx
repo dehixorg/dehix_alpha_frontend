@@ -190,11 +190,11 @@ const ProjectMarketTab: React.FC = () => {
     const fetchFilterOptions = async () => {
       try {
         // setIsLoading(true);
-        const skillsRes = await axiosInstance.get('/skills');
+        const skillsRes = await axiosInstance.get('/skills/all');
         setSkills(skillsRes.data.data.map((s: any) => s.label));
-        const domainsRes = await axiosInstance.get('/domain');
+        const domainsRes = await axiosInstance.get('/domain/all');
         setDomains(domainsRes.data.data.map((d: any) => d.label));
-        const projDomRes = await axiosInstance.get('/projectdomain');
+        const projDomRes = await axiosInstance.get('/projectdomain/all');
         setProjectDomains(projDomRes.data.data.map((pd: any) => pd.label));
       } catch (err) {
         console.error('Error loading filters', err);
