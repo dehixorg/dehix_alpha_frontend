@@ -1,10 +1,19 @@
 'use client';
 import { useSelector } from 'react-redux';
+import dynamic from 'next/dynamic';
 
 import FreelancerSettingsLayout from '../../../../components/layout/FreelancerSettingsLayout';
 
 import { RootState } from '@/lib/store';
-import KYCForm from '@/components/form/kycFreelancerForm';
+
+const KYCForm = dynamic(() => import('@/components/form/kycFreelancerForm'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center p-8">
+      Loading KYC Form...
+    </div>
+  ),
+});
 
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);

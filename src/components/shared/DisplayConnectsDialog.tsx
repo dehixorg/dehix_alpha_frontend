@@ -69,16 +69,13 @@ export const DisplayConnectsDialog = React.forwardRef<
 
       const newData = (response.data.data || []) as TokenRequest[];
 
-      // Get the set of processed request IDs from localStorage
       const processedRequests = new Set(
         JSON.parse(localStorage.getItem('PROCESSED_REQUESTS') || '[]'),
       );
 
       const newApprovedRequests: TokenRequest[] = [];
 
-      // Process new data - identify approved requests that haven't been processed yet
       newData.forEach((newItem: TokenRequest) => {
-        // Only process approved requests that haven't been processed yet
         if (
           newItem.status === 'APPROVED' &&
           !processedRequests.has(newItem._id)
@@ -87,7 +84,6 @@ export const DisplayConnectsDialog = React.forwardRef<
         }
       });
 
-      // Update processed requests in localStorage if there are new ones
       setData(newData);
       setFilteredData(newData);
 
@@ -95,7 +91,7 @@ export const DisplayConnectsDialog = React.forwardRef<
         try {
           let success = false;
           if (userType) {
-            const balance = await fetchAndUpdateConnects(userType);
+            const balance = await fetchAndUpdateConnects(userType, true);
             success = balance !== null;
           } else {
             const totalNewConnects = newApprovedRequests.reduce(
@@ -103,7 +99,6 @@ export const DisplayConnectsDialog = React.forwardRef<
               0,
             );
 
-            // CAS retry logic for local storage update
             let retries = 3;
             let updated = false;
 
@@ -112,8 +107,6 @@ export const DisplayConnectsDialog = React.forwardRef<
               const currentConnects = parseInt(currentStr, 10);
               const newTotal = currentConnects + totalNewConnects;
 
-              // Optimistic update attempt
-              // Check if value changed during computation (simple collision check)
               if (
                 localStorage.getItem('DHX_CONNECTS') ===
                 (currentStr === '0' && !localStorage.getItem('DHX_CONNECTS')
@@ -124,26 +117,19 @@ export const DisplayConnectsDialog = React.forwardRef<
                 updated = true;
               } else {
                 retries--;
-                await new Promise((r) => setTimeout(r, 50)); // backoff
+                await new Promise((r) => setTimeout(r, 50));
               }
 
-              // Fallback if strict CAS is not possible with just localStorage:
-              // Just verify we are writing fresh data.
-              // Since we don't have atomic hardware CAS for localStorage,
-              // we just minimize the window. The above check is best-effort.
               if (!updated && retries === 0) {
-                // Final attempt force write
                 updateConnectsBalance(currentConnects + totalNewConnects);
                 updated = true;
               }
             }
 
-            // Wait for event dispatch propagation if needed, though updateConnectsBalance is sync-like for localStorage
             await new Promise((resolve) => setTimeout(resolve, 0));
             success = true;
           }
 
-          // Only update PROCESSED_REQUESTS after fetch succeeds
           if (success) {
             const updatedProcessedRequests = new Set(processedRequests);
             newApprovedRequests.forEach((req) => {
@@ -302,6 +288,25 @@ export const DisplayConnectsDialog = React.forwardRef<
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-8"
+                  onClick={fetchConnectsRequest}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      Refreshing
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="mr-1 h-3 w-3" />
+                      Refresh
+                    </>
+                  )}
+                </Button>
                 <RequestConnectsDialog userId={userId} />
               </div>
             </div>

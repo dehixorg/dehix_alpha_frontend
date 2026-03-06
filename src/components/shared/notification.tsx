@@ -129,7 +129,7 @@ export const NotificationButton = () => {
       // Only call fetchAndUpdateConnects once for new connects-approved notifications
       if (needsRefresh && newConnectsApprovedIds.length > 0) {
         // IDs are already tracked in processedNotificationIds by the loop above
-        fetchAndUpdateConnects(userType).catch(() => {});
+        fetchAndUpdateConnects(userType, true).catch(() => {});
       }
     },
     [user?.uid, userType],
