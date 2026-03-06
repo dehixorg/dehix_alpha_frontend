@@ -653,23 +653,26 @@ export default function ResumeEditor({
       }> = [];
       element.querySelectorAll('a[href]').forEach((anchor) => {
         const href = anchor.getAttribute('href');
+        const normalizedHref = href?.trim();
         // skip empty, fragment, and unsafe links
         const safeSchemes = ['https:', 'http:', 'mailto:'];
-        if (
-          !href ||
-          href.trim() === '#' ||
-          href.trim().toLowerCase().startsWith('tel:') ||
-          !safeSchemes.some((scheme) =>
-            href.trim().toLowerCase().startsWith(scheme),
-          )
-        )
+        if (!normalizedHref || normalizedHref === '#') return;
+        let protocol = '';
+        try {
+          protocol = new URL(
+            normalizedHref,
+            window.location.origin,
+          ).protocol.toLowerCase();
+        } catch {
           return;
+        }
+        if (!safeSchemes.includes(protocol)) return;
         const rect = anchor.getBoundingClientRect();
         const x = xOffset + (rect.left - elemRect.left) * domToMm;
         const yAbs = yOffset + (rect.top - elemRect.top) * domToMm;
         const w = rect.width * domToMm;
         const h = rect.height * domToMm;
-        links.push({ x, yAbs, w, h, href });
+        links.push({ x, yAbs, w, h, href: normalizedHref });
       });
 
       if (imgPdfHeight > pdfHeight) {
@@ -800,13 +803,12 @@ export default function ResumeEditor({
                         <button
                           type="button"
                           onClick={() => setCurrentStep(i)}
-                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                            isActive
+                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${isActive
                               ? 'bg-primary text-primary-foreground border-primary'
                               : isDone
                                 ? 'bg-secondary text-secondary-foreground border-secondary'
                                 : 'bg-background text-foreground/80 border-muted'
-                          }`}
+                            }`}
                           aria-current={isActive ? 'step' : undefined}
                         >
                           <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-[10px]">
@@ -816,9 +818,8 @@ export default function ResumeEditor({
                         </button>
                         {i !== stepLabels.length - 1 && (
                           <span
-                            className={`h-px w-4 sm:w-8 ${
-                              isDone ? 'bg-primary' : 'bg-muted'
-                            }`}
+                            className={`h-px w-4 sm:w-8 ${isDone ? 'bg-primary' : 'bg-muted'
+                              }`}
                           />
                         )}
                       </div>
