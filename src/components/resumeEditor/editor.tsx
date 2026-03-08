@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -149,11 +149,6 @@ export default function ResumeEditor({
     },
   ]);
 
-  interface Skill {
-    skillName: string;
-    _id?: string;
-    name?: string;
-  }
   const [skillData, setSkillData] = useState<Skill[]>([]);
   const [skillOptions, setSkillOptions] = useState<
     Array<{ _id?: string; name: string }>
@@ -176,6 +171,82 @@ export default function ResumeEditor({
   const [currentStep, setCurrentStep] = useState(0);
   const [showAtsScore, setShowAtsScore] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedResumeId, setSavedResumeId] = useState<string | undefined>(
+    initialResume?._id,
+  );
+  // Sync savedResumeId whenever the editor is reused for a different resume
+  useEffect(() => {
+    setSavedResumeId(initialResume?._id);
+    // Reset load guard when switching resumes
+    resumeLoadedRef.current = false;
+
+    if (!initialResume) {
+      // Clear data if no resume is provided (New create flow)
+      setPersonalData([
+        {
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phoneNumber: '123-456-7890',
+          city: 'New York',
+          country: 'USA',
+          github: 'github.com/john',
+          linkedin: 'linkedin.com/in/john',
+        },
+      ]);
+      setWorkExperienceData([
+        {
+          jobTitle: 'Software Engineer',
+          company: 'ABC Corp',
+          startDate: '2020-01-01',
+          endDate: '2023-01-01',
+          description: 'Worked on web applications.',
+        },
+      ]);
+      setEducationData([
+        {
+          degree: 'B.Sc. Computer Science',
+          school: 'XYZ University',
+          startDate: '2016-01-01',
+          endDate: '2020-01-01',
+        },
+      ]);
+      setSkillData([]);
+      setAchievementData([{ achievementName: 'Won Hackathon 2022' }]);
+      setProjectData([
+        {
+          title: 'Portfolio Website',
+          description: 'Built a personal portfolio website.',
+        },
+      ]);
+      setSummaryData([
+        'Motivated software engineer with experience in web development.',
+      ]);
+      setSelectedTemplate('ResumePreview2');
+    }
+  }, [initialResume?._id]);
+
+  const resumeText = useMemo(
+    () =>
+      JSON.stringify({
+        personalData,
+        workExperienceData,
+        educationData,
+        skills: skillData,
+        achievements: achievementData,
+        summaryData,
+        projectData,
+      }),
+    [
+      personalData,
+      workExperienceData,
+      educationData,
+      skillData,
+      achievementData,
+      summaryData,
+      projectData,
+    ],
+  );
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -194,52 +265,52 @@ export default function ResumeEditor({
     fetchSkills();
   }, []);
 
-  // Populate data from savedResume or initialResume
+  // Track whether initial resume data has been loaded to avoid re-running
+  // when skillOptions changes after the first successful load.
+  const resumeLoadedRef = useRef(false);
+
   useEffect(() => {
+    // Only load once per initialResume — don't re-run when skillOptions changes
+    if (resumeLoadedRef.current) return;
+    if (!initialResume) return;
+
+    let cancelled = false;
+
     const loadResumeData = async () => {
       const resume = initialResume;
-      if (!resume) return;
 
       try {
+        if (cancelled) return;
+
         setPersonalData([
           {
-            firstName: resume.personalInfo?.firstName || 'John',
-            lastName: resume.personalInfo?.lastName || 'Doe',
-            email: resume.personalInfo?.email || '123.doe@example.com',
-            phoneNumber: resume.personalInfo?.phone || '123-456-7890',
-            city: resume.personalInfo?.city || 'New York',
-            country: resume.personalInfo?.country || 'USA',
-            github: resume.personalInfo?.github || 'github.com/john',
-            linkedin: resume.personalInfo?.linkedin || 'linkedin.com/in/john',
+            firstName: resume.personalInfo?.firstName ?? '',
+            lastName: resume.personalInfo?.lastName ?? '',
+            email: resume.personalInfo?.email ?? '',
+            phoneNumber: resume.personalInfo?.phone ?? '',
+            city: resume.personalInfo?.city ?? '',
+            country: resume.personalInfo?.country ?? '',
+            github: resume.personalInfo?.github ?? '',
+            linkedin: resume.personalInfo?.linkedin ?? '',
           },
         ]);
 
         setWorkExperienceData(resume.workExperience || []);
         setEducationData(resume.education || []);
-        // First, wait for skills to be loaded
-        await new Promise((resolve) => {
-          if (skillOptions.length > 0) resolve(true);
-          const interval = setInterval(() => {
-            if (skillOptions.length > 0) {
-              clearInterval(interval);
-              resolve(true);
-            }
-          }, 100);
-        });
 
-        // First, create a map of all available skills for quick lookup
+        // Create a map of all available skills for quick lookup
         const skillMap = new Map<string, Skill>();
         (skillOptions as SkillOption[]).forEach((skill) => {
           if (skill._id) {
             skillMap.set(skill._id, {
               ...skill,
-              name: skill.label, // Use label as name for display
-              skillName: skill.label, // For backward compatibility
+              name: skill.label || skill.name || '',
+              skillName: skill.label || skill.name || '',
             });
           }
         });
 
-        // First, get all skill IDs that are strings (not already mapped)
+        // Get all skill IDs that are strings (not already mapped)
         const skillIds = (resume.skills || []).filter(
           (s) => typeof s === 'string',
         );
@@ -247,18 +318,16 @@ export default function ResumeEditor({
         // If we have skill IDs to look up, fetch them in a batch
         if (skillIds.length > 0) {
           try {
-            // Fetch all skills in one request
             const response = await axiosInstance.get('/skills', {
               params: { ids: skillIds.join(',') },
             });
 
-            // Update the skill map with the fetched skills
             (response.data?.data || []).forEach((skill: SkillOption) => {
               if (skill?._id) {
                 const skillData: Skill = {
                   ...skill,
-                  name: skill.label, // Use label as the name since that's what's displayed
-                  skillName: skill.label, // For backward compatibility
+                  name: skill.label || skill.name || '',
+                  skillName: skill.label || skill.name || '',
                 };
                 skillMap.set(skill._id, skillData);
               }
@@ -268,10 +337,11 @@ export default function ResumeEditor({
           }
         }
 
+        if (cancelled) return;
+
         // Map all skills, using the skill map for lookups
         const mappedSkills = (resume.skills || [])
           .map((skill) => {
-            // If it's a string, it's an ID
             if (typeof skill === 'string') {
               return (
                 skillMap.get(skill) || {
@@ -283,18 +353,16 @@ export default function ResumeEditor({
               );
             }
 
-            // If it's an object with an ID, try to enhance it with data from the map
             if (skill?._id) {
               const mappedSkill = skillMap.get(skill._id);
               if (mappedSkill) {
                 return {
                   ...mappedSkill,
-                  ...skill, // Allow any provided fields to override
+                  ...skill,
                 };
               }
             }
 
-            // If it's an object without an ID, use it as-is but ensure required fields
             if (typeof skill === 'object') {
               const { _id, name, skillName, label, ...rest } = skill;
               return {
@@ -308,7 +376,7 @@ export default function ResumeEditor({
 
             return null;
           })
-          .filter((s): s is Skill => s !== null); // Remove null entries and ensure type
+          .filter((s): s is Skill => s !== null);
         setSkillData(mappedSkills);
         setAchievementData(
           resume.achievements?.map((ach) => ({
@@ -319,13 +387,21 @@ export default function ResumeEditor({
         setSummaryData(
           resume.professionalSummary ? [resume.professionalSummary] : [],
         );
-        setSelectedTemplate(resume.selectedTemplate || 'ResumePreview2');
+        if (!cancelled) {
+          resumeLoadedRef.current = true;
+        }
       } catch (error) {
         console.error('Error loading resume data:', error);
+        if (!cancelled) {
+          resumeLoadedRef.current = false;
+        }
       }
     };
 
     loadResumeData();
+    return () => {
+      cancelled = true;
+    };
   }, [initialResume, skillOptions]);
 
   // PDF Optimization
@@ -464,7 +540,11 @@ export default function ResumeEditor({
     try {
       const formatDateForBackend = (dateString: string) => {
         if (!dateString) return '';
-        return new Date(dateString).toISOString().split('T')[0];
+        // If already YYYY-MM-DD, return as-is to avoid timezone shift
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+        const d = new Date(dateString);
+        if (isNaN(d.getTime())) return '';
+        return d.toISOString().split('T')[0];
       };
       const resumeData = {
         userId: user.uid,
@@ -508,11 +588,14 @@ export default function ResumeEditor({
         status: 'active',
       };
 
-      if (initialResume?._id) {
-        await axiosInstance.put(`/resume/${initialResume._id}`, resumeData);
+      const existingId = initialResume?._id || savedResumeId;
+      if (existingId) {
+        await axiosInstance.put(`/resume/${existingId}`, resumeData);
         notifySuccess('Resume updated successfully!', 'Success');
       } else {
-        await axiosInstance.post('/resume', resumeData);
+        const res = await axiosInstance.post('/resume', resumeData);
+        const newId = res.data?.resume?._id;
+        if (newId) setSavedResumeId(newId);
         notifySuccess('Resume created successfully!', 'Success');
       }
     } catch (error) {
@@ -596,21 +679,40 @@ export default function ResumeEditor({
         'FAST',
       );
 
-      // Overlay real clickable links — scale DOM px → PDF mm
+      // Collect real clickable links — scale DOM px → PDF mm
       // canvas.width = element.offsetWidth * scale(3), ratio = pdfWidth/canvas.width
       // so: elementPx * scale * ratio = mm  →  elementPx * (canvas.width/element.offsetWidth) * ratio
       const domToMm = (canvas.width / element.offsetWidth) * ratio;
       const elemRect = element.getBoundingClientRect();
+      const links: Array<{
+        x: number;
+        yAbs: number;
+        w: number;
+        h: number;
+        href: string;
+      }> = [];
       element.querySelectorAll('a[href]').forEach((anchor) => {
         const href = anchor.getAttribute('href');
-        // skip empty, fragment, and phone links
-        if (!href || href === '#' || href.startsWith('tel:')) return;
+        const normalizedHref = href?.trim();
+        // skip empty, fragment, and unsafe links
+        const safeSchemes = ['https:', 'http:', 'mailto:'];
+        if (!normalizedHref || normalizedHref === '#') return;
+        let protocol = '';
+        try {
+          protocol = new URL(
+            normalizedHref,
+            window.location.origin,
+          ).protocol.toLowerCase();
+        } catch {
+          return;
+        }
+        if (!safeSchemes.includes(protocol)) return;
         const rect = anchor.getBoundingClientRect();
         const x = xOffset + (rect.left - elemRect.left) * domToMm;
-        const y = yOffset + (rect.top - elemRect.top) * domToMm;
+        const yAbs = yOffset + (rect.top - elemRect.top) * domToMm;
         const w = rect.width * domToMm;
         const h = rect.height * domToMm;
-        pdf.link(x, y, w, h, { url: href });
+        links.push({ x, yAbs, w, h, href: normalizedHref });
       });
 
       if (imgPdfHeight > pdfHeight) {
@@ -633,6 +735,22 @@ export default function ResumeEditor({
         }
       }
 
+      // Place each link on its correct PDF page
+      const pageHeightMm = pdfHeight;
+      const totalPages =
+        typeof (pdf as any).getNumberOfPages === 'function'
+          ? (pdf as any).getNumberOfPages()
+          : Math.max(1, Math.ceil(imgPdfHeight / pageHeightMm));
+      links.forEach((l) => {
+        const pageIndex = Math.max(0, Math.floor(l.yAbs / pageHeightMm));
+        const pageNumber = pageIndex + 1;
+        if (pageNumber > totalPages) return;
+        if (typeof (pdf as any).setPage === 'function')
+          (pdf as any).setPage(pageNumber);
+        const yLocal = l.yAbs - pageIndex * pageHeightMm;
+        pdf.link(l.x, yLocal, l.w, l.h, { url: l.href });
+      });
+
       pdf.save(
         `Resume-${personalData[0]?.firstName || ''}-${personalData[0]?.lastName || ''}-${new Date().toISOString().slice(0, 10)}.pdf`,
       );
@@ -647,13 +765,14 @@ export default function ResumeEditor({
 
   // Delete resume
   const handleDeleteResume = async () => {
-    if (!initialResume?._id) {
+    const deleteId = initialResume?._id || savedResumeId;
+    if (!deleteId) {
       notifyError('No resume to delete', 'Error');
       return;
     }
     setIsDeleting(true);
     try {
-      await axiosInstance.put(`/resume/${initialResume._id}`, {
+      await axiosInstance.put(`/resume/${deleteId}`, {
         status: 'inactive',
       });
       notifySuccess('Resume deleted successfully!', 'Success');
@@ -700,114 +819,110 @@ export default function ResumeEditor({
                 variant="secondary"
               >
                 {showAtsScore ? <Pencil /> : <Gauge />}
-                {showAtsScore ? 'Edit' : 'Check ATS Score'}
+                {showAtsScore ? 'Back to Edit' : 'Check ATS Score'}
               </Button>
             </div>
 
-            {showAtsScore ? (
+            {/* ATS Score — always mounted so it tracks edits live; hidden via CSS when not shown */}
+            <div className={showAtsScore ? 'block' : 'hidden'}>
               <AtsScore
                 name={`${personalData[0]?.firstName} ${personalData[0]?.lastName}`}
-                resumeText={JSON.stringify({
-                  personalData,
-                  workExperienceData,
-                  educationData,
-                  skills: skillData,
-                  achievements: achievementData,
-                  summaryData,
-                })}
-                jobKeywords={[]}
+                resumeText={resumeText}
+                resumeId={initialResume?._id || savedResumeId}
               />
-            ) : (
-              <>
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&_*::-webkit-scrollbar]:hidden">
-                    {stepLabels.map((label, i) => {
-                      const isActive = i === currentStep;
-                      const isDone = i < currentStep;
-                      return (
-                        <div key={label} className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setCurrentStep(i)}
-                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                              isActive
-                                ? 'bg-primary text-primary-foreground border-primary'
-                                : isDone
-                                  ? 'bg-secondary text-secondary-foreground border-secondary'
-                                  : 'bg-background text-foreground/80 border-muted'
+            </div>
+
+            <div className={showAtsScore ? 'hidden' : 'block'}>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&_*::-webkit-scrollbar]:hidden">
+                  {stepLabels.map((label, i) => {
+                    const isActive = i === currentStep;
+                    const isDone = i < currentStep;
+                    return (
+                      <div key={label} className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(i)}
+                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            isActive
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : isDone
+                                ? 'bg-secondary text-secondary-foreground border-secondary'
+                                : 'bg-background text-foreground/80 border-muted'
+                          }`}
+                          aria-current={isActive ? 'step' : undefined}
+                        >
+                          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-[10px]">
+                            {i + 1}
+                          </span>
+                          {label}
+                        </button>
+                        {i !== stepLabels.length - 1 && (
+                          <span
+                            className={`h-px w-4 sm:w-8 ${
+                              isDone ? 'bg-primary' : 'bg-muted'
                             }`}
-                            aria-current={isActive ? 'step' : undefined}
-                          >
-                            <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-[10px]">
-                              {i + 1}
-                            </span>
-                            {label}
-                          </button>
-                          {i !== stepLabels.length - 1 && (
-                            <span
-                              className={`h-px w-4 sm:w-8 ${isDone ? 'bg-primary' : 'bg-muted'}`}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
 
-                <div className="flex justify-between mb-4">
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      setCurrentStep((prev) => Math.max(prev - 1, 0))
-                    }
-                    disabled={currentStep === 0}
-                  >
-                    <ChevronLeft /> Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      setCurrentStep((prev) =>
-                        Math.min(prev + 1, steps.length - 1),
-                      )
-                    }
-                    disabled={currentStep === steps.length - 1}
-                  >
-                    Next <ChevronRight />
-                  </Button>
-                </div>
+              <div className="flex justify-between mb-4">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setCurrentStep((prev) => Math.max(prev - 1, 0))
+                  }
+                  disabled={currentStep === 0}
+                >
+                  <ChevronLeft /> Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setCurrentStep((prev) =>
+                      Math.min(prev + 1, steps.length - 1),
+                    )
+                  }
+                  disabled={currentStep === steps.length - 1}
+                >
+                  Next <ChevronRight />
+                </Button>
+              </div>
 
-                {steps[currentStep]}
+              {steps[currentStep]}
 
-                <div className="mt-6 sticky bottom-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex justify-end gap-3">
-                  {initialResume?._id && (
-                    <Button
-                      onClick={openDeleteDialog}
-                      disabled={isDeleting || isSubmitting}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </Button>
-                  )}
+              <div className="mt-6 sticky bottom-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex justify-end gap-3">
+                {(initialResume?._id || savedResumeId) && (
                   <Button
-                    onClick={handleSubmitResume}
-                    disabled={isSubmitting || isDeleting}
+                    onClick={openDeleteDialog}
+                    disabled={isDeleting || isSubmitting}
+                    variant="destructive"
                     size="sm"
-                    className="bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80 w-full"
                   >
-                    {isSubmitting ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Save /> Save
-                      </>
-                    )}
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
                   </Button>
-                </div>
-              </>
-            )}
+                )}
+                <Button
+                  onClick={handleSubmitResume}
+                  disabled={isSubmitting || isDeleting}
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Save /> Save
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
 
           <div className="px-6 md:pl-0 pt-2">
