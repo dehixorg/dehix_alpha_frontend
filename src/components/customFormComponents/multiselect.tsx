@@ -46,21 +46,21 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   return (
     <div className="relative" ref={dropdownRef}>
       <div
-        className="border rounded-md p-2 cursor-pointer"
+        className="border rounded-md p-2 cursor-pointer min-h-[42px] flex items-center flex-wrap gap-2"
         onClick={() => setIsOpen(!isOpen)}
       >
         {value.length === 0 && (
-          <span className="text-gray-500">Select skills</span>
+          <span className="text-muted-foreground">Select skills</span>
         )}
         {value.map((val) => (
           <span
             key={val}
-            className="inline-block bg-blue-500 text-white rounded-full px-2 py-1 text-sm mr-2"
+            className="inline-block bg-primary text-primary-foreground rounded-full px-2 py-1 text-sm"
           >
             {options.find((option) => option.value === val)?.label}
             <button
               type="button"
-              className="ml-1 text-white"
+              className="ml-1 hover:bg-primary/80 rounded-full p-0.5"
               onClick={(e) => {
                 e.stopPropagation();
                 handleRemove(val);
@@ -72,18 +72,18 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         ))}
       </div>
       {isOpen && (
-        <div className="absolute z-10 mt-2 w-full bg-muted/100 border rounded-md shadow-lg">
+        <div className="absolute z-10 bottom-full mb-2 w-full bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
           {options.map((option) => (
             <div
               key={option.value}
-              className="flex items-center p-2 cursor-pointer hover:bg-gray-500"
+              className="flex items-center p-3 cursor-pointer hover:bg-muted transition-colors"
               onClick={() => handleSelect(option.value)}
             >
               <input
                 type="checkbox"
                 checked={value.includes(option.value)}
                 readOnly
-                className="mr-2"
+                className="mr-3"
               />
               {option.label}
             </div>

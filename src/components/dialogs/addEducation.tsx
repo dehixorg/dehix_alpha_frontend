@@ -168,7 +168,10 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
 
   const nextStep = async () => {
     if (step === 1) {
-      // Trigger validation for step 1 fields to show inline errors
+      // Clear any existing errors from step 2 fields
+      form.clearErrors(['startDate', 'endDate']);
+
+      // Trigger validation for step 1 fields only
       const isValid = await form.trigger([
         'degree',
         'universityName',
@@ -292,11 +295,14 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit, () => {
-              notifyError(
-                'Please fill in all required fields',
-                'Validation Error',
-              );
+            onSubmit={form.handleSubmit(onSubmit, (_errors) => {
+              // Only show validation error if we're actually submitting (on step 2)
+              if (step === 2) {
+                notifyError(
+                  'Please fill in all required fields',
+                  'Validation Error',
+                );
+              }
             })}
             className="space-y-4"
           >
@@ -451,7 +457,14 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
             <DialogFooter className="flex justify-between pt-4">
               {step === 2 ? (
                 <>
-                  <Button type="button" variant="outline" onClick={prevStep}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      prevStep();
+                    }}
+                  >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back
                   </Button>
                   <Button type="submit" disabled={loading}>
@@ -461,7 +474,13 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
               ) : (
                 <>
                   <div />
-                  <Button type="button" onClick={nextStep}>
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      nextStep();
+                    }}
+                  >
                     Next <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </>
