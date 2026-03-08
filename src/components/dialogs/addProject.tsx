@@ -4,11 +4,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import {
   Plus,
-  X,
   ArrowRight,
   ArrowLeft,
-  Check,
-  ChevronsUpDown,
   FolderKanban,
   Github,
   Globe,
@@ -19,16 +16,9 @@ import {
 
 import { DatePicker } from '../shared/datePicker';
 import DraftDialog from '../shared/DraftDialog';
+import { MultiSelect } from '../customFormComponents/multiselect';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
 import {
   Dialog,
   DialogTrigger,
@@ -52,11 +42,6 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import ThumbnailUpload from '@/components/fileUpload/thumbnailUpload';
 import useDraft from '@/hooks/useDraft';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -204,7 +189,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
-  const [open, setOpen] = useState(false);
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -517,89 +501,18 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     control={form.control}
                     name="techUsed"
                     render={({ field }) => {
-                      const toggleSkill = (skillLabel: string) => {
-                        let updatedSkills: string[] = [];
-                        if (currSkills.includes(skillLabel)) {
-                          updatedSkills = currSkills.filter(
-                            (s) => s !== skillLabel,
-                          );
-                        } else {
-                          updatedSkills = [...currSkills, skillLabel];
-                        }
-                        setCurrSkills(updatedSkills);
-                        field.onChange(updatedSkills);
-                      };
-
                       return (
                         <FormItem className="mb-4">
                           <FormLabel>Skills</FormLabel>
                           <FormControl>
-                            <div>
-                              <Popover open={open} onOpenChange={setOpen}>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    role="combobox"
-                                    aria-expanded={open}
-                                    className="w-full justify-between"
-                                  >
-                                    {currSkills.length > 0
-                                      ? `${currSkills.length} selected`
-                                      : 'Select skills'}
-                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0">
-                                  <Command>
-                                    <CommandInput placeholder="Search skills..." />
-                                    <CommandEmpty>
-                                      No skills found.
-                                    </CommandEmpty>
-                                    <CommandGroup>
-                                      {skills.map((skill: any) => (
-                                        <CommandItem
-                                          key={skill.label}
-                                          value={skill.label}
-                                          onSelect={() =>
-                                            toggleSkill(skill.label)
-                                          }
-                                        >
-                                          <Check
-                                            className={`mr-2 h-4 w-4 ${
-                                              currSkills.includes(skill.label)
-                                                ? 'opacity-100'
-                                                : 'opacity-0'
-                                            }`}
-                                          />
-                                          {skill.label}
-                                        </CommandItem>
-                                      ))}
-                                    </CommandGroup>
-                                  </Command>
-                                </PopoverContent>
-                              </Popover>
-
-                              {/* Selected Skills Tags */}
-                              <div className="flex flex-wrap mt-3 gap-2">
-                                {currSkills.map((skill: any, index: number) => (
-                                  <Badge
-                                    key={index}
-                                    variant="secondary"
-                                    className="text-xs flex items-center gap-1"
-                                  >
-                                    {skill}
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleSkill(skill)}
-                                      className="ml-1 text-red-500 hover:text-red-700"
-                                      aria-label={`Remove ${skill}`}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </button>
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
+                            <MultiSelect
+                              options={skills}
+                              value={currSkills}
+                              onChange={(selectedValues) => {
+                                setCurrSkills(selectedValues);
+                                field.onChange(selectedValues);
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -634,7 +547,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="liveDemoLink"
@@ -655,8 +567,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-
+                />{' '}
                 <FormField
                   control={form.control}
                   name="thumbnail"
@@ -672,7 +583,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="refer"
@@ -694,7 +604,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="role"
@@ -716,7 +625,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="projectType"
@@ -738,7 +646,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="comments"
