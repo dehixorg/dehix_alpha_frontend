@@ -14,7 +14,6 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
 import StatCard from '@/components/shared/statCard';
-import { useStreakTour } from '@/components/tour/freelancer-profile/useStreakTour';
 
 // TypeScript Interfaces
 interface StreakInfo {
@@ -264,14 +263,9 @@ export default function StreakPage() {
       return 'available';
     }
 
-    // Check if milestone is already passed (user moved beyond it)
-    if (streakData.currentStreak > milestone && !canClaim) {
+    // Check if milestone is already passed or matched (user moved beyond it)
+    if (streakData.currentStreak >= milestone && !canClaim) {
       return 'claimed'; // Either claimed or outside 7-day window
-    }
-
-    // Check if milestone is reached but not yet in claimable list
-    if (streakData.currentStreak === milestone && !canClaim) {
-      return 'available'; // Current milestone is always available
     }
 
     // Otherwise locked (user hasn't reached this milestone yet)
@@ -292,10 +286,10 @@ export default function StreakPage() {
     if (!streakData || !rewardsData) return 0;
 
     // Sum up rewards for milestones that have been claimed
-    // A milestone is claimed if: currentStreak > milestone.days AND milestone is NOT in claimableMilestones
+    // A milestone is claimed if: currentStreak >= milestone.days AND milestone is NOT in claimableMilestones
     return rewardsData.reduce((total, reward) => {
       const isClaimed =
-        streakData.currentStreak > reward.days &&
+        streakData.currentStreak >= reward.days &&
         !streakData.claimableMilestones.includes(reward.days);
       return total + (isClaimed ? reward.reward : 0);
     }, 0);
