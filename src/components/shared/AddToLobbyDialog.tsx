@@ -168,7 +168,7 @@ const AddToLobbyDialog = ({
             buttonText="Save"
             userType="BUSINESS"
             requiredConnects={parseInt(
-              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '5',
               10,
             )}
             skipRedirect={true}
