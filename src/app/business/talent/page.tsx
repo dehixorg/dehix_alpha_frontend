@@ -229,7 +229,10 @@ export default function Talent() {
       breadcrumbItems={[
         { label: 'Business', link: '/dashboard/business' },
         { label: 'Hire Talent', link: '#' },
-        { label: 'Overview', link: '#' },
+        {
+          label: currentTab === 'overview' ? 'Overview' : 'Applications',
+          link: '#',
+        },
       ]}
       contentClassName="flex flex-col sm:py-0 sm:pl-14"
       mainClassName="p-0"
