@@ -1,4 +1,5 @@
 'use client';
+
 import { usePathname, useRouter } from 'next/navigation';
 import { Users2, FileText } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -17,6 +18,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
+import { useBusinessTalentTour } from '@/components/tour/business/useBusinessTalentTour';
+
 interface Skill {
   _id: string;
   label: string;
@@ -70,14 +73,16 @@ export default function Talent() {
   const [bootstrapLoading, setBootstrapLoading] = useState<boolean>(true);
   const bootstrapInFlightRef = useRef(false);
 
+  useBusinessTalentTour(true);
+
   const refreshBootstrap = useCallback(async () => {
     if (bootstrapInFlightRef.current) return;
     bootstrapInFlightRef.current = true;
     setBootstrapLoading(true);
     try {
       const [skillsRes, domainsRes, hiresRes] = await Promise.all([
-        axiosInstance.get('/skills'),
-        axiosInstance.get('/domain'),
+        axiosInstance.get('/skills/all'),
+        axiosInstance.get('/domain/all'),
         axiosInstance.get('/business/hire-dehixtalent'),
       ]);
 
@@ -95,21 +100,31 @@ export default function Talent() {
       setDomains(nextDomains);
       setHireItems(nextHires);
 
-      const fetchedFilterSkills: Skill[] = (nextHires || [])
+      // Deduplicate skills by label using Map for O(n) performance
+      const skillsMap = new Map<string, Skill>();
+      (nextHires || [])
         .filter((item) => item?.type === 'SKILL' && item?.visible)
-        .map((item) => ({
-          _id: item?.talentId || item?._id,
-          label: item?.talentName || '',
-        }))
-        .filter((s) => Boolean(s._id) && Boolean(s.label));
+        .forEach((item) => {
+          const label = item?.talentName || '';
+          const _id = item?.talentId || item?._id;
+          if (label && _id && !skillsMap.has(label)) {
+            skillsMap.set(label, { _id, label });
+          }
+        });
+      const fetchedFilterSkills: Skill[] = Array.from(skillsMap.values());
 
-      const fetchedFilterDomains: Domain[] = (nextHires || [])
+      // Deduplicate domains by label using Map for O(n) performance
+      const domainsMap = new Map<string, Domain>();
+      (nextHires || [])
         .filter((item) => item?.type === 'DOMAIN' && item?.visible)
-        .map((item) => ({
-          _id: item?.talentId || item?._id,
-          label: item?.talentName || '',
-        }))
-        .filter((d) => Boolean(d._id) && Boolean(d.label));
+        .forEach((item) => {
+          const label = item?.talentName || '';
+          const _id = item?.talentId || item?._id;
+          if (label && _id && !domainsMap.has(label)) {
+            domainsMap.set(label, { _id, label });
+          }
+        });
+      const fetchedFilterDomains: Domain[] = Array.from(domainsMap.values());
 
       setFilterSkill(fetchedFilterSkills);
       setFilterDomain(fetchedFilterDomains);
@@ -142,20 +157,31 @@ export default function Talent() {
       setHireItems(cachedBusinessTalentBootstrap.hires);
 
       const hires = cachedBusinessTalentBootstrap.hires || [];
-      const fetchedFilterSkills: Skill[] = hires
+      // Deduplicate skills by label using Map for O(n) performance
+      const skillsMap = new Map<string, Skill>();
+      hires
         .filter((item) => item?.type === 'SKILL' && item?.visible)
-        .map((item) => ({
-          _id: item?.talentId || item?._id,
-          label: item?.talentName || '',
-        }))
-        .filter((s) => Boolean(s._id) && Boolean(s.label));
-      const fetchedFilterDomains: Domain[] = hires
+        .forEach((item) => {
+          const label = item?.talentName || '';
+          const _id = item?.talentId || item?._id;
+          if (label && _id && !skillsMap.has(label)) {
+            skillsMap.set(label, { _id, label });
+          }
+        });
+      const fetchedFilterSkills: Skill[] = Array.from(skillsMap.values());
+
+      // Deduplicate domains by label using Map for O(n) performance
+      const domainsMap = new Map<string, Domain>();
+      hires
         .filter((item) => item?.type === 'DOMAIN' && item?.visible)
-        .map((item) => ({
-          _id: item?.talentId || item?._id,
-          label: item?.talentName || '',
-        }))
-        .filter((d) => Boolean(d._id) && Boolean(d.label));
+        .forEach((item) => {
+          const label = item?.talentName || '';
+          const _id = item?.talentId || item?._id;
+          if (label && _id && !domainsMap.has(label)) {
+            domainsMap.set(label, { _id, label });
+          }
+        });
+      const fetchedFilterDomains: Domain[] = Array.from(domainsMap.values());
       setFilterSkill(fetchedFilterSkills);
       setFilterDomain(fetchedFilterDomains);
 
@@ -209,11 +235,12 @@ export default function Talent() {
       mainClassName="p-0"
     >
       {/* Tabs Header */}
-      <div className="container px-4 py-4 ">
+      <div className="container px-4 py-4" data-tour="business-talent-header">
         <Tabs
           value={currentTab}
           onValueChange={handleTabChange}
           className="w-full"
+          data-tour="business-talent-tabs"
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">
@@ -252,7 +279,7 @@ export default function Talent() {
           </CardTitle>
 
           {/* Skill and Domain Filter */}
-          <div className="flex">
+          <div className="flex" data-tour="business-talent-filter">
             <Select onValueChange={setTalentFilter} value={talentFilter}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Skill or Domain" />
@@ -294,7 +321,10 @@ export default function Talent() {
               </SelectContent>
             </Select>
           </div>
-          <div className="lg:h-[75vh] h-[59vh] rounded-lg  overflow-y-scroll no-scrollbar">
+          <div
+            className="lg:h-[75vh] h-[59vh] rounded-lg overflow-y-scroll no-scrollbar"
+            data-tour="business-talent-list"
+          >
             <TalentCard
               talentFilter={talentFilter}
               skillDomainData={skillDomainData}

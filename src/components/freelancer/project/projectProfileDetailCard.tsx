@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams } from 'next/navigation';
-import { Mail, CalendarDays, Award, Link2, Code2 } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import {
+  Mail,
+  CalendarDays,
+  Award,
+  Link2,
+  Code2,
+  AlertCircle,
+} from 'lucide-react';
 
-import { updateConnectsBalance } from '@/lib/updateConnects';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,22 +22,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { notifyError } from '@/utils/toastMessage';
 import { StatusEnum } from '@/utils/freelancer/enum';
-// import Link from 'next/link';
 
 interface ProjectProfileDetailCardProps {
   _id: string;
@@ -41,13 +36,13 @@ interface ProjectProfileDetailCardProps {
   experience: number;
   minConnect: number;
   rate: number;
-  description: string;
+  description?: string;
   email?: string;
   status?: StatusEnum;
   startDate?: string;
   endDate?: string;
   className?: string;
-  domain_id: string;
+  domain_id?: string;
   // business_id: string;
 }
 
@@ -61,72 +56,61 @@ export function ProjectProfileDetailCard({
   skills,
   experience,
   minConnect,
-  description,
   email,
   status,
   startDate,
   endDate,
   className,
-  domain_id,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  description: _description,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  domain_id: _domain_id,
   ...props
 }: CardProps) {
   const user = useSelector((state: RootState) => state.user);
-  const [amount, setAmount] = useState('');
-  const [descriptionValue, setDescription] = useState(description);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const router = useRouter();
   const params = useParams();
-  const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
+
   const [exist, setExist] = useState(false);
+  const [hasReachedLimit, setHasReachedLimit] = useState(false);
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-
-    try {
-      const response = await axiosInstance.post(`/bid`, {
-        current_price: amount,
-        description: descriptionValue,
-        bidder_id: user.uid,
-        project_id: params.project_id,
-        domain_id: domain_id,
-        profile_id: _id,
-      });
-
-      const remaining = response?.data?.remainingConnects;
-      if (typeof remaining === 'number') {
-        updateConnectsBalance(remaining);
-      } else {
-        console.error('remainingConnects not returned or invalid from API');
-        notifyError('Failed to update connects balance.', 'Warning');
-      }
-
-      setAmount('');
-      setDescription('');
-      setDialogOpen(false);
-      notifySuccess('The Bid has been successfully added.', 'Bid Added');
-      // window.location.reload();
-    } catch (error) {
-      console.error('Error submitting bid:', error);
-      notifyError('Something went wrong. Please try again.', 'Error');
+  const handleBidClick = () => {
+    if (hasReachedLimit || exist) {
+      return;
     }
+    // Redirect to the apply page
+    router.push(`/freelancer/market/project/${params.project_id}/apply`);
   };
 
   useEffect(() => {
     async function fetchData() {
       try {
         const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
-        const profileIds = response.data.data.map((bid: any) => bid.profile_id); // Extract profile_ids
-        setBidProfiles(profileIds);
+        const allBids = response.data.data;
+
+        // Filter bids for the current project
+        const projectBids = allBids.filter(
+          (bid: any) => bid.project_id === params.project_id,
+        );
+        const profileIds = projectBids.map((bid: any) => bid.profile_id);
+        const uniqueProfileIds = profileIds.filter(
+          (id: string, index: number) => profileIds.indexOf(id) === index,
+        );
+
+        // Check if current profile is already bid on
+        setExist(uniqueProfileIds.includes(_id));
+
+        // Check if user has reached the limit of 3 unique profiles
+        setHasReachedLimit(
+          uniqueProfileIds.length >= 3 && !uniqueProfileIds.includes(_id),
+        );
       } catch (error) {
         console.error('API Error:', error);
         notifyError('Something went wrong. Please try again.', 'Error');
       }
     }
     fetchData();
-  }, [user.uid]);
-
-  useEffect(() => {
-    setExist(bidProfiles.includes(_id));
-  }, [bidProfiles, _id]);
+  }, [user.uid, params.project_id, _id]);
 
   return (
     <Card
@@ -217,58 +201,26 @@ export function ProjectProfileDetailCard({
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end">
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" type="button" disabled={exist}>
-              {!exist ? 'Bid' : 'Applied'}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Bid</DialogTitle>
-              <DialogDescription>
-                Click on bid if you want to bid for this profile
-              </DialogDescription>
-            </DialogHeader>
-
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="amount" className="text-center">
-                    Amount
-                  </Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="description" className="text-right block">
-                    Description
-                  </Label>
-                  <Input
-                    id="description"
-                    type="text"
-                    value={descriptionValue}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={exist}>
-                  {!exist ? 'Bid' : 'Applied'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+      <CardFooter className="flex flex-col gap-3">
+        {hasReachedLimit && (
+          <Alert variant="destructive" className="w-full">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You have already reached the limit of bidding on profiles for this
+              project.
+            </AlertDescription>
+          </Alert>
+        )}
+        <div className="w-full flex justify-end">
+          <Button
+            variant="outline"
+            type="button"
+            disabled={exist || hasReachedLimit}
+            onClick={handleBidClick}
+          >
+            {exist ? 'Applied' : 'Bid'}
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

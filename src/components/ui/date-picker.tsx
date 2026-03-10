@@ -1,61 +1,59 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { ChevronDownIcon } from "lucide-react"
-import { format } from "date-fns"
+import * as React from 'react';
+import { ChevronDownIcon } from 'lucide-react';
+import { format } from 'date-fns';
 
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 interface DateTimePickerProps {
-  date?: Date
-  onDateChange?: (date: Date | undefined) => void
-  time?: string
-  onTimeChange?: (time: string) => void
-  label?: string
-  disabled?: boolean
+  date?: Date;
+  onDateChange?: (date: Date | undefined) => void;
+  time?: string;
+  onTimeChange?: (time: string) => void;
+  label?: string;
+  disabled?: boolean;
 }
 
-export function DateTimePicker({ 
-  date, 
-  onDateChange, 
-  time, 
-  onTimeChange, 
-  label = "Date & Time",
-  disabled = false
+export function DateTimePicker({
+  date,
+  onDateChange,
+  time,
+  onTimeChange,
+  label = 'Date & Time',
+  disabled = false,
 }: DateTimePickerProps) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
-    onDateChange?.(selectedDate)
-    setOpen(false)
-  }
+    onDateChange?.(selectedDate);
+    setOpen(false);
+  };
 
   return (
     <div className="flex flex-col gap-3">
-      <Label className="px-1">
-        {label}
-      </Label>
+      <Label className="px-1">{label}</Label>
       <div className="flex gap-2">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
-                "flex-1 justify-between font-normal",
-                !date && "text-muted-foreground"
+                'flex-1 justify-between font-normal',
+                !date && 'text-muted-foreground',
               )}
               disabled={disabled}
             >
-              {date ? format(date, "PPP") : "Select date"}
+              {date ? format(date, 'PPP') : 'Select date'}
               <ChevronDownIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -69,7 +67,7 @@ export function DateTimePicker({
             />
           </PopoverContent>
         </Popover>
-        
+
         <Input
           type="time"
           value={time}
@@ -79,5 +77,5 @@ export function DateTimePicker({
         />
       </div>
     </div>
-  )
+  );
 }

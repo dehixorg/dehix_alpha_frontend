@@ -14,12 +14,15 @@ import { Card } from '@/components/ui/card';
 import { CreateNoteDialog } from '@/components/shared/CreateNoteDialog';
 import EmptyState from '@/components/shared/EmptyState';
 import NotesLayout from '@/components/layout/NotesLayout';
+import { useNotesTour } from '@/components/tour/shared/useNotesTour';
 
 const Notes = () => {
   // Get userId from Redux
   const user = useSelector((state: any) => state.user);
   const userId = user.uid;
   const { notes, isLoading, fetchNotes, setNotes } = useFetchNotes(userId);
+
+  useNotesTour(true);
 
   useEffect(() => {
     if (userId) {
@@ -70,7 +73,7 @@ const Notes = () => {
       activeMenu="Notes"
       breadcrumbItems={[{ label: 'Notes', link: '/notes' }]}
     >
-      <Card className="overflow-hidden border">
+      <Card className="overflow-hidden border" data-tour="notes">
         <NotesHeader
           isTrash={false}
           setNotes={setNotes}

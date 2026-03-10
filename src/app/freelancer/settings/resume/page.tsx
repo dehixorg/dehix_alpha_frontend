@@ -13,6 +13,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ResumeInfoCard from '@/components/cards/resumeInfoCard';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/shared/EmptyState';
+import { useResumeTour } from '@/components/tour/freelancer-profile/useResumeTour';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
@@ -37,6 +38,8 @@ export default function Resume() {
     },
     [user.uid],
   );
+
+  useResumeTour(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -91,52 +94,54 @@ export default function Resume() {
   }
 
   return (
-    <FreelancerSettingsLayout
-      active="Resume"
-      activeMenu="Resume"
-      breadcrumbItems={[
-        { label: 'Settings', link: '#' },
-        { label: 'Resume Building', link: '#' },
-      ]}
-      isKycCheck={true}
-      contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14"
-      mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+    <div data-tour="resume">
+      <FreelancerSettingsLayout
+        active="Resume"
+        activeMenu="Resume"
+        breadcrumbItems={[
+          { label: 'Settings', link: '#' },
+          { label: 'Resume Building', link: '#' },
+        ]}
+        isKycCheck={true}
+        contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14"
+        mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-    >
-      {resumeData.map((resume) => (
-        <ResumeInfoCard
-          key={resume._id}
-          {...resume}
-          onClick={() => handleEditResume(resume)}
-          onDelete={handleDeleteResume}
-        />
-      ))}
-
-      {resumeData.length > 0 && (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleNewResume}
-          className="my-auto"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      )}
-      {resumeData.length === 0 && (
-        <div className="col-span-full">
-          <EmptyState
-            icon={<Plus className="h-12 w-12 text-muted-foreground/80" />}
-            title="No resumes found"
-            description="Create your first resume to get started."
-            actions={
-              <Button variant="outline" size="icon" onClick={handleNewResume}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            }
-            className="py-8"
+      >
+        {resumeData.map((resume) => (
+          <ResumeInfoCard
+            key={resume._id}
+            {...resume}
+            onClick={() => handleEditResume(resume)}
+            onDelete={handleDeleteResume}
           />
-        </div>
-      )}
-    </FreelancerSettingsLayout>
+        ))}
+
+        {resumeData.length > 0 && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleNewResume}
+            className="my-auto"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
+        {resumeData.length === 0 && (
+          <div className="col-span-full">
+            <EmptyState
+              icon={<Plus className="h-12 w-12 text-muted-foreground/80" />}
+              title="No resumes found"
+              description="Create your first resume to get started."
+              actions={
+                <Button variant="outline" size="icon" onClick={handleNewResume}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              }
+              className="py-8"
+            />
+          </div>
+        )}
+      </FreelancerSettingsLayout>
+    </div>
   );
 }

@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 // import { useForm } from 'react-hook-form';
 import { NotebookText, X } from 'lucide-react';
 
-import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -28,6 +27,8 @@ interface SummaryInfoProps {
   }[];
 }
 
+const WORD_LIMIT = 60;
+
 export const SummaryInfo: React.FC<SummaryInfoProps> = ({
   summaryData,
   setSummaryData,
@@ -38,16 +39,16 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
   // const [aiResponse, setAiResponse] = useState<string>('');
 
   const handleInputChange = (index: number, value: string) => {
+    const words = value.trim().split(/\s+/).filter(Boolean);
+    const truncated =
+      words.length > WORD_LIMIT ? words.slice(0, WORD_LIMIT).join(' ') : value;
+
     const updatedSummaryData = [...summaryData];
-    updatedSummaryData[index] = value;
+    updatedSummaryData[index] = truncated;
     setSummaryData(updatedSummaryData);
   };
 
   useEffect(() => {}, [workExperienceData]); // Logs data every time it updates
-
-  const handleAddSummary = () => {
-    setSummaryData([...summaryData, '']);
-  };
 
   const handleRemoveSummary = (index: number) => {
     const updatedSummaryData = summaryData.filter((_, i) => i !== index);
@@ -138,12 +139,14 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
                 onChange={(e) => handleInputChange(index, e.target.value)}
                 placeholder="A brief, engaging text about yourself"
               />
+              <p className="mt-1 text-xs text-muted-foreground text-right">
+                {summary.trim().split(/\s+/).filter(Boolean).length} /{' '}
+                {WORD_LIMIT} words
+              </p>
             </CardContent>
           </Card>
         ))}
       </form>
-
-      <AddButton onClick={handleAddSummary} />
 
       {/* <div className="flex justify-center mt-4">
         <Button className="text-center bg-green-500 hover:bg-green-600 text-white">

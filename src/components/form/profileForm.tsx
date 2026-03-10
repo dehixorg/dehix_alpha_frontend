@@ -16,10 +16,10 @@ import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
+import { ScrollArea } from '../ui/scroll-area';
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
-
-import CoverLetterTextarea from './CoverLetterTextarea';
+import { usePersonalInfoTour } from '../tour/freelancer-profile/usePersonalInfo';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -77,10 +77,10 @@ const profileFormSchema = z.object({
           .trim()
           .split(/\s+/)
           .filter((word) => word.length > 0).length;
-        return wordCount >= 500;
+        return wordCount >= 200;
       },
       {
-        message: 'Cover letter must contain at least 500 words when provided.',
+        message: 'Cover letter must contain at least 200 words when provided.',
       },
     ),
   description: z.string().max(500, {
@@ -141,6 +141,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     },
     mode: 'all',
   });
+
+  usePersonalInfoTour(true);
 
   const handleAddCustomSkill = async () => {
     if (!customSkill.label.trim()) {
@@ -827,52 +829,54 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <InputGroup>
-                      <InputGroupText>
-                        <AtSign className="h-4 w-4" />
-                      </InputGroupText>
-                      <InputGroupInput
-                        placeholder="Enter your username"
-                        {...field}
-                        readOnly
-                      />
-                    </InputGroup>
-                  </FormControl>
-                  <FormMessage />
-                  <FormDescription>Non editable field</FormDescription>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <InputGroup>
-                      <InputGroupText>
-                        <Mail className="h-4 w-4" />
-                      </InputGroupText>
-                      <InputGroupInput
-                        placeholder="Enter your email"
-                        {...field}
-                        readOnly
-                      />
-                    </InputGroup>
-                  </FormControl>
-                  <FormDescription>Non editable field</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div data-tour="non-editable-field">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <InputGroup>
+                        <InputGroupText>
+                          <AtSign className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your username"
+                          {...field}
+                          readOnly
+                        />
+                      </InputGroup>
+                    </FormControl>
+                    <FormMessage />
+                    <FormDescription>Non editable field</FormDescription>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <InputGroup>
+                        <InputGroupText>
+                          <Mail className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Enter your email"
+                          {...field}
+                          readOnly
+                        />
+                      </InputGroup>
+                    </FormControl>
+                    <FormDescription>Non editable field</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="description"
@@ -935,7 +939,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           </div>
 
           <Separator className="my-6 bg-muted-foreground/20" />
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-1 md:col-span-2" data-tour="skills-domains">
             <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
               <Tags className="h-4 w-4" /> Skills & Domains
             </h3>
@@ -959,9 +963,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setDialogType('skill');
                     setIsDialogOpen(true);
                   }}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs w-fit self-start"
                 >
-                  + Not able to find your skill?
+                  + Add custom skill
                 </Button>
               </div>
               <div className="col-span-1">
@@ -984,9 +988,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setDialogType('domain');
                     setIsDialogOpen(true);
                   }}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs w-fit self-start"
                 >
-                  + Not able to find your domain?
+                  + Add custom domain
                 </Button>
               </div>
               <div className="col-span-1">
@@ -1009,9 +1013,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setDialogType('projectDomain');
                     setIsDialogOpen(true);
                   }}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs w-fit self-start"
                 >
-                  + Not able to find your project domain?
+                  + Add custom project domain
                 </Button>
               </div>
             </div>
@@ -1042,20 +1046,36 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     <FormLabel className="ml-2">
                       Cover Letter (Optional)
                     </FormLabel>
-                    <div className="w-full">
-                      <CoverLetterTextarea
-                        value={field.value || ''}
-                        onChange={field.onChange}
-                        error={fieldState.error?.message}
-                      />
-                    </div>
+                    <FormControl>
+                      <div className="w-full">
+                        <ScrollArea className="h-[200px] w-full rounded-md border p-3">
+                          <Textarea
+                            placeholder="Write your cover letter here... (minimum 200 words)"
+                            className="min-h-fit resize-none border-0 focus-visible:ring-0 p-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                            style={{ overflow: 'auto' }}
+                            rows={15}
+                            {...field}
+                          />
+                        </ScrollArea>
+                        {fieldState.error && (
+                          <p className="text-sm font-medium text-destructive mt-2">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </div>
+                    </FormControl>
                   </FormItem>
                 )}
               />
             </div>
           </div>
           <div className="col-span-1 md:col-span-2 mt-6">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+              data-tour="profile-save"
+            >
               <Save className="h-4 w-4 mr-2" />
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>

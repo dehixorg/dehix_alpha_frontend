@@ -6,7 +6,6 @@ export interface GamificationItemBase {
   imageUrl?: string;
   isActive?: boolean;
   type?: 'LEVEL' | 'BADGE';
-  priority?: number;
   earnedAt?: string;
   level_id?: string;
   badge_id?: string;
@@ -36,7 +35,7 @@ export interface GamificationItemBase {
 // Interface for level items
 export interface LevelItem extends GamificationItemBase {
   level_id: string;
-  priority: number;
+  levelNumber: number;
   type: 'LEVEL';
   rewardMultiplier?: number;
 }
@@ -48,7 +47,6 @@ export interface BadgeItem extends GamificationItemBase {
   earnedAt?: string;
   isActive?: boolean;
   baseReward?: number;
-  priority?: number;
   imageUrl?: string;
 }
 

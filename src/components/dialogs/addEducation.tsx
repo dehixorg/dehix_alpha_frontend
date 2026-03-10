@@ -48,11 +48,24 @@ const toDateOnly = (date: Date) =>
 
 const FormSchema = z
   .object({
-    degree: z.string().min(1, { message: 'Degree is required' }),
+    degree: z
+      .string()
+      .min(1, { message: 'Degree is required' })
+      .min(2, { message: 'Degree must be at least 2 characters' })
+      .max(100, { message: 'Degree cannot exceed 100 characters' })
+      .regex(/^[a-zA-Z0-9\s.,()'-]+$/, {
+        message: 'Degree contains invalid characters',
+      }),
     universityName: z
       .string()
-      .min(1, { message: 'University name is required' }),
-    fieldOfStudy: z.string().min(1, { message: 'Field of study is required' }),
+      .min(1, { message: 'University name is required' })
+      .min(3, { message: 'University name must be at least 3 characters' })
+      .max(200, { message: 'University name cannot exceed 200 characters' }),
+    fieldOfStudy: z
+      .string()
+      .min(1, { message: 'Field of study is required' })
+      .min(2, { message: 'Field of study must be at least 2 characters' })
+      .max(100, { message: 'Field of study cannot exceed 100 characters' }),
     startDate: z
       .string()
       .min(1, { message: 'Start date is required' })
@@ -65,7 +78,14 @@ const FormSchema = z
       .transform((val) => (val === '' ? undefined : val))
       .optional(),
     ongoing: z.boolean().optional(),
-    grade: z.string().optional(),
+    grade: z
+      .string()
+      .max(20, { message: 'Grade cannot exceed 20 characters' })
+      .regex(/^[a-zA-Z0-9.+\s%-]*$/, {
+        message:
+          'Grade can only contain letters, numbers, and basic symbols (., +, %, -)',
+      })
+      .optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.ongoing && !data.endDate) {
@@ -146,23 +166,23 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     restoredDraft.current = null;
   }, [form]);
 
-  const validateStep1 = () => {
-    const { degree, universityName, fieldOfStudy } = form.getValues();
-    if (!degree || !universityName || !fieldOfStudy) {
-      notifyError(
-        'Please fill degree, university and field of study.',
-        'Missing fields',
-      );
-      return false;
+  const nextStep = async () => {
+    if (step === 1) {
+      // Clear any existing errors from step 2 fields
+      form.clearErrors(['startDate', 'endDate']);
+
+      // Trigger validation for step 1 fields only
+      const isValid = await form.trigger([
+        'degree',
+        'universityName',
+        'fieldOfStudy',
+      ]);
+      if (isValid) {
+        setStep(2);
+      }
     }
-    return true;
   };
 
-  const nextStep = () => {
-    if (step === 1) {
-      if (validateStep1()) setStep(2);
-    }
-  };
   const prevStep = () => {
     if (step === 2) setStep(1);
   };
@@ -275,11 +295,14 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit, () => {
-              notifyError(
-                'Please fill in all required fields',
-                'Validation Error',
-              );
+            onSubmit={form.handleSubmit(onSubmit, (_errors) => {
+              // Only show validation error if we're actually submitting (on step 2)
+              if (step === 2) {
+                notifyError(
+                  'Please fill in all required fields',
+                  'Validation Error',
+                );
+              }
             })}
             className="space-y-4"
           >
@@ -434,7 +457,14 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
             <DialogFooter className="flex justify-between pt-4">
               {step === 2 ? (
                 <>
-                  <Button type="button" variant="outline" onClick={prevStep}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      prevStep();
+                    }}
+                  >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back
                   </Button>
                   <Button type="submit" disabled={loading}>
@@ -444,7 +474,13 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
               ) : (
                 <>
                   <div />
-                  <Button type="button" onClick={nextStep}>
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      nextStep();
+                    }}
+                  >
                     Next <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </>

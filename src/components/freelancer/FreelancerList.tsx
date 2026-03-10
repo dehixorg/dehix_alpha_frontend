@@ -261,30 +261,62 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
 
   // Handle chat click
   const handleChatClick = (freelancer: Freelancer) => {
-    if (onChatClick) {
-      onChatClick(
-        freelancer._id,
+    try {
+      // Generate a unique session key
+      const sessionKey = crypto.randomUUID();
+
+      // Extract freelancer data
+      const userName =
         freelancer.firstName && freelancer.lastName
           ? `${freelancer.firstName} ${freelancer.lastName}`
-          : freelancer.userName,
-      );
-    } else {
-      // Default behavior - could integrate with existing chat system
-      notifySuccess(`Opening chat with ${freelancer.userName}...`, 'Chat');
+          : freelancer.userName;
+
+      // Create chat data object
+      const chatData = {
+        newChat: true,
+        userId: freelancer._id,
+        userName: userName,
+        userEmail: freelancer.email,
+        userPhoto: freelancer.profilePic || null,
+        userType: 'freelancer',
+      };
+
+      // Store in localStorage (accessible across tabs)
+      localStorage.setItem(sessionKey, JSON.stringify(chatData));
+
+      // Open in new tab
+      window.open(`/chat?session=${sessionKey}`, '_blank');
+
+      notifySuccess(`Opening chat with ${userName}...`, 'Chat');
+    } catch (error) {
+      console.error('Error opening chat:', error);
+      notifyError('Failed to open chat. Please try again.', 'Error');
+
+      // Fallback to callback if available
+      if (onChatClick) {
+        onChatClick(
+          freelancer._id,
+          freelancer.firstName && freelancer.lastName
+            ? `${freelancer.firstName} ${freelancer.lastName}`
+            : freelancer.userName,
+        );
+      }
     }
   };
 
   // Handle group click
   const handleGroupClick = (group: FreelancerGroup) => {
-    // If there's an onChatClick handler, use it for the group chat
-    if (onChatClick) {
-      onChatClick(group.id, group.project_name);
-    } else {
-      // Default behavior for group click
+    try {
+      // Directly navigate to the group chat using conversation ID
+      window.open(`/chat?c=${group.id}`, '_blank');
+
       notifySuccess(
         `Opening group chat: ${group.project_name}...`,
         'Group Chat',
       );
+    } catch (error) {
+      console.error('Error opening group chat:', error);
+      notifyError('Failed to open group chat. Please try again.', 'Error');
     }
   };
 

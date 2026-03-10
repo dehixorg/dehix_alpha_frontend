@@ -45,6 +45,9 @@ import { Type } from '@/utils/enum';
 import { setUser } from '@/lib/userSlice';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
+const LINKEDIN_REGEX =
+  /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\/(in|company)\/[a-zA-Z0-9-_%]+\/?$/;
+
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
     message: 'First Name must be at least 2 characters.',
@@ -64,14 +67,9 @@ const profileFormSchema = z.object({
   linkedin: z
     .string()
     .url({ message: 'Must be a valid URL.' })
-    .refine(
-      (url) =>
-        url.includes('linkedin.com/in/') ||
-        url.includes('linkedin.com/company/'),
-      {
-        message: 'LinkedIn URL must start with: https://www.linkedin.com/in/',
-      },
-    )
+    .refine((url) => !url || LINKEDIN_REGEX.test(url), {
+      message: 'Enter a valid LinkedIn profile or company page URL',
+    })
     .optional(),
   website: z.string().url({ message: 'Must be a valid URL.' }).optional(),
 });
@@ -93,7 +91,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
       companyName: '',
       companySize: '',
       position: '',
-      linkedin: '',
+      linkedin: undefined,
       website: '',
     },
     mode: 'all',
@@ -266,7 +264,10 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+            data-tour="business-readonly-fields"
+          >
             <div className="space-y-2">
               <Label>Email</Label>
               <FormField
@@ -456,7 +457,12 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               />
             </div>
           </div>
-          <Button className="w-full" type="submit" disabled={loading}>
+          <Button
+            className="w-full"
+            type="submit"
+            disabled={loading}
+            data-tour="save"
+          >
             <Save className="h-4 w-4 mr-2" />
             {loading ? 'Saving...' : 'Save Changes'}
           </Button>

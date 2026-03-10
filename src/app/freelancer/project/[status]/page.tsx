@@ -29,6 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import EmptyState from '@/components/shared/EmptyState';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
+import { useProjectTour } from '@/components/tour/freelancer/useProjectTour';
 
 // Section header component
 function SectionHeader({
@@ -64,8 +65,11 @@ function FilterToggle({
   id?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2">
-      <Badge variant={projectType === 'FREELANCER' ? 'default' : 'outline'}>
+    <div className="flex items-center gap-2 rounded-lg border bg-card px-2 py-1.5 sm:gap-3 sm:px-3 sm:py-2 mx-auto sm:ml-auto sm:mr-0">
+      <Badge
+        variant={projectType === 'FREELANCER' ? 'default' : 'outline'}
+        className="text-[10px] sm:text-sm px-1.5 py-0.5 sm:px-2.5 sm:py-1"
+      >
         FREELANCER
       </Badge>
       <Switch
@@ -74,8 +78,12 @@ function FilterToggle({
         onCheckedChange={(checked) =>
           onChange(checked ? 'FREELANCER' : 'CONSULTANT')
         }
+        className="scale-75 sm:scale-100"
       />
-      <Badge variant={projectType === 'CONSULTANT' ? 'default' : 'outline'}>
+      <Badge
+        variant={projectType === 'CONSULTANT' ? 'default' : 'outline'}
+        className="text-[10px] sm:text-sm px-1.5 py-0.5 sm:px-2.5 sm:py-1"
+      >
         CONSULTANT
       </Badge>
     </div>
@@ -220,6 +228,7 @@ export default function ProjectPage() {
   const [projectType, setProjectType] = useState('FREELANCER');
   const [activeTab, setActiveTab] = useState('current');
   const [projectsRefreshTrigger, setProjectsRefreshTrigger] = useState(0);
+  useProjectTour(true);
 
   // Listen for task assignment updates
   useEffect(() => {
@@ -268,7 +277,7 @@ export default function ProjectPage() {
       containerClassName="flex min-h-screen w-full flex-col pb-10"
       mainClassName="flex-1"
     >
-      <div className="w-full p-4 sm:px-6 sm:py-2">
+      <div className="w-full p-4 sm:px-6 sm:py-2" data-tour="current-projects">
         <Card className="w-full">
           <CardHeader className="space-y-1 bg-gradient">
             <CardTitle className="text-2xl font-bold tracking-tight">

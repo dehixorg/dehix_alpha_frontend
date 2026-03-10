@@ -22,6 +22,7 @@ import {
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
 import Bids from '@/components/freelancer/interview/Bids';
 import { RootState } from '@/lib/store';
+import { useIntervieweeTour } from '@/components/tour/freelancer/useIntervieweeTour';
 
 export default function IntervieweePage() {
   const params = useParams();
@@ -31,6 +32,7 @@ export default function IntervieweePage() {
   // slug will be [] or ["current"], ["bids"], ["history"]
   const slug = Array.isArray(params?.slug) ? params.slug : [];
   const activeTab = slug[0] || 'current';
+  useIntervieweeTour(true);
 
   useEffect(() => {
     if (slug.length === 0) {
@@ -55,9 +57,12 @@ export default function IntervieweePage() {
           ]}
         />
         <main className="flex-1 px-4 sm:px-6 sm:py-2">
-          <div className="mx-auto w-full max-w-7xl">
+          <div className="mx-auto w-full max-w-7xl" data-tour="interviewee">
             <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient">
+              <CardHeader
+                className="bg-gradient"
+                data-tour="interviewee-header"
+              >
                 <CardTitle className="text-2xl font-bold tracking-tight">
                   Interviewee
                 </CardTitle>
@@ -74,7 +79,10 @@ export default function IntervieweePage() {
                   className="w-full"
                 >
                   <div className="border-b px-2 sm:px-6">
-                    <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
+                    <TabsList
+                      className="bg-transparent h-12 w-full md:w-auto p-0"
+                      data-tour="tab-list"
+                    >
                       <TabsTrigger
                         value="current"
                         className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"

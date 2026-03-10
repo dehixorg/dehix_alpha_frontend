@@ -126,8 +126,8 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
     try {
       // fetch skills/domains for dialogs
       const [skillsResponse, domainsResponse] = await Promise.all([
-        axiosInstance.get('/skills'),
-        axiosInstance.get('/domain'),
+        axiosInstance.get('/skills/all'),
+        axiosInstance.get('/domain/all'),
       ]);
       setSkillsState(skillsResponse.data?.data || []);
       setDomainsState(domainsResponse.data?.data || []);
@@ -138,19 +138,31 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         );
         const hireTalentData = hireTalentResponse.data?.data || [];
 
-        const fetchedFilterSkills = (hireTalentData || [])
+        // Deduplicate skills by label using Map for O(n) performance
+        const skillsMap = new Map<string, Skill>();
+        (hireTalentData || [])
           .filter((item: any) => item.type === 'SKILL' && item.visible)
-          .map((item: any) => ({
-            _id: item.talentId || item._id,
-            label: item.talentName,
-          }));
+          .forEach((item: any) => {
+            const label = item.talentName || '';
+            const _id = item.talentId || item._id;
+            if (label && _id && !skillsMap.has(label)) {
+              skillsMap.set(label, { _id, label });
+            }
+          });
+        const fetchedFilterSkills = Array.from(skillsMap.values());
 
-        const fetchedFilterDomains = (hireTalentData || [])
+        // Deduplicate domains by label using Map for O(n) performance
+        const domainsMap = new Map<string, Domain>();
+        (hireTalentData || [])
           .filter((item: any) => item.type === 'DOMAIN' && item.visible)
-          .map((item: any) => ({
-            _id: item.talentId || item._id,
-            label: item.talentName,
-          }));
+          .forEach((item: any) => {
+            const label = item.talentName || '';
+            const _id = item.talentId || item._id;
+            if (label && _id && !domainsMap.has(label)) {
+              domainsMap.set(label, { _id, label });
+            }
+          });
+        const fetchedFilterDomains = Array.from(domainsMap.values());
 
         setFilterSkill(fetchedFilterSkills);
         setFilterDomain(fetchedFilterDomains);
@@ -192,6 +204,22 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
 
   // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {
+    // Prevent duplicate submission only if the skill is currently visible
+    const isAlreadyVisible = skillDomainData.some(
+      (item, index) =>
+        item.label === data.label &&
+        item.status !== 'REMOVED' &&
+        statusVisibility[index],
+    );
+
+    if (isAlreadyVisible) {
+      notifyError(
+        'This skill is already visible in your requirements.',
+        'Duplicate Skill',
+      );
+      return;
+    }
+
     setSkillDomainData([
       ...skillDomainData,
       { ...data, status: 'ADDED', visible: false },
@@ -200,12 +228,51 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   };
 
   const onSubmitDomain = (data: SkillDomainData) => {
+    // Prevent duplicate submission only if the domain is currently visible
+    const isAlreadyVisible = skillDomainData.some(
+      (item, index) =>
+        item.label === data.label &&
+        item.status !== 'REMOVED' &&
+        statusVisibility[index],
+    );
+
+    if (isAlreadyVisible) {
+      notifyError(
+        'This domain is already visible in your requirements.',
+        'Duplicate Domain',
+      );
+      return;
+    }
+
     setSkillDomainData([
       ...skillDomainData,
       { ...data, status: 'ADDED', visible: false },
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };
+
+  // Filter skills and domains that are already added AND visible
+  const getAvailableSkills = useMemo(() => {
+    const visibleSkillLabels = new Set(
+      skillDomainData
+        .filter(
+          (item, index) => item.status !== 'REMOVED' && statusVisibility[index],
+        )
+        .map((item) => item.label),
+    );
+    return skills.filter((skill) => !visibleSkillLabels.has(skill.label));
+  }, [skills, skillDomainData, statusVisibility]);
+
+  const getAvailableDomains = useMemo(() => {
+    const visibleDomainLabels = new Set(
+      skillDomainData
+        .filter(
+          (item, index) => item.status !== 'REMOVED' && statusVisibility[index],
+        )
+        .map((item) => item.label),
+    );
+    return domains.filter((domain) => !visibleDomainLabels.has(domain.label));
+  }, [domains, skillDomainData, statusVisibility]);
 
   // Function to handle visibility toggle and API call
   const handleToggleVisibility = async (
@@ -249,9 +316,15 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <CardTitle className="text-lg">Requirements</CardTitle>
 
-            <div className="flex items-center gap-3">
-              <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
-              <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
+            <div className="flex items-center gap-3" data-tour="requirements">
+              <SkillDialog
+                skills={getAvailableSkills}
+                onSubmitSkill={onSubmitSkill}
+              />
+              <DomainDialog
+                domains={getAvailableDomains}
+                onSubmitDomain={onSubmitDomain}
+              />
             </div>
           </div>
         </CardHeader>

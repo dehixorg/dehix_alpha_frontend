@@ -62,7 +62,6 @@ import {
   updateConversationWithMessageTransaction,
   updateDataInFirestore,
 } from '@/utils/common/firestoreUtils';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/components/ui/use-toast';
 import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
@@ -274,6 +273,22 @@ export function CardsChat({
         );
       }
     }
+  };
+
+  //Bold, italics and underline button should be highlighted when selected in chat
+  const [, setTick] = React.useState(0);
+
+  React.useEffect(() => {
+    const onSelectionChange = () => setTick((t) => t + 1);
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () =>
+      document.removeEventListener('selectionchange', onSelectionChange);
+  }, []);
+
+  const isFormatActive = (command: string) => {
+    return typeof document !== 'undefined'
+      ? document.queryCommandState(command)
+      : false;
   };
 
   useEffect(() => {
@@ -506,22 +521,12 @@ export function CardsChat({
   }
 
   async function handleCreateMeet() {
-    try {
-      const response = await axiosInstance.post('/meeting', {
-        participants: conversation.participants,
-      });
-
-      const meetLink = response.data.meetLink;
-      const message: Partial<Message> = {
-        senderId: user.uid,
-        content: `🔗 Join the Meet: [Click here](${meetLink})`,
-        timestamp: new Date().toISOString(),
-      };
-
-      sendMessage(conversation, message, setInput);
-    } catch (error) {
-      console.error('Error creating meet:', error);
-    }
+    // Video call functionality is currently disabled
+    toast({
+      title: "Feature Unavailable",
+      description: "This functionality is not available for now.",
+      variant: "default",
+    });
   }
 
   /**
@@ -530,6 +535,7 @@ export function CardsChat({
   function handleBold() {
     composerRef.current?.focus();
     document.execCommand('bold');
+    setTick((t) => t + 1);
   }
 
   /**
@@ -538,6 +544,7 @@ export function CardsChat({
   const handleUnderline = () => {
     composerRef.current?.focus();
     document.execCommand('underline');
+    setTick((t) => t + 1);
   };
 
   /**
@@ -546,6 +553,7 @@ export function CardsChat({
   function handleitalics() {
     composerRef.current?.focus();
     document.execCommand('italic');
+    setTick((t) => t + 1);
   }
 
   const toggleFormattingOptions = () => {
@@ -978,217 +986,227 @@ export function CardsChat({
               {/* create a search bar input here to take input from user to search conversation */}
               <TooltipProvider>
                 <div className="flex items-center space-x-0.5 sm:space-x-1">
-                {/* Desktop controls */}
-                {isSearchVisible ? (
-                  <div className="hidden sm:flex items-center space-x-2">
-                    <Input
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      placeholder="Search in conversation..."
-                      className="w-40 sm:w-56 rounded-full text-sm"
-                    />
+                  {/* Desktop controls */}
+                  {isSearchVisible ? (
+                    <div className="hidden sm:flex items-center space-x-2">
+                      <Input
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        placeholder="Search in conversation..."
+                        className="w-40 sm:w-56 rounded-full text-sm"
+                      />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Close search"
+                            onClick={() => {
+                              setIsSearchVisible(false);
+                              setSearchValue('');
+                            }}
+                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                          >
+                            ✕
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Close search
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  ) : (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="Close search"
-                          onClick={() => {
-                            setIsSearchVisible(false);
-                            setSearchValue('');
-                          }}
-                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                          aria-label="Search in chat"
+                          onClick={() => setIsSearchVisible(true)}
+                          className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                         >
-                          ✕
+                          <Search className="h-5 w-5" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom">Close search</TooltipContent>
+                      <TooltipContent side="bottom">Search</TooltipContent>
                     </Tooltip>
-                  </div>
-                ) : (
+                  )}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label="Search in chat"
-                        onClick={() => setIsSearchVisible(true)}
+                        aria-label={
+                          isArchived ? 'Unarchive chat' : 'Archive chat'
+                        }
+                        onClick={handleToggleArchive}
                         className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                       >
-                        <Search className="h-5 w-5" />
+                        {isArchived ? (
+                          <ArchiveRestore className="h-5 w-5" />
+                        ) : (
+                          <Archive className="h-5 w-5" />
+                        )}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">Search</TooltipContent>
+                    <TooltipContent side="bottom">
+                      {isArchived ? 'Unarchive' : 'Archive'}
+                    </TooltipContent>
                   </Tooltip>
-                )}
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
-                      onClick={handleToggleArchive}
-                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      {isArchived ? (
-                        <ArchiveRestore className="h-5 w-5" />
-                      ) : (
-                        <Archive className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {isArchived ? 'Unarchive' : 'Archive'}
-                  </TooltipContent>
-                </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Video call"
+                        onClick={handleCreateMeet}
+                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] opacity-50 cursor-not-allowed"
+                      >
+                        <Video className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">This functionality is not available for now</TooltipContent>
+                  </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Video call"
-                      onClick={handleCreateMeet}
-                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      <Video className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Video call</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
-                      onClick={() => {
-                        if (onToggleExpand) {
-                          onToggleExpand();
-                        } else {
-                          console.error('[CardsChat] onToggleExpand is undefined!');
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={
+                          isChatExpanded ? 'Collapse chat' : 'Expand chat'
                         }
-                      }}
-                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      {isChatExpanded ? (
-                        <Minimize2 className="h-5 w-5" />
-                      ) : (
-                        <Maximize2 className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {isChatExpanded ? 'Collapse' : 'Expand'}
-                  </TooltipContent>
-                </Tooltip>
+                        onClick={() => {
+                          if (onToggleExpand) {
+                            onToggleExpand();
+                          } else {
+                            console.error(
+                              '[CardsChat] onToggleExpand is undefined!',
+                            );
+                          }
+                        }}
+                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        {isChatExpanded ? (
+                          <Minimize2 className="h-5 w-5" />
+                        ) : (
+                          <Maximize2 className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      {isChatExpanded ? 'Collapse' : 'Expand'}
+                    </TooltipContent>
+                  </Tooltip>
 
-                {/* Mobile: everything in the three-dot menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label="More options"
-                          className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                        >
-                          <MoreVertical className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">More</TooltipContent>
-                    </Tooltip>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={5}
-                    className="w-52 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => setIsSearchVisible((v) => !v)}
-                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                  {/* Mobile: everything in the three-dot menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="More options"
+                            className="sm:hidden text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                          >
+                            <MoreVertical className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">More</TooltipContent>
+                      </Tooltip>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      sideOffset={5}
+                      className="w-52 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
                     >
-                      <Search className="h-4 w-4" />
-                      <span className="text-sm font-medium">Search</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleToggleArchive}
-                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      {isArchived ? (
-                        <ArchiveRestore className="h-4 w-4" />
-                      ) : (
-                        <Archive className="h-4 w-4" />
-                      )}
-                      <span className="text-sm font-medium">
-                        {isArchived ? 'Unarchive' : 'Archive'}
-                      </span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleCreateMeet}
-                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      <Video className="h-4 w-4" />
-                      <span className="text-sm font-medium">Video call</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        if (onToggleExpand) {
-                          onToggleExpand();
-                        } else {
-                          console.error('[CardsChat] onToggleExpand is undefined!');
-                        }
-                      }}
-                      className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      {isChatExpanded ? (
-                        <Minimize2 className="h-4 w-4" />
-                      ) : (
-                        <Maximize2 className="h-4 w-4" />
-                      )}
-                      <span className="text-sm font-medium">
-                        {isChatExpanded ? 'Collapse' : 'Expand'}
-                      </span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setOpenReport(true)}
-                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span className="text-sm font-medium">Report</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuItem
+                        onClick={() => setIsSearchVisible((v) => !v)}
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        <Search className="h-4 w-4" />
+                        <span className="text-sm font-medium">Search</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleToggleArchive}
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        {isArchived ? (
+                          <ArchiveRestore className="h-4 w-4" />
+                        ) : (
+                          <Archive className="h-4 w-4" />
+                        )}
+                        <span className="text-sm font-medium">
+                          {isArchived ? 'Unarchive' : 'Archive'}
+                        </span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleCreateMeet}
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2 opacity-50"
+                      >
+                        <Video className="h-4 w-4" />
+                        <span className="text-sm font-medium">Video call (Not available)</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (onToggleExpand) {
+                            onToggleExpand();
+                          } else {
+                            console.error(
+                              '[CardsChat] onToggleExpand is undefined!',
+                            );
+                          }
+                        }}
+                        className="px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        {isChatExpanded ? (
+                          <Minimize2 className="h-4 w-4" />
+                        ) : (
+                          <Maximize2 className="h-4 w-4" />
+                        )}
+                        <span className="text-sm font-medium">
+                          {isChatExpanded ? 'Collapse' : 'Expand'}
+                        </span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setOpenReport(true)}
+                        className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        <Flag className="h-4 w-4" />
+                        <span className="text-sm font-medium">Report</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
 
-                {/* Desktop: existing more options menu (report) */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="More options"
-                      className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  {/* Desktop: existing more options menu (report) */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="More options"
+                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      sideOffset={5}
+                      className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
                     >
-                      <MoreVertical className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={5}
-                    className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => setOpenReport(true)}
-                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span className="text-sm font-medium">Report</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuItem
+                        onClick={() => setOpenReport(true)}
+                        className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                      >
+                        <Flag className="h-4 w-4" />
+                        <span className="text-sm font-medium">Report</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </TooltipProvider>
             </CardHeader>
@@ -1247,9 +1265,10 @@ export function CardsChat({
                         const raw = replyMsg?.content || '';
 
                         const isImage = /\.(jpeg|jpg|gif|png)(\?|$)/i.test(raw);
-                        const isFile = /\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt)(\?|$)/i.test(
-                          raw,
-                        );
+                        const isFile =
+                          /\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt)(\?|$)/i.test(
+                            raw,
+                          );
 
                         const label = replyMsg?.voiceMessage
                           ? 'Voice message'
@@ -1258,10 +1277,10 @@ export function CardsChat({
                             : isFile
                               ? 'Document'
                               : raw
-                                  .replace(/<[^>]*>/g, '')
-                                  .replace(/&nbsp;/g, ' ')
-                                  .replace(/\*|__/g, '')
-                                  .trim() || 'Message';
+                                .replace(/<[^>]*>/g, '')
+                                .replace(/&nbsp;/g, ' ')
+                                .replace(/\*|__/g, '')
+                                .trim() || 'Message';
 
                         return (
                           <div className="flex items-center gap-2 min-w-0">
@@ -1412,7 +1431,11 @@ export function CardsChat({
                       onClick={handleBold}
                       title="Bold"
                       aria-label="Bold"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className={
+                        isFormatActive('bold')
+                          ? 'bg-accent text-foreground'
+                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                      }
                     >
                       {' '}
                       <Bold className="h-4 w-4" />{' '}
@@ -1424,7 +1447,11 @@ export function CardsChat({
                       onClick={handleitalics}
                       title="Italic"
                       aria-label="Italic"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className={
+                        isFormatActive('italic')
+                          ? 'bg-accent text-foreground'
+                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                      }
                     >
                       {' '}
                       <Italic className="h-4 w-4" />{' '}
@@ -1436,7 +1463,11 @@ export function CardsChat({
                       onClick={handleUnderline}
                       title="Underline"
                       aria-label="Underline"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                      className={
+                        isFormatActive('underline')
+                          ? 'bg-accent text-foreground'
+                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                      }
                     >
                       {' '}
                       <Underline className="h-4 w-4" />{' '}
@@ -1643,7 +1674,7 @@ export function CardsChat({
               <DialogContent
                 className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
              z-[50] bg-background border border-border
-             shadow-2xl rounded-2xl max-w-xl w-full p-6
+             shadow-2xl rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6
              transition-transform duration-300 animate-in fade-in zoom-in-95"
               >
                 <DialogHeader></DialogHeader>

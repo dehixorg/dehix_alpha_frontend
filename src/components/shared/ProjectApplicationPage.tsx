@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import {
   CheckCircle2,
   ChevronDown,
@@ -11,6 +12,8 @@ import {
   AlertCircle,
   SendHorizontal,
   X,
+  AlertTriangle,
+  Target,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -53,6 +56,18 @@ interface Profile {
   rate?: number;
   description?: string;
   profileType: 'FREELANCER' | 'CONSULTANT';
+  budget?: {
+    type: string;
+    fixedAmount?: number;
+    hourlyRate?: number;
+    hourly?: {
+      minRate?: number;
+      maxRate?: number;
+      estimatedHours?: number;
+    };
+    min?: number;
+    max?: number;
+  };
 }
 
 interface FreelancerProfile {
@@ -102,8 +117,8 @@ interface Bid {
 interface Budget {
   type: 'fixed' | 'hourly';
   hourly?: {
-    minRate: number;
-    maxRate: number;
+    minRate?: number;
+    maxRate?: number;
     estimatedHours?: number;
   };
   fixedAmount?: number;
@@ -123,8 +138,29 @@ const ProjectApplicationForm = ({
 }: ProjectApplicationFormProps) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [coverLetter, setCoverLetter] = useState<string>('');
-  const minChars = 500;
-  const maxChars = 2000;
+  const minChars = 200;
+  const maxChars = 500;
+
+  // Helper function to format budget display
+  const formatBudgetDisplay = (profile: Profile) => {
+    if (profile.budget?.type === 'FIXED' && profile.budget.fixedAmount) {
+      return `$${profile.budget.fixedAmount}`;
+    } else if (profile.budget?.type === 'HOURLY') {
+      if (profile.budget.hourlyRate) {
+        return `$${profile.budget.hourlyRate}/hr`;
+      } else if (
+        profile.budget.hourly?.minRate &&
+        profile.budget.hourly?.maxRate
+      ) {
+        return `$${profile.budget.hourly.minRate} - $${profile.budget.hourly.maxRate}/hr`;
+      }
+    } else if (profile.budget?.min && profile.budget?.max) {
+      return `$${profile.budget.min} - $${profile.budget.max}`;
+    } else if (profile.rate !== undefined) {
+      return `$${profile.rate}/hr`;
+    }
+    return 'Negotiable';
+  };
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [freelancerProfiles, setFreelancerProfiles] = useState<
@@ -135,7 +171,13 @@ const ProjectApplicationForm = ({
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+
+  const [appliedProfiles, setAppliedProfiles] = useState<Set<string>>(
+    new Set<string>(),
+  );
   const user = useSelector((state: RootState) => state.user);
+  const router = useRouter();
+
   const fetchFreelancerProfiles = useCallback(async () => {
     setIsLoadingProfiles(true);
     try {
@@ -182,6 +224,19 @@ const ProjectApplicationForm = ({
 
   // Handle project profile selection
   const handleProfileSelect = (profile: Profile) => {
+    if (isProfileApplied(profile._id)) {
+      return; // Don't allow selecting already applied profiles
+    }
+
+    // Check if already applied to 3 profiles
+    if (appliedProfiles.size >= 3) {
+      notifyError(
+        'You can bid on at most 3 profiles in a single project.',
+        'Maximum Applications Reached',
+      );
+      return;
+    }
+
     setSelectedProfile(profile);
     setBidAmount(profile.minConnect || 0);
     setSelectedFreelancerProfile(null);
@@ -196,14 +251,18 @@ const ProjectApplicationForm = ({
   const fetchAppliedData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
-      const profilesUserAppliedFor =
+      const appliedProfileIds = new Set(
         response.data?.data
           ?.filter(
             (bid: any) =>
               bid.project_id === project._id && bid.bidder_id === user.uid,
           )
-          ?.map((bid: any) => bid.profile_id) || [];
-      return profilesUserAppliedFor;
+          ?.map((bid: any) => bid.profile_id) || [],
+      );
+
+      const profileIds = Array.from(appliedProfileIds) as string[];
+      setAppliedProfiles(new Set<string>(profileIds));
+      return appliedProfileIds;
     } catch (error: any) {
       console.error('API Error fetching applied data:', error);
       notifyError('Failed to retrieve application status. Please try again.');
@@ -236,12 +295,37 @@ const ProjectApplicationForm = ({
     }
     setDialogOpen(true);
   };
+  const isProfileApplied = useCallback(
+    (profileId: string): boolean => {
+      return appliedProfiles.has(profileId);
+    },
+    [appliedProfiles],
+  );
+
   const handleBidSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate profile selection
+    // Profile selection is optional - freelancers can bid with or without a profile
     if (!selectedProfile?._id) {
       notifyError('No profile selected for bidding');
+      return;
+    }
+
+    // Check if already applied
+    if (isProfileApplied(selectedProfile._id)) {
+      notifyError(
+        'You have already applied to this profile',
+        'Already Applied',
+      );
+      return;
+    }
+
+    // Check if user has already applied to 3 profiles in this project
+    if (appliedProfiles.size >= 3) {
+      notifyError(
+        'You can bid on at most 3 profiles in a single project.',
+        'Maximum Applications Reached',
+      );
       return;
     }
 
@@ -319,6 +403,13 @@ const ProjectApplicationForm = ({
       setCoverLetter('');
       setSelectedFreelancerProfile(null);
 
+      // Update applied profiles in state
+      setAppliedProfiles((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(selectedProfile._id);
+        return newSet;
+      });
+
       // Show success message
       notifySuccess(
         'Your application has been successfully submitted.',
@@ -373,7 +464,9 @@ const ProjectApplicationForm = ({
     }
   };
 
-  const hasAppliedToSelectedProfile = !selectedFreelancerProfile;
+  const hasAppliedToSelectedProfile = Boolean(
+    selectedProfile && isProfileApplied(selectedProfile._id),
+  );
 
   if (isLoading) {
     return (
@@ -384,378 +477,549 @@ const ProjectApplicationForm = ({
   }
 
   return (
-    <Card className="overflow-hidden shadow-sm">
-      <CardHeader className="bg-gradient p-6 rounded-t-lg border">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl flex items-center gap-2">
-              Your Application
-            </CardTitle>
-            <CardDescription className="mt-1">
-              Apply to this project with your profile
-            </CardDescription>
-          </div>
-
-          <div className="w-full sm:w-auto">
-            {selectedProfile ? (
-              <div className="flex items-center gap-2">
-                <Badge className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white">
-                  {selectedProfile.domain} ({selectedProfile.profileType})
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full bg-red-700/20 hover:bg-red-700/40"
-                  onClick={() => {
-                    setSelectedProfile(null);
-                    setSelectedFreelancerProfile(null);
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    Select profile
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-0" align="end">
-                  <ScrollArea className="h-[280px]">
-                    {project.profiles && project.profiles.length > 0 ? (
-                      <div className="p-2">
-                        <div className="px-3 py-2">
-                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                            Select Project Profile
-                          </h4>
-                          <div className="space-y-1">
-                            {project.profiles.map((profile) => (
-                              <div
-                                key={profile._id}
-                                className="flex items-center justify-between p-2 rounded-md hover:bg-accent cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleProfileSelect(profile);
-                                }}
-                              >
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium">
-                                    {profile.domain}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {profile.profileType?.toLowerCase() ===
-                                    'freelancer'
-                                      ? 'Freelancer'
-                                      : 'Consultant'}
-                                  </p>
-                                </div>
-                                {profile.rate !== undefined && (
-                                  <Badge variant="outline" className="ml-2">
-                                    ${profile.rate}/hr
-                                  </Badge>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-6 text-center">
-                        <p className="text-sm text-muted-foreground">
-                          No project profiles available
-                        </p>
-                      </div>
-                    )}
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="pt-6">
-        {selectedProfile ? (
-          <div className="space-y-6">
+    <div className="w-full">
+      <Card className="overflow-hidden shadow-sm">
+        <CardHeader className="bg-gradient p-6 rounded-t-lg border">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h3 className="text-lg font-medium mb-4">
-                Available Freelancer Profiles
-              </h3>
-              {isLoadingProfiles ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[1, 2, 3].map((i) => (
-                    <Card key={i} className="animate-pulse">
-                      <CardContent className="p-4">
-                        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-muted rounded w-1/2 mb-4"></div>
-                        <div className="space-y-2">
-                          <div className="h-3 bg-muted rounded"></div>
-                          <div className="h-3 bg-muted rounded w-5/6"></div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : filteredFreelancerProfiles.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredFreelancerProfiles.map((profile) => (
-                    <Card
-                      key={profile._id}
-                      className={`cursor-pointer transition-all ${
-                        selectedFreelancerProfile?._id === profile._id
-                          ? 'ring-2 ring-primary'
-                          : 'hover:border-primary/50'
-                      }`}
-                      onClick={() => handleFreelancerSelect(profile)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">{profile.profileName}</h4>
-                          {profile.hourlyRate && (
-                            <Badge variant="outline">
-                              ${profile.hourlyRate}/hr
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {profile.description}
-                        </p>
-                        <div className="mt-3 flex flex-wrap gap-1">
-                          {profile.skills?.slice(0, 3).map((skill) => (
-                            <Badge
-                              key={skill._id}
-                              variant="secondary"
-                              className="text-xs"
-                            >
-                              {skill.label}
-                            </Badge>
-                          ))}
-                          {(profile.skills?.length || 0) > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{(profile.skills?.length || 0) - 3} more
-                            </Badge>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 border rounded-lg">
-                  <UserX className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                  <h4 className="text-sm font-medium">
-                    No matching profiles found
-                  </h4>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    We couldn&apos;t find any freelancer profiles that match
-                    this project&apos;s requirements.
-                  </p>
-                </div>
-              )}
+              <CardTitle className="text-xl flex items-center gap-2">
+                Your Application
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Apply to this project with your profile
+              </CardDescription>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
+            <div className="w-full sm:w-auto">
+              {selectedProfile ? (
                 <div className="flex items-center gap-2">
-                  <h3 className="font-medium">Cover Letter</h3>
+                  <Badge className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white">
+                    {selectedProfile.domain} ({selectedProfile.profileType})
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full bg-red-700/20 hover:bg-red-700/40"
+                    onClick={() => {
+                      setSelectedProfile(null);
+                      setSelectedFreelancerProfile(null);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {coverLetter.length}/{maxChars} characters
-                </div>
-              </div>
+              ) : (
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full sm:w-auto">
+                      Select profile
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0" align="end">
+                    <ScrollArea className="h-[280px]">
+                      {project.profiles && project.profiles.length > 0 ? (
+                        <div className="p-2">
+                          <div className="px-3 py-2">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Select Project Profile
+                              </h4>
+                              {appliedProfiles.size > 0 && (
+                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 border border-primary/20">
+                                  <Target className="h-3 w-3 text-primary" />
+                                  <span className="text-xs font-medium text-primary">
+                                    {appliedProfiles.size}/3 applied
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            {appliedProfiles.size >= 3 && (
+                              <div className="mb-3 p-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-2 border-amber-200 dark:border-amber-800/50 shadow-sm">
+                                <div className="flex items-start gap-2">
+                                  <div className="p-1 rounded-full bg-amber-500/20 mt-0.5">
+                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-200 mb-0.5">
+                                      Maximum Limit Reached
+                                    </p>
+                                    <p className="text-xs text-amber-800 dark:text-amber-300/90">
+                                      You can only bid on 3 profiles per
+                                      project. You&apos;ve reached the limit.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            <div className="space-y-1.5">
+                              {project.profiles?.map((profile: Profile) => {
+                                if (!profile?._id) return null;
+                                const isApplied = isProfileApplied(profile._id);
+                                const isMaxReached =
+                                  appliedProfiles.size >= 3 && !isApplied;
+                                return (
+                                  <div
+                                    key={profile._id}
+                                    className={cn(
+                                      'flex items-center justify-between p-3 rounded-lg border transition-all duration-200',
+                                      isApplied
+                                        ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/50 opacity-80'
+                                        : isMaxReached
+                                          ? 'bg-muted/30 border-muted-foreground/20 opacity-60 cursor-not-allowed'
+                                          : 'hover:bg-accent/50 hover:border-primary/30 cursor-pointer border-border',
+                                      selectedProfile &&
+                                        (selectedProfile as Profile)._id ===
+                                          profile._id &&
+                                        !isApplied
+                                        ? 'bg-primary/10 border-primary/40 shadow-sm'
+                                        : '',
+                                    )}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (
+                                        !isApplied &&
+                                        !isMaxReached &&
+                                        profile?._id
+                                      ) {
+                                        handleProfileSelect(profile);
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium">
+                                          {profile.domain} (
+                                          {profile.profileType})
+                                        </span>
+                                        {isApplied && (
+                                          <Badge
+                                            variant="outline"
+                                            className="h-5 text-xs"
+                                          >
+                                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                                            Applied
+                                          </Badge>
+                                        )}
+                                        {isMaxReached && !isApplied && (
+                                          <Badge
+                                            variant="outline"
+                                            className="h-5 text-xs bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 font-medium"
+                                          >
+                                            <AlertTriangle className="h-3 w-3 mr-1" />
+                                            Max Limit
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-xs text-muted-foreground line-clamp-1">
+                                        {profile.description}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Badge
+                                        variant={
+                                          isApplied ? 'secondary' : 'outline'
+                                        }
+                                        className={cn(
+                                          'ml-2',
+                                          isApplied
+                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                                            : '',
+                                        )}
+                                      >
+                                        {formatBudgetDisplay(profile)}
+                                      </Badge>
+                                      {!isApplied && !isMaxReached && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleProfileSelect(profile);
+                                          }}
+                                          className="shrink-0"
+                                        >
+                                          Select
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-6 text-center">
+                          <p className="text-sm text-muted-foreground">
+                            No project profiles available
+                          </p>
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+          </div>
+        </CardHeader>
 
-              <div className="relative">
-                <Textarea
-                  value={coverLetter}
-                  onChange={handleCoverLetterChange}
-                  placeholder="Tell us why you're the perfect fit for this project. Include relevant experience, skills, and any other details that make you stand out..."
-                  rows={8}
-                  className={cn(
-                    'w-full p-4 border rounded-lg resize-none transition-all duration-200',
-                    'focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1',
-                    hasAppliedToSelectedProfile
-                      ? 'bg-muted/50'
-                      : 'bg-background',
-                    coverLetter.length > maxChars
-                      ? 'border-destructive/50'
-                      : '',
+        <CardContent className="pt-6">
+          {selectedProfile ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">
+                    {selectedProfile.domain} ({selectedProfile.profileType})
+                  </h3>
+                  {isProfileApplied(selectedProfile._id) && (
+                    <div className="flex items-center text-sm text-green-600 mt-1">
+                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      <span>You&apos;ve already applied to this profile</span>
+                    </div>
                   )}
-                  disabled={hasAppliedToSelectedProfile}
-                />
-
-                {coverLetter.length === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="text-center p-4 max-w-xs mx-auto">
-                      <Lightbulb className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-xs text-muted-foreground">
-                        Tip: A personalized cover letter increases your chances
-                        of getting hired by 2x!
-                      </p>
+                </div>
+                <Badge variant="outline" className="text-sm">
+                  {formatBudgetDisplay(selectedProfile)}
+                </Badge>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-medium">
+                      Available Freelancer Profiles
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Select a profile to showcase your expertise, or continue
+                      without one
+                    </p>
+                  </div>
+                </div>
+                {isLoadingProfiles ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                      <Card key={i} className="animate-pulse">
+                        <CardContent className="p-4">
+                          <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-muted rounded w-1/2 mb-4"></div>
+                          <div className="space-y-2">
+                            <div className="h-3 bg-muted rounded"></div>
+                            <div className="h-3 bg-muted rounded w-5/6"></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : filteredFreelancerProfiles.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredFreelancerProfiles.map((profile) => (
+                      <Card
+                        key={profile._id}
+                        className={`cursor-pointer transition-all ${
+                          selectedFreelancerProfile?._id === profile._id
+                            ? 'ring-2 ring-primary'
+                            : 'hover:border-primary/50'
+                        }`}
+                        onClick={() => handleFreelancerSelect(profile)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium">
+                              {profile.profileName}
+                            </h4>
+                            {profile.hourlyRate && (
+                              <Badge variant="outline">
+                                ${profile.hourlyRate}/hr
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {profile.description}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-1">
+                            {profile.skills?.slice(0, 3).map((skill) => (
+                              <Badge
+                                key={skill._id}
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {skill.label}
+                              </Badge>
+                            ))}
+                            {(profile.skills?.length || 0) > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{(profile.skills?.length || 0) - 3} more
+                              </Badge>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 border rounded-lg bg-muted/20">
+                    <UserX className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                    <h4 className="text-sm font-medium mb-1">
+                      No matching profiles found
+                    </h4>
+                    <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
+                      You can create a new{' '}
+                      {selectedProfile?.profileType?.toLowerCase()} profile to
+                      showcase your expertise, or continue without a profile.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() =>
+                          router.push('/freelancer/settings/profiles')
+                        }
+                        className="w-full sm:w-auto"
+                      >
+                        Go to Profile Settings
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedFreelancerProfile(null)}
+                        className="w-full sm:w-auto"
+                      >
+                        Continue Without Profile
+                      </Button>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="mt-2">
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                  <span>Minimum {minChars} characters</span>
-                  <span>
-                    {coverLetter.length < minChars
-                      ? `${minChars - coverLetter.length} more required`
-                      : 'Minimum reached'}
-                  </span>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium">Cover Letter</h3>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {coverLetter.length}/{maxChars} characters
+                  </div>
                 </div>
-                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <motion.div
+
+                <div className="relative">
+                  <Textarea
+                    value={coverLetter}
+                    onChange={handleCoverLetterChange}
+                    placeholder="Tell us why you're the perfect fit for this project. Include relevant experience, skills, and any other details that make you stand out..."
+                    rows={8}
                     className={cn(
-                      'h-full',
+                      'w-full p-4 border rounded-lg resize-none transition-all duration-200',
+                      'focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1',
+                      hasAppliedToSelectedProfile
+                        ? 'bg-muted/50'
+                        : 'bg-background',
                       coverLetter.length > maxChars
-                        ? 'bg-destructive'
-                        : coverLetter.length >= minChars
-                          ? 'bg-green-500'
-                          : 'bg-yellow-500',
+                        ? 'border-destructive/50'
+                        : '',
                     )}
-                    initial={{ width: '0%' }}
-                    animate={{
-                      width: `${Math.min((coverLetter.length / maxChars) * 100, 100)}%`,
-                      transition: { duration: 0.3, ease: 'easeOut' },
-                    }}
+                    disabled={hasAppliedToSelectedProfile}
                   />
+
+                  {coverLetter.length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="text-center p-4 max-w-xs mx-auto">
+                        <Lightbulb className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-xs text-muted-foreground">
+                          Tip: A personalized cover letter increases your
+                          chances of getting hired by 2x!
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="mt-1 text-right">
-                  <span
-                    className={cn(
-                      'text-xs',
-                      coverLetter.length < minChars
-                        ? 'text-yellow-600'
-                        : coverLetter.length > maxChars
-                          ? 'text-destructive'
-                          : 'text-success',
-                    )}
-                  >
-                    {coverLetter.length < minChars ? (
-                      <span className="flex items-center justify-end gap-1">
-                        <AlertCircle className="h-3 w-3 inline" />
-                        {minChars - coverLetter.length} more characters needed
-                      </span>
-                    ) : coverLetter.length > maxChars ? (
-                      <span className="flex items-center justify-end gap-1">
-                        <AlertCircle className="h-3 w-3 inline" />
-                        {coverLetter.length - maxChars} characters over limit
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-end gap-1">
-                        <CheckCircle2 className="h-3 w-3 inline" />
-                        Your cover letter is ready to submit
-                      </span>
-                    )}
-                  </span>
+
+                <div className="mt-2">
+                  <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <motion.div
+                      className={cn(
+                        'h-full',
+                        coverLetter.length > maxChars
+                          ? 'bg-destructive'
+                          : coverLetter.length >= minChars
+                            ? 'bg-green-500'
+                            : 'bg-yellow-500',
+                      )}
+                      initial={{ width: '0%' }}
+                      animate={{
+                        width: `${Math.min((coverLetter.length / minChars) * 100, 100)}%`,
+                        transition: { duration: 0.3, ease: 'easeOut' },
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1 text-right">
+                    <span
+                      className={cn(
+                        'text-xs',
+                        coverLetter.length < minChars
+                          ? 'text-yellow-600'
+                          : coverLetter.length > maxChars
+                            ? 'text-destructive'
+                            : 'text-success',
+                      )}
+                    >
+                      {coverLetter.length < minChars ? (
+                        <span className="flex items-center justify-end gap-1">
+                          <AlertCircle className="h-3 w-3 inline" />
+                          {minChars - coverLetter.length} more characters needed
+                        </span>
+                      ) : coverLetter.length > maxChars ? (
+                        <span className="flex items-center justify-end gap-1">
+                          <AlertCircle className="h-3 w-3 inline" />
+                          {coverLetter.length - maxChars} characters over limit
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-end gap-1">
+                          <CheckCircle2 className="h-3 w-3 inline" />
+                          Your cover letter is ready to submit
+                        </span>
+                      )}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-10 text-muted-foreground dark:text-muted-foreground/40">
-            <Lightbulb className="h-6 w-6 mx-auto mb-2" />
-            <p>
-              Select a project profile above to see matching freelancer
-              profiles.
-            </p>
-            <p className="text-xs mt-1">
-              Tip: Click “Select profile” and choose the role you want to apply
-              with.
-            </p>
-          </div>
-        )}
-      </CardContent>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground dark:text-muted-foreground/40">
+              <Lightbulb className="h-6 w-6 mx-auto mb-2" />
+              <p>
+                Select a project profile above to see matching freelancer
+                profiles.
+              </p>
+              <p className="text-xs mt-1">
+                Tip: Click &quot;Select profile&quot; and choose the role you
+                want to apply with.
+              </p>
+            </div>
+          )}
+        </CardContent>
 
-      <CardFooter className="pt-4 border-t">
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            className="w-full sm:w-auto ml-auto"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}
-            Cancel
-          </Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                onClick={handleApplyClick}
-                className="w-full md:w-auto px-8"
-                disabled={
-                  !selectedProfile ||
-                  coverLetter.length < minChars ||
-                  coverLetter.length > maxChars
-                }
-              >
-                <SendHorizontal className="mr-2 h-4 w-4" />
-                Submit Application
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirm Application</DialogTitle>
-                <DialogDescription className="space-y-4">
-                  <div>
-                    <p>You are about to submit your application.</p>
-                    <p>
-                      Minimum required connects:{' '}
-                      {selectedProfile?.minConnect || 0}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="bidAmount"
-                      className="block text-sm font-medium text-foreground"
+        <CardFooter className="pt-4 border-t">
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              className="w-full sm:w-auto ml-auto"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Cancel
+            </Button>
+            <div>
+              {selectedProfile && isProfileApplied(selectedProfile._id) ? (
+                <Button variant="outline" className="w-full sm:w-auto" disabled>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Already Applied
+                </Button>
+              ) : (
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      className="w-full md:w-auto px-8"
+                      onClick={handleApplyClick}
+                      disabled={
+                        !selectedProfile ||
+                        coverLetter.length < minChars ||
+                        coverLetter.length > maxChars ||
+                        (selectedProfile &&
+                          isProfileApplied(selectedProfile._id))
+                      }
                     >
-                      Number of Connects to Bid
-                    </label>
-                    <input
-                      type="number"
-                      id="bidAmount"
-                      min={selectedProfile?.minConnect || 0}
-                      value={bidAmount || ''}
-                      onChange={handleBidAmountChange}
-                      onBlur={handleBidAmountBlur}
-                      className="w-full p-2 border rounded"
-                      placeholder={`Min ${selectedProfile?.minConnect || 0} connects`}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      You can bid more connects to increase visibility
-                    </p>
-                  </div>
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleBidSubmit}
-                  disabled={isSubmitting || hasAppliedToSelectedProfile}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    'Confirm'
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </CardFooter>
-    </Card>
+                      {selectedProfile &&
+                      isProfileApplied(selectedProfile._id) ? (
+                        <>
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Already Applied
+                        </>
+                      ) : (
+                        <>
+                          <SendHorizontal className="mr-2 h-4 w-4" />
+                          Submit Application
+                        </>
+                      )}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Confirm Application</DialogTitle>
+                      <DialogDescription className="space-y-4">
+                        <div>
+                          <p>You are about to submit your application.</p>
+                          <p>
+                            Minimum required connects:{' '}
+                            {selectedProfile?.minConnect || 0}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="bidAmount"
+                            className="block text-sm font-medium text-foreground"
+                          >
+                            Number of Connects to Bid
+                          </label>
+                          <input
+                            type="number"
+                            id="bidAmount"
+                            min={selectedProfile?.minConnect || 0}
+                            value={bidAmount || ''}
+                            onChange={handleBidAmountChange}
+                            onBlur={handleBidAmountBlur}
+                            className="w-full p-2 border rounded"
+                            placeholder={`Min ${selectedProfile?.minConnect || 0} connects`}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            You can bid more connects to increase visibility
+                          </p>
+                        </div>
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setDialogOpen(false)}
+                        disabled={isSubmitting}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleBidSubmit}
+                        disabled={
+                          isSubmitting ||
+                          (selectedProfile
+                            ? isProfileApplied(selectedProfile._id)
+                            : true)
+                        }
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : selectedProfile &&
+                          isProfileApplied(selectedProfile._id) ? (
+                          <>
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Already Applied
+                          </>
+                        ) : (
+                          'Confirm Application'
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 

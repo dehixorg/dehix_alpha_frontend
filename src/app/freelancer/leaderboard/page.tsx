@@ -39,6 +39,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
+import { useLeaderboardTour } from '@/components/tour/freelancer/useLeaderboardTour';
 
 // Skeleton Loaders
 function CardGridSkeleton() {
@@ -239,6 +240,7 @@ export default function LeaderboardPage() {
   const [leaderboards, setLeaderboards] = useState<FullLeaderboard[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [error, setError] = useState<string | null>(null);
+  useLeaderboardTour(true);
 
   // Load data on mount
   useEffect(() => {
@@ -310,7 +312,7 @@ export default function LeaderboardPage() {
       ]}
       mainClassName="flex-1 p-4 sm:px-6 sm:py-2"
     >
-      <div className="mx-auto w-full max-w-[92vw]">
+      <div className="mx-auto w-full max-w-[92vw]" data-tour="leaderboard">
         <Card className="overflow-hidden">
           <CardHeader>
             <div className="flex items-start justify-between gap-4">

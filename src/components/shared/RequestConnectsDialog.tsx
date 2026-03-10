@@ -35,9 +35,9 @@ export default function RequestConnectsDialog({
       notifyError('Please enter a valid number of connects.', 'Invalid input');
       return;
     }
-    if (parsed > 500) {
+    if (parsed > 200) {
       notifyError(
-        'You can request up to 500 connects at a time.',
+        'You can request up to 200 connects at a time.',
         'Limit exceeded',
       );
       return;
@@ -106,7 +106,7 @@ export default function RequestConnectsDialog({
                 inputMode="numeric"
                 step={1}
                 min={1}
-                max={500}
+                max={200}
                 className="mt-2"
               />
             </div>
