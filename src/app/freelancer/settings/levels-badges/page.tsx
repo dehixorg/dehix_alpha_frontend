@@ -268,13 +268,14 @@ export default function LevelsAndBadgesPage() {
     Record<string, boolean>
   >({});
 
-  // Memoize the calculateDisplayLevel function
-  const calculateDisplayLevel = useCallback((priority: number): number => {
-    // If priority is 0, it's level 1
-    if (priority === 0) return 1;
-    // Otherwise, divide by 10 and add 1 to get level number
-    return Math.floor(priority / 10) + 1;
-  }, []);
+  // Calculate display level number from index in sorted levels array
+  const getDisplayLevelNumber = useCallback(
+    (levelId: string): number => {
+      const level = allLevels.find((l) => (l._id || l.level_id) === levelId);
+      return level?.levelNumber ?? 1;
+    },
+    [allLevels],
+  );
 
   // Claim badge mutation
   const claimBadgeMutation = useMutation<ClaimBadgeResponse, Error, string>({
@@ -406,7 +407,7 @@ export default function LevelsAndBadgesPage() {
 
     const currentNum = currentLevel.levelNumber ?? 0;
     const nextLevel = allLevels.find(
-      (l: LevelItem) => (l.priority || 0) === (currentLevel.priority || 0) + 10,
+      (l: LevelItem) => (l.levelNumber ?? 0) === currentNum + 1,
     );
 
     if (!nextLevel) {
@@ -725,38 +726,26 @@ export default function LevelsAndBadgesPage() {
             ) : (
               'Level Up!'
             )}
-          </div>
-        </CardHeader>
-        <CardContent className="max-w-full">
-          {filteredBadges.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredBadges.map((badge) => {
-                const badgeId = badge._id || badge.badge_id || '';
-                const isEarned = isBadgeEarned(badgeId);
-                const isNextBadge = badge.priority === maxEarnedPriority + 10;
-                const eligibility = eligibilityChecks[badgeId];
-                const isChecking = checkingEligibility[badgeId];
+          </Button>
+        )}
+      </div>
 
-                return (
-                  <div key={levelId} className="relative pl-12">
-                    {/* Timeline node */}
-                    <div
-                      className={`absolute left-0 top-4 flex h-10 w-10 items-center justify-center rounded-full border-4 border-background ${
-                        getLevelStatus(level.priority || 0) === 'completed'
-                          ? 'bg-green-500 text-white'
-                          : getLevelStatus(level.priority || 0) === 'current'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {getLevelStatus(level.priority || 0) === 'completed' ? (
-                        <Check className="h-5 w-5" />
-                      ) : getLevelStatus(level.priority || 0) === 'current' ? (
-                        <Crown className="h-5 w-5" />
-                      ) : (
-                        <Lock className="h-5 w-5" />
-                      )}
-                    </div>
+      {/* Levels Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold tracking-tight">Your Level</h2>
+          {currentLevel && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Trophy className="h-4 w-4" />
+              <span>
+                Level{' '}
+                {getDisplayLevelNumber(
+                  currentLevel._id || currentLevel.level_id,
+                )}
+              </span>
+            </div>
+          )}
+        </div>
 
         {sortedLevels.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
