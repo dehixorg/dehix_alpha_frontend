@@ -26,10 +26,12 @@ const AddToLobbyDialog = ({
   setLoading,
 }: any) => {
   const user = useSelector((state: RootState) => state.user);
-  const requiredConnectsEnv = Number(process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST);
-const requiredConnects = Number.isFinite(requiredConnectsEnv)
-  ? requiredConnectsEnv
-  : 5;
+  const requiredConnectsEnv = Number(
+    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST,
+  );
+  const requiredConnects = Number.isFinite(requiredConnectsEnv)
+    ? requiredConnectsEnv
+    : 5;
 
   const existingInvites = Array.isArray(talent?.dehixTalent)
     ? talent.dehixTalent
