@@ -156,7 +156,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>(
     skillDomainDataProp || [],
   );
-  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(new Set());
+  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    const stored = localStorage.getItem('invitedTalents');
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  });
   const [selectedTalent, setSelectedTalent] = useState<any>();
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
@@ -427,6 +431,12 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setInvitedTalents((prev) => {
           const next = new Set(prev);
           next.add(freelancerId);
+
+          localStorage.setItem(
+            'invitedTalents',
+            JSON.stringify(Array.from(next)),
+          );
+
           return next;
         });
 
@@ -621,15 +631,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
                       </div>
                     ))}
                   </div>
-
-                  {isInvited && (
-                    <Badge
-                      variant="outline"
-                      className="rounded-full text-xs font-medium px-3 py-1 border-blue-300 text-blue-700 dark:text-blue-300"
-                    >
-                      Invited
-                    </Badge>
-                  )}
 
                   <div className="pt-1">
                     {SHEET_SIDES.map((View) => (
@@ -1025,6 +1026,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                           <div className="px-6 pb-6 pt-2">
                             <div className="flex flex-col sm:flex-row gap-3 justify-center space-between">
                               <Button
+                                disabled={isInvited}
                                 className={`w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
                                 onClick={() => {
                                   setOpenSheetId(null);
@@ -1059,6 +1061,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
               <CardFooter className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
                 <div className="flex flex-col sm:flex-row gap-3 w-full">
                   <Button
+                    disabled={isInvited}
                     className={`w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
