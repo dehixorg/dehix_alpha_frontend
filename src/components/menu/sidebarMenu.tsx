@@ -138,7 +138,27 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const pathname = usePathname();
 
   const user = useSelector((state: RootState) => state.user);
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => {
+    if (pathname === href) return true;
+    // Handle parent routes (e.g., /business/talent should match /business/talent/applications)
+    if (href.endsWith('/talent') && pathname.startsWith('/business/talent')) {
+      return true;
+    }
+    if (
+      href.endsWith('/projects') &&
+      pathname.startsWith('/business/projects')
+    ) {
+      return true;
+    }
+    if (
+      href.endsWith('/settings') &&
+      pathname.startsWith('/business/settings')
+    ) {
+      return true;
+    }
+    return false;
+  };
+
   const isActiveParent = (item: MenuItem) => {
     if (isActive(item.href ? item.href : '')) return true;
     return item.subItems?.some((subItem) => isActive(subItem.href));
@@ -191,6 +211,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   };
 
   const MenuIcon = ({ item }: { item: MenuItem }) => {
+    const shouldHighlight = isActive(item.href || '') || item.label === 'Dehix';
+
     if (item.subItems) {
       return (
         <Popover>
@@ -265,7 +287,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
               onClick={() => setActive(item.label)}
               data-tour={item.tourId}
               className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                item.label === active || item.label === 'Dehix'
+                shouldHighlight
                   ? item.label === 'Dehix'
                     ? 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base'
                     : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
