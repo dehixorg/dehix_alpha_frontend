@@ -1,11 +1,9 @@
 'use client';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { notifyError } from '@/utils/toastMessage';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 import { VerificationStatus } from '@/utils/verificationStatus';
 import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
@@ -15,84 +13,21 @@ type FilterOption = 'all' | 'pending' | 'approved' | 'denied';
 
 const STATUS = VerificationStatus;
 
-export default function BusinessVerification() {
-  const [businessdata, setBusinessData] = useState<any[]>([]);
+interface BusinessVerificationProps {
+  data: any[];
+  loading: boolean;
+}
+
+export default function BusinessVerification({
+  data,
+  loading,
+}: BusinessVerificationProps) {
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [localData, setLocalData] = useState<any[]>([]);
+  const [initialized, setInitialized] = useState(false);
 
   const handleFilterChange = useCallback(
     (newFilter: FilterOption) => setFilter(newFilter),
-    [],
-  );
-
-  const filteredData = useMemo(() => {
-    return businessdata.filter((data) => {
-      if (filter === 'all') return true;
-      const status = data.verificationStatus as VerificationStatus;
-      if (filter === 'pending') return status === STATUS.PENDING;
-      if (filter === 'approved') return status === STATUS.APPROVED;
-      if (filter === 'denied') return status === STATUS.DENIED;
-      return true;
-    });
-  }, [businessdata, filter]);
-
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await axiosInstance.get(
-        `/verification/oracle?doc_type=business`,
-      );
-      const result = response.data.data;
-
-      const flattenedData = result.flatMap((entry: any) =>
-        entry.result?.projects
-          ? Object.values(entry.result.projects).map((project: any) => ({
-              ...project,
-              // canonical status on each item
-              verificationStatus: toVerificationStatus(
-                project.verificationStatus ||
-                  project.status ||
-                  project.verification_status ||
-                  STATUS.PENDING,
-              ),
-              verifier_id: entry.verifier_id,
-              verifier_username: entry.verifier_username,
-            }))
-          : [],
-      );
-
-      setBusinessData(flattenedData);
-    } catch (error) {
-      console.error('Error in getting verification data:', error);
-      notifyError('Something went wrong. Please try again.', 'Error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const updateBusinessStatus = useCallback(
-    (index: number, newStatus: VerificationStatus) => {
-      setBusinessData((prev: any[]) => {
-        const next = [...prev];
-        if (next[index]) next[index].status = newStatus;
-        return next;
-      });
-    },
-    [],
-  );
-
-  const updateCommentStatus = useCallback(
-    (index: number, newComment: string) => {
-      setBusinessData((prev: any[]) => {
-        const next = [...prev];
-        if (next[index]) next[index].comments = newComment;
-        return next;
-      });
-    },
     [],
   );
 
@@ -107,6 +42,68 @@ export default function BusinessVerification() {
         return VerificationStatus.PENDING;
     }
   };
+
+  const businessData = useMemo(() => {
+    const transformed = data
+      .map((entry: any) => {
+        if (!entry.result) return null;
+        return {
+          ...entry.result,
+          verification_id: entry._id,
+          document_id: entry.document_id,
+          verificationStatus: toVerificationStatus(
+            entry.verification_status || STATUS.PENDING,
+          ),
+          comment: entry.comment,
+        };
+      })
+      .filter(Boolean);
+
+    if (!initialized && transformed.length > 0) {
+      setLocalData(transformed);
+      setInitialized(true);
+    }
+    return transformed;
+  }, [data, initialized]);
+
+  const displayData = initialized ? localData : businessData;
+
+  const filteredData = useMemo(() => {
+    return displayData.filter((d: any) => {
+      if (filter === 'all') return true;
+      const status = d.verificationStatus as VerificationStatus;
+      if (filter === 'pending') return status === STATUS.PENDING;
+      if (filter === 'approved') return status === STATUS.APPROVED;
+      if (filter === 'denied') return status === STATUS.DENIED;
+      return true;
+    });
+  }, [displayData, filter]);
+
+  const updateBusinessStatus = useCallback(
+    (documentId: string, newStatus: VerificationStatus) => {
+      setLocalData((prev: any[]) =>
+        prev.map((item) =>
+          item.document_id === documentId
+            ? { ...item, verificationStatus: newStatus }
+            : item,
+        ),
+      );
+    },
+    [],
+  );
+
+  const updateCommentStatus = useCallback(
+    (documentId: string, newComment: string) => {
+      setLocalData((prev: any[]) =>
+        prev.map((item) =>
+          item.document_id === documentId
+            ? { ...item, comments: newComment }
+            : item,
+        ),
+      );
+    },
+    [],
+  );
 
   return (
     <OracleVerificationLayout
@@ -167,10 +164,10 @@ export default function BusinessVerification() {
                       </div>
                     ))
                   ) : filteredData.length > 0 ? (
-                    filteredData.map((data: any, index: number) => (
+                    filteredData.map((data: any) => (
                       <BusinessVerificationCard
-                        key={index}
-                        _id={data._id}
+                        key={data.verification_id}
+                        _id={data.verification_id}
                         firstName={data.firstName}
                         lastName={data.lastName}
                         email={data.email}
@@ -181,16 +178,16 @@ export default function BusinessVerification() {
                         websiteLink={data.websiteLink}
                         linkedInLink={data.linkedInLink}
                         githubLink={data.githubLink}
-                        comments={data.comments}
+                        comments={data.comment}
                         status={data.verificationStatus}
                         onStatusUpdate={(newStatus) =>
                           updateBusinessStatus(
-                            index,
+                            data.document_id,
                             newStatus as VerificationStatus,
                           )
                         }
                         onCommentUpdate={(newComment) =>
-                          updateCommentStatus(index, newComment)
+                          updateCommentStatus(data.document_id, newComment)
                         }
                       />
                     ))
