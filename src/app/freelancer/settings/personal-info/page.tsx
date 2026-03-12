@@ -5,6 +5,7 @@ import FreelancerSettingsLayout from '../../../../components/layout/FreelancerSe
 
 import { RootState } from '@/lib/store';
 import { ProfileForm } from '@/components/form/profileForm';
+import { UpdatePasswordForm } from '@/components/form/updatePasswordForm';
 
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);
@@ -20,6 +21,7 @@ export default function PersonalInfo() {
       isKycCheck={true}
     >
       <ProfileForm user_id={user.uid} />
+      <UpdatePasswordForm user_id={user.uid} userType="freelancer" />
     </FreelancerSettingsLayout>
   );
 }

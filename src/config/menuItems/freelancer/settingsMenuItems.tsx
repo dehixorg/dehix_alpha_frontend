@@ -10,6 +10,7 @@ import {
   Star,
   Flame,
   Receipt,
+  Eye,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -81,6 +82,12 @@ export const menuItemsTop: MenuItem[] = [
     icon: <FileText className="h-5 w-5" />,
     label: 'Resume',
     tourId: 'sidebar-resume',
+  },
+  {
+    href: '/freelancer/settings/oracle',
+    icon: <Eye className="h-5 w-5" />,
+    label: 'Oracle',
+    tourId: 'sidebar-oracle',
   },
   {
     href: '/settings/feedback',
