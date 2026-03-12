@@ -943,7 +943,7 @@ export function ProfileSidebar({
             </p>
           </div>
         </SheetHeader>
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 overflow-y-scroll">
           <div className="p-4 space-y-6">
             {loading && (
               <Card>
