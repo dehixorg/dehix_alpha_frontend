@@ -191,7 +191,7 @@ const Header: React.FC<HeaderProps> = ({
     <header
       role="banner"
       aria-label="Site header"
-      className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-muted-foreground/20 dark:bg-muted/20 px-4 sm:px-6 backdrop-blur-md"
+      className="sticky top-0 z-50 flex h-14 items-center py-6 gap-4 border-b bg-muted-foreground/20 dark:bg-muted/20 px-4 sm:px-6 backdrop-blur-md"
     >
       {/* Sidebar Menu */}
       <CollapsibleSidebarMenu
