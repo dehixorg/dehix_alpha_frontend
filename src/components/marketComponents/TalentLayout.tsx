@@ -95,7 +95,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col overflow-auto">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -116,7 +116,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
           ]}
         />
         {/* Filters will be added later if needed */}
-        <div className="container px-4 py-4 ">
+        <div className="container px-4 py-4">
           <Tabs
             value={activeTab}
             onValueChange={handleTabChange}
@@ -134,21 +134,22 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
             </TabsList>
           </Tabs>
         </div>
-
-        <div className="container flex-1 items-start px-4">
-          <div className="grid grid-cols-12">
-            <div className="col-span-12">
-              <TalentContent
-                activeTab={activeTab}
-                talents={activeTab === 'overview' ? [] : talents}
-                loading={loading}
-                statusFilter={statusFilter}
-                onStatusFilterChange={onStatusFilterChange}
-                talentFilter={talentFilter}
-                onTalentFilterChange={onTalentFilterChange}
-                talentOptions={talentOptions}
-                onUpdateApplicationStatus={onUpdateApplicationStatus}
-              />
+        <div className="flex-1 overflow-auto">
+          <div className="container flex-1 items-start px-4">
+            <div className="grid grid-cols-12">
+              <div className="col-span-12">
+                <TalentContent
+                  activeTab={activeTab}
+                  talents={activeTab === 'overview' ? [] : talents}
+                  loading={loading}
+                  statusFilter={statusFilter}
+                  onStatusFilterChange={onStatusFilterChange}
+                  talentFilter={talentFilter}
+                  onTalentFilterChange={onTalentFilterChange}
+                  talentOptions={talentOptions}
+                  onUpdateApplicationStatus={onUpdateApplicationStatus}
+                />
+              </div>
             </div>
           </div>
         </div>
