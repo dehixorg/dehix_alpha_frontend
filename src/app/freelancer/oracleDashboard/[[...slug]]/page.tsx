@@ -8,12 +8,15 @@ import BusinessVerification from '@/components/freelancer/oracleDashboard/Busine
 import EducationVerification from '@/components/freelancer/oracleDashboard/EducationVerification';
 import ProjectVerification from '@/components/freelancer/oracleDashboard/ProjectVerification';
 import WorkExpVerification from '@/components/freelancer/oracleDashboard/WorkExpVerification';
+import OracleApplicationCard from '@/components/freelancer/oracle/OracleApplicationCard';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 import { useOracleTour } from '@/components/tour/freelancer/useOracleTour';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
+import { OracleStatusEnum } from '@/utils/enum';
 
 export default function OracleDashboardPage() {
   const router = useRouter();
@@ -40,6 +43,8 @@ export default function OracleDashboardPage() {
     project: false,
     education: false,
   });
+  const [oracleStatus, setOracleStatus] = useState<string | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
 
   // Determine active tab from dynamic route params
   const slugParam = (params as any)?.slug;
@@ -79,9 +84,32 @@ export default function OracleDashboardPage() {
     [user?.uid, fetched],
   );
 
+  const fetchOracleStatus = useCallback(async () => {
+    if (!user?.uid) {
+      setStatusLoading(false);
+      return;
+    }
+    try {
+      setStatusLoading(true);
+      const res = await axiosInstance.get(`/freelancer/${user.uid}`);
+      const status =
+        res.data?.data?.oracleStatus ?? OracleStatusEnum.NOT_APPLIED;
+      setOracleStatus(status);
+    } catch {
+      notifyError('Failed to fetch Oracle status.', 'Error');
+    } finally {
+      setStatusLoading(false);
+    }
+  }, [user?.uid]);
+
   useEffect(() => {
+    fetchOracleStatus();
+  }, [fetchOracleStatus]);
+
+  useEffect(() => {
+    if (oracleStatus !== OracleStatusEnum.APPROVED) return;
     fetchVerificationData(currentTabFromURL);
-  }, [currentTabFromURL, fetchVerificationData]);
+  }, [currentTabFromURL, fetchVerificationData, oracleStatus]);
 
   useOracleTour(true);
 
@@ -100,70 +128,81 @@ export default function OracleDashboardPage() {
       mainClassName="flex-1 px-4"
     >
       <div className="mx-auto w-full max-w-7xl mt-4 md:mt-0">
-        <Tabs
-          value={currentTabFromURL}
-          onValueChange={handleTabChange}
-          className="w-full"
-        >
-          <TabsList
-            className="grid w-full grid-cols-4 gap-2"
-            data-tour="oracle-tabs"
+        {statusLoading ? (
+          <div className="max-w-3xl space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+        ) : oracleStatus === OracleStatusEnum.APPROVED ? (
+          <Tabs
+            value={currentTabFromURL}
+            onValueChange={handleTabChange}
+            className="w-full"
           >
-            <TabsTrigger
-              value="business"
-              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+            <TabsList
+              className="grid w-full grid-cols-4 gap-2"
+              data-tour="oracle-tabs"
             >
-              <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Business</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="experience"
-              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
-            >
-              <User className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Experience</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="project"
-              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
-            >
-              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Projects</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="education"
-              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
-            >
-              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Education</span>
-            </TabsTrigger>
-          </TabsList>
+              <TabsTrigger
+                value="business"
+                className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+              >
+                <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Business</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="experience"
+                className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+              >
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Experience</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="project"
+                className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+              >
+                <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Projects</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="education"
+                className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+              >
+                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Education</span>
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="business" data-tour="oracle-page">
-            <BusinessVerification
-              data={verificationData.business}
-              loading={loading.business}
-            />
-          </TabsContent>
-          <TabsContent value="experience">
-            <WorkExpVerification
-              data={verificationData.experience}
-              loading={loading.experience}
-            />
-          </TabsContent>
-          <TabsContent value="project">
-            <ProjectVerification
-              data={verificationData.project}
-              loading={loading.project}
-            />
-          </TabsContent>
-          <TabsContent value="education">
-            <EducationVerification
-              data={verificationData.education}
-              loading={loading.education}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="business" data-tour="oracle-page">
+              <BusinessVerification
+                data={verificationData.business}
+                loading={loading.business}
+              />
+            </TabsContent>
+            <TabsContent value="experience">
+              <WorkExpVerification
+                data={verificationData.experience}
+                loading={loading.experience}
+              />
+            </TabsContent>
+            <TabsContent value="project">
+              <ProjectVerification
+                data={verificationData.project}
+                loading={loading.project}
+              />
+            </TabsContent>
+            <TabsContent value="education">
+              <EducationVerification
+                data={verificationData.education}
+                loading={loading.education}
+              />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="max-w-3xl">
+            <OracleApplicationCard userId={user?.uid} />
+          </div>
+        )}
       </div>
     </FreelancerAppLayout>
   );
