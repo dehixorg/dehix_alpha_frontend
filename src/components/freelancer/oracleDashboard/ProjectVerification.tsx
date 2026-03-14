@@ -1,12 +1,10 @@
 'use client';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
-import { notifyError } from '@/utils/toastMessage';
 import { VerificationStatus } from '@/utils/verificationStatus';
 import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
 import EmptyState from '@/components/shared/EmptyState';
@@ -24,15 +22,52 @@ interface ProjectData {
   comments: string;
   role: string;
   projectType: string;
+  verification_id: string;
+  document_id: string;
   verification_status: VerificationStatus;
-  onStatusUpdate: (newStatus: VerificationStatus) => void;
-  onCommentUpdate: (newComment: string) => void;
+  comment: string;
 }
 
-const ProjectVerification = () => {
-  const [projectData, setProjectData] = useState<ProjectData[]>([]);
+interface ProjectVerificationProps {
+  data: any[];
+  loading: boolean;
+}
+
+const ProjectVerification = ({ data, loading }: ProjectVerificationProps) => {
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [localData, setLocalData] = useState<ProjectData[]>([]);
+  const [initialized, setInitialized] = useState(false);
+
+  const projectData = useMemo(() => {
+    const transformed: ProjectData[] = data
+      .map((entry: any) => {
+        const projectDocs = entry.result?.projects
+          ? (Object.values(entry.result.projects) as any[])
+          : [];
+
+        const matchingDoc = projectDocs.find(
+          (doc: any) => doc._id === entry.document_id,
+        );
+
+        if (!matchingDoc) return null;
+        return {
+          ...matchingDoc,
+          verification_id: entry._id,
+          document_id: entry.document_id,
+          verification_status: entry.verification_status as VerificationStatus,
+          comment: entry.comment,
+        } as ProjectData;
+      })
+      .filter(Boolean) as ProjectData[];
+
+    if (!initialized && transformed.length > 0) {
+      setLocalData(transformed);
+      setInitialized(true);
+    }
+    return transformed;
+  }, [data, initialized]);
+
+  const displayData = initialized ? localData : projectData;
 
   const handleFilterChange = useCallback(
     (newFilter: FilterOption) => setFilter(newFilter),
@@ -40,69 +75,40 @@ const ProjectVerification = () => {
   );
 
   const filteredData = useMemo(() => {
-    return projectData.filter((data) => {
+    return displayData.filter((d) => {
       if (filter === 'all') return true;
       if (filter === 'pending')
-        return data.verification_status === VerificationStatus.PENDING;
+        return d.verification_status === VerificationStatus.PENDING;
       if (filter === 'approved')
-        return data.verification_status === VerificationStatus.APPROVED;
+        return d.verification_status === VerificationStatus.APPROVED;
       if (filter === 'denied')
-        return data.verification_status === VerificationStatus.DENIED;
+        return d.verification_status === VerificationStatus.DENIED;
       return true;
     });
-  }, [projectData, filter]);
-
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await axiosInstance.get(
-        `/verification/oracle?doc_type=project`,
-      );
-      const result = response.data.data;
-
-      const flattenedData: ProjectData[] = result.flatMap((entry: any) =>
-        entry.result?.projects
-          ? (Object.values(entry.result.projects) as any[]).map(
-              (project: any) => {
-                return {
-                  ...project,
-                  ...entry,
-                } as ProjectData;
-              },
-            )
-          : [],
-      );
-
-      setProjectData(flattenedData);
-    } catch (error) {
-      notifyError('Something went wrong. Please try again.', 'Error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  }, [displayData, filter]);
 
   const updateProjectStatus = useCallback(
-    (index: number, newStatus: VerificationStatus) => {
-      setProjectData((prev) => {
-        const next = [...prev];
-        if (next[index]) next[index].verification_status = newStatus;
-        return next;
-      });
+    (documentId: string, newStatus: VerificationStatus) => {
+      setLocalData((prev) =>
+        prev.map((item) =>
+          item.document_id === documentId
+            ? { ...item, verification_status: newStatus }
+            : item,
+        ),
+      );
     },
     [],
   );
 
   const updateCommentStatus = useCallback(
-    (index: number, newComment: string) => {
-      setProjectData((prev) => {
-        const next = [...prev];
-        if (next[index]) next[index].comments = newComment;
-        return next;
-      });
+    (documentId: string, newComment: string) => {
+      setLocalData((prev) =>
+        prev.map((item) =>
+          item.document_id === documentId
+            ? { ...item, comments: newComment }
+            : item,
+        ),
+      );
     },
     [],
   );
@@ -226,10 +232,10 @@ const ProjectVerification = () => {
                       </div>
                     ))
                   ) : filteredData.length > 0 ? (
-                    filteredData.map((data, index) => (
+                    filteredData.map((data) => (
                       <ProjectVerificationCard
-                        key={index}
-                        _id={data._id}
+                        key={data.verification_id}
+                        _id={data.verification_id}
                         projectName={data.projectName}
                         description={data.description}
                         githubLink={data.githubLink}
@@ -239,13 +245,13 @@ const ProjectVerification = () => {
                         projectType={data.projectType}
                         reference={data.refer}
                         techUsed={data.techUsed}
-                        comments={data.comments}
+                        comments={data.comment}
                         status={data.verification_status}
                         onStatusUpdate={(newStatus) =>
-                          updateProjectStatus(index, newStatus)
+                          updateProjectStatus(data.document_id, newStatus)
                         }
                         onCommentUpdate={(newComment) =>
-                          updateCommentStatus(index, newComment)
+                          updateCommentStatus(data.document_id, newComment)
                         }
                       />
                     ))

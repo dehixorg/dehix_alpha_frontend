@@ -1,11 +1,9 @@
 'use client';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { notifyError } from '@/utils/toastMessage';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
 import EmptyState from '@/components/shared/EmptyState';
@@ -23,133 +21,89 @@ interface EducationData {
   comments: string;
 }
 
-interface VerificationEntry {
-  _id: string;
+interface CombinedData extends EducationData {
+  verification_id: string;
   document_id: string;
   verification_status: string;
-  comments: string;
-  requester_id: string;
-  Requester: {
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-  };
-  Verifier: {
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-  };
+  comment: string;
 }
 
-interface CombinedData extends EducationData, VerificationEntry {}
+interface EducationVerificationProps {
+  data: any[];
+  loading: boolean;
+}
 
-const OracleDashboard = () => {
-  const [educationdata, setEducationData] = useState<CombinedData[]>([]);
+const OracleDashboard = ({ data, loading }: EducationVerificationProps) => {
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [localData, setLocalData] = useState<CombinedData[]>([]);
+  const [initialized, setInitialized] = useState(false);
+
+  const educationData = useMemo(() => {
+    const transformed: CombinedData[] = data
+      .map((entry: any) => {
+        const educationDocs = entry.result?.education
+          ? (Object.values(entry.result.education) as EducationData[])
+          : [];
+
+        const matchingDoc = educationDocs.find(
+          (doc) => doc._id === entry.document_id,
+        );
+
+        if (!matchingDoc) return null;
+        return {
+          ...matchingDoc,
+          verification_id: entry._id,
+          document_id: entry.document_id,
+          verification_status: entry.verification_status,
+          comment: entry.comment,
+        } as CombinedData;
+      })
+      .filter(Boolean) as CombinedData[];
+
+    if (!initialized && transformed.length > 0) {
+      setLocalData(transformed);
+      setInitialized(true);
+    }
+    return transformed;
+  }, [data, initialized]);
+
+  const displayData = initialized ? localData : educationData;
 
   const handleFilterChange = useCallback((newFilter: FilterOption) => {
     setFilter(newFilter);
   }, []);
 
-  const filteredData = educationdata.filter((data) => {
+  const filteredData = displayData.filter((d) => {
     if (filter === 'all') return true;
-    if (filter === 'pending') return data.verification_status === 'PENDING';
-    if (filter === 'verified') return data.verification_status === 'APPROVED';
-    if (filter === 'rejected') return data.verification_status === 'DENIED';
+    if (filter === 'pending') return d.verification_status === 'PENDING';
+    if (filter === 'verified') return d.verification_status === 'APPROVED';
+    if (filter === 'rejected') return d.verification_status === 'DENIED';
     return true;
   });
-
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const verificationResponse = await axiosInstance.get(
-        `/verification/oracle?doc_type=education`,
-      );
-      const verificationEntries = verificationResponse.data.data;
-      if (!verificationEntries || verificationEntries.length === 0) {
-        setEducationData([]);
-        return;
-      }
-
-      const transformedDataPromises = verificationEntries.map(
-        async (entry: VerificationEntry) => {
-          try {
-            const educationResponse = await axiosInstance.get(
-              `/verification/${entry.requester_id}/education`,
-            );
-
-            const list = (educationResponse?.data?.data || []) as any[];
-            const allEducationDocs: EducationData[] = list.flatMap((e) =>
-              Object.values(e?.education || {}),
-            ) as EducationData[];
-
-            if (!allEducationDocs || allEducationDocs.length === 0) return null;
-
-            const matchingEducationDoc = allEducationDocs.find(
-              (doc) => doc._id === entry.document_id,
-            );
-
-            if (matchingEducationDoc) {
-              return {
-                ...matchingEducationDoc,
-                ...entry,
-                requester: entry.Requester,
-                verifier: entry.Verifier,
-              };
-            }
-            return null;
-          } catch (error) {
-            console.error(
-              `Failed to fetch education data for requester ID ${entry.requester_id}:`,
-              error,
-            );
-            return null;
-          }
-        },
-      );
-
-      const combinedData = (await Promise.all(transformedDataPromises)).filter(
-        Boolean,
-      );
-      setEducationData(combinedData);
-    } catch (error) {
-      notifyError('Something went wrong. Please try again.', 'Error');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   const updateEducationStatus = (
     documentId: string,
     newStatus: string,
     newComment: string,
   ) => {
-    setEducationData((prev) =>
+    setLocalData((prev) =>
       prev.map((item) =>
         item.document_id === documentId
-          ? { ...item, verification_status: newStatus, comments: newComment }
+          ? { ...item, verification_status: newStatus, comment: newComment }
           : item,
       ),
     );
   };
 
   const updateCommentStatus = (documentId: string, newComment: string) => {
-    setEducationData((prev) =>
+    setLocalData((prev) =>
       prev.map((item) =>
         item.document_id === documentId
-          ? { ...item, comments: newComment }
+          ? { ...item, comment: newComment }
           : item,
       ),
     );
   };
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   return (
     <OracleVerificationLayout
@@ -249,7 +203,7 @@ const OracleDashboard = () => {
                     filteredData.map((data) => (
                       <EducationVerificationCard
                         key={data.document_id}
-                        _id={data._id}
+                        _id={data.verification_id}
                         type="education"
                         location={data.universityName}
                         degree={data.degree}
@@ -257,13 +211,13 @@ const OracleDashboard = () => {
                         endTo={data.endDate}
                         grade={data.grade}
                         fieldOfStudy={data.fieldOfStudy}
-                        comments={data.comments}
+                        comments={data.comment}
                         status={data.verification_status}
                         onStatusUpdate={(newStatus: string) =>
                           updateEducationStatus(
                             data.document_id,
                             newStatus,
-                            data.comments,
+                            data.comment,
                           )
                         }
                         onCommentUpdate={(newComment) =>
