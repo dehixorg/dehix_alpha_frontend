@@ -57,6 +57,18 @@ export default function Dashboard() {
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
   const [, setModalOpen] = useState(false);
   const [, setMode] = useState<'single' | 'multiple' | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string>(''); // Cache the image URL
+
+  // Add cache-busting for profile images - only update when URL actually changes
+  useEffect(() => {
+    if (user?.photoURL) {
+      const separator = user.photoURL.includes('?') ? '&' : '?';
+      const newUrl = `${user.photoURL}${separator}t=${Date.now()}`;
+      setProfileImageUrl(newUrl);
+    } else {
+      setProfileImageUrl('');
+    }
+  }, [user?.photoURL]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -149,7 +161,7 @@ export default function Dashboard() {
                 </CardDescription>
               </div>
               <Avatar className="h-12 w-12">
-                <AvatarImage src={user?.photoURL || ''} alt={user?.name} />
+                <AvatarImage src={profileImageUrl} alt={user?.name} />
                 <AvatarFallback>
                   {user?.displayName?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
