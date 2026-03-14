@@ -78,7 +78,7 @@ interface DehixTalent {
   talentName?: string;
   experience: number;
   level?: string;
-  status?: HireDehixTalentStatusEnum;
+  status?: HireDehixTalentStatusEnum | 'INVITED';
   activeStatus?: string;
   talentMonthlyPay?: number;
 
@@ -435,7 +435,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           hireId: h.hireId,
           attributeId: h.attributeId,
           attributeName: h.attributeName,
-          status: 'INVITED' as HireDehixTalentStatusEnum,
+          status: 'INVITED',
           updatedAt: nowIso,
         }));
 
