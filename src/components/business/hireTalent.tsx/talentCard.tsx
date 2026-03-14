@@ -81,6 +81,11 @@ interface DehixTalent {
   status?: HireDehixTalentStatusEnum;
   activeStatus?: string;
   talentMonthlyPay?: number;
+
+  hireId?: string;
+  attributeId?: string;
+  attributeName?: string;
+  updatedAt?: string;
 }
 
 interface Talent {
@@ -89,7 +94,7 @@ interface Talent {
   userName: string;
   profilePic: string | null;
   talents: DehixTalent[];
-  dehixTalent?: any[];
+  dehixTalent?: Partial<DehixTalent>[];
   Github: any;
   LinkedIn: any;
   education?: Record<string, Education>;
@@ -156,11 +161,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>(
     skillDomainDataProp || [],
   );
-  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(() => {
-    if (typeof window === 'undefined') return new Set();
-    const stored = localStorage.getItem('invitedTalents');
-    return stored ? new Set(JSON.parse(stored)) : new Set();
-  });
+
   const [selectedTalent, setSelectedTalent] = useState<any>();
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
@@ -428,29 +429,18 @@ const TalentCard: React.FC<TalentCardProps> = ({
         });
 
         setCurrSkills([]);
-        setInvitedTalents((prev) => {
-          const next = new Set(prev);
-          next.add(freelancerId);
-
-          localStorage.setItem(
-            'invitedTalents',
-            JSON.stringify(Array.from(next)),
-          );
-
-          return next;
-        });
 
         const nowIso = new Date().toISOString();
-        const nextInvites = hires.map((h) => ({
+        const nextInvites: Partial<DehixTalent>[] = hires.map((h) => ({
           hireId: h.hireId,
           attributeId: h.attributeId,
           attributeName: h.attributeName,
-          status: 'INVITED',
+          status: 'INVITED' as HireDehixTalentStatusEnum,
           updatedAt: nowIso,
         }));
 
-        const mergeInvites = (existing: any[] = []) => {
-          const keyOf = (i: any) =>
+        const mergeInvites = (existing: Partial<DehixTalent>[] = []) => {
+          const keyOf = (i: Partial<DehixTalent>) =>
             `${i?.hireId || ''}:${i?.attributeId || ''}`;
           const seen = new Set(existing.map(keyOf));
           const merged = [...existing];
@@ -560,7 +550,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
           const education = talent.education;
           const professionalInfo = talent.professionalInfo;
           const projects = talent.projects;
-          const isInvited = invitedTalents.has(talent.freelancer_id);
+
+          const isInvited =
+            Array.isArray(talent.dehixTalent) &&
+            talent.dehixTalent.some((t) => t.hireId === talentEntry?.hireId);
 
           if (!talentEntry) return null;
 
