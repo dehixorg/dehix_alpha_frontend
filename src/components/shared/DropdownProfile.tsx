@@ -69,6 +69,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const [loading, setLoading] = useState(true);
   const [isFaqOpen, setIsFaqOpen] = useState(false); // New state for FAQ dialog
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState<string>(''); // Cache the image URL
 
   const pathname = usePathname();
 
@@ -183,6 +184,17 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
     }
   };
 
+  // Add cache-busting for profile images - only update when URL actually changes
+  useEffect(() => {
+    if (user?.photoURL) {
+      const separator = user.photoURL.includes('?') ? '&' : '?';
+      const newUrl = `${user.photoURL}${separator}t=${Date.now()}`;
+      setProfileImageUrl(newUrl);
+    } else {
+      setProfileImageUrl('');
+    }
+  }, [user?.photoURL]);
+
   const referralLink =
     referralCode && typeof window !== 'undefined'
       ? `${window.location.origin}/auth/sign-up/freelancer?referral=${referralCode}`
@@ -227,7 +239,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           >
             <Avatar className="h-9 w-9 border-2 border-background">
               <AvatarImage
-                src={user.photoURL || ''}
+                src={profileImageUrl}
                 alt={user.displayName || 'User'}
                 className="object-cover"
               />
@@ -254,7 +266,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           <div className="px-2 py-3 flex items-center space-x-3">
             <Avatar className="h-10 w-10">
               <AvatarImage
-                src={user.photoURL || ''}
+                src={profileImageUrl}
                 alt={user.displayName || 'User'}
               />
               <AvatarFallback className="bg-gradient-to-br from-primary/10 to-primary/30 text-primary">

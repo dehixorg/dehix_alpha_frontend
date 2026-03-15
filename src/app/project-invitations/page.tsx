@@ -15,7 +15,6 @@ import {
   ArrowUpNarrowWide,
   Trash2,
   CircleX,
-  X,
 } from 'lucide-react';
 
 import {
