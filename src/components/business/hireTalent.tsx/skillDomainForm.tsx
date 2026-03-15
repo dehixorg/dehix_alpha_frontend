@@ -329,8 +329,8 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           </div>
         </CardHeader>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto no-scrollbar">
+        <CardContent className="p-0 max-h-[65vh] overflow-y-auto no-scrollbar">
+          <div className="overflow-x-auto">
             <Table className="w-full">
               <TableHeader className="sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <TableRow>

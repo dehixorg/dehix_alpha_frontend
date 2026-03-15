@@ -27,6 +27,16 @@ const AddToLobbyDialog = ({
 }: any) => {
   const user = useSelector((state: RootState) => state.user);
 
+  const requiredConnects = Number(
+    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST,
+  );
+
+  if (!Number.isFinite(requiredConnects)) {
+    console.error(
+      'NEXT_PUBLIC__APP_HIRE_TALENT_COST is not configured properly',
+    );
+  }
+
   const existingInvites = Array.isArray(talent?.dehixTalent)
     ? talent.dehixTalent
     : [];
@@ -160,6 +170,10 @@ const AddToLobbyDialog = ({
             loading={isLoading}
             setLoading={setLoading}
             onSubmit={async () => {
+              if (!talent?.freelancer_id) {
+                console.error('Invalid freelancer id');
+                return;
+              }
               const success = await handleAddToLobby(talent.freelancer_id);
               if (success) setOpen(false);
             }}
@@ -167,10 +181,7 @@ const AddToLobbyDialog = ({
             userId={user?.uid}
             buttonText="Save"
             userType="BUSINESS"
-            requiredConnects={parseInt(
-              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-              10,
-            )}
+            requiredConnects={requiredConnects}
             skipRedirect={true}
           />
         </DialogFooter>
