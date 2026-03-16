@@ -1,12 +1,11 @@
 'use client';
 import { useSelector } from 'react-redux';
 import dynamic from 'next/dynamic';
+import React, { Fragment } from 'react';
 
 import FreelancerSettingsLayout from '../../../../components/layout/FreelancerSettingsLayout';
 
 import { RootState } from '@/lib/store';
-
-import React, { Fragment } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 
@@ -21,7 +20,7 @@ const KYCForm = dynamic(() => import('@/components/form/kycFreelancerForm'), {
         </div>
         <Skeleton className="h-6 w-20 rounded-full" />
       </div>
-      
+
       {/* KycStatusAlert skeleton */}
       <Skeleton className="h-16 w-full rounded-md mb-6" />
 
