@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { RootState } from '@/lib/store';
 import BusinessSettingsLayout from '@/components/layout/BusinessSettingsLayout';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { useKycTour } from '@/components/tour/business-profile/useKycTour';
 
 const KYCForm = dynamic(
@@ -25,7 +25,7 @@ const KYCForm = dynamic(
           </div>
           <Skeleton className="h-6 w-20 rounded-full" />
         </div>
-        
+
         {/* KycStatusAlert skeleton */}
         <Skeleton className="h-16 w-full rounded-md mb-6" />
 
