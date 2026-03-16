@@ -630,7 +630,9 @@ export default function ResumeEditor({
         scrollY: 0,
         windowWidth: document.documentElement.offsetWidth,
         onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector('.resumeContent') as HTMLElement;
+          const clonedElement = clonedDoc.querySelector(
+            '.resumeContent',
+          ) as HTMLElement;
           if (clonedElement) {
             // Remove the visible container styling from the clone before capture
             clonedElement.style.boxShadow = 'none';
@@ -835,12 +837,13 @@ export default function ResumeEditor({
                         <button
                           type="button"
                           onClick={() => setCurrentStep(i)}
-                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${isActive
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : isDone
-                              ? 'bg-secondary text-secondary-foreground border-secondary'
-                              : 'bg-background text-foreground/80 border-muted'
-                            }`}
+                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            isActive
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : isDone
+                                ? 'bg-secondary text-secondary-foreground border-secondary'
+                                : 'bg-background text-foreground/80 border-muted'
+                          }`}
                           aria-current={isActive ? 'step' : undefined}
                         >
                           <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-[10px]">
@@ -850,8 +853,9 @@ export default function ResumeEditor({
                         </button>
                         {i !== stepLabels.length - 1 && (
                           <span
-                            className={`h-px w-4 sm:w-8 ${isDone ? 'bg-primary' : 'bg-muted'
-                              }`}
+                            className={`h-px w-4 sm:w-8 ${
+                              isDone ? 'bg-primary' : 'bg-muted'
+                            }`}
                           />
                         )}
                       </div>
@@ -916,10 +920,7 @@ export default function ResumeEditor({
           </div>
 
           <div className="px-6 md:pl-0 pt-2">
-            <div
-              ref={resumeRef}
-              className="relative min-h-full"
-            >
+            <div ref={resumeRef} className="relative min-h-full">
               <div className="flex items-center gap-2 mb-4">
                 <Tabs
                   value={selectedTemplate}

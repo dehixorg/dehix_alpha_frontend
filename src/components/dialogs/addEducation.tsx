@@ -295,7 +295,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit, (_errors) => {
+            onSubmit={form.handleSubmit(onSubmit, () => {
               // Only show validation error if we're actually submitting (on step 2)
               if (step === 2) {
                 notifyError(

@@ -173,7 +173,11 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
                   </h2>
                   <Separator className="my-2 h-[1px] bg-slate-200" />
                   <div className="space-y-2 mt-3 text-sm font-medium text-slate-600">
-                    {person.email && <div className="break-all"><ResumeLink value={person.email} /></div>}
+                    {person.email && (
+                      <div className="break-all">
+                        <ResumeLink value={person.email} />
+                      </div>
+                    )}
                     {person.phoneNumber && <div>{person.phoneNumber}</div>}
                     {(person.city || person.country) && (
                       <div>
@@ -182,8 +186,16 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
                           .join(', ')}
                       </div>
                     )}
-                    {person.linkedin && <div><ResumeLink value={person.linkedin} label="LinkedIn" /></div>}
-                    {person.github && <div><ResumeLink value={person.github} label="GitHub" /></div>}
+                    {person.linkedin && (
+                      <div>
+                        <ResumeLink value={person.linkedin} label="LinkedIn" />
+                      </div>
+                    )}
+                    {person.github && (
+                      <div>
+                        <ResumeLink value={person.github} label="GitHub" />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -199,7 +211,10 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
               <Separator className="my-2 h-[1px] bg-slate-200" />
               <div className="mt-3 flex flex-col gap-1.5">
                 {skillData.map((skill, index) => (
-                  <div key={index} className="text-sm font-medium text-slate-700">
+                  <div
+                    key={index}
+                    className="text-sm font-medium text-slate-700"
+                  >
                     {skill.skillName}
                   </div>
                 ))}
@@ -220,7 +235,7 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
               <p className="text-sm text-slate-700 leading-relaxed text-justify">
                 {summaryData.join(' ')}
               </p>
-             </section>
+            </section>
           )}
 
           {sectionVisibility.workExperience &&
@@ -240,7 +255,8 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
                           {exp.jobTitle}
                         </h3>
                         <span className="text-xs font-semibold text-slate-500 whitespace-nowrap ml-2">
-                          {formatDate(exp.startDate)} - {formatDate(exp.endDate)}
+                          {formatDate(exp.startDate)} -{' '}
+                          {formatDate(exp.endDate)}
                         </span>
                       </div>
                       <p className="text-sm font-medium text-slate-700 italic mb-1.5">
