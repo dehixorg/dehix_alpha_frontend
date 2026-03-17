@@ -255,7 +255,7 @@ export default function ResumeEditor({
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const res = await axiosInstance.get('/skills');
+        const res = await axiosInstance.get('/skills/all');
         setSkillOptions(res?.data?.data || []);
       } catch (e) {
         console.error('Failed to fetch skills:', e);
@@ -630,21 +630,15 @@ export default function ResumeEditor({
         scrollY: 0,
         windowWidth: document.documentElement.offsetWidth,
         onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector('.resumeContent');
+          const clonedElement = clonedDoc.querySelector(
+            '.resumeContent',
+          ) as HTMLElement;
           if (clonedElement) {
-            Array.from(clonedElement.querySelectorAll('*')).forEach((el) => {
-              if (el instanceof HTMLElement) {
-                el.style.margin = window.getComputedStyle(el).margin;
-                el.style.padding = window.getComputedStyle(el).padding;
-                el.style.fontSize = window.getComputedStyle(el).fontSize;
-                el.style.fontFamily = window.getComputedStyle(el).fontFamily;
-                el.style.lineHeight = window.getComputedStyle(el).lineHeight;
-                el.style.color = window.getComputedStyle(el).color;
-                el.style.backgroundColor =
-                  window.getComputedStyle(el).backgroundColor;
-                el.style.border = window.getComputedStyle(el).border;
-              }
-            });
+            // Remove the visible container styling from the clone before capture
+            clonedElement.style.boxShadow = 'none';
+            clonedElement.style.margin = '0';
+            clonedElement.style.border = 'none';
+            clonedElement.style.borderRadius = '0';
           }
         },
       });
@@ -926,11 +920,7 @@ export default function ResumeEditor({
           </div>
 
           <div className="px-6 md:pl-0 pt-2">
-            <div
-              ref={resumeRef}
-              className="relative"
-              style={{ minHeight: '1100px' }}
-            >
+            <div ref={resumeRef} className="relative min-h-full">
               <div className="flex items-center gap-2 mb-4">
                 <Tabs
                   value={selectedTemplate}
