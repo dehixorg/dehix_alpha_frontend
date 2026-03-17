@@ -255,12 +255,6 @@ export function CardsChat({
       if (otherParticipantUid) {
         const participantDetails =
           conversation.participantDetails?.[otherParticipantUid];
-        onOpenProfileSidebar(otherParticipantUid, 'user', {
-          userName: participantDetails?.userName || '',
-          email: participantDetails?.email || '',
-          profilePic: participantDetails?.profilePic || '',
-        });
-        conversation.participantDetails?.[otherParticipantUid];
         const initialUserData = {
           userName: participantDetails?.userName || primaryUser.userName,
           email: participantDetails?.email || primaryUser.email,
@@ -1314,7 +1308,7 @@ export function CardsChat({
                     </div>
                   )}
                   <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
+                    <div className="relative flex-1 min-w-0">
                       <div
                         className="absolute inset-y-0 flex items-center justify-center 
                     pl-0.1 z-10"
@@ -1330,7 +1324,7 @@ export function CardsChat({
                         aria-label="Type a message"
                         aria-placeholder="Type a message..."
                         data-placeholder="Type a message..."
-                        className="pl-12 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                        className="w-full pl-12 min-h-[36px] max-h-60 overflow-y-auto break-words border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
                         onInput={(e) => {
                           const html = (e.currentTarget as HTMLElement)
                             .innerHTML;
