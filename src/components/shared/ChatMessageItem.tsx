@@ -337,7 +337,7 @@ function ChatMessageItem({
           className={cn(
             'flex flex-col',
             isSender ? 'items-end' : 'items-start',
-            'max-w-[80%]',
+            'max-w-[80%] min-w-0',
           )}
         >
           {isGroupChat && showSenderName && !isSender && (
@@ -350,7 +350,7 @@ function ChatMessageItem({
 
           <div
             className={cn(
-              'flex w-max max-w-full flex-col gap-1 rounded-lg p-2 text-sm',
+              'flex min-w-0 max-w-full flex-col gap-1 rounded-lg p-2 text-sm',
               message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ||
                 isEmojiOnly ||
                 (message.voiceMessage && message.voiceMessage.type === 'voice')
@@ -394,7 +394,7 @@ function ChatMessageItem({
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="break-words w-full">
+                  <div className="w-full break-words [overflow-wrap:anywhere]">
                     {message.replyTo && (
                       <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
                         <div
@@ -489,7 +489,7 @@ function ChatMessageItem({
                         <>
                           <div
                             className={cn(
-                              'w-full break-words',
+                              'w-full break-words [overflow-wrap:anywhere]',
                               isEmojiOnly &&
                                 'text-4xl leading-snug text-center',
                             )}
