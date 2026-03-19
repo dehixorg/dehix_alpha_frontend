@@ -331,8 +331,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
         }
 
         if (rawData) {
-          setTalents(fetchedData);
-          skipRef.current = fetchedData.length;
+          if (reset) {
+            setTalents(fetchedData);
+            skipRef.current = fetchedData.length;
+          } else {
+            setTalents((prev) => [...prev, ...fetchedData]);
+            skipRef.current += fetchedData.length;
+          }
         } else {
           throw new Error('Fail to fetch data');
         }
