@@ -521,7 +521,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           const professionalInfo = talent.professionalInfo;
           const projects = talent.projects;
 
-          const isInvited = talentEntry?.status === 'INVITED';
+          const isInvited = talentEntries.some((t) => t?.status === 'INVITED');
 
           if (!talentEntry) return null;
 
