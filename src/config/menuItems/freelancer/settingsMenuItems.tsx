@@ -10,6 +10,7 @@ import {
   Star,
   Flame,
   Receipt,
+  Globe,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -45,6 +46,12 @@ export const menuItemsTop: MenuItem[] = [
     icon: <UserCog className="h-5 w-5" />,
     label: 'My Profile',
     tourId: 'sidebar-profile',
+  },
+  {
+    href: '/freelancer/settings/public-profile',
+    icon: <Globe className="h-5 w-5" />,
+    label: 'Public Profile',
+    tourId: 'sidebar-public-profile',
   },
   {
     href: '/freelancer/settings/kyc',
