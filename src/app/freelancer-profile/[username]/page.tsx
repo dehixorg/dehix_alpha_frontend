@@ -216,10 +216,7 @@ const FreelancerProfile = () => {
             }
           } catch (fallbackError) {
             if (!cancelled) {
-              console.error(
-                'Error fetching freelancer details',
-                fallbackError,
-              );
+              console.error('Error fetching freelancer details', fallbackError);
               notifyError('Failed to fetch freelancer details.', 'Error');
             }
           }
