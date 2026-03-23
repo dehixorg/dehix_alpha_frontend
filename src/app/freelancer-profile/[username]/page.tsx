@@ -127,95 +127,118 @@ const FreelancerProfile = () => {
   const isBusiness = userType === 'business';
 
   useEffect(() => {
-    if (username) {
-      const processFreelancerData = (freelancerData: any) => {
-        const attrs = Array.isArray(freelancerData.attributes)
-          ? freelancerData.attributes
-          : [];
+    // Reset state immediately on username change
+    setProfileData(null);
+    setFreelancerId('');
+    setLoading(true);
 
-        const skillsFromAttributes: Skill[] = attrs
-          .filter((attr: any) => attr?.type === 'SKILL')
-          .map((attr: any) => ({
-            _id: attr._id,
-            name: attr.name,
-          }));
+    if (!username) {
+      setLoading(false);
+      return;
+    }
 
-        const domainsFromAttributes: Domain[] = attrs
-          .filter((attr: any) => attr?.type === 'DOMAIN')
-          .map((attr: any) => ({
-            _id: attr._id,
-            name: attr.name,
-          }));
+    let cancelled = false;
 
-        const transformedData: FreelancerProfile = {
-          firstName: freelancerData.firstName || '',
-          lastName: freelancerData.lastName || '',
-          description: freelancerData.description || '',
-          profilePic: freelancerData.profilePic || '',
-          email: freelancerData.email || '',
-          githubLink: freelancerData.githubLink || '',
-          linkedin: freelancerData.linkedin || '',
-          personalWebsite: freelancerData.personalWebsite || '',
-          attributes: attrs,
-          skills:
-            skillsFromAttributes.length > 0
-              ? skillsFromAttributes
-              : freelancerData.skills || [],
-          domain:
-            domainsFromAttributes.length > 0
-              ? domainsFromAttributes
-              : freelancerData.domain || [],
-          projectDomain: freelancerData.projectDomain || [],
-          projects: freelancerData.projects || [],
-          professionalInfo: freelancerData.professionalInfo || [],
-          education: freelancerData.education || [],
-        };
+    const processFreelancerData = (freelancerData: any) => {
+      if (cancelled) return;
 
-        setProfileData(transformedData);
-        setFreelancerId(freelancerData._id || '');
+      const attrs = Array.isArray(freelancerData.attributes)
+        ? freelancerData.attributes
+        : [];
+
+      const skillsFromAttributes: Skill[] = attrs
+        .filter((attr: any) => attr?.type === 'SKILL')
+        .map((attr: any) => ({
+          _id: attr._id,
+          name: attr.name,
+        }));
+
+      const domainsFromAttributes: Domain[] = attrs
+        .filter((attr: any) => attr?.type === 'DOMAIN')
+        .map((attr: any) => ({
+          _id: attr._id,
+          name: attr.name,
+        }));
+
+      const transformedData: FreelancerProfile = {
+        firstName: freelancerData.firstName || '',
+        lastName: freelancerData.lastName || '',
+        description: freelancerData.description || '',
+        profilePic: freelancerData.profilePic || '',
+        email: freelancerData.email || '',
+        githubLink: freelancerData.githubLink || '',
+        linkedin: freelancerData.linkedin || '',
+        personalWebsite: freelancerData.personalWebsite || '',
+        attributes: attrs,
+        skills:
+          skillsFromAttributes.length > 0
+            ? skillsFromAttributes
+            : freelancerData.skills || [],
+        domain:
+          domainsFromAttributes.length > 0
+            ? domainsFromAttributes
+            : freelancerData.domain || [],
+        projectDomain: freelancerData.projectDomain || [],
+        projects: freelancerData.projects || [],
+        professionalInfo: freelancerData.professionalInfo || [],
+        education: freelancerData.education || [],
       };
 
-      const fetchFreelancerDetails = async () => {
-        try {
-          setLoading(true);
-          // Try fetching by username first
-          const response = await axiosInstance.get(
-            `/public/freelancer/username/${username}`,
-          );
-          if (response.status === 200) {
-            const freelancerData = response.data.data || response.data;
-            processFreelancerData(freelancerData);
-          }
-        } catch (error: any) {
-          // If username lookup fails, try by ID (backward compatibility)
-          if (
-            error?.response?.status === 404 ||
-            error?.response?.status === 500
-          ) {
-            try {
-              const fallbackResponse = await axiosInstance.get(
-                `/public/freelancer/${username}`,
+      setProfileData(transformedData);
+      setFreelancerId(freelancerData._id || '');
+    };
+
+    const fetchFreelancerDetails = async () => {
+      try {
+        // Try fetching by username first
+        const response = await axiosInstance.get(
+          `/public/freelancer/username/${username}`,
+        );
+        if (response.status === 200) {
+          const freelancerData = response.data.data || response.data;
+          processFreelancerData(freelancerData);
+        }
+      } catch (error: any) {
+        if (cancelled) return;
+        // If username lookup fails, try by ID (backward compatibility)
+        if (
+          error?.response?.status === 404 ||
+          error?.response?.status === 500
+        ) {
+          try {
+            const fallbackResponse = await axiosInstance.get(
+              `/public/freelancer/${username}`,
+            );
+            if (fallbackResponse.status === 200 && !cancelled) {
+              const freelancerData =
+                fallbackResponse.data.data || fallbackResponse.data;
+              processFreelancerData(freelancerData);
+            }
+          } catch (fallbackError) {
+            if (!cancelled) {
+              console.error(
+                'Error fetching freelancer details',
+                fallbackError,
               );
-              if (fallbackResponse.status === 200) {
-                const freelancerData =
-                  fallbackResponse.data.data || fallbackResponse.data;
-                processFreelancerData(freelancerData);
-              }
-            } catch (fallbackError) {
-              console.error('Error fetching freelancer details', fallbackError);
               notifyError('Failed to fetch freelancer details.', 'Error');
             }
-          } else {
-            console.error('Error fetching freelancer details', error);
-            notifyError('Failed to fetch freelancer details.', 'Error');
           }
-        } finally {
+        } else {
+          console.error('Error fetching freelancer details', error);
+          notifyError('Failed to fetch freelancer details.', 'Error');
+        }
+      } finally {
+        if (!cancelled) {
           setLoading(false);
         }
-      };
+      }
+    };
 
-      fetchFreelancerDetails();
-    }
+    fetchFreelancerDetails();
+
+    return () => {
+      cancelled = true;
+    };
   }, [username]);
 
   const formatDate = (dateString: string): string => {

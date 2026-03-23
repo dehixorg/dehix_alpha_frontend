@@ -104,6 +104,7 @@ export default function FreelancerPublicProfileSettings() {
   }, [user?.uid]);
 
   const handleCopy = async () => {
+    if (!publicUrl) return;
     try {
       await navigator.clipboard.writeText(publicUrl);
       setCopied(true);
@@ -115,6 +116,7 @@ export default function FreelancerPublicProfileSettings() {
   };
 
   const handleShare = () => {
+    if (!publicUrl) return;
     if (navigator.share) {
       navigator
         .share({
@@ -174,6 +176,7 @@ export default function FreelancerPublicProfileSettings() {
                 variant="default"
                 className="flex items-center gap-2"
                 onClick={handleCopy}
+                disabled={!publicUrl}
               >
                 {copied ? (
                   <>
@@ -191,6 +194,7 @@ export default function FreelancerPublicProfileSettings() {
                 variant="outline"
                 className="flex items-center gap-2"
                 onClick={handleShare}
+                disabled={!publicUrl}
               >
                 <Share2 className="h-4 w-4" />
                 Share
@@ -198,7 +202,8 @@ export default function FreelancerPublicProfileSettings() {
               <Button
                 variant="ghost"
                 className="flex items-center gap-2"
-                onClick={() => window.open(publicUrl, '_blank')}
+                onClick={() => publicUrl && window.open(publicUrl, '_blank')}
+                disabled={!publicUrl}
               >
                 <ExternalLink className="h-4 w-4" />
                 Preview
@@ -321,6 +326,29 @@ export default function FreelancerPublicProfileSettings() {
                       ) : (
                         <p className="text-muted-foreground italic text-sm">
                           No domains added
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <Separator />
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                      Project Domains
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {profileData?.projectDomain?.length ? (
+                        profileData.projectDomain.map((pd) => (
+                          <Badge
+                            key={pd._id}
+                            variant="outline"
+                            className="text-xs px-3 py-1 rounded-full border-purple-500/30 bg-purple-500/5 text-purple-700 dark:text-purple-300"
+                          >
+                            {pd.name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground italic text-sm">
+                          No project domains added
                         </p>
                       )}
                     </div>
