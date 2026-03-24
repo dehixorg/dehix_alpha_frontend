@@ -80,7 +80,12 @@ export default function RequestConnectsDialog({
 
   return (
     <>
-      <Button size="sm" onClick={() => setOpen(true)} className="gap-2">
+      <Button
+        size="sm"
+        variant="secondary"
+        onClick={() => setOpen(true)}
+        className="gap-2"
+      >
         Request <Coins className="h-4 w-4" />
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
