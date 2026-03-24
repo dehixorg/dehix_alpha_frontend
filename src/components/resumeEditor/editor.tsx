@@ -254,9 +254,6 @@ export default function ResumeEditor({
   const PAGE_W_MM = 210;
   const PAGE_H_MM = 297;
   const PAGE_GAP_MM = 6;
-  const PAGE_PAD_MM = 8;
-  const CONTENT_H_MM = PAGE_H_MM - PAGE_PAD_MM * 2;
-  const PREVIEW_SCALE_BOOST = 1.1;
   const [pageCount, setPageCount] = useState(1);
   const [previewScale, setPreviewScale] = useState(1);
   const [pxPerMm, setPxPerMm] = useState(3.78);
@@ -274,8 +271,9 @@ export default function ResumeEditor({
       if (!pageH || !fullH) return;
       const ppMm = pageH / PAGE_H_MM;
       setPxPerMm(ppMm);
-      const contentPerPagePx = (PAGE_H_MM - PAGE_PAD_MM * 2) * ppMm;
-      setPageCount(Math.max(1, Math.ceil(fullH / contentPerPagePx)));
+      // Full A4 height only — template padding is inside ResumePreview; do not subtract here.
+      const pagePerPagePx = PAGE_H_MM * ppMm;
+      setPageCount(Math.max(1, Math.ceil(fullH / pagePerPagePx)));
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -304,7 +302,7 @@ export default function ResumeEditor({
       const pageWidthPx = PAGE_W_MM * ppMm;
       const available = wrapper.clientWidth;
       const fitScale = available >= pageWidthPx ? 1 : available / pageWidthPx;
-      setPreviewScale(Math.min(1, fitScale * PREVIEW_SCALE_BOOST));
+      setPreviewScale(Math.min(1, fitScale));
     };
     compute();
     const ro = new ResizeObserver(compute);
@@ -710,7 +708,7 @@ export default function ResumeEditor({
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
 
-        const safeSchemes = ['https:', 'http:', 'mailto:'];
+        const safeSchemes = ['https:', 'http:', 'mailto:', 'tel:'];
 
         for (let i = 0; i < pageEls.length; i++) {
           const pageEl = pageEls[i];
@@ -871,7 +869,7 @@ export default function ResumeEditor({
         const href = anchor.getAttribute('href');
         const normalizedHref = href?.trim();
         // skip empty, fragment, and unsafe links
-        const safeSchemes = ['https:', 'http:', 'mailto:'];
+        const safeSchemes = ['https:', 'http:', 'mailto:', 'tel:'];
         if (!normalizedHref || normalizedHref === '#') return;
         let protocol = '';
         try {
@@ -982,7 +980,7 @@ export default function ResumeEditor({
         />
 
         <main className="flex w-full items-start flex-col lg:flex-row md:gap-6 lg:h-[calc(100vh-88px)] lg:overflow-hidden">
-          <div className="w-full lg:w-1/2 flex flex-col px-6 pt-2 min-w-0 lg:h-full">
+          <div className="w-full lg:w-1/2 flex flex-col px-6 pt-2 min-w-0 lg:min-h-0 lg:h-full lg:overflow-y-auto lg:overflow-x-hidden">
             <div className="flex justify-between items-center mb-6">
               <Button onClick={onCancel} size="sm" variant="outline">
                 <ChevronLeft /> Back
@@ -1098,7 +1096,7 @@ export default function ResumeEditor({
             )}
           </div>
 
-          <div className="w-full lg:w-1/2 px-6 md:pl-0 pt-2 min-w-0 lg:h-full lg:overflow-y-auto lg:overflow-x-hidden">
+          <div className="w-full lg:w-1/2 px-6 md:pl-0 pt-2 min-w-0 lg:min-h-0 lg:h-full lg:overflow-y-auto lg:overflow-x-hidden">
             <div ref={resumeRef} className="relative h-auto">
               <div className="flex items-center gap-2 mb-4">
                 <Tabs
@@ -1262,18 +1260,18 @@ export default function ResumeEditor({
                                           boxSizing: 'border-box',
                                           margin: '0 auto',
                                           flex: '0 0 auto',
-                                          padding: `${PAGE_PAD_MM}mm 0`,
+                                          padding: 0,
                                         }}
                                       >
                                         <div
                                           style={{
-                                            height: `${CONTENT_H_MM}mm`,
+                                            height: `${PAGE_H_MM}mm`,
                                             overflow: 'hidden',
                                           }}
                                         >
                                           <div
                                             style={{
-                                              transform: `translateY(-${i * CONTENT_H_MM}mm)`,
+                                              transform: `translateY(-${i * PAGE_H_MM}mm)`,
                                               transformOrigin: 'top left',
                                             }}
                                           >
