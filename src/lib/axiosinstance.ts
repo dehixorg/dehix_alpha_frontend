@@ -1,4 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import Cookies from 'js-cookie';
+
+import { auth } from '@/config/firebaseConfig';
 
 // Create an Axios instance
 let axiosInstance: AxiosInstance = axios.create({
@@ -13,6 +16,9 @@ let axiosInstance: AxiosInstance = axios.create({
 const inFlightControllers = new Map<string, AbortController>();
 let requestCounter = 0;
 const nextRequestId = () => `req_${Date.now()}_${++requestCounter}`;
+
+// Shared promise for token refresh to deduplicate concurrent 401s
+let lastRefreshPromise: Promise<string | null> | null = null;
 
 // Interceptors attacher so new instances get the same behavior
 function attachInterceptors(instance: AxiosInstance) {
@@ -59,6 +65,64 @@ function attachInterceptors(instance: AxiosInstance) {
         // eslint-disable-next-line no-console
         console.error('Response error');
       }
+
+      // Handle 401 Unauthorized errors
+      const originalRequest = error?.config;
+      if (
+        error.response?.status === 401 &&
+        originalRequest &&
+        !originalRequest._retry &&
+        !isCanceled
+      ) {
+        originalRequest._retry = true;
+
+        if (!lastRefreshPromise) {
+          lastRefreshPromise = (async () => {
+            try {
+              const user = auth.currentUser;
+              if (user) {
+                const newToken = await user.getIdToken(true);
+                localStorage.setItem('token', newToken);
+                Cookies.set('token', newToken, {
+                  expires: 1,
+                  sameSite: 'Strict',
+                });
+
+                // Re-initialize the instance if needed (though interceptors are shared)
+                // But we should ensure future requests use this token
+                if (instance === axiosInstance) {
+                  initializeAxiosWithToken(newToken);
+                }
+
+                return newToken;
+              }
+              throw new Error('No user found for refresh');
+            } catch (refreshError) {
+              console.error('Manual token refresh failed:', refreshError);
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                Cookies.remove('token');
+                window.location.href = '/auth/login?expired=true';
+              }
+              throw refreshError;
+            } finally {
+              lastRefreshPromise = null;
+            }
+          })();
+        }
+
+        return lastRefreshPromise.then((newToken) => {
+          if (!newToken) return Promise.reject(error);
+          // Apply the new token to the original request
+          originalRequest.headers = {
+            ...(originalRequest.headers || {}),
+            Authorization: `Bearer ${newToken}`,
+          };
+          return axiosInstance(originalRequest);
+        });
+      }
+
       try {
         const requestId = (error?.config as any)?.metadata?.requestId as
           | string
