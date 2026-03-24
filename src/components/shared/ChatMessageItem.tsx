@@ -302,7 +302,7 @@ function ChatMessageItem({
           <div
             role="button"
             tabIndex={0}
-            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex-shrink-0 mr-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => {
               if (onOpenProfileSidebar) {
                 onOpenProfileSidebar(message.senderId, 'user', {
