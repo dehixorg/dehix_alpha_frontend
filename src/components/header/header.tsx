@@ -59,15 +59,21 @@ const Header: React.FC<HeaderProps> = ({
       ? (String(user.type).toLowerCase() as 'freelancer' | 'business')
       : undefined;
 
-  const fetchConnects = async () => {
+  const fetchConnects = async (): Promise<number | null> => {
     try {
       const data = localStorage.getItem('DHX_CONNECTS');
-      const parsedData = data ? parseInt(data) : 0;
+      if (data == null) {
+        return null;
+      }
+      const parsedData = parseInt(data);
       if (!isNaN(parsedData)) {
         setConnects(parsedData);
+        return parsedData;
       }
+      return null;
     } catch (error) {
       console.error('Error fetching connects:', error);
+      return null;
     }
   };
 
@@ -80,8 +86,15 @@ const Header: React.FC<HeaderProps> = ({
         setConnects(balance);
         notifySuccess('Connects refreshed successfully!', 'Success');
       } else {
-        fetchConnects();
-        notifySuccess('Connects data updated from cache', 'Updated');
+        const cachedBalance = await fetchConnects();
+        if (cachedBalance) {
+          notifySuccess('Connects data updated from cache', 'Updated');
+        } else if (cachedBalance === null) {
+          notifyError(
+            'Unable to refresh connects and no cached data found.',
+            'Error',
+          );
+        }
       }
     } catch (error) {
       fetchConnects();
