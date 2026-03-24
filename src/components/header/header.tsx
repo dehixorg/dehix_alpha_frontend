@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Wallet } from 'lucide-react';
+import { Wallet, RefreshCw } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
@@ -19,7 +19,7 @@ import TourMenu from '@/components/tour/shared/TourMenu';
 import { RootState } from '@/lib/store';
 import type { TourTarget } from '@/lib/tourSlice';
 import { fetchAndUpdateConnects } from '@/lib/updateConnects';
-import { notifyError } from '@/utils/toastMessage';
+import { notifySuccess, notifyError } from '@/utils/toastMessage';
 
 interface HeaderProps {
   menuItemsTop: MenuItem[];
@@ -50,6 +50,7 @@ const Header: React.FC<HeaderProps> = ({
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const [connects, setConnects] = useState<number>(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const pathname = usePathname();
 
   const userType =
@@ -72,18 +73,21 @@ const Header: React.FC<HeaderProps> = ({
 
   const refreshConnectsFromServer = useCallback(async () => {
     if (!user?.uid || !userType) return;
+    setIsRefreshing(true);
     try {
       const balance = await fetchAndUpdateConnects(userType, true);
       if (balance != null) {
         setConnects(balance);
-        // notifySuccess('Connects refreshed successfully!', 'Success');
+        notifySuccess('Connects refreshed successfully!', 'Success');
       } else {
         fetchConnects();
-        // notifySuccess('Connects data updated from cache', 'Updated');
+        notifySuccess('Connects data updated from cache', 'Updated');
       }
     } catch (error) {
       fetchConnects();
       notifyError('Failed to refresh connects. Please try again.', 'Error');
+    } finally {
+      setIsRefreshing(false);
     }
   }, [user?.uid, userType]);
 
@@ -266,6 +270,18 @@ const Header: React.FC<HeaderProps> = ({
               connects={connects}
               userType={userType}
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refreshConnectsFromServer}
+              disabled={isRefreshing}
+              className="h-9 w-9 p-0"
+              aria-label="Refresh connects"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+            </Button>
           </div>
         ) : (
           <div data-tour="header-connects">

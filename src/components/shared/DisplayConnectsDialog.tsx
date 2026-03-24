@@ -9,7 +9,6 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  RefreshCw,
 } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
@@ -398,20 +397,17 @@ export const DisplayConnectsDialog = React.forwardRef<
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs h-7 gap-1.5"
+              className="text-xs h-7"
               onClick={fetchConnectsRequest}
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                   Refreshing...
                 </>
               ) : (
-                <>
-                  <RefreshCw className="h-3 w-3" />
-                  Refresh
-                </>
+                'Refresh'
               )}
             </Button>
           </div>
