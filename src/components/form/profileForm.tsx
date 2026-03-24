@@ -829,54 +829,52 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 </FormItem>
               )}
             />
-            <div data-tour="non-editable-field">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <InputGroup>
-                        <InputGroupText>
-                          <AtSign className="h-4 w-4" />
-                        </InputGroupText>
-                        <InputGroupInput
-                          placeholder="Enter your username"
-                          {...field}
-                          readOnly
-                        />
-                      </InputGroup>
-                    </FormControl>
-                    <FormMessage />
-                    <FormDescription>Non editable field</FormDescription>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <InputGroup>
-                        <InputGroupText>
-                          <Mail className="h-4 w-4" />
-                        </InputGroupText>
-                        <InputGroupInput
-                          placeholder="Enter your email"
-                          {...field}
-                          readOnly
-                        />
-                      </InputGroup>
-                    </FormControl>
-                    <FormDescription>Non editable field</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem data-tour="non-editable-field">
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <InputGroup>
+                      <InputGroupText>
+                        <AtSign className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your username"
+                        {...field}
+                        readOnly
+                      />
+                    </InputGroup>
+                  </FormControl>
+                  <FormMessage />
+                  <FormDescription>Non editable field</FormDescription>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <InputGroup>
+                      <InputGroupText>
+                        <Mail className="h-4 w-4" />
+                      </InputGroupText>
+                      <InputGroupInput
+                        placeholder="Enter your email"
+                        {...field}
+                        readOnly
+                      />
+                    </InputGroup>
+                  </FormControl>
+                  <FormDescription>Non editable field</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="description"
