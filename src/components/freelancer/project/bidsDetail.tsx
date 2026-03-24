@@ -1276,9 +1276,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   Bid Amount
                 </TableHead>
                 <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Profile Used
-                </TableHead>
-                <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Status
                 </TableHead>
                 <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -1360,34 +1357,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     </TableCell>
 
                     <TableCell className="text-center">
-                      {freelancerProfile ? (
-                        <div className="space-y-0.5">
-                          <div className="text-sm font-medium text-foreground">
-                            {freelancerProfile.profileName}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {freelancerProfile.skills
-                              ?.slice(0, 2)
-                              .map((skill: any) => skill.label)
-                              .join(', ')}
-                            {freelancerProfile.skills?.length > 2
-                              ? ` +${freelancerProfile.skills.length - 2}`
-                              : ''}
-                          </div>
-                          {freelancerProfile.hourlyRate && (
-                            <div className="text-xs text-muted-foreground">
-                              {formatUSD(freelancerProfile.hourlyRate)}/hr
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">
-                          No profile selected
-                        </span>
-                      )}
-                    </TableCell>
-
-                    <TableCell className="text-center">
                       {renderStatusBadge(data.bid_status)}
                     </TableCell>
 
@@ -1398,7 +1367,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                         onClick={handleViewProfile}
                         className="h-8"
                       >
-                        <Eye className="mr-2 h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                         View
                       </Button>
                     </TableCell>
@@ -1410,7 +1379,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                         onClick={handleOpenInterviewDialog}
                         className="h-8"
                       >
-                        <Video className="mr-2 h-4 w-4" />
+                        <Video className="h-4 w-4" />
                         Interview
                       </Button>
                     </TableCell>

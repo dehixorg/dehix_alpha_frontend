@@ -30,10 +30,12 @@ import Header from '@/components/header/header';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import EmptyState from '@/components/shared/EmptyState';
 import { RootState, useAppSelector } from '@/lib/store';
+import InviteFreelancerDialog from '@/components/dialogs/InviteFreelancerDialog';
 
 interface Skill {
   _id: string;
@@ -110,82 +112,131 @@ const FreelancerProfile = () => {
   const sidebarMenuItemsBottom = isFreelancer
     ? freelancerMenuItemsBottom
     : menuItemsBottom;
-  const { freelancer_id } = useParams<{ freelancer_id: string }>();
+  const { username } = useParams<{ username: string }>();
   const [profileData, setProfileData] = useState<FreelancerProfile | null>(
     null,
   );
+  const [freelancerId, setFreelancerId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [hireLoading, setHireLoading] = useState(false);
   const user = useSelector((state: RootState) => state.user);
 
+  // Invite dialog state (for business users)
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const isBusiness = userType === 'business';
+
   useEffect(() => {
-    if (freelancer_id) {
-      const fetchFreelancerDetails = async () => {
-        try {
-          setLoading(true);
-          const response = await axiosInstance.get(
-            `/public/freelancer/${freelancer_id}`,
-          );
-          if (response.status === 200) {
-            const freelancerData = response.data.data || response.data;
+    // Reset state immediately on username change
+    setProfileData(null);
+    setFreelancerId('');
+    setLoading(true);
 
-            const attrs = Array.isArray(freelancerData.attributes)
-              ? freelancerData.attributes
-              : [];
+    if (!username) {
+      setLoading(false);
+      return;
+    }
 
-            const skillsFromAttributes: Skill[] = attrs
-              .filter((attr: any) => attr?.type === 'SKILL')
-              .map((attr: any) => ({
-                _id: attr._id,
-                name: attr.name,
-              }));
+    let cancelled = false;
 
-            const domainsFromAttributes: Domain[] = attrs
-              .filter((attr: any) => attr?.type === 'DOMAIN')
-              .map((attr: any) => ({
-                _id: attr._id,
-                name: attr.name,
-              }));
+    const processFreelancerData = (freelancerData: any) => {
+      if (cancelled) return;
 
-            // Transform the data to match our interface
-            const transformedData: FreelancerProfile = {
-              firstName: freelancerData.firstName || '',
-              lastName: freelancerData.lastName || '',
-              description: freelancerData.description || '',
-              profilePic: freelancerData.profilePic || '',
-              email: freelancerData.email || '',
-              githubLink: freelancerData.githubLink || '',
-              linkedin: freelancerData.linkedin || '',
-              personalWebsite: freelancerData.personalWebsite || '',
-              attributes: attrs,
-              skills:
-                skillsFromAttributes.length > 0
-                  ? skillsFromAttributes
-                  : freelancerData.skills || [],
-              domain:
-                domainsFromAttributes.length > 0
-                  ? domainsFromAttributes
-                  : freelancerData.domain || [],
-              projectDomain: freelancerData.projectDomain || [],
-              projects: freelancerData.projects || [],
-              professionalInfo: freelancerData.professionalInfo || [],
-              education: freelancerData.education || [],
-            };
+      const attrs = Array.isArray(freelancerData.attributes)
+        ? freelancerData.attributes
+        : [];
 
-            setProfileData(transformedData);
-          }
-        } catch (error) {
-          console.error('Error fetching freelancer details', error);
-          notifyError('Failed to fetch freelancer details.', 'Error');
-        } finally {
-          setLoading(false);
-        }
+      const skillsFromAttributes: Skill[] = attrs
+        .filter((attr: any) => attr?.type === 'SKILL')
+        .map((attr: any) => ({
+          _id: attr._id,
+          name: attr.name,
+        }));
+
+      const domainsFromAttributes: Domain[] = attrs
+        .filter((attr: any) => attr?.type === 'DOMAIN')
+        .map((attr: any) => ({
+          _id: attr._id,
+          name: attr.name,
+        }));
+
+      const transformedData: FreelancerProfile = {
+        firstName: freelancerData.firstName || '',
+        lastName: freelancerData.lastName || '',
+        description: freelancerData.description || '',
+        profilePic: freelancerData.profilePic || '',
+        email: freelancerData.email || '',
+        githubLink: freelancerData.githubLink || '',
+        linkedin: freelancerData.linkedin || '',
+        personalWebsite: freelancerData.personalWebsite || '',
+        attributes: attrs,
+        skills:
+          skillsFromAttributes.length > 0
+            ? skillsFromAttributes
+            : freelancerData.skills || [],
+        domain:
+          domainsFromAttributes.length > 0
+            ? domainsFromAttributes
+            : freelancerData.domain || [],
+        projectDomain: freelancerData.projectDomain || [],
+        projects: freelancerData.projects || [],
+        professionalInfo: freelancerData.professionalInfo || [],
+        education: freelancerData.education || [],
       };
 
-      fetchFreelancerDetails();
-    }
-  }, [freelancer_id]);
+      setProfileData(transformedData);
+      setFreelancerId(freelancerData._id || '');
+    };
+
+    const fetchFreelancerDetails = async () => {
+      try {
+        // Try fetching by username first
+        const response = await axiosInstance.get(
+          `/public/freelancer/username/${username}`,
+        );
+        if (response.status === 200) {
+          const freelancerData = response.data.data || response.data;
+          processFreelancerData(freelancerData);
+        }
+      } catch (error: any) {
+        if (cancelled) return;
+        // If username lookup fails, try by ID (backward compatibility)
+        if (
+          error?.response?.status === 404 ||
+          error?.response?.status === 500
+        ) {
+          try {
+            const fallbackResponse = await axiosInstance.get(
+              `/public/freelancer/${username}`,
+            );
+            if (fallbackResponse.status === 200 && !cancelled) {
+              const freelancerData =
+                fallbackResponse.data.data || fallbackResponse.data;
+              processFreelancerData(freelancerData);
+            }
+          } catch (fallbackError) {
+            if (!cancelled) {
+              console.error('Error fetching freelancer details', fallbackError);
+              notifyError('Failed to fetch freelancer details.', 'Error');
+            }
+          }
+        } else {
+          console.error('Error fetching freelancer details', error);
+          notifyError('Failed to fetch freelancer details.', 'Error');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchFreelancerDetails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [username]);
 
   const formatDate = (dateString: string): string => {
     if (!dateString) return '';
@@ -203,10 +254,10 @@ const FreelancerProfile = () => {
       10,
     );
     try {
-      // Include freelancer_id in the hire request
+      // Include freelancerId in the hire request
       const hireData = {
         ...data,
-        freelancerId: freelancer_id,
+        freelancerId: freelancerId,
       };
 
       const res = await axiosInstance.post(
@@ -257,18 +308,24 @@ const FreelancerProfile = () => {
   if (loading) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background">
-        <SidebarMenu
-          menuItemsTop={sidebarMenuItemsTop}
-          menuItemsBottom={sidebarMenuItemsBottom}
-          active=""
-        />
-        <div className="flex flex-col sm:gap-4 mb-8 sm:pl-14">
-          <Header
+        {user?.isLoggedIn && (
+          <SidebarMenu
             menuItemsTop={sidebarMenuItemsTop}
             menuItemsBottom={sidebarMenuItemsBottom}
-            activeMenu="Projects"
-            breadcrumbItems={[{ label: 'Freelancer', link: '#' }]}
+            active=""
           />
+        )}
+        <div
+          className={`flex flex-col sm:gap-4 mb-8 ${user?.isLoggedIn ? 'sm:pl-14' : ''}`}
+        >
+          {user?.isLoggedIn && (
+            <Header
+              menuItemsTop={sidebarMenuItemsTop}
+              menuItemsBottom={sidebarMenuItemsBottom}
+              activeMenu="Projects"
+              breadcrumbItems={[{ label: 'Freelancer', link: '#' }]}
+            />
+          )}
 
           <div className="flex p-3 md:px-14 relative flex-col sm:gap-8 sm:py-4 max-w-full overflow-x-hidden">
             <main className="w-full max-w-4xl mx-auto space-y-6">
@@ -468,24 +525,30 @@ const FreelancerProfile = () => {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      <SidebarMenu
-        menuItemsTop={sidebarMenuItemsTop}
-        menuItemsBottom={sidebarMenuItemsBottom}
-        active=""
-      />
-      <div className="flex flex-col sm:gap-4 mb-8 sm:pl-14">
-        <Header
+      {user?.isLoggedIn && (
+        <SidebarMenu
           menuItemsTop={sidebarMenuItemsTop}
           menuItemsBottom={sidebarMenuItemsBottom}
-          activeMenu="Projects"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '#' },
-            {
-              label: `${profileData?.firstName || ''} ${profileData?.lastName || ''}`,
-              link: '#',
-            },
-          ]}
+          active=""
         />
+      )}
+      <div
+        className={`flex flex-col sm:gap-4 mb-8 ${user?.isLoggedIn ? 'sm:pl-14' : ''}`}
+      >
+        {user?.isLoggedIn && (
+          <Header
+            menuItemsTop={sidebarMenuItemsTop}
+            menuItemsBottom={sidebarMenuItemsBottom}
+            activeMenu="Projects"
+            breadcrumbItems={[
+              { label: 'Freelancer', link: '#' },
+              {
+                label: `${profileData?.firstName || ''} ${profileData?.lastName || ''}`,
+                link: '#',
+              },
+            ]}
+          />
+        )}
 
         <div className="flex p-3 md:px-14 relative flex-col sm:gap-8 sm:py-4 max-w-full overflow-x-hidden">
           <main className="m:mt-8 w-full max-w-4xl mx-auto">
@@ -526,8 +589,17 @@ const FreelancerProfile = () => {
                       </p>
                     </div>
                   </div>
-                  {!isFreelancer && (
-                    <div className="w-full sm:w-auto">
+                  {!isFreelancer && user?.isLoggedIn && (
+                    <div className="w-full sm:w-auto flex flex-wrap gap-2">
+                      {isBusiness && (
+                        <Button
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                          onClick={() => setInviteDialogOpen(true)}
+                        >
+                          Invite to Project
+                        </Button>
+                      )}
                       <ConnectsDialog
                         loading={hireLoading}
                         setLoading={setHireLoading}
@@ -718,7 +790,9 @@ const FreelancerProfile = () => {
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
                               {formatDate(experience.workFrom)} -{' '}
-                              {formatDate(experience.workTo)}
+                              {experience.workTo
+                                ? formatDate(experience.workTo)
+                                : 'Present'}
                             </p>
                           </div>
                         </div>
@@ -764,7 +838,7 @@ const FreelancerProfile = () => {
                         </div>
                         <div className="text-sm text-muted-foreground bg-cyan-500/5 dark:bg-cyan-500/10 px-3 py-1 rounded-md h-fit w-fit">
                           {formatDate(edu.startDate)} -{' '}
-                          {formatDate(edu.endDate)}
+                          {edu.endDate ? formatDate(edu.endDate) : 'Present'}
                         </div>
                       </div>
                     ))}
@@ -786,6 +860,17 @@ const FreelancerProfile = () => {
           <ProjectDialog
             project={selectedProject}
             onClose={() => setSelectedProject(null)}
+          />
+        )}
+
+        {/* Invite Dialog — shown to business users only */}
+        {user?.isLoggedIn && isBusiness && (
+          <InviteFreelancerDialog
+            open={inviteDialogOpen}
+            onOpenChange={setInviteDialogOpen}
+            freelancerId={freelancerId || ''}
+            freelancer_professional_profile_id=""
+            onSuccess={() => setInviteDialogOpen(false)}
           />
         )}
       </div>

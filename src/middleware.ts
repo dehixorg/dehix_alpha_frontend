@@ -10,14 +10,21 @@ export async function middleware(request: NextRequest) {
 
   const allowCrossRolePaths = ['/project-invitations', '/freelancer-profile'];
 
-  // Skip middleware for static files, API routes, and auth pages
+  // Public routes — accessible without authentication
+  const publicPaths = [
+    '/freelancer-profile',
+    '/business-profile',
+    '/auth/sign-up',
+    '/auth/forgot-password',
+  ];
+
+  // Skip middleware for static files, API routes, and public pages
   if (
     pathname.startsWith('/_next') ||
     pathname.includes('.') ||
     pathname.startsWith('/api/') ||
     pathname.startsWith('/static/') ||
-    pathname.startsWith('/auth/sign-up') ||
-    pathname.startsWith('/auth/forgot-password')
+    publicPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`))
   ) {
     return NextResponse.next();
   }
