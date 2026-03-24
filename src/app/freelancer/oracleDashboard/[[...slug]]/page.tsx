@@ -129,9 +129,75 @@ export default function OracleDashboardPage() {
     >
       <div className="mx-auto w-full max-w-7xl mt-4 md:mt-0">
         {statusLoading ? (
-          <div className="max-w-3xl space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-40 w-full" />
+          <div className="space-y-6">
+            {/* Skeleton for Tabs */}
+            <div className="w-full">
+              <div className="grid w-full grid-cols-4 gap-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-10 w-full rounded-md" />
+                ))}
+              </div>
+            </div>
+
+            {/* Skeleton for Tab Content */}
+            <div className="space-y-4">
+              {/* Header Section */}
+              <div className="space-y-3">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+
+              {/* Content Cards Grid */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="space-y-3 rounded-lg border p-4">
+                    {/* Card Header */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+
+                    {/* Card Actions */}
+                    <div className="flex gap-2 pt-2">
+                      <Skeleton className="h-8 w-20 rounded-md" />
+                      <Skeleton className="h-8 w-20 rounded-md" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Additional Content Section */}
+              <div className="space-y-3 rounded-lg border p-6">
+                <Skeleton className="h-6 w-40" />
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         ) : oracleStatus === OracleStatusEnum.APPROVED ? (
           <Tabs

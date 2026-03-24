@@ -156,6 +156,20 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
     ) {
       return true;
     }
+    // Handle freelancer interviewer routes (e.g., /freelancer/interviewer should match /freelancer/interviewer/profile, /freelancer/interviewer/current, etc.)
+    if (
+      href.endsWith('/interviewer') &&
+      pathname.startsWith('/freelancer/interviewer')
+    ) {
+      return true;
+    }
+    // Handle freelancer oracle dashboard routes (e.g., /freelancer/oracleDashboard should match /freelancer/oracleDashboard/ and its sub-routes)
+    if (
+      href.endsWith('/oracleDashboard') &&
+      pathname.startsWith('/freelancer/oracleDashboard')
+    ) {
+      return true;
+    }
     return false;
   };
 
