@@ -132,12 +132,6 @@ interface SkillDomainData {
 
 const SHEET_SIDES = ['left'] as const;
 
-let cachedHireData: {
-  skillDomainData: SkillDomainData[];
-  filterSkills: SkillOption[];
-  filterDomains: DomainOption[];
-} | null = null;
-
 // type SheetSide = (typeof SHEET_SIDES)[number];
 
 const TalentCard: React.FC<TalentCardProps> = ({
@@ -164,7 +158,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
 
   const [selectedTalent, setSelectedTalent] = useState<any>();
   const [currSkills, setCurrSkills] = useState<any>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
   const [isDialogOpen, setIsDialogOpen] = useState<any>(false);
   const [isLoading, setIsLoading] = useState<any>(false);
   const [openSheetId, setOpenSheetId] = useState<string | null>(null);
@@ -206,13 +199,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
   useEffect(() => {
     if (Array.isArray(skillDomainDataProp)) return;
 
-    if (cachedHireData) {
-      setSkillDomainData(cachedHireData.skillDomainData);
-      setFilterSkill?.(cachedHireData.filterSkills);
-      setFilterDomain?.(cachedHireData.filterDomains);
-      return;
-    }
-
     const run = async () => {
       try {
         const res = await axiosInstance.get('/business/hire-dehixtalent');
@@ -245,6 +231,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         const filterDomains: DomainOption[] = Array.from(domainsMap.values());
 
         const formatted: SkillDomainData[] = (hireTalentData || [])
+          .filter((item: any) => item?.visible)
           .map((item: any) => ({
             uid: item?._id,
             label: item?.talentName || 'N/A',
@@ -253,14 +240,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
             status: item?.status,
             visible: Boolean(item?.visible),
             talentId: item?.talentId,
-          }))
-          .filter((i: any) => Boolean(i?.uid) && i?.label !== 'N/A');
-
-        cachedHireData = {
-          skillDomainData: formatted,
-          filterSkills,
-          filterDomains,
-        };
+          }));
 
         setSkillDomainData(formatted);
         setFilterSkill?.(filterSkills);
@@ -274,22 +254,22 @@ const TalentCard: React.FC<TalentCardProps> = ({
     void run();
   }, [skillDomainDataProp, setFilterDomain, setFilterSkill]);
 
-  const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
-      setCurrSkills([
-        ...currSkills,
-        {
-          name: tmpSkill,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
-      setTmpSkill('');
-    }
+  const handleAddSkill = (value: string) => {
+    if (!value || currSkills.some((s: any) => s.name === value)) return;
+
+    setCurrSkills((prev: any) => [
+      ...prev,
+      {
+        name: value,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+      },
+    ]);
   };
+
   const handleDeleteSkill = (skillToDelete: string) => {
     setCurrSkills(
       currSkills.filter((skill: any) => skill.name !== skillToDelete),
@@ -351,12 +331,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
         }
 
         if (rawData) {
-          setTalents((prev) =>
-            reset ? fetchedData : [...prev, ...fetchedData],
-          );
-          skipRef.current = reset
-            ? Dehix_Talent_Card_Pagination.BATCH
-            : skipRef.current + Dehix_Talent_Card_Pagination.BATCH;
+          if (reset) {
+            setTalents(fetchedData);
+            skipRef.current = fetchedData.length;
+          } else {
+            setTalents((prev) => [...prev, ...fetchedData]);
+            skipRef.current += fetchedData.length;
+          }
         } else {
           throw new Error('Fail to fetch data');
         }
@@ -423,6 +404,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
       if (response.status === 200) {
         notifySuccess('Invitation sent successfully', 'Success');
 
+        await fetchTalentData(0, true);
+
         // Sync connects balance after invitation (fire-and-forget)
         fetchAndUpdateConnects('business').catch((error) => {
           console.warn('Failed to sync connects after invitation:', error);
@@ -452,19 +435,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
           }
           return merged;
         };
-
-        setTalents((prev) =>
-          prev.map((t) =>
-            t.freelancer_id === freelancerId
-              ? {
-                  ...t,
-                  dehixTalent: mergeInvites(
-                    Array.isArray(t.dehixTalent) ? t.dehixTalent : [],
-                  ),
-                }
-              : t,
-          ),
-        );
 
         setSelectedTalent((prev: any) => {
           if (!prev || prev.freelancer_id !== freelancerId) return prev;
@@ -551,9 +521,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           const professionalInfo = talent.professionalInfo;
           const projects = talent.projects;
 
-          const isInvited =
-            Array.isArray(talent.dehixTalent) &&
-            talent.dehixTalent.some((t) => t.hireId === talentEntry?.hireId);
+          const isInvited = talentEntries.some((t) => t?.status === 'INVITED');
 
           if (!talentEntry) return null;
 
@@ -1022,6 +990,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 disabled={isInvited}
                                 className={`w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
                                 onClick={() => {
+                                  setCurrSkills([]);
                                   setOpenSheetId(null);
                                   setIsDialogOpen(true);
                                   setSelectedTalent(talent);
@@ -1058,6 +1027,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     className={`w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
+                      setCurrSkills([]);
                       setOpenSheetId(null);
                       setIsDialogOpen(true);
                       setSelectedTalent(talent);
@@ -1076,12 +1046,12 @@ const TalentCard: React.FC<TalentCardProps> = ({
         {selectedTalent && (
           <AddToLobbyDialog
             skillDomainData={skillDomainData}
+            key={JSON.stringify(skillDomainData)}
             currSkills={currSkills}
             handleAddSkill={handleAddSkill}
             handleDeleteSkill={handleDeleteSkill}
             handleAddToLobby={handleAddToLobby}
             talent={selectedTalent}
-            setTmpSkill={setTmpSkill}
             open={isDialogOpen}
             setOpen={(v: boolean) => {
               setIsDialogOpen(v);
