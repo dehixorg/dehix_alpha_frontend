@@ -829,7 +829,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 </FormItem>
               )}
             />
-            <div data-tour="non-editable-field">
+            <div
+              data-tour="non-editable-field"
+              className="grid gap-6 grid-cols-1 md:grid-cols-2 md:col-span-2"
+            >
               <FormField
                 control={form.control}
                 name="username"

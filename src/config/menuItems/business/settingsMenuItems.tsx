@@ -5,6 +5,7 @@ import {
   User,
   Star,
   Receipt,
+  Globe,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -34,6 +35,12 @@ export const menuItemsTop: MenuItem[] = [
     icon: <User className="h-5 w-5" />,
     label: 'Business Info',
     tourId: 'settings-business-info',
+  },
+  {
+    href: '/business/settings/public-profile',
+    icon: <Globe className="h-5 w-5" />,
+    label: 'Public Profile',
+    tourId: 'settings-public-profile',
   },
   {
     href: '/business/settings/kyc',
