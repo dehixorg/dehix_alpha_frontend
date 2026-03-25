@@ -27,7 +27,7 @@ const AddToLobbyDialog = ({
   const user = useSelector((state: RootState) => state.user);
 
   const requiredConnects = Number(
-    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST // 5 connects
+    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST, // 5 connects
   );
 
   if (!Number.isFinite(requiredConnects)) {

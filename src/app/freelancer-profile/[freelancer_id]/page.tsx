@@ -100,7 +100,9 @@ interface FreelancerProfile {
 }
 
 const FreelancerProfile = () => {
-  const userTypeFromStore = useAppSelector((state: RootState) => state.user.type)
+  const userTypeFromStore = useAppSelector(
+    (state: RootState) => state.user.type,
+  );
   const userType = userTypeFromStore || (Cookies.get('userType') as any);
   const isFreelancer = userType === 'freelancer';
 
