@@ -156,6 +156,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
     ) {
       return true;
     }
+    if (
+      href.endsWith('/interviewer') &&
+      pathname.startsWith('/freelancer/interviewer')
+    ) {
+      return true;
+    }
     return false;
   };
 

@@ -223,7 +223,6 @@ const TalentMarketTab: React.FC = () => {
       setIsListingsLoading(true);
       const res = await axiosInstance.get('/freelancer/dehix-talent/market');
       const data: TalentMarketItem[] = res.data?.data || [];
-      setItems(data);
     } catch (err) {
       console.error('Fetch talent market error:', err);
       notifyError('Failed to load talent market listings.');
@@ -386,8 +385,20 @@ const TalentMarketTab: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const hasUserApplied = (item: TalentMarketItem): boolean => {
+    if (!user?.uid) return false;
+    return !!item.freelancers?.some((f) => f.freelancerId === user.uid);
+  };
+
   const openApplyDialog = (job: Project) => {
     const item = items.find((i) => i._id === job._id) || null;
+    if (!item) return;
+
+    if (hasUserApplied(item)) {
+      notifyError('You have already applied to this opportunity.');
+      return;
+    }
+
     setSelectedItem(item);
     setApplyOpen(true);
     setCoverLetter('');
@@ -510,10 +521,12 @@ const TalentMarketTab: React.FC = () => {
               {visibleJobs.map((job) => {
                 const item = items.find((i) => i._id === job._id);
                 if (!item) return null;
+                const hasApplied = hasUserApplied(item);
                 return (
                   <TalentMarketCard
                     key={item._id}
                     item={item}
+                    hasApplied={hasApplied}
                     onNotInterested={() => handleRemoveJob(item._id)}
                     onToggleBookmark={(it, next) =>
                       setItems((prev) =>
@@ -698,6 +711,29 @@ const TalentMarketTab: React.FC = () => {
                     '/freelancer/dehix-talent/apply',
                     payload,
                   );
+
+                  setItems((prev) =>
+                    prev.map((item) =>
+                      item._id === selectedItem._id
+                        ? {
+                            ...item,
+                            freelancers: [
+                              ...(item.freelancers || []),
+                              {
+                                _id: '',
+                                freelancerId: user.uid,
+                                freelancer_professional_profile_id:
+                                  selectedProfileId,
+                                status: 'APPLIED',
+                                cover_letter: coverLetter.trim(),
+                                updatedAt: new Date().toISOString(),
+                              },
+                            ],
+                          }
+                        : item,
+                    ),
+                  );
+
                   notifySuccess('Applied successfully', 'Success');
                   setApplyOpen(false);
                 } catch (e) {
