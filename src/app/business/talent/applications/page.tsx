@@ -54,6 +54,9 @@ export default function Page() {
   const [talentFilter, setTalentFilter] = useState<string | undefined>(
     undefined,
   );
+  const [activeHireId, setActiveHireId] = useState<string | undefined>(
+    undefined,
+  );
   const [talentOptions, setTalentOptions] = useState<
     { label: string; value: string }[]
   >([]);
@@ -67,15 +70,17 @@ export default function Page() {
 
   const updateApplicationStatus = async (
     freelancerId: string,
-    status: 'SELECTED' | 'REJECTED',
+    status: 'SELECTED' | 'REJECTED' | 'LOBBY' | 'INTERVIEW',
+    freelancer_professional_profile_id: string | undefined,
   ) => {
-    const hireId = talentFilter;
+    const hireId = talentFilter ?? activeHireId;
     if (!hireId) return;
 
     try {
       await axiosInstance.post('/business/update-application', {
         hireId,
         freelancerId,
+        freelancer_professional_profile_id,
         status,
       });
 
@@ -120,6 +125,8 @@ export default function Page() {
         const firstHireId = nextUniqueTalentOptions[0]?.value;
         const effectiveHireId =
           talentFilter !== undefined ? talentFilter : firstHireId;
+
+        setActiveHireId(effectiveHireId);
 
         if (!effectiveHireId) {
           setTabApplications([]);
@@ -173,7 +180,9 @@ export default function Page() {
                 application?.freelancerId || freelancer?._id || '',
               ),
               freelancerProfessionalProfileId: String(
-                application?.freelancerProfessionalProfileId ||
+                application?.freelancer_professional_profile_id ||
+                  row?.freelancer_professional_profile_id ||
+                  application?.freelancerProfessionalProfileId ||
                   row?.freelancerProfessionalProfileId ||
                   '',
               ),

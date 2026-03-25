@@ -35,7 +35,8 @@ interface TalentLayoutProps {
   talentOptions?: { label: string; value: string }[];
   onUpdateApplicationStatus?: (
     freelancerId: string,
-    status: 'SELECTED' | 'REJECTED',
+    status: 'SELECTED' | 'REJECTED' | 'LOBBY' | 'INTERVIEW',
+    freelancer_professional_profile_id: string | undefined,
   ) => Promise<void>;
 }
 
