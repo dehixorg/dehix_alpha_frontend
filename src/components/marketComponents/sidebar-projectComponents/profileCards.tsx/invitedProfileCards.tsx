@@ -355,7 +355,9 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                         <Button
                           size="sm"
                           variant="secondary"
-                          disabled={updatingFreelancerId === talent.freelancerId}
+                          disabled={
+                            updatingFreelancerId === talent.freelancerId
+                          }
                           onClick={() =>
                             handleDecision(
                               talent.freelancerId,
@@ -373,7 +375,9 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                         <Button
                           size="sm"
                           variant="secondary"
-                          disabled={updatingFreelancerId === talent.freelancerId}
+                          disabled={
+                            updatingFreelancerId === talent.freelancerId
+                          }
                           onClick={() =>
                             handleDecision(
                               talent.freelancerId,
