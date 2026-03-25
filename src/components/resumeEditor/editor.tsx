@@ -251,6 +251,65 @@ export default function ResumeEditor({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  const PAGE_W_MM = 210;
+  const PAGE_H_MM = 297;
+  const PAGE_GAP_MM = 6;
+  const [pageCount, setPageCount] = useState(1);
+  const [previewScale, setPreviewScale] = useState(1);
+  const [pxPerMm, setPxPerMm] = useState(3.78);
+  const resumeMeasureRef = useRef<HTMLDivElement>(null);
+  const pageHeightMeasureRef = useRef<HTMLDivElement>(null);
+  const contentWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Measure full resume height and compute A4 page count for editor preview.
+  useEffect(() => {
+    const measure = () => {
+      const pageH =
+        pageHeightMeasureRef.current?.getBoundingClientRect().height || 0;
+      const fullH =
+        resumeMeasureRef.current?.getBoundingClientRect().height || 0;
+      if (!pageH || !fullH) return;
+      const ppMm = pageH / PAGE_H_MM;
+      setPxPerMm(ppMm);
+      // Full A4 height only — template padding is inside ResumePreview; do not subtract here.
+      const pagePerPagePx = PAGE_H_MM * ppMm;
+      setPageCount(Math.max(1, Math.ceil(fullH / pagePerPagePx)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (resumeMeasureRef.current) ro.observe(resumeMeasureRef.current);
+    if (pageHeightMeasureRef.current) ro.observe(pageHeightMeasureRef.current);
+    let mounted = true;
+    if ((document as any).fonts?.ready) {
+      (document as any).fonts.ready.then(() => {
+        if (mounted) measure();
+      });
+    }
+    return () => {
+      mounted = false;
+      ro.disconnect();
+    };
+  }, [resumeText, selectedTemplate, selectedColor]);
+
+  // Scale pages to fit the available container width.
+  useEffect(() => {
+    const wrapper = contentWrapperRef.current;
+    const measurer = pageHeightMeasureRef.current;
+    if (!wrapper || !measurer) return;
+    const compute = () => {
+      const ppMm = measurer.getBoundingClientRect().height / PAGE_H_MM;
+      if (!ppMm) return;
+      const pageWidthPx = PAGE_W_MM * ppMm;
+      const available = wrapper.clientWidth;
+      const fitScale = available >= pageWidthPx ? 1 : available / pageWidthPx;
+      setPreviewScale(Math.min(1, fitScale));
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(wrapper);
+    return () => ro.disconnect();
+  }, [selectedTemplate, pageCount]);
+
   // Fetch skills for the skill picker
   useEffect(() => {
     const fetchSkills = async () => {
@@ -417,7 +476,22 @@ export default function ResumeEditor({
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
+      .resumeContent section,
+      .resumeContent .mb-4,
+      .resumeContent .mb-3,
+      .resumeContent .mb-6 {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .resumeContent h2 {
+        page-break-after: avoid;
+      }
       @media print {
+        body { margin: 0; }
+        .resumeContent {
+          box-shadow: none !important;
+          margin: 0 !important;
+        }
         .pdf-optimized {
           -webkit-print-color-adjust: exact !important;
           color-adjust: exact !important;
@@ -428,6 +502,7 @@ export default function ResumeEditor({
         }
         .pdf-optimized h1, .pdf-optimized h2 {
           margin-bottom: 8px !important;
+          page-break-after: avoid;
         }
         .pdf-optimized p {
           margin-bottom: 4px !important;
@@ -615,6 +690,114 @@ export default function ResumeEditor({
       if ((document as any).fonts?.ready) {
         await (document as any).fonts.ready;
       }
+      const pageEls = Array.from(
+        resumeRef.current.querySelectorAll('.resume-page'),
+      ) as HTMLElement[];
+
+      // Preferred path: export each editor page container separately.
+      // This prevents spacing/gaps from leaking into the PDF and makes the PDF match the preview slice-by-slice.
+      if (pageEls.length) {
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+          compress: true,
+          precision: 16,
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        const safeSchemes = ['https:', 'http:', 'mailto:', 'tel:'];
+
+        for (let i = 0; i < pageEls.length; i++) {
+          const pageEl = pageEls[i];
+          const canvas = await html2canvas(pageEl, {
+            scale: 3,
+            backgroundColor: '#FFFFFF',
+            logging: false,
+            useCORS: true,
+            allowTaint: true,
+            width: pageEl.offsetWidth,
+            height: pageEl.offsetHeight,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: document.documentElement.offsetWidth,
+            onclone: (clonedDoc) => {
+              const sw = clonedDoc.querySelector(
+                '[data-scale-wrapper]',
+              ) as HTMLElement;
+              if (sw) sw.style.transform = 'none';
+              const rc = clonedDoc.querySelector(
+                '.resumeContent',
+              ) as HTMLElement;
+              if (rc) {
+                rc.style.overflow = 'visible';
+                rc.style.maxWidth = 'none';
+                rc.style.boxShadow = 'none';
+                rc.style.paddingTop = '0';
+              }
+            },
+          });
+
+          const imgData = canvas.toDataURL('image/png', 1.0);
+          if (i > 0) pdf.addPage();
+          pdf.addImage(
+            imgData,
+            'PNG',
+            0,
+            0,
+            pdfWidth,
+            pdfHeight,
+            undefined,
+            'FAST',
+          );
+
+          // Add clickable links on the correct PDF page.
+          const pageRect = pageEl.getBoundingClientRect();
+          const domToMmX = pdfWidth / pageRect.width;
+          const domToMmY = pdfHeight / pageRect.height;
+
+          pageEl.querySelectorAll('a[href]').forEach((anchor) => {
+            const href = anchor.getAttribute('href');
+            const normalizedHref = href?.trim();
+            if (!normalizedHref || normalizedHref === '#') return;
+
+            let protocol = '';
+            try {
+              protocol = new URL(
+                normalizedHref,
+                window.location.origin,
+              ).protocol.toLowerCase();
+            } catch {
+              return;
+            }
+            if (!safeSchemes.includes(protocol)) return;
+
+            const rect = anchor.getBoundingClientRect();
+            if (rect.bottom <= pageRect.top || rect.top >= pageRect.bottom)
+              return;
+
+            const relLeft = rect.left - pageRect.left;
+            const relTop = rect.top - pageRect.top;
+
+            const x = Math.max(0, relLeft * domToMmX);
+            const y = Math.max(0, relTop * domToMmY);
+            const w = Math.min(pdfWidth - x, rect.width * domToMmX);
+            const h = Math.min(pdfHeight - y, rect.height * domToMmY);
+
+            if (w <= 0 || h <= 0) return;
+            pdf.link(x, y, w, h, { url: normalizedHref });
+          });
+        }
+
+        pdf.save(
+          `Resume-${personalData[0]?.firstName || ''}-${personalData[0]?.lastName || ''}-${new Date().toISOString().slice(0, 10)}.pdf`,
+        );
+        notifySuccess('Resume PDF generated successfully!', 'Success');
+        return;
+      }
+
       const element = resumeRef.current.querySelector(
         '.resumeContent',
       ) as HTMLElement;
@@ -639,6 +822,7 @@ export default function ResumeEditor({
             clonedElement.style.margin = '0';
             clonedElement.style.border = 'none';
             clonedElement.style.borderRadius = '0';
+            clonedElement.style.paddingTop = '0';
           }
         },
       });
@@ -656,26 +840,22 @@ export default function ResumeEditor({
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgPdfWidth = imgWidth * ratio;
+      const ratio = pdfWidth / imgWidth;
+      const imgPdfWidth = pdfWidth;
       const imgPdfHeight = imgHeight * ratio;
-      const xOffset = (pdfWidth - imgPdfWidth) / 2;
-      const yOffset = 0;
+      const xOffset = 0;
 
       pdf.addImage(
         imgData,
         'PNG',
         xOffset,
-        yOffset,
+        0,
         imgPdfWidth,
         imgPdfHeight,
         undefined,
         'FAST',
       );
 
-      // Collect real clickable links — scale DOM px → PDF mm
-      // canvas.width = element.offsetWidth * scale(3), ratio = pdfWidth/canvas.width
-      // so: elementPx * scale * ratio = mm  →  elementPx * (canvas.width/element.offsetWidth) * ratio
       const domToMm = (canvas.width / element.offsetWidth) * ratio;
       const elemRect = element.getBoundingClientRect();
       const links: Array<{
@@ -689,7 +869,7 @@ export default function ResumeEditor({
         const href = anchor.getAttribute('href');
         const normalizedHref = href?.trim();
         // skip empty, fragment, and unsafe links
-        const safeSchemes = ['https:', 'http:', 'mailto:'];
+        const safeSchemes = ['https:', 'http:', 'mailto:', 'tel:'];
         if (!normalizedHref || normalizedHref === '#') return;
         let protocol = '';
         try {
@@ -702,31 +882,29 @@ export default function ResumeEditor({
         }
         if (!safeSchemes.includes(protocol)) return;
         const rect = anchor.getBoundingClientRect();
-        const x = xOffset + (rect.left - elemRect.left) * domToMm;
-        const yAbs = yOffset + (rect.top - elemRect.top) * domToMm;
+        const x = (rect.left - elemRect.left) * domToMm;
+        const yAbs = (rect.top - elemRect.top) * domToMm;
         const w = rect.width * domToMm;
         const h = rect.height * domToMm;
         links.push({ x, yAbs, w, h, href: normalizedHref });
       });
 
-      if (imgPdfHeight > pdfHeight) {
-        let heightLeft = imgPdfHeight;
-        let position = -pdfHeight;
-        while (heightLeft > pdfHeight) {
-          position = position - pdfHeight;
-          heightLeft = heightLeft - pdfHeight;
-          pdf.addPage();
-          pdf.addImage(
-            imgData,
-            'PNG',
-            xOffset,
-            position,
-            imgPdfWidth,
-            imgPdfHeight,
-            undefined,
-            'FAST',
-          );
-        }
+      let heightLeft = imgPdfHeight - pdfHeight;
+      let position = 0;
+      while (heightLeft > 0) {
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(
+          imgData,
+          'PNG',
+          xOffset,
+          position,
+          imgPdfWidth,
+          imgPdfHeight,
+          undefined,
+          'FAST',
+        );
+        heightLeft -= pdfHeight;
       }
 
       // Place each link on its correct PDF page
@@ -784,7 +962,7 @@ export default function ResumeEditor({
   const openDeleteDialog = () => setShowDeleteDialog(true);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-auto flex-col overflow-x-hidden">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -801,8 +979,8 @@ export default function ResumeEditor({
           menuItemsBottom={[]}
         />
 
-        <main className="flex-1 md:gap-6 lg:grid lg:grid-cols-2">
-          <div className="px-6 pt-2">
+        <main className="flex w-full items-start flex-col lg:flex-row md:gap-6 lg:h-[calc(100vh-88px)] lg:overflow-hidden">
+          <div className="w-full lg:w-1/2 flex flex-col px-6 pt-2 min-w-0 lg:min-h-0 lg:h-full lg:overflow-y-auto lg:overflow-x-hidden">
             <div className="flex justify-between items-center mb-6">
               <Button onClick={onCancel} size="sm" variant="outline">
                 <ChevronLeft /> Back
@@ -817,110 +995,109 @@ export default function ResumeEditor({
               </Button>
             </div>
 
-            {/* ATS Score — always mounted so it tracks edits live; hidden via CSS when not shown */}
-            <div className={showAtsScore ? 'block' : 'hidden'}>
+            {showAtsScore ? (
               <AtsScore
                 name={`${personalData[0]?.firstName} ${personalData[0]?.lastName}`}
                 resumeText={resumeText}
                 resumeId={initialResume?._id || savedResumeId}
               />
-            </div>
-
-            <div className={showAtsScore ? 'hidden' : 'block'}>
-              <div className="mb-4">
-                <div className="flex items-center gap-2 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&_*::-webkit-scrollbar]:hidden">
-                  {stepLabels.map((label, i) => {
-                    const isActive = i === currentStep;
-                    const isDone = i < currentStep;
-                    return (
-                      <div key={label} className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setCurrentStep(i)}
-                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                            isActive
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : isDone
-                                ? 'bg-secondary text-secondary-foreground border-secondary'
-                                : 'bg-background text-foreground/80 border-muted'
-                          }`}
-                          aria-current={isActive ? 'step' : undefined}
-                        >
-                          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-[10px]">
-                            {i + 1}
-                          </span>
-                          {label}
-                        </button>
-                        {i !== stepLabels.length - 1 && (
-                          <span
-                            className={`h-px w-4 sm:w-8 ${
-                              isDone ? 'bg-primary' : 'bg-muted'
+            ) : (
+              <>
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&_*::-webkit-scrollbar]:hidden">
+                    {stepLabels.map((label, i) => {
+                      const isActive = i === currentStep;
+                      const isDone = i < currentStep;
+                      return (
+                        <div key={label} className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setCurrentStep(i)}
+                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                              isActive
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : isDone
+                                  ? 'bg-secondary text-secondary-foreground border-secondary'
+                                  : 'bg-background text-foreground/80 border-muted'
                             }`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
+                            aria-current={isActive ? 'step' : undefined}
+                          >
+                            <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-[10px]">
+                              {i + 1}
+                            </span>
+                            {label}
+                          </button>
+                          {i !== stepLabels.length - 1 && (
+                            <span
+                              className={`h-px w-4 sm:w-8 ${
+                                isDone ? 'bg-primary' : 'bg-muted'
+                              }`}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex justify-between mb-4">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setCurrentStep((prev) => Math.max(prev - 1, 0))
-                  }
-                  disabled={currentStep === 0}
-                >
-                  <ChevronLeft /> Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setCurrentStep((prev) =>
-                      Math.min(prev + 1, steps.length - 1),
-                    )
-                  }
-                  disabled={currentStep === steps.length - 1}
-                >
-                  Next <ChevronRight />
-                </Button>
-              </div>
-
-              {steps[currentStep]}
-
-              <div className="mt-6 sticky bottom-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex justify-end gap-3">
-                {(initialResume?._id || savedResumeId) && (
+                <div className="flex justify-between mb-4">
                   <Button
-                    onClick={openDeleteDialog}
-                    disabled={isDeleting || isSubmitting}
-                    variant="destructive"
-                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setCurrentStep((prev) => Math.max(prev - 1, 0))
+                    }
+                    disabled={currentStep === 0}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
+                    <ChevronLeft /> Previous
                   </Button>
-                )}
-                <Button
-                  onClick={handleSubmitResume}
-                  disabled={isSubmitting || isDeleting}
-                  size="sm"
-                  className="bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Save /> Save
-                    </>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setCurrentStep((prev) =>
+                        Math.min(prev + 1, steps.length - 1),
+                      )
+                    }
+                    disabled={currentStep === steps.length - 1}
+                  >
+                    Next <ChevronRight />
+                  </Button>
+                </div>
+
+                {steps[currentStep]}
+
+                <div className="mt-6 sticky bottom-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex justify-end gap-3">
+                  {(initialResume?._id || savedResumeId) && (
+                    <Button
+                      onClick={openDeleteDialog}
+                      disabled={isDeleting || isSubmitting}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </Button>
                   )}
-                </Button>
-              </div>
-            </div>
+                  <Button
+                    onClick={handleSubmitResume}
+                    disabled={isSubmitting || isDeleting}
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Save /> Save
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
 
-          <div className="px-6 md:pl-0 pt-2">
-            <div ref={resumeRef} className="relative min-h-full">
+          <div className="w-full lg:w-1/2 px-6 md:pl-0 pt-2 min-w-0 lg:min-h-0 lg:h-full lg:overflow-y-auto lg:overflow-x-hidden">
+            <div ref={resumeRef} className="relative h-auto">
               <div className="flex items-center gap-2 mb-4">
                 <Tabs
                   value={selectedTemplate}
@@ -951,47 +1128,168 @@ export default function ResumeEditor({
               </div>
 
               <div
+                ref={contentWrapperRef}
                 className="resumeContent pt-4 rounded-md"
                 style={{
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                  overflow: 'hidden',
+                  overflowX: 'hidden',
+                  overflowY: 'visible',
                   width: '100%',
                   maxWidth: '794px',
+                  minWidth: 0,
                   margin: '0 auto',
                 }}
               >
-                {[
-                  {
-                    value: 'ResumePreview1',
-                    render: (
-                      <ResumePreview1
-                        personalData={personalData}
-                        workExperienceData={workExperienceData}
-                        educationData={educationData}
-                        skillData={skillData}
-                        achievementData={achievementData}
-                        projectData={projectData}
-                        summaryData={summaryData}
-                        headingColor={selectedColor}
+                {(() => {
+                  const renderedTemplate =
+                    [
+                      {
+                        value: 'ResumePreview1',
+                        render: (
+                          <ResumePreview1
+                            personalData={personalData}
+                            workExperienceData={workExperienceData}
+                            educationData={educationData}
+                            skillData={skillData}
+                            achievementData={achievementData}
+                            projectData={projectData}
+                            summaryData={summaryData}
+                            headingColor={selectedColor}
+                          />
+                        ),
+                      },
+                      {
+                        value: 'ResumePreview2',
+                        render: (
+                          <ResumePreview2
+                            personalData={personalData}
+                            workExperienceData={workExperienceData}
+                            educationData={educationData}
+                            skillData={skillData}
+                            achievementData={achievementData}
+                            projectData={projectData}
+                            summaryData={summaryData}
+                            headingColor={selectedColor}
+                          />
+                        ),
+                      },
+                    ].find((t) => t.value === selectedTemplate)?.render || null;
+
+                  if (!renderedTemplate) return null;
+
+                  return (
+                    <>
+                      <div
+                        ref={pageHeightMeasureRef}
+                        style={{
+                          position: 'absolute',
+                          visibility: 'hidden',
+                          top: 0,
+                          left: 0,
+                          width: '1px',
+                          height: `${PAGE_H_MM}mm`,
+                        }}
                       />
-                    ),
-                  },
-                  {
-                    value: 'ResumePreview2',
-                    render: (
-                      <ResumePreview2
-                        personalData={personalData}
-                        workExperienceData={workExperienceData}
-                        educationData={educationData}
-                        skillData={skillData}
-                        achievementData={achievementData}
-                        projectData={projectData}
-                        summaryData={summaryData}
-                        headingColor={selectedColor}
-                      />
-                    ),
-                  },
-                ].find((t) => t.value === selectedTemplate)?.render || null}
+
+                      <div
+                        ref={resumeMeasureRef}
+                        style={{
+                          visibility: 'hidden',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: `${PAGE_W_MM}mm`,
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        {renderedTemplate}
+                      </div>
+
+                      {(() => {
+                        const totalMm =
+                          pageCount * PAGE_H_MM +
+                          Math.max(0, pageCount - 1) * PAGE_GAP_MM;
+                        const scaledH =
+                          pxPerMm > 0
+                            ? totalMm * pxPerMm * previewScale
+                            : undefined;
+                        return (
+                          <div
+                            style={{
+                              width: '100%',
+                              height: scaledH ? `${scaledH}px` : 'auto',
+                              position: 'relative',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                display: 'flex',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <div
+                                data-scale-wrapper
+                                style={{
+                                  width: `${PAGE_W_MM}mm`,
+                                  transform: `scale(${previewScale})`,
+                                  transformOrigin: 'top center',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: `${PAGE_GAP_MM}mm`,
+                                  }}
+                                >
+                                  {Array.from({ length: pageCount }).map(
+                                    (_, i) => (
+                                      <div
+                                        key={i}
+                                        className="resume-page"
+                                        style={{
+                                          width: `${PAGE_W_MM}mm`,
+                                          height: `${PAGE_H_MM}mm`,
+                                          overflow: 'hidden',
+                                          background: '#FFFFFF',
+                                          boxSizing: 'border-box',
+                                          margin: '0 auto',
+                                          flex: '0 0 auto',
+                                          padding: 0,
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            height: `${PAGE_H_MM}mm`,
+                                            overflow: 'hidden',
+                                          }}
+                                        >
+                                          <div
+                                            style={{
+                                              transform: `translateY(-${i * PAGE_H_MM}mm)`,
+                                              transformOrigin: 'top left',
+                                            }}
+                                          >
+                                            {renderedTemplate}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>
