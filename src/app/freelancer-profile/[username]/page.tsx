@@ -879,3 +879,4 @@ const FreelancerProfile = () => {
 };
 
 export default FreelancerProfile;
+
