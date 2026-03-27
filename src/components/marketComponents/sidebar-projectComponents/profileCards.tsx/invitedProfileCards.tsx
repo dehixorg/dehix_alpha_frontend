@@ -48,24 +48,29 @@ interface Talent {
   description?: string;
   workExperience?: number;
   application?: {
-    status?: 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
+    status?:
+      | 'INVITED'
+      | 'SELECTED'
+      | 'REJECTED'
+      | 'APPLIED'
+      | 'LOBBY'
+      | 'INTERVIEW';
   };
 }
 interface ProfileCardsProps {
   talents: Talent[];
   loading: boolean;
   calculateExperience: (professionalInfo: ProfessionalExperience[]) => string;
-  showDecisionActions?: boolean;
   onDecision?: (
     freelancerId: string,
-    status: 'SELECTED' | 'REJECTED',
+    status: 'SELECTED' | 'REJECTED' | 'LOBBY' | 'INTERVIEW',
+    freelancer_professional_profile_id: string | undefined,
   ) => Promise<void>;
 }
 
 const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
   talents,
   loading,
-  showDecisionActions = false,
   onDecision,
 }) => {
   const router = useRouter();
@@ -79,12 +84,17 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
 
   const handleDecision = async (
     freelancerId: string,
-    status: 'SELECTED' | 'REJECTED',
+    status: 'SELECTED' | 'REJECTED' | 'LOBBY' | 'INTERVIEW',
+    freelancer_professional_profile_id: string | undefined,
   ) => {
     if (!onDecision || !freelancerId) return;
     try {
       setUpdatingFreelancerId(freelancerId);
-      await onDecision(freelancerId, status);
+      await onDecision(
+        freelancerId,
+        status,
+        freelancer_professional_profile_id,
+      );
     } finally {
       setUpdatingFreelancerId(null);
     }
@@ -124,6 +134,8 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
     SELECTED: 'Accepted',
     REJECTED: 'Rejected',
     APPLIED: 'Applied',
+    LOBBY: 'In Lobby',
+    INTERVIEW: 'Interview',
   };
 
   const statusStyleMap: Record<string, string> = {
@@ -134,6 +146,10 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
     REJECTED: 'bg-red-500/10 text-red-700 dark:text-red-200 border-red-500/20',
     APPLIED:
       'bg-blue-500/10 text-blue-700 dark:text-blue-200 border-blue-500/20',
+    LOBBY:
+      'bg-purple-500/10 text-purple-700 dark:text-purple-200 border-purple-500/20',
+    INTERVIEW:
+      'bg-indigo-500/10 text-indigo-700 dark:text-indigo-200 border-indigo-500/20',
   };
 
   return (
@@ -283,34 +299,100 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
             </CardContent>
             <div className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
               <div className="flex flex-col sm:flex-row gap-3 w-full">
-                {/* <Button size="sm" variant="ghost">
-                  Cancel
-                </Button> */}
-                {showDecisionActions && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      disabled={updatingFreelancerId === talent.freelancerId}
-                      className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg"
-                      onClick={() =>
-                        handleDecision(talent.freelancerId, 'SELECTED')
-                      }
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      disabled={updatingFreelancerId === talent.freelancerId}
-                      onClick={() =>
-                        handleDecision(talent.freelancerId, 'REJECTED')
-                      }
-                    >
-                      Reject
-                    </Button>
-                  </>
-                )}
+                {(() => {
+                  const currentStatus = talent.application?.status ?? 'INVITED';
+                  const showAcceptReject =
+                    currentStatus === 'APPLIED' ||
+                    currentStatus === 'LOBBY' ||
+                    currentStatus === 'INTERVIEW';
+                  const showLobby = currentStatus === 'APPLIED';
+                  const showInterview =
+                    currentStatus === 'APPLIED' || currentStatus === 'LOBBY';
+
+                  return (
+                    <>
+                      {showAcceptReject && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            disabled={
+                              updatingFreelancerId === talent.freelancerId
+                            }
+                            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg"
+                            onClick={() =>
+                              handleDecision(
+                                talent.freelancerId,
+                                'SELECTED',
+                                (talent as any).application
+                                  ?.freelancer_professional_profile_id,
+                              )
+                            }
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={
+                              updatingFreelancerId === talent.freelancerId
+                            }
+                            onClick={() =>
+                              handleDecision(
+                                talent.freelancerId,
+                                'REJECTED',
+                                (talent as any).application
+                                  ?.freelancer_professional_profile_id,
+                              )
+                            }
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+
+                      {showLobby && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={
+                            updatingFreelancerId === talent.freelancerId
+                          }
+                          onClick={() =>
+                            handleDecision(
+                              talent.freelancerId,
+                              'LOBBY',
+                              (talent as any).application
+                                ?.freelancer_professional_profile_id,
+                            )
+                          }
+                        >
+                          Add to Lobby
+                        </Button>
+                      )}
+
+                      {showInterview && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={
+                            updatingFreelancerId === talent.freelancerId
+                          }
+                          onClick={() =>
+                            handleDecision(
+                              talent.freelancerId,
+                              'INTERVIEW',
+                              (talent as any).application
+                                ?.freelancer_professional_profile_id,
+                            )
+                          }
+                        >
+                          Move to Interview
+                        </Button>
+                      )}
+                    </>
+                  );
+                })()}
                 <Button
                   size="sm"
                   variant="outline"

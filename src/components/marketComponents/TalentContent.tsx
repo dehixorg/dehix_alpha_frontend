@@ -55,7 +55,8 @@ interface TalentContentProps {
   talentOptions?: { label: string; value: string }[];
   onUpdateApplicationStatus?: (
     freelancerId: string,
-    status: 'SELECTED' | 'REJECTED',
+    status: 'SELECTED' | 'REJECTED' | 'LOBBY' | 'INTERVIEW',
+    freelancer_professional_profile_id: string | undefined,
   ) => Promise<void>;
 }
 
@@ -226,7 +227,6 @@ const TalentContent: React.FC<TalentContentProps> = ({
             talents={talents}
             loading={loading}
             calculateExperience={calculateExperience}
-            showDecisionActions={selected === 'applications'}
             onDecision={onUpdateApplicationStatus}
           />
         );

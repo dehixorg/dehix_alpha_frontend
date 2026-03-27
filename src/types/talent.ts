@@ -2,7 +2,13 @@ export interface FreelancerApplication {
   _id: string;
   freelancerId: string;
   freelancerProfessionalProfileId: string;
-  status: 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
+  status:
+    | 'INVITED'
+    | 'SELECTED'
+    | 'REJECTED'
+    | 'APPLIED'
+    | 'LOBBY'
+    | 'INTERVIEW';
   cover_letter?: string;
   interviewIds?: string[];
   updatedAt: string;
