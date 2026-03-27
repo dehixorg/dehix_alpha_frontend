@@ -1418,55 +1418,6 @@ export function CardsChat({
                     </Button>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleBold}
-                      title="Bold"
-                      aria-label="Bold"
-                      className={
-                        isFormatActive('bold')
-                          ? 'bg-accent text-foreground'
-                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
-                      }
-                    >
-                      {' '}
-                      <Bold className="h-4 w-4" />{' '}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleitalics}
-                      title="Italic"
-                      aria-label="Italic"
-                      className={
-                        isFormatActive('italic')
-                          ? 'bg-accent text-foreground'
-                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
-                      }
-                    >
-                      {' '}
-                      <Italic className="h-4 w-4" />{' '}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleUnderline}
-                      title="Underline"
-                      aria-label="Underline"
-                      className={
-                        isFormatActive('underline')
-                          ? 'bg-accent text-foreground'
-                          : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
-                      }
-                    >
-                      {' '}
-                      <Underline className="h-4 w-4" />{' '}
-                    </Button>
-
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
                         <TooltipTrigger asChild>

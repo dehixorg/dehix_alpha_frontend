@@ -516,7 +516,7 @@ const ProjectApplicationForm = ({
                       <ChevronDown className="ml-2 h-4 w-4" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0" align="end">
+                  <PopoverContent className="w-96 p-2" align="end">
                     <ScrollArea className="h-[280px]">
                       {project.profiles && project.profiles.length > 0 ? (
                         <div className="p-2">
@@ -668,7 +668,7 @@ const ProjectApplicationForm = ({
           {selectedProfile ? (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-medium">
                     {selectedProfile.domain} ({selectedProfile.profileType})
                   </h3>
@@ -793,7 +793,7 @@ const ProjectApplicationForm = ({
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <h3 className="font-medium">Cover Letter</h3>
                   </div>
                   <div className="text-xs text-muted-foreground">
