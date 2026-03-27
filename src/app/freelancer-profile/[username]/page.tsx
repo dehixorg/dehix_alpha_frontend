@@ -584,8 +584,7 @@ const FreelancerProfile = () => {
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground max-w-xl">
-                        {profileData?.description ||
-                          'This freelancer has not added a description yet.'}
+                        {profileData?.description}
                       </p>
                     </div>
                   </div>
