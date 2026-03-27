@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { RootState } from '@/lib/store';
 import { ProjectCard } from '@/components/cards/projectCard';
 import EmptyState from '@/components/shared/EmptyState';
+import { Badge } from '@/components/ui/badge';
 
 interface UserProfile {
   _id: string;
@@ -67,27 +68,8 @@ export default function BusinessProfile() {
             setBusinessId(response.data._id || '');
           }
         } catch (error: any) {
-          // If username lookup fails, try by ID (backward compatibility)
-          if (
-            error?.response?.status === 404 ||
-            error?.response?.status === 500
-          ) {
-            try {
-              const fallbackResponse = await axiosInstance.get(
-                `/public/business/${username}`,
-              );
-              if (fallbackResponse.status === 200) {
-                setUserProfile(fallbackResponse.data);
-                setBusinessId(fallbackResponse.data._id || '');
-              }
-            } catch (fallbackError) {
-              console.error('Error fetching business details', fallbackError);
-              notifyError('Failed to fetch business details.', 'Error');
-            }
-          } else {
-            console.error('Error fetching business details', error);
-            notifyError('Failed to fetch business details.', 'Error');
-          }
+          console.error('Error fetching business details', error);
+          notifyError('Failed to fetch business details.', 'Error');
         } finally {
           setLoading(false);
         }
@@ -165,14 +147,32 @@ export default function BusinessProfile() {
               {loading ? (
                 <Skeleton className="w-24 h-24 rounded-full mr-6" />
               ) : (
-                <Avatar className="w-24 h-24 rounded-full mr-6 relative overflow-hidden border-4 border-primary shadow-lg hover:scale-110 transition-transform duration-300 ease-in-out">
-                  <AvatarImage
-                    src={'/default-avatar.png'}
-                    alt={`${userProfile?.firstName} ${userProfile?.lastName} Profile Picture`}
-                    className="object-cover w-full h-full"
-                  />
-                  <AvatarFallback>{`${userProfile?.firstName?.[0] || 'B'}${userProfile?.lastName?.[0] || 'U'}`}</AvatarFallback>
-                </Avatar>
+                <>
+                  <Avatar className="w-24 h-24 rounded-full mr-6 relative overflow-hidden border-4 border-primary shadow-lg hover:scale-110 transition-transform duration-300 ease-in-out">
+                    <AvatarImage
+                      src={'/default-avatar.png'}
+                      alt={`${userProfile?.firstName} ${userProfile?.lastName} Profile Picture`}
+                      className="object-cover w-full h-full"
+                    />
+                    <AvatarFallback>{`${userProfile?.firstName?.[0] || 'B'}${userProfile?.lastName?.[0] || 'U'}`}</AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-2 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="text-2xl font-bold text-foreground">
+                        {userProfile?.firstName} {userProfile?.lastName}
+                      </h1>
+                      <Badge
+                        variant="outline"
+                        className="text-xs font-medium border-primary/30 text-primary bg-primary/5"
+                      >
+                        Business
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground max-w-xl">
+                      {userProfile?.companyName}
+                    </p>
+                  </div>
+                </>
               )}
             </Card>
             {/* Projects List */}
