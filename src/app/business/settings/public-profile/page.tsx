@@ -53,8 +53,6 @@ export default function BusinessPublicProfileSettings() {
       try {
         setLoading(true);
         const res = await axiosInstance.get(`/public/business/${user.uid}`);
-
-        console.log('the response is ', res);
         setProfileData(res.data);
         // Build share URL from userName (companyName for businesses)
         const uname = res.data.userName || res.data.companyName || user.uid;
