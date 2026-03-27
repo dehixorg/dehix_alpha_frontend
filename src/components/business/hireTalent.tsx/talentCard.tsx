@@ -564,33 +564,35 @@ const TalentCard: React.FC<TalentCardProps> = ({
               <CardContent className="px-6 py-3">
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    {talentEntries.map((t) => (
-                      <div
-                        key={`${talent.freelancer_id}:${t.type}:${t.talentName}`}
-                        className="p-3 rounded-lg border bg-muted/30"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Badge
-                                variant="outline"
-                                className="rounded-full text-[11px] px-2 py-0.5"
-                              >
-                                {t.type}
-                              </Badge>
-                              <span className="text-sm font-medium truncate">
-                                {t.talentName || 'N/A'}
-                              </span>
-                            </div>
-                            <div className="mt-1 text-[11px] text-muted-foreground">
-                              Exp: {t.experience ?? 'N/A'}y | Level:{' '}
-                              {t.level || 'N/A'} | Pay: $
-                              {t.talentMonthlyPay ?? 'N/A'}
+                    {talentEntries
+                      .filter((t) => t.activeStatus === 'ACTIVE')
+                      .map((t) => (
+                        <div
+                          key={`${talent.freelancer_id}:${t.type}:${t.talentName}`}
+                          className="p-3 rounded-lg border bg-muted/30"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Badge
+                                  variant="outline"
+                                  className="rounded-full text-[11px] px-2 py-0.5"
+                                >
+                                  {t.type}
+                                </Badge>
+                                <span className="text-sm font-medium truncate">
+                                  {t.talentName || 'N/A'}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-[11px] text-muted-foreground">
+                                Exp: {t.experience ?? 'N/A'}y | Level:{' '}
+                                {t.level || 'N/A'} | Pay: $
+                                {t.talentMonthlyPay ?? 'N/A'}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
 
                   <div className="pt-1">
@@ -679,33 +681,35 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               </div>
                             </div>
                             <div className="mt-4 space-y-2">
-                              {talentEntries.map((t) => (
-                                <div
-                                  key={`sheet-${talent.freelancer_id}:${t.type}:${t.talentName}`}
-                                  className="p-3 rounded-lg border border-border/60 bg-muted/30"
-                                >
-                                  <div className="flex items-center justify-between gap-2">
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-2 min-w-0">
-                                        <Badge
-                                          variant="outline"
-                                          className="rounded-full text-[11px] px-2 py-0.5"
-                                        >
-                                          {t.type}
-                                        </Badge>
-                                        <span className="text-sm font-medium truncate">
-                                          {t.talentName || 'N/A'}
-                                        </span>
-                                      </div>
-                                      <div className="mt-1 text-[11px] text-muted-foreground">
-                                        Exp: {t.experience ?? 'N/A'}y | Level:{' '}
-                                        {t.level || 'N/A'} | Pay: $
-                                        {t.talentMonthlyPay ?? 'N/A'}
+                              {talentEntries
+                                .filter((t) => t.activeStatus === 'ACTIVE')
+                                .map((t) => (
+                                  <div
+                                    key={`sheet-${talent.freelancer_id}:${t.type}:${t.talentName}`}
+                                    className="p-3 rounded-lg border border-border/60 bg-muted/30"
+                                  >
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div className="min-w-0">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <Badge
+                                            variant="outline"
+                                            className="rounded-full text-[11px] px-2 py-0.5"
+                                          >
+                                            {t.type}
+                                          </Badge>
+                                          <span className="text-sm font-medium truncate">
+                                            {t.talentName || 'N/A'}
+                                          </span>
+                                        </div>
+                                        <div className="mt-1 text-[11px] text-muted-foreground">
+                                          Exp: {t.experience ?? 'N/A'}y | Level:{' '}
+                                          {t.level || 'N/A'} | Pay: $
+                                          {t.talentMonthlyPay ?? 'N/A'}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
                             </div>
                           </div>
 

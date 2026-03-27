@@ -551,7 +551,7 @@ const FreelancerProfile = () => {
         )}
 
         <div className="flex p-3 md:px-14 relative flex-col sm:gap-8 sm:py-4 max-w-full overflow-x-hidden">
-          <main className="m:mt-8 w-full max-w-4xl mx-auto">
+          <main className="sm:mt-8 w-full max-w-4xl mx-auto">
             {/* Profile Info */}
             <Card className="mb-8 shadow-md">
               <CardContent className="p-6">
