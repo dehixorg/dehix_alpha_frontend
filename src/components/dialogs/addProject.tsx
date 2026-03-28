@@ -75,36 +75,40 @@ import {
 } from '@/config/contracts/abis';
 
 // Schema for form validation using zod
-const SEPOLIA_CHAIN_ID = 11155111;
+const POLYGON_AMOY_CHAIN_ID = 80002;
 const GAS_BUFFER_BPS = 12000n; // 120%
-const SEPOLIA_MAX_GAS = 16777216n; // Sepolia's block gas limit
+const POLYGON_AMOY_MAX_GAS = 20000000n; // Polygon Amoy block gas limit
 const FALLBACK_GAS = 5000000n; // Safe fallback when estimation fails
 const withGasBuffer = (estimatedGas: bigint) => {
   const bufferedGas = (estimatedGas * GAS_BUFFER_BPS) / 10000n;
-  // Cap at Sepolia maximum to prevent 'gas limit too high' errors
-  return bufferedGas > SEPOLIA_MAX_GAS ? SEPOLIA_MAX_GAS : bufferedGas;
+  // Cap at Polygon Amoy maximum to prevent 'gas limit too high' errors
+  return bufferedGas > POLYGON_AMOY_MAX_GAS ? POLYGON_AMOY_MAX_GAS : bufferedGas;
 };
 
 // Contract ABIs and addresses imported from centralized config
 const freelancerContractAbi = FREELANCER_CONTRACT_ABI;
 const soulBoundTokenAbi = FREELANCER_SBT_ABI;
-const DEFAULT_FREELANCER_CONTRACT_SEPOLIA =
+const DEFAULT_FREELANCER_CONTRACT =
   CONTRACT_ADDRESSES.FREELANCER_CONTRACT;
-const DEFAULT_SBT_CONTRACT_SEPOLIA = CONTRACT_ADDRESSES.SBT_CONTRACT;
+const DEFAULT_SBT_CONTRACT = CONTRACT_ADDRESSES.SBT_CONTRACT;
 
-// Gas price constants for Sepolia
+// Gas price estimation for Polygon Amoy
+const POLYGON_AMOY_MIN_PRIORITY = 25000000000n; // 25 Gwei
 const getGasPriceParams = async (publicClient: any) => {
   try {
     const feeData = await publicClient.estimateFeesPerGas();
-    return {
-      maxFeePerGas: feeData.gasPrice ? feeData.gasPrice * 2n : 50000000000n, // 50 Gwei fallback
-      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas || 2000000000n, // 2 Gwei fallback
-    };
+    const priority = feeData.maxPriorityFeePerGas || POLYGON_AMOY_MIN_PRIORITY;
+    const safePriority = priority < POLYGON_AMOY_MIN_PRIORITY ? POLYGON_AMOY_MIN_PRIORITY : priority;
+    const baseFee = feeData.maxFeePerGas || (feeData.gasPrice ? feeData.gasPrice * 2n : 0n);
+    // maxFeePerGas must always be >= maxPriorityFeePerGas
+    const minMaxFee = safePriority * 2n;
+    const safeMaxFee = baseFee > minMaxFee ? baseFee : minMaxFee;
+    return { maxFeePerGas: safeMaxFee, maxPriorityFeePerGas: safePriority };
   } catch (err) {
     console.warn('Could not estimate gas price, using fallback values:', err);
     return {
-      maxFeePerGas: 50000000000n, // 50 Gwei
-      maxPriorityFeePerGas: 2000000000n, // 2 Gwei
+      maxFeePerGas: POLYGON_AMOY_MIN_PRIORITY * 4n, // 100 Gwei
+      maxPriorityFeePerGas: POLYGON_AMOY_MIN_PRIORITY,
     };
   }
 };
@@ -133,7 +137,8 @@ const projectFormSchema = z
       .string()
       .min(1, { message: 'Live demo link is required.' })
       .url({ message: 'Live demo link must be a valid URL.' }),
-    thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
+    // thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
+    thumbnail: z.string().optional().default(''),
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
     refer: z.string().min(1, { message: 'Reference is required.' }),
@@ -190,28 +195,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       }
       try {
         setMinting(true);
-        const freelancerContractAddress = (process.env
-          .NEXT_PUBLIC_FREELANCER_CONTRACT_SEPOLIA ||
-          DEFAULT_FREELANCER_CONTRACT_SEPOLIA) as `0x${string}`;
-        const sbtContractAddress = (process.env
-          .NEXT_PUBLIC_SBT_CONTRACT_SEPOLIA ||
-          process.env.NEXT_PUBLIC_SOUL_BOUND_TOKEN_SEPOLIA ||
-          DEFAULT_SBT_CONTRACT_SEPOLIA) as `0x${string}`;
-
-        if (!freelancerContractAddress || !sbtContractAddress) {
-          const errorMsg = 'Missing contract addresses';
-          notifyError(errorMsg, 'Configuration Error');
-          throw new Error(errorMsg);
-        }
-
-        if (
-          !isAddress(freelancerContractAddress) ||
-          !isAddress(sbtContractAddress)
-        ) {
-          const errorMsg = 'Invalid contract address format in .env.local';
-          notifyError(errorMsg, 'Configuration Error');
-          throw new Error(errorMsg);
-        }
+        const freelancerContractAddress = CONTRACT_ADDRESSES.FREELANCER_CONTRACT as `0x${string}`;
+        const sbtContractAddress = CONTRACT_ADDRESSES.SBT_CONTRACT as `0x${string}`;
 
         if (!publicClient) {
           const errorMsg = 'No public client found for current network';
@@ -219,9 +204,9 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
           throw new Error(errorMsg);
         }
 
-        if (chainId !== SEPOLIA_CHAIN_ID) {
+        if (chainId !== POLYGON_AMOY_CHAIN_ID) {
           const errorMsg =
-            'Please switch wallet network to Sepolia before saving.';
+            'Please switch wallet network to Polygon Amoy before saving.';
           notifyError(errorMsg, 'Wrong Network');
           throw new Error(errorMsg);
         }
@@ -353,13 +338,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         let tokenId: string | undefined;
         try {
           console.log('Fetching token ID from contract...');
-          const fetchedTokenId = await publicClient.readContract({
+          const tokenIds = await publicClient.readContract({
             address: sbtContractAddress,
             abi: soulBoundTokenAbi,
-            functionName: 'freelancerTokenId',
+            functionName: 'getTokenIdsByFreelancer',
             args: [address],
-          });
-          tokenId = fetchedTokenId?.toString();
+          }) as bigint[];
+          tokenId = tokenIds.length > 0 ? tokenIds[tokenIds.length - 1].toString() : undefined;
           console.log('Successfully fetched token ID:', tokenId);
         } catch (err: any) {
           console.warn(
@@ -594,6 +579,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
       // 3) Update backend with transaction hash if minting was successful
       const createdProjectId =
+        backendResponse.data?.data?.projectId ||
+        backendResponse.data?.projectId ||
         backendResponse.data?.data?._id ||
         backendResponse.data?.data?.id ||
         backendResponse.data?._id ||
@@ -609,7 +596,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
           // Try to update backend with transaction hash
           try {
-            await axiosInstance.patch(
+            await axiosInstance.put(
               `/freelancer/project/${createdProjectId}`,
               {
                 transactionHash,
@@ -909,11 +896,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                                           }
                                         >
                                           <Check
-                                            className={`mr-2 h-4 w-4 ${
-                                              currSkills.includes(skill.label)
-                                                ? 'opacity-100'
-                                                : 'opacity-0'
-                                            }`}
+                                            className={`mr-2 h-4 w-4 ${currSkills.includes(skill.label)
+                                              ? 'opacity-100'
+                                              : 'opacity-0'
+                                              }`}
                                           />
                                           {skill.label}
                                         </CommandItem>

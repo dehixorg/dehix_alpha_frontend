@@ -15,9 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 // Replace with your actual contract address and ABI
-const SBT_CONTRACT_ADDRESS =
-  process.env.NEXT_PUBLIC_SBT_CONTRACT_SEPOLIA ||
-  '0x73b8Ecfd44DA278f856E50e6A328c13bC8F5A5e3';
+const SBT_CONTRACT_ADDRESS = '0xac0484c2361504ae8f71e95a149f7a81cd7bdda5';
 const SBT_ABI = [
   // Minimal ABI for ERC721-like tokens
   'function balanceOf(address owner) view returns (uint256)',
@@ -167,12 +165,12 @@ const SBTSection: React.FC = () => {
                         </div>
                         {token.txHash && (
                           <a
-                            href={`https://sepolia.etherscan.io/tx/${token.txHash}`}
+                            href={`https://amoy.polygonscan.com/tx/${token.txHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-blue-600 hover:underline"
                           >
-                            View on Etherscan →
+                            View on PolygonScan →
                           </a>
                         )}
                       </div>

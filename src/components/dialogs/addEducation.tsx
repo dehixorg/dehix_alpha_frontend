@@ -11,7 +11,7 @@ import {
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { isAddress } from 'viem';
+//import { isAddress } from 'viem';
 import {
   useAccount,
   useChainId,
@@ -58,39 +58,39 @@ import {
 const toDateOnly = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-const SEPOLIA_CHAIN_ID = 11155111;
+const POLYGON_AMOY_CHAIN_ID = 80002;
 const GAS_BUFFER_BPS = 12000n; // 120%
-const SEPOLIA_MAX_GAS = 16777216n; // Sepolia's block gas limit
+const POLYGON_AMOY_MAX_GAS = 20000000n; // Polygon Amoy block gas limit
 const FALLBACK_GAS = 5000000n; // Safe fallback when estimation fails
 const withGasBuffer = (estimatedGas: bigint) => {
   const bufferedGas = (estimatedGas * GAS_BUFFER_BPS) / 10000n;
-  // Cap at Sepolia maximum to prevent 'gas limit too high' errors
-  return bufferedGas > SEPOLIA_MAX_GAS ? SEPOLIA_MAX_GAS : bufferedGas;
+  // Cap at Polygon Amoy maximum to prevent 'gas limit too high' errors
+  return bufferedGas > POLYGON_AMOY_MAX_GAS ? POLYGON_AMOY_MAX_GAS : bufferedGas;
 };
 
 // Contract ABIs and addresses imported from centralized config
 const freelancerContractAbi = FREELANCER_CONTRACT_ABI;
 const soulBoundTokenAbi = FREELANCER_SBT_ABI;
-const DEFAULT_FREELANCER_CONTRACT_SEPOLIA =
-  CONTRACT_ADDRESSES.FREELANCER_CONTRACT;
-const DEFAULT_SBT_CONTRACT_SEPOLIA = CONTRACT_ADDRESSES.SBT_CONTRACT;
 
-// Gas price constants for Sepolia
+// Gas price estimation for Polygon Amoy (requires minimum 25 Gwei priority fee)
+const POLYGON_AMOY_MIN_PRIORITY = 25000000000n; // 25 Gwei
 const getGasPriceParams = async (publicClient: any) => {
   try {
     const feeData = await publicClient.estimateFeesPerGas();
+    const priority = feeData.maxPriorityFeePerGas || POLYGON_AMOY_MIN_PRIORITY;
+    const safePriority = priority < POLYGON_AMOY_MIN_PRIORITY ? POLYGON_AMOY_MIN_PRIORITY : priority;
+    const baseFee = feeData.maxFeePerGas || feeData.gasPrice * 2n || 100000000000n;
+    const safeMaxFee = baseFee < safePriority * 2n ? safePriority * 2n : baseFee;
+    return { maxFeePerGas: safeMaxFee, maxPriorityFeePerGas: safePriority };
+  } catch {
     return {
-      maxFeePerGas: feeData.gasPrice ? feeData.gasPrice * 2n : 50000000000n, // 50 Gwei fallback
-      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas || 2000000000n, // 2 Gwei fallback
-    };
-  } catch (err) {
-    console.warn('Could not estimate gas price, using fallback values:', err);
-    return {
-      maxFeePerGas: 50000000000n, // 50 Gwei
-      maxPriorityFeePerGas: 2000000000n, // 2 Gwei
+      maxFeePerGas: POLYGON_AMOY_MIN_PRIORITY * 4n, // 100 Gwei
+      maxPriorityFeePerGas: POLYGON_AMOY_MIN_PRIORITY,
     };
   }
 };
+
+
 
 const FormSchema = z
   .object({
@@ -169,28 +169,8 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
       }
       try {
         setMinting(true);
-        const freelancerContractAddress = (process.env
-          .NEXT_PUBLIC_FREELANCER_CONTRACT_SEPOLIA ||
-          DEFAULT_FREELANCER_CONTRACT_SEPOLIA) as `0x${string}`;
-        const sbtContractAddress = (process.env
-          .NEXT_PUBLIC_SBT_CONTRACT_SEPOLIA ||
-          process.env.NEXT_PUBLIC_SOUL_BOUND_TOKEN_SEPOLIA ||
-          DEFAULT_SBT_CONTRACT_SEPOLIA) as `0x${string}`;
-
-        if (!freelancerContractAddress || !sbtContractAddress) {
-          const errorMsg = 'Missing contract addresses';
-          notifyError(errorMsg, 'Configuration Error');
-          throw new Error(errorMsg);
-        }
-
-        if (
-          !isAddress(freelancerContractAddress) ||
-          !isAddress(sbtContractAddress)
-        ) {
-          const errorMsg = 'Invalid contract address format in .env.local';
-          notifyError(errorMsg, 'Configuration Error');
-          throw new Error(errorMsg);
-        }
+        const freelancerContractAddress = CONTRACT_ADDRESSES.FREELANCER_CONTRACT as `0x${string}`;
+        const sbtContractAddress = CONTRACT_ADDRESSES.SBT_CONTRACT as `0x${string}`;
 
         if (!publicClient) {
           const errorMsg = 'No public client found for current network';
@@ -198,9 +178,9 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
           throw new Error(errorMsg);
         }
 
-        if (chainId !== SEPOLIA_CHAIN_ID) {
+        if (chainId !== POLYGON_AMOY_CHAIN_ID) {
           const errorMsg =
-            'Please switch wallet network to Sepolia before saving.';
+            'Please switch wallet network to Polygon Amoy before saving.';
           notifyError(errorMsg, 'Wrong Network');
           throw new Error(errorMsg);
         }
@@ -211,6 +191,29 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         console.log('Freelancer ID:', freelancerId);
         console.log('Freelancer Contract:', freelancerContractAddress);
         console.log('SBT Contract:', sbtContractAddress);
+
+        // Check existing SBTs for this address
+        let existingTokenId: string | undefined;
+        try {
+          const balance = await publicClient.readContract({
+            address: sbtContractAddress,
+            abi: soulBoundTokenAbi,
+            functionName: 'balanceOf',
+            args: [address],
+          });
+          if (balance && BigInt(balance as bigint) > 0n) {
+            const tokenIds = await publicClient.readContract({
+              address: sbtContractAddress,
+              abi: soulBoundTokenAbi,
+              functionName: 'getTokenIdsByFreelancer',
+              args: [address],
+            }) as bigint[];
+            existingTokenId = tokenIds.length > 0 ? tokenIds[tokenIds.length - 1].toString() : undefined;
+            console.log('Existing SBTs for this address. Latest Token ID:', existingTokenId);
+          }
+        } catch (err) {
+          console.log('No existing SBT found, proceeding with minting...');
+        }
 
         // 1) Register freelancer in FreelancerContract
         let addFreelancerGas = FALLBACK_GAS; // Default to fallback gas
@@ -332,13 +335,13 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         let tokenId: string | undefined;
         try {
           console.log('Fetching token ID from contract...');
-          const fetchedTokenId = await publicClient.readContract({
+          const tokenIds = await publicClient.readContract({
             address: sbtContractAddress,
             abi: soulBoundTokenAbi,
-            functionName: 'freelancerTokenId',
+            functionName: 'getTokenIdsByFreelancer',
             args: [address],
-          });
-          tokenId = fetchedTokenId?.toString();
+          }) as bigint[];
+          tokenId = tokenIds.length > 0 ? tokenIds[tokenIds.length - 1].toString() : undefined;
           console.log('Successfully fetched token ID:', tokenId);
         } catch (err: any) {
           console.warn(
@@ -508,6 +511,8 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
 
       // 3) Update backend with transaction hash if minting was successful
       const createdEducationId =
+        backendResponse.data?.data?.educationId ||
+        backendResponse.data?.educationId ||
         backendResponse.data?.data?._id ||
         backendResponse.data?.data?.id ||
         backendResponse.data?._id ||
@@ -529,7 +534,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
 
           // Try to update backend with transaction hash
           try {
-            await axiosInstance.patch(
+            await axiosInstance.put(
               `/freelancer/education/${createdEducationId}`,
               {
                 transactionHash,

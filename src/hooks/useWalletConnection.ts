@@ -2,10 +2,12 @@ import { useState, useCallback } from 'react';
 import { useAccount, useDisconnect, useConnect } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
+import { signInWithCustomToken } from 'firebase/auth';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { setUser } from '@/lib/userSlice';
+import { auth } from '@/config/firebaseConfig';
 
 export const useWalletConnection = () => {
   const { address, isConnected, chainId } = useAccount();
@@ -35,9 +37,12 @@ export const useWalletConnection = () => {
         if (response.data) {
           const { token, user } = response.data;
 
-          // Store authentication data
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(user));
+          // Sign in with the Firebase custom token to establish a real session.
+          // AuthContext's onIdTokenChanged listener will handle storing
+          // the ID token and initializing axios automatically.
+          await signInWithCustomToken(auth, token);
+
+          // Store wallet address for reference
           localStorage.setItem('walletAddress', address);
 
           // Update Redux store

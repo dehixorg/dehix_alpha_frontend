@@ -143,9 +143,9 @@ export const useSBTData = (): UseSBTDataReturn => {
 
           let matchedEvent = item.tokenId
             ? mintEvents.find(
-                (event) =>
-                  event.tokenId === item.tokenId && !usedTx.has(event.txHash),
-              )
+              (event) =>
+                event.tokenId === item.tokenId && !usedTx.has(event.txHash),
+            )
             : undefined;
 
           if (!matchedEvent) {
@@ -216,9 +216,7 @@ export const useSBTData = (): UseSBTDataReturn => {
       const data = response.data?.data || {};
 
       const items: SBTItem[] = [];
-      const sbtContractAddress = (process.env
-        .NEXT_PUBLIC_SBT_CONTRACT_SEPOLIA ||
-        CONTRACT_ADDRESSES.SBT_CONTRACT) as `0x${string}`;
+      const sbtContractAddress = CONTRACT_ADDRESSES.SBT_CONTRACT as `0x${string}`;
 
       // Get token balance to check if user has SBTs
       try {
@@ -236,16 +234,16 @@ export const useSBTData = (): UseSBTDataReturn => {
         if (balance > 0) {
           // Try to get transaction receipt for minting
           try {
-            // Get the freelancer's token ID
-            const tokenId = await publicClient.readContract({
+            // Get the freelancer's token IDs
+            const tokenIds = await publicClient.readContract({
               address: sbtContractAddress,
               abi: FREELANCER_SBT_ABI,
-              functionName: 'freelancerTokenId',
+              functionName: 'getTokenIdsByFreelancer',
               args: [address],
-            });
+            }) as bigint[];
 
-            if (tokenId) {
-              console.log('Fetched tokenId:', tokenId);
+            if (tokenIds && tokenIds.length > 0) {
+              console.log('Fetched tokenIds:', tokenIds.map(id => id.toString()));
             }
           } catch (err) {
             console.warn('Could not fetch token ID from contract:', err);

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 
+import NDAFileIcon from '@/components/icons/NDAFileIcon';
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
 export const menuItemsTop: MenuItem[] = [
@@ -53,6 +54,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/reports', // Link to your new Reports page
     icon: <FileWarning className="h-5 w-5" />, // You can change icon
     label: 'Reports',
+  },
+  {
+    href: '/nda-transactions',
+    icon: <NDAFileIcon className="h-5 w-5" />,
+    label: 'NDA',
   },
 ];
 

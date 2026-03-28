@@ -14,6 +14,7 @@ import {
 import Image from 'next/image';
 
 import SBTHexagon from '@/components/icons/SBTHexagon';
+import NDAFileIcon from '@/components/icons/NDAFileIcon';
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
 export const menuItemsTop: MenuItem[] = [
@@ -89,6 +90,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/sbt-transactions',
     icon: <SBTHexagon className="h-5 w-5" />,
     label: 'SBT',
+  },
+  {
+    href: '/nda-transactions',
+    icon: <NDAFileIcon className="h-5 w-5" />,
+    label: 'NDA',
   },
 ];
 

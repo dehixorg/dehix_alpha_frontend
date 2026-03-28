@@ -45,15 +45,15 @@
  */
 
 // ============================================
-// SMART CONTRACT ADDRESSES (SEPOLIA TESTNET)
+// SMART CONTRACT ADDRESSES (POLYGON AMOY TESTNET)
 // ============================================
 export const CONTRACT_ADDRESSES = {
   // ⬇️ CHANGE THESE ADDRESSES (keep the quotes)
   // Freelancer Contract - Handles freelancer registration
-  FREELANCER_CONTRACT: '0xcEb98b9E4773dF57b5dB1cB9e097404b684FeE5A',
+  FREELANCER_CONTRACT: '0x1f04977be437ade69ad867ecf8bfc3b3ae7abcc4',
 
   // Soulbound Token Contract - Handles SBT minting
-  SBT_CONTRACT: '0x5094297851D4AB5bE67c7Dac57DcdFF00e463028',
+  SBT_CONTRACT: '0xac0484c2361504ae8f71e95a149f7a81cd7bdda5',
 };
 
 // ============================================
@@ -93,24 +93,24 @@ export const SBT_CONTRACT_ABI = [
     type: 'function',
     name: 'mintFreelancerToken',
     inputs: [
-      { name: 'to', type: 'address' },
-      { name: 'freelancerId', type: 'string' },
+      { name: '_freelancerAddress', type: 'address' },
+      { name: '_freelancerId', type: 'string' },
     ],
-    outputs: [{ name: 'tokenId', type: 'uint256' }],
+    outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'nonpayable',
   },
   {
     type: 'function',
     name: 'balanceOf',
-    inputs: [{ name: 'account', type: 'address' }],
+    inputs: [{ name: 'owner', type: 'address' }],
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
-    name: 'freelancerTokenId',
-    inputs: [{ name: 'account', type: 'address' }],
-    outputs: [{ name: '', type: 'uint256' }],
+    name: 'getTokenIdsByFreelancer',
+    inputs: [{ name: '_freelancerAddress', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256[]' }],
     stateMutability: 'view',
   },
   {

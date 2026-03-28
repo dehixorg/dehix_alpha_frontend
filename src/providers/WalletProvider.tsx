@@ -12,9 +12,10 @@ import {
   mainnet,
   polygon,
   sepolia,
+  polygonAmoy,
 } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider } from 'wagmi';
+import { WagmiProvider, http } from 'wagmi';
 import React, { ReactNode } from 'react';
 
 const projectId =
@@ -25,7 +26,10 @@ const { wallets } = getDefaultWallets();
 const config = getDefaultConfig({
   appName: 'Dehix',
   projectId: projectId,
-  chains: [mainnet, polygon, sepolia, arbitrumSepolia, baseSepolia],
+  chains: [polygonAmoy],
+  transports: {
+    [polygonAmoy.id]: http('https://rpc-amoy.polygon.technology'),
+  },
   wallets: [...wallets],
   ssr: true,
 });

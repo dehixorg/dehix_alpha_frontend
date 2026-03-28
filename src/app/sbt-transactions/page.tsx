@@ -20,14 +20,14 @@ import EmptyState from '@/components/shared/EmptyState';
 import { useSBTData } from '@/hooks/useSBTData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { FREELANCER_SBT_SEPOLIA } from '@/config/contracts/abis';
+import { FREELANCER_SBT_POLYGON_AMOY } from '@/config/contracts/abis';
 
 export default function SBTTransactionsPage() {
   const user = useSelector((state: RootState) => state.user);
   const userType = user.type === 'business' ? 'business' : 'freelancer';
   const { sbtItems, isLoading, error, totalCount, refetch } = useSBTData();
-  const txExplorerBase = 'https://sepolia.etherscan.io/tx/';
-  const tokenExplorerBase = `https://sepolia.etherscan.io/token/${process.env.NEXT_PUBLIC_SBT_CONTRACT_SEPOLIA || FREELANCER_SBT_SEPOLIA}`;
+  const txExplorerBase = 'https://amoy.polygonscan.com/tx/';
+  const tokenExplorerBase = `https://amoy.polygonscan.com/token/${FREELANCER_SBT_POLYGON_AMOY}`;
   const isValidTxHash = (hash?: string) =>
     Boolean(hash && /^0x[a-fA-F0-9]{64}$/.test(hash));
 
@@ -260,8 +260,8 @@ export default function SBTTransactionsPage() {
                           {transaction.date ||
                             (transaction.createdAt
                               ? new Date(
-                                  transaction.createdAt,
-                                ).toLocaleDateString()
+                                transaction.createdAt,
+                              ).toLocaleDateString()
                               : 'Recently added')}
                         </p>
                         <Badge
@@ -318,7 +318,7 @@ export default function SBTTransactionsPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs bg-blue-100 dark:bg-blue-950/40 px-2 py-1 rounded font-mono break-all text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer inline-flex items-center gap-1.5 group font-semibold border border-blue-300 dark:border-blue-700"
-                              title={`View on Sepolia Etherscan: ${transaction.transactionHash}`}
+                              title={`View on Polygon Amoy: ${transaction.transactionHash}`}
                             >
                               {transaction.transactionHash!.slice(0, 10)}...
                               {transaction.transactionHash!.slice(-10)}
@@ -335,7 +335,7 @@ export default function SBTTransactionsPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs bg-blue-100 dark:bg-blue-950/40 px-2 py-1 rounded text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer inline-flex items-center gap-1.5 group font-semibold border border-blue-300 dark:border-blue-700"
-                              title={`View token ${transaction.tokenId} on Sepolia Etherscan`}
+                              title={`View token ${transaction.tokenId} on Polygon Amoy`}
                             >
                               Open token on explorer
                               <ExternalLink className="h-3 w-3 opacity-70 group-hover:opacity-100 transition-opacity" />
