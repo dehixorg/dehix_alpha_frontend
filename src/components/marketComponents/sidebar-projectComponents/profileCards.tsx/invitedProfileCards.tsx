@@ -319,7 +319,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                             disabled={
                               updatingFreelancerId === talent.freelancerId
                             }
-                            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg"
+                            className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 transition-all duration-200 shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-emerald-400/60 disabled:opacity-60 disabled:cursor-not-allowed"
                             onClick={() =>
                               handleDecision(
                                 talent.freelancerId,
@@ -337,6 +337,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                             disabled={
                               updatingFreelancerId === talent.freelancerId
                             }
+                            className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-400 transition-all duration-200 shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-red-400/60 disabled:opacity-60 disabled:cursor-not-allowed"
                             onClick={() =>
                               handleDecision(
                                 talent.freelancerId,
@@ -358,6 +359,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                           disabled={
                             updatingFreelancerId === talent.freelancerId
                           }
+                          className="bg-violet-600 text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400 transition-all duration-200 shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-violet-400/60 disabled:opacity-60 disabled:cursor-not-allowed"
                           onClick={() =>
                             handleDecision(
                               talent.freelancerId,
@@ -378,6 +380,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                           disabled={
                             updatingFreelancerId === talent.freelancerId
                           }
+                          className="bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 transition-all duration-200 shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-indigo-400/60 disabled:opacity-60 disabled:cursor-not-allowed"
                           onClick={() =>
                             handleDecision(
                               talent.freelancerId,
