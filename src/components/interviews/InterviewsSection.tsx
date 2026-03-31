@@ -55,17 +55,14 @@ export function InterviewsSection() {
     try {
       setLoading(true);
       setError(null);
-      const response = await axiosInstance.get(
-        '/meeting',
-        {
-          noRetry: true,
-          params: {
-            status: 'upcoming',
-            limit,
-            offset,
-          },
-        } as any,
-      );
+      const response = await axiosInstance.get('/meeting', {
+        noRetry: true,
+        params: {
+          status: 'upcoming',
+          limit,
+          offset,
+        },
+      } as any);
 
       setUpcomingMeetings(response.data?.data || []);
     } catch (err: any) {

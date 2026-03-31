@@ -62,7 +62,9 @@ const NDA_MAX_GAS = 1_200_000n;
 const POLYGON_AMOY_MIN_PRIORITY = 25_000_000_000n;
 const POLYGON_AMOY_MAX_FEE_PER_GAS = 150_000_000_000n;
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-const TRANSFER_EVENT_TOPIC = keccak256(toBytes('Transfer(address,address,uint256)'));
+const TRANSFER_EVENT_TOPIC = keccak256(
+  toBytes('Transfer(address,address,uint256)'),
+);
 const NDA_CREATED_EVENT_TOPIC = keccak256(
   toBytes('NDACreated(uint256,address,bytes32,string)'),
 );
@@ -123,7 +125,7 @@ export default function NDADialog({ projectId, projectName }: NDADialogProps) {
   const [content, setContent] = useState(
     `NON-DISCLOSURE AGREEMENT\n\nThis Non-Disclosure Agreement ("Agreement") is entered into for the project "${projectName}".\n\nBoth parties agree to keep all project-related information, including but not limited to technical details, business strategies, client data, and proprietary methods, strictly confidential.\n\nNeither party shall disclose, share, or use any confidential information for purposes outside the scope of this project without prior written consent from the other party.\n\nViolation of this agreement may result in penalties as defined by the platform's terms of service.`,
   );
-  const [freelancerWalletAddress, setFreelancerWalletAddress] = useState("");
+  const [freelancerWalletAddress, setFreelancerWalletAddress] = useState('');
 
   // Freelancer: existing NDAs to sign
   const [pendingNDAs, setPendingNDAs] = useState<NDARecord[]>([]);
@@ -177,12 +179,12 @@ export default function NDADialog({ projectId, projectName }: NDADialogProps) {
     expectedRecipient?: `0x${string}`,
   ) => {
     const contractLogs = receipt.logs.filter(
-      (log) =>
-        log.address.toLowerCase() === NDA_SBT_POLYGON_AMOY.toLowerCase(),
+      (log) => log.address.toLowerCase() === NDA_SBT_POLYGON_AMOY.toLowerCase(),
     );
 
     const ndaCreatedLog = contractLogs.find(
-      (log) => log.topics[0]?.toLowerCase() === NDA_CREATED_EVENT_TOPIC.toLowerCase(),
+      (log) =>
+        log.topics[0]?.toLowerCase() === NDA_CREATED_EVENT_TOPIC.toLowerCase(),
     );
     if (ndaCreatedLog?.topics[1]) {
       return BigInt(ndaCreatedLog.topics[1]).toString();
@@ -333,580 +335,608 @@ export default function NDADialog({ projectId, projectName }: NDADialogProps) {
 
       return `ipfs://${ipfsCid}`;
     } catch (error) {
-      console.warn('Pinata upload failed for NDA content, using fallback hash:', error);
+      console.warn(
+        'Pinata upload failed for NDA content, using fallback hash:',
+        error,
+      );
       return `ipfs://nda-${contentHash.slice(2)}`;
     }
   };
 
-const buildNdaWriteConfig = async (
-  functionName: 'createNDA' | 'signNDAByBusiness' | 'signNDAByFreelancer',
-  args: readonly unknown[],
-) => {
-  ensureWalletReady();
-
-  const baseRequest = {
-    account: address,
-    address: NDA_SBT_POLYGON_AMOY as `0x${string}`,
-    abi: NDA_SBT_ABI,
-    functionName,
-    args,
-  } as const;
-
-  await publicClient!.simulateContract(baseRequest);
-
-  const estimatedGas = await publicClient!.estimateContractGas(baseRequest);
-  const gasPrices = await getSafeGasPriceParams(publicClient!);
-
-  return {
-    address: NDA_SBT_POLYGON_AMOY as `0x${string}`,
-    abi: NDA_SBT_ABI,
-    functionName,
-    args,
-    gas: withGasBuffer(estimatedGas),
-    maxFeePerGas: gasPrices.maxFeePerGas,
-    maxPriorityFeePerGas: gasPrices.maxPriorityFeePerGas,
-  };
-};
-
-const resetForm = () => {
-  setStep('form');
-  setDurationDays(30);
-  setSbtTokenId('');
-  setSbtTxHash('');
-  setBackendNdaId('');
-  setSelectedNDA(null);
-};
-
-const handleClose = () => {
-  setOpen(false);
-  resetForm();
-};
-
-// Fetch pending NDAs for freelancer when dialog opens
-useEffect(() => {
-  if (!open || isBusiness || !address) return;
-
-  const fetchPendingNDAs = async () => {
-    setLoadingNDAs(true);
-    try {
-      const response = await axiosInstance.get('/nda/my-ndas', {
-        params: { walletAddress: address },
-      });
-      const allNdas: NDARecord[] = response?.data?.data || [];
-      const pending = await Promise.all(
-        allNdas
-          .filter((nda) => nda.status === 'signed_by_business')
-          .map(async (nda) => {
-            const resolvedTokenId = await resolveExistingTokenId(nda);
-            return resolvedTokenId
-              ? { ...nda, sbtTokenId: resolvedTokenId }
-              : null;
-          }),
-      );
-
-      // Only show NDAs that are truly signable on-chain.
-      const validPending = pending.filter(
-        (
-          nda,
-        ): nda is NDARecord & {
-          sbtTokenId: string;
-        } => nda !== null,
-      );
-      setPendingNDAs(validPending);
-    } catch (error) {
-      console.error('Error fetching NDAs:', error);
-    } finally {
-      setLoadingNDAs(false);
-    }
-  };
-
-  fetchPendingNDAs();
-}, [open, isBusiness, address, publicClient]);
-
-// ── Business: Create + Sign NDA ──
-const handleBusinessCreateAndSign = async () => {
-  if (!address) {
-    notifyError('Please connect your wallet first.', 'Wallet Required');
-    return;
-  }
-  if (!content.trim()) {
-    notifyError('NDA content cannot be empty.', 'Missing Content');
-    return;
-  }
-  if (durationDays < 1) {
-    notifyError('Duration must be at least 1 day.', 'Invalid Duration');
-    return;
-  }
-
-  setLoading(true);
-  setStep('signing');
-
-  // Get Firebase token for authentication
-  let token = '';
-  try {
-    token = (await auth.currentUser?.getIdToken()) ?? '';
-  } catch (err) {
-    notifyError('Authentication error: Unable to get user token.', 'Auth Error');
-    setStep('form');
-    setLoading(false);
-    return;
-  }
-  if (!token) {
-    notifyError('You must be logged in to create the NDA.', 'Auth Error');
-    setStep('form');
-    setLoading(false);
-    return;
-  }
-
-  try {
+  const buildNdaWriteConfig = async (
+    functionName: 'createNDA' | 'signNDAByBusiness' | 'signNDAByFreelancer',
+    args: readonly unknown[],
+  ) => {
     ensureWalletReady();
 
-    // Use a placeholder freelancer address — the actual freelancer will be assigned when they sign
-    if (!freelancerWalletAddress || !/^0x[a-fA-F0-9]{40}$/.test(freelancerWalletAddress)) {
-      notifyError('Please enter a valid freelancer wallet address.', 'Invalid Wallet Address');
+    const baseRequest = {
+      account: address,
+      address: NDA_SBT_POLYGON_AMOY as `0x${string}`,
+      abi: NDA_SBT_ABI,
+      functionName,
+      args,
+    } as const;
+
+    await publicClient!.simulateContract(baseRequest);
+
+    const estimatedGas = await publicClient!.estimateContractGas(baseRequest);
+    const gasPrices = await getSafeGasPriceParams(publicClient!);
+
+    return {
+      address: NDA_SBT_POLYGON_AMOY as `0x${string}`,
+      abi: NDA_SBT_ABI,
+      functionName,
+      args,
+      gas: withGasBuffer(estimatedGas),
+      maxFeePerGas: gasPrices.maxFeePerGas,
+      maxPriorityFeePerGas: gasPrices.maxPriorityFeePerGas,
+    };
+  };
+
+  const resetForm = () => {
+    setStep('form');
+    setDurationDays(30);
+    setSbtTokenId('');
+    setSbtTxHash('');
+    setBackendNdaId('');
+    setSelectedNDA(null);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    resetForm();
+  };
+
+  // Fetch pending NDAs for freelancer when dialog opens
+  useEffect(() => {
+    if (!open || isBusiness || !address) return;
+
+    const fetchPendingNDAs = async () => {
+      setLoadingNDAs(true);
+      try {
+        const response = await axiosInstance.get('/nda/my-ndas', {
+          params: { walletAddress: address },
+        });
+        const allNdas: NDARecord[] = response?.data?.data || [];
+        const pending = await Promise.all(
+          allNdas
+            .filter((nda) => nda.status === 'signed_by_business')
+            .map(async (nda) => {
+              const resolvedTokenId = await resolveExistingTokenId(nda);
+              return resolvedTokenId
+                ? { ...nda, sbtTokenId: resolvedTokenId }
+                : null;
+            }),
+        );
+
+        // Only show NDAs that are truly signable on-chain.
+        const validPending = pending.filter(
+          (
+            nda,
+          ): nda is NDARecord & {
+            sbtTokenId: string;
+          } => nda !== null,
+        );
+        setPendingNDAs(validPending);
+      } catch (error) {
+        console.error('Error fetching NDAs:', error);
+      } finally {
+        setLoadingNDAs(false);
+      }
+    };
+
+    fetchPendingNDAs();
+  }, [open, isBusiness, address, publicClient]);
+
+  // ── Business: Create + Sign NDA ──
+  const handleBusinessCreateAndSign = async () => {
+    if (!address) {
+      notifyError('Please connect your wallet first.', 'Wallet Required');
+      return;
+    }
+    if (!content.trim()) {
+      notifyError('NDA content cannot be empty.', 'Missing Content');
+      return;
+    }
+    if (durationDays < 1) {
+      notifyError('Duration must be at least 1 day.', 'Invalid Duration');
       return;
     }
 
-    // Hash the content for on-chain storage (full text stored in backend)
-    const contentHash = keccak256(toBytes(content));
+    setLoading(true);
+    setStep('signing');
 
-    const ipfsHash = await buildNdaIpfsHash(contentHash as `0x${string}`);
-
-    // Step 1: Create NDA on-chain (store contentHash + ipfsHash)
-    const createConfig = await buildNdaWriteConfig('createNDA', [
-      contentHash,
-      ipfsHash,
-      freelancerWalletAddress as `0x${string}`,
-      BigInt(durationDays),
-    ]);
-    const createHash = await writeContractAsync(createConfig);
-
-    const createReceipt = await publicClient!.waitForTransactionReceipt({
-      hash: createHash,
-    });
-
-    const tokenId = extractMintedTokenIdFromReceipt(
-      createReceipt,
-      freelancerWalletAddress as `0x${string}`,
-    );
-
-    if (!tokenId) {
-      notifyError('Could not extract token ID from transaction.', 'Error');
+    // Get Firebase token for authentication
+    let token = '';
+    try {
+      token = (await auth.currentUser?.getIdToken()) ?? '';
+    } catch (err) {
+      notifyError(
+        'Authentication error: Unable to get user token.',
+        'Auth Error',
+      );
+      setStep('form');
+      setLoading(false);
+      return;
+    }
+    if (!token) {
+      notifyError('You must be logged in to create the NDA.', 'Auth Error');
       setStep('form');
       setLoading(false);
       return;
     }
 
-    // Step 2: Sign NDA on-chain as business owner
-    const signature = `business_signed_${address}_${Date.now()}`;
-    const signatureHash = keccak256(toBytes(signature));
-    const signConfig = await buildNdaWriteConfig('signNDAByBusiness', [
-      BigInt(tokenId),
-      signatureHash,
-    ]);
-    const signHash = await writeContractAsync(signConfig);
+    try {
+      ensureWalletReady();
 
-    await publicClient!.waitForTransactionReceipt({ hash: signHash });
-
-    // Step 3: Save to backend (with auth)
-    const createResponse = await axiosInstance.post(
-      '/nda/create',
-      {
-        content,
-        freelancerAddress: freelancerWalletAddress,
-        durationDays,
-        businessOwnerAddress: address,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      // Use a placeholder freelancer address — the actual freelancer will be assigned when they sign
+      if (
+        !freelancerWalletAddress ||
+        !/^0x[a-fA-F0-9]{40}$/.test(freelancerWalletAddress)
+      ) {
+        notifyError(
+          'Please enter a valid freelancer wallet address.',
+          'Invalid Wallet Address',
+        );
+        return;
       }
-    );
 
-    const ndaId = createResponse?.data?.data?.ndaId;
-    if (ndaId) {
-      setBackendNdaId(ndaId);
-      await axiosInstance.post(
-        '/nda/sign-business',
+      // Hash the content for on-chain storage (full text stored in backend)
+      const contentHash = keccak256(toBytes(content));
+
+      const ipfsHash = await buildNdaIpfsHash(contentHash as `0x${string}`);
+
+      // Step 1: Create NDA on-chain (store contentHash + ipfsHash)
+      const createConfig = await buildNdaWriteConfig('createNDA', [
+        contentHash,
+        ipfsHash,
+        freelancerWalletAddress as `0x${string}`,
+        BigInt(durationDays),
+      ]);
+      const createHash = await writeContractAsync(createConfig);
+
+      const createReceipt = await publicClient!.waitForTransactionReceipt({
+        hash: createHash,
+      });
+
+      const tokenId = extractMintedTokenIdFromReceipt(
+        createReceipt,
+        freelancerWalletAddress as `0x${string}`,
+      );
+
+      if (!tokenId) {
+        notifyError('Could not extract token ID from transaction.', 'Error');
+        setStep('form');
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Sign NDA on-chain as business owner
+      const signature = `business_signed_${address}_${Date.now()}`;
+      const signatureHash = keccak256(toBytes(signature));
+      const signConfig = await buildNdaWriteConfig('signNDAByBusiness', [
+        BigInt(tokenId),
+        signatureHash,
+      ]);
+      const signHash = await writeContractAsync(signConfig);
+
+      await publicClient!.waitForTransactionReceipt({ hash: signHash });
+
+      // Step 3: Save to backend (with auth)
+      const createResponse = await axiosInstance.post(
+        '/nda/create',
         {
-          ndaId,
+          content,
+          freelancerAddress: freelancerWalletAddress,
+          durationDays,
+          businessOwnerAddress: address,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const ndaId = createResponse?.data?.data?.ndaId;
+      if (ndaId) {
+        setBackendNdaId(ndaId);
+        await axiosInstance.post(
+          '/nda/sign-business',
+          {
+            ndaId,
+            signature,
+            sbtTokenId: tokenId,
+            sbtTransactionHash: createHash,
+            sbtContractAddress: NDA_SBT_POLYGON_AMOY,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+      }
+
+      setSbtTokenId(tokenId);
+      setSbtTxHash(createHash);
+      setStep('done');
+      notifySuccess('NDA created and signed on-chain!', 'NDA Created');
+      window.dispatchEvent(new Event('ndaDataUpdated'));
+    } catch (error: any) {
+      console.error('NDA creation error:', error);
+      const msg =
+        error?.shortMessage || error?.message || 'Failed to create NDA';
+      notifyError(msg, 'Transaction Failed');
+      setStep('form');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Freelancer: Sign existing NDA ──
+  const handleFreelancerSign = async () => {
+    if (!address) {
+      notifyError('Please connect your wallet first.', 'Wallet Required');
+      return;
+    }
+    if (!selectedNDA) {
+      notifyError('Please select an NDA to sign.', 'No NDA Selected');
+      return;
+    }
+    // Log NDA for debugging
+    console.log('Selected NDA:', selectedNDA);
+    if (!selectedNDA.sbtTokenId || !selectedNDA.ndaId) {
+      notifyError(
+        'NDA is missing required blockchain data. Please ask the business to sign the NDA on-chain first.',
+        'NDA Data Error',
+      );
+      return;
+    }
+    if (!selectedNDA.content) {
+      notifyError('NDA content is missing. Cannot sign.', 'NDA Data Error');
+      return;
+    }
+
+    setLoading(true);
+    setStep('signing');
+
+    try {
+      ensureWalletReady();
+      const currentTokenId = await resolveExistingTokenId(selectedNDA);
+
+      if (!currentTokenId) {
+        notifyError(
+          'This NDA does not have a valid on-chain token yet. Please ask the business to recreate/sign it again.',
+          'NDA Data Error',
+        );
+        setStep('form');
+        return;
+      }
+
+      let token = '';
+      try {
+        token = (await auth.currentUser?.getIdToken()) ?? '';
+      } catch (err) {
+        notifyError(
+          'Authentication error: Unable to get user token.',
+          'Auth Error',
+        );
+        setStep('form');
+        return;
+      }
+      if (!token) {
+        notifyError('You must be logged in to sign the NDA.', 'Auth Error');
+        setStep('form');
+        return;
+      }
+
+      const contentHash = keccak256(toBytes(selectedNDA.content));
+      const ipfsHash = await buildNdaIpfsHash(contentHash as `0x${string}`);
+
+      const signature = `freelancer_signed_${address}_${Date.now()}`;
+      const signatureHash = keccak256(toBytes(signature));
+      const signConfig = await buildNdaWriteConfig('signNDAByFreelancer', [
+        BigInt(currentTokenId),
+        signatureHash,
+      ]);
+      const signHash = await writeContractAsync(signConfig);
+
+      const receipt = await publicClient!.waitForTransactionReceipt({
+        hash: signHash,
+      });
+
+      // Extract new token ID after burn+remint
+      const newTokenId =
+        extractMintedTokenIdFromReceipt(receipt, address as `0x${string}`) ||
+        currentTokenId;
+
+      // Save to backend
+      await axiosInstance.post(
+        '/nda/sign-freelancer',
+        {
+          ndaId: selectedNDA.ndaId,
           signature,
-          sbtTokenId: tokenId,
-          sbtTransactionHash: createHash,
+          sbtTokenId: newTokenId,
+          sbtTransactionHash: signHash,
+          ipfsHash,
           sbtContractAddress: NDA_SBT_POLYGON_AMOY,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
-      );
-    }
-
-    setSbtTokenId(tokenId);
-    setSbtTxHash(createHash);
-    setStep('done');
-    notifySuccess('NDA created and signed on-chain!', 'NDA Created');
-    window.dispatchEvent(new Event('ndaDataUpdated'));
-  } catch (error: any) {
-    console.error('NDA creation error:', error);
-    const msg =
-      error?.shortMessage || error?.message || 'Failed to create NDA';
-    notifyError(msg, 'Transaction Failed');
-    setStep('form');
-  } finally {
-    setLoading(false);
-  }
-};
-
-// ── Freelancer: Sign existing NDA ──
-const handleFreelancerSign = async () => {
-  if (!address) {
-    notifyError('Please connect your wallet first.', 'Wallet Required');
-    return;
-  }
-  if (!selectedNDA) {
-    notifyError('Please select an NDA to sign.', 'No NDA Selected');
-    return;
-  }
-  // Log NDA for debugging
-  console.log('Selected NDA:', selectedNDA);
-  if (!selectedNDA.sbtTokenId || !selectedNDA.ndaId) {
-    notifyError('NDA is missing required blockchain data. Please ask the business to sign the NDA on-chain first.', 'NDA Data Error');
-    return;
-  }
-  if (!selectedNDA.content) {
-    notifyError('NDA content is missing. Cannot sign.', 'NDA Data Error');
-    return;
-  }
-
-  setLoading(true);
-  setStep('signing');
-
-  try {
-    ensureWalletReady();
-    const currentTokenId = await resolveExistingTokenId(selectedNDA);
-
-    if (!currentTokenId) {
-      notifyError(
-        'This NDA does not have a valid on-chain token yet. Please ask the business to recreate/sign it again.',
-        'NDA Data Error',
-      );
-      setStep('form');
-      return;
-    }
-
-    let token = '';
-    try {
-      token = (await auth.currentUser?.getIdToken()) ?? '';
-    } catch (err) {
-      notifyError('Authentication error: Unable to get user token.', 'Auth Error');
-      setStep('form');
-      return;
-    }
-    if (!token) {
-      notifyError('You must be logged in to sign the NDA.', 'Auth Error');
-      setStep('form');
-      return;
-    }
-
-    const contentHash = keccak256(toBytes(selectedNDA.content));
-    const ipfsHash = await buildNdaIpfsHash(contentHash as `0x${string}`);
-
-    const signature = `freelancer_signed_${address}_${Date.now()}`;
-    const signatureHash = keccak256(toBytes(signature));
-    const signConfig = await buildNdaWriteConfig('signNDAByFreelancer', [
-      BigInt(currentTokenId),
-      signatureHash,
-    ]);
-    const signHash = await writeContractAsync(signConfig);
-
-    const receipt = await publicClient!.waitForTransactionReceipt({
-      hash: signHash,
-    });
-
-    // Extract new token ID after burn+remint
-    const newTokenId =
-      extractMintedTokenIdFromReceipt(receipt, address as `0x${string}`) ||
-      currentTokenId;
-
-    // Save to backend
-    await axiosInstance.post(
-      '/nda/sign-freelancer',
-      {
-        ndaId: selectedNDA.ndaId,
-        signature,
-        sbtTokenId: newTokenId,
-        sbtTransactionHash: signHash,
-        ipfsHash,
-        sbtContractAddress: NDA_SBT_POLYGON_AMOY,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
         },
-      },
-    );
+      );
 
-    setSbtTokenId(newTokenId);
-    setSbtTxHash(signHash);
-    setBackendNdaId(selectedNDA.ndaId);
-    setStep('done');
-    notifySuccess(
-      'NDA signed successfully! SBT re-minted to your wallet.',
-      'NDA Signed',
-    );
-    window.dispatchEvent(new Event('ndaDataUpdated'));
-  } catch (error: any) {
-    console.error('NDA signing error:', error, selectedNDA);
-    const msg = error?.shortMessage || error?.message || 'Failed to sign NDA';
-    notifyError(msg, 'Transaction Failed');
-    setStep('form');
-  } finally {
-    setLoading(false);
-  }
-};
+      setSbtTokenId(newTokenId);
+      setSbtTxHash(signHash);
+      setBackendNdaId(selectedNDA.ndaId);
+      setStep('done');
+      notifySuccess(
+        'NDA signed successfully! SBT re-minted to your wallet.',
+        'NDA Signed',
+      );
+      window.dispatchEvent(new Event('ndaDataUpdated'));
+    } catch (error: any) {
+      console.error('NDA signing error:', error, selectedNDA);
+      const msg = error?.shortMessage || error?.message || 'Failed to sign NDA';
+      notifyError(msg, 'Transaction Failed');
+      setStep('form');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-return (
-  <>
-    <Button
-      size="sm"
-      variant="outline"
-      className="gap-2"
-      onClick={() => setOpen(true)}
-    >
-      <FileText className="w-4 h-4" />
-      NDA Agreement
-    </Button>
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="outline"
+        className="gap-2"
+        onClick={() => setOpen(true)}
+      >
+        <FileText className="w-4 h-4" />
+        NDA Agreement
+      </Button>
 
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            {step === 'done'
-              ? isBusiness
-                ? 'NDA Created Successfully'
-                : 'NDA Signed Successfully'
-              : isBusiness
-                ? 'Create NDA Agreement'
-                : 'Sign NDA Agreement'}
-          </DialogTitle>
-          <DialogDescription>
-            {step === 'form' &&
-              (isBusiness
-                ? 'Create a Non-Disclosure Agreement and mint an SBT token on-chain.'
-                : 'Review and sign a pending NDA from the business owner.')}
-            {step === 'signing' &&
-              (isBusiness
-                ? 'Creating and signing NDA on blockchain...'
-                : 'Signing NDA on blockchain...')}
-            {step === 'done' &&
-              (isBusiness
-                ? 'NDA has been minted as Soulbound Token. Freelancer can now sign it.'
-                : 'NDA signed. SBT has been re-minted to your wallet.')}
-          </DialogDescription>
-        </DialogHeader>
+      <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {step === 'done'
+                ? isBusiness
+                  ? 'NDA Created Successfully'
+                  : 'NDA Signed Successfully'
+                : isBusiness
+                  ? 'Create NDA Agreement'
+                  : 'Sign NDA Agreement'}
+            </DialogTitle>
+            <DialogDescription>
+              {step === 'form' &&
+                (isBusiness
+                  ? 'Create a Non-Disclosure Agreement and mint an SBT token on-chain.'
+                  : 'Review and sign a pending NDA from the business owner.')}
+              {step === 'signing' &&
+                (isBusiness
+                  ? 'Creating and signing NDA on blockchain...'
+                  : 'Signing NDA on blockchain...')}
+              {step === 'done' &&
+                (isBusiness
+                  ? 'NDA has been minted as Soulbound Token. Freelancer can now sign it.'
+                  : 'NDA signed. SBT has been re-minted to your wallet.')}
+            </DialogDescription>
+          </DialogHeader>
 
-        {/* FORM STEP — Business */}
-        {step === 'form' && isBusiness && (
-          <div className="space-y-4 py-2">
-            {businessActionBlockedReason && (
-              <p className="text-sm text-amber-500">
-                {businessActionBlockedReason}
-              </p>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration (days)</Label>
-              <Input
-                id="duration"
-                type="number"
-                min={1}
-                value={durationDays}
-                onChange={(e) =>
-                  setDurationDays(parseInt(e.target.value) || 30)
-                }
-              />
+          {/* FORM STEP — Business */}
+          {step === 'form' && isBusiness && (
+            <div className="space-y-4 py-2">
+              {businessActionBlockedReason && (
+                <p className="text-sm text-amber-500">
+                  {businessActionBlockedReason}
+                </p>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration (days)</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  min={1}
+                  value={durationDays}
+                  onChange={(e) =>
+                    setDurationDays(parseInt(e.target.value) || 30)
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="freelancerWalletAddress">
+                  Freelancer Wallet Address
+                </Label>
+                <Input
+                  id="freelancerWalletAddress"
+                  type="text"
+                  placeholder="0x..."
+                  value={freelancerWalletAddress}
+                  onChange={(e) => setFreelancerWalletAddress(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="content">NDA Content</Label>
+                <Textarea
+                  id="content"
+                  rows={8}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label htmlFor="freelancerWalletAddress">Freelancer Wallet Address</Label>
-              <Input
-                id="freelancerWalletAddress"
-                type="text"
-                placeholder="0x..."
-                value={freelancerWalletAddress}
-                onChange={(e) => setFreelancerWalletAddress(e.target.value)}
-                className="text-sm"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="content">NDA Content</Label>
-              <Textarea
-                id="content"
-                rows={8}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="text-sm"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* FORM STEP — Freelancer */}
-        {step === 'form' && !isBusiness && (
-          <div className="space-y-4 py-2">
-            {freelancerActionBlockedReason && (
-              <p className="text-sm text-amber-500">
-                {freelancerActionBlockedReason}
-              </p>
-            )}
-            {loadingNDAs ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Loading pending NDAs...
-              </p>
-            ) : pendingNDAs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No pending NDAs to sign.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                <Label>Select an NDA to sign</Label>
-                {pendingNDAs.map((nda) => (
-                  <div
-                    key={nda.ndaId}
-                    onClick={() => setSelectedNDA(nda)}
-                    className={`cursor-pointer rounded-lg border p-3 text-sm transition-colors ${selectedNDA?.ndaId === nda.ndaId
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-muted/50'
+          {/* FORM STEP — Freelancer */}
+          {step === 'form' && !isBusiness && (
+            <div className="space-y-4 py-2">
+              {freelancerActionBlockedReason && (
+                <p className="text-sm text-amber-500">
+                  {freelancerActionBlockedReason}
+                </p>
+              )}
+              {loadingNDAs ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Loading pending NDAs...
+                </p>
+              ) : pendingNDAs.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No pending NDAs to sign.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  <Label>Select an NDA to sign</Label>
+                  {pendingNDAs.map((nda) => (
+                    <div
+                      key={nda.ndaId}
+                      onClick={() => setSelectedNDA(nda)}
+                      className={`cursor-pointer rounded-lg border p-3 text-sm transition-colors ${
+                        selectedNDA?.ndaId === nda.ndaId
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:bg-muted/50'
                       }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-mono text-xs">
-                        {nda.ndaId.slice(0, 16)}...
-                      </span>
-                      <Badge variant="outline">{nda.durationDays} days</Badge>
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-xs">
+                          {nda.ndaId.slice(0, 16)}...
+                        </span>
+                        <Badge variant="outline">{nda.durationDays} days</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {nda.content.slice(0, 120)}...
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {nda.content.slice(0, 120)}...
-                    </p>
-                  </div>
-                ))}
+                  ))}
 
-                {/* Show selected NDA full content */}
-                {selectedNDA && (
-                  <div className="space-y-2 mt-2">
-                    <Label>NDA Content</Label>
-                    <div className="bg-muted/30 border rounded-lg p-3 text-sm max-h-40 overflow-y-auto whitespace-pre-wrap">
-                      {selectedNDA.content}
+                  {/* Show selected NDA full content */}
+                  {selectedNDA && (
+                    <div className="space-y-2 mt-2">
+                      <Label>NDA Content</Label>
+                      <div className="bg-muted/30 border rounded-lg p-3 text-sm max-h-40 overflow-y-auto whitespace-pre-wrap">
+                        {selectedNDA.content}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* SIGNING STEP */}
-        {step === 'signing' && (
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-            <p className="text-sm text-muted-foreground text-center">
-              Please confirm the transaction in your wallet.
-              <br />
-              {isBusiness
-                ? 'This creates the NDA and signs it on-chain.'
-                : 'This signs the NDA and re-mints the SBT to your wallet.'}
-            </p>
-          </div>
-        )}
-
-        {/* DONE STEP */}
-        {step === 'done' && (
-          <div className="space-y-4 py-2">
-            <div className="rounded-lg border bg-muted/30 p-4 text-sm">
-              <span className="text-muted-foreground">NDA Content</span>
-              <div className="mt-2 whitespace-pre-wrap">
-                {isBusiness
-                  ? content
-                  : (selectedNDA?.ipfsHash ? (
-                    <a href={`https://ipfs.io/ipfs/${selectedNDA.ipfsHash.replace('ipfs://', '')}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                      {selectedNDA.ipfsHash}
-                    </a>
-                  ) : '')}
-              </div>
-            </div>
-            <div className="rounded-lg border bg-muted/30 p-4 space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">SBT Token ID</span>
-                <span className="font-mono font-semibold">#{sbtTokenId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Transaction</span>
-                <a
-                  href={`https://amoy.polygonscan.com/tx/${sbtTxHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline font-mono text-xs"
-                >
-                  {sbtTxHash.slice(0, 10)}...{sbtTxHash.slice(-8)}
-                </a>
-              </div>
-              {backendNdaId && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">NDA ID</span>
-                  <span className="font-mono text-xs">
-                    {backendNdaId.slice(0, 16)}...
-                  </span>
+                  )}
                 </div>
               )}
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
-                <span
-                  className={`font-medium ${isBusiness ? 'text-yellow-500' : 'text-green-500'}`}
-                >
-                  {isBusiness
-                    ? 'Awaiting Freelancer Signature'
-                    : 'Signed by Both Parties'}
-                </span>
+            </div>
+          )}
+
+          {/* SIGNING STEP */}
+          {step === 'signing' && (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+              <p className="text-sm text-muted-foreground text-center">
+                Please confirm the transaction in your wallet.
+                <br />
+                {isBusiness
+                  ? 'This creates the NDA and signs it on-chain.'
+                  : 'This signs the NDA and re-mints the SBT to your wallet.'}
+              </p>
+            </div>
+          )}
+
+          {/* DONE STEP */}
+          {step === 'done' && (
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+                <span className="text-muted-foreground">NDA Content</span>
+                <div className="mt-2 whitespace-pre-wrap">
+                  {isBusiness ? (
+                    content
+                  ) : selectedNDA?.ipfsHash ? (
+                    <a
+                      href={`https://ipfs.io/ipfs/${selectedNDA.ipfsHash.replace('ipfs://', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      {selectedNDA.ipfsHash}
+                    </a>
+                  ) : (
+                    ''
+                  )}
+                </div>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">SBT Token ID</span>
+                  <span className="font-mono font-semibold">#{sbtTokenId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Transaction</span>
+                  <a
+                    href={`https://amoy.polygonscan.com/tx/${sbtTxHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline font-mono text-xs"
+                  >
+                    {sbtTxHash.slice(0, 10)}...{sbtTxHash.slice(-8)}
+                  </a>
+                </div>
+                {backendNdaId && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">NDA ID</span>
+                    <span className="font-mono text-xs">
+                      {backendNdaId.slice(0, 16)}...
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <span
+                    className={`font-medium ${isBusiness ? 'text-yellow-500' : 'text-green-500'}`}
+                  >
+                    {isBusiness
+                      ? 'Awaiting Freelancer Signature'
+                      : 'Signed by Both Parties'}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <DialogFooter>
-          {step === 'form' && isBusiness && (
-            <>
-              <Button variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleBusinessCreateAndSign}
-                disabled={loading || Boolean(businessActionBlockedReason)}
-              >
-                {businessActionBlockedReason || 'Create & Sign NDA'}
-              </Button>
-            </>
-          )}
-          {step === 'form' && !isBusiness && (
-            <>
-              <Button variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleFreelancerSign}
-                disabled={loading || Boolean(freelancerActionBlockedReason)}
-              >
-                {freelancerActionBlockedReason || 'Sign NDA'}
-              </Button>
-            </>
-          )}
-          {step === 'done' && <Button onClick={handleClose}>Close</Button>}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  </>
-);
+          <DialogFooter>
+            {step === 'form' && isBusiness && (
+              <>
+                <Button variant="outline" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleBusinessCreateAndSign}
+                  disabled={loading || Boolean(businessActionBlockedReason)}
+                >
+                  {businessActionBlockedReason || 'Create & Sign NDA'}
+                </Button>
+              </>
+            )}
+            {step === 'form' && !isBusiness && (
+              <>
+                <Button variant="outline" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleFreelancerSign}
+                  disabled={loading || Boolean(freelancerActionBlockedReason)}
+                >
+                  {freelancerActionBlockedReason || 'Sign NDA'}
+                </Button>
+              </>
+            )}
+            {step === 'done' && <Button onClick={handleClose}>Close</Button>}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }
