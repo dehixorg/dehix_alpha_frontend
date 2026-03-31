@@ -491,15 +491,14 @@ const SkillDomainForm: React.FC = () => {
                           >
                             {r.status?.toUpperCase()}
                           </Badge>
-                          {canVerify(r.status) &&
-                            r.uid && (
-                              <VerifyDialog
-                                talentType={r.type}
-                                _id={r.uid}
-                                userId={user.uid}
-                                originalTalentId={r.originalTalentId}
-                              />
-                            )}
+                          {canVerify(r.status) && r.uid && (
+                            <VerifyDialog
+                              talentType={r.type}
+                              _id={r.uid}
+                              userId={user.uid}
+                              originalTalentId={r.originalTalentId}
+                            />
+                          )}
                         </div>
                       </TableCell>
 
@@ -548,15 +547,14 @@ const SkillDomainForm: React.FC = () => {
                               >
                                 {r.status?.toUpperCase()}
                               </Badge>
-                              {canVerify(r.status) &&
-                                r.uid && (
-                                  <VerifyDialog
-                                    talentType={r.type}
-                                    _id={r.uid}
-                                    userId={user.uid}
-                                    originalTalentId={r.originalTalentId}
-                                  />
-                                )}
+                              {canVerify(r.status) && r.uid && (
+                                <VerifyDialog
+                                  talentType={r.type}
+                                  _id={r.uid}
+                                  userId={user.uid}
+                                  originalTalentId={r.originalTalentId}
+                                />
+                              )}
                             </div>
                           )}
 
