@@ -491,7 +491,7 @@ const SkillDomainForm: React.FC = () => {
                           >
                             {r.status?.toUpperCase()}
                           </Badge>
-                          {r.status === StatusEnum.PENDING && r.uid && (
+                          {(r.status === StatusEnum.PENDING || (r.status as string) === 'APPLIED') && r.uid && (
                             <VerifyDialog
                               talentType={r.type}
                               _id={r.uid}
@@ -547,7 +547,7 @@ const SkillDomainForm: React.FC = () => {
                               >
                                 {r.status?.toUpperCase()}
                               </Badge>
-                              {r.status === StatusEnum.PENDING && r.uid && (
+                              {(r.status === StatusEnum.PENDING || (r.status as string) === 'APPLIED') && r.uid && (
                                 <VerifyDialog
                                   talentType={r.type}
                                   _id={r.uid}

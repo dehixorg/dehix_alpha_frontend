@@ -60,7 +60,7 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
     const formData = {
       creatorId: userId,
       intervieweeId: userId,
-      interviewType: 'INTERVIEWER',
+      interviewType: 'TALENT',
       talentType: talentType.toUpperCase(),
       talentId: originalTalentId, // Use the global skill id
       interviewDate: localDate.toISOString(), // Using the adjusted date

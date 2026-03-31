@@ -203,7 +203,10 @@ export default function InterviewerBids() {
           ? res.data
           : [];
 
-      const sorted = [...list].sort((a, b) => {
+      // Filter out invalid/mock database entries like 'temp-biddable-kapil-001'
+      const validList = list.filter((item) => !String(item._id).includes('temp'));
+
+      const sorted = [...validList].sort((a, b) => {
         const at = a?.interviewDate ? new Date(a.interviewDate).getTime() : 0;
         const bt = b?.interviewDate ? new Date(b.interviewDate).getTime() : 0;
         return at - bt;
