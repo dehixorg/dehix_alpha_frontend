@@ -641,7 +641,9 @@ export default function CurrentComponent({
                     value={section.key}
                     disabled={(section as any).disabled}
                     className={`border rounded-lg${idx === 0 ? '' : ' mt-4'} ${
-                      (section as any).disabled ? 'opacity-50 pointer-events-none' : ''
+                      (section as any).disabled
+                        ? 'opacity-50 pointer-events-none'
+                        : ''
                     }`}
                   >
                     <AccordionTrigger className="group rounded-lg px-4 py-3 transition-colors hover:bg-muted/50 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">

@@ -46,10 +46,7 @@ export default function IntervieweePage() {
     >
       <div className="mx-auto w-full max-w-[92vw]" data-tour="interviewee">
         <Card className="overflow-hidden">
-          <CardHeader
-            className="bg-gradient"
-            data-tour="interviewee-header"
-          >
+          <CardHeader className="bg-gradient" data-tour="interviewee-header">
             <CardTitle className="text-2xl font-bold tracking-tight">
               Interviewee
             </CardTitle>
