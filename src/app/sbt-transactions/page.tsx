@@ -260,8 +260,8 @@ export default function SBTTransactionsPage() {
                           {transaction.date ||
                             (transaction.createdAt
                               ? new Date(
-                                transaction.createdAt,
-                              ).toLocaleDateString()
+                                  transaction.createdAt,
+                                ).toLocaleDateString()
                               : 'Recently added')}
                         </p>
                         <Badge

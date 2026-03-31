@@ -4,7 +4,13 @@ import { Abi } from 'viem';
 export const FREELANCER_CONTRACT_ABI: Abi = [
   {
     type: 'constructor',
-    inputs: [{ type: 'address', name: '_stakingContractAddress', internalType: 'address' }],
+    inputs: [
+      {
+        type: 'address',
+        name: '_stakingContractAddress',
+        internalType: 'address',
+      },
+    ],
     stateMutability: 'nonpayable',
   },
   {
@@ -30,7 +36,9 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
   {
     type: 'function',
     name: 'addOracle',
-    inputs: [{ type: 'address', name: '_oracleAddress', internalType: 'address' }],
+    inputs: [
+      { type: 'address', name: '_oracleAddress', internalType: 'address' },
+    ],
     outputs: [],
     stateMutability: 'nonpayable',
   },
@@ -118,7 +126,9 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
   {
     type: 'function',
     name: 'removeOracle',
-    inputs: [{ type: 'address', name: '_oracleAddress', internalType: 'address' }],
+    inputs: [
+      { type: 'address', name: '_oracleAddress', internalType: 'address' },
+    ],
     outputs: [],
     stateMutability: 'nonpayable',
   },
@@ -141,7 +151,11 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
       { type: 'address', name: 'freelancerAddress', internalType: 'address' },
       { type: 'address', name: 'businessAddress', internalType: 'address' },
       { type: 'uint256', name: 'depositedAmount', internalType: 'uint256' },
-      { type: 'address', name: 'tokenAddress', internalType: 'contract IERC20' },
+      {
+        type: 'address',
+        name: 'tokenAddress',
+        internalType: 'contract IERC20',
+      },
     ],
     stateMutability: 'view',
   },
@@ -176,7 +190,9 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
     type: 'function',
     name: 'stakingContract',
     inputs: [],
-    outputs: [{ type: 'address', name: '', internalType: 'contract StakingRewards' }],
+    outputs: [
+      { type: 'address', name: '', internalType: 'contract StakingRewards' },
+    ],
     stateMutability: 'view',
   },
   {
@@ -193,8 +209,18 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
     type: 'event',
     name: 'BusinessAdded',
     inputs: [
-      { type: 'string', name: 'businessId', indexed: true, internalType: 'string' },
-      { type: 'address', name: 'businessAddress', indexed: true, internalType: 'address' },
+      {
+        type: 'string',
+        name: 'businessId',
+        indexed: true,
+        internalType: 'string',
+      },
+      {
+        type: 'address',
+        name: 'businessAddress',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
     anonymous: false,
   },
@@ -202,9 +228,24 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
     type: 'event',
     name: 'EscrowCreated',
     inputs: [
-      { type: 'string', name: 'escrowId', indexed: true, internalType: 'string' },
-      { type: 'address', name: 'business', indexed: true, internalType: 'address' },
-      { type: 'address', name: 'freelancer', indexed: true, internalType: 'address' },
+      {
+        type: 'string',
+        name: 'escrowId',
+        indexed: true,
+        internalType: 'string',
+      },
+      {
+        type: 'address',
+        name: 'business',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'address',
+        name: 'freelancer',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
     anonymous: false,
   },
@@ -212,8 +253,18 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
     type: 'event',
     name: 'FreelancerAdded',
     inputs: [
-      { type: 'string', name: 'freelancerId', indexed: true, internalType: 'string' },
-      { type: 'address', name: 'freelancerAddress', indexed: true, internalType: 'address' },
+      {
+        type: 'string',
+        name: 'freelancerId',
+        indexed: true,
+        internalType: 'string',
+      },
+      {
+        type: 'address',
+        name: 'freelancerAddress',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
     anonymous: false,
   },
@@ -221,8 +272,18 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
     type: 'event',
     name: 'FundsDeposited',
     inputs: [
-      { type: 'string', name: 'escrowId', indexed: true, internalType: 'string' },
-      { type: 'uint256', name: 'amount', indexed: false, internalType: 'uint256' },
+      {
+        type: 'string',
+        name: 'escrowId',
+        indexed: true,
+        internalType: 'string',
+      },
+      {
+        type: 'uint256',
+        name: 'amount',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -230,9 +291,19 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
     type: 'event',
     name: 'FundsRefunded',
     inputs: [
-      { type: 'string', name: 'escrowId', indexed: true, internalType: 'string' },
+      {
+        type: 'string',
+        name: 'escrowId',
+        indexed: true,
+        internalType: 'string',
+      },
       { type: 'address', name: 'to', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'amount', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'amount',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -240,43 +311,96 @@ export const FREELANCER_CONTRACT_ABI: Abi = [
     type: 'event',
     name: 'FundsReleased',
     inputs: [
-      { type: 'string', name: 'escrowId', indexed: true, internalType: 'string' },
+      {
+        type: 'string',
+        name: 'escrowId',
+        indexed: true,
+        internalType: 'string',
+      },
       { type: 'address', name: 'to', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'amount', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'amount',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'OracleAdded',
-    inputs: [{ type: 'address', name: 'oracleAddress', indexed: true, internalType: 'address' }],
+    inputs: [
+      {
+        type: 'address',
+        name: 'oracleAddress',
+        indexed: true,
+        internalType: 'address',
+      },
+    ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'OracleRemoved',
-    inputs: [{ type: 'address', name: 'oracleAddress', indexed: true, internalType: 'address' }],
+    inputs: [
+      {
+        type: 'address',
+        name: 'oracleAddress',
+        indexed: true,
+        internalType: 'address',
+      },
+    ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'ProjectCreated',
-    inputs: [{ type: 'string', name: 'projectId', indexed: true, internalType: 'string' }],
+    inputs: [
+      {
+        type: 'string',
+        name: 'projectId',
+        indexed: true,
+        internalType: 'string',
+      },
+    ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'ProjectDeactivated',
-    inputs: [{ type: 'string', name: 'projectId', indexed: true, internalType: 'string' }],
+    inputs: [
+      {
+        type: 'string',
+        name: 'projectId',
+        indexed: true,
+        internalType: 'string',
+      },
+    ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'Voted',
     inputs: [
-      { type: 'string', name: 'escrowId', indexed: true, internalType: 'string' },
-      { type: 'address', name: 'oracle', indexed: true, internalType: 'address' },
-      { type: 'bool', name: 'voteForRelease', indexed: false, internalType: 'bool' },
+      {
+        type: 'string',
+        name: 'escrowId',
+        indexed: true,
+        internalType: 'string',
+      },
+      {
+        type: 'address',
+        name: 'oracle',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'bool',
+        name: 'voteForRelease',
+        indexed: false,
+        internalType: 'bool',
+      },
     ],
     anonymous: false,
   },
@@ -690,10 +814,30 @@ export const FREELANCER_SBT_ABI: Abi = [
     type: 'event',
     name: 'AchievementUnlocked',
     inputs: [
-      { type: 'uint256', name: 'tokenId', indexed: true, internalType: 'uint256' },
-      { type: 'uint8', name: 'achievement', indexed: false, internalType: 'enum FreelancerSoulBoundToken.Achievement' },
-      { type: 'string', name: 'metadata', indexed: false, internalType: 'string' },
-      { type: 'uint256', name: 'timestamp', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'tokenId',
+        indexed: true,
+        internalType: 'uint256',
+      },
+      {
+        type: 'uint8',
+        name: 'achievement',
+        indexed: false,
+        internalType: 'enum FreelancerSoulBoundToken.Achievement',
+      },
+      {
+        type: 'string',
+        name: 'metadata',
+        indexed: false,
+        internalType: 'string',
+      },
+      {
+        type: 'uint256',
+        name: 'timestamp',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -701,9 +845,24 @@ export const FREELANCER_SBT_ABI: Abi = [
     type: 'event',
     name: 'Approval',
     inputs: [
-      { type: 'address', name: 'owner', indexed: true, internalType: 'address' },
-      { type: 'address', name: 'approved', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'tokenId', indexed: true, internalType: 'uint256' },
+      {
+        type: 'address',
+        name: 'owner',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'address',
+        name: 'approved',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'uint256',
+        name: 'tokenId',
+        indexed: true,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -711,8 +870,18 @@ export const FREELANCER_SBT_ABI: Abi = [
     type: 'event',
     name: 'ApprovalForAll',
     inputs: [
-      { type: 'address', name: 'owner', indexed: true, internalType: 'address' },
-      { type: 'address', name: 'operator', indexed: true, internalType: 'address' },
+      {
+        type: 'address',
+        name: 'owner',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'address',
+        name: 'operator',
+        indexed: true,
+        internalType: 'address',
+      },
       { type: 'bool', name: 'approved', indexed: false, internalType: 'bool' },
     ],
     anonymous: false,
@@ -721,10 +890,30 @@ export const FREELANCER_SBT_ABI: Abi = [
     type: 'event',
     name: 'ProfileDataUpdated',
     inputs: [
-      { type: 'uint256', name: 'tokenId', indexed: true, internalType: 'uint256' },
-      { type: 'string', name: 'fieldName', indexed: false, internalType: 'string' },
-      { type: 'string', name: 'newValue', indexed: false, internalType: 'string' },
-      { type: 'uint256', name: 'timestamp', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'tokenId',
+        indexed: true,
+        internalType: 'uint256',
+      },
+      {
+        type: 'string',
+        name: 'fieldName',
+        indexed: false,
+        internalType: 'string',
+      },
+      {
+        type: 'string',
+        name: 'newValue',
+        indexed: false,
+        internalType: 'string',
+      },
+      {
+        type: 'uint256',
+        name: 'timestamp',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -732,11 +921,36 @@ export const FREELANCER_SBT_ABI: Abi = [
     type: 'event',
     name: 'ReputationUpdated',
     inputs: [
-      { type: 'uint256', name: 'tokenId', indexed: true, internalType: 'uint256' },
-      { type: 'uint256', name: 'totalProjects', indexed: false, internalType: 'uint256' },
-      { type: 'uint256', name: 'averageRating', indexed: false, internalType: 'uint256' },
-      { type: 'uint256', name: 'totalEarnings', indexed: false, internalType: 'uint256' },
-      { type: 'uint256', name: 'timestamp', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'tokenId',
+        indexed: true,
+        internalType: 'uint256',
+      },
+      {
+        type: 'uint256',
+        name: 'totalProjects',
+        indexed: false,
+        internalType: 'uint256',
+      },
+      {
+        type: 'uint256',
+        name: 'averageRating',
+        indexed: false,
+        internalType: 'uint256',
+      },
+      {
+        type: 'uint256',
+        name: 'totalEarnings',
+        indexed: false,
+        internalType: 'uint256',
+      },
+      {
+        type: 'uint256',
+        name: 'timestamp',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -745,8 +959,18 @@ export const FREELANCER_SBT_ABI: Abi = [
     name: 'RoleAdminChanged',
     inputs: [
       { type: 'bytes32', name: 'role', indexed: true, internalType: 'bytes32' },
-      { type: 'bytes32', name: 'previousAdminRole', indexed: true, internalType: 'bytes32' },
-      { type: 'bytes32', name: 'newAdminRole', indexed: true, internalType: 'bytes32' },
+      {
+        type: 'bytes32',
+        name: 'previousAdminRole',
+        indexed: true,
+        internalType: 'bytes32',
+      },
+      {
+        type: 'bytes32',
+        name: 'newAdminRole',
+        indexed: true,
+        internalType: 'bytes32',
+      },
     ],
     anonymous: false,
   },
@@ -755,8 +979,18 @@ export const FREELANCER_SBT_ABI: Abi = [
     name: 'RoleGranted',
     inputs: [
       { type: 'bytes32', name: 'role', indexed: true, internalType: 'bytes32' },
-      { type: 'address', name: 'account', indexed: true, internalType: 'address' },
-      { type: 'address', name: 'sender', indexed: true, internalType: 'address' },
+      {
+        type: 'address',
+        name: 'account',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'address',
+        name: 'sender',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
     anonymous: false,
   },
@@ -765,8 +999,18 @@ export const FREELANCER_SBT_ABI: Abi = [
     name: 'RoleRevoked',
     inputs: [
       { type: 'bytes32', name: 'role', indexed: true, internalType: 'bytes32' },
-      { type: 'address', name: 'account', indexed: true, internalType: 'address' },
-      { type: 'address', name: 'sender', indexed: true, internalType: 'address' },
+      {
+        type: 'address',
+        name: 'account',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'address',
+        name: 'sender',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
     anonymous: false,
   },
@@ -774,11 +1018,26 @@ export const FREELANCER_SBT_ABI: Abi = [
     type: 'event',
     name: 'SkillEndorsed',
     inputs: [
-      { type: 'uint256', name: 'tokenId', indexed: true, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'tokenId',
+        indexed: true,
+        internalType: 'uint256',
+      },
       { type: 'string', name: 'skill', indexed: false, internalType: 'string' },
       { type: 'bool', name: 'verified', indexed: false, internalType: 'bool' },
-      { type: 'address', name: 'endorsedBy', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'timestamp', indexed: false, internalType: 'uint256' },
+      {
+        type: 'address',
+        name: 'endorsedBy',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'uint256',
+        name: 'timestamp',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -786,9 +1045,24 @@ export const FREELANCER_SBT_ABI: Abi = [
     type: 'event',
     name: 'TokenBurned',
     inputs: [
-      { type: 'uint256', name: 'tokenId', indexed: true, internalType: 'uint256' },
-      { type: 'address', name: 'freelancerAddress', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'timestamp', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'tokenId',
+        indexed: true,
+        internalType: 'uint256',
+      },
+      {
+        type: 'address',
+        name: 'freelancerAddress',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'uint256',
+        name: 'timestamp',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -796,10 +1070,30 @@ export const FREELANCER_SBT_ABI: Abi = [
     type: 'event',
     name: 'TokenMinted',
     inputs: [
-      { type: 'uint256', name: 'tokenId', indexed: true, internalType: 'uint256' },
-      { type: 'address', name: 'freelancerAddress', indexed: true, internalType: 'address' },
-      { type: 'string', name: 'freelancerId', indexed: false, internalType: 'string' },
-      { type: 'uint256', name: 'timestamp', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'tokenId',
+        indexed: true,
+        internalType: 'uint256',
+      },
+      {
+        type: 'address',
+        name: 'freelancerAddress',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'string',
+        name: 'freelancerId',
+        indexed: false,
+        internalType: 'string',
+      },
+      {
+        type: 'uint256',
+        name: 'timestamp',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -809,7 +1103,12 @@ export const FREELANCER_SBT_ABI: Abi = [
     inputs: [
       { type: 'address', name: 'from', indexed: true, internalType: 'address' },
       { type: 'address', name: 'to', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'tokenId', indexed: true, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'tokenId',
+        indexed: true,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -1612,9 +1911,24 @@ export const MY_TOKEN_ABI: Abi = [
     type: 'event',
     name: 'Approval',
     inputs: [
-      { type: 'address', name: 'owner', indexed: true, internalType: 'address' },
-      { type: 'address', name: 'spender', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'value', indexed: false, internalType: 'uint256' },
+      {
+        type: 'address',
+        name: 'owner',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'address',
+        name: 'spender',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'uint256',
+        name: 'value',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -1623,8 +1937,18 @@ export const MY_TOKEN_ABI: Abi = [
     name: 'RoleAdminChanged',
     inputs: [
       { type: 'bytes32', name: 'role', indexed: true, internalType: 'bytes32' },
-      { type: 'bytes32', name: 'previousAdminRole', indexed: true, internalType: 'bytes32' },
-      { type: 'bytes32', name: 'newAdminRole', indexed: true, internalType: 'bytes32' },
+      {
+        type: 'bytes32',
+        name: 'previousAdminRole',
+        indexed: true,
+        internalType: 'bytes32',
+      },
+      {
+        type: 'bytes32',
+        name: 'newAdminRole',
+        indexed: true,
+        internalType: 'bytes32',
+      },
     ],
     anonymous: false,
   },
@@ -1633,8 +1957,18 @@ export const MY_TOKEN_ABI: Abi = [
     name: 'RoleGranted',
     inputs: [
       { type: 'bytes32', name: 'role', indexed: true, internalType: 'bytes32' },
-      { type: 'address', name: 'account', indexed: true, internalType: 'address' },
-      { type: 'address', name: 'sender', indexed: true, internalType: 'address' },
+      {
+        type: 'address',
+        name: 'account',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'address',
+        name: 'sender',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
     anonymous: false,
   },
@@ -1643,8 +1977,18 @@ export const MY_TOKEN_ABI: Abi = [
     name: 'RoleRevoked',
     inputs: [
       { type: 'bytes32', name: 'role', indexed: true, internalType: 'bytes32' },
-      { type: 'address', name: 'account', indexed: true, internalType: 'address' },
-      { type: 'address', name: 'sender', indexed: true, internalType: 'address' },
+      {
+        type: 'address',
+        name: 'account',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        type: 'address',
+        name: 'sender',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
     anonymous: false,
   },
@@ -1654,7 +1998,12 @@ export const MY_TOKEN_ABI: Abi = [
     inputs: [
       { type: 'address', name: 'from', indexed: true, internalType: 'address' },
       { type: 'address', name: 'to', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'value', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'value',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -1871,7 +2220,14 @@ export const STAKING_REWARDS_ABI: Abi = [
   {
     type: 'event',
     name: 'RewardNotified',
-    inputs: [{ type: 'uint256', name: 'newRate', indexed: false, internalType: 'uint256' }],
+    inputs: [
+      {
+        type: 'uint256',
+        name: 'newRate',
+        indexed: false,
+        internalType: 'uint256',
+      },
+    ],
     anonymous: false,
   },
   {
@@ -1879,14 +2235,26 @@ export const STAKING_REWARDS_ABI: Abi = [
     name: 'RewardPaid',
     inputs: [
       { type: 'address', name: 'user', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'reward', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'reward',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'RewardsDurationSet',
-    inputs: [{ type: 'uint256', name: 'newDuration', indexed: false, internalType: 'uint256' }],
+    inputs: [
+      {
+        type: 'uint256',
+        name: 'newDuration',
+        indexed: false,
+        internalType: 'uint256',
+      },
+    ],
     anonymous: false,
   },
   {
@@ -1894,7 +2262,12 @@ export const STAKING_REWARDS_ABI: Abi = [
     name: 'Staked',
     inputs: [
       { type: 'address', name: 'user', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'amount', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'amount',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -1903,7 +2276,12 @@ export const STAKING_REWARDS_ABI: Abi = [
     name: 'Withdrawn',
     inputs: [
       { type: 'address', name: 'user', indexed: true, internalType: 'address' },
-      { type: 'uint256', name: 'amount', indexed: false, internalType: 'uint256' },
+      {
+        type: 'uint256',
+        name: 'amount',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
     anonymous: false,
   },
@@ -1924,8 +2302,10 @@ export const FREELANCER_CONTRACT_POLYGON_AMOY =
   '0x1f04977be437ade69ad867ecf8bfc3b3ae7abcc4';
 export const FREELANCER_SBT_POLYGON_AMOY =
   '0xac0484c2361504ae8f71e95a149f7a81cd7bdda5';
-export const NDA_SBT_POLYGON_AMOY = '0xc032155ef5cd589055c4015aeebebf8e188a3981';
-export const MY_TOKEN_POLYGON_AMOY = '0x010f6eab067cbd0d3849db6d2fa86958414e3d3b';
+export const NDA_SBT_POLYGON_AMOY =
+  '0xc032155ef5cd589055c4015aeebebf8e188a3981';
+export const MY_TOKEN_POLYGON_AMOY =
+  '0x010f6eab067cbd0d3849db6d2fa86958414e3d3b';
 export const STAKING_REWARDS_POLYGON_AMOY =
   '0xe36914d8ce3bcfa489fc9ad7e4fea0d43253b19a';
 

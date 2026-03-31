@@ -13,7 +13,6 @@ import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
 import NDADialog from '@/components/dialogs/NDADialog';
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
@@ -224,10 +223,9 @@ function ProjectDetailCard({
                 Milestones
               </Button>
             </Link>
-            {projectStatus !== 'COMPLETED' &&
-              projectStatus !== 'REJECTED' && (
-                <NDADialog projectId={projectId} projectName={projectName} />
-              )}
+            {projectStatus !== 'COMPLETED' && projectStatus !== 'REJECTED' && (
+              <NDADialog projectId={projectId} projectName={projectName} />
+            )}
           </div>
           {/* Conditional button based on project status */}
           {projectStatus === 'PENDING' ? (

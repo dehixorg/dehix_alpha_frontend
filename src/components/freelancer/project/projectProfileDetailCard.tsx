@@ -48,6 +48,7 @@ interface ProjectProfileDetailCardProps {
   endDate?: string;
   className?: string;
   domain_id: string;
+  totalBid?: unknown[];
   // business_id: string;
 }
 
@@ -68,6 +69,7 @@ export function ProjectProfileDetailCard({
   endDate,
   className,
   domain_id,
+  totalBid: _totalBid,
   ...props
 }: CardProps) {
   const user = useSelector((state: RootState) => state.user);

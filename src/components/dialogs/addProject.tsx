@@ -82,14 +82,15 @@ const FALLBACK_GAS = 5000000n; // Safe fallback when estimation fails
 const withGasBuffer = (estimatedGas: bigint) => {
   const bufferedGas = (estimatedGas * GAS_BUFFER_BPS) / 10000n;
   // Cap at Polygon Amoy maximum to prevent 'gas limit too high' errors
-  return bufferedGas > POLYGON_AMOY_MAX_GAS ? POLYGON_AMOY_MAX_GAS : bufferedGas;
+  return bufferedGas > POLYGON_AMOY_MAX_GAS
+    ? POLYGON_AMOY_MAX_GAS
+    : bufferedGas;
 };
 
 // Contract ABIs and addresses imported from centralized config
 const freelancerContractAbi = FREELANCER_CONTRACT_ABI;
 const soulBoundTokenAbi = FREELANCER_SBT_ABI;
-const DEFAULT_FREELANCER_CONTRACT =
-  CONTRACT_ADDRESSES.FREELANCER_CONTRACT;
+const DEFAULT_FREELANCER_CONTRACT = CONTRACT_ADDRESSES.FREELANCER_CONTRACT;
 const DEFAULT_SBT_CONTRACT = CONTRACT_ADDRESSES.SBT_CONTRACT;
 
 // Gas price estimation for Polygon Amoy
@@ -98,8 +99,12 @@ const getGasPriceParams = async (publicClient: any) => {
   try {
     const feeData = await publicClient.estimateFeesPerGas();
     const priority = feeData.maxPriorityFeePerGas || POLYGON_AMOY_MIN_PRIORITY;
-    const safePriority = priority < POLYGON_AMOY_MIN_PRIORITY ? POLYGON_AMOY_MIN_PRIORITY : priority;
-    const baseFee = feeData.maxFeePerGas || (feeData.gasPrice ? feeData.gasPrice * 2n : 0n);
+    const safePriority =
+      priority < POLYGON_AMOY_MIN_PRIORITY
+        ? POLYGON_AMOY_MIN_PRIORITY
+        : priority;
+    const baseFee =
+      feeData.maxFeePerGas || (feeData.gasPrice ? feeData.gasPrice * 2n : 0n);
     // maxFeePerGas must always be >= maxPriorityFeePerGas
     const minMaxFee = safePriority * 2n;
     const safeMaxFee = baseFee > minMaxFee ? baseFee : minMaxFee;
@@ -195,8 +200,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       }
       try {
         setMinting(true);
-        const freelancerContractAddress = CONTRACT_ADDRESSES.FREELANCER_CONTRACT as `0x${string}`;
-        const sbtContractAddress = CONTRACT_ADDRESSES.SBT_CONTRACT as `0x${string}`;
+        const freelancerContractAddress =
+          CONTRACT_ADDRESSES.FREELANCER_CONTRACT as `0x${string}`;
+        const sbtContractAddress =
+          CONTRACT_ADDRESSES.SBT_CONTRACT as `0x${string}`;
 
         if (!publicClient) {
           const errorMsg = 'No public client found for current network';
@@ -338,13 +345,16 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         let tokenId: string | undefined;
         try {
           console.log('Fetching token ID from contract...');
-          const tokenIds = await publicClient.readContract({
+          const tokenIds = (await publicClient.readContract({
             address: sbtContractAddress,
             abi: soulBoundTokenAbi,
             functionName: 'getTokenIdsByFreelancer',
             args: [address],
-          }) as bigint[];
-          tokenId = tokenIds.length > 0 ? tokenIds[tokenIds.length - 1].toString() : undefined;
+          })) as bigint[];
+          tokenId =
+            tokenIds.length > 0
+              ? tokenIds[tokenIds.length - 1].toString()
+              : undefined;
           console.log('Successfully fetched token ID:', tokenId);
         } catch (err: any) {
           console.warn(
@@ -596,14 +606,11 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
           // Try to update backend with transaction hash
           try {
-            await axiosInstance.put(
-              `/freelancer/project/${createdProjectId}`,
-              {
-                transactionHash,
-                tokenId,
-                sbtMinted: true,
-              },
-            );
+            await axiosInstance.put(`/freelancer/project/${createdProjectId}`, {
+              transactionHash,
+              tokenId,
+              sbtMinted: true,
+            });
             console.log('Backend updated with transaction hash successfully');
           } catch (backendUpdateError: any) {
             console.warn(
@@ -896,10 +903,11 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                                           }
                                         >
                                           <Check
-                                            className={`mr-2 h-4 w-4 ${currSkills.includes(skill.label)
-                                              ? 'opacity-100'
-                                              : 'opacity-0'
-                                              }`}
+                                            className={`mr-2 h-4 w-4 ${
+                                              currSkills.includes(skill.label)
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                            }`}
                                           />
                                           {skill.label}
                                         </CommandItem>

@@ -65,7 +65,9 @@ const FALLBACK_GAS = 5000000n; // Safe fallback when estimation fails
 const withGasBuffer = (estimatedGas: bigint) => {
   const bufferedGas = (estimatedGas * GAS_BUFFER_BPS) / 10000n;
   // Cap at Polygon Amoy maximum to prevent 'gas limit too high' errors
-  return bufferedGas > POLYGON_AMOY_MAX_GAS ? POLYGON_AMOY_MAX_GAS : bufferedGas;
+  return bufferedGas > POLYGON_AMOY_MAX_GAS
+    ? POLYGON_AMOY_MAX_GAS
+    : bufferedGas;
 };
 
 // Contract ABIs and addresses imported from centralized config
@@ -78,9 +80,14 @@ const getGasPriceParams = async (publicClient: any) => {
   try {
     const feeData = await publicClient.estimateFeesPerGas();
     const priority = feeData.maxPriorityFeePerGas || POLYGON_AMOY_MIN_PRIORITY;
-    const safePriority = priority < POLYGON_AMOY_MIN_PRIORITY ? POLYGON_AMOY_MIN_PRIORITY : priority;
-    const baseFee = feeData.maxFeePerGas || feeData.gasPrice * 2n || 100000000000n;
-    const safeMaxFee = baseFee < safePriority * 2n ? safePriority * 2n : baseFee;
+    const safePriority =
+      priority < POLYGON_AMOY_MIN_PRIORITY
+        ? POLYGON_AMOY_MIN_PRIORITY
+        : priority;
+    const baseFee =
+      feeData.maxFeePerGas || feeData.gasPrice * 2n || 100000000000n;
+    const safeMaxFee =
+      baseFee < safePriority * 2n ? safePriority * 2n : baseFee;
     return { maxFeePerGas: safeMaxFee, maxPriorityFeePerGas: safePriority };
   } catch {
     return {
@@ -89,8 +96,6 @@ const getGasPriceParams = async (publicClient: any) => {
     };
   }
 };
-
-
 
 const FormSchema = z
   .object({
@@ -169,8 +174,10 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
       }
       try {
         setMinting(true);
-        const freelancerContractAddress = CONTRACT_ADDRESSES.FREELANCER_CONTRACT as `0x${string}`;
-        const sbtContractAddress = CONTRACT_ADDRESSES.SBT_CONTRACT as `0x${string}`;
+        const freelancerContractAddress =
+          CONTRACT_ADDRESSES.FREELANCER_CONTRACT as `0x${string}`;
+        const sbtContractAddress =
+          CONTRACT_ADDRESSES.SBT_CONTRACT as `0x${string}`;
 
         if (!publicClient) {
           const errorMsg = 'No public client found for current network';
@@ -202,14 +209,20 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
             args: [address],
           });
           if (balance && BigInt(balance as bigint) > 0n) {
-            const tokenIds = await publicClient.readContract({
+            const tokenIds = (await publicClient.readContract({
               address: sbtContractAddress,
               abi: soulBoundTokenAbi,
               functionName: 'getTokenIdsByFreelancer',
               args: [address],
-            }) as bigint[];
-            existingTokenId = tokenIds.length > 0 ? tokenIds[tokenIds.length - 1].toString() : undefined;
-            console.log('Existing SBTs for this address. Latest Token ID:', existingTokenId);
+            })) as bigint[];
+            existingTokenId =
+              tokenIds.length > 0
+                ? tokenIds[tokenIds.length - 1].toString()
+                : undefined;
+            console.log(
+              'Existing SBTs for this address. Latest Token ID:',
+              existingTokenId,
+            );
           }
         } catch (err) {
           console.log('No existing SBT found, proceeding with minting...');
@@ -335,13 +348,16 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         let tokenId: string | undefined;
         try {
           console.log('Fetching token ID from contract...');
-          const tokenIds = await publicClient.readContract({
+          const tokenIds = (await publicClient.readContract({
             address: sbtContractAddress,
             abi: soulBoundTokenAbi,
             functionName: 'getTokenIdsByFreelancer',
             args: [address],
-          }) as bigint[];
-          tokenId = tokenIds.length > 0 ? tokenIds[tokenIds.length - 1].toString() : undefined;
+          })) as bigint[];
+          tokenId =
+            tokenIds.length > 0
+              ? tokenIds[tokenIds.length - 1].toString()
+              : undefined;
           console.log('Successfully fetched token ID:', tokenId);
         } catch (err: any) {
           console.warn(

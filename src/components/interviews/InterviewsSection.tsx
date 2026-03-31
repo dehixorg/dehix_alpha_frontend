@@ -55,18 +55,27 @@ export function InterviewsSection() {
     try {
       setLoading(true);
       setError(null);
-      const response = await axiosInstance.get('/meeting', {
-        params: {
-          status: 'upcoming',
-          limit,
-          offset,
-        },
-      });
+      const response = await axiosInstance.get(
+        '/meeting',
+        {
+          noRetry: true,
+          params: {
+            status: 'upcoming',
+            limit,
+            offset,
+          },
+        } as any,
+      );
 
       setUpcomingMeetings(response.data?.data || []);
     } catch (err: any) {
-      console.error('Failed to fetch upcoming meetings:', err);
-      setError(err.response?.data?.message || 'Failed to load meetings');
+      const message =
+        err?.response?.data?.message ||
+        (err?.response?.status === 500
+          ? 'Meetings are temporarily unavailable.'
+          : 'Failed to load meetings');
+      setError(message);
+      setUpcomingMeetings([]);
     } finally {
       setLoading(false);
     }
