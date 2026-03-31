@@ -259,9 +259,11 @@ export default function HistoryInterviews({
 
     const direction = tableSort === 'dateAsc' ? 1 : -1;
 
-    const rows = sections.flatMap((s) =>
-      normalizeList(grouped[s.key]).map((item) => ({ item, section: s })),
-    );
+    const rows = sections
+      .filter((s) => !(s as any).disabled)
+      .flatMap((s) =>
+        normalizeList(grouped[s.key]).map((item) => ({ item, section: s })),
+      );
 
     return rows
       .slice()
@@ -382,7 +384,9 @@ export default function HistoryInterviews({
                     </span>
                   </td>
                   <td className="px-4 py-3 min-w-[220px]">
-                    {`${rowTalentTypeLabel}${rowTalentName ? ` - ${rowTalentName}` : ''}`}
+                    {hideIds
+                      ? `${rowTalentTypeLabel}${rowTalentName ? ` - ${rowTalentName}` : ''}`
+                      : `${rowTalentTypeLabel}${rowTalentName ? ` - ${rowTalentName}` : ` - ${item?.talentId || '-'}`}`}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">{dateLabel}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -481,8 +485,10 @@ export default function HistoryInterviews({
 
         {!enableViewToggle || view === 'cards' ? (
           <Accordion type="single" collapsible defaultValue={sections[0].key}>
-            {sections.map((section, idx) => {
-              const items = normalizeList(grouped[section.key]);
+            {sections
+              .filter((s) => !(s as any).disabled)
+              .map((section, idx) => {
+                const items = normalizeList(grouped[section.key]);
               const Icon = section.icon;
 
               return (

@@ -423,7 +423,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
                               >
                                 <TableCell className="font-medium">
                                   {bid.interviewer
-                                    ? `${bid.interviewer.firstName || ''} ${bid.interviewer.lastName || ''}`.trim() || bid.interviewer.userName || bid.interviewerId || '-'
+                                    ? `${bid.interviewer.firstName || ''} ${bid.interviewer.lastName || ''}`.trim() || bid.interviewer.userName || bid.interviewer._id || bid.interviewerId || '-'
                                     : bid.interviewerId || '-'}
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap">
