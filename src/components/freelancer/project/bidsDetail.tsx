@@ -50,6 +50,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { MeetingDialog } from '@/components/ui/meetingDialog';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -1633,24 +1634,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         bidData={selectedBidData}
       />
 
-      <Dialog
-        open={isInterviewDialogOpen}
-        onOpenChange={setIsInterviewDialogOpen}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl font-semibold">
-              Work in Progress
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="text-6xl mb-4">🚧</div>
-            <p className="text-gray-600 dark:text-gray-400 text-center">
-              Interview functionality is currently under development.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <MeetingDialog
+        isOpen={isInterviewDialogOpen}
+        onClose={() => setIsInterviewDialogOpen(false)}
+      />
     </>
   );
 };

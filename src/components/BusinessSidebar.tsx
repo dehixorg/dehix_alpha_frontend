@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, ListVideo } from 'lucide-react';
+import Link from 'next/link';
 
 import { Button } from './ui/button';
 
@@ -31,14 +32,19 @@ export function BusinessSidebar() {
                 Business Page
               </h4>
               <div className="p-4">
-                <div className="text-lg font-semibold mb-6 hover:bg-slate-500 cursor-pointer rounded-lg">
-                  Profile
-                </div>
-                <Separator className="-mt-2 mb-4" />
-                <div className="text-lg font-semibold mb-6 hover:bg-slate-500 cursor-pointer rounded-lg">
-                  Projects
-                </div>
+              <div className="text-lg font-semibold mb-6 hover:bg-slate-500 cursor-pointer rounded-lg">
+                <Link href="/business/profile">Profile</Link>
               </div>
+              <Separator className="-mt-2 mb-4" />
+              <div className="text-lg font-semibold mb-6 hover:bg-slate-500 cursor-pointer rounded-lg">
+                <Link href="/business/projects">Projects</Link>
+              </div>
+              <Separator className="-mt-2 mb-4" />
+              <div className="flex items-center gap-2 text-lg font-semibold mb-6 hover:bg-slate-500 cursor-pointer rounded-lg p-2">
+                <ListVideo className="h-5 w-5" />
+                <Link href="/business/interviews">Interviews</Link>
+              </div>
+            </div>
             </div>
             <div className="m-10 mt-3">
               <div className="flex flex-1 items-center gap-2">

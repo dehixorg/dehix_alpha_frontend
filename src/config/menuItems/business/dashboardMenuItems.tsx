@@ -6,6 +6,7 @@ import {
   Settings,
   ShoppingCart,
   StickyNote,
+  TabletSmartphone,
   Trash2,
   Users2,
   SendHorizontal,
@@ -52,6 +53,12 @@ export const menuItemsTop: MenuItem[] = [
     icon: <SendHorizontal className="h-5 w-5" />,
     label: 'Project Invitations',
     tourId: 'nav-invitations',
+  },
+  {
+    href: '/business/interviews',
+    icon: <TabletSmartphone className="h-5 w-5" />,
+    label: 'Interviews',
+    tourId: 'nav-interviews',
   },
   {
     href: '/business/talent',
