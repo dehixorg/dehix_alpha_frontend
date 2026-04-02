@@ -19,8 +19,15 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
-import SelectTagPicker from '@/components/shared/SelectTagPicker'; // Import your picker
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 
@@ -52,7 +59,7 @@ const domainSchema = z.object({
   experience: z
     .string()
     .nonempty('Please enter your experience')
-    .regex(/^\d+$/, 'Experience must be a number')
+    .regex(/^\d+(\.\d+)?$/, 'Experience must be a number')
     .refine(
       (val) => parseInt(val) <= 40,
       'Maximum 40 years of experience allowed',
@@ -169,26 +176,32 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-3">
+            <Label className="mb-1 block text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Domain
+            </Label>
             <Controller
               control={control}
               name="label"
               render={({ field }) => (
-                <SelectTagPicker
-                  label="Domain"
-                  options={domains}
-                  selected={field.value ? [{ name: field.value }] : []} // Convert to expected format
-                  onAdd={(val) => {
-                    field.onChange(val); // Update label
+                <Select
+                  value={field.value}
+                  onValueChange={(val) => {
+                    field.onChange(val);
                     const selectedDomain = domains.find((d) => d.label === val);
                     setValue('domainId', selectedDomain?._id || '');
                   }}
-                  onRemove={() => {
-                    field.onChange('');
-                    setValue('domainId', '');
-                  }}
-                  selectPlaceholder="Select domain"
-                  searchPlaceholder="Search domain"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select domain" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {domains.map((domain) => (
+                      <SelectItem key={domain._id} value={domain.label}>
+                        {domain.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             />
             {errors.label && (

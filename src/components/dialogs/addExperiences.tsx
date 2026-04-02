@@ -166,18 +166,64 @@ const validateWorkDates = (
 
 const experienceFormSchema = z
   .object({
-    company: z.string().min(1, { message: 'Company name is required.' }),
-    jobTitle: z.string().min(1, { message: 'Job Title is required.' }),
+    company: z
+      .string()
+      .min(1, { message: 'Company name is required.' })
+      .min(2, { message: 'Company name must be at least 2 characters.' })
+      .max(100, { message: 'Company name cannot exceed 100 characters.' })
+      .regex(/^[a-zA-Z0-9\s&.,'-]+$/, {
+        message: 'Company name contains invalid characters.',
+      }),
+    jobTitle: z
+      .string()
+      .min(1, { message: 'Job Title is required.' })
+      .min(2, { message: 'Job title must be at least 2 characters.' })
+      .max(100, { message: 'Job title cannot exceed 100 characters.' })
+      .regex(/^[a-zA-Z0-9\s&.,/'-]+$/, {
+        message: 'Job title contains invalid characters.',
+      }),
     workDescription: z
       .string()
-      .min(1, { message: 'Work Description is required.' }),
+      .min(1, { message: 'Work Description is required.' })
+      .min(50, {
+        message: 'Work description must be at least 50 characters.',
+      })
+      .max(2000, {
+        message: 'Work description cannot exceed 2000 characters.',
+      }),
     workFrom: z
       .string()
       .min(1, { message: 'Work from is required.' })
-      .datetime({ message: 'Invalid Work From date.' }),
+      .datetime({ message: 'Invalid Work From date.' })
+      .refine(
+        (date) => {
+          const workFromDate = new Date(date);
+          const today = new Date();
+          // Allow up to today (inclusive)
+          today.setHours(23, 59, 59, 999);
+          return workFromDate <= today;
+        },
+        {
+          message: 'Work From date cannot be in the future.',
+        },
+      ),
     workTo: z
       .union([
-        z.string().trim().datetime({ message: 'Invalid Work To date.' }),
+        z
+          .string()
+          .trim()
+          .datetime({ message: 'Invalid Work To date.' })
+          .refine(
+            (date) => {
+              const workToDate = new Date(date);
+              const today = new Date();
+              today.setHours(23, 59, 59, 999);
+              return workToDate <= today;
+            },
+            {
+              message: 'Work To date cannot be in the future.',
+            },
+          ),
         z.literal(''),
       ])
       .transform((val) => (val === '' ? undefined : val))
@@ -185,7 +231,13 @@ const experienceFormSchema = z
     ongoing: z.boolean().optional(),
     referencePersonName: z
       .string()
-      .min(1, { message: 'Reference Person Name is required.' }),
+      .min(1, { message: 'Reference Person Name is required.' })
+      .min(2, { message: 'Name must be at least 2 characters.' })
+      .max(100, { message: 'Name cannot exceed 100 characters.' })
+      .regex(/^[a-zA-Z\s.'-]+$/, {
+        message:
+          'Name can only contain letters, spaces, and basic punctuation.',
+      }),
     referenceContactType: z.enum(['phone', 'email']).optional(),
     referencePersonContact: z
       .string()
@@ -200,7 +252,10 @@ const experienceFormSchema = z
         message:
           'Please enter a valid GitHub repository URL (e.g. https://github.com/owner/repo).',
       }),
-    comments: z.string().optional(),
+    comments: z
+      .string()
+      .max(500, { message: 'Comments cannot exceed 500 characters.' })
+      .optional(),
   })
   .superRefine((data, ctx) => {
     validateWorkDates(data, ctx);
@@ -512,29 +567,18 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   const referenceContactType = form.watch('referenceContactType');
 
   // Validate Step 1 fields before proceeding to Step 2
-  const validateStep1 = async () => {
-    const valid = await form.trigger([
-      'company',
-      'jobTitle',
-      'workDescription',
-      'workFrom',
-      'workTo',
-    ]);
-
-    if (!valid) {
-      notifyError(
-        'Please fix the highlighted errors in Step 1.',
-        'Validation error',
-      );
-      return false;
-    }
-
-    return true;
-  };
-
   const nextStep = async () => {
     if (step === 1) {
-      if (await validateStep1()) {
+      // Trigger validation for step 1 fields to show inline errors
+      const valid = await form.trigger([
+        'company',
+        'jobTitle',
+        'workDescription',
+        'workFrom',
+        'workTo',
+      ]);
+
+      if (valid) {
         setStep(2);
       }
     }

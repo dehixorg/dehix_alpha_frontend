@@ -53,9 +53,13 @@ export default function HistoryInterviews({
 }: HistoryInterviewsProps) {
   const user = useSelector((state: RootState) => state.user);
 
-  const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>('All');
+  const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
+    'All',
+  );
   const [view, setView] = useState<'cards' | 'table'>('cards');
-  const [tableSort, setTableSort] = useState<'dateAsc' | 'dateDesc'>('dateDesc');
+  const [tableSort, setTableSort] = useState<'dateAsc' | 'dateDesc'>(
+    'dateDesc',
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -110,7 +114,10 @@ export default function HistoryInterviews({
         const data: GroupedInterviews = response?.data?.data || {};
         setGrouped(data);
       } catch (err: any) {
-        if (err.response?.status === 404 || err.response?.data?.code === 'NOT_FOUND') {
+        if (
+          err.response?.status === 404 ||
+          err.response?.data?.code === 'NOT_FOUND'
+        ) {
           setGrouped({});
         } else {
           notifyError('Something went wrong. Please try again.', 'Error');
@@ -204,26 +211,41 @@ export default function HistoryInterviews({
   ] as const;
 
   const renderInterviewCard = (item: InterviewItem) => {
-    return (
-      <InterviewItemCard key={item._id} item={item} hideIds={hideIds} />
-    );
+    return <InterviewItemCard key={item._id} item={item} hideIds={hideIds} />;
   };
 
   const getStatusBadge = (statusRaw: string) => {
-    const status = String(statusRaw || '').toUpperCase().trim();
+    const status = String(statusRaw || '')
+      .toUpperCase()
+      .trim();
     const base =
       'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
     if (status === 'APPROVED')
-      return { label: status, className: `${base} bg-emerald-500/10 text-emerald-600` };
+      return {
+        label: status,
+        className: `${base} bg-emerald-500/10 text-emerald-600`,
+      };
     if (status === 'APPLIED')
-      return { label: status, className: `${base} bg-amber-500/10 text-amber-700` };
+      return {
+        label: status,
+        className: `${base} bg-amber-500/10 text-amber-700`,
+      };
     if (status === 'PENDING')
-      return { label: status, className: `${base} bg-slate-500/10 text-slate-700` };
+      return {
+        label: status,
+        className: `${base} bg-slate-500/10 text-slate-700`,
+      };
     if (status === 'REJECTED' || status === 'CANCELLED')
       return { label: status, className: `${base} bg-red-500/10 text-red-600` };
     if (status === 'COMPLETED')
-      return { label: status, className: `${base} bg-blue-500/10 text-blue-600` };
-    return { label: status || '-', className: `${base} bg-muted text-muted-foreground` };
+      return {
+        label: status,
+        className: `${base} bg-blue-500/10 text-blue-600`,
+      };
+    return {
+      label: status || '-',
+      className: `${base} bg-muted text-muted-foreground`,
+    };
   };
 
   const getTypeBadgeClassName = (iconClassName: string) => {
@@ -358,7 +380,9 @@ export default function HistoryInterviews({
               return (
                 <tr key={item._id} className="border-t">
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={getTypeBadgeClassName(section.iconClassName)}>
+                    <span
+                      className={getTypeBadgeClassName(section.iconClassName)}
+                    >
                       {section.title}
                     </span>
                   </td>
@@ -369,7 +393,9 @@ export default function HistoryInterviews({
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">{dateLabel}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={statusBadge.className}>{statusBadge.label}</span>
+                    <span className={statusBadge.className}>
+                      {statusBadge.label}
+                    </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {meetingLink ? (
@@ -435,7 +461,6 @@ export default function HistoryInterviews({
           <div className="flex items-center gap-2">
             {enableViewToggle ? (
               <>
-                
                 <Button
                   onClick={() => setView('table')}
                   variant={view === 'table' ? 'default' : 'outline'}
@@ -474,26 +499,26 @@ export default function HistoryInterviews({
                   className={`border rounded-lg${idx === 0 ? '' : ' mt-4'}`}
                 >
                   <AccordionTrigger className="group rounded-lg px-4 py-3 transition-colors hover:bg-muted/50 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                                      <div className="flex w-full items-start justify-between gap-4">
-                                        <div className="flex items-start gap-3">
-                                          <div
-                                            className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ring-1 ring-inset ring-black/5 transition-colors dark:ring-white/10 ${section.iconClassName}`}
-                                          >
-                                            <Icon className="h-5 w-5" />
-                                          </div>
-                                          <div className="min-w-0 text-left leading-tight">
-                                            <div className="text-sm font-semibold tracking-tight">
-                                              {section.title}
-                                            </div>
-                                            <div className="mt-0.5 text-xs text-muted-foreground">
-                                              {section.description}
-                                            </div>
-                                          </div>
-                                        </div>
-                  
-                                        <div className="shrink-0 my-auto mr-2 rounded-md border bg-background px-2.5 py-1 text-xs font-medium tabular-nums text-foreground/70 shadow-sm">
-                                          {items.length}
-                                        </div>
+                    <div className="flex w-full items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ring-1 ring-inset ring-black/5 transition-colors dark:ring-white/10 ${section.iconClassName}`}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 text-left leading-tight">
+                          <div className="text-sm font-semibold tracking-tight">
+                            {section.title}
+                          </div>
+                          <div className="mt-0.5 text-xs text-muted-foreground">
+                            {section.description}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 my-auto mr-2 rounded-md border bg-background px-2.5 py-1 text-xs font-medium tabular-nums text-foreground/70 shadow-sm">
+                        {items.length}
+                      </div>
                     </div>
                   </AccordionTrigger>
 

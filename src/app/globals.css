@@ -1,3 +1,5 @@
+@import "shepherd.js/dist/css/shepherd.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -219,3 +221,209 @@
 .bg-gradient {
   @apply bg-gradient-to-bl from-background/0 via-primary/5 to-primary/20;
 }
+
+.shepherd-theme-custom .shepherd-content {
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+}
+
+.dark .shepherd-theme-custom .shepherd-content {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55),
+  0 0 0 2px hsl(var(--primary) / 0.35);
+}
+
+.dark .shepherd-theme-custom .shepherd-header {
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.dark .shepherd-theme-custom .shepherd-arrow::before {
+  background: hsl(var(--background));
+}
+
+.dark .shepherd-theme-custom .shepherd-title {
+  color: hsl(var(--foreground));
+}
+
+.shepherd-theme-custom .shepherd-header {
+  background: hsl(var(--popover));
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 12px 14px;
+}
+
+.shepherd-theme-custom .shepherd-button {
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  transition: background 150ms ease, transform 120ms ease;
+}
+
+.shepherd-theme-custom .shepherd-button:hover {
+  background: hsl(var(--accent));
+}
+
+.shepherd-theme-custom .shepherd-button:last-child {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+  box-shadow: 0 6px 18px hsl(var(--primary) / 0.35);
+}
+
+.shepherd-theme-custom .shepherd-cancel-icon {
+  color: hsl(var(--muted-foreground));
+  transition: color 150ms ease;
+}
+
+.shepherd-theme-custom .shepherd-cancel-icon:hover {
+  color: hsl(var(--destructive));
+}
+
+.dark .shepherd-theme-custom .shepherd-cancel-icon {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .shepherd-theme-custom .shepherd-cancel-icon:hover {
+  color: hsl(var(--destructive));
+}
+
+.shepherd-modal-overlay-container.shepherd-modal-is-visible {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.dark .shepherd-modal-overlay-container.shepherd-modal-is-visible {
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(1px);
+}
+
+.shepherd-enabled.shepherd-target {
+  box-shadow:
+    0 0 0 3px hsl(var(--primary) / 0.28),
+    0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.shepherd-theme-custom.shepherd-element {
+  background: transparent !important;
+  border-radius: 10px;
+}
+
+.shepherd-theme-custom .shepherd-arrow {
+  width: 12px;
+  height: 12px;
+  z-index: 10;
+}
+
+.shepherd-theme-custom .shepherd-arrow::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: hsl(var(--popover));
+  transform: rotate(45deg);
+}
+
+.shepherd-theme-custom[data-popper-placement^='top'] .shepherd-arrow {
+  bottom: -4px;
+}
+
+.shepherd-theme-custom[data-popper-placement^='bottom'] .shepherd-arrow {
+  top: -4px;
+}
+
+.shepherd-theme-custom[data-popper-placement^='left'] .shepherd-arrow {
+  right: -4px;
+}
+
+.shepherd-theme-custom[data-popper-placement^='right'] .shepherd-arrow {
+  left: -4px;
+}
+
+.shepherd-theme-custom .shepherd-arrow {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.18));
+}
+
+.dark .shepherd-theme-custom .shepherd-arrow {
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+}
+
+.dark .shepherd-theme-custom.shepherd-element
+  .shepherd-arrow::before {
+  background-color: hsl(var(--background)) !important;
+  box-shadow: 
+    0 0 0 1px hsl(var(--border)) inset;
+}
+
+.shepherd-theme-custom .shepherd-title {
+  color: hsl(var(--foreground));
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.shepherd-theme-custom .shepherd-step-indicator {
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 6px;
+}
+
+.shepherd-theme-custom .shepherd-text {
+  padding: 12px 18px 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: hsl(var(--foreground));
+}
+
+.shepherd-enabled.shepherd-target {
+  outline: 3px solid hsl(var(--primary) / 0.55);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+.shepherd-theme-custom .shepherd-text .shepherd-step-indicator {
+  display: none;
+}
+
+.shepherd-theme-custom .shepherd-footer {
+  position: relative;
+  padding: 14px 18px 16px;
+  padding-left: 120px; 
+  background: hsl(var(--popover));
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  align-items: center;
+}
+
+.shepherd-theme-custom .shepherd-footer::before {
+  content: attr(data-step);
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  letter-spacing: 0.02em;
+}
+
+.shepherd-progress {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5563;
+
+  line-height: 1;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+

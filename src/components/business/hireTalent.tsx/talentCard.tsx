@@ -72,23 +72,6 @@ interface ProfessionalInfo {
   verificationStatus?: string;
 }
 
-interface Education {
-  _id: string;
-  degree: string;
-  universityName: string;
-  fieldOfStudy: string;
-  startDate: string;
-  endDate: string;
-  grade: string;
-}
-interface Projects {
-  _id: string;
-  projectName: string;
-  githubLink: string;
-  techUsed: string[];
-  role: string;
-}
-
 interface DehixTalent {
   freelancer_id: any;
   type: string;
@@ -166,6 +149,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
+  const scrollContainerRef = useRef<any>(null);
+  const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(
+    null,
+  );
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>(
     skillDomainDataProp || [],
   );
@@ -185,6 +172,31 @@ const TalentCard: React.FC<TalentCardProps> = ({
     }
   }, [skillDomainDataProp]);
 
+  // Find the scrollable parent container
+  useEffect(() => {
+    const findScrollableParent = () => {
+      const element = document.querySelector(
+        '[data-tour="business-talent-list"]',
+      ) as HTMLElement;
+      if (element) {
+        scrollContainerRef.current = element;
+        setScrollContainer(element);
+      }
+    };
+
+    // Find immediately
+    findScrollableParent();
+
+    // Also try after a short delay
+    const timer1 = setTimeout(findScrollableParent, 100);
+    const timer2 = setTimeout(findScrollableParent, 500);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
+
   // Backward compatible: if parent does not provide hire list, fetch it once here.
   useEffect(() => {
     if (Array.isArray(skillDomainDataProp)) return;
@@ -201,21 +213,31 @@ const TalentCard: React.FC<TalentCardProps> = ({
         const res = await axiosInstance.get('/business/hire-dehixtalent');
         const hireTalentData = res?.data?.data || [];
 
-        const filterSkills: SkillOption[] = (hireTalentData || [])
+        // Deduplicate skills by label using Map for O(n) performance
+        const skillsMap = new Map<string, SkillOption>();
+        (hireTalentData || [])
           .filter((item: any) => item?.type === 'SKILL' && item?.visible)
-          .map((item: any) => ({
-            _id: item?.talentId || item?._id,
-            label: item?.talentName || '',
-          }))
-          .filter((s: any) => Boolean(s?._id) && Boolean(s?.label));
+          .forEach((item: any) => {
+            const label = item?.talentName || '';
+            const _id = item?.talentId || item?._id;
+            if (label && _id && !skillsMap.has(label)) {
+              skillsMap.set(label, { _id, label });
+            }
+          });
+        const filterSkills: SkillOption[] = Array.from(skillsMap.values());
 
-        const filterDomains: DomainOption[] = (hireTalentData || [])
+        // Deduplicate domains by label using Map for O(n) performance
+        const domainsMap = new Map<string, DomainOption>();
+        (hireTalentData || [])
           .filter((item: any) => item?.type === 'DOMAIN' && item?.visible)
-          .map((item: any) => ({
-            _id: item?.talentId || item?._id,
-            label: item?.talentName || '',
-          }))
-          .filter((d: any) => Boolean(d?._id) && Boolean(d?.label));
+          .forEach((item: any) => {
+            const label = item?.talentName || '';
+            const _id = item?.talentId || item?._id;
+            if (label && _id && !domainsMap.has(label)) {
+              domainsMap.set(label, { _id, label });
+            }
+          });
+        const filterDomains: DomainOption[] = Array.from(domainsMap.values());
 
         const formatted: SkillDomainData[] = (hireTalentData || [])
           .map((item: any) => ({
@@ -240,6 +262,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setFilterDomain?.(filterDomains);
       } catch (e) {
         // keep UI usable even if this fails
+        console.error('TalentCard: failed to fetch talent data', e);
       }
     };
 
@@ -355,10 +378,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
   }, [fetchTalentData]);
 
   // This useEffect now triggers a new API call when filters change.
+
   useEffect(() => {
     resetAndFetchData();
-  }, [talentFilter, skillFilter, domainFilter]); // Trigger reset when filters change
-
+  }, [resetAndFetchData]);
   const handleAddToLobby = async (freelancerId: string): Promise<boolean> => {
     const businessId = user?.uid;
     const hires = (currSkills || [])
@@ -395,13 +418,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
       if (response.status === 200) {
         notifySuccess('Invitation sent successfully', 'Success');
 
-        // Sync connects balance after invitation
-        try {
-          await fetchAndUpdateConnects(businessId, 'business');
-        } catch (error) {
+        // Sync connects balance after invitation (fire-and-forget)
+        fetchAndUpdateConnects('business').catch((error) => {
           console.warn('Failed to sync connects after invitation:', error);
-          // Don't block success flow if sync fails
-        }
+        });
 
         setCurrSkills([]);
         setInvitedTalents((prev) => {
@@ -1052,34 +1072,37 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   </Button>
                 </div>
               </CardFooter>
-              {selectedTalent && (
-                <AddToLobbyDialog
-                  skillDomainData={skillDomainData}
-                  currSkills={currSkills}
-                  handleAddSkill={handleAddSkill}
-                  handleDeleteSkill={handleDeleteSkill}
-                  handleAddToLobby={handleAddToLobby}
-                  talent={selectedTalent}
-                  setTmpSkill={setTmpSkill}
-                  open={isDialogOpen}
-                  setOpen={(v: boolean) => {
-                    setIsDialogOpen(v);
-                    if (v) setOpenSheetId(null);
-                  }}
-                  isLoading={isLoading}
-                  setLoading={setIsLoading}
-                />
-              )}
               <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/20 dark:group-hover:border-primary/30 rounded-xl pointer-events-none transition-all duration-300"></div>
             </Card>
           );
         })}
+
+        {selectedTalent && (
+          <AddToLobbyDialog
+            skillDomainData={skillDomainData}
+            currSkills={currSkills}
+            handleAddSkill={handleAddSkill}
+            handleDeleteSkill={handleDeleteSkill}
+            handleAddToLobby={handleAddToLobby}
+            talent={selectedTalent}
+            setTmpSkill={setTmpSkill}
+            open={isDialogOpen}
+            setOpen={(v: boolean) => {
+              setIsDialogOpen(v);
+              if (v) setOpenSheetId(null);
+            }}
+            isLoading={isLoading}
+            setLoading={setIsLoading}
+          />
+        )}
         {/* ... (InfiniteScroll and loading skeleton) */}
         <InfiniteScroll
           hasMore={hasMore}
           isLoading={loading}
           next={fetchTalentData}
-          threshold={1}
+          threshold={0.1}
+          root={scrollContainer}
+          rootMargin="200px"
         >
           {loading && (
             <div className="flex flex-wrap justify-center gap-4 w-full mt-4">

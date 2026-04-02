@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
-import { ScrollArea } from '../ui/scroll-area';
+import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Separator } from '../ui/separator';
 import SelectTagPicker from '../shared/SelectTagPicker';
@@ -117,8 +117,8 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
       setLoadingData(true);
       try {
         const [domainsResponse, skillsResponse] = await Promise.all([
-          axiosInstance.get('/domain'),
-          axiosInstance.get('/skills'),
+          axiosInstance.get('/domain/all'),
+          axiosInstance.get('/skills/all'),
         ]);
 
         const domainsData = domainsResponse.data.data || [];
@@ -245,13 +245,13 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] p-0 flex flex-col">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex h-full max-h-[90vh] flex-col"
+            className="flex flex-1 flex-col overflow-hidden"
           >
-            <div className="sticky top-0 border-b bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:p-5">
+            <div className="flex-shrink-0 border-b bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:p-5">
               <DialogHeader className="space-y-1">
                 <DialogTitle className="text-base sm:text-lg font-semibold">
                   Add New Profile
@@ -277,8 +277,8 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
               </div>
             </div>
 
-            <ScrollArea className="flex-1">
-              <div className="grid gap-6 p-4 sm:p-5 md:grid-cols-[1fr_240px]">
+            <ScrollArea className="flex-1 overflow-auto">
+              <div className="grid gap-6 p-4 sm:p-5 md:grid-cols-[1fr_240px] pb-2 pr-4">
                 <div className="space-y-5">
                   <FormField
                     control={form.control}
@@ -469,9 +469,10 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
                   </Card>
                 </div>
               </div>
+              <ScrollBar orientation="vertical" />
             </ScrollArea>
 
-            <div className="sticky bottom-0 border-t bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:p-5">
+            <div className="flex-shrink-0 border-t bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:p-5">
               <div className="flex items-center justify-end gap-2">
                 <Button
                   type="button"

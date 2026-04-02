@@ -16,6 +16,7 @@ import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 import VerifyDialog from './verifyDialog';
 
+import MeetingDialog from '@/components/ui/meetingDialog';
 import {
   Card,
   CardContent,
@@ -84,6 +85,7 @@ const SkillDomainForm: React.FC = () => {
   const [visibility, setVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
+  const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -178,6 +180,7 @@ const SkillDomainForm: React.FC = () => {
       <Button
         size="sm"
         className="bg-white text-black hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-gray-300"
+        data-tour="skill"
       >
         <Award className="h-4 w-4 mr-1" />
         Add Skill
@@ -187,7 +190,7 @@ const SkillDomainForm: React.FC = () => {
 
   const AddDomainBtn = () => (
     <DomainDialog domains={domains} onSuccess={triggerRefresh}>
-      <Button size="sm" variant="outline">
+      <Button size="sm" variant="outline" data-tour="domain">
         <Briefcase className="h-4 w-4 mr-1" />
         Add Domain
       </Button>
@@ -563,6 +566,7 @@ const SkillDomainForm: React.FC = () => {
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`Schedule interview for ${r.label}`}
+                                  onClick={() => setMeetingDialogOpen(true)}
                                 >
                                   <VideoIcon className="h-4 w-4" />
                                 </Button>
@@ -700,6 +704,10 @@ const SkillDomainForm: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      <MeetingDialog
+        isOpen={meetingDialogOpen}
+        onClose={() => setMeetingDialogOpen(false)}
+      />
     </section>
   );
 };

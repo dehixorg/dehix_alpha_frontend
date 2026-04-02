@@ -9,6 +9,7 @@ import ProjectVerification from '@/components/freelancer/oracleDashboard/Project
 import WorkExpVerification from '@/components/freelancer/oracleDashboard/WorkExpVerification';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
+import { useOracleTour } from '@/components/tour/freelancer/useOracleTour';
 
 export default function OracleDashboardPage() {
   const router = useRouter();
@@ -28,6 +29,8 @@ export default function OracleDashboardPage() {
   const handleTabChange = (tab: string) => {
     router.push(`/freelancer/oracleDashboard/${tab}`);
   };
+
+  useOracleTour(true);
 
   return (
     <FreelancerAppLayout
@@ -49,26 +52,41 @@ export default function OracleDashboardPage() {
           onValueChange={handleTabChange}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="business" className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
+          <TabsList
+            className="grid w-full grid-cols-4 gap-2"
+            data-tour="oracle-tabs"
+          >
+            <TabsTrigger
+              value="business"
+              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+            >
+              <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Business</span>
             </TabsTrigger>
-            <TabsTrigger value="experience" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
+            <TabsTrigger
+              value="experience"
+              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+            >
+              <User className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Experience</span>
             </TabsTrigger>
-            <TabsTrigger value="project" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
+            <TabsTrigger
+              value="project"
+              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+            >
+              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Projects</span>
             </TabsTrigger>
-            <TabsTrigger value="education" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
+            <TabsTrigger
+              value="education"
+              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+            >
+              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Education</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="business">
+          <TabsContent value="business" data-tour="oracle-page">
             <BusinessVerification />
           </TabsContent>
           <TabsContent value="experience">

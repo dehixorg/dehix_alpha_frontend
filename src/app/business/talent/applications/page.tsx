@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import TalentLayout from '@/components/marketComponents/TalentLayout';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { FreelancerApplication } from '@/types/talent';
+import { useToast } from '@/components/ui/use-toast';
 
 interface HireTalentItem {
   _id: string;
@@ -37,15 +38,22 @@ export default function Page() {
 
   const allowed = new Set(['invited', 'accepted', 'rejected', 'applications']);
   const initialStatusFilter = allowed.has(statusParam)
-    ? (statusParam as 'invited' | 'accepted' | 'rejected' | 'applications')
-    : 'invited';
+    ? (statusParam as
+        | 'invited'
+        | 'accepted'
+        | 'rejected'
+        | 'applications'
+        | undefined)
+    : undefined;
 
   const activeTab = 'applications' as const;
   const [statusFilter, setStatusFilter] = useState<
-    'invited' | 'accepted' | 'rejected' | 'applications'
+    'invited' | 'accepted' | 'rejected' | 'applications' | undefined
   >(initialStatusFilter);
 
-  const [talentFilter, setTalentFilter] = useState<string>('');
+  const [talentFilter, setTalentFilter] = useState<string | undefined>(
+    undefined,
+  );
   const [talentOptions, setTalentOptions] = useState<
     { label: string; value: string }[]
   >([]);
@@ -54,8 +62,8 @@ export default function Page() {
     FreelancerApplication[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const { toast } = useToast();
 
   const updateApplicationStatus = async (
     freelancerId: string,
@@ -74,7 +82,11 @@ export default function Page() {
       setRefreshKey((v) => v + 1);
     } catch (error) {
       console.error('Error updating application:', error);
-      setErrorMessage('Failed to update application. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to update application. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -82,7 +94,6 @@ export default function Page() {
     const fetchHireTalentData = async () => {
       try {
         setLoading(true);
-        setErrorMessage(null);
         const hireTalentResponse = await axiosInstance.get(
           `/business/hire-dehixtalent`,
         );
@@ -106,33 +117,34 @@ export default function Page() {
         const nextUniqueTalentOptions = Array.from(uniqueByValue.values());
         setTalentOptions(nextUniqueTalentOptions);
 
-        const defaultTalentId = nextUniqueTalentOptions[0]?.value;
-        const effectiveHireId = talentFilter || defaultTalentId || '';
-
-        if (!talentFilter && defaultTalentId) {
-          setTalentFilter(defaultTalentId);
-        }
-
-        type Status = 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
-        const desiredStatus: Status =
-          statusFilter === 'accepted'
-            ? 'SELECTED'
-            : statusFilter === 'rejected'
-              ? 'REJECTED'
-              : statusFilter === 'applications'
-                ? 'APPLIED'
-                : 'INVITED';
+        const firstHireId = nextUniqueTalentOptions[0]?.value;
+        const effectiveHireId =
+          talentFilter !== undefined ? talentFilter : firstHireId;
 
         if (!effectiveHireId) {
           setTabApplications([]);
           return;
         }
 
+        type Status = 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
+        let desiredStatus: Status | undefined;
+
+        if (statusFilter) {
+          desiredStatus =
+            statusFilter === 'accepted'
+              ? 'SELECTED'
+              : statusFilter === 'rejected'
+                ? 'REJECTED'
+                : statusFilter === 'applications'
+                  ? 'APPLIED'
+                  : 'INVITED';
+        }
+
         const applicationsResponse = await axiosInstance.get(
           `/business/hire-dehixtalent-applications/${effectiveHireId}/applications/init`,
           {
             params: {
-              status: desiredStatus,
+              ...(desiredStatus ? { status: desiredStatus } : {}),
               limit: 20,
               skip: 0,
             },
@@ -202,9 +214,12 @@ export default function Page() {
         setTabApplications(normalized as FreelancerApplication[]);
       } catch (error) {
         console.error('Error fetching hire talent data:', error);
-        setErrorMessage(
-          'Failed to load talent data. Please refresh the page or try again later.',
-        );
+        toast({
+          title: 'Error',
+          description:
+            'Failed to load talent data. Please refresh the page or try again later.',
+          variant: 'destructive',
+        });
       } finally {
         setLoading(false);
       }
@@ -215,13 +230,6 @@ export default function Page() {
 
   return (
     <>
-      {errorMessage && (
-        <div className="container px-4 pt-4">
-          <div className="rounded-md border border-red-200 bg-red-50 text-red-700 p-3">
-            {errorMessage}
-          </div>
-        </div>
-      )}
       <TalentLayout
         activeTab={activeTab}
         talents={tabApplications}

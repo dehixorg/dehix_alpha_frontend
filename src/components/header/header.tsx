@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+'use client';
+
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Wallet } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
 import { MenuItem } from '../menu/sidebarMenu';
@@ -12,7 +15,11 @@ import { DisplayConnectsDialog } from '../shared/DisplayConnectsDialog';
 import { WalletConnectButton } from '../WalletConnectButton';
 import { Input } from '../ui/input';
 
+import { startTour } from '@/lib/tourSlice';
+import TourMenu from '@/components/tour/shared/TourMenu';
 import { RootState } from '@/lib/store';
+import type { TourTarget } from '@/lib/tourSlice';
+import { fetchAndUpdateConnects } from '@/lib/updateConnects';
 
 interface HeaderProps {
   menuItemsTop: MenuItem[];
@@ -41,7 +48,15 @@ const Header: React.FC<HeaderProps> = ({
   setActiveConversation,
 }) => {
   const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const [connects, setConnects] = useState<number>(0);
+  const pathname = usePathname();
+
+  const userType =
+    user?.type &&
+    ['freelancer', 'business'].includes(String(user.type).toLowerCase())
+      ? (String(user.type).toLowerCase() as 'freelancer' | 'business')
+      : undefined;
 
   const fetchConnects = async () => {
     try {
@@ -55,17 +70,92 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (user?.uid) {
+  const refreshConnectsFromServer = useCallback(async () => {
+    if (!user?.uid || !userType) return;
+    try {
+      const balance = await fetchAndUpdateConnects(userType);
+      if (balance != null) setConnects(balance);
+      else fetchConnects();
+    } catch {
       fetchConnects();
     }
+  }, [user?.uid, userType]);
+
+  // Stable ref to hold the latest callback without causing effect re-runs
+  const refreshRef = useRef(refreshConnectsFromServer);
+  useEffect(() => {
+    refreshRef.current = refreshConnectsFromServer;
+  }, [refreshConnectsFromServer]);
+
+  const PAGE_TOUR_ROUTE_MAP: { path: string; target: TourTarget }[] = [
+    // Freelancer
+    { path: '/freelancer/project/current', target: 'current-projects' },
+    { path: '/freelancer/interviewer', target: 'interviewer-profile' },
+    { path: '/freelancer/interviewee', target: 'interviewee' },
+    { path: '/freelancer/oracleDashboard', target: 'oracle-dashboard' },
+    { path: '/freelancer/market', target: 'market' },
+    { path: '/freelancer/talent', target: 'talent' },
+    { path: '/freelancer/leaderboard', target: 'leaderboard' },
+
+    // Business
+    { path: '/dashboard/business', target: 'business-dashboard' },
+    { path: '/business/market', target: 'business-market' },
+    { path: '/business/projects', target: 'business-projects' },
+    { path: '/business/talent', target: 'business-talent' },
+
+    // Shared
+    { path: '/project-invitations', target: 'project-invitations' },
+    { path: '/dashboard', target: 'dashboard' },
+    { path: '/chat', target: 'chat' },
+    { path: '/notes', target: 'notes' },
+
+    // Freelancer Settings
+    {
+      path: '/freelancer/settings/personal-info',
+      target: 'personal-info-form',
+    },
+    { path: '/freelancer/settings/profiles', target: 'profiles-center' },
+    { path: '/freelancer/settings/profile', target: 'experience' },
+    { path: '/freelancer/settings/kyc', target: 'kyc' },
+    { path: '/freelancer/settings/levels-badges', target: 'level-badges' },
+    { path: '/freelancer/settings/streak', target: 'streak' },
+    { path: '/freelancer/settings/transactions', target: 'transaction' },
+    { path: '/freelancer/settings/resume', target: 'resume' },
+    { path: '/settings/feedback', target: 'feedback' },
+    { path: '/reports', target: 'reports' },
+
+    // Business Settings
+    { path: '/business/settings/business-info', target: 'business-info' },
+    { path: '/business/settings/kyc', target: 'business-kyc' },
+    {
+      path: '/business/settings/transactions',
+      target: 'business-transactions',
+    },
+  ];
+
+  const getPageTarget = (): TourTarget | null => {
+    return (
+      PAGE_TOUR_ROUTE_MAP.find((route) => pathname.startsWith(route.path))
+        ?.target ?? null
+    );
+  };
+
+  useEffect(() => {
+    if (!user?.uid || !userType) return;
+    fetchConnects();
+    refreshRef.current();
     const updateConnects = () => fetchConnects();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshRef.current();
+    };
     window.addEventListener('connectsUpdated', updateConnects);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       window.removeEventListener('connectsUpdated', updateConnects);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [user?.uid]);
+  }, [user?.uid, userType]);
 
   const [searchValue, setSearchValue] = useState('');
   const [, setSearchFocused] = useState(false);
@@ -118,7 +208,7 @@ const Header: React.FC<HeaderProps> = ({
       <Breadcrumb items={breadcrumbItems || []} />
 
       <div className="ml-auto flex items-center gap-2">
-        <div className="relative hidden md:block">
+        <div className="relative hidden md:block" data-tour="search">
           <label htmlFor="global-search-input" className="sr-only">
             Search
           </label>
@@ -139,18 +229,60 @@ const Header: React.FC<HeaderProps> = ({
         </div>
 
         {user?.uid && <WalletConnectButton />}
+
+        {/* Platform Tour */}
+        <div>
+          <TourMenu
+            onThisPageTour={() => {
+              const target = getPageTarget();
+              if (!target) return;
+              dispatch(startTour({ mode: 'page', target }));
+            }}
+            onFullPlatformTour={() => {
+              const isFreelancerSettings =
+                pathname.startsWith('/freelancer/settings') ||
+                pathname.startsWith('/reports') ||
+                pathname.startsWith('/settings/feedback');
+
+              const isBusinessSettings =
+                pathname.startsWith('/business/settings');
+
+              dispatch(
+                startTour({
+                  mode: 'platform',
+                  target:
+                    isFreelancerSettings || isBusinessSettings
+                      ? 'sidebar'
+                      : 'navigation',
+                }),
+              );
+            }}
+          />
+        </div>
         {user?.uid ? (
-          <DisplayConnectsDialog userId={user.uid} connects={connects} />
+          <div data-tour="header-connects">
+            <DisplayConnectsDialog
+              userId={user.uid}
+              connects={connects}
+              userType={userType}
+            />
+          </div>
         ) : (
-          <Button variant="ghost" size="sm">
-            <Wallet className="h-4 w-4" />
-          </Button>
+          <div data-tour="header-connects">
+            <Button variant="ghost" size="sm">
+              <Wallet className="h-4 w-4" />
+            </Button>
+          </div>
         )}
         {/* Notification Button */}
-        <NotificationButton />
+        <div data-tour="header-notifications">
+          <NotificationButton />
+        </div>
 
         {/* Profile Dropdown */}
-        <DropdownProfile setConnects={setConnects} />
+        <div data-tour="header-profile">
+          <DropdownProfile setConnects={setConnects} />
+        </div>
       </div>
     </header>
   );

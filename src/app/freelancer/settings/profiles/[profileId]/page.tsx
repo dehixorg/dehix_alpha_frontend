@@ -111,8 +111,8 @@ export default function ProfileDetailPage() {
     title: string;
     Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
     options: any[];
-    selectedIds: string[];
-    getNameById: (id: string) => string;
+    selectedIds: any[];
+    getNameById: (item: any) => string;
     onAdd: (value: string) => void;
     onRemove: (name: string) => void;
   }) => (
@@ -126,8 +126,8 @@ export default function ProfileDetailPage() {
           label=""
           options={options}
           selected={(selectedIds || [])
-            .map((id: string) => ({
-              name: getNameById(id),
+            .map((item: any) => ({
+              name: getNameById(item),
             }))
             .filter(
               (item, index, self) =>
@@ -145,12 +145,12 @@ export default function ProfileDetailPage() {
       <div className="flex flex-wrap gap-2 mt-5">
         {selectedIds?.length > 0 &&
           !isEditMode &&
-          Array.from(new Set(selectedIds)).map((id: string, index: number) => (
+          selectedIds.map((item: any, index: number) => (
             <Badge
               key={index}
               className="rounded-md uppercase text-xs font-normal dark:bg-muted bg-muted-foreground/30 dark:hover:bg-muted/20 hover:bg-muted-foreground/20 flex items-center px-2 py-1 text-black dark:text-white"
             >
-              {getNameById(id)}
+              {getNameById(item)}
             </Badge>
           ))}
         {selectedIds?.length === 0 && !isEditMode && (
@@ -193,27 +193,15 @@ export default function ProfileDetailPage() {
     if (!user.uid) return;
 
     try {
-      const freelancerResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}`,
+      // Fetch skills and domains from freelancer's attributes using the new endpoint
+      const attributesResponse = await axiosInstance.get(
+        `/freelancer/${user.uid}/profile-attributes`,
       );
-      const freelancerData = freelancerResponse.data.data || {};
-      const freelancerAttributes = freelancerData.attributes || [];
+      const attributesData = attributesResponse.data.data || {};
 
-      const skills = freelancerAttributes
-        .filter((attr: any) => attr.type === 'SKILL')
-        .map((attr: any) => ({
-          _id: attr.type_id,
-          label: attr.name,
-          name: attr.name,
-        }));
+      const skills = (attributesData.skills || []) as any[];
 
-      const domains = freelancerAttributes
-        .filter((attr: any) => attr.type === 'DOMAIN')
-        .map((attr: any) => ({
-          _id: attr.type_id,
-          label: attr.name,
-          name: attr.name,
-        }));
+      const domains = (attributesData.domains || []) as any[];
 
       setSkillsOptions(skills);
       setDomainsOptions(domains);
@@ -231,7 +219,7 @@ export default function ProfileDetailPage() {
   }, [user.uid]);
 
   const fetchProfile = useCallback(async () => {
-    if (!profileId || !user.uid) return;
+    if (!profileId || !user.uid) return null;
 
     try {
       const response = await axiosInstance.get(
@@ -266,22 +254,14 @@ export default function ProfileDetailPage() {
         }
       }
 
-      const processedProfileData = {
-        ...profileData,
-        skills: (profileData.skills || []).map((s: any) =>
-          typeof s === 'string' ? s : s._id,
-        ),
-        domains: (profileData.domains || []).map((d: any) =>
-          typeof d === 'string' ? d : d._id,
-        ),
-      };
-
-      setProfile(processedProfileData);
-      setEditingProfileData(processedProfileData);
+      // Store the raw profile data
+      setProfile(profileData);
+      return profileData;
     } catch (error) {
       console.error('Error fetching profile:', error);
       notifyError('Failed to load profile', 'Error');
       router.push('/freelancer/settings/profiles');
+      return null;
     }
   }, [profileId, user.uid, router]);
 
@@ -306,8 +286,14 @@ export default function ProfileDetailPage() {
         setIsLoading(true);
         try {
           await fetchSkillsAndDomains();
-          await fetchProfile();
+          const rawProfileData = await fetchProfile();
           await fetchFreelancerProjects();
+
+          // Enrich profile data with skills and domains after all data is fetched
+          if (rawProfileData) {
+            // Wait for skills and domains to be loaded
+            // This will be handled by the separate effect below
+          }
         } catch (error) {
           console.error('Error fetching data:', error);
         } finally {
@@ -317,28 +303,78 @@ export default function ProfileDetailPage() {
 
       fetchData();
     }
-  }, [
-    profileId,
-    user.uid,
-    fetchSkillsAndDomains,
-    fetchProfile,
-    fetchFreelancerProjects,
-  ]);
+    // Only depend on static values, not on the callback functions
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId, user.uid]);
 
-  const getSkillNameById = (skillId: string) => {
-    if (!skillId || !skillsOptions || skillsOptions.length === 0) {
-      return skillId || '';
+  // Separate effect to enrich profile data when skills/domains are loaded
+  useEffect(() => {
+    const enrichProfileData = async () => {
+      if (!profile || !skillsAndDomainsLoaded) return;
+
+      // Enrich skills and domains with full objects from options
+      const enrichedSkills = (profile.skills || []).map((s: any) => {
+        const skillId = typeof s === 'string' ? s : s._id || s.type_id;
+        const fullSkill = skillsOptions.find(
+          (opt: any) => (opt._id || opt.type_id) === skillId,
+        );
+        return (
+          fullSkill ||
+          (typeof s === 'object'
+            ? s
+            : { _id: skillId, name: skillId, label: skillId })
+        );
+      });
+
+      const enrichedDomains = (profile.domains || []).map((d: any) => {
+        const domainId = typeof d === 'string' ? d : d._id || d.type_id;
+        const fullDomain = domainsOptions.find(
+          (opt: any) => (opt._id || opt.type_id) === domainId,
+        );
+        return (
+          fullDomain ||
+          (typeof d === 'object'
+            ? d
+            : { _id: domainId, name: domainId, label: domainId })
+        );
+      });
+
+      const processedProfileData = {
+        ...profile,
+        skills: enrichedSkills,
+        domains: enrichedDomains,
+      };
+
+      setEditingProfileData(processedProfileData);
+    };
+
+    enrichProfileData();
+  }, [profile, skillsOptions, domainsOptions, skillsAndDomainsLoaded]);
+
+  const getSkillNameById = (skill: any) => {
+    if (!skill) return '';
+    // If skill is already an object with name/label, use it
+    if (typeof skill === 'object') {
+      return skill.label || skill.name || '';
     }
-    const skill = skillsOptions.find((s: any) => s._id === skillId);
-    return skill ? skill.label || skill.name : skillId;
+    // Otherwise it's an ID string, look it up
+    const foundSkill = skillsOptions.find(
+      (s: any) => s._id === skill || s.type_id === skill,
+    );
+    return foundSkill ? foundSkill.label || foundSkill.name : skill;
   };
 
-  const getDomainNameById = (domainId: string) => {
-    if (!domainId || !domainsOptions || domainsOptions.length === 0) {
-      return domainId || '';
+  const getDomainNameById = (domain: any) => {
+    if (!domain) return '';
+    // If domain is already an object with name/label, use it
+    if (typeof domain === 'object') {
+      return domain.label || domain.name || '';
     }
-    const domain = domainsOptions.find((d: any) => d._id === domainId);
-    return domain ? domain.label || domain.name : domainId;
+    // Otherwise it's an ID string, look it up
+    const foundDomain = domainsOptions.find(
+      (d: any) => d._id === domain || d.type_id === domain,
+    );
+    return foundDomain ? foundDomain.label || foundDomain.name : domain;
   };
 
   const transformProfileForAPI = (profileData: any) => {
@@ -347,7 +383,7 @@ export default function ProfileDetailPage() {
         if (typeof skill === 'string') {
           return skill;
         }
-        return skill._id;
+        return skill._id || skill.type_id;
       }) || [];
 
     const transformedDomains =
@@ -355,7 +391,7 @@ export default function ProfileDetailPage() {
         if (typeof domain === 'string') {
           return domain;
         }
-        return domain._id;
+        return domain._id || domain.type_id;
       }) || [];
 
     // Create a clean payload without LinkedIn and Website fields
@@ -957,23 +993,22 @@ export default function ProfileDetailPage() {
                     (s: any) => (s.label || s.name) === value,
                   );
                   if (!selectedSkill) return;
-                  const id = selectedSkill._id;
-                  if ((editingProfileData.skills || []).includes(id)) return;
+                  // Check if already exists by comparing IDs
+                  const skillId = selectedSkill._id || selectedSkill.type_id;
+                  const exists = (editingProfileData.skills || []).some(
+                    (s: any) => (s._id || s.type_id) === skillId,
+                  );
+                  if (exists) return;
                   setEditingProfileData((prev: any) => ({
                     ...prev,
-                    skills: [...(prev.skills || []), id],
+                    skills: [...(prev.skills || []), selectedSkill],
                   }));
                 }}
                 onRemove={(name: string) => {
-                  const skill = freelancerSkillsOptions.find(
-                    (s: any) => (s.label || s.name) === name,
-                  );
-                  const id = skill?._id;
-                  if (!id) return;
                   setEditingProfileData((prev: any) => ({
                     ...prev,
                     skills: (prev.skills || []).filter(
-                      (sid: string) => sid !== id,
+                      (skill: any) => (skill.label || skill.name) !== name,
                     ),
                   }));
                 }}
@@ -989,23 +1024,22 @@ export default function ProfileDetailPage() {
                     (d: any) => (d.label || d.name) === value,
                   );
                   if (!selectedDomain) return;
-                  const id = selectedDomain._id;
-                  if ((editingProfileData.domains || []).includes(id)) return;
+                  // Check if already exists by comparing IDs
+                  const domainId = selectedDomain._id || selectedDomain.type_id;
+                  const exists = (editingProfileData.domains || []).some(
+                    (d: any) => (d._id || d.type_id) === domainId,
+                  );
+                  if (exists) return;
                   setEditingProfileData((prev: any) => ({
                     ...prev,
-                    domains: [...(prev.domains || []), id],
+                    domains: [...(prev.domains || []), selectedDomain],
                   }));
                 }}
                 onRemove={(name: string) => {
-                  const domain = freelancerDomainsOptions.find(
-                    (d: any) => (d.label || d.name) === name,
-                  );
-                  const id = domain?._id;
-                  if (!id) return;
                   setEditingProfileData((prev: any) => ({
                     ...prev,
                     domains: (prev.domains || []).filter(
-                      (did: string) => did !== id,
+                      (domain: any) => (domain.label || domain.name) !== name,
                     ),
                   }));
                 }}

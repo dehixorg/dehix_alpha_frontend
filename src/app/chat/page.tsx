@@ -29,6 +29,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
+import { useChatTour } from '@/components/tour/shared/useChatTour';
 
 const HomePage = () => {
   const router = useRouter();
@@ -54,6 +55,8 @@ const HomePage = () => {
 
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
+
+  useChatTour(true);
 
   const handleOpenProfileSidebar = (
     id: string,
@@ -272,15 +275,15 @@ const HomePage = () => {
     const sessionKey = searchParams.get('session');
     if (!sessionKey) return;
 
-    // Get the chat data from session storage
-    const chatDataStr = sessionStorage.getItem(sessionKey);
+    // Get the chat data from localStorage (accessible across tabs)
+    const chatDataStr = localStorage.getItem(sessionKey);
     if (!chatDataStr) return;
 
     try {
       const chatData = JSON.parse(chatDataStr);
 
       // Clear the session data after reading it
-      sessionStorage.removeItem(sessionKey);
+      localStorage.removeItem(sessionKey);
 
       // Clear the URL parameter using Next.js router to maintain consistency
       const url = new URL(window.location.href);
@@ -522,7 +525,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col" data-tour="chat">
       <SidebarMenu
         menuItemsTop={
           user.type === 'business'
@@ -536,7 +539,7 @@ const HomePage = () => {
         }
         active="Chats"
       />
-      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14 overflow-hidden">
+      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={
             user.type === 'business'
@@ -552,7 +555,7 @@ const HomePage = () => {
           breadcrumbItems={[{ label: 'Chats', link: '/chat' }]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[96vh]">
+        <main className="h-[96vh]" data-tour="chat-main">
           {isMobile ? (
             <div className="h-full">
               {activeConversation

@@ -35,6 +35,7 @@ import { StarRating } from '@/components/ui/star-rating';
 import { Textarea } from '@/components/ui/textarea';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { useFeedbackTour } from '@/components/tour/freelancer-profile/useFeedbackTour';
 
 type UserType = 'freelancer' | 'business';
 
@@ -234,6 +235,8 @@ export default function FeedbackPage() {
     }
   };
 
+  useFeedbackTour(true);
+
   const renderQuestion = (campaign: Campaign, question: Question) => {
     const answer = answers[campaign.campaignId]?.[question.questionId];
 
@@ -327,7 +330,7 @@ export default function FeedbackPage() {
       ]}
       mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8"
     >
-      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_360px]" data-tour="feedback">
         <div className="space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-4">

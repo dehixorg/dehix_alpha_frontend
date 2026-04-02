@@ -3,11 +3,13 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
 import userSlice, { UserState } from './userSlice';
 import projectDraftSlice, { ProjectDraftState } from './projectDraftSlice';
+import tourReducer, { TourState } from './tourSlice';
 
 // Define the root state type
 export interface RootState {
   user: UserState;
   projectDraft: ProjectDraftState;
+  tour: TourState;
 }
 
 export const makeStore = () => {
@@ -15,6 +17,7 @@ export const makeStore = () => {
     reducer: {
       user: userSlice,
       projectDraft: projectDraftSlice,
+      tour: tourReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

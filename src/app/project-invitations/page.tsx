@@ -15,6 +15,7 @@ import {
   ArrowUpNarrowWide,
   Trash2,
   CircleX,
+  X,
 } from 'lucide-react';
 
 import {
@@ -66,6 +67,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import StatusDot from '@/components/shared/StatusDot';
 import { useAppSelector } from '@/lib/hooks';
 import { projectInvitationService } from '@/services/projectInvitation';
+import { useProjectInvitationTour } from '@/components/tour/shared/useProjectInvitationTour';
 
 const ProjectInvitationsPage: React.FC = () => {
   const router = useRouter();
@@ -97,6 +99,8 @@ const ProjectInvitationsPage: React.FC = () => {
     'createdAt' | 'projectName' | 'freelancerName'
   >('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  useProjectInvitationTour(true);
 
   useEffect(() => {
     const load = async () => {
@@ -226,7 +230,10 @@ const ProjectInvitationsPage: React.FC = () => {
 
     setRejectingInviteId(inv._id);
     try {
-      const res = await projectInvitationService.rejectInvitation(inviteId);
+      const res = await projectInvitationService.respondInvitation(
+        inviteId,
+        'REJECTED',
+      );
       if (!res?.success) {
         const errorMessage =
           res?.data?.message ||
@@ -245,6 +252,11 @@ const ProjectInvitationsPage: React.FC = () => {
     } finally {
       setRejectingInviteId(null);
     }
+  };
+
+  const handleBidOnProject = (inv: ProjectInvitation) => {
+    if (!isFreelancer) return;
+    router.push(`/freelancer/market/project/${inv.projectId}/apply`);
   };
 
   const InvitationsContent = () => {
@@ -288,20 +300,6 @@ const ProjectInvitationsPage: React.FC = () => {
                   search || statusFilter !== 'ALL'
                     ? 'Try adjusting your search or filter criteria.'
                     : "You haven't sent any project invitations yet."
-                }
-                actions={
-                  (search || statusFilter !== 'ALL') && (
-                    <Button
-                      variant="ghost"
-                      className="mt-4"
-                      onClick={() => {
-                        setSearch('');
-                        setStatusFilter('ALL');
-                      }}
-                    >
-                      Clear filters
-                    </Button>
-                  )
                 }
                 className="py-16 text-center"
               />
@@ -437,17 +435,27 @@ const ProjectInvitationsPage: React.FC = () => {
                     <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
                       {isFreelancer &&
                         inv.status === InvitationStatus.PENDING && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            disabled={rejectingInviteId === inv._id}
-                            onClick={() => handleRejectInvite(inv)}
-                          >
-                            <CircleX className="h-4 w-4" />
-                            {rejectingInviteId === inv._id
-                              ? 'Rejecting...'
-                              : 'Reject'}
-                          </Button>
+                          <>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleBidOnProject(inv)}
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                              Bid
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled={rejectingInviteId === inv._id}
+                              onClick={() => handleRejectInvite(inv)}
+                            >
+                              <CircleX className="h-4 w-4" />
+                              {rejectingInviteId === inv._id
+                                ? 'Rejecting...'
+                                : 'Reject'}
+                            </Button>
+                          </>
                         )}
                       {isBusiness && (
                         <Button
@@ -500,7 +508,12 @@ const ProjectInvitationsPage: React.FC = () => {
         />
 
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
-          <div className="w-full mx-auto">
+          <div
+            className="w-full mx-auto"
+            data-tour={
+              isBusiness ? 'business-invitation' : 'freelancer-invitation'
+            }
+          >
             <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-bold tracking-tight">
@@ -514,7 +527,15 @@ const ProjectInvitationsPage: React.FC = () => {
               <div className="flex w-full items-center justify-start gap-2 sm:w-auto">
                 <Select
                   value={sortBy}
-                  onValueChange={(value) => setSortBy(value as any)}
+                  onValueChange={(value) => {
+                    if (value === 'clear-filters') {
+                      setSearch('');
+                      setStatusFilter('ALL');
+                      setSortBy('createdAt');
+                    } else {
+                      setSortBy(value as any);
+                    }
+                  }}
                 >
                   <SelectTrigger className="h-9 w-14 px-2 sm:w-auto sm:px-3">
                     <div className="flex w-full items-center justify-center gap-2 min-w-0 sm:justify-start">
@@ -559,6 +580,20 @@ const ProjectInvitationsPage: React.FC = () => {
                         </span>
                       </div>
                     </SelectItem>
+                    {(search || statusFilter !== 'ALL') && (
+                      <>
+                        <div className="h-px my-1 bg-border" />
+                        <SelectItem
+                          value="clear-filters"
+                          className="text-red-600"
+                        >
+                          <div className="flex items-center">
+                            <X className="h-4 w-4 mr-2" />
+                            <span>Clear Filters</span>
+                          </div>
+                        </SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
 
@@ -574,6 +609,19 @@ const ProjectInvitationsPage: React.FC = () => {
                     <ArrowDownNarrowWide className="h-4 w-4" />
                   )}
                 </Button>
+
+                {(search || statusFilter !== 'ALL') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearch('');
+                      setStatusFilter('ALL');
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
               </div>
             </div>
 

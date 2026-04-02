@@ -78,6 +78,11 @@ interface Project {
       type: string;
       fixedAmount?: number;
       hourlyRate?: number;
+      hourly?: {
+        minRate?: number;
+        maxRate?: number;
+        estimatedHours?: number;
+      };
       min?: number;
       max?: number;
     };
@@ -203,6 +208,36 @@ const JobCard: React.FC<JobCardProps> = ({
 
   const profile =
     job.profiles && job.profiles.length > 0 ? job.profiles[0] : null;
+
+  // Calculate average budget from all profiles
+  const calculateAverageBudget = () => {
+    if (!job.profiles || job.profiles.length === 0) return null;
+
+    const budgetValues = job.profiles
+      .map((p) => {
+        if (p.budget?.type === 'FIXED' && p.budget.fixedAmount) {
+          return p.budget.fixedAmount;
+        } else if (p.budget?.type === 'HOURLY') {
+          if (p.budget.hourlyRate) {
+            return p.budget.hourlyRate;
+          } else if (p.budget.hourly?.minRate && p.budget.hourly?.maxRate) {
+            return (p.budget.hourly.minRate + p.budget.hourly.maxRate) / 2;
+          }
+        } else if (p.budget?.min && p.budget?.max) {
+          return (p.budget.min + p.budget.max) / 2;
+        }
+        return null;
+      })
+      .filter((value) => value !== null);
+
+    if (budgetValues.length === 0) return null;
+
+    const average =
+      budgetValues.reduce((sum, value) => sum + value, 0) / budgetValues.length;
+    return Math.round(average);
+  };
+
+  const averageBudget = calculateAverageBudget();
 
   // Format date with type safety
   const formatDate = (dateString?: string | Date): string => {
@@ -344,7 +379,7 @@ const JobCard: React.FC<JobCardProps> = ({
                           {job.companyName && job.companyName !== 'null' && (
                             <Dot className="text-muted-foreground" />
                           )}
-                          {job.projectDomain[0]}
+                          {job.projectDomain}
                         </span>
                       )}
 
@@ -395,16 +430,23 @@ const JobCard: React.FC<JobCardProps> = ({
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Budget
+                      Avg. Budget
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {profile?.budget?.type === 'FIXED'
-                        ? `$${profile.budget.fixedAmount}`
-                        : profile?.budget?.type === 'HOURLY'
-                          ? `$${profile.budget.hourlyRate}/hr`
-                          : profile?.budget?.min && profile?.budget?.max
-                            ? `$${profile.budget.min} - $${profile.budget.max}`
-                            : 'Negotiable'}
+                      {averageBudget
+                        ? `$${averageBudget}`
+                        : profile?.budget?.type === 'FIXED'
+                          ? `$${profile.budget.fixedAmount}`
+                          : profile?.budget?.type === 'HOURLY'
+                            ? profile?.budget?.hourlyRate
+                              ? `$${profile.budget.hourlyRate}/hr`
+                              : profile?.budget?.hourly?.minRate &&
+                                  profile?.budget?.hourly?.maxRate
+                                ? `$${profile.budget.hourly.minRate} - $${profile.budget.hourly.maxRate}/hr`
+                                : 'Negotiable'
+                            : profile?.budget?.min && profile?.budget?.max
+                              ? `$${profile.budget.min} - $${profile.budget.max}`
+                              : 'Negotiable'}
                     </p>
                   </div>
                 </div>

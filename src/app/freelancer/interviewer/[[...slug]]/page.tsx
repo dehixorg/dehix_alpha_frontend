@@ -16,6 +16,7 @@ import InterviewProfile from '@/components/freelancer/interview/interviewProfile
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
 import InterviewerBids from '@/components/freelancer/interview/InterviewerBids';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
+import { useInterviewerProfileTour } from '@/components/tour/freelancer/useInterviewTour';
 
 export default function InterviewerPage() {
   const params = useParams();
@@ -23,6 +24,7 @@ export default function InterviewerPage() {
 
   const slug = Array.isArray(params?.slug) ? params.slug : [];
   const activeTab = slug[0] || 'profile';
+  useInterviewerProfileTour(true);
 
   useEffect(() => {
     if (slug.length === 0) {
@@ -39,9 +41,12 @@ export default function InterviewerPage() {
       ]}
       mainClassName="flex-1 p-4 sm:px-6 sm:py-2"
     >
-      <div className="mx-auto w-full max-w-[92vw]">
+      <div
+        className="mx-auto w-full max-w-[92vw]"
+        data-tour="interviewer-profile"
+      >
         <Card className="overflow-hidden">
-          <CardHeader className="bg-gradient">
+          <CardHeader className="bg-gradient" data-tour="interviewer-header">
             <CardTitle className="text-2xl font-bold tracking-tight">
               Interviews
             </CardTitle>
@@ -60,10 +65,14 @@ export default function InterviewerPage() {
             >
               <div className="border-b px-2 sm:px-6">
                 <div className="max-w-full overflow-x-auto no-scrollbar">
-                  <TabsList className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap">
+                  <TabsList
+                    className="bg-transparent h-12 w-max min-w-max md:w-auto p-0 whitespace-nowrap"
+                    data-tour="interviewer-tabs"
+                  >
                     <TabsTrigger
                       value="profile"
                       className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      data-tour="interview-profile-card"
                     >
                       <Users2 className="h-4 w-4" />
                       <span>Profile</span>
@@ -71,6 +80,7 @@ export default function InterviewerPage() {
                     <TabsTrigger
                       value="current"
                       className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      data-tour="active-interviews"
                     >
                       <ListVideo className="h-4 w-4" />
                       <span>Current</span>
@@ -78,6 +88,7 @@ export default function InterviewerPage() {
                     <TabsTrigger
                       value="bids"
                       className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      data-tour="bids"
                     >
                       <Briefcase className="h-4 w-4" />
                       <span>Bids</span>
@@ -85,6 +96,7 @@ export default function InterviewerPage() {
                     <TabsTrigger
                       value="history"
                       className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      data-tour="interview-history"
                     >
                       <History className="h-4 w-4" />
                       <span>History</span>

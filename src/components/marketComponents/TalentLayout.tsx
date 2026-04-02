@@ -28,10 +28,10 @@ interface TalentLayoutProps {
   loading?: boolean;
   statusFilter?: 'invited' | 'accepted' | 'rejected' | 'applications';
   onStatusFilterChange?: (
-    value: 'invited' | 'accepted' | 'rejected' | 'applications',
+    value: 'invited' | 'accepted' | 'rejected' | 'applications' | undefined,
   ) => void;
   talentFilter?: string;
-  onTalentFilterChange?: (value: string) => void;
+  onTalentFilterChange?: (value: string | undefined) => void;
   talentOptions?: { label: string; value: string }[];
   onUpdateApplicationStatus?: (
     freelancerId: string,
