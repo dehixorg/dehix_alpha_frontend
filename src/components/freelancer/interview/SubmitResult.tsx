@@ -54,10 +54,7 @@ const SubmitResult: React.FC = () => {
     } catch (error: any) {
       if (error?.response?.status !== 404) {
         console.error('Error fetching interviews:', error);
-        notifyError(
-          'Failed to load interviews. Please try again.',
-          'Error',
-        );
+        notifyError('Failed to load interviews. Please try again.', 'Error');
       }
       setInterviews([]);
     } finally {
@@ -106,9 +103,7 @@ const SubmitResult: React.FC = () => {
       <div className="flex items-center justify-center py-16">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">
-            Loading interviews...
-          </p>
+          <p className="text-sm text-muted-foreground">Loading interviews...</p>
         </div>
       </div>
     );
