@@ -46,9 +46,22 @@ interface TalentContentProps {
   activeTab: 'applications' | 'overview';
   talents: any[];
   loading: boolean;
-  statusFilter?: 'invited' | 'accepted' | 'rejected' | 'applications';
+  statusFilter?:
+    | 'invited'
+    | 'accepted'
+    | 'rejected'
+    | 'applications'
+    | 'lobby'
+    | 'interview';
   onStatusFilterChange?: (
-    value: 'invited' | 'accepted' | 'rejected' | 'applications' | undefined,
+    value:
+      | 'invited'
+      | 'accepted'
+      | 'rejected'
+      | 'applications'
+      | 'lobby'
+      | 'interview'
+      | undefined,
   ) => void;
   talentFilter?: string;
   onTalentFilterChange?: (value: string | undefined) => void;
@@ -283,7 +296,9 @@ const TalentContent: React.FC<TalentContentProps> = ({
                             | 'invited'
                             | 'accepted'
                             | 'rejected'
-                            | 'applications',
+                            | 'applications'
+                            | 'lobby'
+                            | 'interview',
                         )
                       }
                       className="gap-2"
@@ -331,6 +346,36 @@ const TalentContent: React.FC<TalentContentProps> = ({
                           id="talent-status-rejected"
                         />
                         <span className="text-sm">Rejected</span>
+                      </Label>
+
+                      <Label
+                        htmlFor="talent-status-lobby"
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
+                          selected === 'lobby'
+                            ? 'bg-muted/50 border-primary/30'
+                            : ''
+                        }`}
+                      >
+                        <RadioGroupItem
+                          value="lobby"
+                          id="talent-status-lobby"
+                        />
+                        <span className="text-sm">Lobby</span>
+                      </Label>
+
+                      <Label
+                        htmlFor="talent-status-interview"
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40 ${
+                          selected === 'interview'
+                            ? 'bg-muted/50 border-primary/30'
+                            : ''
+                        }`}
+                      >
+                        <RadioGroupItem
+                          value="interview"
+                          id="talent-status-interview"
+                        />
+                        <span className="text-sm">Interview</span>
                       </Label>
 
                       <Label

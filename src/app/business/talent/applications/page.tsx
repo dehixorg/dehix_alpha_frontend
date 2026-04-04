@@ -36,19 +36,34 @@ export default function Page() {
   const searchParams = useSearchParams();
   const statusParam = (searchParams.get('status') || '').toLowerCase();
 
-  const allowed = new Set(['invited', 'accepted', 'rejected', 'applications']);
+  const allowed = new Set([
+    'invited',
+    'accepted',
+    'rejected',
+    'applications',
+    'lobby',
+    'interview',
+  ]);
   const initialStatusFilter = allowed.has(statusParam)
     ? (statusParam as
         | 'invited'
         | 'accepted'
         | 'rejected'
         | 'applications'
+        | 'lobby'
+        | 'interview'
         | undefined)
     : undefined;
 
   const activeTab = 'applications' as const;
   const [statusFilter, setStatusFilter] = useState<
-    'invited' | 'accepted' | 'rejected' | 'applications' | undefined
+    | 'invited'
+    | 'accepted'
+    | 'rejected'
+    | 'applications'
+    | 'lobby'
+    | 'interview'
+    | undefined
   >(initialStatusFilter);
 
   const [talentFilter, setTalentFilter] = useState<string | undefined>(
@@ -133,7 +148,13 @@ export default function Page() {
           return;
         }
 
-        type Status = 'INVITED' | 'SELECTED' | 'REJECTED' | 'APPLIED';
+        type Status =
+          | 'INVITED'
+          | 'SELECTED'
+          | 'REJECTED'
+          | 'APPLIED'
+          | 'LOBBY'
+          | 'INTERVIEW';
         let desiredStatus: Status | undefined;
 
         if (statusFilter) {
@@ -144,7 +165,11 @@ export default function Page() {
                 ? 'REJECTED'
                 : statusFilter === 'applications'
                   ? 'APPLIED'
-                  : 'INVITED';
+                  : statusFilter === 'lobby'
+                    ? 'LOBBY'
+                    : statusFilter === 'interview'
+                      ? 'INTERVIEW'
+                      : 'INVITED';
         }
 
         const applicationsResponse = await axiosInstance.get(

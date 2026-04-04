@@ -26,9 +26,22 @@ interface TalentLayoutProps {
   activeTab: 'applications' | 'overview';
   talents?: FreelancerApplication[];
   loading?: boolean;
-  statusFilter?: 'invited' | 'accepted' | 'rejected' | 'applications';
+  statusFilter?:
+    | 'invited'
+    | 'accepted'
+    | 'rejected'
+    | 'applications'
+    | 'lobby'
+    | 'interview';
   onStatusFilterChange?: (
-    value: 'invited' | 'accepted' | 'rejected' | 'applications' | undefined,
+    value:
+      | 'invited'
+      | 'accepted'
+      | 'rejected'
+      | 'applications'
+      | 'lobby'
+      | 'interview'
+      | undefined,
   ) => void;
   talentFilter?: string;
   onTalentFilterChange?: (value: string | undefined) => void;
