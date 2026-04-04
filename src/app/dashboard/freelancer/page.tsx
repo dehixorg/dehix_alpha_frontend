@@ -66,6 +66,9 @@ export default function Dashboard() {
       [StatusEnum.PENDING]: 0,
       [StatusEnum.COMPLETED]: 0,
       [StatusEnum.REJECTED]: 0,
+      [StatusEnum.APPLIED]: 0,
+      [StatusEnum.VERIFIED]: 0,
+      [StatusEnum.NOT_APPLIED]: 0,
     };
 
     // Track unique project IDs for each status to avoid counting duplicate bids on the same project
@@ -74,6 +77,9 @@ export default function Dashboard() {
       [StatusEnum.PENDING]: new Set(),
       [StatusEnum.COMPLETED]: new Set(),
       [StatusEnum.REJECTED]: new Set(),
+      [StatusEnum.APPLIED]: new Set(),
+      [StatusEnum.VERIFIED]: new Set(),
+      [StatusEnum.NOT_APPLIED]: new Set(),
     };
 
     for (const p of projects) {

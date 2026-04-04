@@ -6,7 +6,6 @@ import {
   ArrowDown,
   ArrowUp,
   GraduationCap,
-  Handshake,
   Search,
   Table,
   TrendingUp,

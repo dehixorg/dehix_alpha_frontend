@@ -3,14 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
-import {
-  ArrowUpRight,
-  Award,
-  Briefcase,
-  Eye,
-  Zap,
-  VideoIcon,
-} from 'lucide-react';
+import { ArrowUpRight, Award, Briefcase, Eye, Zap } from 'lucide-react';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -101,14 +94,14 @@ const SkillDomainForm: React.FC = () => {
 
         const statusEntries = Object.entries(talentData ?? {});
 
-        const nonNotAppliedGroups = statusEntries
-          .filter(([statusKey]) => statusKey !== 'NOT_APPLIED')
-          .map(([, group]) => group);
-
-        const talentFlat = nonNotAppliedGroups.flatMap((group: any) => {
+        const talentFlat = statusEntries.flatMap(([, group]) => {
           if (!group || typeof group !== 'object') return [];
-          const skillsGroup = Array.isArray(group.SKILL) ? group.SKILL : [];
-          const domainsGroup = Array.isArray(group.DOMAIN) ? group.DOMAIN : [];
+          const skillsGroup = Array.isArray((group as any).SKILL)
+            ? (group as any).SKILL
+            : [];
+          const domainsGroup = Array.isArray((group as any).DOMAIN)
+            ? (group as any).DOMAIN
+            : [];
           return [...skillsGroup, ...domainsGroup];
         });
 
@@ -294,7 +287,7 @@ const SkillDomainForm: React.FC = () => {
                       rows.filter(
                         (r) =>
                           (r.type === 'SKILL' || r.type === 'DOMAIN') &&
-                          r.status === StatusEnum.ACTIVE,
+                          r.status === StatusEnum.VERIFIED,
                       ).length
                     }
                     /{rows.length}
@@ -309,7 +302,7 @@ const SkillDomainForm: React.FC = () => {
                   {
                     rows.filter(
                       (r) =>
-                        r.type === 'SKILL' && r.status === StatusEnum.ACTIVE,
+                        r.type === 'SKILL' && r.status === StatusEnum.VERIFIED,
                     ).length
                   }
                   /{rows.filter((r) => r.type === 'SKILL').length} Skills
@@ -317,7 +310,7 @@ const SkillDomainForm: React.FC = () => {
                   {
                     rows.filter(
                       (r) =>
-                        r.type === 'DOMAIN' && r.status === StatusEnum.ACTIVE,
+                        r.type === 'DOMAIN' && r.status === StatusEnum.VERIFIED,
                     ).length
                   }
                   /{rows.filter((r) => r.type === 'DOMAIN').length} Domains
@@ -340,7 +333,9 @@ const SkillDomainForm: React.FC = () => {
                   <TableHead className="w-32 text-center">Pay</TableHead>
                   <TableHead className="w-28 text-center">Status</TableHead>
                   <TableHead className="w-28 text-center">Visible</TableHead>
-                  <TableHead className="w-32 text-center">Actions</TableHead>
+                  <TableHead className="w-32 text-center">
+                    Request for verification
+                  </TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -484,22 +479,12 @@ const SkillDomainForm: React.FC = () => {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className={statusOutlineClasses(r.status)}
-                          >
-                            {r.status?.toUpperCase()}
-                          </Badge>
-                          {canVerify(r.status) && r.uid && (
-                            <VerifyDialog
-                              talentType={r.type}
-                              _id={r.uid}
-                              userId={user.uid}
-                              originalTalentId={r.originalTalentId}
-                            />
-                          )}
-                        </div>
+                        <Badge
+                          variant="outline"
+                          className={statusOutlineClasses(r.status)}
+                        >
+                          {r.status?.toUpperCase()}
+                        </Badge>
                       </TableCell>
 
                       <TableCell className="text-center">
@@ -514,7 +499,7 @@ const SkillDomainForm: React.FC = () => {
 
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          {r.originalTalentId ? (
+                          {r.originalTalentId && (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -539,43 +524,16 @@ const SkillDomainForm: React.FC = () => {
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                          ) : (
-                            <div className="flex items-center justify-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className={statusOutlineClasses(r.status)}
-                              >
-                                {r.status?.toUpperCase()}
-                              </Badge>
-                              {canVerify(r.status) && r.uid && (
-                                <VerifyDialog
-                                  talentType={r.type}
-                                  _id={r.uid}
-                                  userId={user.uid}
-                                  originalTalentId={r.originalTalentId}
-                                />
-                              )}
-                            </div>
                           )}
 
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label={`Schedule interview for ${r.label}`}
-                                  onClick={() => setMeetingDialogOpen(true)}
-                                >
-                                  <VideoIcon className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Schedule interview</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          {canVerify(r.status) && r.uid && (
+                            <VerifyDialog
+                              talentType={r.type}
+                              _id={r.uid}
+                              userId={user.uid}
+                              originalTalentId={r.originalTalentId}
+                            />
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

@@ -17,6 +17,8 @@ export enum StatusEnum {
   APPLIED = 'APPLIED',
   REJECTED = 'REJECTED',
   COMPLETED = 'COMPLETED',
+  VERIFIED = 'VERIFIED',
+  NOT_APPLIED = 'NOT_APPLIED',
 }
 
 export enum InterviewPermission {
@@ -33,5 +35,9 @@ export const kycBadgeColors: { [key: string]: string } = {
 };
 
 export const canVerify = (status?: string | StatusEnum): boolean => {
-  return status === StatusEnum.PENDING || status === StatusEnum.APPLIED;
+  return (
+    status === StatusEnum.NOT_APPLIED ||
+    status === StatusEnum.APPLIED ||
+    status === 'NOT_APPLIED'
+  );
 };

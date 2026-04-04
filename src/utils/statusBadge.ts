@@ -17,6 +17,16 @@ export const getStatusBadge = (status: string | undefined) => {
       };
     case 'applied':
       return { text: 'APPLIED', className: 'bg-blue-500 hover:bg-blue-600' };
+    case 'not_applied':
+      return {
+        text: 'NOT APPLIED',
+        className: 'bg-gray-500 hover:bg-gray-600',
+      };
+    case 'verified':
+      return {
+        text: 'VERIFIED',
+        className: 'bg-success hover:bg-success text-black',
+      };
     default:
       return { text: 'UNKNOWN', className: 'bg-gray-500 hover:bg-gray-600' };
   }
