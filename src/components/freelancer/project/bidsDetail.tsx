@@ -15,13 +15,13 @@ import {
   File,
   CalendarDays,
 } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+
 import { DateTimePicker } from '@/components/ui/date-picker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import {
   Accordion,
@@ -1681,7 +1681,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                 </div>
                               </div>
                             ) : (
-                               <BidsTable
+                              <BidsTable
                                 status={status as BidStatus}
                                 profile={profile}
                               />
@@ -1728,7 +1728,9 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
           <div className="py-4 space-y-6">
             <div className="space-y-3">
-              <Label className="text-sm font-semibold">How would you like to interview?</Label>
+              <Label className="text-sm font-semibold">
+                How would you like to interview?
+              </Label>
               <RadioGroup
                 value={interviewMode}
                 onValueChange={(val: any) => setInterviewMode(val)}
@@ -1738,14 +1740,19 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   <RadioGroupItem value="DIRECT" id="direct" />
                   <Label htmlFor="direct" className="flex-1 cursor-pointer">
                     <div className="font-semibold">Interview Directly</div>
-                    <div className="text-xs text-muted-foreground">You will be the interviewer for this candidate.</div>
+                    <div className="text-xs text-muted-foreground">
+                      You will be the interviewer for this candidate.
+                    </div>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors">
                   <RadioGroupItem value="HIRE" id="hire" />
                   <Label htmlFor="hire" className="flex-1 cursor-pointer">
                     <div className="font-semibold">Hire an Interviewer</div>
-                    <div className="text-xs text-muted-foreground">Post this as an opportunity for qualified freelancers to bid on.</div>
+                    <div className="text-xs text-muted-foreground">
+                      Post this as an opportunity for qualified freelancers to
+                      bid on.
+                    </div>
                   </Label>
                 </div>
               </RadioGroup>
@@ -1763,7 +1770,9 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="desc" className="text-sm font-semibold">Description / Notes</Label>
+                <Label htmlFor="desc" className="text-sm font-semibold">
+                  Description / Notes
+                </Label>
                 <Textarea
                   id="desc"
                   placeholder="Additional details about the interview process..."
@@ -1792,7 +1801,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
                     Processing...
                   </span>
-                ) : interviewMode === 'HIRE' ? 'Post Opportunity' : 'Schedule Interview'}
+                ) : interviewMode === 'HIRE' ? (
+                  'Post Opportunity'
+                ) : (
+                  'Schedule Interview'
+                )}
               </Button>
             </div>
           </div>
