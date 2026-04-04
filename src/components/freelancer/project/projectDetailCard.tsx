@@ -39,6 +39,7 @@ export interface ProjectDetailCardProps {
   handleStartProject?: () => void; // Added start project handler
   handleIncompleteProject?: () => void; // Added incomplete project handler
   milestones?: Milestone[]; // Optional milestones to compute progress
+  showNDA?: boolean;
 }
 
 function ProjectDetailCard({
@@ -55,6 +56,7 @@ function ProjectDetailCard({
   handleStartProject,
   handleIncompleteProject,
   milestones,
+  showNDA = true,
 }: ProjectDetailCardProps) {
   const { text: projectStatus } = getStatusBadge(status);
 
@@ -223,9 +225,11 @@ function ProjectDetailCard({
                 Milestones
               </Button>
             </Link>
-            {projectStatus !== 'COMPLETED' && projectStatus !== 'REJECTED' && (
-              <NDADialog projectId={projectId} projectName={projectName} />
-            )}
+            {showNDA &&
+              projectStatus !== 'COMPLETED' &&
+              projectStatus !== 'REJECTED' && (
+                <NDADialog projectId={projectId} projectName={projectName} />
+              )}
           </div>
           {/* Conditional button based on project status */}
           {projectStatus === 'PENDING' ? (

@@ -41,7 +41,33 @@ export function WalletConnectButton() {
     <>
       <div className="flex gap-2 items-center">
         {!isConnected ? (
-          <ConnectButton />
+          <ConnectButton.Custom>
+            {({ openConnectModal, mounted }) => {
+              const ready = mounted;
+              return (
+                <div
+                  {...(!ready && {
+                    'aria-hidden': true,
+                    style: {
+                      opacity: 0,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    },
+                  })}
+                >
+                  <Button
+                    onClick={openConnectModal}
+                    type="button"
+                    size="sm"
+                    className="h-9 gap-2 rounded-full hover:scale-105 transition-transform px-3"
+                  >
+                    <Wallet className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    Connect Wallet
+                  </Button>
+                </div>
+              );
+            }}
+          </ConnectButton.Custom>
         ) : (
           <>
             <Button

@@ -211,7 +211,12 @@ const ProjectList = ({
               </div>
             ) : (
               projects.map((project, index: number) => (
-                <ProjectCard key={index} project={project} type={user.type} />
+                <ProjectCard
+                  key={index}
+                  project={project}
+                  type={user.type}
+                  showNdaButton={status === 'ACTIVE'}
+                />
               ))
             )}
           </main>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useReducer } from 'react';
 import { FileText } from 'lucide-react';
 import {
   useAccount,
@@ -115,7 +115,45 @@ const getSafeGasPriceParams = async (
   }
 };
 
+/** One NDA dialog open app-wide; other instances disable until it closes. */
+let ndaDialogGateOwner: symbol | null = null;
+const ndaGateListeners = new Set<() => void>();
+
+function notifyNdaGateListeners() {
+  ndaGateListeners.forEach((fn) => fn());
+}
+
+function subscribeNdaGate(listener: () => void) {
+  ndaGateListeners.add(listener);
+  return () => ndaGateListeners.delete(listener);
+}
+
+function tryAcquireNdaGate(owner: symbol): boolean {
+  if (ndaDialogGateOwner !== null && ndaDialogGateOwner !== owner) {
+    return false;
+  }
+  if (ndaDialogGateOwner === null) {
+    ndaDialogGateOwner = owner;
+    notifyNdaGateListeners();
+  }
+  return true;
+}
+
+function releaseNdaGate(owner: symbol) {
+  if (ndaDialogGateOwner === owner) {
+    ndaDialogGateOwner = null;
+    notifyNdaGateListeners();
+  }
+}
+
+function isNdaGateForeign(owner: symbol) {
+  return ndaDialogGateOwner !== null && ndaDialogGateOwner !== owner;
+}
+
 export default function NDADialog({ projectId, projectName }: NDADialogProps) {
+  const ndaGateInstance = useMemo(() => Symbol('nda-dialog'), []);
+  const [, bumpNdaGate] = useReducer((n: number) => n + 1, 0);
+
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>('form');
   const [loading, setLoading] = useState(false);
@@ -349,6 +387,55 @@ export default function NDADialog({ projectId, projectName }: NDADialogProps) {
   ) => {
     ensureWalletReady();
 
+    if (!address) {
+      throw new Error('Please connect your wallet first.');
+    }
+
+    const ensureRoleForFunction = async () => {
+      const contractAddress = NDA_SBT_POLYGON_AMOY as `0x${string}`;
+      const account = address as `0x${string}`;
+
+      const requireRole = async (
+        roleFn: 'BUSINESS_OWNER_ROLE' | 'FREELANCER_ROLE',
+        friendlyName: string,
+      ) => {
+        const role = (await publicClient!.readContract({
+          address: contractAddress,
+          abi: NDA_SBT_ABI,
+          functionName: roleFn,
+        })) as `0x${string}`;
+
+        const hasRole = (await publicClient!.readContract({
+          address: contractAddress,
+          abi: NDA_SBT_ABI,
+          functionName: 'hasRole',
+          args: [role, account],
+        })) as boolean;
+
+        if (!hasRole) {
+          const msg = `Wallet not authorized for this action. Missing ${friendlyName} on NDA contract.`;
+          notifyError(
+            `${msg} Ask the contract admin to grant this role to ${account}.`,
+            'Access Denied',
+          );
+          throw new Error(msg);
+        }
+      };
+
+      if (
+        functionName === 'createNDA' ||
+        functionName === 'signNDAByBusiness'
+      ) {
+        await requireRole('BUSINESS_OWNER_ROLE', 'BUSINESS_OWNER_ROLE');
+      }
+
+      if (functionName === 'signNDAByFreelancer') {
+        await requireRole('FREELANCER_ROLE', 'FREELANCER_ROLE');
+      }
+    };
+
+    await ensureRoleForFunction();
+
     const baseRequest = {
       account: address,
       address: NDA_SBT_POLYGON_AMOY as `0x${string}`,
@@ -383,9 +470,20 @@ export default function NDADialog({ projectId, projectName }: NDADialogProps) {
   };
 
   const handleClose = () => {
+    releaseNdaGate(ndaGateInstance);
     setOpen(false);
     resetForm();
   };
+
+  useEffect(() => {
+    const unsub = subscribeNdaGate(bumpNdaGate);
+    return () => {
+      unsub();
+      releaseNdaGate(ndaGateInstance);
+    };
+  }, [ndaGateInstance]);
+
+  const foreignNdaDialogOpen = isNdaGateForeign(ndaGateInstance);
 
   // Fetch pending NDAs for freelancer when dialog opens
   useEffect(() => {
@@ -694,7 +792,17 @@ export default function NDADialog({ projectId, projectName }: NDADialogProps) {
         size="sm"
         variant="outline"
         className="gap-2"
-        onClick={() => setOpen(true)}
+        disabled={foreignNdaDialogOpen || open}
+        onClick={() => {
+          if (!tryAcquireNdaGate(ndaGateInstance)) {
+            notifyError(
+              'Another NDA agreement is already open. Close it first.',
+              'NDA',
+            );
+            return;
+          }
+          setOpen(true);
+        }}
       >
         <FileText className="w-4 h-4" />
         NDA Agreement
