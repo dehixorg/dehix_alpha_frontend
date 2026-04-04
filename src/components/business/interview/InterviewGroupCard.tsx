@@ -143,6 +143,7 @@ export default function InterviewGroupCard({
                 variant="outline"
                 size="icon"
                 className="h-10 w-10 rounded-xl bg-white dark:bg-[#1A1A1A] border-[#E5E7EB] dark:border-[#2A2A2A] shadow-sm"
+                aria-label="Open meeting link"
                 onClick={() => window.open(meetingLink, '_blank')}
               >
                 <Video className="h-4 w-4" />
@@ -151,6 +152,7 @@ export default function InterviewGroupCard({
                 variant="outline"
                 size="icon"
                 className="h-10 w-10 rounded-xl bg-white dark:bg-[#1A1A1A] border-[#E5E7EB] dark:border-[#2A2A2A] shadow-sm"
+                aria-label="Open meeting link"
                 onClick={() => handleCopyLink(meetingLink)}
               >
                 <Copy className="h-4 w-4" />

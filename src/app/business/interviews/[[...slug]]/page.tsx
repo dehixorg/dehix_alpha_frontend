@@ -84,6 +84,9 @@ interface Meeting {
 }
 
 const mapInterviewToMeeting = (interview: any): Meeting => {
+  const rawInterviewStatus =
+    interview.interviewStatus || interview.InterviewStatus || 'PENDING';
+
   return {
     ...interview,
     id: interview._id,
@@ -101,11 +104,8 @@ const mapInterviewToMeeting = (interview: any): Meeting => {
       ).toISOString(),
       timeZone: 'UTC',
     },
-    status: (
-      interview.interviewStatus ||
-      interview.InterviewStatus ||
-      'PENDING'
-    ).toLowerCase(),
+    interviewStatus: rawInterviewStatus.toUpperCase(),
+    status: rawInterviewStatus.toLowerCase(),
     interviewType: (interview.interviewType || 'TALENT').toUpperCase(),
     hangoutLink: interview.meetingLink,
   };
@@ -183,6 +183,11 @@ export default function BusinessInterviewsPage() {
     }
   };
 
+  const statusMap: Record<string, string[]> = {
+    confirmed: ['approved', 'completed'],
+    pending: ['pending'],
+  };
+
   const filteredMeetings = useMemo(() => {
     let filtered = meetings.filter((m) => {
       const status = getInterviewStatus(m);
@@ -195,7 +200,13 @@ export default function BusinessInterviewsPage() {
     });
 
     if (filterStatus !== 'all') {
-      filtered = filtered.filter((m) => m.status === filterStatus);
+      if (statusMap[filterStatus]) {
+        filtered = filtered.filter((m) =>
+          statusMap[filterStatus].includes(m.status),
+        );
+      } else {
+        filtered = filtered.filter((m) => m.status === filterStatus);
+      }
     }
 
     return filtered;
@@ -353,7 +364,13 @@ export default function BusinessInterviewsPage() {
                         variant="outline"
                         size="sm"
                         className="h-9 px-4 font-bold text-xs rounded-xl border-[#E5E7EB] dark:border-[#2A2A2A] bg-white dark:bg-[#1A1A1A] text-[#1A1A1A] dark:text-white hover:bg-white/90 dark:hover:bg-[#262626] shadow-sm"
-                        onClick={() => window.open(meetingLink, '_blank')}
+                        onClick={() =>
+                          window.open(
+                            meetingLink,
+                            '_blank',
+                            'noopener,noreferrer',
+                          )
+                        }
                       >
                         Open
                       </Button>

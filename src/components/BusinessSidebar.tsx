@@ -42,7 +42,14 @@ export function BusinessSidebar() {
                 <Separator className="-mt-2 mb-4" />
                 <div className="flex items-center gap-2 text-lg font-semibold mb-6 hover:bg-slate-500 cursor-pointer rounded-lg p-2">
                   <ListVideo className="h-5 w-5" />
-                  <Link href="/business/interviews">Interviews</Link>
+                  <Link
+                    href="/business/interviews"
+                    data-tour="nav-interviews"
+                    className="mb-6 flex items-center gap-2 rounded-lg p-2 text-lg font-semibold hover:bg-slate-500"
+                  >
+                    <ListVideo className="h-5 w-5" />
+                    <span>Interviews</span>
+                  </Link>
                 </div>
               </div>
             </div>
