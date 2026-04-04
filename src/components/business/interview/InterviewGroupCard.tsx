@@ -1,7 +1,6 @@
-'use client';
-import React, { useMemo } from 'react';
-import { Video, Copy, Calendar, Clock, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar, ExternalLink, User2, Video, Copy, Clock, Users } from 'lucide-react';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { notifySuccess, notifyError } from '@/utils/toastMessage';
@@ -21,10 +20,18 @@ interface Meeting {
   attendees?: Array<{
     email: string;
     responseStatus: string;
+    name?: string;
+    avatar?: string;
   }>;
+  interviewer?: {
+    name?: string;
+    avatar?: string;
+  };
   status: string;
+  interviewType: string;
   htmlLink?: string;
   hangoutLink?: string;
+  interviewStatus?: string;
 }
 
 interface InterviewGroupCardProps {
@@ -36,28 +43,39 @@ export default function InterviewGroupCard({
   meeting,
   viewType,
 }: InterviewGroupCardProps) {
-  const interviewStatus = useMemo(() => {
+  const getInterviewStatus = () => {
     const now = new Date();
     const startTime = new Date(meeting.start.dateTime);
     const endTime = new Date(meeting.end.dateTime);
+    const dbStatus = (meeting.interviewStatus || meeting.status || '').toUpperCase();
 
-    if (startTime <= now && now < endTime) {
-      return 'CURRENT';
-    } else if (startTime > now) {
-      return 'SCHEDULED';
-    } else {
+    if (['COMPLETED', 'CANCELLED', 'REJECTED'].includes(dbStatus)) {
       return 'COMPLETED';
     }
-  }, [meeting]);
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    if (dbStatus === 'ONGOING' || (startTime <= now && now < endTime)) {
+      return 'ONGOING';
+    }
+
+    if (startTime > now) {
+      return 'SCHEDULED';
+    }
+
+    return 'COMPLETED';
   };
 
-  const attendeeCount = meeting.attendees?.length || 0;
+  const interviewStatus = getInterviewStatus();
+
+  const getStatusPillClassName = (status: string) => {
+    const base = 'inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-bold tracking-tight';
+
+    if (status === 'COMPLETED' || status === 'APPROVED')
+      return `${base} bg-[#E3F8EE] text-[#00BA77] border border-[#BFF3D9]`;
+    if (status === 'ONGOING' || status === 'SCHEDULED')
+      return `${base} bg-[#DEE7FF] text-[#4F78FF] border border-[#C7D7FF]`;
+
+    return `${base} bg-slate-200/80 text-slate-500 border border-slate-300`;
+  };
 
   const handleCopyLink = async (link: string) => {
     try {
@@ -68,140 +86,141 @@ export default function InterviewGroupCard({
     }
   };
 
+  const firstAttendee = meeting.attendees?.[0];
+  const meetingLink = meeting.hangoutLink || meeting.htmlLink || '';
+
+  const dateLabel = new Date(meeting.start.dateTime).toLocaleString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+
   if (viewType === 'list') {
     return (
-      <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition">
+      <div className="flex items-center justify-between p-5 border rounded-2xl bg-white dark:bg-[#1E1E1E] hover:bg-accent transition shadow-sm">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">
-              {formatTime(meeting.start.dateTime)} • TALENT
+          <div className="flex items-center gap-3">
+            <div className={getStatusPillClassName(interviewStatus)}>
+              {interviewStatus}
+            </div>
+            <span className="text-xs font-bold text-[#666666] dark:text-[#8C8C8C] uppercase tracking-widest">
+              {meeting.interviewType || 'INTERVIEW'}
             </span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">{meeting.summary}</p>
-          {meeting.description && (
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-              {meeting.description}
-            </p>
-          )}
+          <p className="text-[15px] text-[#1A1A1A] dark:text-white font-bold mt-2 truncate">
+            {meeting.summary}
+          </p>
+          <div className="flex items-center gap-4 mt-1.5">
+            <div className="flex items-center gap-1.5 text-[12px] font-medium text-[#8C8C8C]">
+              <Calendar className="h-3.5 w-3.5" /> {dateLabel}
+            </div>
+            {firstAttendee?.name && (
+              <div className="flex items-center gap-1.5 text-[12px] font-medium text-[#8C8C8C]">
+                <User2 className="h-3.5 w-3.5" /> {firstAttendee.name}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 ml-4">
-          <Badge
-            variant={
-              interviewStatus === 'CURRENT'
-                ? 'default'
-                : interviewStatus === 'SCHEDULED'
-                  ? 'outline'
-                  : 'secondary'
-            }
-            className="text-xs"
-          >
-            {interviewStatus}
-          </Badge>
-
-          {meeting.hangoutLink ? (
-            <div className="flex gap-1">
+        <div className="flex items-center gap-3 ml-6">
+          {meetingLink ? (
+            <div className="flex gap-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="h-8 w-8"
-                onClick={() =>
-                  window.open(meeting.hangoutLink, '_blank')
-                }
-                title="Join Meeting"
+                className="h-10 w-10 rounded-xl bg-white dark:bg-[#1A1A1A] border-[#E5E7EB] dark:border-[#2A2A2A] shadow-sm"
+                onClick={() => window.open(meetingLink, '_blank')}
               >
                 <Video className="h-4 w-4" />
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="h-8 w-8"
-                onClick={() => handleCopyLink(meeting.hangoutLink || '')}
-                title="Copy Link"
+                className="h-10 w-10 rounded-xl bg-white dark:bg-[#1A1A1A] border-[#E5E7EB] dark:border-[#2A2A2A] shadow-sm"
+                onClick={() => handleCopyLink(meetingLink)}
               >
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <span className="text-xs text-muted-foreground">No meeting link</span>
+            <span className="text-xs font-medium text-[#8C8C8C]">No Link</span>
           )}
         </div>
       </div>
     );
   }
 
-  // Grid view
   return (
-    <Card className="overflow-hidden hover:shadow-md transition">
-      <CardHeader className="pb-3 bg-muted/30">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-sm line-clamp-2">
-              {meeting.summary}
+    <Card
+      className={`group overflow-hidden border-none bg-[#D1D1D1] dark:bg-[#1E1E1E] dark:border dark:border-[#2A2A2A] rounded-[32px] shadow-none dark:shadow-xl transition-all`}
+    >
+      <CardHeader className="gap-0 pb-5 pt-8 px-8">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-[13px] font-bold uppercase tracking-widest text-[#1A1A1A] dark:text-white/90">
+              {meeting.interviewType || 'INTERVIEW'}
             </CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">TALENT</p>
+            <CardDescription className="text-[12px] font-medium text-[#666666] dark:text-[#8C8C8C] opacity-80">
+              {meetingLink ? 'Meeting link available' : 'No meeting link'}
+            </CardDescription>
           </div>
-          <Badge
-            variant={
-              interviewStatus === 'CURRENT'
-                ? 'default'
-                : interviewStatus === 'SCHEDULED'
-                  ? 'outline'
-                  : 'secondary'
-            }
-            className="text-xs whitespace-nowrap"
-          >
+          <div className={getStatusPillClassName(interviewStatus)}>
             {interviewStatus}
-          </Badge>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-4 space-y-3">
-        {meeting.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {meeting.description}
-          </p>
-        )}
-
-        <div className="space-y-2 text-xs">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" />
-            <span>{formatTime(meeting.start.dateTime)}</span>
+      <CardContent className="space-y-5 px-8 pb-8 pt-0">
+        <div className="space-y-5 rounded-[24px] bg-white dark:bg-[#0F0F0F] p-7 shadow-sm dark:shadow-md dark:border dark:border-[#262626]">
+          <div className="flex items-start gap-4">
+            <User2 className="h-5 w-5 text-[#8C8C8C] mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-medium text-[#868686] dark:text-[#8C8C8C]">
+                Talent
+              </div>
+              <div className="min-w-0 truncate text-[16px] font-bold text-[#1A1A1A] dark:text-white tracking-tight">
+                {meeting.summary}
+              </div>
+            </div>
           </div>
 
-          {attendeeCount > 0 && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Users className="h-3.5 w-3.5" />
-              <span>{attendeeCount} attendee{attendeeCount !== 1 ? 's' : ''}</span>
+          <div className="flex items-start gap-4">
+            <Calendar className="h-5 w-5 text-[#8C8C8C] mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-medium text-[#868686] dark:text-[#8C8C8C]">
+                Date
+              </div>
+              <div className="truncate text-[16px] font-bold text-[#1A1A1A] dark:text-white tracking-tight">
+                {dateLabel}
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
-        {meeting.hangoutLink ? (
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 h-8"
-              onClick={() => window.open(meeting.hangoutLink, '_blank')}
-            >
-              <Video className="h-3.5 w-3.5 mr-1" />
-              Join
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8"
-              onClick={() => handleCopyLink(meeting.hangoutLink || '')}
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
+        {meeting.description ? (
+          <div className="text-[13px] leading-relaxed text-[#666666] dark:text-[#A0A0A0] line-clamp-2 px-1 font-medium">
+            {meeting.description}
           </div>
-        ) : (
-          <div className="text-xs text-muted-foreground text-center py-2">
-            Meeting link available
-          </div>
-        )}
+        ) : null}
+
+        {meetingLink ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full justify-between h-[52px] border-none bg-white dark:bg-[#1A1A1A] text-[#1A1A1A] dark:text-white hover:bg-white/90 dark:hover:bg-[#262626] transition-all font-bold text-[15px] rounded-[18px] shadow-sm dark:shadow-lg mt-2"
+            onClick={() =>
+              window.open(meetingLink, '_blank', 'noopener,noreferrer')
+            }
+          >
+            Open meeting
+            <ExternalLink className="h-4.5 w-4.5" />
+          </Button>
+        ) : null}
       </CardContent>
     </Card>
   );

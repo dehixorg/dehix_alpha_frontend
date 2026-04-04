@@ -8,8 +8,17 @@ import {
   Search,
   Table,
   Grid3x3,
+  GraduationCap,
+  Briefcase,
 } from 'lucide-react';
 import { BoxModelIcon } from '@radix-ui/react-icons';
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -25,7 +34,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
 import EmptyState from '@/components/shared/EmptyState';
-import InterviewGroupCard from '@/components/business/interview/InterviewGroupCard';
+import InterviewItemCard from '@/components/freelancer/interview/InterviewItemCard';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import {
@@ -52,14 +61,49 @@ interface Meeting {
     dateTime: string;
     timeZone: string;
   };
-  attendees?: Array<{
-    email: string;
-    responseStatus: string;
-  }>;
+  interviewer?: {
+    firstName?: string;
+    lastName?: string;
+    userName?: string;
+    skills?: string[];
+    avatar?: string;
+  };
+  interviewee?: {
+    firstName?: string;
+    lastName?: string;
+    userName?: string;
+    skills?: string[];
+    avatar?: string;
+  };
   status: string;
+  interviewType: string;
   htmlLink?: string;
   hangoutLink?: string;
+  interviewStatus?: string;
+  interviewDate?: string;
+  name?: string;
+  talentName?: string;
 }
+
+const mapInterviewToMeeting = (interview: any): Meeting => {
+  return {
+    ...interview,
+    id: interview._id,
+    summary: interview.talentName || 'Professional Interview',
+    description: interview.description || `Interview for ${interview.talentName || 'Talent'}`,
+    start: {
+      dateTime: interview.interviewDate,
+      timeZone: 'UTC',
+    },
+    end: {
+      dateTime: new Date(new Date(interview.interviewDate).getTime() + 60 * 60 * 1000).toISOString(),
+      timeZone: 'UTC',
+    },
+    status: (interview.interviewStatus || interview.InterviewStatus || 'PENDING').toLowerCase(),
+    interviewType: (interview.interviewType || 'TALENT').toUpperCase(),
+    hangoutLink: interview.meetingLink,
+  };
+};
 
 type InterviewStatus = 'current' | 'scheduled' | 'history';
 
@@ -67,6 +111,15 @@ const getInterviewStatus = (meeting: Meeting): InterviewStatus => {
   const now = new Date();
   const startTime = new Date(meeting.start.dateTime);
   const endTime = new Date(meeting.end.dateTime);
+  const dbStatus = (meeting.interviewStatus || '').toUpperCase();
+
+  if (['COMPLETED', 'CANCELLED', 'REJECTED'].includes(dbStatus)) {
+    return 'history';
+  }
+
+  if (dbStatus === 'ONGOING') {
+    return 'current';
+  }
 
   if (startTime <= now && now < endTime) {
     return 'current';
@@ -119,7 +172,7 @@ export default function BusinessInterviewsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [viewType, setViewType] = useState<'list' | 'grid'>('list');
+  const [viewType, setViewType] = useState<'list' | 'grid'>('grid');
 
   useEffect(() => {
     if (!['current', 'scheduled', 'history'].includes(slug)) {
@@ -134,13 +187,20 @@ export default function BusinessInterviewsPage() {
   const fetchMeetings = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/meeting', {
+      const response = await axiosInstance.get('/interview/business', {
         params: {
           limit: 100,
-          offset: 0,
         },
       });
-      setMeetings(response.data?.data || []);
+
+      const data = response.data?.data || {};
+      const allInterviews = [
+        ...(data.PROJECT || []),
+        ...(data.TALENT || []),
+      ];
+
+      const mappedMeetings = allInterviews.map(mapInterviewToMeeting);
+      setMeetings(mappedMeetings);
     } catch (error: any) {
       console.error('Error fetching meetings:', error);
       notifyError(
@@ -152,7 +212,6 @@ export default function BusinessInterviewsPage() {
     }
   };
 
-  // Filter and categorize interviews
   const filteredMeetings = useMemo(() => {
     let filtered = meetings.filter((m) => {
       const status = getInterviewStatus(m);
@@ -171,17 +230,152 @@ export default function BusinessInterviewsPage() {
     return filtered;
   }, [meetings, slug, searchQuery, filterStatus]);
 
-  // Group by date
-  const groupedMeetings = useMemo(() => {
-    return groupByDate(filteredMeetings);
+  const sections = [
+    {
+      key: 'TALENT',
+      title: 'Talent',
+      description: 'Interviews from your Dehix Talent profile',
+      icon: GraduationCap,
+      iconClassName: 'bg-blue-500/10 text-blue-500',
+    },
+    {
+      key: 'PROJECT',
+      title: 'Projects',
+      description: 'Interviews scheduled for your projects',
+      icon: Briefcase,
+      iconClassName: 'bg-emerald-500/10 text-emerald-500',
+    },
+  ] as const;
+
+  const groupedBySection = useMemo(() => {
+    const grouped: Record<string, Meeting[]> = {
+      TALENT: [],
+      PROJECT: [],
+    };
+
+    filteredMeetings.forEach((m) => {
+      const type = (m.interviewType || '').toUpperCase();
+      if (grouped[type]) {
+        grouped[type].push(m);
+      } else if (type === 'PROJECT') {
+        grouped['PROJECT'].push(m);
+      } else if (type === 'TALENT') {
+        grouped['TALENT'].push(m);
+      }
+    });
+
+    return grouped;
   }, [filteredMeetings]);
+
+  const getStatusBadge = (statusRaw: string) => {
+    const status = String(statusRaw || '').toUpperCase().trim();
+    const base = 'inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-bold tracking-tight';
+
+    if (status === 'APPROVED' || status === 'COMPLETED')
+      return { label: status, className: `${base} bg-[#E3F8EE] text-[#00BA77] border border-[#BFF3D9]` };
+    if (status === 'ONGOING' || status === 'SCHEDULED')
+      return { label: status, className: `${base} bg-[#DEE7FF] text-[#4F78FF] border border-[#C7D7FF]` };
+    if (status === 'PENDING' || status === 'APPLIED')
+      return { label: status, className: `${base} bg-amber-100 text-amber-700 border border-amber-200` };
+    if (status === 'REJECTED' || status === 'CANCELLED')
+      return { label: status, className: `${base} bg-red-100 text-red-700 border border-red-200` };
+
+    return { label: status || '-', className: `${base} bg-muted text-muted-foreground border border-border` };
+  };
+
+  const renderTable = () => {
+    const allItems = sections.flatMap((s) =>
+      (groupedBySection[s.key] || []).map((item) => ({ item, section: s }))
+    );
+
+    if (allItems.length === 0) {
+      return (
+        <EmptyState
+          className="py-8"
+          title="No interviews found"
+          description="Try adjusting your search or filters."
+        />
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50">
+            <tr className="text-left font-medium">
+              <th className="px-4 py-3 font-medium">Type</th>
+              <th className="px-4 py-3 font-medium">Talent</th>
+              <th className="px-4 py-3 font-medium">Date</th>
+              <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">Meeting</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allItems.map(({ item, section }) => {
+              const relatedUser = item.interviewee || item.interviewer;
+              const fullName = relatedUser 
+                ? `${relatedUser.firstName || ''} ${relatedUser.lastName || ''}`.trim() || relatedUser.userName
+                : item?.name || item?.talentName || '-';
+              
+              const skill = relatedUser?.skills && relatedUser.skills.length > 0 ? relatedUser.skills[0] : '';
+              const talentDetails = skill ? `${fullName} (${skill})` : fullName;
+
+              const statusInfo = getStatusBadge(item.status);
+              const meetingLink = item.hangoutLink || '';
+
+              return (
+                <tr key={item.id} className="border-t hover:bg-muted/5 transition-colors">
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold ${section.iconClassName}`}>
+                      {section.title}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-bold text-[#1A1A1A] dark:text-white/90">{talentDetails}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-[#666666] dark:text-[#8C8C8C]">
+                    {new Date(item.start.dateTime).toLocaleString('en-US', {
+                      month: 'numeric',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true,
+                    })}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={statusInfo.className}>{statusInfo.label}</span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {meetingLink ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-4 font-bold text-xs rounded-xl border-[#E5E7EB] dark:border-[#2A2A2A] bg-white dark:bg-[#1A1A1A] text-[#1A1A1A] dark:text-white hover:bg-white/90 dark:hover:bg-[#262626] shadow-sm"
+                        onClick={() => window.open(meetingLink, '_blank')}
+                      >
+                        Open
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   const tabCounts = useMemo(
     () => ({
-      current: meetings.filter((m) => getInterviewStatus(m) === 'current').length,
+      current: meetings.filter((m) => getInterviewStatus(m) === 'current')
+        .length,
       scheduled: meetings.filter((m) => getInterviewStatus(m) === 'scheduled')
         .length,
-      history: meetings.filter((m) => getInterviewStatus(m) === 'history').length,
+      history: meetings.filter((m) => getInterviewStatus(m) === 'history')
+        .length,
     }),
     [meetings],
   );
@@ -189,7 +383,6 @@ export default function BusinessInterviewsPage() {
   const handleTabChange = (tab: string) => {
     router.push(`/business/interviews/${tab}`);
   };
-
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -203,7 +396,9 @@ export default function BusinessInterviewsPage() {
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Interviews"
-          breadcrumbItems={[{ label: 'Interviews', link: '/business/interviews' }]}
+          breadcrumbItems={[
+            { label: 'Interviews', link: '/business/interviews' },
+          ]}
         />
         <main className="flex-1 px-4 sm:px-10 sm:py-2">
           <div className="mx-auto w-full max-w-none">
@@ -218,7 +413,11 @@ export default function BusinessInterviewsPage() {
               </CardHeader>
               <CardContent className="p-0">
                 {/* Tabs */}
-                <Tabs value={slug} onValueChange={handleTabChange} className="w-full">
+                <Tabs
+                  value={slug}
+                  onValueChange={handleTabChange}
+                  className="w-full"
+                >
                   <div className="border-b px-2 sm:px-6">
                     <TabsList className="bg-transparent h-12 w-full justify-start p-0">
                       <TabsTrigger
@@ -324,62 +523,82 @@ export default function BusinessInterviewsPage() {
                     ) : (
                       <>
                         {/* Content */}
-                        {filteredMeetings.length === 0 ? (
-                          <EmptyState
-                            icon="📅"
-                            title="No interviews found"
-                            description={`No interviews in the ${slug} category.`}
-                          />
+                        {viewType === 'list' ? (
+                          filteredMeetings.length === 0 ? (
+                            <EmptyState
+                              icon="📅"
+                              title="No interviews found"
+                              description={`No interviews in the ${slug} category.`}
+                            />
+                          ) : (
+                            renderTable()
+                          )
                         ) : (
-                          <div className="space-y-6">
-                            {Object.entries(groupedMeetings).map(
-                              ([dateGroup, groupMeetings]) => {
-                                const firstMeeting = groupMeetings[0];
-                                const date = new Date(firstMeeting.start.dateTime);
-                                const formattedDate = date.toLocaleDateString(
-                                  undefined,
-                                  {
-                                    weekday: 'long',
-                                    month: 'short',
-                                    day: 'numeric',
-                                  },
-                                );
+                          <Accordion
+                            type="single"
+                            collapsible
+                            defaultValue={sections[0].key}
+                            className="w-full"
+                          >
+                            {sections.map((section, idx) => {
+                              const items = groupedBySection[section.key] || [];
+                              const Icon = section.icon;
 
-                                return (
-                                  <div key={dateGroup} className="space-y-3">
-                                    <div className="flex items-start justify-between gap-3 px-1">
-                                      <div>
-                                        <h2 className="text-base font-semibold tracking-tight">
-                                          {dateGroup}
-                                        </h2>
-                                        <p className="text-xs text-muted-foreground">
-                                          {formattedDate}
+                              return (
+                                <AccordionItem
+                                  key={section.key}
+                                  value={section.key}
+                                  className={`border rounded-lg${idx === 0 ? '' : ' mt-4'}`}
+                                >
+                                  <AccordionTrigger className="group rounded-lg px-4 py-3 transition-colors hover:bg-muted/50 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                    <div className="flex w-full items-start justify-between gap-4">
+                                      <div className="flex items-start gap-3">
+                                        <div
+                                          className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ring-1 ring-inset ring-black/5 transition-colors dark:ring-white/10 ${section.iconClassName}`}
+                                        >
+                                          <Icon className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0 text-left leading-tight">
+                                          <div className="text-sm font-semibold tracking-tight">
+                                            {section.title}
+                                          </div>
+                                          <div className="mt-0.5 text-xs text-muted-foreground">
+                                            {section.description}
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="shrink-0 my-auto mr-2 rounded-md border bg-background px-2.5 py-1 text-xs font-medium tabular-nums text-foreground/70 shadow-sm">
+                                        {items.length}
+                                      </div>
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="px-4 pb-6">
+                                    {items.length === 0 ? (
+                                      <div className="mt-2 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border/60 bg-muted/5 py-12 px-4 text-center">
+                                        <h3 className="text-[18px] font-bold tracking-tight text-foreground/90 dark:text-white">
+                                          No interviews found
+                                        </h3>
+                                        <p className="mt-1.5 text-[14px] font-medium text-muted-foreground/70">
+                                          Try adjusting your search or filters.
                                         </p>
                                       </div>
-                                      <div className="shrink-0 rounded-md border bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground shadow-sm">
-                                        {groupMeetings.length}
+                                    ) : (
+                                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-2">
+                                        {items.map((meeting) => (
+                                          <InterviewItemCard
+                                            key={meeting.id}
+                                            item={meeting as any}
+                                            hideIds={true}
+                                          />
+                                        ))}
                                       </div>
-                                    </div>
-                                    <div
-                                      className={`grid gap-3 ${
-                                        viewType === 'grid'
-                                          ? 'md:grid-cols-2 lg:grid-cols-3'
-                                          : 'grid-cols-1'
-                                      }`}
-                                    >
-                                      {groupMeetings.map((meeting) => (
-                                        <InterviewGroupCard
-                                          key={meeting.id}
-                                          meeting={meeting}
-                                          viewType={viewType}
-                                        />
-                                      ))}
-                                    </div>
-                                  </div>
-                                );
-                              },
-                            )}
-                          </div>
+                                    )}
+                                  </AccordionContent>
+                                </AccordionItem>
+                              );
+                            })}
+                          </Accordion>
                         )}
                       </>
                     )}
