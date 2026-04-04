@@ -1,7 +1,12 @@
-import { Calendar, ExternalLink, User2, Video, Copy, Clock, Users } from 'lucide-react';
+import { Calendar, ExternalLink, User2, Video, Copy } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { notifySuccess, notifyError } from '@/utils/toastMessage';
 
@@ -47,7 +52,11 @@ export default function InterviewGroupCard({
     const now = new Date();
     const startTime = new Date(meeting.start.dateTime);
     const endTime = new Date(meeting.end.dateTime);
-    const dbStatus = (meeting.interviewStatus || meeting.status || '').toUpperCase();
+    const dbStatus = (
+      meeting.interviewStatus ||
+      meeting.status ||
+      ''
+    ).toUpperCase();
 
     if (['COMPLETED', 'CANCELLED', 'REJECTED'].includes(dbStatus)) {
       return 'COMPLETED';
@@ -67,7 +76,8 @@ export default function InterviewGroupCard({
   const interviewStatus = getInterviewStatus();
 
   const getStatusPillClassName = (status: string) => {
-    const base = 'inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-bold tracking-tight';
+    const base =
+      'inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-bold tracking-tight';
 
     if (status === 'COMPLETED' || status === 'APPROVED')
       return `${base} bg-[#E3F8EE] text-[#00BA77] border border-[#BFF3D9]`;

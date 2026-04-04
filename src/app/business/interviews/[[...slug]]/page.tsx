@@ -7,7 +7,6 @@ import {
   History,
   Search,
   Table,
-  Grid3x3,
   GraduationCap,
   Briefcase,
 } from 'lucide-react';
@@ -19,7 +18,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import {
@@ -90,16 +88,24 @@ const mapInterviewToMeeting = (interview: any): Meeting => {
     ...interview,
     id: interview._id,
     summary: interview.talentName || 'Professional Interview',
-    description: interview.description || `Interview for ${interview.talentName || 'Talent'}`,
+    description:
+      interview.description ||
+      `Interview for ${interview.talentName || 'Talent'}`,
     start: {
       dateTime: interview.interviewDate,
       timeZone: 'UTC',
     },
     end: {
-      dateTime: new Date(new Date(interview.interviewDate).getTime() + 60 * 60 * 1000).toISOString(),
+      dateTime: new Date(
+        new Date(interview.interviewDate).getTime() + 60 * 60 * 1000,
+      ).toISOString(),
       timeZone: 'UTC',
     },
-    status: (interview.interviewStatus || interview.InterviewStatus || 'PENDING').toLowerCase(),
+    status: (
+      interview.interviewStatus ||
+      interview.InterviewStatus ||
+      'PENDING'
+    ).toLowerCase(),
     interviewType: (interview.interviewType || 'TALENT').toUpperCase(),
     hangoutLink: interview.meetingLink,
   };
@@ -128,38 +134,6 @@ const getInterviewStatus = (meeting: Meeting): InterviewStatus => {
   } else {
     return 'history';
   }
-};
-
-const groupByDate = (meetings: Meeting[]) => {
-  const grouped: Record<string, Meeting[]> = {};
-
-  meetings.forEach((meeting) => {
-    const date = new Date(meeting.start.dateTime);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    let dateKey: string;
-
-    if (date.toDateString() === today.toDateString()) {
-      dateKey = 'Today';
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      dateKey = 'Tomorrow';
-    } else {
-      dateKey = date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'short',
-        day: 'numeric',
-      });
-    }
-
-    if (!grouped[dateKey]) {
-      grouped[dateKey] = [];
-    }
-    grouped[dateKey].push(meeting);
-  });
-
-  return grouped;
 };
 
 export default function BusinessInterviewsPage() {
@@ -194,10 +168,7 @@ export default function BusinessInterviewsPage() {
       });
 
       const data = response.data?.data || {};
-      const allInterviews = [
-        ...(data.PROJECT || []),
-        ...(data.TALENT || []),
-      ];
+      const allInterviews = [...(data.PROJECT || []), ...(data.TALENT || [])];
 
       const mappedMeetings = allInterviews.map(mapInterviewToMeeting);
       setMeetings(mappedMeetings);
@@ -268,24 +239,42 @@ export default function BusinessInterviewsPage() {
   }, [filteredMeetings]);
 
   const getStatusBadge = (statusRaw: string) => {
-    const status = String(statusRaw || '').toUpperCase().trim();
-    const base = 'inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-bold tracking-tight';
+    const status = String(statusRaw || '')
+      .toUpperCase()
+      .trim();
+    const base =
+      'inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-bold tracking-tight';
 
     if (status === 'APPROVED' || status === 'COMPLETED')
-      return { label: status, className: `${base} bg-[#E3F8EE] text-[#00BA77] border border-[#BFF3D9]` };
+      return {
+        label: status,
+        className: `${base} bg-[#E3F8EE] text-[#00BA77] border border-[#BFF3D9]`,
+      };
     if (status === 'ONGOING' || status === 'SCHEDULED')
-      return { label: status, className: `${base} bg-[#DEE7FF] text-[#4F78FF] border border-[#C7D7FF]` };
+      return {
+        label: status,
+        className: `${base} bg-[#DEE7FF] text-[#4F78FF] border border-[#C7D7FF]`,
+      };
     if (status === 'PENDING' || status === 'APPLIED')
-      return { label: status, className: `${base} bg-amber-100 text-amber-700 border border-amber-200` };
+      return {
+        label: status,
+        className: `${base} bg-amber-100 text-amber-700 border border-amber-200`,
+      };
     if (status === 'REJECTED' || status === 'CANCELLED')
-      return { label: status, className: `${base} bg-red-100 text-red-700 border border-red-200` };
+      return {
+        label: status,
+        className: `${base} bg-red-100 text-red-700 border border-red-200`,
+      };
 
-    return { label: status || '-', className: `${base} bg-muted text-muted-foreground border border-border` };
+    return {
+      label: status || '-',
+      className: `${base} bg-muted text-muted-foreground border border-border`,
+    };
   };
 
   const renderTable = () => {
     const allItems = sections.flatMap((s) =>
-      (groupedBySection[s.key] || []).map((item) => ({ item, section: s }))
+      (groupedBySection[s.key] || []).map((item) => ({ item, section: s })),
     );
 
     if (allItems.length === 0) {
@@ -313,24 +302,35 @@ export default function BusinessInterviewsPage() {
           <tbody>
             {allItems.map(({ item, section }) => {
               const relatedUser = item.interviewee || item.interviewer;
-              const fullName = relatedUser 
-                ? `${relatedUser.firstName || ''} ${relatedUser.lastName || ''}`.trim() || relatedUser.userName
+              const fullName = relatedUser
+                ? `${relatedUser.firstName || ''} ${relatedUser.lastName || ''}`.trim() ||
+                  relatedUser.userName
                 : item?.name || item?.talentName || '-';
-              
-              const skill = relatedUser?.skills && relatedUser.skills.length > 0 ? relatedUser.skills[0] : '';
+
+              const skill =
+                relatedUser?.skills && relatedUser.skills.length > 0
+                  ? relatedUser.skills[0]
+                  : '';
               const talentDetails = skill ? `${fullName} (${skill})` : fullName;
 
               const statusInfo = getStatusBadge(item.status);
               const meetingLink = item.hangoutLink || '';
 
               return (
-                <tr key={item.id} className="border-t hover:bg-muted/5 transition-colors">
+                <tr
+                  key={item.id}
+                  className="border-t hover:bg-muted/5 transition-colors"
+                >
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold ${section.iconClassName}`}>
+                    <span
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold ${section.iconClassName}`}
+                    >
                       {section.title}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-bold text-[#1A1A1A] dark:text-white/90">{talentDetails}</td>
+                  <td className="px-4 py-3 font-bold text-[#1A1A1A] dark:text-white/90">
+                    {talentDetails}
+                  </td>
                   <td className="px-4 py-3 whitespace-nowrap text-[#666666] dark:text-[#8C8C8C]">
                     {new Date(item.start.dateTime).toLocaleString('en-US', {
                       month: 'numeric',
@@ -343,7 +343,9 @@ export default function BusinessInterviewsPage() {
                     })}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={statusInfo.className}>{statusInfo.label}</span>
+                    <span className={statusInfo.className}>
+                      {statusInfo.label}
+                    </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {meetingLink ? (
