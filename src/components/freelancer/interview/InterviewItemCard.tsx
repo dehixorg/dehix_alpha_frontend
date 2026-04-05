@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, ExternalLink, User2, CheckCircle } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -80,6 +80,10 @@ export default function InterviewItemCard({
 
     if (status === 'APPROVED' || status === 'COMPLETED')
       return `${base} border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300`;
+    if (status === 'SCHEDULED')
+      return `${base} border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300`;
+    if (status === 'ONGOING')
+      return `${base} border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300`;
     if (status === 'PENDING' || status === 'APPLIED')
       return `${base} border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300`;
     if (status === 'REJECTED' || status === 'CANCELLED')
@@ -88,9 +92,9 @@ export default function InterviewItemCard({
     return `${base} border-border bg-muted/40 text-muted-foreground`;
   };
 
-  const interviewDate = item?.interviewDate
-    ? new Date(item.interviewDate)
-    : undefined;
+  const interviewDate = useMemo(() => {
+    return item?.interviewDate ? new Date(item.interviewDate) : undefined;
+  }, [item?.interviewDate]);
 
   const meetingLink = String(item?.meetingLink || '').trim();
   const talentName = String(item?.name || item?.talentName || '').trim();
@@ -104,16 +108,56 @@ export default function InterviewItemCard({
       : '-'
     : talentName || item?.talentId || '-';
 
-  const dateLabel =
-    interviewDate && !Number.isNaN(interviewDate.getTime())
+  const dateLabel = useMemo(() => {
+    return interviewDate && !Number.isNaN(interviewDate.getTime())
       ? interviewDate.toLocaleString()
       : '-';
+  }, [interviewDate]);
 
-  const isScheduled = statusLabel === 'SCHEDULED';
+  const isJoinableStatus = useMemo(() => {
+    return ['SCHEDULED', 'ONGOING', 'APPROVED'].includes(statusLabel);
+  }, [statusLabel]);
+
   const bothConfirmed = localInterviewerConfirmed && localIntervieweeConfirmed;
 
-  // Show meeting link only if scheduled and not both confirmed
-  const showMeetingButton = meetingLink && isScheduled && !bothConfirmed;
+  // 5-minute rule logic
+  const [isMeetEnabled, setIsMeetEnabled] = useState(false);
+  const [timeToEnable, setTimeToEnable] = useState<string>('');
+
+  useEffect(() => {
+    if (!interviewDate || !isJoinableStatus || bothConfirmed) return;
+
+    if (statusLabel === 'ONGOING') {
+      setIsMeetEnabled(true);
+      return;
+    }
+
+    const checkTime = () => {
+      const now = new Date();
+      const startTime = interviewDate;
+      const enableTime = new Date(startTime.getTime() - 5 * 60 * 1000);
+      
+      const enabled = now >= enableTime;
+      setIsMeetEnabled(enabled);
+
+      if (!enabled) {
+        const diffMs = enableTime.getTime() - now.getTime();
+        const diffMins = Math.ceil(diffMs / (1000 * 60));
+        if (diffMins > 60) {
+            setTimeToEnable(enableTime.toLocaleString());
+        } else {
+            setTimeToEnable(`${diffMins} minute${diffMins > 1 ? 's' : ''}`);
+        }
+      }
+    };
+
+    checkTime();
+    const interval = setInterval(checkTime, 30000); // Check every 30s
+    return () => clearInterval(interval);
+  }, [item?.interviewDate, statusLabel, bothConfirmed, isJoinableStatus]);
+
+  // Show meeting link only if joinable status and not both confirmed
+  const showMeetingButton = !!meetingLink && isJoinableStatus && !bothConfirmed;
 
   // For interviewer: show confirmation prompt after clicking "Open meeting"
   // For interviewee: show confirmation prompt if interviewer has confirmed but interviewee hasn't
@@ -121,7 +165,7 @@ export default function InterviewItemCard({
     role === 'interviewee' &&
     localInterviewerConfirmed &&
     !localIntervieweeConfirmed &&
-    isScheduled;
+    isJoinableStatus;
 
   const handleOpenMeeting = () => {
     window.open(meetingLink, '_blank', 'noopener,noreferrer');
@@ -232,7 +276,7 @@ export default function InterviewItemCard({
           ) : null}
 
           {/* Completion status indicators */}
-          {isScheduled &&
+          {isJoinableStatus &&
             (localInterviewerConfirmed || localIntervieweeConfirmed) && (
               <div className="space-y-1">
                 {localInterviewerConfirmed && (
@@ -252,16 +296,29 @@ export default function InterviewItemCard({
 
           {/* Open meeting button (for interviewer, triggers confirmation after) */}
           {showMeetingButton ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full justify-between"
-              onClick={handleOpenMeeting}
-            >
-              Open meeting
-              <ExternalLink className="h-4 w-4" />
-            </Button>
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant={isMeetEnabled ? "outline" : "secondary"}
+                size="sm"
+                className="w-full justify-between"
+                onClick={handleOpenMeeting}
+                disabled={!isMeetEnabled}
+              >
+                {isMeetEnabled ? 'Open meeting' : 'Meeting button locked'}
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              {!isMeetEnabled && (
+                <p className="text-[11px] text-center text-muted-foreground italic">
+                  The meeting button will be enabled 5 minutes before the start time.
+                  {timeToEnable && (
+                    <span className="block mt-0.5 font-medium text-primary/70">
+                      Enabling in approx. {timeToEnable}
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
           ) : null}
 
           {/* For interviewee: show confirm completion button when interviewer has confirmed */}

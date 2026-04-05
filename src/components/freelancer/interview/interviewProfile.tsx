@@ -398,7 +398,6 @@ const InterviewProfile: React.FC = () => {
 
   useEffect(() => {
     fetchVerifiedAttributes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
   const handleApplyAsInterviewer = async (
