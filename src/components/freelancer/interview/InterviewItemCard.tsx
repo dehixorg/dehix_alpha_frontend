@@ -136,7 +136,7 @@ export default function InterviewItemCard({
       const now = new Date();
       const startTime = interviewDate;
       const enableTime = new Date(startTime.getTime() - 5 * 60 * 1000);
-      
+
       const enabled = now >= enableTime;
       setIsMeetEnabled(enabled);
 
@@ -144,9 +144,9 @@ export default function InterviewItemCard({
         const diffMs = enableTime.getTime() - now.getTime();
         const diffMins = Math.ceil(diffMs / (1000 * 60));
         if (diffMins > 60) {
-            setTimeToEnable(enableTime.toLocaleString());
+          setTimeToEnable(enableTime.toLocaleString());
         } else {
-            setTimeToEnable(`${diffMins} minute${diffMins > 1 ? 's' : ''}`);
+          setTimeToEnable(`${diffMins} minute${diffMins > 1 ? 's' : ''}`);
         }
       }
     };
@@ -299,7 +299,7 @@ export default function InterviewItemCard({
             <div className="space-y-2">
               <Button
                 type="button"
-                variant={isMeetEnabled ? "outline" : "secondary"}
+                variant={isMeetEnabled ? 'outline' : 'secondary'}
                 size="sm"
                 className="w-full justify-between"
                 onClick={handleOpenMeeting}
@@ -310,7 +310,8 @@ export default function InterviewItemCard({
               </Button>
               {!isMeetEnabled && (
                 <p className="text-[11px] text-center text-muted-foreground italic">
-                  The meeting button will be enabled 5 minutes before the start time.
+                  The meeting button will be enabled 5 minutes before the start
+                  time.
                   {timeToEnable && (
                     <span className="block mt-0.5 font-medium text-primary/70">
                       Enabling in approx. {timeToEnable}

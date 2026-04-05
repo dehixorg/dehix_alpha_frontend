@@ -18,8 +18,8 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { BoxModelIcon } from '@radix-ui/react-icons';
-import { cn } from '@/lib/utils';
 
+import { cn } from '@/lib/utils';
 import {
   Accordion,
   AccordionContent,
@@ -152,7 +152,9 @@ export default function BusinessInterviewsPage() {
   const [viewType, setViewType] = useState<'list' | 'grid'>('grid');
 
   const isReviewingBids = slug === 'bids' && slugParam.length > 1;
-  const reviewInterviewId = isReviewingBids ? slugParam[slugParam.length - 1] : null;
+  const reviewInterviewId = isReviewingBids
+    ? slugParam[slugParam.length - 1]
+    : null;
 
   useEffect(() => {
     if (!['current', 'bids', 'history'].includes(slug)) {
@@ -173,7 +175,9 @@ export default function BusinessInterviewsPage() {
       // Collect all categorized interviews from the backend (PROJECT, TALENT, HIRE, etc.)
       const allInterviews = Object.values(data).flat();
 
-      const mappedMeetings = (allInterviews as any[]).map(mapInterviewToMeeting);
+      const mappedMeetings = (allInterviews as any[]).map(
+        mapInterviewToMeeting,
+      );
       setMeetings(mappedMeetings);
     } catch (error: any) {
       console.error('Error fetching meetings:', error);
@@ -223,7 +227,9 @@ export default function BusinessInterviewsPage() {
     const total = meetings.length;
     const pending = meetings.filter((m) => m.status === 'bidding').length;
     const scheduled = meetings.filter((m) =>
-      ['SCHEDULED', 'ONGOING'].includes((m.interviewStatus || '').toUpperCase()),
+      ['SCHEDULED', 'ONGOING'].includes(
+        (m.interviewStatus || '').toUpperCase(),
+      ),
     ).length;
 
     return [
@@ -312,13 +318,17 @@ export default function BusinessInterviewsPage() {
                   Interview Dashboard
                 </h1>
                 <p className="text-lg text-muted-foreground max-w-2xl">
-                  Streamline your hiring process. Manage project-specific skill verifications and talent interviews in one place.
+                  Streamline your hiring process. Manage project-specific skill
+                  verifications and talent interviews in one place.
                 </p>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 {stats.map((stat, idx) => (
-                  <Card key={idx} className="border-muted/40 bg-card/40 backdrop-blur-sm shadow-sm hover:shadow-md transition-all group">
+                  <Card
+                    key={idx}
+                    className="border-muted/40 bg-card/40 backdrop-blur-sm shadow-sm hover:shadow-md transition-all group"
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
@@ -329,7 +339,13 @@ export default function BusinessInterviewsPage() {
                             {stat.value}
                           </p>
                         </div>
-                        <div className={cn('p-3 rounded-2xl transition-transform group-hover:scale-110', stat.bg, stat.color)}>
+                        <div
+                          className={cn(
+                            'p-3 rounded-2xl transition-transform group-hover:scale-110',
+                            stat.bg,
+                            stat.color,
+                          )}
+                        >
                           <stat.icon className="h-6 w-6" />
                         </div>
                       </div>
@@ -345,7 +361,9 @@ export default function BusinessInterviewsPage() {
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-1 bg-primary rounded-full" />
                     <h2 className="text-2xl font-bold tracking-tight">
-                      {isReviewingBids ? 'Candidate Profiles' : 'Manage Interviews'}
+                      {isReviewingBids
+                        ? 'Candidate Profiles'
+                        : 'Manage Interviews'}
                     </h2>
                   </div>
                   {!isReviewingBids && (
@@ -416,7 +434,10 @@ export default function BusinessInterviewsPage() {
                           className="pl-9 h-11 bg-background/50 border-muted/60 focus:border-primary/50 transition-all rounded-xl shadow-sm"
                         />
                       </div>
-                      <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <Select
+                        value={filterStatus}
+                        onValueChange={setFilterStatus}
+                      >
                         <SelectTrigger className="w-[160px] h-11 bg-background/50 border-muted/60 rounded-xl shadow-sm">
                           <SelectValue placeholder="All Status" />
                         </SelectTrigger>
@@ -429,11 +450,17 @@ export default function BusinessInterviewsPage() {
                     </div>
                   </div>
 
-                  <TabsContent value={slug} className="mt-0 border-none p-0 outline-none">
+                  <TabsContent
+                    value={slug}
+                    className="mt-0 border-none p-0 outline-none"
+                  >
                     {loading ? (
                       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {[1, 2, 3].map((i) => (
-                          <Card key={i} className="overflow-hidden border-muted/60">
+                          <Card
+                            key={i}
+                            className="overflow-hidden border-muted/60"
+                          >
                             <CardHeader className="space-y-2">
                               <Skeleton className="h-5 w-1/2" />
                               <Skeleton className="h-4 w-3/4" />
@@ -449,9 +476,9 @@ export default function BusinessInterviewsPage() {
                         ))}
                       </div>
                     ) : isReviewingBids && reviewInterviewId ? (
-                      <ReviewBidsDetail 
-                        interviewId={reviewInterviewId} 
-                        onBack={() => router.push('/business/interviews/bids')} 
+                      <ReviewBidsDetail
+                        interviewId={reviewInterviewId}
+                        onBack={() => router.push('/business/interviews/bids')}
                       />
                     ) : filteredMeetings.length === 0 ? (
                       <div className="py-12">
@@ -462,10 +489,15 @@ export default function BusinessInterviewsPage() {
                               ? `No interviews match your search "${searchQuery}"`
                               : `You don't have any ${slug} interviews at the moment.`
                           }
-                          icon={<Calendar className="h-12 w-12 text-muted-foreground" />}
+                          icon={
+                            <Calendar className="h-12 w-12 text-muted-foreground" />
+                          }
                           actions={
                             searchQuery && (
-                              <Button variant="outline" onClick={() => setSearchQuery('')}>
+                              <Button
+                                variant="outline"
+                                onClick={() => setSearchQuery('')}
+                              >
                                 Clear search
                               </Button>
                             )
@@ -475,13 +507,21 @@ export default function BusinessInterviewsPage() {
                     ) : slug === 'bids' ? (
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {filteredMeetings.map((meeting) => (
-                          <BiddingInterviewCard key={meeting.id} meeting={meeting} />
+                          <BiddingInterviewCard
+                            key={meeting.id}
+                            meeting={meeting}
+                          />
                         ))}
                       </div>
                     ) : (
-                      <Accordion type="multiple" defaultValue={['TALENT', 'PROJECT']} className="space-y-8">
+                      <Accordion
+                        type="multiple"
+                        defaultValue={['TALENT', 'PROJECT']}
+                        className="space-y-8"
+                      >
                         {sections.map((section) => {
-                          const sectionMeetings = groupedBySection[section.key] || [];
+                          const sectionMeetings =
+                            groupedBySection[section.key] || [];
                           if (sectionMeetings.length === 0) return null;
 
                           return (
@@ -493,7 +533,9 @@ export default function BusinessInterviewsPage() {
                               <div className="flex items-center justify-between mb-4">
                                 <AccordionTrigger className="hover:no-underline py-0 group">
                                   <div className="flex items-center gap-4">
-                                    <div className={`p-2.5 rounded-xl ${section.iconClassName} transition-colors group-hover:bg-opacity-20`}>
+                                    <div
+                                      className={`p-2.5 rounded-xl ${section.iconClassName} transition-colors group-hover:bg-opacity-20`}
+                                    >
                                       <section.icon className="h-5 w-5" />
                                     </div>
                                     <div className="text-left">
@@ -527,30 +569,57 @@ export default function BusinessInterviewsPage() {
                                     <table className="w-full text-sm">
                                       <thead>
                                         <tr className="border-b bg-muted/30">
-                                          <th className="px-4 py-3 text-left font-semibold">Talent</th>
-                                          <th className="px-4 py-3 text-left font-semibold">Status</th>
-                                          <th className="px-4 py-3 text-left font-semibold">Date</th>
-                                          <th className="px-4 py-3 text-right font-semibold">Actions</th>
+                                          <th className="px-4 py-3 text-left font-semibold">
+                                            Talent
+                                          </th>
+                                          <th className="px-4 py-3 text-left font-semibold">
+                                            Status
+                                          </th>
+                                          <th className="px-4 py-3 text-left font-semibold">
+                                            Date
+                                          </th>
+                                          <th className="px-4 py-3 text-right font-semibold">
+                                            Actions
+                                          </th>
                                         </tr>
                                       </thead>
                                       <tbody className="divide-y divide-muted/60">
                                         {sectionMeetings.map((meeting) => (
-                                          <tr key={meeting.id} className="hover:bg-muted/20 transition-colors">
-                                            <td className="px-4 py-4 font-medium">{meeting.summary}</td>
+                                          <tr
+                                            key={meeting.id}
+                                            className="hover:bg-muted/20 transition-colors"
+                                          >
+                                            <td className="px-4 py-4 font-medium">
+                                              {meeting.summary}
+                                            </td>
                                             <td className="px-4 py-4">
-                                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
-                                                meeting.status === 'completed' || meeting.status === 'approved'
-                                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                                  : 'bg-amber-50 text-amber-700 border-amber-200'
-                                              }`}>
+                                              <span
+                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
+                                                  meeting.status ===
+                                                    'completed' ||
+                                                  meeting.status === 'approved'
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                                                }`}
+                                              >
                                                 {meeting.interviewStatus}
                                               </span>
                                             </td>
                                             <td className="px-4 py-4 text-muted-foreground">
-                                              {new Date(meeting.start.dateTime).toLocaleString()}
+                                              {new Date(
+                                                meeting.start.dateTime,
+                                              ).toLocaleString()}
                                             </td>
                                             <td className="px-4 py-4 text-right">
-                                              <Button variant="ghost" size="sm" onClick={() => router.push(`/business/interviews/${slug}/${meeting.id}`)}>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() =>
+                                                  router.push(
+                                                    `/business/interviews/${slug}/${meeting.id}`,
+                                                  )
+                                                }
+                                              >
                                                 View Details
                                               </Button>
                                             </td>
@@ -590,9 +659,7 @@ function BiddingInterviewCard({ meeting }: { meeting: Meeting }) {
           </Badge>
           <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/40 rounded-full border border-muted/60">
             <Users className="h-3 w-3 text-muted-foreground" />
-            <span className="text-[11px] font-semibold">
-              {bids.length}
-            </span>
+            <span className="text-[11px] font-semibold">{bids.length}</span>
           </div>
         </div>
         <CardTitle className="text-xl font-bold line-clamp-1 group-hover:text-primary transition-colors">
@@ -606,54 +673,82 @@ function BiddingInterviewCard({ meeting }: { meeting: Meeting }) {
       <CardContent className="flex-1 pb-6 pt-0">
         <div className="space-y-6">
           <div className="flex flex-col gap-2.5">
-             <div className="flex items-center gap-2.5 text-xs text-muted-foreground font-medium">
-               <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-500">
+            <div className="flex items-center gap-2.5 text-xs text-muted-foreground font-medium">
+              <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-500">
                 <Calendar className="h-3.5 w-3.5" />
-               </div>
-               <span>Requested: {new Date(meeting.start.dateTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-             </div>
-             <div className="flex items-center gap-2.5 text-xs text-muted-foreground font-medium">
-               <div className="p-1.5 rounded-md bg-amber-500/10 text-amber-500">
+              </div>
+              <span>
+                Requested:{' '}
+                {new Date(meeting.start.dateTime).toLocaleDateString(
+                  undefined,
+                  { month: 'short', day: 'numeric', year: 'numeric' },
+                )}
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5 text-xs text-muted-foreground font-medium">
+              <div className="p-1.5 rounded-md bg-amber-500/10 text-amber-500">
                 <Clock className="h-3.5 w-3.5" />
-               </div>
-               <span>Time: {new Date(meeting.start.dateTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
-             </div>
+              </div>
+              <span>
+                Time:{' '}
+                {new Date(meeting.start.dateTime).toLocaleTimeString(
+                  undefined,
+                  { hour: '2-digit', minute: '2-digit' },
+                )}
+              </span>
+            </div>
           </div>
 
           <div className="space-y-3.5">
-             <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Recent Bids</h4>
-                {bids.length > 0 && <span className="h-1 flex-1 mx-3 bg-muted/30 rounded-full" />}
-             </div>
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">
+                Recent Bids
+              </h4>
+              {bids.length > 0 && (
+                <span className="h-1 flex-1 mx-3 bg-muted/30 rounded-full" />
+              )}
+            </div>
 
-             {bids.length === 0 ? (
-               <div className="flex flex-col items-center justify-center py-4 px-2 rounded-xl border border-dashed border-muted bg-muted/10 text-center">
-               </div>
-             ) : (
-               <div className="space-y-2.5">
-                 {bids.slice(0, 2).map((bid: any, idx: number) => (
-                   <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-background/40 border border-muted/40 hover:border-muted-foreground/20 transition-colors">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter mb-0.5">Estimated Fee</span>
-                        <span className="text-sm font-bold text-foreground leading-none">${bid.fee}</span>
-                      </div>
-                      <Badge variant="outline" className="text-[9px] h-5 bg-background font-bold tracking-wide uppercase border-muted/60">
-                        {bid.status}
-                      </Badge>
-                   </div>
-                 ))}
-                 {bids.length > 2 && (
-                   <div className="flex items-center justify-center pt-1 group/more">
-                     <p 
-                        className="text-[11px] text-primary/80 font-bold hover:text-primary transition-colors cursor-pointer flex items-center gap-1"
-                        onClick={() => router.push(`/business/interviews/bids/${meeting.id}`)}
-                     >
-                       View all {bids.length} bids <ChevronRight className="h-3 w-3" />
-                     </p>
-                   </div>
-                 )}
-               </div>
-             )}
+            {bids.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-4 px-2 rounded-xl border border-dashed border-muted bg-muted/10 text-center"></div>
+            ) : (
+              <div className="space-y-2.5">
+                {bids.slice(0, 2).map((bid: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-background/40 border border-muted/40 hover:border-muted-foreground/20 transition-colors"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter mb-0.5">
+                        Estimated Fee
+                      </span>
+                      <span className="text-sm font-bold text-foreground leading-none">
+                        ${bid.fee}
+                      </span>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] h-5 bg-background font-bold tracking-wide uppercase border-muted/60"
+                    >
+                      {bid.status}
+                    </Badge>
+                  </div>
+                ))}
+                {bids.length > 2 && (
+                  <div className="flex items-center justify-center pt-1 group/more">
+                    <p
+                      className="text-[11px] text-primary/80 font-bold hover:text-primary transition-colors cursor-pointer flex items-center gap-1"
+                      onClick={() =>
+                        router.push(`/business/interviews/bids/${meeting.id}`)
+                      }
+                    >
+                      View all {bids.length} bids{' '}
+                      <ChevronRight className="h-3 w-3" />
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
