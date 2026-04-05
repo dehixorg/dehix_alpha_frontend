@@ -48,7 +48,7 @@ import {
   getBadgeColor,
   statusOutlineClasses,
 } from '@/utils/common/getBadgeStatus';
-import { StatusEnum } from '@/utils/freelancer/enum';
+import { StatusEnum, canVerify } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
 
@@ -491,7 +491,7 @@ const SkillDomainForm: React.FC = () => {
                           >
                             {r.status?.toUpperCase()}
                           </Badge>
-                          {r.status === StatusEnum.PENDING && r.uid && (
+                          {canVerify(r.status) && r.uid && (
                             <VerifyDialog
                               talentType={r.type}
                               _id={r.uid}
@@ -547,7 +547,7 @@ const SkillDomainForm: React.FC = () => {
                               >
                                 {r.status?.toUpperCase()}
                               </Badge>
-                              {r.status === StatusEnum.PENDING && r.uid && (
+                              {canVerify(r.status) && r.uid && (
                                 <VerifyDialog
                                   talentType={r.type}
                                   _id={r.uid}
@@ -689,7 +689,7 @@ const SkillDomainForm: React.FC = () => {
                     <Badge className={getBadgeColor(r.status)}>
                       {r.status?.toUpperCase()}
                     </Badge>
-                    {r.status === StatusEnum.PENDING && r.uid && (
+                    {canVerify(r.status) && r.uid && (
                       <VerifyDialog
                         talentType={r.type}
                         _id={r.uid}

@@ -65,8 +65,10 @@ export default function InterviewItemCard({
   const typeLabel = String(item?.interviewType || 'INTERVIEW').toUpperCase();
 
   const talentDetails = hideIds
-    ? `${talentName ? talentName : '-'}`
-    : `${item?.talentId || '-'}${talentName ? ` (${talentName})` : ''}`;
+    ? talentName
+      ? talentName
+      : '-'
+    : talentName || item?.talentId || '-';
 
   const dateLabel =
     interviewDate && !Number.isNaN(interviewDate.getTime())

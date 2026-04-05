@@ -207,23 +207,18 @@ export default function CurrentComponent({
     {
       key: 'PEERTOPEER',
       title: 'Peer to Peer',
-      description: 'Peer-to-peer interviews and mock sessions',
+      description: 'Peer-to-peer interviews and mock sessions (Disabled)',
       icon: Users2,
       iconClassName: 'bg-sky-500/10 text-sky-600',
-    },
-    {
-      key: 'HIRE',
-      title: 'Hire',
-      description: 'Hiring interviews and related processes',
-      icon: Handshake,
-      iconClassName: 'bg-amber-500/10 text-amber-600',
+      disabled: true,
     },
     {
       key: 'GROWTH',
       title: 'Growth',
-      description: 'Growth interviews and mentorship sessions',
+      description: 'Growth interviews and mentorship sessions (Disabled)',
       icon: TrendingUp,
       iconClassName: 'bg-pink-500/10 text-pink-600',
+      disabled: true,
     },
   ] as const;
 
@@ -241,9 +236,11 @@ export default function CurrentComponent({
 
     const direction = tableSort === 'dateAsc' ? 1 : -1;
 
-    const rows = sections.flatMap((s) =>
-      normalizeList(grouped[s.key]).map((item) => ({ item, section: s })),
-    );
+    const rows = sections
+      .filter((s) => !(s as any).disabled)
+      .flatMap((s) =>
+        normalizeList(grouped[s.key]).map((item) => ({ item, section: s })),
+      );
 
     return rows
       .slice()
@@ -411,7 +408,7 @@ export default function CurrentComponent({
                   <td className="px-4 py-3 min-w-[220px]">
                     {hideIds
                       ? `${rowTalentTypeLabel}${rowTalentName ? ` - ${rowTalentName}` : ''}`
-                      : `${rowTalentTypeLabel} / ${item?.talentId || '-'}${rowTalentName ? ` (${rowTalentName})` : ''}`}
+                      : `${rowTalentTypeLabel}${rowTalentName ? ` - ${rowTalentName}` : ` - ${item?.talentId || '-'}`}`}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">{dateLabel}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -512,6 +509,7 @@ export default function CurrentComponent({
         {showTodaySummary
           ? (() => {
               const todayItems = sections
+                .filter((s) => !(s as any).disabled)
                 .flatMap((s) => normalizeList(grouped[s.key]))
                 .filter((item) => isToday(item.interviewDate))
                 .sort((a, b) =>
@@ -638,91 +636,98 @@ export default function CurrentComponent({
         {!enableViewToggle || view === 'cards' ? (
           <div data-tour="interviewee-sections">
             <Accordion type="single" collapsible defaultValue={sections[0].key}>
-              {sections.map((section, idx) => {
-                const items = normalizeList(grouped[section.key]);
-                const Icon = section.icon;
+              {sections
+                .filter((s) => !(s as any).disabled)
+                .map((section, idx) => {
+                  const items = normalizeList(grouped[section.key]);
+                  const Icon = section.icon;
 
-                return (
-                  <AccordionItem
-                    key={section.key}
-                    value={section.key}
-                    className={`border rounded-lg${idx === 0 ? '' : ' mt-4'}`}
-                  >
-                    <AccordionTrigger className="group rounded-lg px-4 py-3 transition-colors hover:bg-muted/50 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                      <div className="flex w-full items-start justify-between gap-4">
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ring-1 ring-inset ring-black/5 transition-colors dark:ring-white/10 ${section.iconClassName}`}
-                          >
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <div className="min-w-0 text-left leading-tight">
-                            <div className="text-sm font-semibold tracking-tight">
-                              {section.title}
-                            </div>
-                            <div className="mt-0.5 text-xs text-muted-foreground">
-                              {section.description}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="shrink-0 my-auto mr-2 rounded-md border bg-background px-2.5 py-1 text-xs font-medium tabular-nums text-foreground/70 shadow-sm">
-                          {items.length}
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      {isLoading ? (
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-2">
-                          {Array.from({ length: 6 }).map((_, idx) => (
+                  return (
+                    <AccordionItem
+                      key={section.key}
+                      value={section.key}
+                      disabled={(section as any).disabled}
+                      className={`border rounded-lg${idx === 0 ? '' : ' mt-4'} ${
+                        (section as any).disabled
+                          ? 'opacity-50 pointer-events-none'
+                          : ''
+                      }`}
+                    >
+                      <AccordionTrigger className="group rounded-lg px-4 py-3 transition-colors hover:bg-muted/50 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                        <div className="flex w-full items-start justify-between gap-4">
+                          <div className="flex items-start gap-3">
                             <div
-                              key={idx}
-                              className="overflow-hidden rounded-lg border bg-card/60"
+                              className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ring-1 ring-inset ring-black/5 transition-colors dark:ring-white/10 ${section.iconClassName}`}
                             >
-                              <div className="space-y-3 p-4">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex items-start gap-3">
-                                    <Skeleton className="h-9 w-9 rounded-lg" />
-                                    <div className="space-y-2">
-                                      <Skeleton className="h-5 w-28" />
-                                      <Skeleton className="h-4 w-40" />
-                                    </div>
-                                  </div>
-                                  <Skeleton className="h-5 w-20" />
-                                </div>
-
-                                <div className="space-y-2 rounded-lg border bg-background/60 p-3">
-                                  <div className="flex items-center gap-2">
-                                    <Skeleton className="h-4 w-4 rounded" />
-                                    <Skeleton className="h-4 w-16" />
-                                    <Skeleton className="h-4 w-36" />
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Skeleton className="h-4 w-4 rounded" />
-                                    <Skeleton className="h-4 w-44" />
-                                  </div>
-                                </div>
-
-                                <Skeleton className="h-9 w-full" />
+                              <Icon className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0 text-left leading-tight">
+                              <div className="text-sm font-semibold tracking-tight">
+                                {section.title}
+                              </div>
+                              <div className="mt-0.5 text-xs text-muted-foreground">
+                                {section.description}
                               </div>
                             </div>
-                          ))}
+                          </div>
+
+                          <div className="shrink-0 my-auto mr-2 rounded-md border bg-background px-2.5 py-1 text-xs font-medium tabular-nums text-foreground/70 shadow-sm">
+                            {items.length}
+                          </div>
                         </div>
-                      ) : items.length === 0 ? (
-                        <EmptyState
-                          className="py-8 mt-2"
-                          title="No interviews found"
-                          description="Try adjusting your search or filters."
-                        />
-                      ) : (
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-2">
-                          {items.map(renderInterviewCard)}
-                        </div>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                        {isLoading ? (
+                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-2">
+                            {Array.from({ length: 6 }).map((_, idx) => (
+                              <div
+                                key={idx}
+                                className="overflow-hidden rounded-lg border bg-card/60"
+                              >
+                                <div className="space-y-3 p-4">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-start gap-3">
+                                      <Skeleton className="h-9 w-9 rounded-lg" />
+                                      <div className="space-y-2">
+                                        <Skeleton className="h-5 w-28" />
+                                        <Skeleton className="h-4 w-40" />
+                                      </div>
+                                    </div>
+                                    <Skeleton className="h-5 w-20" />
+                                  </div>
+
+                                  <div className="space-y-2 rounded-lg border bg-background/60 p-3">
+                                    <div className="flex items-center gap-2">
+                                      <Skeleton className="h-4 w-4 rounded" />
+                                      <Skeleton className="h-4 w-16" />
+                                      <Skeleton className="h-4 w-36" />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Skeleton className="h-4 w-4 rounded" />
+                                      <Skeleton className="h-4 w-44" />
+                                    </div>
+                                  </div>
+
+                                  <Skeleton className="h-9 w-full" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : items.length === 0 ? (
+                          <EmptyState
+                            className="py-8 mt-2"
+                            title="No interviews found"
+                            description="Try adjusting your search or filters."
+                          />
+                        ) : (
+                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-2">
+                            {items.map(renderInterviewCard)}
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
             </Accordion>
           </div>
         ) : (

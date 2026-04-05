@@ -40,6 +40,13 @@ type InterviewBid = {
   fee?: string;
   status?: string;
   description?: string;
+  interviewer?: {
+    _id?: string;
+    firstName?: string;
+    lastName?: string;
+    userName?: string;
+    profilePic?: string;
+  };
 };
 
 type Interview = {
@@ -133,6 +140,12 @@ const BidsPage = ({ userId }: { userId?: string }) => {
 
       // Close the dialog after successful selection
       setSelectedInterview(null);
+    } catch (error: any) {
+      console.error('Error selecting bid:', error);
+      const msg =
+        error?.response?.data?.message ||
+        'Failed to select bid. Please try again.';
+      notifyError(String(msg), 'Error');
     } finally {
       setSelectingBidId(null);
     }
@@ -409,7 +422,9 @@ const BidsPage = ({ userId }: { userId?: string }) => {
                                 }
                               >
                                 <TableCell className="font-medium">
-                                  {bid.interviewerId || '-'}
+                                  {bid.interviewer
+                                    ? `${bid.interviewer.firstName || ''} ${bid.interviewer.lastName || ''}`.trim() || bid.interviewer.userName || bid.interviewer._id || bid.interviewerId || '-'
+                                    : bid.interviewerId || '-'}
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap">
                                   {bid.fee || '-'}
