@@ -5,7 +5,6 @@ import {
   ArrowUp,
   Briefcase,
   GraduationCap,
-  Handshake,
   Search,
   Table,
   TrendingUp,
@@ -84,6 +83,8 @@ export default function CurrentComponent({
     description?: string;
     meetingLink?: string;
     intervieweeDateTimeAgreement?: boolean;
+    interviewerCompletionConfirmed?: boolean;
+    intervieweeCompletionConfirmed?: boolean;
     createdAt?: string;
     updatedAt?: string;
     transaction?: {
@@ -222,8 +223,29 @@ export default function CurrentComponent({
     },
   ] as const;
 
+  const refetchInterviews = async () => {
+    try {
+      if (!user?.uid) return;
+      const response = await axiosInstance.get(`/interview/${apiRole}`, {
+        params: { interviewStatus: 'current' },
+      });
+      const data: GroupedInterviews = response?.data?.data || {};
+      setGrouped(data);
+    } catch {
+      // Silently fail on refetch
+    }
+  };
+
   const renderInterviewCard = (item: InterviewItem) => {
-    return <InterviewItemCard key={item._id} item={item} hideIds={hideIds} />;
+    return (
+      <InterviewItemCard
+        key={item._id}
+        item={item}
+        hideIds={hideIds}
+        role={apiRole}
+        onCompletionConfirmed={refetchInterviews}
+      />
+    );
   };
 
   const getAllItems = () => {

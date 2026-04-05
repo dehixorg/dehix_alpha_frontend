@@ -664,6 +664,11 @@ export default function InterviewerBids() {
               />
             </div>
 
+            <div className="rounded-md border border-amber-500/20 bg-amber-500/10 p-3 text-sm font-medium text-amber-700 dark:text-amber-400">
+              Note: When your bid is selected, 50 connects will be deducted
+              automatically.
+            </div>
+
             <div className="flex items-center justify-end gap-2">
               <Button
                 type="button"

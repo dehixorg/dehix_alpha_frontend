@@ -223,6 +223,7 @@ const TalentMarketTab: React.FC = () => {
       setIsListingsLoading(true);
       const res = await axiosInstance.get('/freelancer/dehix-talent/market');
       const data: TalentMarketItem[] = res.data?.data || [];
+      setItems(data);
     } catch (err) {
       console.error('Fetch talent market error:', err);
       notifyError('Failed to load talent market listings.');
