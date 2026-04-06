@@ -173,6 +173,18 @@ export function usePlatformTour(isReady: boolean) {
       });
 
       tour.addStep({
+        id: 'nav-interviews',
+        title: 'Interviews',
+        text: 'Manage your interviews schedule.',
+        attachTo: { element: '[data-tour="nav-interviews"]', on: 'right' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
         id: 'nav-talent',
         title: 'Talent',
         text: 'Explore and manage talent opportunities.',
