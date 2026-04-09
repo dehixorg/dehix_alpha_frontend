@@ -234,22 +234,25 @@ const BusinessProjectsPage: React.FC = () => {
         { label: 'Business', link: '/dashboard/business' },
         { label: 'Projects', link: '/business/projects' },
       ]}
-      contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
-      mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8"
+      contentClassName="mb-8 flex flex-col sm:gap-4 sm:py-0 sm:pl-14"
+      mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 lg:gap-8"
     >
-      <Card className="p-6 max-w-[92vw]" data-tour="business-projects">
+      <Card
+        className="max-w-[92vw] p-4 sm:p-5 md:max-lg:max-w-full md:max-lg:p-4 lg:p-6"
+        data-tour="business-projects"
+      >
         {/* Header section */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex flex-col space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Projects
             </h1>
             <p className="hidden md:block text-muted-foreground">
-              Manage your projects.
+              
             </p>
           </div>
           {/* View toggle buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 self-start">
             <Button
               variant={isTableView ? 'default' : 'outline'}
               size="sm"
@@ -308,15 +311,15 @@ const BusinessProjectsPage: React.FC = () => {
             {isTableView ? (
               /* Table View */
               <div className="space-y-4">
-                <div className="flex flex-col gap-3 md:gap-4">
-                  <div className="flex items-center justify-between gap-3 border-b">
+                <div className="flex flex-col gap-3 lg:gap-4">
+                  <div className="flex flex-col gap-3 border-b pb-3 lg:flex-row lg:items-center lg:justify-between lg:pb-0">
                     <Tabs
                       value={statusFilter}
                       onValueChange={(v) => setStatusFilter(v)}
                       className="w-full"
                     >
                       <div className="max-w-full overflow-x-auto">
-                        <TabsList className="bg-transparent h-12 w-max min-w-max sm:w-auto p-0 whitespace-nowrap">
+                        <TabsList className="h-12 w-max min-w-max whitespace-nowrap bg-transparent p-0 sm:w-auto">
                           <TabsTrigger
                             value="ALL"
                             className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
@@ -335,8 +338,8 @@ const BusinessProjectsPage: React.FC = () => {
                         </TabsList>
                       </div>
                     </Tabs>
-                    <div className="hidden sm:flex items-center gap-2">
-                      <div className="sm:max-w-xs w-64">
+                    <div className="hidden items-center gap-2 lg:flex">
+                      <div className="w-64 max-w-xs">
                         <Input
                           placeholder="Search projects..."
                           value={search}
@@ -435,13 +438,14 @@ const BusinessProjectsPage: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center sm:hidden gap-2">
+                  <div className="flex flex-col gap-2 lg:hidden sm:flex-row sm:items-center">
                     <Input
                       className="flex-1"
                       placeholder="Search projects..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
                     <TooltipProvider>
                       <DropdownMenu>
                         <Tooltip>
@@ -514,23 +518,41 @@ const BusinessProjectsPage: React.FC = () => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TooltipProvider>
+                    {(statusFilter !== 'ALL' ||
+                      search ||
+                      sortBy !== 'createdAt' ||
+                      sortDir !== 'desc') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setStatusFilter('ALL');
+                          setSearch('');
+                          setSortBy('createdAt');
+                          setSortDir('desc');
+                        }}
+                      >
+                        Reset
+                      </Button>
+                    )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border shadow-sm max-w-full overflow-x-auto">
-                  <Table className="min-w-[720px]">
+                <div className="max-w-full overflow-x-auto rounded-lg border shadow-sm md:max-lg:-mx-1">
+                  <Table className="w-full min-w-[760px] table-auto">
                     <TableHeader>
                       <TableRow className="bg-muted/40">
-                        <TableHead className="sticky top-0 z-10">
+                        <TableHead className="sticky top-0 z-10 min-w-[220px] whitespace-nowrap">
                           Project
                         </TableHead>
-                        <TableHead className="text-center sticky top-0 z-10">
+                        <TableHead className="sticky top-0 z-10 min-w-[120px] whitespace-nowrap text-center">
                           Status
                         </TableHead>
-                        <TableHead className="sticky top-0 z-10">
+                        <TableHead className="sticky top-0 z-10 min-w-[110px] whitespace-nowrap">
                           Created
                         </TableHead>
-                        <TableHead className="text-center sticky top-0 z-10">
+                        <TableHead className="sticky top-0 z-10 min-w-[190px] whitespace-nowrap text-center">
                           Actions
                         </TableHead>
                       </TableRow>
@@ -561,17 +583,17 @@ const BusinessProjectsPage: React.FC = () => {
                               (window.location.href = `/business/project/${p._id}`)
                             }
                           >
-                            <TableCell className="">
-                              <div className="flex flex-col">
-                                <span className="font-medium leading-tight">
+                            <TableCell className="min-w-[220px]">
+                              <div className="flex min-w-0 flex-col">
+                                <span className="truncate font-medium leading-tight">
                                   {p.projectName}
                                 </span>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="truncate text-xs text-muted-foreground">
                                   {p.companyName}
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell className="text-center">
+                            <TableCell className="min-w-[120px] whitespace-nowrap text-center">
                               {status ? (
                                 <Badge
                                   variant="secondary"
@@ -585,12 +607,12 @@ const BusinessProjectsPage: React.FC = () => {
                                 </span>
                               )}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="min-w-[110px] whitespace-nowrap">
                               {p.createdAt
                                 ? new Date(p.createdAt).toLocaleDateString()
                                 : '-'}
                             </TableCell>
-                            <TableCell className="text-center">
+                            <TableCell className="min-w-[190px] whitespace-nowrap text-center">
                               {p.status === 'COMPLETED' ? (
                                 <Button
                                   variant="outline"
