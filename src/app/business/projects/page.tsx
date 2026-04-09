@@ -247,9 +247,7 @@ const BusinessProjectsPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Projects
             </h1>
-            <p className="hidden md:block text-muted-foreground">
-              
-            </p>
+            <p className="hidden md:block text-muted-foreground"></p>
           </div>
           {/* View toggle buttons */}
           <div className="flex gap-2 self-start">
@@ -446,95 +444,96 @@ const BusinessProjectsPage: React.FC = () => {
                       onChange={(e) => setSearch(e.target.value)}
                     />
                     <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <TooltipProvider>
-                      <DropdownMenu>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                aria-label="Sort"
-                              >
-                                <ListFilter className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>Sort options</TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSortBy('createdAt');
-                              setSortDir('desc');
-                            }}
-                            className={
-                              sortBy === 'createdAt' && sortDir === 'desc'
-                                ? 'font-medium'
-                                : ''
-                            }
-                          >
-                            <Clock className="mr-2 h-4 w-4" /> Newest first
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSortBy('createdAt');
-                              setSortDir('asc');
-                            }}
-                            className={
-                              sortBy === 'createdAt' && sortDir === 'asc'
-                                ? 'font-medium'
-                                : ''
-                            }
-                          >
-                            <Calendar className="mr-2 h-4 w-4" /> Oldest first
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSortBy('projectName');
-                              setSortDir('asc');
-                            }}
-                            className={
-                              sortBy === 'projectName' && sortDir === 'asc'
-                                ? 'font-medium'
-                                : ''
-                            }
-                          >
-                            <ArrowDownAZ className="mr-2 h-4 w-4" /> Name A → Z
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSortBy('projectName');
-                              setSortDir('desc');
-                            }}
-                            className={
-                              sortBy === 'projectName' && sortDir === 'desc'
-                                ? 'font-medium'
-                                : ''
-                            }
-                          >
-                            <ArrowUpAZ className="mr-2 h-4 w-4" /> Name Z → A
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TooltipProvider>
-                    {(statusFilter !== 'ALL' ||
-                      search ||
-                      sortBy !== 'createdAt' ||
-                      sortDir !== 'desc') && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setStatusFilter('ALL');
-                          setSearch('');
-                          setSortBy('createdAt');
-                          setSortDir('desc');
-                        }}
-                      >
-                        Reset
-                      </Button>
-                    )}
+                      <TooltipProvider>
+                        <DropdownMenu>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  aria-label="Sort"
+                                >
+                                  <ListFilter className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>Sort options</TooltipContent>
+                          </Tooltip>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSortBy('createdAt');
+                                setSortDir('desc');
+                              }}
+                              className={
+                                sortBy === 'createdAt' && sortDir === 'desc'
+                                  ? 'font-medium'
+                                  : ''
+                              }
+                            >
+                              <Clock className="mr-2 h-4 w-4" /> Newest first
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSortBy('createdAt');
+                                setSortDir('asc');
+                              }}
+                              className={
+                                sortBy === 'createdAt' && sortDir === 'asc'
+                                  ? 'font-medium'
+                                  : ''
+                              }
+                            >
+                              <Calendar className="mr-2 h-4 w-4" /> Oldest first
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSortBy('projectName');
+                                setSortDir('asc');
+                              }}
+                              className={
+                                sortBy === 'projectName' && sortDir === 'asc'
+                                  ? 'font-medium'
+                                  : ''
+                              }
+                            >
+                              <ArrowDownAZ className="mr-2 h-4 w-4" /> Name A →
+                              Z
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSortBy('projectName');
+                                setSortDir('desc');
+                              }}
+                              className={
+                                sortBy === 'projectName' && sortDir === 'desc'
+                                  ? 'font-medium'
+                                  : ''
+                              }
+                            >
+                              <ArrowUpAZ className="mr-2 h-4 w-4" /> Name Z → A
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TooltipProvider>
+                      {(statusFilter !== 'ALL' ||
+                        search ||
+                        sortBy !== 'createdAt' ||
+                        sortDir !== 'desc') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setStatusFilter('ALL');
+                            setSearch('');
+                            setSortBy('createdAt');
+                            setSortDir('desc');
+                          }}
+                        >
+                          Reset
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
