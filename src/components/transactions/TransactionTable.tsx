@@ -56,11 +56,17 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
         <Table>
           <TableHeader className="bg-muted/30 sticky top-0 z-10">
             <TableRow>
-              <TableHead className="w-[180px]">Date & Time</TableHead>
-              <TableHead className="w-[220px]">Description</TableHead>
-              <TableHead className="w-[320px]">Ref ID</TableHead>
-              <TableHead className="w-[120px]">Type</TableHead>
-              <TableHead className="w-[120px] text-right">Amount</TableHead>
+              <TableHead className="w-[120px] sm:w-[180px]">
+                Date & Time
+              </TableHead>
+              <TableHead className="w-[140px] sm:w-[220px]">
+                Description
+              </TableHead>
+              <TableHead className="w-[80px] sm:w-[320px]">Ref ID</TableHead>
+              <TableHead className="w-[80px] sm:w-[120px]">Type</TableHead>
+              <TableHead className="w-[80px] sm:w-[120px] text-right">
+                Amount
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -76,19 +82,19 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                   className="hover:bg-muted/50 transition-colors duration-150 border-b border-border/50"
                 >
                   <TableCell className="font-medium">
-                    <div className="space-y-1">
-                      <p className="text-sm">
+                    <div className="space-y-0.5 sm:space-y-1">
+                      <p className="text-xs sm:text-sm">
                         {formatDate(transaction.createdAt)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
                         {formatTransactionDate(transaction.createdAt)}
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="w-[220px]">
+                  <TableCell className="w-[140px] sm:w-[220px]">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <p className="font-medium text-sm truncate max-w-[220px] cursor-help">
+                        <p className="font-medium text-xs sm:text-sm truncate max-w-[140px] sm:max-w-[220px] cursor-help">
                           {description}
                         </p>
                       </TooltipTrigger>
@@ -97,31 +103,46 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                       </TooltipContent>
                     </Tooltip>
                   </TableCell>
-                  <TableCell className="w-[320px]">
+                  <TableCell className="w-[80px] sm:w-[320px]">
                     {referenceId ? (
-                      <div className="flex items-start gap-2">
-                        <p className="text-xs text-muted-foreground font-mono break-all">
-                          {referenceId}
-                        </p>
+                      <div className="flex items-center sm:items-start gap-1 sm:gap-2">
+                        {/* Truncated on mobile, full on desktop */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground font-mono sm:break-all cursor-help">
+                              <span className="sm:hidden">
+                                {referenceId.slice(0, 8)}…
+                              </span>
+                              <span className="hidden sm:inline">
+                                {referenceId}
+                              </span>
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs break-all font-mono text-xs sm:hidden">
+                            {referenceId}
+                          </TooltipContent>
+                        </Tooltip>
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 shrink-0"
+                          className="h-5 w-5 sm:h-6 sm:w-6 shrink-0"
                           onClick={() =>
                             handleCopyRefId(referenceId, transaction._id)
                           }
                           aria-label="Copy reference ID"
                         >
                           {copiedRefId === transaction._id ? (
-                            <Check className="h-3.5 w-3.5" />
+                            <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           ) : (
-                            <Copy className="h-3.5 w-3.5" />
+                            <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           )}
                         </Button>
                       </div>
                     ) : (
-                      <p className="text-xs text-muted-foreground">-</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
+                        -
+                      </p>
                     )}
                   </TableCell>
                   <TableCell>
