@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, ExternalLink, User2, CheckCircle } from 'lucide-react';
+import { Calendar, ExternalLink, User2, CheckCircle, Star } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,8 @@ export type InterviewItemCardItem = {
   meetingLink?: string;
   interviewerCompletionConfirmed?: boolean;
   intervieweeCompletionConfirmed?: boolean;
+  interviewerFeedback?: string;
+  interviewerRating?: number;
 };
 
 type InterviewItemCardProps = {
@@ -274,6 +276,38 @@ export default function InterviewItemCard({
               {item.description}
             </div>
           ) : null}
+
+          {/* Feedback section for completed interviews */}
+          {statusLabel === 'COMPLETED' && !!item.interviewerRating && (
+            <div className="mt-2 space-y-2 rounded-lg border bg-muted/20 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-xs font-semibold text-foreground/80">
+                  Interviewer Feedback
+                </div>
+                <div className="flex items-center gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-3 w-3 ${
+                        i < (item.interviewerRating || 0)
+                          ? 'fill-amber-400 text-amber-400'
+                          : 'fill-muted text-muted'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+              {item.interviewerFeedback ? (
+                <p className="text-xs text-muted-foreground italic">
+                  &quot;{item.interviewerFeedback}&quot;
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">
+                  No written feedback provided.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Completion status indicators */}
           {isJoinableStatus &&

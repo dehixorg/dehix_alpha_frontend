@@ -8,11 +8,9 @@ import {
   Users,
   CheckCircle2,
   XCircle,
-  MoreVertical,
   MessageSquare,
   ShieldCheck,
   Star,
-  ExternalLink,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -21,7 +19,6 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
