@@ -35,14 +35,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
@@ -234,8 +226,9 @@ const BusinessProjectsPage: React.FC = () => {
         { label: 'Business', link: '/dashboard/business' },
         { label: 'Projects', link: '/business/projects' },
       ]}
+      containerClassName="overflow-x-visible lg:overflow-x-hidden"
       contentClassName="mb-8 flex flex-col w-full !max-w-none sm:gap-4 sm:py-0 sm:pl-14"
-      mainClassName="grid flex-1 items-start gap-4 p-4 w-full !max-w-none sm:px-6 sm:py-2 md:px-8 lg:gap-8"
+      mainClassName="grid min-w-0 flex-1 items-start gap-4 p-4 w-full !max-w-none sm:px-6 sm:py-2 md:px-8 lg:gap-8"
     >
       <Card
         className="w-full max-w-none p-4 sm:p-5 md:p-6 lg:p-8 shrink-0"
@@ -539,80 +532,73 @@ const BusinessProjectsPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="w-full overflow-x-auto rounded-lg border shadow-sm">
-                  <Table className="w-full min-w-[1100px] table-auto">
-                    <TableHeader>
-                      <TableRow className="bg-muted/40">
-                        <TableHead className="sticky top-0 z-10 min-w-[220px] whitespace-nowrap">
-                          Project
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10 min-w-[120px] whitespace-nowrap text-center">
-                          Status
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10 min-w-[110px] whitespace-nowrap">
-                          Created
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10 min-w-[190px] whitespace-nowrap text-center">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredSortedProjects.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={4} className="h-40 p-0">
-                            <EmptyState
-                              icon={
-                                <Search className="h-8 w-8 text-muted-foreground" />
-                              }
-                              title="No matching projects"
-                              className="h-full border-0 bg-transparent py-6"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {filteredSortedProjects.map((p) => {
-                        const status = PROJECT_STATUS_FORMATS.find(
-                          (s) => s.value === p.status,
-                        );
-                        return (
-                          <TableRow
-                            key={p._id}
-                            className="hover:bg-muted/40 cursor-pointer"
-                            onClick={() =>
-                              (window.location.href = `/business/project/${p._id}`)
-                            }
-                          >
-                            <TableCell className="min-w-[220px]">
-                              <div className="flex min-w-0 flex-col">
-                                <span className="truncate font-medium leading-tight">
-                                  {p.projectName}
-                                </span>
-                                <span className="truncate text-xs text-muted-foreground">
-                                  {p.companyName}
-                                </span>
+                <div className="space-y-3 lg:hidden">
+                  {filteredSortedProjects.length === 0 ? (
+                    <div className="rounded-lg border shadow-sm">
+                      <EmptyState
+                        icon={
+                          <Search className="h-8 w-8 text-muted-foreground" />
+                        }
+                        title="No matching projects"
+                        className="border-0 bg-transparent py-10"
+                      />
+                    </div>
+                  ) : (
+                    filteredSortedProjects.map((p) => {
+                      const status = PROJECT_STATUS_FORMATS.find(
+                        (s) => s.value === p.status,
+                      );
+
+                      return (
+                        <div
+                          key={p._id}
+                          className="cursor-pointer rounded-lg border bg-background p-4 shadow-sm transition-colors hover:bg-muted/20"
+                          onClick={() =>
+                            (window.location.href = `/business/project/${p._id}`)
+                          }
+                        >
+                          <div className="space-y-4">
+                            <div className="min-w-0">
+                              <p className="truncate text-base font-semibold">
+                                {p.projectName}
+                              </p>
+                              <p className="truncate text-sm text-muted-foreground">
+                                {p.companyName}
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                  Status
+                                </p>
+                                {status ? (
+                                  <Badge
+                                    variant="secondary"
+                                    className={`uppercase rounded-full px-2.5 py-1 text-xs shadow-sm ${statusOutlineClasses(status.value)}`}
+                                  >
+                                    {status.textValue}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">
+                                    {p.status}
+                                  </span>
+                                )}
                               </div>
-                            </TableCell>
-                            <TableCell className="min-w-[120px] whitespace-nowrap text-center">
-                              {status ? (
-                                <Badge
-                                  variant="secondary"
-                                  className={`uppercase rounded-full px-2.5 py-1 text-xs shadow-sm ${statusOutlineClasses(status.value)}`}
-                                >
-                                  {status.textValue}
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">
-                                  {p.status}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="min-w-[110px] whitespace-nowrap">
-                              {p.createdAt
-                                ? new Date(p.createdAt).toLocaleDateString()
-                                : '-'}
-                            </TableCell>
-                            <TableCell className="min-w-[190px] whitespace-nowrap text-center">
+
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                  Created
+                                </p>
+                                <p className="whitespace-nowrap">
+                                  {p.createdAt
+                                    ? new Date(p.createdAt).toLocaleDateString()
+                                    : '-'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="pt-1">
                               {p.status === 'COMPLETED' ? (
                                 <Button
                                   variant="outline"
@@ -622,7 +608,7 @@ const BusinessProjectsPage: React.FC = () => {
                                     handleStatusUpdate(p._id, 'ACTIVE');
                                   }}
                                   disabled={updatingStatus === p._id}
-                                  className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
+                                  className="w-full justify-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
                                 >
                                   {updatingStatus === p._id ? (
                                     <>
@@ -645,7 +631,7 @@ const BusinessProjectsPage: React.FC = () => {
                                     handleStatusUpdate(p._id, 'ACTIVE');
                                   }}
                                   disabled={updatingStatus === p._id}
-                                  className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50"
+                                  className="w-full justify-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50"
                                 >
                                   {updatingStatus === p._id ? (
                                     <>
@@ -667,7 +653,7 @@ const BusinessProjectsPage: React.FC = () => {
                                     handleStatusUpdate(p._id, 'COMPLETED');
                                   }}
                                   disabled={updatingStatus === p._id}
-                                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                                  className="w-full justify-center gap-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
                                 >
                                   {updatingStatus === p._id ? (
                                     <>
@@ -686,12 +672,169 @@ const BusinessProjectsPage: React.FC = () => {
                                   -
                                 </span>
                               )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className="hidden lg:block">
+                  <div className="rounded-lg border shadow-sm">
+                    <table className="w-full table-auto caption-bottom text-sm">
+                      <thead className="[&_tr]:border-b">
+                        <tr className="border-b bg-muted/40 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                          <th className="sticky top-0 z-10 h-12 min-w-[220px] whitespace-nowrap px-4 text-left align-middle font-medium text-muted-foreground">
+                            Project
+                          </th>
+                          <th className="sticky top-0 z-10 h-12 min-w-[120px] whitespace-nowrap px-4 text-center align-middle font-medium text-muted-foreground">
+                            Status
+                          </th>
+                          <th className="sticky top-0 z-10 h-12 min-w-[110px] whitespace-nowrap px-4 text-left align-middle font-medium text-muted-foreground">
+                            Created
+                          </th>
+                          <th className="sticky top-0 z-10 h-12 min-w-[190px] whitespace-nowrap px-4 text-center align-middle font-medium text-muted-foreground">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="[&_tr:last-child]:border-0">
+                        {filteredSortedProjects.length === 0 && (
+                          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <td colSpan={4} className="h-40 p-0 align-middle">
+                              <EmptyState
+                                icon={
+                                  <Search className="h-8 w-8 text-muted-foreground" />
+                                }
+                                title="No matching projects"
+                                className="h-full border-0 bg-transparent py-6"
+                              />
+                            </td>
+                          </tr>
+                        )}
+                        {filteredSortedProjects.map((p) => {
+                          const status = PROJECT_STATUS_FORMATS.find(
+                            (s) => s.value === p.status,
+                          );
+                          return (
+                            <tr
+                              key={p._id}
+                              className="cursor-pointer border-b transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted"
+                              onClick={() =>
+                                (window.location.href = `/business/project/${p._id}`)
+                              }
+                            >
+                              <td className="min-w-[220px] p-4 align-middle">
+                                <div className="flex min-w-0 flex-col">
+                                  <span className="truncate font-medium leading-tight">
+                                    {p.projectName}
+                                  </span>
+                                  <span className="truncate text-xs text-muted-foreground">
+                                    {p.companyName}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="min-w-[120px] whitespace-nowrap p-4 text-center align-middle">
+                                {status ? (
+                                  <Badge
+                                    variant="secondary"
+                                    className={`uppercase rounded-full px-2.5 py-1 text-xs shadow-sm ${statusOutlineClasses(status.value)}`}
+                                  >
+                                    {status.textValue}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">
+                                    {p.status}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="min-w-[110px] whitespace-nowrap p-4 align-middle">
+                                {p.createdAt
+                                  ? new Date(p.createdAt).toLocaleDateString()
+                                  : '-'}
+                              </td>
+                              <td className="min-w-[190px] whitespace-nowrap p-4 text-center align-middle">
+                                {p.status === 'COMPLETED' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStatusUpdate(p._id, 'ACTIVE');
+                                    }}
+                                    disabled={updatingStatus === p._id}
+                                    className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
+                                  >
+                                    {updatingStatus === p._id ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Updating...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Undo2 className="h-4 w-4" /> Mark as
+                                        Incomplete
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : p.status === 'PENDING' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStatusUpdate(p._id, 'ACTIVE');
+                                    }}
+                                    disabled={updatingStatus === p._id}
+                                    className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50"
+                                  >
+                                    {updatingStatus === p._id ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Starting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Play className="h-4 w-4" /> Start Project
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : p.status === 'ACTIVE' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStatusUpdate(p._id, 'COMPLETED');
+                                    }}
+                                    disabled={updatingStatus === p._id}
+                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                                  >
+                                    {updatingStatus === p._id ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Completing...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle2 className="h-4 w-4" /> Mark
+                                        as Completed
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">
+                                    -
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             ) : (
