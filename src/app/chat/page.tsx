@@ -403,37 +403,35 @@ const HomePage = () => {
     async (conv: Conversation | null) => {
       if (!conv?.id || !user?.uid) return;
       const lastMessage = conv.lastMessage;
+
+      const getTimestampMs = (ts: any) => {
+        if (!ts) return 0;
+        if (typeof ts === 'object' && ts.seconds) return ts.seconds;
+        if (typeof ts === 'number') return Math.floor(ts / 1000);
+        return Math.floor(new Date(ts as string).getTime() / 1000) || 0;
+      };
+
+      const msgTime = getTimestampMs(lastMessage?.timestamp);
+      const readTime = getTimestampMs(
+        conv.participantDetails?.[user.uid]?.lastReadAt,
+      );
+
       if (
         !lastMessage?.senderId ||
         lastMessage.senderId === user.uid ||
-        lastMessage.read
+        readTime >= msgTime
       ) {
         return;
       }
 
       try {
         await updateDataInFirestore('conversations', conv.id, {
-          'lastMessage.read': true,
+          [`participantDetails.${user.uid}.lastReadAt`]: serverTimestamp(),
         });
 
-        setConversations((prev) =>
-          prev.map((item) =>
-            item.id === conv.id && item.lastMessage
-              ? {
-                  ...item,
-                  lastMessage: { ...item.lastMessage, read: true },
-                }
-              : item,
-          ),
-        );
-        setActiveConversation((prev) =>
-          prev?.id === conv.id && prev.lastMessage
-            ? {
-                ...prev,
-                lastMessage: { ...prev.lastMessage, read: true },
-              }
-            : prev,
-        );
+        // We don't strictly need to update local React state synchronously
+        // because the onSnapshot listener from subscribeToUserConversations
+        // will push the updated participant details structure automatically.
       } catch (error) {
         console.error('Failed to mark conversation as read:', error);
       }

@@ -37,7 +37,6 @@ export interface Conversation extends DocumentData {
   lastMessage: {
     content?: string;
     senderId?: string;
-    read?: boolean;
     timestamp?: string;
     voiceMessage?: boolean;
     attachments?: Array<{ type?: string }>;
@@ -49,6 +48,8 @@ export interface Conversation extends DocumentData {
       email?: string;
       userType?: 'freelancer' | 'business';
       viewState?: 'archived' | 'inbox';
+      lastReadAt?: any;
+      lastSeenMessageId?: string;
     };
   };
   groupName?: string;
@@ -300,6 +301,13 @@ export function ChatList({
     setActiveView('inbox');
   };
 
+  const getTimestampMs = (ts: any) => {
+    if (!ts) return 0;
+    if (typeof ts === 'object' && ts.seconds) return ts.seconds;
+    if (typeof ts === 'number') return Math.floor(ts / 1000);
+    return Math.floor(new Date(ts as string).getTime() / 1000) || 0;
+  };
+
   const displayedConversations = conversations
     .filter((conversation) => {
       const userDetails = conversation.participantDetails?.[currentUser.uid];
@@ -326,11 +334,16 @@ export function ChatList({
     })
     .sort((a, b) => {
       const getIsUnread = (conv: Conversation) => {
+        const msgTime = getTimestampMs(conv.lastMessage?.timestamp);
+        const readTime = getTimestampMs(
+          conv.participantDetails?.[currentUser.uid]?.lastReadAt,
+        );
+
         return (
           !!conv.lastMessage?.senderId &&
           conv.lastMessage.senderId !== currentUser.uid &&
           active?.id !== conv.id &&
-          !conv.lastMessage?.read
+          msgTime > readTime
         );
       };
 
@@ -338,13 +351,6 @@ export function ChatList({
       const bUnread = getIsUnread(b);
 
       if (aUnread !== bUnread) return aUnread ? -1 : 1;
-
-      const getTimestampMs = (ts: any) => {
-        if (!ts) return 0;
-        if (typeof ts === 'object' && ts.seconds) return ts.seconds;
-        if (typeof ts === 'number') return Math.floor(ts / 1000);
-        return Math.floor(new Date(ts as string).getTime() / 1000) || 0;
-      };
 
       const aTime = getTimestampMs(a.timestamp);
       const bTime = getTimestampMs(b.timestamp);
@@ -486,11 +492,19 @@ export function ChatList({
                     getLastMessagePreview(conversation.lastMessage);
 
                   // Unread: incoming last message, not explicitly read, and not currently open
+                  const msgTime = getTimestampMs(
+                    conversation.lastMessage?.timestamp,
+                  );
+                  const readTime = getTimestampMs(
+                    conversation.participantDetails?.[currentUser.uid]
+                      ?.lastReadAt,
+                  );
+
                   const isUnread =
                     !!conversation.lastMessage?.senderId &&
                     conversation.lastMessage.senderId !== currentUser.uid &&
                     !isActive &&
-                    !conversation.lastMessage?.read;
+                    msgTime > readTime;
 
                   return (
                     <div
