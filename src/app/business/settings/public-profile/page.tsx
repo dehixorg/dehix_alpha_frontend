@@ -155,7 +155,9 @@ export default function BusinessPublicProfileSettings() {
               <Button
                 variant="ghost"
                 className="flex items-center justify-center gap-2 w-full sm:w-auto"
-                onClick={() => window.open(publicUrl, '_blank')}
+                onClick={() =>
+                  window.open(publicUrl, '_blank', 'noopener,noreferrer')
+                }
               >
                 <ExternalLink className="h-4 w-4" />
                 Preview
@@ -207,7 +209,7 @@ export default function BusinessPublicProfileSettings() {
             {/* Projects preview */}
             <Card className="w-full shadow-lg mt-3 sm:mt-4 overflow-hidden">
               <CardHeader className="bg-green-500/5 border-b border-border py-2.5 sm:py-4 px-3 sm:px-6">
-                <CardTitle className="text-xs sm:text-md font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
+                <CardTitle className="text-xs sm:text-base font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
                   <Code className="h-3.5 w-3.5 sm:h-5 sm:w-5 shrink-0" />
                   <span className="truncate">
                     Projects (
@@ -243,7 +245,7 @@ export default function BusinessPublicProfileSettings() {
             {/* Contact preview */}
             <Card className="w-full shadow-lg mt-3 sm:mt-4 overflow-hidden">
               <CardHeader className="bg-blue-500/5 border-b border-border py-2.5 sm:py-4 px-3 sm:px-6">
-                <CardTitle className="text-xs sm:text-md font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                <CardTitle className="text-xs sm:text-base font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
                   <Mail className="h-3.5 w-3.5 sm:h-5 sm:w-5 shrink-0" />
                   Contact Information
                 </CardTitle>
