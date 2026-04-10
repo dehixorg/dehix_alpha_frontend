@@ -10,7 +10,7 @@ import {
   UserPlus,
   ExternalLink,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -134,8 +134,6 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
       if (!isClosing) setIsDialogOpen(true);
     }
   };
-  const router = useRouter();
-
   return (
     <>
       <Card className="mx-auto h-full max-w-[1000px] group relative overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm transition-all duration-300 hover:shadow-md">
@@ -250,7 +248,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7"
-                            title="websiteUrl"
+                            title="Website"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Globe className="h-4 w-4" />
@@ -403,11 +401,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 
                     <div className="space-y-6 py-2">
                       {/* Top profile summary */}
-                      <div
-                        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 cursor-pointer"
-                        onClick={() =>
-                          router.push(`/freelancer-profile/${freelancer_id}`)
-                        }
+                      <Link
+                        href={`/freelancer-profile/${freelancer_id}`}
+                        className="flex flex-col gap-4 cursor-pointer transition-opacity hover:opacity-80 md:flex-row md:items-center md:justify-between"
                       >
                         <div className="flex items-center gap-4">
                           <Avatar className="h-16 w-16 ring-2 ring-primary/10">
@@ -447,7 +443,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                             </Badge>
                           )}
                         </div>
-                      </div>
+                      </Link>
 
                       <Separator />
 

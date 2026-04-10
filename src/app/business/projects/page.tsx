@@ -72,7 +72,9 @@ const BusinessProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isTableView, setIsTableView] = useState(true);
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [updatingStatusIds, setUpdatingStatusIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<'createdAt' | 'projectName'>(
@@ -119,11 +121,15 @@ const BusinessProjectsPage: React.FC = () => {
 
   // Handle status update
   const handleStatusUpdate = async (projectId: string, newStatus: string) => {
-    if (updatingStatus === projectId) {
+    if (updatingStatusIds.has(projectId)) {
       return;
     }
 
-    setUpdatingStatus(projectId);
+    setUpdatingStatusIds((prev) => {
+      const next = new Set(prev);
+      next.add(projectId);
+      return next;
+    });
 
     try {
       // Try the primary endpoint
@@ -195,7 +201,11 @@ const BusinessProjectsPage: React.FC = () => {
         );
       }
     } finally {
-      setUpdatingStatus(null);
+      setUpdatingStatusIds((prev) => {
+        const next = new Set(prev);
+        next.delete(projectId);
+        return next;
+      });
     }
   };
 
@@ -609,10 +619,10 @@ const BusinessProjectsPage: React.FC = () => {
                                     e.stopPropagation();
                                     handleStatusUpdate(p._id, 'ACTIVE');
                                   }}
-                                  disabled={updatingStatus === p._id}
+                                  disabled={updatingStatusIds.has(p._id)}
                                   className="w-full justify-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
                                 >
-                                  {updatingStatus === p._id ? (
+                                  {updatingStatusIds.has(p._id) ? (
                                     <>
                                       <Loader2 className="h-4 w-4 animate-spin" />
                                       Updating...
@@ -632,10 +642,10 @@ const BusinessProjectsPage: React.FC = () => {
                                     e.stopPropagation();
                                     handleStatusUpdate(p._id, 'ACTIVE');
                                   }}
-                                  disabled={updatingStatus === p._id}
+                                  disabled={updatingStatusIds.has(p._id)}
                                   className="w-full justify-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50"
                                 >
-                                  {updatingStatus === p._id ? (
+                                  {updatingStatusIds.has(p._id) ? (
                                     <>
                                       <Loader2 className="h-4 w-4 animate-spin" />
                                       Starting...
@@ -654,10 +664,10 @@ const BusinessProjectsPage: React.FC = () => {
                                     e.stopPropagation();
                                     handleStatusUpdate(p._id, 'COMPLETED');
                                   }}
-                                  disabled={updatingStatus === p._id}
+                                  disabled={updatingStatusIds.has(p._id)}
                                   className="w-full justify-center gap-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
                                 >
-                                  {updatingStatus === p._id ? (
+                                  {updatingStatusIds.has(p._id) ? (
                                     <>
                                       <Loader2 className="h-4 w-4 animate-spin" />
                                       Completing...
@@ -765,10 +775,10 @@ const BusinessProjectsPage: React.FC = () => {
                                       e.stopPropagation();
                                       handleStatusUpdate(p._id, 'ACTIVE');
                                     }}
-                                    disabled={updatingStatus === p._id}
+                                    disabled={updatingStatusIds.has(p._id)}
                                     className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
                                   >
-                                    {updatingStatus === p._id ? (
+                                    {updatingStatusIds.has(p._id) ? (
                                       <>
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                         Updating...
@@ -788,10 +798,10 @@ const BusinessProjectsPage: React.FC = () => {
                                       e.stopPropagation();
                                       handleStatusUpdate(p._id, 'ACTIVE');
                                     }}
-                                    disabled={updatingStatus === p._id}
+                                    disabled={updatingStatusIds.has(p._id)}
                                     className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50"
                                   >
-                                    {updatingStatus === p._id ? (
+                                    {updatingStatusIds.has(p._id) ? (
                                       <>
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                         Starting...
@@ -811,10 +821,10 @@ const BusinessProjectsPage: React.FC = () => {
                                       e.stopPropagation();
                                       handleStatusUpdate(p._id, 'COMPLETED');
                                     }}
-                                    disabled={updatingStatus === p._id}
+                                    disabled={updatingStatusIds.has(p._id)}
                                     className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
                                   >
-                                    {updatingStatus === p._id ? (
+                                    {updatingStatusIds.has(p._id) ? (
                                       <>
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                         Completing...
@@ -840,10 +850,16 @@ const BusinessProjectsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+            ) : /* Card View */
+            filteredSortedProjects.length === 0 ? (
+              <EmptyState
+                icon={<Search className="h-8 w-8 text-muted-foreground" />}
+                title="No matching projects"
+                className="mt-4 border-0 bg-transparent py-10"
+              />
             ) : (
-              /* Card View */
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
-                {projects.map((project) => (
+              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredSortedProjects.map((project) => (
                   <ProjectCard key={project._id} project={project} />
                 ))}
               </div>
