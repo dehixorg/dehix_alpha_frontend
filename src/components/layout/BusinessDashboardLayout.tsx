@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -29,19 +30,19 @@ export default function BusinessDashboardLayout({
   breadcrumbItems,
   isKycCheck = true,
   containerClassName,
-  contentClassName = 'flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14',
-  mainClassName = 'grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8',
+  contentClassName = 'flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14 w-full',
+  mainClassName = 'grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 w-full',
   children,
 }: Props) {
   return (
-    <div className={containerClassName ?? 'flex min-h-screen w-full flex-col'}>
+    <div className={cn('flex min-h-screen w-full !max-w-none overflow-x-hidden', containerClassName)}>
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active={active}
         isKycCheck={isKycCheck}
       />
-      <div className={contentClassName}>
+      <div className={cn('flex flex-col min-w-0 flex-1 w-full !max-w-none', contentClassName)}>
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

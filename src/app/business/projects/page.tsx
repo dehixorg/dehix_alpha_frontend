@@ -93,7 +93,7 @@ const BusinessProjectsPage: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
 
   // Debug: Log when projects state changes
-  useEffect(() => {}, [projects]);
+  useEffect(() => { }, [projects]);
 
   const filteredSortedProjects = useMemo(() => {
     let items = [...projects];
@@ -158,7 +158,7 @@ const BusinessProjectsPage: React.FC = () => {
 
       const statusMessage =
         newStatus === 'ACTIVE' &&
-        projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
+          projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
           ? 'Project marked as incomplete'
           : `Project status updated to ${newStatus}`;
       notifySuccess(statusMessage);
@@ -190,14 +190,14 @@ const BusinessProjectsPage: React.FC = () => {
 
         const statusMessage =
           newStatus === 'ACTIVE' &&
-          projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
+            projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
             ? 'Project marked as incomplete'
             : `Project status updated to ${newStatus}`;
         notifySuccess(statusMessage);
       } catch (alternativeError: any) {
         notifyError(
           alternativeError.response?.data?.message ||
-            'Failed to update project status',
+          'Failed to update project status',
           'Error',
         );
       }
@@ -234,11 +234,11 @@ const BusinessProjectsPage: React.FC = () => {
         { label: 'Business', link: '/dashboard/business' },
         { label: 'Projects', link: '/business/projects' },
       ]}
-      contentClassName="mb-8 flex flex-col sm:gap-4 sm:py-0 sm:pl-14"
-      mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 lg:gap-8"
+      contentClassName="mb-8 flex flex-col w-full !max-w-none sm:gap-4 sm:py-0 sm:pl-14"
+      mainClassName="grid flex-1 items-start gap-4 p-4 w-full !max-w-none sm:px-6 sm:py-2 md:px-8 lg:gap-8"
     >
       <Card
-        className="max-w-[92vw] p-4 sm:p-5 md:max-lg:max-w-full md:max-lg:p-4 lg:p-6"
+        className="w-full max-w-none p-4 sm:p-5 md:p-6 lg:p-8 shrink-0"
         data-tour="business-projects"
       >
         {/* Header section */}
@@ -247,7 +247,9 @@ const BusinessProjectsPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Projects
             </h1>
-            <p className="hidden md:block text-muted-foreground"></p>
+            <p className="hidden md:block text-muted-foreground">
+
+            </p>
           </div>
           {/* View toggle buttons */}
           <div className="flex gap-2 self-start">
@@ -336,7 +338,7 @@ const BusinessProjectsPage: React.FC = () => {
                         </TabsList>
                       </div>
                     </Tabs>
-                    <div className="hidden items-center gap-2 lg:flex">
+                    <div className="hidden items-center gap-2 md:flex">
                       <div className="w-64 max-w-xs">
                         <Input
                           placeholder="Search projects..."
@@ -421,22 +423,22 @@ const BusinessProjectsPage: React.FC = () => {
                         search ||
                         sortBy !== 'createdAt' ||
                         sortDir !== 'desc') && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setStatusFilter('ALL');
-                            setSearch('');
-                            setSortBy('createdAt');
-                            setSortDir('desc');
-                          }}
-                        >
-                          Reset
-                        </Button>
-                      )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setStatusFilter('ALL');
+                              setSearch('');
+                              setSortBy('createdAt');
+                              setSortDir('desc');
+                            }}
+                          >
+                            Reset
+                          </Button>
+                        )}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2 lg:hidden sm:flex-row sm:items-center">
+                  <div className="flex flex-col gap-2 md:hidden sm:flex-row sm:items-center">
                     <Input
                       className="flex-1"
                       placeholder="Search projects..."
@@ -498,8 +500,7 @@ const BusinessProjectsPage: React.FC = () => {
                                   : ''
                               }
                             >
-                              <ArrowDownAZ className="mr-2 h-4 w-4" /> Name A →
-                              Z
+                              <ArrowDownAZ className="mr-2 h-4 w-4" /> Name A → Z
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
@@ -521,25 +522,25 @@ const BusinessProjectsPage: React.FC = () => {
                         search ||
                         sortBy !== 'createdAt' ||
                         sortDir !== 'desc') && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setStatusFilter('ALL');
-                            setSearch('');
-                            setSortBy('createdAt');
-                            setSortDir('desc');
-                          }}
-                        >
-                          Reset
-                        </Button>
-                      )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setStatusFilter('ALL');
+                              setSearch('');
+                              setSortBy('createdAt');
+                              setSortDir('desc');
+                            }}
+                          >
+                            Reset
+                          </Button>
+                        )}
                     </div>
                   </div>
                 </div>
 
-                <div className="max-w-full overflow-x-auto rounded-lg border shadow-sm md:max-lg:-mx-1">
-                  <Table className="w-full min-w-[760px] table-auto">
+                <div className="w-full overflow-x-auto rounded-lg border shadow-sm">
+                  <Table className="w-full min-w-[1100px] table-auto">
                     <TableHeader>
                       <TableRow className="bg-muted/40">
                         <TableHead className="sticky top-0 z-10 min-w-[220px] whitespace-nowrap">
