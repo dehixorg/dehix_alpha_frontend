@@ -542,7 +542,6 @@ const SkillDomainForm: React.FC = () => {
               </TableBody>
             </Table>
           </div>
-
         </CardContent>
       </Card>
       <MeetingDialog
