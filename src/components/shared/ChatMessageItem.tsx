@@ -283,7 +283,7 @@ function ChatMessageItem({
 
   const handleDeleteMessage = async () => {
     try {
-      await deleteMessageFromFirestore(conversation.id, message.id);
+      await deleteMessageFromFirestore(conversation.id, message.id, userId);
       toast({
         title: 'Deleted',
         description: 'Message deleted.',

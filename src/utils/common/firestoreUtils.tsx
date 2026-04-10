@@ -16,6 +16,7 @@ import {
   writeBatch,
   runTransaction,
   updateDoc,
+  limit,
 } from 'firebase/firestore';
 
 import { db } from '../../config/firebaseConfig';
@@ -367,7 +368,33 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 export async function deleteMessageFromFirestore(
   conversationId: string,
   messageId: string,
+  currentUserId: string,
 ): Promise<void> {
+  // Pre-calculate what the next latest message will be (avoiding queries inside transaction)
+  const messagesRef = collection(
+    db,
+    'conversations',
+    conversationId,
+    'messages',
+  );
+  const latestQuery = query(
+    messagesRef,
+    orderBy('timestamp', 'desc'),
+    limit(2),
+  );
+  const snap = await getDocs(latestQuery);
+
+  let fallbackMessage: any = null;
+  if (!snap.empty) {
+    if (snap.docs[0].id === messageId && snap.docs.length > 1) {
+      fallbackMessage = { id: snap.docs[1].id, ...snap.docs[1].data() };
+    } else if (snap.docs[0].id !== messageId) {
+      // If we aren't deleting the most recent one, or concurrent write pushed a new one,
+      // fallback isn't needed, but keeping the actual top message is safe.
+      fallbackMessage = { id: snap.docs[0].id, ...snap.docs[0].data() };
+    }
+  }
+
   await runTransaction(db, async (transaction) => {
     const msgRef = doc(
       db,
@@ -378,6 +405,15 @@ export async function deleteMessageFromFirestore(
     );
     const conversationRef = doc(db, 'conversations', conversationId);
 
+    const msgSnap = await transaction.get(msgRef);
+    if (!msgSnap.exists()) return; // Already deleted or doesn't exist
+
+    const msgData = msgSnap.data();
+
+    if (msgData.senderId !== currentUserId) {
+      throw new Error('Unauthorized delete attempt');
+    }
+
     const convoSnap = await transaction.get(conversationRef);
     if (!convoSnap.exists()) return;
 
@@ -385,12 +421,21 @@ export async function deleteMessageFromFirestore(
 
     transaction.delete(msgRef);
 
+    // If the deleted message was registered as the latest message
     if (convoData.lastMessageId === messageId) {
-      transaction.update(conversationRef, {
-        lastMessage: null,
-        lastMessageId: null,
-        timestamp: null,
-      });
+      if (fallbackMessage) {
+        transaction.update(conversationRef, {
+          lastMessage: fallbackMessage,
+          lastMessageId: fallbackMessage.id,
+          timestamp: fallbackMessage.timestamp,
+        });
+      } else {
+        transaction.update(conversationRef, {
+          lastMessage: null,
+          lastMessageId: null,
+          timestamp: null,
+        });
+      }
     }
   });
 }
