@@ -138,9 +138,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 
   return (
     <>
-      <Card
-        className="mx-auto h-full max-w-[1000px] group relative overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm transition-all duration-300 hover:shadow-md"
-      >
+      <Card className="mx-auto h-full max-w-[1000px] group relative overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm transition-all duration-300 hover:shadow-md">
         <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-muted-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 dark:border-gray-800 dark:bg-muted/20 sm:min-h-[208px] md:min-h-[220px] md:flex-row md:gap-4 lg:min-h-[240px] lg:gap-5">
           {/* Left Side - Profile */}
           <div className="flex flex-col items-center bg-muted-foreground/20 p-4 dark:bg-muted/20 sm:flex-row sm:items-start sm:gap-4 sm:p-4 md:w-56 md:self-stretch md:flex-col md:gap-0 md:border-r md:border-border md:p-4 lg:w-64 lg:p-5">
@@ -259,7 +257,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                           </Button>
                         </a>
                       </TooltipTrigger>
-                          <TooltipContent>Website</TooltipContent>
+                      <TooltipContent>Website</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}
