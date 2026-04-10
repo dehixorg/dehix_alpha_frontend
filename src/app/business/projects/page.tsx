@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import {
   Table as TableIcon,
@@ -248,6 +249,7 @@ const BusinessProjectsPage: React.FC = () => {
               variant={isTableView ? 'default' : 'outline'}
               size="sm"
               onClick={() => setIsTableView(true)}
+              aria-label="Table view"
             >
               <TableIcon className="h-4 w-4" />
             </Button>
@@ -255,6 +257,7 @@ const BusinessProjectsPage: React.FC = () => {
               variant={!isTableView ? 'default' : 'outline'}
               size="sm"
               onClick={() => setIsTableView(false)}
+              aria-label="Card view"
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
@@ -551,16 +554,16 @@ const BusinessProjectsPage: React.FC = () => {
                       return (
                         <div
                           key={p._id}
-                          className="cursor-pointer rounded-lg border bg-background p-4 shadow-sm transition-colors hover:bg-muted/20"
-                          onClick={() =>
-                            (window.location.href = `/business/project/${p._id}`)
-                          }
+                          className="rounded-lg border bg-background p-4 shadow-sm transition-colors hover:bg-muted/20"
                         >
                           <div className="space-y-4">
                             <div className="min-w-0">
-                              <p className="truncate text-base font-semibold">
+                              <Link
+                                href={`/business/project/${p._id}`}
+                                className="block truncate text-base font-semibold underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm"
+                              >
                                 {p.projectName}
-                              </p>
+                              </Link>
                               <p className="truncate text-sm text-muted-foreground">
                                 {p.companyName}
                               </p>
@@ -719,16 +722,16 @@ const BusinessProjectsPage: React.FC = () => {
                           return (
                             <tr
                               key={p._id}
-                              className="cursor-pointer border-b transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted"
-                              onClick={() =>
-                                (window.location.href = `/business/project/${p._id}`)
-                              }
+                              className="border-b transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted"
                             >
                               <td className="min-w-[220px] p-4 align-middle">
                                 <div className="flex min-w-0 flex-col">
-                                  <span className="truncate font-medium leading-tight">
+                                  <Link
+                                    href={`/business/project/${p._id}`}
+                                    className="truncate font-medium leading-tight underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm"
+                                  >
                                     {p.projectName}
-                                  </span>
+                                  </Link>
                                   <span className="truncate text-xs text-muted-foreground">
                                     {p.companyName}
                                   </span>

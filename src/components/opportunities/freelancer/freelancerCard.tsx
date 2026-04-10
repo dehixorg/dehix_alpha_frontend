@@ -8,6 +8,7 @@ import {
   Layers,
   Award,
   UserPlus,
+  ExternalLink,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -102,6 +103,27 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
     return `${n}/hr`;
   };
 
+  const toSafeExternalUrl = (value?: string) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return undefined;
+
+    try {
+      const normalized = trimmed.startsWith('//')
+        ? `https:${trimmed}`
+        : trimmed;
+      const url = new URL(normalized);
+      return url.protocol === 'http:' || url.protocol === 'https:'
+        ? url.toString()
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const safeGithubUrl = toSafeExternalUrl(githubUrl);
+  const safeLinkedInUrl = toSafeExternalUrl(linkedInUrl);
+  const safeWebsiteUrl = toSafeExternalUrl(websiteUrl);
+
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setIsClosing(true);
@@ -118,17 +140,6 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
     <>
       <Card
         className="mx-auto h-full max-w-[1000px] group relative overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm transition-all duration-300 hover:shadow-md"
-        role="button"
-        tabIndex={0}
-        onClick={() => {
-          if (!isClosing) setIsDialogOpen(true);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (!isClosing) setIsDialogOpen(true);
-          }
-        }}
       >
         <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-muted-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 dark:border-gray-800 dark:bg-muted/20 sm:min-h-[208px] md:min-h-[220px] md:flex-row md:gap-4 lg:min-h-[240px] lg:gap-5">
           {/* Left Side - Profile */}
@@ -174,12 +185,12 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 
               {/* Social Links */}
               <div className="mt-2 flex justify-center gap-1.5 sm:justify-start">
-                {githubUrl && (
+                {safeGithubUrl && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href={githubUrl}
+                          href={safeGithubUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="GitHub"
@@ -200,12 +211,12 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                     </Tooltip>
                   </TooltipProvider>
                 )}
-                {linkedInUrl && (
+                {safeLinkedInUrl && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href={linkedInUrl}
+                          href={safeLinkedInUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="LinkedIn"
@@ -226,12 +237,12 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                     </Tooltip>
                   </TooltipProvider>
                 )}
-                {websiteUrl && (
+                {safeWebsiteUrl && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href={websiteUrl}
+                          href={safeWebsiteUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="Website"
@@ -248,7 +259,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                           </Button>
                         </a>
                       </TooltipTrigger>
-                      <TooltipContent>LinkedIn Profile</TooltipContent>
+                          <TooltipContent>Website</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}
@@ -502,9 +513,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                       {/* Footer actions inside content for mobile stacking */}
                       <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {githubUrl && (
+                          {safeGithubUrl && (
                             <a
-                              href={githubUrl}
+                              href={safeGithubUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -519,9 +530,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                               </Button>
                             </a>
                           )}
-                          {linkedInUrl && (
+                          {safeLinkedInUrl && (
                             <a
-                              href={linkedInUrl}
+                              href={safeLinkedInUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -536,9 +547,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                               </Button>
                             </a>
                           )}
-                          {websiteUrl && (
+                          {safeWebsiteUrl && (
                             <a
-                              href={websiteUrl}
+                              href={safeWebsiteUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -575,7 +586,19 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                 </Dialog>
               </div>
 
-              <div onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isClosing) setIsDialogOpen(true);
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  View Profile
+                </Button>
+
                 <Button
                   size="sm"
                   onClick={(e) => {
