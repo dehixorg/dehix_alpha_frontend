@@ -27,7 +27,10 @@ import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
+import {
+  subscribeToUserConversations,
+  updateDataInFirestore,
+} from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 import { useChatTour } from '@/components/tour/shared/useChatTour';
 
@@ -396,6 +399,52 @@ const HomePage = () => {
     [isMobile, router],
   );
 
+  const markConversationAsRead = useCallback(
+    async (conv: Conversation | null) => {
+      if (!conv?.id || !user?.uid) return;
+      const lastMessage = conv.lastMessage;
+      if (
+        !lastMessage?.senderId ||
+        lastMessage.senderId === user.uid ||
+        lastMessage.read
+      ) {
+        return;
+      }
+
+      try {
+        await updateDataInFirestore('conversations', conv.id, {
+          'lastMessage.read': true,
+        });
+
+        setConversations((prev) =>
+          prev.map((item) =>
+            item.id === conv.id && item.lastMessage
+              ? {
+                  ...item,
+                  lastMessage: { ...item.lastMessage, read: true },
+                }
+              : item,
+          ),
+        );
+        setActiveConversation((prev) =>
+          prev?.id === conv.id && prev.lastMessage
+            ? {
+                ...prev,
+                lastMessage: { ...prev.lastMessage, read: true },
+              }
+            : prev,
+        );
+      } catch (error) {
+        console.error('Failed to mark conversation as read:', error);
+      }
+    },
+    [user?.uid],
+  );
+
+  useEffect(() => {
+    markConversationAsRead(activeConversation);
+  }, [activeConversation, markConversationAsRead]);
+
   let chatListComponentContent;
   if (loading) {
     chatListComponentContent = (
@@ -503,6 +552,14 @@ const HomePage = () => {
         onToggleExpand={toggleChatExpanded}
         onOpenProfileSidebar={handleOpenProfileSidebar}
         onConversationUpdate={setActiveConversation}
+        onBack={() => {
+          setActiveConversation(null);
+          const url = new URL(window.location.href);
+          if (url.searchParams.has('c')) {
+            url.searchParams.delete('c');
+            router.replace(url.pathname + url.search, { scroll: false });
+          }
+        }}
       />
     );
   } else if (!loading && conversations.length > 0) {
@@ -525,7 +582,10 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col" data-tour="chat">
+    <div
+      className="flex min-h-screen w-full flex-col overflow-x-hidden"
+      data-tour="chat"
+    >
       <SidebarMenu
         menuItemsTop={
           user.type === 'business'

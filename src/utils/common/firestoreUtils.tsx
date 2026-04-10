@@ -230,16 +230,22 @@ export async function updateConversationWithMessageTransaction(
         'messages',
       );
 
+      // Add the message to the messages subcollection
+      const newMessageRef = doc(messagesRef); // Generate a new document ID for the message
+
       // Update the conversation document with the last message and timestamp
       transaction.update(conversationRef, {
-        lastMessage: message,
+        lastMessage: {
+          ...message,
+          id: newMessageRef.id, // ensure ID is stored
+        },
+        lastMessageId: newMessageRef.id,
         timestamp: datentime,
       });
 
-      // Add the message to the messages subcollection
-      const newMessageRef = doc(messagesRef); // Generate a new document ID for the message
       transaction.set(newMessageRef, {
         ...message,
+        id: newMessageRef.id, // optional but recommended
         timestamp: datentime,
       });
     });
@@ -342,3 +348,49 @@ export const markAllNotificationsAsRead = async (userId: string) => {
     throw new Error('Failed to mark notifications as read');
   }
 };
+
+/**
+ * Delete a message from a conversation's messages subcollection.
+ *
+ * Uses a Firestore transaction for full atomicity:
+ * - Reads the conversation doc via transaction.get()
+ * - Deletes the message doc
+ * - If the deleted message's ID matches lastMessageId on the conversation,
+ *   resets lastMessage / lastMessageId / timestamp to null.
+ *
+ * NOTE: This intentionally does NOT recalculate the new latest message inside
+ * the transaction (that would require getDocs/queries which are forbidden in
+ * transactions and would introduce race conditions). If accurate last-message
+ * recalculation is required, use a Firebase Cloud Function `onDelete` trigger
+ * to recompute it server-side.
+ */
+export async function deleteMessageFromFirestore(
+  conversationId: string,
+  messageId: string,
+): Promise<void> {
+  await runTransaction(db, async (transaction) => {
+    const msgRef = doc(
+      db,
+      'conversations',
+      conversationId,
+      'messages',
+      messageId,
+    );
+    const conversationRef = doc(db, 'conversations', conversationId);
+
+    const convoSnap = await transaction.get(conversationRef);
+    if (!convoSnap.exists()) return;
+
+    const convoData = convoSnap.data();
+
+    transaction.delete(msgRef);
+
+    if (convoData.lastMessageId === messageId) {
+      transaction.update(conversationRef, {
+        lastMessage: null,
+        lastMessageId: null,
+        timestamp: null,
+      });
+    }
+  });
+}

@@ -5,7 +5,7 @@ import React, { RefObject, useMemo, memo, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
 import { formatDistanceToNow, format } from 'date-fns';
-import { CheckCheck, Reply, Flag, MoreVertical, Copy } from 'lucide-react';
+import { CheckCheck, Reply, Flag, MoreVertical, Copy, Trash2 } from 'lucide-react';
 
 import { EmojiPicker } from '../emojiPicker';
 
@@ -31,6 +31,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { apiHelperService } from '@/services/report';
+import { deleteMessageFromFirestore } from '@/utils/common/firestoreUtils';
 
 // Local helpers to keep component self-contained
 function formatChatTimestamp(timestamp: string) {
@@ -280,6 +281,23 @@ function ChatMessageItem({
     }
   };
 
+  const handleDeleteMessage = async () => {
+    try {
+      await deleteMessageFromFirestore(conversation.id, message.id);
+      toast({
+        title: 'Deleted',
+        description: 'Message deleted.',
+      });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete message. Please try again.',
+      });
+    }
+  };
+
   return (
     <div className="w-full" key={message.id}>
       {isNewDay && (
@@ -396,10 +414,10 @@ function ChatMessageItem({
                 <TooltipTrigger asChild>
                   <div className="w-full break-words [overflow-wrap:anywhere]">
                     {message.replyTo && (
-                      <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
+                        <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
                         <div
                           className={cn(
-                            'italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2',
+                            'italic overflow-hidden whitespace-pre-wrap break-words text-ellipsis max-h-[3em] line-clamp-2',
                             isSender
                               ? 'text-primary-foreground dark:text-primary-foreground'
                               : 'text-primary dark:text-primary',
@@ -655,7 +673,7 @@ function ChatMessageItem({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" sideOffset={5} collisionPadding={10} avoidCollisions className="w-48">
                 <DropdownMenuItem onClick={handleCopyMessage}>
                   <Copy className="mr-2 h-4 w-4" />
                   <span>Copy message</span>
@@ -668,6 +686,15 @@ function ChatMessageItem({
                   <Flag className="mr-2 h-4 w-4" />
                   <span>Report message</span>
                 </DropdownMenuItem>
+                {isSender && (
+                  <DropdownMenuItem
+                    onClick={handleDeleteMessage}
+                    className="text-red-500 focus:text-red-500"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Delete message</span>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

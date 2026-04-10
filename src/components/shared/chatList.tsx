@@ -37,6 +37,7 @@ export interface Conversation extends DocumentData {
   lastMessage: {
     content?: string;
     senderId?: string;
+    read?: boolean;
     timestamp?: string;
     voiceMessage?: boolean;
     attachments?: Array<{ type?: string }>;
@@ -322,10 +323,37 @@ export function ChatList({
         name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
       );
+    })
+    .sort((a, b) => {
+      const getIsUnread = (conv: Conversation) => {
+        return (
+          !!conv.lastMessage?.senderId &&
+          conv.lastMessage.senderId !== currentUser.uid &&
+          active?.id !== conv.id &&
+          !conv.lastMessage?.read
+        );
+      };
+
+      const aUnread = getIsUnread(a);
+      const bUnread = getIsUnread(b);
+
+      if (aUnread !== bUnread) return aUnread ? -1 : 1;
+
+      const getTimestampMs = (ts: any) => {
+        if (!ts) return 0;
+        if (typeof ts === 'object' && ts.seconds) return ts.seconds;
+        if (typeof ts === 'number') return Math.floor(ts / 1000);
+        return Math.floor(new Date(ts as string).getTime() / 1000) || 0;
+      };
+
+      const aTime = getTimestampMs(a.timestamp);
+      const bTime = getTimestampMs(b.timestamp);
+
+      return bTime - aTime;
     });
 
   return (
-    <div className="flex flex-col h-full bg-[hsl(var(--card))]">
+    <div className="flex flex-col h-full w-full bg-[hsl(var(--card))] overflow-hidden">
       <div className="p-3 border-b border-[hsl(var(--border))]">
         <div className="flex space-x-2 mb-3">
           <Button
@@ -429,15 +457,17 @@ export function ChatList({
                   }
                 }}
               >
-                <Avatar className="w-10 h-10 mr-3">
+                <Avatar className="w-10 h-10 mr-3 flex-shrink-0">
                   <AvatarImage src={user.profilePic} />
                   <AvatarFallback>
                     {user.displayName?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="text-sm font-medium">{user.displayName}</p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {user.displayName}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
                 </div>
               </div>
             ))
@@ -454,6 +484,13 @@ export function ChatList({
                   const isActive = active?.id === conversation.id;
                   const { text: displayText, icon: displayIcon } =
                     getLastMessagePreview(conversation.lastMessage);
+
+                  // Unread: incoming last message, not explicitly read, and not currently open
+                  const isUnread =
+                    !!conversation.lastMessage?.senderId &&
+                    conversation.lastMessage.senderId !== currentUser.uid &&
+                    !isActive &&
+                    !conversation.lastMessage?.read;
 
                   return (
                     <div
@@ -501,9 +538,14 @@ export function ChatList({
                           </AvatarFallback>
                         </Avatar>
                       </div>
-                      <div className="flex-grow overflow-hidden">
+                      <div className="flex-1 min-w-0 overflow-hidden">
                         <div className="flex justify-between items-baseline">
-                          <p className="text-sm font-medium truncate">
+                          <p
+                            className={cn(
+                              'text-sm truncate',
+                              isUnread ? 'font-bold' : 'font-medium',
+                            )}
+                          >
                             {conversation.type === 'group'
                               ? conversation.groupName
                               : conversation.participantDetails?.[
@@ -512,20 +554,39 @@ export function ChatList({
                                   ) || ''
                                 ]?.userName || 'Chat User'}
                           </p>
-                          <p className="text-xs flex-shrink-0 ml-2">
+                          <p
+                            className={cn(
+                              'text-xs flex-shrink-0 ml-2',
+                              isUnread
+                                ? 'text-foreground font-semibold'
+                                : 'text-muted-foreground',
+                            )}
+                          >
                             {lastUpdated}
                           </p>
                         </div>
-                        <p className="text-xs truncate flex items-center gap-1">
-                          {displayIcon ? (
-                            <span className="text-[hsl(var(--muted-foreground))]">
-                              {displayIcon}
-                            </span>
-                          ) : null}
-                          {displayText.length > 40
-                            ? displayText.substring(0, 40) + '...'
-                            : displayText}
-                        </p>
+                        <div className="flex items-center justify-between gap-1">
+                          <p
+                            className={cn(
+                              'text-xs truncate flex items-center gap-1',
+                              isUnread
+                                ? 'font-semibold text-foreground'
+                                : 'text-muted-foreground',
+                            )}
+                          >
+                            {displayIcon ? (
+                              <span className="text-[hsl(var(--muted-foreground))]">
+                                {displayIcon}
+                              </span>
+                            ) : null}
+                            {displayText.length > 40
+                              ? displayText.substring(0, 40) + '...'
+                              : displayText}
+                          </p>
+                          {isUnread && (
+                            <span className="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-primary" />
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
