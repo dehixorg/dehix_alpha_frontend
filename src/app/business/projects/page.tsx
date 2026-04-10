@@ -85,7 +85,7 @@ const BusinessProjectsPage: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
 
   // Debug: Log when projects state changes
-  useEffect(() => { }, [projects]);
+  useEffect(() => {}, [projects]);
 
   const filteredSortedProjects = useMemo(() => {
     let items = [...projects];
@@ -150,7 +150,7 @@ const BusinessProjectsPage: React.FC = () => {
 
       const statusMessage =
         newStatus === 'ACTIVE' &&
-          projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
+        projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
           ? 'Project marked as incomplete'
           : `Project status updated to ${newStatus}`;
       notifySuccess(statusMessage);
@@ -182,14 +182,14 @@ const BusinessProjectsPage: React.FC = () => {
 
         const statusMessage =
           newStatus === 'ACTIVE' &&
-            projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
+          projects.find((p) => p._id === projectId)?.status === 'COMPLETED'
             ? 'Project marked as incomplete'
             : `Project status updated to ${newStatus}`;
         notifySuccess(statusMessage);
       } catch (alternativeError: any) {
         notifyError(
           alternativeError.response?.data?.message ||
-          'Failed to update project status',
+            'Failed to update project status',
           'Error',
         );
       }
@@ -240,9 +240,7 @@ const BusinessProjectsPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Projects
             </h1>
-            <p className="hidden md:block text-muted-foreground">
-
-            </p>
+            <p className="hidden md:block text-muted-foreground"></p>
           </div>
           {/* View toggle buttons */}
           <div className="flex gap-2 self-start">
@@ -416,19 +414,19 @@ const BusinessProjectsPage: React.FC = () => {
                         search ||
                         sortBy !== 'createdAt' ||
                         sortDir !== 'desc') && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setStatusFilter('ALL');
-                              setSearch('');
-                              setSortBy('createdAt');
-                              setSortDir('desc');
-                            }}
-                          >
-                            Reset
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setStatusFilter('ALL');
+                            setSearch('');
+                            setSortBy('createdAt');
+                            setSortDir('desc');
+                          }}
+                        >
+                          Reset
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 md:hidden sm:flex-row sm:items-center">
@@ -493,7 +491,8 @@ const BusinessProjectsPage: React.FC = () => {
                                   : ''
                               }
                             >
-                              <ArrowDownAZ className="mr-2 h-4 w-4" /> Name A → Z
+                              <ArrowDownAZ className="mr-2 h-4 w-4" /> Name A →
+                              Z
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
@@ -515,19 +514,19 @@ const BusinessProjectsPage: React.FC = () => {
                         search ||
                         sortBy !== 'createdAt' ||
                         sortDir !== 'desc') && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setStatusFilter('ALL');
-                              setSearch('');
-                              setSortBy('createdAt');
-                              setSortDir('desc');
-                            }}
-                          >
-                            Reset
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setStatusFilter('ALL');
+                            setSearch('');
+                            setSortBy('createdAt');
+                            setSortDir('desc');
+                          }}
+                        >
+                          Reset
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -796,7 +795,8 @@ const BusinessProjectsPage: React.FC = () => {
                                       </>
                                     ) : (
                                       <>
-                                        <Play className="h-4 w-4" /> Start Project
+                                        <Play className="h-4 w-4" /> Start
+                                        Project
                                       </>
                                     )}
                                   </Button>
@@ -818,8 +818,8 @@ const BusinessProjectsPage: React.FC = () => {
                                       </>
                                     ) : (
                                       <>
-                                        <CheckCircle2 className="h-4 w-4" /> Mark
-                                        as Completed
+                                        <CheckCircle2 className="h-4 w-4" />{' '}
+                                        Mark as Completed
                                       </>
                                     )}
                                   </Button>

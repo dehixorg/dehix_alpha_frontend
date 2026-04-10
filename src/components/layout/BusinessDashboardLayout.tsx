@@ -1,6 +1,6 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
 
+import { cn } from '@/lib/utils';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -35,14 +35,24 @@ export default function BusinessDashboardLayout({
   children,
 }: Props) {
   return (
-    <div className={cn('flex min-h-screen w-full !max-w-none overflow-x-hidden', containerClassName)}>
+    <div
+      className={cn(
+        'flex min-h-screen w-full !max-w-none overflow-x-hidden',
+        containerClassName,
+      )}
+    >
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active={active}
         isKycCheck={isKycCheck}
       />
-      <div className={cn('flex flex-col min-w-0 flex-1 w-full !max-w-none', contentClassName)}>
+      <div
+        className={cn(
+          'flex flex-col min-w-0 flex-1 w-full !max-w-none',
+          contentClassName,
+        )}
+      >
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
