@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useBusinessInterviewTour } from '@/components/tour/business/useBusinessInterviewTour';
 import {
   ListVideo,
   Calendar,
@@ -13,6 +12,7 @@ import {
 } from 'lucide-react';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 
+import { useBusinessInterviewTour } from '@/components/tour/business/useBusinessInterviewTour';
 import {
   Accordion,
   AccordionContent,
@@ -423,7 +423,10 @@ export default function BusinessInterviewsPage() {
           ]}
         />
         <main className="flex-1 px-4 sm:px-10 sm:py-2">
-          <div className="mx-auto w-full max-w-none" data-tour="business-interviews">
+          <div
+            className="mx-auto w-full max-w-none"
+            data-tour="business-interviews"
+          >
             <Card className="overflow-hidden">
               <CardHeader className="bg-gradient">
                 <CardTitle className="text-2xl font-bold tracking-tight">

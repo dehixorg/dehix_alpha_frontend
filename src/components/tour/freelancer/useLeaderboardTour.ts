@@ -3,7 +3,10 @@
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { useTourFactory, type TourStepConfig } from '@/components/tour/shared/tourFactory';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
 const LEADERBOARD_TOUR_STEPS: TourStepConfig[] = [
   {
@@ -15,10 +18,11 @@ const LEADERBOARD_TOUR_STEPS: TourStepConfig[] = [
   },
 ];
 
-export function useLeaderboardTour(isReady: boolean) {
+export function useLeaderboardTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
 
-  const shouldStartTour = trigger > 0 && mode === 'page' && target === 'leaderboard';
+  const shouldStartTour =
+    trigger > 0 && mode === 'page' && target === 'leaderboard';
 
   useTourFactory(LEADERBOARD_TOUR_STEPS, shouldStartTour);
 }

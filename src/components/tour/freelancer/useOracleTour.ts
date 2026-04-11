@@ -3,7 +3,10 @@
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { useTourFactory, type TourStepConfig } from '@/components/tour/shared/tourFactory';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
 const ORACLE_TOUR_STEPS: TourStepConfig[] = [
   {
@@ -29,10 +32,11 @@ const ORACLE_TOUR_STEPS: TourStepConfig[] = [
   },
 ];
 
-export function useOracleTour(isReady: boolean) {
+export function useOracleTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
 
-  const shouldStartTour = trigger > 0 && mode === 'page' && target === 'oracle-dashboard';
+  const shouldStartTour =
+    trigger > 0 && mode === 'page' && target === 'oracle-dashboard';
 
   useTourFactory(ORACLE_TOUR_STEPS, shouldStartTour);
 }

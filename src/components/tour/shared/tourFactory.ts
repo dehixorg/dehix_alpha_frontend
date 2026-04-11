@@ -3,8 +3,9 @@ import Shepherd from 'shepherd.js';
 import type { Tour } from 'shepherd.js';
 import { useDispatch } from 'react-redux';
 
-import { clearTour } from '@/lib/tourSlice';
 import { TOUR_CONFIG, withProgress, getButtonCombinations } from './tourConfig';
+
+import { clearTour } from '@/lib/tourSlice';
 
 export interface TourStepConfig {
   id: string;

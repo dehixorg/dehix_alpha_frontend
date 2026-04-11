@@ -3,7 +3,10 @@
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { useTourFactory, type TourStepConfig } from '@/components/tour/shared/tourFactory';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
 const BUSINESS_MARKET_TOUR_STEPS: TourStepConfig[] = [
   {
@@ -29,10 +32,11 @@ const BUSINESS_MARKET_TOUR_STEPS: TourStepConfig[] = [
   },
 ];
 
-export function useBusinessMarketTour(isReady: boolean) {
+export function useBusinessMarketTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
 
-  const shouldStartTour = trigger > 0 && mode === 'page' && target === 'business-market';
+  const shouldStartTour =
+    trigger > 0 && mode === 'page' && target === 'business-market';
 
   useTourFactory(BUSINESS_MARKET_TOUR_STEPS, shouldStartTour);
 }

@@ -21,8 +21,7 @@ const KYC_TOUR_STEPS: TourStepConfig[] = [
 export function useKycTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
 
-  const shouldStartTour =
-    trigger > 0 && mode === 'page' && target === 'kyc';
+  const shouldStartTour = trigger > 0 && mode === 'page' && target === 'kyc';
 
   useTourFactory(KYC_TOUR_STEPS, shouldStartTour);
 }

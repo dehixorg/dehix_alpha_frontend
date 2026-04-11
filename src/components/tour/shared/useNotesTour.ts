@@ -3,7 +3,10 @@
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { useTourFactory, type TourStepConfig } from '@/components/tour/shared/tourFactory';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
 const BUSINESS_NOTES_STEPS: TourStepConfig[] = [
   {

@@ -3,7 +3,10 @@
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { useTourFactory, type TourStepConfig } from '@/components/tour/shared/tourFactory';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
 const KYC_TOUR_STEPS: TourStepConfig[] = [
   {
@@ -18,7 +21,8 @@ const KYC_TOUR_STEPS: TourStepConfig[] = [
 export function useKycTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
 
-  const shouldStartTour = trigger > 0 && mode === 'page' && target === 'business-kyc';
+  const shouldStartTour =
+    trigger > 0 && mode === 'page' && target === 'business-kyc';
 
   useTourFactory(KYC_TOUR_STEPS, shouldStartTour);
 }

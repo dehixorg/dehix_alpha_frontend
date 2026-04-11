@@ -88,7 +88,9 @@ export const createSidebarSteps = (): TourStepConfig[] => [
 /**
  * Combine multiple step groups
  */
-export const combineSteps = (...stepGroups: TourStepConfig[][]): TourStepConfig[] => {
+export const combineSteps = (
+  ...stepGroups: TourStepConfig[][]
+): TourStepConfig[] => {
   return stepGroups.flat();
 };
 
@@ -96,7 +98,9 @@ export const combineSteps = (...stepGroups: TourStepConfig[][]): TourStepConfig[
  * Filter steps based on selector availability
  * Useful for handling optional UI elements
  */
-export const filterAvailableSteps = (steps: TourStepConfig[]): TourStepConfig[] => {
+export const filterAvailableSteps = (
+  steps: TourStepConfig[],
+): TourStepConfig[] => {
   return steps.filter((step) => {
     return document.querySelector(step.selector) !== null;
   });

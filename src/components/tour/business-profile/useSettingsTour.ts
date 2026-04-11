@@ -3,7 +3,10 @@
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { useTourFactory, type TourStepConfig } from '@/components/tour/shared/tourFactory';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
 const SETTINGS_TOUR_STEPS: TourStepConfig[] = [
   {
@@ -53,7 +56,8 @@ const SETTINGS_TOUR_STEPS: TourStepConfig[] = [
 export function useSettingsTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
 
-  const shouldStartTour = trigger > 0 && mode === 'platform' && target === 'sidebar';
+  const shouldStartTour =
+    trigger > 0 && mode === 'platform' && target === 'sidebar';
 
   useTourFactory(SETTINGS_TOUR_STEPS, shouldStartTour);
 }

@@ -36,7 +36,7 @@ export type TourTarget =
   | 'business-market'
   | 'business-projects'
   | 'business-talent'
-  | "business-interviews"
+  | 'business-interviews'
 
   // Business settings
   | 'business-transactions'

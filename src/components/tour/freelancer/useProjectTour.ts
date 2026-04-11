@@ -3,7 +3,10 @@
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { useTourFactory, type TourStepConfig } from '@/components/tour/shared/tourFactory';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
 const PROJECT_TOUR_STEPS: TourStepConfig[] = [
   {
@@ -15,10 +18,11 @@ const PROJECT_TOUR_STEPS: TourStepConfig[] = [
   },
 ];
 
-export function useProjectTour(isReady: boolean) {
+export function useProjectTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
 
-  const shouldStartTour = trigger > 0 && mode === 'page' && target === 'current-projects';
+  const shouldStartTour =
+    trigger > 0 && mode === 'page' && target === 'current-projects';
 
   useTourFactory(PROJECT_TOUR_STEPS, shouldStartTour);
 }

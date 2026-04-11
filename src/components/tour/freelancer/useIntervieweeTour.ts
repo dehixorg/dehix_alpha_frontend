@@ -3,7 +3,10 @@
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { useTourFactory, type TourStepConfig } from '@/components/tour/shared/tourFactory';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
 const INTERVIEWEE_TOUR_STEPS: TourStepConfig[] = [
   {
@@ -50,10 +53,11 @@ const INTERVIEWEE_TOUR_STEPS: TourStepConfig[] = [
   },
 ];
 
-export function useIntervieweeTour(isReady: boolean) {
+export function useIntervieweeTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
 
-  const shouldStartTour = trigger > 0 && mode === 'page' && target === 'interviewee';
+  const shouldStartTour =
+    trigger > 0 && mode === 'page' && target === 'interviewee';
 
   useTourFactory(INTERVIEWEE_TOUR_STEPS, shouldStartTour);
 }

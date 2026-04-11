@@ -3,7 +3,10 @@
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { useTourFactory, type TourStepConfig } from '@/components/tour/shared/tourFactory';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
 const BUSINESS_INFO_TOUR_STEPS: TourStepConfig[] = [
   {
@@ -39,7 +42,8 @@ const BUSINESS_INFO_TOUR_STEPS: TourStepConfig[] = [
 export function useBusinessInfoTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
 
-  const shouldStartTour = trigger > 0 && mode === 'page' && target === 'business-info';
+  const shouldStartTour =
+    trigger > 0 && mode === 'page' && target === 'business-info';
 
   useTourFactory(BUSINESS_INFO_TOUR_STEPS, shouldStartTour);
 }
