@@ -6,7 +6,7 @@ import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 import { useTalentTour } from '@/components/tour/freelancer/useTalentTour';
 
 export default function Talent() {
-  useTalentTour(true);
+  useTalentTour();
 
   return (
     <div data-tour="talent">

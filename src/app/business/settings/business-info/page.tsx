@@ -11,7 +11,7 @@ export default function BusinessInfoPage() {
   const router = useRouter();
   const user = useAppSelector((state) => state.user);
 
-  useBusinessInfoTour(true);
+  useBusinessInfoTour();
 
   // Optional: Redirect if user is not authenticated
   useEffect(() => {

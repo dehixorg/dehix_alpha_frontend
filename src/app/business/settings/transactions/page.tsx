@@ -84,7 +84,7 @@ export default function TransactionsPage() {
     staleTime: 1000 * 60 * 5,
   });
 
-  useTransactionsTour(true);
+  useTransactionsTour();
 
   useEffect(() => {
     const handleConnectsUpdate = () => {

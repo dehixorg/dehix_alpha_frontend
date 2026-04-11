@@ -1,114 +1,35 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import Shepherd from 'shepherd.js';
-import type { Tour } from 'shepherd.js';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { clearTour } from '@/lib/tourSlice';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
-function el(selector: string) {
-  return document.querySelector(selector);
-}
-function withProgress(tour: Tour) {
-  return {
-    show(this: any) {
-      const current = tour.steps.indexOf(this) + 1;
-      const total = tour.steps.length;
+const EXPERIENCE_TOUR_STEPS: TourStepConfig[] = [
+  {
+    id: 'professional-experience',
+    title: 'Academic and Work experience',
+    text: 'Fill your academic and work details correctly.',
+    selector: '[data-tour="experience"]',
+    position: 'bottom',
+  },
+  {
+    id: 'add-experience',
+    title: 'Add Experience',
+    text: 'Add your professional experience from here.',
+    selector: '[data-tour="add-details"]',
+    position: 'bottom',
+  },
+];
 
-      const footer = this.el?.querySelector('.shepherd-footer');
-      if (!footer) return;
-
-      let progress = footer.querySelector('.shepherd-progress');
-      if (!progress) {
-        progress = document.createElement('div');
-        progress.className = 'shepherd-progress';
-        footer.insertBefore(progress, footer.firstChild);
-      }
-
-      progress.textContent = `${current} / ${total}`;
-    },
-  };
-}
-
-export function useExperienceTour(isReady: boolean) {
-  const tourRef = useRef<Tour | null>(null);
+export function useExperienceTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
-  const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (tourRef.current) return;
+  const shouldStartTour =
+    trigger > 0 && mode === 'page' && target === 'experience';
 
-    const tour = new Shepherd.Tour({
-      useModalOverlay: true,
-      defaultStepOptions: {
-        arrow: true,
-        cancelIcon: { enabled: true },
-        scrollTo: { behavior: 'smooth', block: 'center' },
-        classes: 'shepherd-theme-custom',
-      },
-    });
-
-    tour.on('cancel', () => dispatch(clearTour()));
-    tour.on('complete', () => dispatch(clearTour()));
-
-    tour.addStep({
-      id: 'professional experience',
-      title: 'Academic and Work experience',
-      text: 'Fill your academic and work details correctly.',
-      when: withProgress(tour),
-      buttons: [
-        {
-          text: 'Skip',
-          action: () => {
-            tour.cancel();
-            dispatch(clearTour());
-          },
-        },
-        {
-          text: 'Next',
-          action: tour.next,
-        },
-      ],
-    });
-
-    tour.addStep({
-      id: 'add',
-      title: 'Add Experience',
-      text: 'Add your professional experience from here.',
-      attachTo: { element: '[data-tour="add-details"]', on: 'bottom' },
-      when: withProgress(tour),
-      buttons: [
-        { text: 'Back', action: tour.back },
-        {
-          text: 'Got it',
-          action: () => {
-            tour.complete();
-            dispatch(clearTour());
-          },
-        },
-      ],
-    });
-
-    tourRef.current = tour;
-
-    return () => {
-      tourRef.current?.cancel();
-      tourRef.current = null;
-      dispatch(clearTour());
-    };
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (!trigger) return;
-    if (!isReady) return;
-
-    if (mode !== 'page') return;
-    if (target !== 'experience') return;
-
-    if (el('[data-tour="experience"]')) {
-      tourRef.current?.start();
-    }
-  }, [trigger, mode, target, isReady]);
+  useTourFactory(EXPERIENCE_TOUR_STEPS, shouldStartTour);
 }

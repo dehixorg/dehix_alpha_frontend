@@ -22,7 +22,7 @@ const Notes = () => {
   const userId = user.uid;
   const { notes, isLoading, fetchNotes, setNotes } = useFetchNotes(userId);
 
-  useNotesTour(true);
+  useNotesTour();
 
   useEffect(() => {
     if (userId) {

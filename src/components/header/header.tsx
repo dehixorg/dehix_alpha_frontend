@@ -108,6 +108,7 @@ const Header: React.FC<HeaderProps> = ({
     { path: '/business/market', target: 'business-market' },
     { path: '/business/projects', target: 'business-projects' },
     { path: '/business/talent', target: 'business-talent' },
+    { path: '/business/interviews', target: 'business-interviews' },
 
     // Shared
     { path: '/project-invitations', target: 'project-invitations' },

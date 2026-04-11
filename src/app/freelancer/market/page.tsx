@@ -17,7 +17,7 @@ const Market: React.FC = () => {
       ? tabParam
       : 'projects';
   });
-  useMarketTour(true);
+  useMarketTour();
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');

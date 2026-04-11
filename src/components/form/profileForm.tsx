@@ -142,7 +142,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     mode: 'all',
   });
 
-  usePersonalInfoTour(true);
+  usePersonalInfoTour();
 
   const handleAddCustomSkill = async () => {
     if (!customSkill.label.trim()) {

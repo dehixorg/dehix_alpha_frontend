@@ -99,7 +99,7 @@ const ProjectInvitationsPage: React.FC = () => {
   >('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
-  useProjectInvitationTour(true);
+  useProjectInvitationTour();
 
   useEffect(() => {
     const load = async () => {
