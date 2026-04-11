@@ -9,6 +9,9 @@ import {
   GraduationCap,
   Briefcase,
   UserPlus,
+  TrendingUp,
+  Users,
+  UserCheck,
 } from 'lucide-react';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 
@@ -200,7 +203,7 @@ export default function BusinessInterviewsPage() {
 
   const statusMap: Record<string, string[]> = {
     confirmed: ['approved', 'completed'],
-    pending: ['pending'],
+    pending: ['pending', 'bidding'],
   };
 
   const filteredMeetings = useMemo(() => {
@@ -249,6 +252,27 @@ export default function BusinessInterviewsPage() {
       icon: UserPlus,
       iconClassName: 'bg-purple-500/10 text-purple-500',
     },
+    {
+      key: 'GROWTH',
+      title: 'Growth',
+      description: 'Career growth interviews',
+      icon: TrendingUp,
+      iconClassName: 'bg-orange-500/10 text-orange-500',
+    },
+    {
+      key: 'PEERTOPEER',
+      title: 'Peer to Peer',
+      description: 'Peer to peer interviews',
+      icon: Users,
+      iconClassName: 'bg-indigo-500/10 text-indigo-500',
+    },
+    {
+      key: 'INTERVIEWER',
+      title: 'Interviewer',
+      description: 'Interviews where you are the interviewer',
+      icon: UserCheck,
+      iconClassName: 'bg-red-500/10 text-red-500',
+    },
   ] as const;
 
   const groupedBySection = useMemo(() => {
@@ -256,6 +280,9 @@ export default function BusinessInterviewsPage() {
       TALENT: [],
       PROJECT: [],
       HIRE: [],
+      GROWTH: [],
+      PEERTOPEER: [],
+      INTERVIEWER: [],
     };
 
     filteredMeetings.forEach((m) => {
@@ -268,6 +295,12 @@ export default function BusinessInterviewsPage() {
         grouped['TALENT'].push(m);
       } else if (type === 'HIRE') {
         grouped['HIRE'].push(m);
+      } else if (type === 'GROWTH') {
+        grouped['GROWTH'].push(m);
+      } else if (type === 'PEERTOPEER') {
+        grouped['PEERTOPEER'].push(m);
+      } else if (type === 'INTERVIEWER') {
+        grouped['INTERVIEWER'].push(m);
       }
     });
 

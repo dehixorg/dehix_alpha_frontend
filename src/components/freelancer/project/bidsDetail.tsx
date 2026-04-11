@@ -1100,6 +1100,16 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   }, []);
 
   // Interview dialog handlers
+  const closeAndResetInterviewDialog = useCallback(() => {
+    setIsInterviewDialogOpen(false);
+    setInterviewDescription('');
+    setInterviewMode('DIRECT');
+    setInterviewDate(undefined);
+    setInterviewTime('');
+    setSelectedBidForInterview(null);
+    setIsSubmittingInterview(false);
+  }, []);
+
   const handleOpenInterviewDialog = useCallback((bid: any, profile: any) => {
     setSelectedBidForInterview({ bid, profile });
     setIsInterviewDialogOpen(true);
@@ -1141,15 +1151,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
             : 'Interview scheduled successfully.',
           'Success',
         );
-        setIsInterviewDialogOpen(false);
-        // Clear state
-        setInterviewDescription('');
-        setInterviewMode('DIRECT');
+        closeAndResetInterviewDialog();
       }
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Failed to create interview';
       notifyError(msg, 'Error');
-    } finally {
       setIsSubmittingInterview(false);
     }
   };
@@ -1711,11 +1717,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         open={isInterviewDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
-            setSelectedBidForInterview(null);
-            setInterviewDescription('');
-            setInterviewMode('DIRECT');
+            closeAndResetInterviewDialog();
+          } else {
+            setIsInterviewDialogOpen(true);
           }
-          setIsInterviewDialogOpen(open);
         }}
       >
         <DialogContent className="sm:max-w-[500px]">
@@ -1786,7 +1791,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => setIsInterviewDialogOpen(false)}
+                onClick={closeAndResetInterviewDialog}
                 disabled={isSubmittingInterview}
               >
                 Cancel

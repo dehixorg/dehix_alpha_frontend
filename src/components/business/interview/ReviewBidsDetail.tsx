@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   ChevronLeft,
   Calendar,
@@ -44,6 +44,8 @@ interface Bid {
     profilePic?: string;
     skills?: string[];
     workExperience?: any[];
+    rating?: number;
+    expertise?: string;
   };
 }
 
@@ -70,17 +72,25 @@ export default function ReviewBidsDetail({
   const [interview, setInterview] = useState<InterviewDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const currentToken = useRef<string>(interviewId);
 
   const fetchInterview = async () => {
+    const fetchId = interviewId;
+    currentToken.current = fetchId;
+    setInterview(null);
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await axiosInstance.get(`/interview/${interviewId}`);
+      const response = await axiosInstance.get(`/interview/${fetchId}`);
+      if (currentToken.current !== fetchId) return;
       setInterview(response.data?.data || response.data || null);
     } catch (error: any) {
+      if (currentToken.current !== fetchId) return;
       console.error('Error fetching interview:', error);
       notifyError('Failed to load candidate details', 'Error');
     } finally {
-      setLoading(false);
+      if (currentToken.current === fetchId) {
+        setLoading(false);
+      }
     }
   };
 
@@ -88,6 +98,9 @@ export default function ReviewBidsDetail({
     if (interviewId) {
       fetchInterview();
     }
+    return () => {
+      currentToken.current = '';
+    };
   }, [interviewId]);
 
   const handleAcceptBid = async (bidId: string) => {
@@ -411,33 +424,56 @@ function CandidateCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground/50">
-              Experience
-            </p>
-            <div className="flex items-center gap-1 text-sm font-bold">
-              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-              <span>Expert</span>
-            </div>
-          </div>
-          <div className="space-y-1 text-right">
-            <p className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground/50">
-              Rating
-            </p>
-            <div className="flex items-center justify-end gap-1 text-sm font-bold">
-              <span>4.9</span>
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star
-                    key={i}
-                    className="h-2 w-2 text-amber-500 fill-amber-500"
-                  />
-                ))}
+        {(bid.interviewer?.expertise || bid.interviewer?.rating) && (
+          <div className="grid grid-cols-2 gap-4">
+            {bid.interviewer?.expertise && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground/50">
+                  Experience
+                </p>
+                <div className="flex items-center gap-1 text-sm font-bold">
+                  <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                  <span>{bid.interviewer.expertise}</span>
+                </div>
               </div>
-            </div>
+            )}
+
+            {bid.interviewer?.rating && (
+              <div
+                className={cn(
+                  'space-y-1',
+                  !bid.interviewer.expertise && 'col-span-2 text-left',
+                  bid.interviewer.expertise && 'text-right',
+                )}
+              >
+                <p className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground/50">
+                  Rating
+                </p>
+                <div
+                  className={cn(
+                    'flex items-center gap-1 text-sm font-bold',
+                    bid.interviewer.expertise && 'justify-end',
+                  )}
+                >
+                  <span>{bid.interviewer.rating}</span>
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          'h-2 w-2',
+                          i <= Math.round(bid.interviewer!.rating!)
+                            ? 'text-amber-500 fill-amber-500'
+                            : 'text-muted-foreground fill-muted-foreground opacity-50',
+                        )}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </CardContent>
 
       <Separator className="bg-muted/40" />
