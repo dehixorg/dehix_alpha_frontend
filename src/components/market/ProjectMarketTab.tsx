@@ -420,6 +420,7 @@ const ProjectMarketTab: React.FC = () => {
 
     // Show undo toast without refetching
     const timer = window.setTimeout(async () => {
+      delete removalTimers.current[id];
       try {
         await axiosInstance.put(`/freelancer/${id}/not_interested_project`);
         // Don't refetch - just show success message
@@ -431,8 +432,6 @@ const ProjectMarketTab: React.FC = () => {
         if (removedJob) {
           setJobs((prev) => [removedJob, ...prev]);
         }
-      } finally {
-        delete removalTimers.current[id];
       }
     }, 4000);
     removalTimers.current[id] = timer;

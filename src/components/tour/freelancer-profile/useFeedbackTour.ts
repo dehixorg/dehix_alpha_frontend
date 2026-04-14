@@ -13,8 +13,6 @@ const FEEDBACK_TOUR_STEPS: TourStepConfig[] = [
     id: 'feedback',
     title: 'Feedback',
     text: 'Submit your feedback here.',
-    // selector: '[data-tour="feedback"]',
-    // position: '',
   },
 ];
 

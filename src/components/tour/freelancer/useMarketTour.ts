@@ -56,7 +56,10 @@ const MARKET_TOUR_STEPS: TourStepConfig[] = [
         return '[data-tour="pm-filter-trigger"]';
       }
       // Fallback to desktop filters
-      return '[data-tour="pm-filters-desktop"]';
+      if (el('[data-tour="pm-filters-desktop"]')) {
+        return '[data-tour="pm-filters-desktop"]';
+      }
+      return null;
     },
     position: 'left',
     scrollTo: false,
@@ -96,7 +99,10 @@ const MARKET_TOUR_STEPS: TourStepConfig[] = [
         return '[data-tour="tm-filter-trigger"]';
       }
       // Fallback to desktop filters
-      return '[data-tour="tm-filters-desktop"]';
+      if (el('[data-tour="tm-filters-desktop"]')) {
+        return '[data-tour="tm-filters-desktop"]';
+      }
+      return null;
     },
     position: 'left',
     scrollTo: false,

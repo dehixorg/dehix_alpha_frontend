@@ -13,8 +13,6 @@ const BUSINESS_INTERVIEW_TOUR_STEPS: TourStepConfig[] = [
     id: 'business-interview',
     title: 'Business Interviews',
     text: 'Check your current and past interviews here.',
-    // selector: '[data-tour="business-interviews"]',
-    // position: '',
   },
 ];
 

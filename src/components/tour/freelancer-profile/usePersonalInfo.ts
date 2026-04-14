@@ -66,7 +66,7 @@ const PERSONAL_TOUR_STEPS: TourStepConfig[] = [
   {
     id: 'save-profile',
     title: 'Save updates',
-    text: 'Update your skills and domains here to improve visibility and matching.',
+    text: 'Save the updates you made to your profile here.',
     selector: '[data-tour="profile-save"]',
     position: 'top',
     scrollTo: true,

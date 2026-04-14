@@ -13,7 +13,6 @@ const STEPS: TourStepConfig[] = [
     id: 'business-public-profile',
     title: 'Business Public Profile',
     text: 'You can view public profile.',
-    selector: '', //[data-tour="public-profile"]
     position: 'top',
   },
 ];

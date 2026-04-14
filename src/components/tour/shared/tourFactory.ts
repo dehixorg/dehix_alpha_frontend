@@ -15,9 +15,9 @@ export interface TourStepConfig {
   position?: 'top' | 'bottom' | 'left' | 'right' | '';
   isFirst?: boolean;
   isLast?: boolean;
-  scrollTo?: boolean;
+  scrollTo?: boolean | ScrollIntoViewOptions;
   beforeShowPromise?: () => Promise<void>;
-  customButtons?: Array<{ text: string; action: (tour: Tour) => void }>;
+  customButtons?: Array<{ text: string; action: (this: Tour) => void }>;
 }
 
 /**
@@ -52,21 +52,20 @@ export function useTourFactory(
 
     const buttons = getButtonCombinations(tour, dispatch, clearTour);
 
-    steps.forEach((step, index) => {
+    const resolvedSteps = steps.flatMap((step) => {
       const resolvedSelector =
         typeof step.selector === 'function' ? step.selector() : step.selector;
 
-      // Skip steps with null selector (element doesn't exist)
-      if (
-        step.selector &&
-        !resolvedSelector &&
-        typeof step.selector === 'function'
-      ) {
-        return; // Skip this step
+      if (typeof step.selector === 'function' && !resolvedSelector) {
+        return []; // Skip this step
       }
 
+      return [{ step, resolvedSelector }];
+    });
+
+    resolvedSteps.forEach(({ step, resolvedSelector }, index) => {
       const isFirst = index === 0;
-      const isLast = index === steps.length - 1;
+      const isLast = index === resolvedSteps.length - 1;
 
       // Determine which buttons to show
       let stepButtons = [...buttons.skipNext];
