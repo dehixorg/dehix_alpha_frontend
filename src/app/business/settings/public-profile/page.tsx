@@ -104,31 +104,32 @@ export default function BusinessPublicProfileSettings() {
         { label: 'Public Profile', link: '#' },
       ]}
       isKycCheck={false}
+      contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
     >
-      <div className="w-full max-w-4xl mx-auto space-y-6">
+      <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6 overflow-hidden">
         {/* Share Link Card */}
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-3">
+        <Card className="border shadow-sm overflow-hidden">
+          <CardHeader className="pb-3 px-3 sm:px-6">
             <div className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">
+              <Globe className="h-5 w-5 text-primary shrink-0" />
+              <CardTitle className="text-base sm:text-lg">
                 Your Public Profile Link
               </CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Anyone with this link can view your business profile — no login
               required.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted border text-sm break-all font-mono text-muted-foreground">
+          <CardContent className="space-y-4 px-3 sm:px-6">
+            <div className="flex items-center gap-2 p-2 sm:p-3 rounded-lg bg-muted border text-xs sm:text-sm font-mono text-muted-foreground overflow-hidden">
               <Globe className="h-4 w-4 shrink-0 text-primary" />
-              <span className="flex-1 truncate">{publicUrl}</span>
+              <span className="flex-1 min-w-0 truncate">{publicUrl}</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 variant="default"
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto"
                 onClick={handleCopy}
               >
                 {copied ? (
@@ -145,7 +146,7 @@ export default function BusinessPublicProfileSettings() {
               </Button>
               <Button
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto"
                 onClick={handleShare}
               >
                 <Share2 className="h-4 w-4" />
@@ -153,8 +154,10 @@ export default function BusinessPublicProfileSettings() {
               </Button>
               <Button
                 variant="ghost"
-                className="flex items-center gap-2"
-                onClick={() => window.open(publicUrl, '_blank')}
+                className="flex items-center justify-center gap-2 w-full sm:w-auto"
+                onClick={() =>
+                  window.open(publicUrl, '_blank', 'noopener,noreferrer')
+                }
               >
                 <ExternalLink className="h-4 w-4" />
                 Preview
@@ -165,17 +168,17 @@ export default function BusinessPublicProfileSettings() {
 
         {/* Profile Preview */}
         <div>
-          <p className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
             Profile Preview — how visitors see your profile
           </p>
 
           {/* Profile Header */}
-          <Card className="w-full bg-black text-white p-4 shadow-md mb-4">
-            <Card className="p-8 flex items-center rounded-lg gap-6">
+          <Card className="w-full bg-black text-white p-2 sm:p-4 shadow-md mb-4 overflow-hidden">
+            <Card className="p-3 sm:p-8 flex flex-col sm:flex-row items-center rounded-lg gap-3 sm:gap-6">
               {loading ? (
-                <Skeleton className="w-24 h-24 rounded-full" />
+                <Skeleton className="w-16 h-16 sm:w-24 sm:h-24 rounded-full" />
               ) : (
-                <Avatar className="w-24 h-24 rounded-full border-4 border-primary shadow-lg">
+                <Avatar className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border-4 border-primary shadow-lg flex-shrink-0">
                   <AvatarImage
                     src="/default-avatar.png"
                     alt="Business"
@@ -187,48 +190,52 @@ export default function BusinessPublicProfileSettings() {
                 </Avatar>
               )}
               {loading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-7 w-48" />
-                  <Skeleton className="h-4 w-32" />
+                <div className="space-y-2 text-center sm:text-left w-full">
+                  <Skeleton className="h-6 sm:h-7 w-3/4 sm:w-48 mx-auto sm:mx-0" />
+                  <Skeleton className="h-4 w-1/2 sm:w-32 mx-auto sm:mx-0" />
                 </div>
               ) : (
-                <div>
-                  <h1 className="text-2xl font-bold text-white">
+                <div className="text-center sm:text-left min-w-0 w-full">
+                  <h1 className="text-lg sm:text-2xl font-bold text-white break-words">
                     {profileData?.firstName} {profileData?.lastName}
                   </h1>
-                  <p className="text-white/70">{profileData?.companyName}</p>
+                  <p className="text-white/70 text-xs sm:text-base break-words">
+                    {profileData?.companyName}
+                  </p>
                 </div>
               )}
             </Card>
 
             {/* Projects preview */}
-            <Card className="w-full shadow-lg mt-4">
-              <CardHeader className="bg-green-500/5 border-b border-border py-4">
-                <CardTitle className="text-md font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
-                  <Code className="h-5 w-5" />
-                  Projects (
-                  {loading ? '…' : (profileData?.ProjectList?.length ?? 0)})
+            <Card className="w-full shadow-lg mt-3 sm:mt-4 overflow-hidden">
+              <CardHeader className="bg-green-500/5 border-b border-border py-2.5 sm:py-4 px-3 sm:px-6">
+                <CardTitle className="text-xs sm:text-base font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
+                  <Code className="h-3.5 w-3.5 sm:h-5 sm:w-5 shrink-0" />
+                  <span className="truncate">
+                    Projects (
+                    {loading ? '…' : (profileData?.ProjectList?.length ?? 0)})
+                  </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
+              <CardContent className="p-2.5 sm:p-4">
                 {loading ? (
-                  <Skeleton className="h-20 w-full rounded-lg" />
+                  <Skeleton className="h-16 sm:h-20 w-full rounded-lg" />
                 ) : profileData?.ProjectList?.length ? (
                   <div className="space-y-2">
                     {profileData.ProjectList.slice(0, 3).map((p: any) => (
                       <div
                         key={p._id}
-                        className="p-3 rounded-md border bg-muted/40 flex items-center gap-3"
+                        className="p-2 sm:p-3 rounded-md border bg-muted/40 flex items-center gap-2 sm:gap-3 overflow-hidden"
                       >
-                        <Code className="h-4 w-4 text-green-500 shrink-0" />
-                        <p className="font-medium truncate">
+                        <Code className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500 shrink-0" />
+                        <p className="font-medium truncate text-xs sm:text-base">
                           {p.projectName || p.title}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-xs sm:text-sm text-muted-foreground italic">
                     No projects added yet.
                   </p>
                 )}
@@ -236,39 +243,41 @@ export default function BusinessPublicProfileSettings() {
             </Card>
 
             {/* Contact preview */}
-            <Card className="w-full shadow-lg mt-4">
-              <CardHeader className="bg-blue-500/5 border-b border-border py-4">
-                <CardTitle className="text-md font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
+            <Card className="w-full shadow-lg mt-3 sm:mt-4 overflow-hidden">
+              <CardHeader className="bg-blue-500/5 border-b border-border py-2.5 sm:py-4 px-3 sm:px-6">
+                <CardTitle className="text-xs sm:text-base font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5 sm:h-5 sm:w-5 shrink-0" />
                   Contact Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-2.5 sm:p-4 space-y-2.5 sm:space-y-3">
                 {loading ? (
-                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-10 sm:h-12 w-full" />
                 ) : (
                   <>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
-                        <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-full flex-shrink-0">
+                        <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Email</p>
-                        <p className="font-medium text-sm">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
+                          Email
+                        </p>
+                        <p className="font-medium text-xs sm:text-sm truncate">
                           {profileData?.email || '—'}
                         </p>
                       </div>
                     </div>
                     {profileData?.linkedin && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
-                          <Linkedin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-full flex-shrink-0">
+                          <Linkedin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">
                             LinkedIn
                           </p>
-                          <p className="font-medium text-sm truncate">
+                          <p className="font-medium text-xs sm:text-sm truncate">
                             {profileData.linkedin}
                           </p>
                         </div>

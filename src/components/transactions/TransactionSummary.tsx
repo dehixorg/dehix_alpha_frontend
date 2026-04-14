@@ -26,15 +26,15 @@ export const TransactionSummaryComponent: React.FC<TransactionSummaryProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {[1, 2, 3].map((i) => (
           <Card key={i} className="animate-pulse">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 sm:px-6">
               <div className="h-4 bg-muted rounded w-20"></div>
               <div className="h-8 w-8 bg-muted rounded-full"></div>
             </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-muted rounded w-24 mb-2"></div>
+            <CardContent className="px-3 sm:px-6">
+              <div className="h-6 sm:h-8 bg-muted rounded w-24 mb-2"></div>
               <div className="h-3 bg-muted rounded w-32"></div>
             </CardContent>
           </Card>
@@ -44,7 +44,7 @@ export const TransactionSummaryComponent: React.FC<TransactionSummaryProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
       {/* Total Credits */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -70,15 +70,15 @@ export const TransactionSummaryComponent: React.FC<TransactionSummaryProps> = ({
             </div>
             <div className="relative">
               <div className="absolute inset-0 bg-green-500/20 rounded-full blur-xl scale-150 group-hover:scale-175 transition-transform duration-500"></div>
-              <div className="relative p-3 bg-gradient-to-br from-green-100 to-green-50 dark:from-green-900/50 dark:to-green-900/30 rounded-xl border border-green-200/50 dark:border-green-700/50">
-                <ArrowUpCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="relative p-2 sm:p-3 bg-gradient-to-br from-green-100 to-green-50 dark:from-green-900/50 dark:to-green-900/30 rounded-xl border border-green-200/50 dark:border-green-700/50">
+                <ArrowUpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="relative">
             <div className="space-y-2">
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-green-600 dark:text-green-400 tracking-tight">
+                <span className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 tracking-tight">
                   +{summary.totalCredits.toFixed(2)}
                 </span>
                 <span className="text-xs text-green-500 dark:text-green-500 font-medium">
@@ -125,15 +125,15 @@ export const TransactionSummaryComponent: React.FC<TransactionSummaryProps> = ({
             </div>
             <div className="relative">
               <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl scale-150 group-hover:scale-175 transition-transform duration-500"></div>
-              <div className="relative p-3 bg-gradient-to-br from-red-100 to-red-50 dark:from-red-900/50 dark:to-red-900/30 rounded-xl border border-red-200/50 dark:border-red-700/50">
-                <ArrowDownCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="relative p-2 sm:p-3 bg-gradient-to-br from-red-100 to-red-50 dark:from-red-900/50 dark:to-red-900/30 rounded-xl border border-red-200/50 dark:border-red-700/50">
+                <ArrowDownCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="relative">
             <div className="space-y-2">
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-red-600 dark:text-red-400 tracking-tight">
+                <span className="text-xl sm:text-3xl font-bold text-red-600 dark:text-red-400 tracking-tight">
                   -{summary.totalDebits.toFixed(2)}
                 </span>
                 <span className="text-xs text-red-500 dark:text-red-500 font-medium">
@@ -246,7 +246,7 @@ export const TransactionSummaryComponent: React.FC<TransactionSummaryProps> = ({
             <div className="space-y-2">
               <div className="flex items-baseline gap-2">
                 <span
-                  className={`text-3xl font-bold tracking-tight ${
+                  className={`text-xl sm:text-3xl font-bold tracking-tight ${
                     summary.netChange >= 0
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : 'text-orange-600 dark:text-orange-400'
