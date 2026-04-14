@@ -421,7 +421,7 @@ export default function BusinessInterviewsPage() {
         />
         <main className="flex-1 px-4 sm:px-10 sm:py-2">
           <div className="mx-auto w-full max-w-none">
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden mt-4">
               <CardHeader className="bg-gradient">
                 <CardTitle className="text-2xl font-bold tracking-tight">
                   Interviews
