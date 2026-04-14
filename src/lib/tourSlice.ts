@@ -21,6 +21,7 @@ export type TourTarget =
   // Freelancer settings
   | 'personal-info-form'
   | 'experience'
+  | 'public-profile'
   | 'kyc'
   | 'level-badges'
   | 'streak'
@@ -37,6 +38,7 @@ export type TourTarget =
   | 'business-projects'
   | 'business-talent'
   | 'business-interviews'
+  | 'business-public-profile'
 
   // Business settings
   | 'business-transactions'

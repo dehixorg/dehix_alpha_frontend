@@ -12,9 +12,9 @@ const RESUME_TOUR_STEPS: TourStepConfig[] = [
   {
     id: 'resume',
     title: 'Resume',
-    text: 'Upload your resume.',
-    selector: '[data-tour="resume"]',
-    position: 'top',
+    text: 'Create your resume.',
+    // selector: '[data-tour="resume"]',
+    // position: '',
   },
 ];
 

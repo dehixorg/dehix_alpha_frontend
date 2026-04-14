@@ -14,7 +14,7 @@ const KYC_TOUR_STEPS: TourStepConfig[] = [
     title: 'Business KYC Verification',
     text: 'Please Complete the Mandatory KYC and earn reward.',
     selector: '',
-    position: 'top',
+    position: '',
   },
 ];
 

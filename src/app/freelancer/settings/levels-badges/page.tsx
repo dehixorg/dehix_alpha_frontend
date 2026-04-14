@@ -31,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
+import { useLevelTour } from '@/components/tour/freelancer-profile/useLevelTour';
 
 // Define the base interface for gamification items
 interface GamificationItemBase {
@@ -254,6 +255,9 @@ async function levelUp(): Promise<LevelUpResponse> {
 }
 
 export default function LevelsAndBadgesPage() {
+  // Initialize tour
+  useLevelTour();
+
   // State for toggling eligible badges
   const [showEligibleOnly, setShowEligibleOnly] = useState(false);
   const [currentLevel, setCurrentLevel] = useState<LevelItem | null>(null);
@@ -705,7 +709,12 @@ export default function LevelsAndBadgesPage() {
     >
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Levels & Badges</h1>
+          <h1
+            className="text-3xl font-bold tracking-tight"
+            data-tour="level-badges"
+          >
+            Levels & Badges
+          </h1>
           <p className="text-muted-foreground">
             Track your progress and earn rewards as you complete tasks and level
             up

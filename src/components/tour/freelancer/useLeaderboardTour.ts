@@ -13,8 +13,8 @@ const LEADERBOARD_TOUR_STEPS: TourStepConfig[] = [
     id: 'leaderboard',
     title: 'Leaderboard',
     text: 'This leaderboard shows rankings based on performance.',
-    selector: '[data-tour="leaderboard"]',
-    position: 'bottom',
+    // selector: '[data-tour="leaderboard"]',
+    // position: '',
   },
 ];
 

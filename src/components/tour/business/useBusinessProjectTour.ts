@@ -13,8 +13,8 @@ const BUSINESS_PROJECT_TOUR_STEPS: TourStepConfig[] = [
     id: 'business-projects',
     title: 'Manage Your Projects',
     text: 'All your active and completed business projects are managed from here. Track progress, update details, and take action on projects easily.',
-    selector: '[data-tour="business-projects"]',
-    position: 'bottom',
+    // selector: '[data-tour="business-projects"]',
+    // position: '',
   },
 ];
 

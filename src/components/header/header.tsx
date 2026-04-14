@@ -122,6 +122,7 @@ const Header: React.FC<HeaderProps> = ({
       target: 'personal-info-form',
     },
     { path: '/freelancer/settings/profiles', target: 'profiles-center' },
+    { path: '/freelancer/settings/public-profile', target: 'public-profile' },
     { path: '/freelancer/settings/profile', target: 'experience' },
     { path: '/freelancer/settings/kyc', target: 'kyc' },
     { path: '/freelancer/settings/levels-badges', target: 'level-badges' },
@@ -137,6 +138,10 @@ const Header: React.FC<HeaderProps> = ({
     {
       path: '/business/settings/transactions',
       target: 'business-transactions',
+    },
+    {
+      path: '/business/settings/public-profile',
+      target: 'business-public-profile',
     },
   ];
 

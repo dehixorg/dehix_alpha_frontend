@@ -13,8 +13,8 @@ const BUSINESS_INVITATION_STEPS: TourStepConfig[] = [
     id: 'business-invitation',
     title: 'Project Invitations',
     text: 'Manage and track all your project invitations in one place. Review requests, respond quickly, and keep collaborations moving forward.',
-    selector: '[data-tour="business-invitation"]',
-    position: 'top',
+    // selector: '[data-tour="business-invitation"]',
+    // position: '',
   },
 ];
 
@@ -23,8 +23,8 @@ const FREELANCER_INVITATION_STEPS: TourStepConfig[] = [
     id: 'freelancer-invitation',
     title: 'Project Invitations',
     text: 'Here you can see projects where clients have directly invited you to apply.',
-    selector: '[data-tour="freelancer-invitation"]',
-    position: 'top',
+    // selector: '[data-tour="freelancer-invitation"]',
+    // position: '',
   },
 ];
 

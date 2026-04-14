@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { usePublicTour } from '@/components/tour/freelancer-profile/usePublicTour';
 
 interface FreelancerProfile {
   userName?: string;
@@ -55,6 +56,7 @@ export default function FreelancerPublicProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [publicUrl, setPublicUrl] = useState('');
+  usePublicTour();
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -150,7 +152,10 @@ export default function FreelancerPublicProfileSettings() {
       isKycCheck={false}
       contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
     >
-      <div className="w-full max-w-4xl mx-auto space-y-6">
+      <div
+        className="w-full max-w-4xl mx-auto space-y-6"
+        data-tour="public-profile-freelancer"
+      >
         {/* Share Link Card */}
         <Card className="border shadow-sm">
           <CardHeader className="pb-3">

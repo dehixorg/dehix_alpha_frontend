@@ -11,10 +11,13 @@ export interface TourStepConfig {
   id: string;
   title: string;
   text: string;
-  selector: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
+  selector?: string | (() => string | null);
+  position?: 'top' | 'bottom' | 'left' | 'right' | '';
   isFirst?: boolean;
   isLast?: boolean;
+  scrollTo?: boolean;
+  beforeShowPromise?: () => Promise<void>;
+  customButtons?: Array<{ text: string; action: (tour: Tour) => void }>;
 }
 
 /**
@@ -50,6 +53,18 @@ export function useTourFactory(
     const buttons = getButtonCombinations(tour, dispatch, clearTour);
 
     steps.forEach((step, index) => {
+      const resolvedSelector =
+        typeof step.selector === 'function' ? step.selector() : step.selector;
+
+      // Skip steps with null selector (element doesn't exist)
+      if (
+        step.selector &&
+        !resolvedSelector &&
+        typeof step.selector === 'function'
+      ) {
+        return; // Skip this step
+      }
+
       const isFirst = index === 0;
       const isLast = index === steps.length - 1;
 
@@ -64,20 +79,77 @@ export function useTourFactory(
         stepButtons = [...buttons.backComplete];
       }
 
-      tour.addStep({
+      const stepConfig: any = {
         id: step.id,
         title: step.title,
         text: step.text,
-        attachTo: {
-          element: step.selector,
-          on: (step.position || 'bottom') as any,
-        },
         when: withProgress(tour),
-        buttons: stepButtons,
-      });
+        buttons: step.customButtons || stepButtons,
+        classes: 'shepherd-theme-custom',
+      };
+
+      if (resolvedSelector) {
+        stepConfig.attachTo = {
+          element: resolvedSelector,
+          on: (step.position || 'bottom') as any,
+        };
+      } else {
+        // For steps without a selector, explicitly center the popover
+        stepConfig.classes += ' shepherd-centered';
+      }
+
+      // Handle scrollTo behavior
+      if (step.scrollTo === false) {
+        stepConfig.scrollTo = false;
+      } else if (step.scrollTo === true || typeof step.scrollTo === 'object') {
+        if (typeof step.scrollTo === 'object') {
+          stepConfig.scrollTo = step.scrollTo;
+        } else {
+          // Default smooth scroll behavior
+          stepConfig.scrollTo = { behavior: 'smooth', block: 'center' };
+        }
+      }
+
+      if (step.beforeShowPromise) {
+        stepConfig.beforeShowPromise = step.beforeShowPromise;
+      }
+
+      tour.addStep(stepConfig);
     });
 
     tourRef.current = tour;
+
+    // Ensure only one step is visible at a time
+    const hideOtherSteps = () => {
+      setTimeout(() => {
+        const activeStep = tour.getCurrentStep();
+        const allElements = document.querySelectorAll('.shepherd-element');
+
+        allElements.forEach((el: Element) => {
+          const htmlEl = el as HTMLElement;
+
+          // Check if this is the active step's element
+          const isActive =
+            activeStep &&
+            (el === activeStep.el ||
+              htmlEl.getAttribute('data-step-id') === activeStep.id);
+
+          if (isActive) {
+            htmlEl.style.display = 'block';
+            htmlEl.style.visibility = 'visible';
+            htmlEl.style.opacity = '1';
+          } else {
+            htmlEl.style.display = 'none';
+            htmlEl.style.visibility = 'hidden';
+            htmlEl.style.opacity = '0';
+          }
+        });
+      }, 100); // Small delay to ensure Shepherd has rendered the step
+    };
+
+    tour.on('show', hideOtherSteps);
+    tour.on('next', hideOtherSteps);
+    tour.on('back', hideOtherSteps);
 
     // Start the tour
     tour.start();

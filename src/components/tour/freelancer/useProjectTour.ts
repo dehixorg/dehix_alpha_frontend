@@ -13,8 +13,8 @@ const PROJECT_TOUR_STEPS: TourStepConfig[] = [
     id: 'current-projects',
     title: 'Your Projects',
     text: 'Track your projects by status and respond to invitations here.',
-    selector: '[data-tour="current-projects"]',
-    position: 'bottom',
+    // selector: '[data-tour="current-projects"]',
+    // position: '',
   },
 ];
 

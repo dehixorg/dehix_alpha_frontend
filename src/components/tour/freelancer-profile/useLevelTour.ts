@@ -13,8 +13,7 @@ const LEVEL_TOUR_STEPS: TourStepConfig[] = [
     id: 'level & badges',
     title: 'Level & Badges',
     text: 'Track your progress and earn rewards as you complete tasks and level up.',
-    selector: '[data-tour="level-badges"]',
-    position: 'top',
+    // selector: '[data-tour="level-badges"]',
   },
 ];
 

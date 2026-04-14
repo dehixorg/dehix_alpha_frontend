@@ -24,6 +24,13 @@ const SETTINGS_TOUR_STEPS: TourStepConfig[] = [
     position: 'right',
   },
   {
+    id: 'settings-public-profile',
+    title: 'Business Public Profile',
+    text: 'See how your public profile look.',
+    selector: '[data-tour="settings-public-profile"]',
+    position: 'right',
+  },
+  {
     id: 'settings-kyc',
     title: 'Compliance & Verification',
     text: 'Complete verification to enable full access to platform features.',

@@ -31,6 +31,13 @@ const PROFILE_PLATFORM_TOUR_STEPS: TourStepConfig[] = [
     position: 'right',
   },
   {
+    id: 'sidebar-public-profile',
+    title: 'Public Profile',
+    text: 'See how visitors view your profile.',
+    selector: '[data-tour="sidebar-public-profile"]',
+    position: 'right',
+  },
+  {
     id: 'sidebar-kyc',
     title: 'KYC Verification',
     text: 'Complete KYC to unlock payments and higher limits.',

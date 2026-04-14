@@ -13,8 +13,8 @@ const EXPERIENCE_TOUR_STEPS: TourStepConfig[] = [
     id: 'professional-experience',
     title: 'Academic and Work experience',
     text: 'Fill your academic and work details correctly.',
-    selector: '[data-tour="experience"]',
-    position: 'bottom',
+    // selector: '[data-tour="experience"]',
+    // position: 'bottom',
   },
   {
     id: 'add-experience',

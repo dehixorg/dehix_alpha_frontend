@@ -13,8 +13,8 @@ const BUSINESS_CHAT_STEPS: TourStepConfig[] = [
     id: 'chat-main',
     title: 'Chats',
     text: 'This is where you communicate with freelancers, discuss project details, and collaborate in real time.',
-    selector: '[data-tour="chat-main"]',
-    position: 'top',
+    // selector: '[data-tour="chat-main"]',
+    // position: '',
   },
 ];
 
@@ -23,8 +23,8 @@ const FREELANCER_CHAT_STEPS: TourStepConfig[] = [
     id: 'chat-main',
     title: 'Chats',
     text: 'This is where you chat with clients, receive updates, and coordinate on projects.',
-    selector: '[data-tour="chat-main"]',
-    position: 'top',
+    // selector: '[data-tour="chat-main"]',
+    // position: '',
   },
 ];
 

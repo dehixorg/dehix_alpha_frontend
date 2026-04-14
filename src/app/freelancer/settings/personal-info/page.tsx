@@ -5,9 +5,13 @@ import FreelancerSettingsLayout from '../../../../components/layout/FreelancerSe
 
 import { RootState } from '@/lib/store';
 import { ProfileForm } from '@/components/form/profileForm';
+import { usePersonalInfoTour } from '@/components/tour/freelancer-profile/usePersonalInfo';
 
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);
+
+  // Initialize tour
+  usePersonalInfoTour();
 
   return (
     <FreelancerSettingsLayout

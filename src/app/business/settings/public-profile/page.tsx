@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useBusinessPublicTour } from '@/components/tour/business-profile/useBusinessPublicTour';
 
 interface BusinessProfile {
   _id: string;
@@ -46,6 +47,8 @@ export default function BusinessPublicProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [publicUrl, setPublicUrl] = useState('');
+
+  useBusinessPublicTour();
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -105,7 +108,10 @@ export default function BusinessPublicProfileSettings() {
       ]}
       isKycCheck={false}
     >
-      <div className="w-full max-w-4xl mx-auto space-y-6">
+      <div
+        className="w-full max-w-4xl mx-auto space-y-6"
+        data-tour="public-profile"
+      >
         {/* Share Link Card */}
         <Card className="border shadow-sm">
           <CardHeader className="pb-3">

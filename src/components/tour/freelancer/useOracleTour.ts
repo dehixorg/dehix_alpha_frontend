@@ -13,8 +13,8 @@ const ORACLE_TOUR_STEPS: TourStepConfig[] = [
     id: 'oracle-intro',
     title: 'Oracle Dashboard',
     text: 'Review and manage verification requests across different categories from this dashboard.',
-    selector: '[data-tour="oracle-page"]',
-    position: 'bottom',
+    selector: '',
+    position: '',
   },
   {
     id: 'oracle-business',

@@ -13,8 +13,6 @@ const STREAK_TOUR_STEPS: TourStepConfig[] = [
     id: 'streak',
     title: 'Login Streak',
     text: 'Build your streak and claim connect rewards at milestones.',
-    selector: '[data-tour="streak"]',
-    position: 'top',
   },
 ];
 

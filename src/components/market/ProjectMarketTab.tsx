@@ -170,9 +170,12 @@ const ProjectMarketTab: React.FC = () => {
     }
   }, [user.uid]);
 
+  // Fetch bid data ONCE on mount - separate from filter effect
   useEffect(() => {
-    fetchBidData();
-  }, [fetchBidData]);
+    if (user?.uid) {
+      fetchBidData();
+    }
+  }, [user?.uid]); // Only refetch if user changes, NOT bidProfiles
 
   useEffect(() => {
     const fetchDrafts = async () => {
@@ -359,7 +362,6 @@ const ProjectMarketTab: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // Create a clean filters object with all filter properties
         const fetchOptions: FilterState = {
           jobType: filters.jobType || [],
           domain: filters.domain || [],
@@ -393,15 +395,13 @@ const ProjectMarketTab: React.FC = () => {
       }
     };
 
-    // Add a small debounce to prevent too many API calls
     const timer = setTimeout(fetchData, 300);
 
-    // Cleanup function
     return () => {
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [filters, user?.uid, fetchJobs, bidProfiles]);
+  }, [filters, user?.uid, fetchJobs]); // ✅ REMOVED bidProfiles dependency
 
   const handleResize = () => {
     setIsLargeScreen(window.innerWidth >= 1024);
@@ -414,19 +414,23 @@ const ProjectMarketTab: React.FC = () => {
   }, []);
 
   const handleRemoveJob = (id: string) => {
-    // Optimistic remove
+    // Optimistic remove - just update UI
     const removedJob = jobs.find((j) => j._id === id);
     setJobs((prev) => prev.filter((job) => job._id !== id));
-    // Show undo toast and delay server mutation
+
+    // Show undo toast without refetching
     const timer = window.setTimeout(async () => {
       try {
         await axiosInstance.put(`/freelancer/${id}/not_interested_project`);
-        // Re-fetch to sync
-        fetchJobs(filters);
+        // Don't refetch - just show success message
         notifySuccess('Project marked as not interested.', 'Success');
       } catch (err) {
         console.error('Remove job error:', err);
         notifyError('Failed to update project status.');
+        // Restore the job if request failed
+        if (removedJob) {
+          setJobs((prev) => [removedJob, ...prev]);
+        }
       } finally {
         delete removalTimers.current[id];
       }
@@ -620,4 +624,4 @@ const ProjectMarketTab: React.FC = () => {
   );
 };
 
-export default ProjectMarketTab;
+export default React.memo(ProjectMarketTab);

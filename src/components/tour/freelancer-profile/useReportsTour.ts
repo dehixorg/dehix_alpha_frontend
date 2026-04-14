@@ -13,8 +13,8 @@ const REPORTS_TOUR_STEPS: TourStepConfig[] = [
     id: 'reports',
     title: 'Reports Center',
     text: 'Generate and manage your reports in one place.',
-    selector: '[data-tour="reports"]',
-    position: 'top',
+    // selector: '[data-tour="reports"]',
+    // position: '',
   },
 ];
 

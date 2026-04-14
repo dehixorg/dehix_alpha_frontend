@@ -14,7 +14,7 @@ const TRANSACTIONS_TOUR_STEPS: TourStepConfig[] = [
     title: 'Business Transaction History',
     text: 'View all your connect transactions and balance changes',
     selector: '',
-    position: 'top',
+    position: '',
   },
 ];
 

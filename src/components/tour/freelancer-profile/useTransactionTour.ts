@@ -13,8 +13,8 @@ const TRANSACTION_TOUR_STEPS: TourStepConfig[] = [
     id: 'transaction',
     title: 'Transaction History',
     text: 'Track your connect transactions and balance changes.',
-    selector: '[data-tour="transaction"]',
-    position: 'top',
+    // selector: '[data-tour="transaction"]',
+    // position: '',
   },
 ];
 

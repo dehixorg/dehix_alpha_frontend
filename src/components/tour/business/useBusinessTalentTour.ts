@@ -13,8 +13,8 @@ const BUSINESS_TALENT_TOUR_STEPS: TourStepConfig[] = [
     id: 'business-talent-header',
     title: 'Hire Talent',
     text: 'This is your talent hub where you can discover, review, and manage candidates for your business needs.',
-    selector: '[data-tour="business-talent-header"]',
-    position: 'bottom',
+    // selector: '[data-tour="business-talent-header"]',
+    // position: 'bottom',
   },
   {
     id: 'business-talent-tabs',

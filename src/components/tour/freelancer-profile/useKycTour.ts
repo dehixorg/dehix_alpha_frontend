@@ -13,8 +13,8 @@ const KYC_TOUR_STEPS: TourStepConfig[] = [
     id: 'kyc verification',
     title: 'KYC Verification',
     text: 'Verify your identity with e-kyc.',
-    selector: '[data-tour="kyc"]',
-    position: 'top',
+    // selector: '[data-tour="kyc"]',
+    // position: '',
   },
 ];
 

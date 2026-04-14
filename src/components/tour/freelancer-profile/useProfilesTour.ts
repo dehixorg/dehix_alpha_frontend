@@ -13,8 +13,8 @@ const PROFILES_TOUR_STEPS: TourStepConfig[] = [
     id: 'profiles-center',
     title: 'Profile Center',
     text: 'Create and manage profiles to showcase your expertise.',
-    selector: '[data-tour="profiles-center"]',
-    position: 'top',
+    // selector: '[data-tour="profiles-center"]',
+    // position: '',
   },
 ];
 

@@ -8,20 +8,58 @@ import {
   type TourStepConfig,
 } from '@/components/tour/shared/tourFactory';
 
+// Helper functions
+function el(selector: string) {
+  const element = document.querySelector(selector);
+  // Check if element exists and is visible (not just offsetParent)
+  if (element) {
+    const style = window.getComputedStyle(element);
+    // Check if element is actually visible
+    if (
+      style.display !== 'none' &&
+      style.visibility !== 'hidden' &&
+      style.opacity !== '0'
+    ) {
+      return element;
+    }
+  }
+  return null;
+}
+
+function switchMarketTab(tab: 'projects' | 'talent') {
+  const root = document.querySelector('[data-tour="market-root"]');
+  if (!root) return;
+  root.dispatchEvent(new CustomEvent('market:switch-tab', { detail: tab }));
+}
+
 const MARKET_TOUR_STEPS: TourStepConfig[] = [
   {
     id: 'pm-market',
     title: 'Marketplace',
     text: 'This is the marketplace where you find your next opportunity.',
-    selector: '[data-tour="pm-market"]',
-    position: 'top',
+    // selector: '[data-tour="pm-market"]',
+    // position: 'top',
+    beforeShowPromise: () =>
+      new Promise((resolve) => {
+        // Ensure tour starts from projects tab
+        switchMarketTab('projects');
+        setTimeout(resolve, 300);
+      }),
   },
   {
     id: 'market-filters-projects',
     title: 'Filters',
     text: 'Use filters to narrow down project results.',
-    selector: '[data-tour="pm-filter-trigger"]',
+    selector: () => {
+      // Check mobile filter trigger first
+      if (el('[data-tour="pm-filter-trigger"]')) {
+        return '[data-tour="pm-filter-trigger"]';
+      }
+      // Fallback to desktop filters
+      return '[data-tour="pm-filters-desktop"]';
+    },
     position: 'left',
+    scrollTo: false,
   },
   {
     id: 'pm-job-cards',
@@ -29,6 +67,7 @@ const MARKET_TOUR_STEPS: TourStepConfig[] = [
     text: 'Apply for project-based opportunities here.',
     selector: '[data-tour="pm-job-cards"]',
     position: 'top',
+    scrollTo: false,
   },
   {
     id: 'market-tabs',
@@ -38,11 +77,29 @@ const MARKET_TOUR_STEPS: TourStepConfig[] = [
     position: 'top',
   },
   {
+    id: 'switch-to-talent',
+    title: 'Talent Marketplace',
+    text: "Now let's explore the Talent marketplace.",
+    beforeShowPromise: () =>
+      new Promise((resolve) => {
+        switchMarketTab('talent');
+        setTimeout(resolve, 300);
+      }),
+  },
+  {
     id: 'market-filters-talent',
     title: 'Talent Filters',
     text: 'Filter talent profiles based on your needs.',
-    selector: '[data-tour="tm-filter-trigger"]',
+    selector: () => {
+      // Check mobile filter trigger first
+      if (el('[data-tour="tm-filter-trigger"]')) {
+        return '[data-tour="tm-filter-trigger"]';
+      }
+      // Fallback to desktop filters
+      return '[data-tour="tm-filters-desktop"]';
+    },
     position: 'left',
+    scrollTo: false,
   },
   {
     id: 'tm-job-cards',
@@ -50,6 +107,7 @@ const MARKET_TOUR_STEPS: TourStepConfig[] = [
     text: 'Browse and connect with talented professionals.',
     selector: '[data-tour="tm-job-cards"]',
     position: 'bottom',
+    scrollTo: false,
   },
 ];
 
