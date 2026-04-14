@@ -188,13 +188,13 @@ export const NotificationButton = () => {
       // Firestore subscription failed - API polling is the fallback
     }
 
-    // API: fetch immediately + poll every 45s as reliable fallback
+    // API: fetch immediately and listen to manual refresh events
     fetchFromApi();
-    const interval = setInterval(fetchFromApi, 45_000);
+    window.addEventListener('refreshNotifications', fetchFromApi);
 
     return () => {
       unsubscribe?.();
-      clearInterval(interval);
+      window.removeEventListener('refreshNotifications', fetchFromApi);
     };
   }, [user?.uid, fetchFromApi, maybeRefreshConnects]);
 

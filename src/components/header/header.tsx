@@ -80,11 +80,14 @@ const Header: React.FC<HeaderProps> = ({
   const refreshConnectsFromServer = useCallback(async () => {
     if (!user?.uid || !userType) return;
     setIsRefreshing(true);
+
+    // Dispatch event to also refresh notifications
+    window.dispatchEvent(new Event('refreshNotifications'));
+
     try {
       const balance = await fetchAndUpdateConnects(userType, true);
       if (balance != null) {
         setConnects(balance);
-        notifySuccess('Connects refreshed successfully!', 'Success');
       } else {
         const cachedBalance = await fetchConnects();
         if (cachedBalance) {
