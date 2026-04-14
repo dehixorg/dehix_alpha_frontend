@@ -1065,7 +1065,48 @@ const TalentCard: React.FC<TalentCardProps> = ({
             setLoading={setIsLoading}
           />
         )}
-        {/* ... (InfiniteScroll and loading skeleton) */}
+        {/* Loading skeletons */}
+        {loading && (
+          <div className="flex flex-wrap justify-center gap-4 w-full mt-4">
+            {[...Array(Dehix_Talent_Card_Pagination.BATCH)].map((_, index) => (
+              <div
+                key={`skeleton-${index}`}
+                className="w-full sm:w-[350px] lg:w-[450px]"
+              >
+                <div className="animate-pulse space-y-4 p-6 border rounded-lg shadow">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/6"></div>
+                  </div>
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md w-full"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Load More button - shown when there are more talents to load */}
+        {hasMore && !loading && talents.length > 0 && (
+          <div className="flex justify-center w-full mt-6 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => fetchTalentData()}
+              className="px-8 py-2 rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
+            >
+              Load More
+            </Button>
+          </div>
+        )}
+
+        {/* Infinite scroll sentinel - always rendered so IntersectionObserver can detect scroll-to-bottom */}
         <InfiniteScroll
           hasMore={hasMore}
           isLoading={loading}
@@ -1074,32 +1115,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           root={scrollContainer}
           rootMargin="200px"
         >
-          {loading && (
-            <div className="flex flex-wrap justify-center gap-4 w-full mt-4">
-              {[...Array(3)].map((_, index) => (
-                <div
-                  key={`skeleton-${index}`}
-                  className="w-full sm:w-[350px] lg:w-[450px]"
-                >
-                  <div className="animate-pulse space-y-4 p-6 border rounded-lg shadow">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/6"></div>
-                    </div>
-                    <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md w-full"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="h-1 w-full" />
         </InfiniteScroll>
       </div>
     </TooltipProvider>
