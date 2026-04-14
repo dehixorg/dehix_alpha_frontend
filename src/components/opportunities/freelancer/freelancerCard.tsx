@@ -8,8 +8,9 @@ import {
   Layers,
   Award,
   UserPlus,
+  ExternalLink,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +60,8 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   freelancer_id,
   freelancer_professional_profile_id,
 }) => {
+  const SKILL_PREVIEW_COUNT = 8;
+  const DOMAIN_PREVIEW_COUNT = 6;
   const skills = attributes.filter(
     (attr) => attr?.type === 'SKILL' && attr?.name,
   );
@@ -66,9 +69,18 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
     (attr) => attr?.type === 'DOMAIN' && attr?.name,
   );
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDomainsExpanded, setIsDomainsExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const visibleSkills = isExpanded
+    ? skills
+    : skills.slice(0, SKILL_PREVIEW_COUNT);
+  const hiddenSkillsCount = Math.max(skills.length - SKILL_PREVIEW_COUNT, 0);
+  const visibleDomains = isDomainsExpanded
+    ? domains
+    : domains.slice(0, DOMAIN_PREVIEW_COUNT);
+  const hiddenDomainsCount = Math.max(domains.length - DOMAIN_PREVIEW_COUNT, 0);
 
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
@@ -91,6 +103,27 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
     return `${n}/hr`;
   };
 
+  const toSafeExternalUrl = (value?: string) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return undefined;
+
+    try {
+      const normalized = trimmed.startsWith('//')
+        ? `https:${trimmed}`
+        : trimmed;
+      const url = new URL(normalized);
+      return url.protocol === 'http:' || url.protocol === 'https:'
+        ? url.toString()
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const safeGithubUrl = toSafeExternalUrl(githubUrl);
+  const safeLinkedInUrl = toSafeExternalUrl(linkedInUrl);
+  const safeWebsiteUrl = toSafeExternalUrl(websiteUrl);
+
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setIsClosing(true);
@@ -101,51 +134,33 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
       if (!isClosing) setIsDialogOpen(true);
     }
   };
-  const router = useRouter();
-
   return (
     <>
-      <Card
-        className="mx-auto max-w-[1000px] group relative overflow-hidden rounded-xl transition-all duration-300 shadow-sm hover:shadow-md border border-border/60 bg-background"
-        role="button"
-        tabIndex={0}
-        onClick={() => {
-          if (!isClosing) setIsDialogOpen(true);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (!isClosing) setIsDialogOpen(true);
-          }
-        }}
-      >
-        <div className="md:flex md:gap-6 border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20">
+      <Card className="mx-auto h-full max-w-[1000px] group relative overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm transition-all duration-300 hover:shadow-md">
+        <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-muted-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 dark:border-gray-800 dark:bg-muted/20 sm:min-h-[208px] md:min-h-[220px] md:flex-row md:gap-4 lg:min-h-[240px] lg:gap-5">
           {/* Left Side - Profile */}
-          <div className="flex flex-col items-center md:items-start md:border-r md:border-border md:pr-6 md:w-80 p-4 pr-0 md:p-6 bg-muted-foreground/20 dark:bg-muted/20">
-            <div className="relative mb-3">
-              <Avatar className="h-20 w-20 ring-2 ring-primary/10">
+          <div className="flex flex-col items-center bg-muted-foreground/20 p-4 dark:bg-muted/20 sm:flex-row sm:items-start sm:gap-4 sm:p-4 md:w-56 md:self-stretch md:flex-col md:gap-0 md:border-r md:border-border md:p-4 lg:w-64 lg:p-5">
+            <div className="relative mb-2 sm:mb-0 md:mb-2">
+              <Avatar className="h-14 w-14 ring-2 ring-primary/10 sm:h-16 sm:w-16">
                 <AvatarImage
                   src={profile}
                   alt={name}
                   className="object-cover"
                 />
-                <AvatarFallback className="bg-muted text-foreground/70 text-lg font-semibold">
+                <AvatarFallback className="bg-muted text-sm font-semibold text-foreground/70 sm:text-base">
                   {getInitials(name)}
                 </AvatarFallback>
               </Avatar>
             </div>
 
-            <CardHeader className="p-0 text-center md:text-left w-full">
-              <CardTitle className="text-lg font-semibold tracking-tight">
+            <CardHeader className="w-full p-0 text-center sm:flex-1 sm:text-left md:flex-none">
+              <CardTitle className="text-base font-semibold tracking-tight">
                 {name}
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <p className="truncate text-sm text-muted-foreground">
                 @{userName || 'username'}
               </p>
-            </CardHeader>
-
-            <div className="mt-4 w-full">
-              <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                 <Badge
                   variant="secondary"
                   className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px]"
@@ -163,99 +178,103 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                   </Badge>
                 )}
               </div>
-            </div>
 
-            {/* Social Links */}
-            <div className="mt-3 flex gap-2">
-              {githubUrl && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <a
-                        href={githubUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="GitHub"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          title="GitHub"
+              {/* Social Links */}
+              <div className="mt-2 flex justify-center gap-1.5 sm:justify-start">
+                {safeGithubUrl && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={safeGithubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="GitHub"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Github className="h-4 w-4" />
-                        </Button>
-                      </a>
-                    </TooltipTrigger>
-                    <TooltipContent>GitHub Profile</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              {linkedInUrl && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <a
-                        href={linkedInUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="LinkedIn"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          title="LinkedIn"
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="GitHub"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Github className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>GitHub Profile</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {safeLinkedInUrl && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={safeLinkedInUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="LinkedIn"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Linkedin className="h-4 w-4" />
-                        </Button>
-                      </a>
-                    </TooltipTrigger>
-                    <TooltipContent>LinkedIn Profile</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              {websiteUrl && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <a
-                        href={websiteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Website"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          title="websiteUrl"
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="LinkedIn"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Linkedin className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>LinkedIn Profile</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {safeWebsiteUrl && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={safeWebsiteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Website"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Globe className="h-4 w-4" />
-                        </Button>
-                      </a>
-                    </TooltipTrigger>
-                    <TooltipContent>LinkedIn Profile</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Website"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Globe className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>Website</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            </CardHeader>
           </div>
 
           {/* Right Side - Details */}
-          <div className="flex-1 flex flex-col p-4 md:p-6 md:pl-0">
+          <div className="flex flex-1 flex-col p-4 pt-0 sm:px-4 sm:pb-4 md:min-h-0 md:p-4 md:pl-0 lg:p-5 lg:pl-0">
             {/* Skills Section */}
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+            <div className="mb-4 min-h-[76px]">
+              <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <Award className="h-4 w-4" /> Skills
               </h3>
-              <div className="flex flex-wrap gap-2">
+              <div
+                className={`flex flex-wrap gap-2 ${
+                  isExpanded ? 'max-h-[82px] overflow-y-auto pr-1' : ''
+                }`}
+              >
                 {!skills || skills.length === 0 ? (
                   <Badge
                     variant="outline"
@@ -265,16 +284,16 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                   </Badge>
                 ) : (
                   <>
-                    {skills.slice(0, 8).map((skill: any, index: number) => (
+                    {visibleSkills.map((skill: any, index: number) => (
                       <Badge
                         key={index}
                         variant="secondary"
-                        className="font-normal px-3 py-1 rounded-full"
+                        className="rounded-full px-3 py-1 text-xs font-normal"
                       >
                         {skill.name}
                       </Badge>
                     ))}
-                    {skills.length > 8 && !isExpanded && (
+                    {hiddenSkillsCount > 0 && !isExpanded && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -284,22 +303,12 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                           setIsExpanded(true);
                         }}
                       >
-                        +{skills.length - 8} more
+                        +{hiddenSkillsCount} more
                       </Button>
                     )}
 
                     {isExpanded && (
-                      <div className="flex flex-wrap gap-2">
-                        {skills?.slice(8).map((skill: any, index: number) => (
-                          <Badge
-                            key={index + 8}
-                            variant="secondary"
-                            className="font-normal px-3 py-1 rounded-full"
-                          >
-                            {skill.name}
-                          </Badge>
-                        ))}
-
+                      <>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -311,7 +320,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                         >
                           Show less
                         </Button>
-                      </div>
+                      </>
                     )}
                   </>
                 )}
@@ -320,26 +329,59 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 
             {/* Domains Section */}
             {domains && domains.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+              <div className="mb-4 min-h-[76px]">
+                <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <Layers className="h-4 w-4" /> Domains
                 </h3>
-                <div className="flex flex-wrap gap-2">
-                  {domains.map((domain: any, index: number) => (
+                <div
+                  className={`flex flex-wrap gap-2 ${
+                    isDomainsExpanded ? 'max-h-[82px] overflow-y-auto pr-1' : ''
+                  }`}
+                >
+                  {visibleDomains.map((domain: any, index: number) => (
                     <Badge
                       key={index}
                       variant="outline"
-                      className="font-normal px-3 py-1 rounded-full"
+                      className="rounded-full px-3 py-1 text-xs font-normal"
                     >
                       {domain.name}
                     </Badge>
                   ))}
+                  {hiddenDomainsCount > 0 && (
+                    <>
+                      {!isDomainsExpanded ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground h-auto p-1 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDomainsExpanded(true);
+                          }}
+                        >
+                          +{hiddenDomainsCount} more
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground h-auto p-1 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDomainsExpanded(false);
+                          }}
+                        >
+                          Show less
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             )}
 
             {/* Action Buttons */}
-            <div className="mt-auto flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center gap-3 pt-5 border-t border-border">
+            <div className="mt-auto flex flex-col items-stretch gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
                   {/* Profile Dialog */}
@@ -359,11 +401,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 
                     <div className="space-y-6 py-2">
                       {/* Top profile summary */}
-                      <div
-                        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 cursor-pointer"
-                        onClick={() =>
-                          router.push(`/freelancer-profile/${freelancer_id}`)
-                        }
+                      <Link
+                        href={`/freelancer-profile/${freelancer_id}`}
+                        className="flex flex-col gap-4 cursor-pointer transition-opacity hover:opacity-80 md:flex-row md:items-center md:justify-between"
                       >
                         <div className="flex items-center gap-4">
                           <Avatar className="h-16 w-16 ring-2 ring-primary/10">
@@ -403,7 +443,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                             </Badge>
                           )}
                         </div>
-                      </div>
+                      </Link>
 
                       <Separator />
 
@@ -467,9 +507,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                       {/* Footer actions inside content for mobile stacking */}
                       <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {githubUrl && (
+                          {safeGithubUrl && (
                             <a
-                              href={githubUrl}
+                              href={safeGithubUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -484,9 +524,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                               </Button>
                             </a>
                           )}
-                          {linkedInUrl && (
+                          {safeLinkedInUrl && (
                             <a
-                              href={linkedInUrl}
+                              href={safeLinkedInUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -501,9 +541,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                               </Button>
                             </a>
                           )}
-                          {websiteUrl && (
+                          {safeWebsiteUrl && (
                             <a
-                              href={websiteUrl}
+                              href={safeWebsiteUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -540,7 +580,19 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                 </Dialog>
               </div>
 
-              <div onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isClosing) setIsDialogOpen(true);
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  View Profile
+                </Button>
+
                 <Button
                   size="sm"
                   onClick={(e) => {
