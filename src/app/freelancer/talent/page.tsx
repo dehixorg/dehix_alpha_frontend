@@ -6,13 +6,13 @@ import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 import { useTalentTour } from '@/components/tour/freelancer/useTalentTour';
 
 export default function Talent() {
-  useTalentTour();
+  useTalentTour(true);
 
   return (
     <div data-tour="talent">
       <FreelancerAppLayout
         active="Talent"
-        activeMenu="Projects"
+        activeMenu="Talent"
         breadcrumbItems={[
           { label: 'Freelancer', link: '/dashboard/freelancer' },
           { label: 'Dehix Talent', link: '#' },

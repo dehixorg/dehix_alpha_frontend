@@ -142,25 +142,30 @@ export default function TransactionsPage() {
         activeMenu="Transactions"
         breadcrumbItems={breadcrumbItems}
         isKycCheck={true}
+        contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
       >
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 overflow-hidden">
           <div>
-            <h1 className="text-3xl font-bold">Transaction History</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-xl sm:text-3xl font-bold">
+              Transaction History
+            </h1>
+            <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
               View all your connect transactions and balance changes
             </p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>All Transactions</CardTitle>
+          <Card className="overflow-hidden">
+            <CardHeader className="px-3 sm:px-6">
+              <CardTitle className="text-base sm:text-lg">
+                All Transactions
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               <div className="space-y-4">
                 {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
-                    className="h-12 bg-muted animate-pulse rounded"
+                    className="h-10 sm:h-12 bg-muted animate-pulse rounded"
                   />
                 ))}
               </div>
@@ -179,24 +184,27 @@ export default function TransactionsPage() {
         activeMenu="Transactions"
         breadcrumbItems={breadcrumbItems}
         isKycCheck={true}
+        contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
       >
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 overflow-hidden">
           <div>
-            <h1 className="text-3xl font-bold">Transaction History</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-xl sm:text-3xl font-bold">
+              Transaction History
+            </h1>
+            <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
               View all your connect transactions and balance changes
             </p>
           </div>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Receipt className="h-12 w-12 text-muted-foreground" />
+          <Card className="overflow-hidden">
+            <CardContent className="pt-6 px-3 sm:px-6">
+              <div className="flex flex-col items-center justify-center py-8 sm:py-12 space-y-4">
+                <Receipt className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
                 <div className="text-center">
-                  <p className="font-semibold text-lg">
+                  <p className="font-semibold text-base sm:text-lg">
                     Failed to load transactions
                   </p>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground text-sm sm:text-base">
                     {(error as Error)?.message || 'An error occurred'}
                   </p>
                 </div>
@@ -231,22 +239,27 @@ export default function TransactionsPage() {
         activeMenu="Transactions"
         breadcrumbItems={breadcrumbItems}
         isKycCheck={true}
+        contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
       >
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 overflow-hidden">
           <div>
-            <h1 className="text-3xl font-bold">Transaction History</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-xl sm:text-3xl font-bold">
+              Transaction History
+            </h1>
+            <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
               View all your connect transactions and balance changes
             </p>
           </div>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Receipt className="h-12 w-12 text-muted-foreground" />
+          <Card className="overflow-hidden">
+            <CardContent className="pt-6 px-3 sm:px-6">
+              <div className="flex flex-col items-center justify-center py-8 sm:py-12 space-y-4">
+                <Receipt className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
                 <div className="text-center">
-                  <p className="font-semibold text-lg">No transactions yet</p>
-                  <p className="text-muted-foreground">
+                  <p className="font-semibold text-base sm:text-lg">
+                    No transactions yet
+                  </p>
+                  <p className="text-muted-foreground text-sm sm:text-base">
                     Your connect transactions will appear here
                   </p>
                 </div>
@@ -265,20 +278,26 @@ export default function TransactionsPage() {
       activeMenu="Transactions"
       breadcrumbItems={breadcrumbItems}
       isKycCheck={true}
+      contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
     >
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h1 className="text-3xl font-bold">Transaction History</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-xl sm:text-3xl font-bold">
+              Transaction History
+            </h1>
+            <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
               View all your connect transactions and balance changes
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             {/* Filters */}
             <Sheet open={showFilters} onOpenChange={setShowFilters}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  className="flex-1 sm:flex-none sm:w-auto"
+                >
                   <Filter className="h-4 w-4 mr-2" />
                   Filters
                   {Object.keys(appliedFilters).length > 0 && (
@@ -466,15 +485,18 @@ export default function TransactionsPage() {
         {/* Summary Cards */}
         <TransactionSummaryComponent summary={summary} isLoading={isLoading} />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>All Transactions</CardTitle>
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 sm:px-6">
+            <CardTitle className="text-base sm:text-lg">
+              All Transactions
+            </CardTitle>
             <div className="flex gap-2">
               <Button
                 onClick={() => refetch()}
                 variant="outline"
                 size="sm"
                 disabled={isFetching}
+                className="w-full sm:w-auto"
               >
                 <RefreshCw
                   className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`}
@@ -483,7 +505,7 @@ export default function TransactionsPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 sm:px-6">
             <TransactionTable transactions={transactions} />
 
             {totalPages > 1 && (
@@ -545,7 +567,7 @@ export default function TransactionsPage() {
                   </PaginationContent>
                 </Pagination>
 
-                <p className="text-center text-sm text-muted-foreground mt-2">
+                <p className="text-center text-xs sm:text-sm text-muted-foreground mt-2">
                   Showing page {page} of {totalPages}
                 </p>
               </div>

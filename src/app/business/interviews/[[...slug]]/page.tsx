@@ -427,7 +427,7 @@ export default function BusinessInterviewsPage() {
             className="mx-auto w-full max-w-none"
             data-tour="business-interviews"
           >
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden mt-4">
               <CardHeader className="bg-gradient">
                 <CardTitle className="text-2xl font-bold tracking-tight">
                   Interviews

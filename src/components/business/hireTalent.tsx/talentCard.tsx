@@ -1100,6 +1100,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
               ))}
             </div>
           )}
+          {/* Sentinel element: InfiniteScroll observes its last child to trigger the next load.
+              This must always render so the observer has an element to watch even when not loading. */}
+          <div className="w-full h-1" />
         </InfiniteScroll>
       </div>
     </TooltipProvider>
