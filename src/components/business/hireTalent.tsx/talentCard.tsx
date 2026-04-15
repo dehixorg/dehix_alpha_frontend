@@ -383,10 +383,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
         };
       })
       .filter(Boolean) as {
-      hireId: string;
-      attributeId: string;
-      attributeName?: string;
-    }[];
+        hireId: string;
+        attributeId: string;
+        attributeName?: string;
+      }[];
 
     if (!hires.length) {
       notifyError('Please select at least one hire.', 'No Hires Selected');
@@ -653,11 +653,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                     href={talent.Github || '#'}
                                     target={talent.Github ? '_blank' : '_self'}
                                     rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 transition-all ${
-                                      talent.Github
-                                        ? 'text-primary hover:text-primary/80'
-                                        : 'text-gray-500 cursor-default'
-                                    }`}
+                                    className={`flex items-center gap-2 transition-all ${talent.Github
+                                      ? 'text-primary hover:text-primary/80'
+                                      : 'text-gray-500 cursor-default'
+                                      }`}
                                     aria-label="GitHub profile"
                                   >
                                     <Github className="w-4 h-4" />
@@ -668,11 +667,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                       talent.LinkedIn ? '_blank' : '_self'
                                     }
                                     rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 transition-all ${
-                                      talent.LinkedIn
-                                        ? 'text-primary hover:text-primary/80'
-                                        : 'text-gray-500 cursor-default'
-                                    }`}
+                                    className={`flex items-center gap-2 transition-all ${talent.LinkedIn
+                                      ? 'text-primary hover:text-primary/80'
+                                      : 'text-gray-500 cursor-default'
+                                      }`}
                                     aria-label="LinkedIn profile"
                                   >
                                     <Linkedin className="w-4 h-4" />
@@ -721,7 +719,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               </AccordionTrigger>
                               <AccordionContent className="p-4 transition-all duration-300">
                                 {education &&
-                                Object.values(education).length > 0 ? (
+                                  Object.values(education).length > 0 ? (
                                   Object.values(education).map((edu: any) => (
                                     <div
                                       key={edu._id}
@@ -770,14 +768,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                           <p className="text-xs font-medium">
                                             {(edu.startDate
                                               ? new Date(
-                                                  edu.startDate,
-                                                ).toLocaleDateString()
+                                                edu.startDate,
+                                              ).toLocaleDateString()
                                               : 'N/A') +
                                               ' - ' +
                                               (edu.endDate
                                                 ? new Date(
-                                                    edu.endDate,
-                                                  ).toLocaleDateString()
+                                                  edu.endDate,
+                                                ).toLocaleDateString()
                                                 : 'N/A')}
                                           </p>
                                         </div>
@@ -797,7 +795,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               </AccordionTrigger>
                               <AccordionContent className="p-4 transition-all duration-300">
                                 {professionalInfo &&
-                                Object.values(professionalInfo).length > 0 ? (
+                                  Object.values(professionalInfo).length > 0 ? (
                                   Object.values(professionalInfo).map(
                                     (info: any) => (
                                       <div
@@ -837,14 +835,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                             <p className="text-xs font-medium">
                                               {(info.workFrom
                                                 ? new Date(
-                                                    info.workFrom,
-                                                  ).toLocaleDateString()
+                                                  info.workFrom,
+                                                ).toLocaleDateString()
                                                 : 'N/A') +
                                                 ' - ' +
                                                 (info.workTo
                                                   ? new Date(
-                                                      info.workTo,
-                                                    ).toLocaleDateString()
+                                                    info.workTo,
+                                                  ).toLocaleDateString()
                                                   : 'N/A')}
                                             </p>
                                           </div>
@@ -888,7 +886,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               </AccordionTrigger>
                               <AccordionContent className="p-4 transition-all duration-300">
                                 {projects &&
-                                Object.values(projects).length > 0 ? (
+                                  Object.values(projects).length > 0 ? (
                                   Object.values(projects).map(
                                     (project: any) => (
                                       <div
@@ -928,14 +926,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                             <p className="text-xs font-medium">
                                               {(project.start
                                                 ? new Date(
-                                                    project.start,
-                                                  ).toLocaleDateString()
+                                                  project.start,
+                                                ).toLocaleDateString()
                                                 : 'N/A') +
                                                 ' - ' +
                                                 (project.end
                                                   ? new Date(
-                                                      project.end,
-                                                    ).toLocaleDateString()
+                                                    project.end,
+                                                  ).toLocaleDateString()
                                                   : 'N/A')}
                                             </p>
                                           </div>
@@ -953,17 +951,17 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                           </div>
                                           {typeof project.verified ===
                                             'boolean' && (
-                                            <div className="sm:col-span-2">
-                                              <p className="text-[11px] text-muted-foreground">
-                                                Verified
-                                              </p>
-                                              <p className="text-xs font-medium">
-                                                {project.verified
-                                                  ? 'Yes'
-                                                  : 'No'}
-                                              </p>
-                                            </div>
-                                          )}
+                                              <div className="sm:col-span-2">
+                                                <p className="text-[11px] text-muted-foreground">
+                                                  Verified
+                                                </p>
+                                                <p className="text-xs font-medium">
+                                                  {project.verified
+                                                    ? 'Yes'
+                                                    : 'No'}
+                                                </p>
+                                              </div>
+                                            )}
                                         </div>
 
                                         {project.githubLink && (
@@ -1100,6 +1098,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
               ))}
             </div>
           )}
+          {/* Sentinel element: InfiniteScroll observes its last child to trigger the next load.
+              This must always render so the observer has an element to watch even when not loading. */}
+          <div className="w-full h-1" />
         </InfiniteScroll>
       </div>
     </TooltipProvider>
