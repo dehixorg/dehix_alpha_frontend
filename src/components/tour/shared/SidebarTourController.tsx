@@ -35,16 +35,16 @@ export default function SidebarTourController() {
 }
 
 function BusinessSidebarTour() {
-  useSettingsTour(true);
+  useSettingsTour();
   return null;
 }
 
 function FreelancerSidebarTour() {
-  useProfilePlatformTour(true);
+  useProfilePlatformTour();
   return null;
 }
 
 function PlatformNavigationTour() {
-  usePlatformTour(true);
+  usePlatformTour();
   return null;
 }

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 
+import { useBusinessInterviewTour } from '@/components/tour/business/useBusinessInterviewTour';
 import {
   Accordion,
   AccordionContent,
@@ -157,6 +158,8 @@ export default function BusinessInterviewsPage() {
   useEffect(() => {
     fetchMeetings();
   }, []);
+
+  useBusinessInterviewTour();
 
   const fetchMeetings = async () => {
     try {
@@ -420,7 +423,10 @@ export default function BusinessInterviewsPage() {
           ]}
         />
         <main className="flex-1 px-4 sm:px-10 sm:py-2">
-          <div className="mx-auto w-full max-w-none">
+          <div
+            className="mx-auto w-full max-w-none"
+            data-tour="business-interviews"
+          >
             <Card className="overflow-hidden mt-4">
               <CardHeader className="bg-gradient">
                 <CardTitle className="text-2xl font-bold tracking-tight">

@@ -108,6 +108,7 @@ const Header: React.FC<HeaderProps> = ({
     { path: '/business/market', target: 'business-market' },
     { path: '/business/projects', target: 'business-projects' },
     { path: '/business/talent', target: 'business-talent' },
+    { path: '/business/interviews', target: 'business-interviews' },
 
     // Shared
     { path: '/project-invitations', target: 'project-invitations' },
@@ -121,6 +122,7 @@ const Header: React.FC<HeaderProps> = ({
       target: 'personal-info-form',
     },
     { path: '/freelancer/settings/profiles', target: 'profiles-center' },
+    { path: '/freelancer/settings/public-profile', target: 'public-profile' },
     { path: '/freelancer/settings/profile', target: 'experience' },
     { path: '/freelancer/settings/kyc', target: 'kyc' },
     { path: '/freelancer/settings/levels-badges', target: 'level-badges' },
@@ -136,6 +138,10 @@ const Header: React.FC<HeaderProps> = ({
     {
       path: '/business/settings/transactions',
       target: 'business-transactions',
+    },
+    {
+      path: '/business/settings/public-profile',
+      target: 'business-public-profile',
     },
   ];
 

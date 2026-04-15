@@ -59,7 +59,7 @@ export default function NewReportPage() {
     return true;
   };
 
-  useReportsTour(true);
+  useReportsTour();
 
   return (
     <div data-tour="reports">

@@ -25,7 +25,7 @@ export default function InterviewerPage() {
 
   const slug = Array.isArray(params?.slug) ? params.slug : [];
   const activeTab = slug[0] || 'profile';
-  useInterviewerProfileTour(true);
+  useInterviewerProfileTour();
 
   useEffect(() => {
     if (slug.length === 0) {

@@ -93,7 +93,7 @@ export default function Dashboard() {
     (project: any) => project.status !== StatusEnum.COMPLETED,
   );
 
-  useBusinessDashboardTour(true);
+  useBusinessDashboardTour();
 
   // Sample data for the chart
   // const chartData = [

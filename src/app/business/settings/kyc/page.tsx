@@ -96,7 +96,7 @@ const KYCForm = dynamic(
 
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);
-  useKycTour(true);
+  useKycTour();
 
   return (
     <BusinessSettingsLayout

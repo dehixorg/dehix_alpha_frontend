@@ -430,7 +430,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
     (kycStatus || '').toUpperCase(),
   );
 
-  useKycTour(true);
+  useKycTour();
 
   return (
     <Card

@@ -14,6 +14,7 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
 import StatCard from '@/components/shared/statCard';
+import { useStreakTour } from '@/components/tour/freelancer-profile/useStreakTour';
 
 // TypeScript Interfaces
 interface StreakInfo {
@@ -165,6 +166,9 @@ const fetchStreakRewards = async (): Promise<StreakReward[]> => {
 };
 
 export default function StreakPage() {
+  // Initialize tour
+  useStreakTour();
+
   const [claimingMilestone, setClaimingMilestone] = useState<number | null>(
     null,
   );

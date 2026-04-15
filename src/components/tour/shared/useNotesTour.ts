@@ -1,100 +1,40 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import Shepherd from 'shepherd.js';
-import type { Tour } from 'shepherd.js';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/lib/store';
-import { clearTour } from '@/lib/tourSlice';
+import {
+  useTourFactory,
+  type TourStepConfig,
+} from '@/components/tour/shared/tourFactory';
 
-function el(selector: string) {
-  return document.querySelector(selector);
-}
+const BUSINESS_NOTES_STEPS: TourStepConfig[] = [
+  {
+    id: 'notes',
+    title: 'Notes',
+    text: 'Use this space to keep business notes, ideas, and important references in one place.',
+    // selector: '[data-tour="notes"]',
+    // position: '',
+  },
+];
 
-function withProgress(tour: Tour) {
-  return {
-    show(this: any) {
-      const current = tour.steps.indexOf(this) + 1;
-      const total = tour.steps.length;
+const FREELANCER_NOTES_STEPS: TourStepConfig[] = [
+  {
+    id: 'notes',
+    title: 'Notes',
+    text: 'Use this section to write down ideas, reminders, and personal notes.',
+    // selector: '[data-tour="notes"]',
+    // position: '',
+  },
+];
 
-      const footer = this.el?.querySelector('.shepherd-footer');
-      if (!footer) return;
-
-      let progress = footer.querySelector('.shepherd-progress');
-      if (!progress) {
-        progress = document.createElement('div');
-        progress.className = 'shepherd-progress';
-        footer.insertBefore(progress, footer.firstChild);
-      }
-
-      progress.textContent = `${current} / ${total}`;
-    },
-  };
-}
-
-export function useNotesTour(isReady: boolean) {
-  const tourRef = useRef<Tour | null>(null);
+export function useNotesTour() {
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const userType = useSelector((s: RootState) => s.user.type);
-  const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (tourRef.current) return;
+  const steps =
+    userType === 'business' ? BUSINESS_NOTES_STEPS : FREELANCER_NOTES_STEPS;
+  const shouldStartTour = trigger > 0 && mode === 'page' && target === 'notes';
 
-    const tour = new Shepherd.Tour({
-      useModalOverlay: true,
-      defaultStepOptions: {
-        arrow: true,
-        cancelIcon: { enabled: true },
-        scrollTo: { behavior: 'smooth', block: 'center' },
-        classes: 'shepherd-theme-custom',
-      },
-    });
-
-    tour.on('cancel', () => dispatch(clearTour()));
-    tour.on('complete', () => dispatch(clearTour()));
-
-    tour.addStep({
-      id: 'notes',
-      title: 'Notes',
-      text:
-        userType === 'business'
-          ? 'Use this space to keep business notes, ideas, and important references in one place.'
-          : 'Use this section to write down ideas, reminders, and personal notes.',
-      // attachTo: {
-      //   element: '[data-tour="notes"]',
-      //   on: 'top',
-      // },
-      when: withProgress(tour),
-      buttons: [
-        {
-          text: 'Got it',
-          action: () => {
-            tour.complete();
-            dispatch(clearTour());
-          },
-        },
-      ],
-    });
-
-    tourRef.current = tour;
-
-    return () => {
-      tourRef.current?.cancel();
-      tourRef.current = null;
-      dispatch(clearTour());
-    };
-  }, [dispatch, userType]);
-
-  useEffect(() => {
-    if (!trigger) return;
-    if (!isReady) return;
-    if (mode !== 'page') return;
-    if (target !== 'notes') return;
-
-    if (el('[data-tour="notes"]')) {
-      tourRef.current?.start();
-    }
-  }, [trigger, mode, target, isReady, userType]);
+  useTourFactory(steps, shouldStartTour);
 }

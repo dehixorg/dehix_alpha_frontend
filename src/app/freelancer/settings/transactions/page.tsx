@@ -127,7 +127,7 @@ export default function TransactionsPage() {
     { label: 'Transactions', link: '#' },
   ];
 
-  useTransactionTour(true);
+  useTransactionTour();
 
   // Loading State
   if (isLoading) {

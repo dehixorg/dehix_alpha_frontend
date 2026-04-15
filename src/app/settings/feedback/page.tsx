@@ -235,7 +235,7 @@ export default function FeedbackPage() {
     }
   };
 
-  useFeedbackTour(true);
+  useFeedbackTour();
 
   const renderQuestion = (campaign: Campaign, question: Question) => {
     const answer = answers[campaign.campaignId]?.[question.questionId];

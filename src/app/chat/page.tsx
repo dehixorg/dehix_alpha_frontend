@@ -59,7 +59,7 @@ const HomePage = () => {
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
 
-  useChatTour(true);
+  useChatTour();
 
   const handleOpenProfileSidebar = (
     id: string,
