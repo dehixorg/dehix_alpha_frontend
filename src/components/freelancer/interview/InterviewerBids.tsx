@@ -51,6 +51,8 @@ type BiddableInterview = {
   talentName?: string;
   description?: string;
   interviewDate?: string;
+  interviewType?: string;
+  creatorType?: string;
 };
 
 type MyBid = {
@@ -66,6 +68,8 @@ type BiddedInterview = {
   talentName?: string;
   talentType?: string;
   interviewStatus?: string;
+  interviewType?: string;
+  creatorType?: string;
   interviewDate?: string;
   description?: string;
   myBid?: MyBid;
@@ -408,9 +412,26 @@ export default function InterviewerBids() {
                         <CardTitle className="text-base">
                           {iv.talentName || 'Interview'}
                         </CardTitle>
-                        {bidStatus ? (
-                          <Badge variant="secondary">{bidStatus}</Badge>
-                        ) : null}
+                        <div className="flex flex-col items-end gap-1">
+                          {bidStatus ? (
+                            <Badge variant="secondary">{bidStatus}</Badge>
+                          ) : null}
+                          {iv.interviewType === 'HIRE' ? (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] border-blue-500 text-blue-500"
+                            >
+                              Business
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] border-green-500 text-green-500"
+                            >
+                              Talent
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <CardDescription>
                         {date} • {time}
@@ -548,6 +569,21 @@ export default function InterviewerBids() {
                               <Badge variant="secondary" className="text-xs">
                                 Available
                               </Badge>
+                              {iv.interviewType === 'HIRE' ? (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] bg-blue-50 border-blue-200 text-blue-600"
+                                >
+                                  Business Opportunity
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] bg-green-50 border-green-200 text-green-600"
+                                >
+                                  Talent Verification
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </div>

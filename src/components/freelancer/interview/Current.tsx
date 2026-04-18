@@ -206,6 +206,13 @@ export default function CurrentComponent({
       iconClassName: 'bg-emerald-500/10 text-emerald-600',
     },
     {
+      key: 'HIRE',
+      title: 'Business Opportunities',
+      description: 'Direct hiring interviews with businesses',
+      icon: Briefcase,
+      iconClassName: 'bg-indigo-500/10 text-indigo-600',
+    },
+    {
       key: 'PEERTOPEER',
       title: 'Peer to Peer',
       description: 'Peer-to-peer interviews and mock sessions (Disabled)',
