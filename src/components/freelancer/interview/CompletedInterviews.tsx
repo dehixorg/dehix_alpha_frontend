@@ -432,9 +432,9 @@ export default function HistoryInterviews({
   return (
     <>
       <div className="flex flex-col gap-4 md:gap-6 p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="w-full sm:w-48">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between md:max-lg:flex-wrap">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center md:max-lg:min-w-0 md:max-lg:flex-1">
+            <div className="w-full sm:w-48 md:max-lg:shrink-0">
               <Select value={filter} onValueChange={(v) => setFilter(v as any)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter" />
@@ -447,7 +447,7 @@ export default function HistoryInterviews({
               </Select>
             </div>
 
-            <div className="relative w-full sm:w-80">
+            <div className="relative w-full sm:w-80 md:max-lg:min-w-0 md:max-lg:flex-1 md:max-lg:w-auto">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search interviews..."
@@ -461,7 +461,7 @@ export default function HistoryInterviews({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:max-lg:w-full md:max-lg:justify-end">
             {enableViewToggle ? (
               <>
                 <Button

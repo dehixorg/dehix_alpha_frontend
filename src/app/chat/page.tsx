@@ -27,7 +27,10 @@ import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
+import {
+  subscribeToUserConversations,
+  updateDataInFirestore,
+} from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 import { useChatTour } from '@/components/tour/shared/useChatTour';
 
@@ -396,6 +399,50 @@ const HomePage = () => {
     [isMobile, router],
   );
 
+  const markConversationAsRead = useCallback(
+    async (conv: Conversation | null) => {
+      if (!conv?.id || !user?.uid) return;
+      const lastMessage = conv.lastMessage;
+
+      const getTimestampMs = (ts: any) => {
+        if (!ts) return 0;
+        if (typeof ts === 'object' && ts.seconds) return ts.seconds;
+        if (typeof ts === 'number') return Math.floor(ts / 1000);
+        return Math.floor(new Date(ts as string).getTime() / 1000) || 0;
+      };
+
+      const msgTime = getTimestampMs(lastMessage?.timestamp);
+      const readTime = getTimestampMs(
+        conv.participantDetails?.[user.uid]?.lastReadAt,
+      );
+
+      if (
+        !lastMessage?.senderId ||
+        lastMessage.senderId === user.uid ||
+        readTime >= msgTime
+      ) {
+        return;
+      }
+
+      try {
+        await updateDataInFirestore('conversations', conv.id, {
+          [`participantDetails.${user.uid}.lastReadAt`]: serverTimestamp(),
+        });
+
+        // We don't strictly need to update local React state synchronously
+        // because the onSnapshot listener from subscribeToUserConversations
+        // will push the updated participant details structure automatically.
+      } catch (error) {
+        console.error('Failed to mark conversation as read:', error);
+      }
+    },
+    [user?.uid],
+  );
+
+  useEffect(() => {
+    markConversationAsRead(activeConversation);
+  }, [activeConversation, markConversationAsRead]);
+
   let chatListComponentContent;
   if (loading) {
     chatListComponentContent = (
@@ -503,6 +550,14 @@ const HomePage = () => {
         onToggleExpand={toggleChatExpanded}
         onOpenProfileSidebar={handleOpenProfileSidebar}
         onConversationUpdate={setActiveConversation}
+        onBack={() => {
+          setActiveConversation(null);
+          const url = new URL(window.location.href);
+          if (url.searchParams.has('c')) {
+            url.searchParams.delete('c');
+            router.replace(url.pathname + url.search, { scroll: false });
+          }
+        }}
       />
     );
   } else if (!loading && conversations.length > 0) {
@@ -525,7 +580,10 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col" data-tour="chat">
+    <div
+      className="flex min-h-screen w-full flex-col overflow-x-hidden"
+      data-tour="chat"
+    >
       <SidebarMenu
         menuItemsTop={
           user.type === 'business'

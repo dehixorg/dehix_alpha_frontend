@@ -21,6 +21,7 @@ import {
   X,
   ArchiveRestore,
   Archive,
+  ArrowLeft,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { doc, DocumentData, updateDoc } from 'firebase/firestore';
@@ -124,6 +125,7 @@ interface CardsChatProps {
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
   onConversationUpdate?: (updatedConversation: Conversation) => void;
+  onBack?: () => void;
 }
 
 export function CardsChat({
@@ -132,6 +134,7 @@ export function CardsChat({
   onToggleExpand,
   onOpenProfileSidebar,
   onConversationUpdate,
+  onBack,
 }: CardsChatProps) {
   const { toast } = useToast();
   const [primaryUser, setPrimaryUser] = useState<User>({
@@ -934,8 +937,17 @@ export function CardsChat({
         </Card>
       ) : (
         <>
-          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-none sm:rounded-xl">
+          <Card className="col-span-3 flex flex-col h-full w-full overflow-hidden bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-none sm:rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-t-xl">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="mr-2 md:hidden text-[hsl(var(--card-foreground))] hover:text-[hsl(var(--foreground))] p-1 rounded-md transition-colors"
+                  aria-label="Back to chat list"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              )}
               <button
                 onClick={handleHeaderClick}
                 className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
@@ -1233,7 +1245,7 @@ export function CardsChat({
                 ))}
               </ScrollArea>
             </CardContent>
-            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-b-xl">
+            <CardFooter className="sticky bottom-0 bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-b-xl">
               {isBlocked ? (
                 // If blocked, show this message
                 <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
