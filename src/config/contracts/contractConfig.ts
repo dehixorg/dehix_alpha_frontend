@@ -50,10 +50,10 @@
 export const CONTRACT_ADDRESSES = {
   // ⬇️ CHANGE THESE ADDRESSES (keep the quotes)
   // Freelancer Contract - Handles freelancer registration
-  FREELANCER_CONTRACT: '0x1f04977be437ade69ad867ecf8bfc3b3ae7abcc4',
+  FREELANCER_CONTRACT: '0xFe70F4032dE38e2bE754810FCb2B4666B80Ac3a2',
 
   // Soulbound Token Contract - Handles SBT minting
-  SBT_CONTRACT: '0xac0484c2361504ae8f71e95a149f7a81cd7bdda5',
+  SBT_CONTRACT: '0x1f4f15125640b683ba4339b8d0f3993E3ca86B9f',
 };
 
 // ============================================

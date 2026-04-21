@@ -1729,6 +1729,338 @@ export const NDA_SBT_ABI: Abi = [
   },
 ];
 
+// Interview Soul Bound Token ABI
+export const INTERVIEW_SBT_ABI: Abi = [
+  {
+    type: 'constructor',
+    inputs: [
+      {
+        name: 'interviewers',
+        type: 'address[]',
+        internalType: 'address[]',
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'approve',
+    inputs: [
+      { name: '', type: 'address', internalType: 'address' },
+      { name: '', type: 'uint256', internalType: 'uint256' },
+    ],
+    outputs: [],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    inputs: [{ name: 'owner', type: 'address', internalType: 'address' }],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'getApproved',
+    inputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    outputs: [{ name: '', type: 'address', internalType: 'address' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    name: 'getTokenDetails',
+    inputs: [{ name: 'tokenId', type: 'uint256', internalType: 'uint256' }],
+    outputs: [
+      { name: 'decision', type: 'uint8', internalType: 'uint8' },
+      { name: 'rating', type: 'uint8', internalType: 'uint8' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'isApprovedForAll',
+    inputs: [
+      { name: '', type: 'address', internalType: 'address' },
+      { name: '', type: 'address', internalType: 'address' },
+    ],
+    outputs: [{ name: '', type: 'bool', internalType: 'bool' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    name: 'mintSBT',
+    inputs: [
+      {
+        name: 'participant',
+        type: 'address',
+        internalType: 'address',
+      },
+      {
+        name: 'participantId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'interviewerId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      { name: 'decision', type: 'uint8', internalType: 'uint8' },
+      { name: 'rating', type: 'uint8', internalType: 'uint8' },
+    ],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'name',
+    inputs: [],
+    outputs: [{ name: '', type: 'string', internalType: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'ownerOf',
+    inputs: [{ name: 'tokenId', type: 'uint256', internalType: 'uint256' }],
+    outputs: [{ name: '', type: 'address', internalType: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'tokenOfOwnerByIndex',
+    inputs: [
+      { name: 'owner', type: 'address', internalType: 'address' },
+      { name: 'index', type: 'uint256', internalType: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'safeTransferFrom',
+    inputs: [
+      { name: 'from', type: 'address', internalType: 'address' },
+      { name: 'to', type: 'address', internalType: 'address' },
+      { name: 'tokenId', type: 'uint256', internalType: 'uint256' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'safeTransferFrom',
+    inputs: [
+      { name: '', type: 'address', internalType: 'address' },
+      { name: '', type: 'address', internalType: 'address' },
+      { name: '', type: 'uint256', internalType: 'uint256' },
+      { name: '', type: 'bytes', internalType: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    name: 'setApprovalForAll',
+    inputs: [
+      { name: '', type: 'address', internalType: 'address' },
+      { name: '', type: 'bool', internalType: 'bool' },
+    ],
+    outputs: [],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    name: 'supportsInterface',
+    inputs: [{ name: 'interfaceId', type: 'bytes4', internalType: 'bytes4' }],
+    outputs: [{ name: '', type: 'bool', internalType: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'symbol',
+    inputs: [],
+    outputs: [{ name: '', type: 'string', internalType: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'tokenURI',
+    inputs: [{ name: 'tokenId', type: 'uint256', internalType: 'uint256' }],
+    outputs: [{ name: '', type: 'string', internalType: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'transferFrom',
+    inputs: [
+      { name: '', type: 'address', internalType: 'address' },
+      { name: '', type: 'address', internalType: 'address' },
+      { name: '', type: 'uint256', internalType: 'uint256' },
+    ],
+    outputs: [],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'event',
+    name: 'Approval',
+    inputs: [
+      {
+        name: 'owner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        name: 'approved',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        name: 'tokenId',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'ApprovalForAll',
+    inputs: [
+      {
+        name: 'owner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        name: 'operator',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        name: 'approved',
+        type: 'bool',
+        indexed: false,
+        internalType: 'bool',
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'SBTMinted',
+    inputs: [
+      {
+        name: 'tokenId',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
+      },
+      {
+        name: 'participant',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        name: 'interviewerId',
+        type: 'uint256',
+        indexed: false,
+        internalType: 'uint256',
+      },
+      {
+        name: 'decision',
+        type: 'uint8',
+        indexed: false,
+        internalType: 'uint8',
+      },
+      {
+        name: 'rating',
+        type: 'uint8',
+        indexed: false,
+        internalType: 'uint8',
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'Transfer',
+    inputs: [
+      {
+        name: 'from',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        name: 'to',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        name: 'tokenId',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'error',
+    name: 'ERC721IncorrectOwner',
+    inputs: [
+      { name: 'sender', type: 'address', internalType: 'address' },
+      { name: 'tokenId', type: 'uint256', internalType: 'uint256' },
+      { name: 'owner', type: 'address', internalType: 'address' },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'ERC721InsufficientApproval',
+    inputs: [
+      { name: 'operator', type: 'address', internalType: 'address' },
+      { name: 'tokenId', type: 'uint256', internalType: 'uint256' },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'ERC721InvalidApprover',
+    inputs: [{ name: 'approver', type: 'address', internalType: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'ERC721InvalidOperator',
+    inputs: [{ name: 'operator', type: 'address', internalType: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'ERC721InvalidOwner',
+    inputs: [{ name: 'owner', type: 'address', internalType: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'ERC721InvalidReceiver',
+    inputs: [{ name: 'receiver', type: 'address', internalType: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'ERC721InvalidSender',
+    inputs: [{ name: 'sender', type: 'address', internalType: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'ERC721NonexistentToken',
+    inputs: [{ name: 'tokenId', type: 'uint256', internalType: 'uint256' }],
+  },
+];
+
 // MyToken (ERC20) ABI
 export const MY_TOKEN_ABI: Abi = [
   {
@@ -2299,19 +2631,22 @@ export const STAKING_REWARDS_ABI: Abi = [
 
 // Contract addresses (Polygon Amoy Testnet)
 export const FREELANCER_CONTRACT_POLYGON_AMOY =
-  '0x1f04977be437ade69ad867ecf8bfc3b3ae7abcc4';
+  '0xFe70F4032dE38e2bE754810FCb2B4666B80Ac3a2';
 export const FREELANCER_SBT_POLYGON_AMOY =
-  '0xac0484c2361504ae8f71e95a149f7a81cd7bdda5';
+  '0x1f4f15125640b683ba4339b8d0f3993E3ca86B9f';
 export const NDA_SBT_POLYGON_AMOY =
-  '0xc032155ef5cd589055c4015aeebebf8e188a3981';
+  '0x787CcF65A2E7ACA51693d5696A9dFF218684aF09';
+export const INTERVIEW_SBT_POLYGON_AMOY =
+  '0x93BBCe78664212D589582271563f962e6e5C6aBd';
 export const MY_TOKEN_POLYGON_AMOY =
-  '0x010f6eab067cbd0d3849db6d2fa86958414e3d3b';
+  '0x0EA93525B020E1309c3f67aBbf8Aa208BFD7BE33';
 export const STAKING_REWARDS_POLYGON_AMOY =
-  '0xe36914d8ce3bcfa489fc9ad7e4fea0d43253b19a';
+  '0x2f8B926a237F8996e64E6406cfBDC51e8397F040';
 
 // Legacy aliases for backward compatibility
 export const FREELANCER_CONTRACT_SEPOLIA = FREELANCER_CONTRACT_POLYGON_AMOY;
 export const FREELANCER_SBT_SEPOLIA = FREELANCER_SBT_POLYGON_AMOY;
 export const NDA_SBT_SEPOLIA = NDA_SBT_POLYGON_AMOY;
+export const INTERVIEW_SBT_SEPOLIA = INTERVIEW_SBT_POLYGON_AMOY;
 export const MY_TOKEN_SEPOLIA = MY_TOKEN_POLYGON_AMOY;
 export const STAKING_REWARDS_SEPOLIA = STAKING_REWARDS_POLYGON_AMOY;

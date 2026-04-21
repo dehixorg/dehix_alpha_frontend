@@ -426,7 +426,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         console.error('SBT Minting Error:', error);
         const message =
           error instanceof Error ? error.message : 'Unknown transaction error';
-        notifyError(`Failed to mint SBT: ${message}`, 'Minting Error');
+        notifyError(`Failed to submit result: ${message}`, 'Submission Error');
         throw error;
       } finally {
         setMinting(false);
@@ -1083,7 +1083,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </span>
                   ) : (
                     <span className="text-yellow-600 font-medium">
-                      ⚠️ Connect wallet to mint SBT
+                      ⚠️ Connect wallet to submit result
                     </span>
                   )}
                 </div>
@@ -1104,7 +1104,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     >
                       {loading
                         ? 'Saving & Minting...'
-                        : 'Add Project & Mint SBT'}
+                        : 'Add Project & Submit Result'}
                     </Button>
                   </div>
                 </>

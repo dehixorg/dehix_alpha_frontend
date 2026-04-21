@@ -402,7 +402,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         console.error('SBT Minting Error:', error);
         const message =
           error instanceof Error ? error.message : 'Unknown transaction error';
-        notifyError(`Failed to mint SBT: ${message}`, 'Minting Error');
+        notifyError(`Failed to submit result: ${message}`, 'Submission Error');
         throw error;
       } finally {
         setMinting(false);

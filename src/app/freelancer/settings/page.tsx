@@ -15,7 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 // Replace with your actual contract address and ABI
-const SBT_CONTRACT_ADDRESS = '0xac0484c2361504ae8f71e95a149f7a81cd7bdda5';
+const SBT_CONTRACT_ADDRESS = '0x1f4f15125640b683ba4339b8d0f3993E3ca86B9f';
 const SBT_ABI = [
   // Minimal ABI for ERC721-like tokens
   'function balanceOf(address owner) view returns (uint256)',
