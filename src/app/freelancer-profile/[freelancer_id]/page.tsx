@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
 import Cookies from 'js-cookie';
 
+import SBTHexagon from '@/components/icons/SBTHexagon';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -97,6 +98,7 @@ interface FreelancerProfile {
   projects: Project[];
   professionalInfo: ProfessionalExperience[];
   education: Education[];
+  verified?: boolean;
 }
 
 const FreelancerProfile = () => {
@@ -777,6 +779,45 @@ const FreelancerProfile = () => {
                     className="py-10 border-border/60 bg-background"
                   />
                 )}
+              </CardContent>
+            </Card>
+
+            {/* SBT Token Section */}
+            <Card className="mb-6 overflow-hidden border border-border shadow-md">
+              <CardHeader className="bg-purple-500/5 dark:bg-purple-500/10 border-b border-border py-4">
+                <CardTitle className="text-md font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-2">
+                  <SBTHexagon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  SBT Token
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-center py-8">
+                    <SBTHexagon className="h-16 w-16 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="font-semibold text-foreground mb-2">
+                      Soulbound Token
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Your verified credentials and achievements stored as a
+                      unique, non-transferable token on the blockchain.
+                    </p>
+                  </div>
+                  {profileData?.verified && (
+                    <div className="bg-purple-500/10 dark:bg-purple-500/20 border border-purple-200 dark:border-purple-800 rounded-md p-3 flex items-center gap-2">
+                      <Award className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium text-purple-700 dark:text-purple-300">
+                          Verified Profile
+                        </p>
+                        <p className="text-xs text-purple-600 dark:text-purple-400">
+                          Your profile has been verified
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </main>

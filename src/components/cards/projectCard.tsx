@@ -37,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import NDADialog from '@/components/dialogs/NDADialog';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -76,11 +77,13 @@ type ProjectCardProps = React.ComponentProps<typeof Card> & {
   cardClassName?: string;
   project: ProjectType;
   type?: string;
+  showNdaButton?: boolean;
 };
 
 export function ProjectCard({
   cardClassName,
   project,
+  showNdaButton = false,
   ...props
 }: ProjectCardProps) {
   const [openReport, setOpenReport] = useState(false);
@@ -370,6 +373,20 @@ export function ProjectCard({
               )}
             </div>
           </Card>
+        )}
+
+        {showNdaButton && user?.type === 'freelancer' && (
+          <div
+            className="flex justify-start"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <NDADialog
+              projectId={project._id}
+              projectName={project.projectName}
+            />
+          </div>
         )}
 
         {/* Report Dialog */}

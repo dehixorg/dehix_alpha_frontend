@@ -22,6 +22,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { getStatusBadge } from '@/utils/statusBadge';
+import NDADialog from '@/components/dialogs/NDADialog';
 
 interface Project {
   _id: string;
@@ -86,86 +87,121 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
     return uniqueProjects;
   };
 
-  const renderTable = (list: Project[]) => (
-    <div className="w-full overflow-x-auto">
-      <Table className="w-full">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-start">Project Name</TableHead>
-            <TableHead className="text-center">Start Date</TableHead>
-            <TableHead className="text-center">Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            [...Array(3)].map((_, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Skeleton className="h-4 w-20" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Skeleton className="h-4 w-16" />
-                </TableCell>
-              </TableRow>
-            ))
-          ) : list.length > 0 ? (
-            list.map((project) => (
-              <TableRow
-                key={project._id}
-                role="link"
-                tabIndex={0}
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => router.push(`/project/${project._id}`)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    router.push(`/project/${project._id}`);
-                  }
-                }}
-              >
-                <TableCell className="min-w-0">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="min-w-0 break-words font-medium">
-                      {project.projectName}
-                    </span>
-                    {project.verified && (
-                      <ShieldCheck className="h-4 w-4 shrink-0 text-green-500" />
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  {project.start
-                    ? new Date(project.start).toLocaleDateString()
-                    : project.createdAt
-                      ? new Date(project.createdAt).toLocaleDateString()
-                      : 'N/A'}
-                </TableCell>
-                <TableCell className="text-center">
-                  {project.status ? (
-                    <Badge className={getStatusBadge(project.status).className}>
-                      {getStatusBadge(project.status).text}
-                    </Badge>
-                  ) : (
-                    'N/A'
+  const renderTable = (list: Project[], tabStatus: StatusEnum) => {
+    const showNdaColumn = tabStatus === StatusEnum.ACTIVE;
+    const colCount = showNdaColumn ? 4 : 3;
+
+    return (
+      <div className="w-full overflow-x-auto">
+        <Table className="w-full">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-start">Project Name</TableHead>
+              <TableHead className="text-center">Start Date</TableHead>
+              {showNdaColumn && (
+                <TableHead className="text-center whitespace-nowrap">
+                  NDA Agreement
+                </TableHead>
+              )}
+              <TableHead className="text-center">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              [...Array(3)].map((_, index) => (
+                <TableRow key={`skeleton-${index}`}>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  {showNdaColumn && (
+                    <TableCell className="text-center">
+                      <Skeleton className="h-8 w-28 mx-auto" />
+                    </TableCell>
                   )}
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={3} className="text-center py-10">
-                <PackageOpen className="mx-auto text-gray-500" size={100} />
-                <p className="text-gray-500">No projects available</p>
-              </td>
-            </tr>
-          )}
-        </TableBody>
-      </Table>
-    </div>
-  );
+                  <TableCell className="text-center">
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : list.length > 0 ? (
+              list.map((project, idx) => (
+                <TableRow
+                  key={`${project._id}-${idx}`}
+                  role="link"
+                  tabIndex={0}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => router.push(`/project/${project._id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      router.push(`/project/${project._id}`);
+                    }
+                  }}
+                >
+                  <TableCell className="min-w-0">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="min-w-0 break-words font-medium">
+                        {project.projectName}
+                      </span>
+                      {project.verified && (
+                        <ShieldCheck className="h-4 w-4 shrink-0 text-green-500" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {project.start
+                      ? new Date(project.start).toLocaleDateString()
+                      : project.createdAt
+                        ? new Date(project.createdAt).toLocaleDateString()
+                        : 'N/A'}
+                  </TableCell>
+                  {showNdaColumn && (
+                    <TableCell
+                      className="text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {project.status !== StatusEnum.COMPLETED &&
+                      project.status !== StatusEnum.REJECTED ? (
+                        <div className="flex justify-center">
+                          <NDADialog
+                            projectId={project._id}
+                            projectName={project.projectName}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                  )}
+                  <TableCell className="text-center">
+                    {project.status ? (
+                      <Badge
+                        className={getStatusBadge(project.status).className}
+                      >
+                        {getStatusBadge(project.status).text}
+                      </Badge>
+                    ) : (
+                      'N/A'
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={colCount} className="text-center py-10">
+                  <PackageOpen className="mx-auto text-gray-500" size={100} />
+                  <p className="text-gray-500">No projects available</p>
+                </td>
+              </tr>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
 
   return (
     <Card>
@@ -209,7 +245,10 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
 
           {Object.values(StatusEnum).map((status) => (
             <TabsContent key={status} value={status} className="m-0">
-              {renderTable(getVisibleProjects(status as StatusEnum))}
+              {renderTable(
+                getVisibleProjects(status as StatusEnum),
+                status as StatusEnum,
+              )}
             </TabsContent>
           ))}
         </Tabs>

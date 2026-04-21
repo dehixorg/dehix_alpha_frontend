@@ -12,6 +12,7 @@ import {
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
+import NDADialog from '@/components/dialogs/NDADialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
@@ -38,6 +39,7 @@ export interface ProjectDetailCardProps {
   handleStartProject?: () => void; // Added start project handler
   handleIncompleteProject?: () => void; // Added incomplete project handler
   milestones?: Milestone[]; // Optional milestones to compute progress
+  showNDA?: boolean;
 }
 
 function ProjectDetailCard({
@@ -54,6 +56,7 @@ function ProjectDetailCard({
   handleStartProject,
   handleIncompleteProject,
   milestones,
+  showNDA = true,
 }: ProjectDetailCardProps) {
   const { text: projectStatus } = getStatusBadge(status);
 
@@ -215,12 +218,19 @@ function ProjectDetailCard({
 
         {/* Buttons */}
         <div className="flex flex-wrap items-center justify-between gap-2 mt-1">
-          <Link href={milestoneRoute}>
-            <Button size="sm" variant="outline" className="gap-2">
-              <FlagIcon className="w-4 h-4" />
-              Milestones
-            </Button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={milestoneRoute}>
+              <Button size="sm" variant="outline" className="gap-2">
+                <FlagIcon className="w-4 h-4" />
+                Milestones
+              </Button>
+            </Link>
+            {showNDA &&
+              projectStatus !== 'COMPLETED' &&
+              projectStatus !== 'REJECTED' && (
+                <NDADialog projectId={projectId} projectName={projectName} />
+              )}
+          </div>
           {/* Conditional button based on project status */}
           {projectStatus === 'PENDING' ? (
             <Button

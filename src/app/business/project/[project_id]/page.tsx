@@ -312,6 +312,7 @@ export default function Dashboard() {
                   handleIncompleteProject={handleIncompleteProject}
                   userRole="Business"
                   milestones={project.milestones}
+                  showNDA={false}
                 />
 
                 <div className="pb-3">
@@ -390,7 +391,10 @@ export default function Dashboard() {
 
             <TabsContent value="Profiles" className="m-0">
               <CardContent className="p-0">
-                <BidsDetails id={project_id || ''} />
+                <BidsDetails
+                  id={project_id || ''}
+                  projectName={project.projectName}
+                />
               </CardContent>
             </TabsContent>
           </Tabs>

@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Briefcase, History, ListVideo } from 'lucide-react';
+import { BarChart3, Briefcase, History, ListVideo } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,6 +21,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
 import Bids from '@/components/freelancer/interview/Bids';
+import IntervieweeSBTDashboard from '@/components/freelancer/interview/IntervieweeSBTDashboard';
 import { RootState } from '@/lib/store';
 import { useIntervieweeTour } from '@/components/tour/freelancer/useIntervieweeTour';
 
@@ -104,6 +105,13 @@ export default function IntervieweePage() {
                         <History className="h-4 w-4" />
                         <span>History</span>
                       </TabsTrigger>
+                      <TabsTrigger
+                        value="dashboard"
+                        className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                        <span>Dashboard</span>
+                      </TabsTrigger>
                     </TabsList>
                   </div>
 
@@ -125,6 +133,9 @@ export default function IntervieweePage() {
                         enableViewToggle
                         hideIds
                       />
+                    </TabsContent>
+                    <TabsContent value="dashboard" className="m-0">
+                      <IntervieweeSBTDashboard />
                     </TabsContent>
                   </div>
                 </Tabs>

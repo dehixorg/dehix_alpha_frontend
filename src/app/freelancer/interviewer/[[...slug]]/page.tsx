@@ -1,7 +1,13 @@
 'use client';
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
+import {
+  ListVideo,
+  Users2,
+  History,
+  Briefcase,
+  BadgeCheck,
+} from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -15,6 +21,7 @@ import CurrentComponent from '@/components/freelancer/interview/Current';
 import InterviewProfile from '@/components/freelancer/interview/interviewProfile';
 import CompletedInterviews from '@/components/freelancer/interview/CompletedInterviews';
 import InterviewerBids from '@/components/freelancer/interview/InterviewerBids';
+import InterviewSBTManager from '@/components/freelancer/interview/InterviewSBTManager';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 import { useInterviewerProfileTour } from '@/components/tour/freelancer/useInterviewTour';
 
@@ -101,6 +108,13 @@ export default function InterviewerPage() {
                       <History className="h-4 w-4" />
                       <span>History</span>
                     </TabsTrigger>
+                    <TabsTrigger
+                      value="mint-sbt"
+                      className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <BadgeCheck className="h-4 w-4" />
+                      <span>Submit Result</span>
+                    </TabsTrigger>
                   </TabsList>
                 </div>
               </div>
@@ -117,6 +131,9 @@ export default function InterviewerPage() {
                 </TabsContent>
                 <TabsContent value="history" className="m-0">
                   <CompletedInterviews enableViewToggle />
+                </TabsContent>
+                <TabsContent value="mint-sbt" className="m-0">
+                  <InterviewSBTManager />
                 </TabsContent>
               </div>
             </Tabs>

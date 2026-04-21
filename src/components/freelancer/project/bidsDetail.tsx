@@ -56,6 +56,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
 import StatItem from '@/components/shared/StatItem';
 import { formatCurrency } from '@/utils/format';
+import NDADialog from '@/components/dialogs/NDADialog';
 // Constants - Backend expects uppercase values
 const BID_STATUSES = [
   'PENDING',
@@ -121,6 +122,7 @@ interface ProjectProfile {
 
 interface BidsDetailsProps {
   id: string;
+  projectName?: string;
 }
 
 // Constants for status formatting
@@ -726,7 +728,7 @@ const ProfileDialog = React.memo(
 );
 ProfileDialog.displayName = 'ProfileDialog';
 
-const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
+const BidsDetails: React.FC<BidsDetailsProps> = ({ id, projectName }) => {
   const [userData, setUserData] = useState<{ data: ProjectProfile } | null>(
     null,
   );
@@ -1404,15 +1406,20 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     </TableCell>
 
                     <TableCell className="text-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleOpenInterviewDialog}
-                        className="h-8"
-                      >
-                        <Video className="mr-2 h-4 w-4" />
-                        Interview
-                      </Button>
+                      <div className="flex items-center justify-center gap-2">
+                        {projectName && status === 'ACCEPTED' && (
+                          <NDADialog projectId={id} projectName={projectName} />
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleOpenInterviewDialog}
+                          className="h-8"
+                        >
+                          <Video className="mr-2 h-4 w-4" />
+                          Interview
+                        </Button>
+                      </div>
                     </TableCell>
 
                     <TableCell className="text-right">

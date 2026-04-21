@@ -12,6 +12,7 @@ import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
 import { Button } from '../ui/button';
 import { DisplayConnectsDialog } from '../shared/DisplayConnectsDialog';
+import { WalletConnectButton } from '../WalletConnectButton';
 import { Input } from '../ui/input';
 
 import { startTour } from '@/lib/tourSlice';
@@ -227,6 +228,8 @@ const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
+        {user?.uid && <WalletConnectButton />}
+
         {/* Platform Tour */}
         <div>
           <TourMenu
@@ -256,7 +259,6 @@ const Header: React.FC<HeaderProps> = ({
             }}
           />
         </div>
-
         {user?.uid ? (
           <div data-tour="header-connects">
             <DisplayConnectsDialog
