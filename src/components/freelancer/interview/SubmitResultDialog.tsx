@@ -92,8 +92,8 @@ export default function SubmitResultDialog({
               </DialogTitle>
             </div>
             <DialogDescription className="text-base text-muted-foreground/80">
-              Complete the evaluation below to mint the candidate&apos;s professional
-              skill certificate (SBT).
+              Complete the evaluation below to mint the candidate&apos;s
+              professional skill certificate (SBT).
             </DialogDescription>
           </DialogHeader>
         </div>

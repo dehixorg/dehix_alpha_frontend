@@ -618,7 +618,8 @@ export default function InterviewSBTManager() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Records are tied specifically to the individual&apos;s wallet address.
+              Records are tied specifically to the individual&apos;s wallet
+              address.
             </p>
           </CardContent>
         </Card>
