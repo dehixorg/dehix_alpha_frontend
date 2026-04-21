@@ -81,9 +81,6 @@ const Header: React.FC<HeaderProps> = ({
     if (!user?.uid || !userType) return;
     setIsRefreshing(true);
 
-    // Dispatch event to also refresh notifications
-    window.dispatchEvent(new Event('refreshNotifications'));
-
     try {
       const balance = await fetchAndUpdateConnects(userType, true);
       if (balance != null) {
@@ -99,8 +96,12 @@ const Header: React.FC<HeaderProps> = ({
           );
         }
       }
+
+      // Refresh notifications only after connects refresh/fallback completes.
+      window.dispatchEvent(new Event('refreshNotifications'));
     } catch (error) {
-      fetchConnects();
+      await fetchConnects();
+      window.dispatchEvent(new Event('refreshNotifications'));
       notifyError('Failed to refresh connects. Please try again.', 'Error');
     } finally {
       setIsRefreshing(false);
