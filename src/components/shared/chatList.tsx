@@ -23,7 +23,10 @@ import { Button } from '@/components/ui/button';
 import { RootState } from '@/lib/store';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { CombinedUser } from '@/hooks/useAllUsers';
-import { useAllUsers } from '@/hooks/useAllUsers';
+import {
+  CHAT_USER_SEARCH_MIN_CHARS,
+  useRemoteUserSearch,
+} from '@/hooks/useRemoteUserSearch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import EmptyState from '@/components/shared/EmptyState';
@@ -93,19 +96,22 @@ export function ChatList({
     Record<string, string>
   >({});
   const [searchTerm, setSearchTerm] = useState('');
-  const { users: allFetchedUsers } = useAllUsers();
   const currentUser = useSelector((state: RootState) => state.user);
   const userSearchTerm = searchTerm;
-  const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
-  interface SelectedUser {
-    id: string;
-    displayName?: string;
-    email?: string;
-  }
-
-  const selectedUsers: SelectedUser[] = [];
-  const [isSearching, setIsSearching] = useState(false);
+  const trimmedSearchTerm = userSearchTerm.trim();
+  const {
+    users: remoteUsers,
+    isLoading: isSearching,
+    error: searchError,
+    hasSearched,
+  } = useRemoteUserSearch(userSearchTerm);
   const [activeView, setActiveView] = useState<'inbox' | 'archived'>('inbox');
+  const [isStartingChat, setIsStartingChat] = useState(false);
+
+  const searchResults: CombinedUser[] =
+    trimmedSearchTerm.length >= CHAT_USER_SEARCH_MIN_CHARS
+      ? remoteUsers.filter((user) => user.id !== currentUser.uid)
+      : [];
 
   const stripHtml = (html: string): string =>
     html
@@ -245,32 +251,6 @@ export function ChatList({
       }
     }
   };
-
-  useEffect(() => {
-    const term = userSearchTerm.trim().toLowerCase();
-    if (term.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-    setIsSearching(true);
-    try {
-      const filtered = allFetchedUsers.filter(
-        (user) =>
-          user.id !== currentUser.uid &&
-          !selectedUsers.find((selected) => selected.id === user.id) &&
-          (user.displayName.toLowerCase().includes(term) ||
-            user.email.toLowerCase().includes(term) ||
-            user.rawUserName?.toLowerCase().includes(term) ||
-            user.rawName?.toLowerCase().includes(term)),
-      );
-      setSearchResults(filtered);
-    } catch (error) {
-      console.error('Error filtering users:', error);
-      notifyError('Failed to search users. Please try again.', 'Error');
-    } finally {
-      setIsSearching(false);
-    }
-  }, [userSearchTerm, allFetchedUsers, currentUser.uid]);
 
   const updateLastUpdated = useCallback(() => {
     const updatedTimes: Record<string, string> = {};
@@ -413,13 +393,18 @@ export function ChatList({
 
       <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="p-2 space-y-2">
-          {searchTerm && (
+          {trimmedSearchTerm.length >= CHAT_USER_SEARCH_MIN_CHARS && (
             <div className="px-2 py-1 text-xs text-muted-foreground flex items-center gap-2">
-              {isSearching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>{isSearching ? 'Searching users…' : 'Search results'}</span>
+              {(isSearching || isStartingChat) && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              )}
+              <span>
+                {isSearching ? 'Searching users...' : 'Search results'}
+              </span>
             </div>
           )}
-          {searchTerm && searchResults.length > 0 ? (
+          {trimmedSearchTerm.length >= CHAT_USER_SEARCH_MIN_CHARS &&
+          searchResults.length > 0 ? (
             searchResults.map((user) => (
               <div
                 key={user.id}
@@ -429,7 +414,7 @@ export function ChatList({
                 className="flex items-center p-3 rounded-md border border-transparent hover:border-border hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer transition"
                 onClick={async () => {
                   // Start the new chat flow for this user
-                  setIsSearching(true);
+                  setIsStartingChat(true);
                   try {
                     if (onSelectUser) {
                       await onSelectUser(user);
@@ -445,7 +430,6 @@ export function ChatList({
                     }
                     // Close search UI
                     setSearchTerm('');
-                    setSearchResults([]);
                   } catch (err: any) {
                     console.error('Failed to start chat:', err);
                     notifyError(
@@ -453,7 +437,7 @@ export function ChatList({
                       'Could not start chat',
                     );
                   } finally {
-                    setIsSearching(false);
+                    setIsStartingChat(false);
                   }
                 }}
                 onKeyDown={async (e) => {
@@ -477,7 +461,21 @@ export function ChatList({
                 </div>
               </div>
             ))
-          ) : searchTerm && !isSearching && searchResults.length === 0 ? (
+          ) : trimmedSearchTerm.length > 0 &&
+            trimmedSearchTerm.length < CHAT_USER_SEARCH_MIN_CHARS ? (
+            <div className="text-sm text-muted-foreground px-3 py-6 text-center border rounded-md bg-muted/30">
+              Type at least {CHAT_USER_SEARCH_MIN_CHARS} characters to search
+              for users.
+            </div>
+          ) : trimmedSearchTerm.length >= CHAT_USER_SEARCH_MIN_CHARS &&
+            searchError ? (
+            <div className="text-sm text-red-500 px-3 py-6 text-center border rounded-md bg-muted/30">
+              {searchError}
+            </div>
+          ) : trimmedSearchTerm.length >= CHAT_USER_SEARCH_MIN_CHARS &&
+            hasSearched &&
+            !isSearching &&
+            searchResults.length === 0 ? (
             <div className="text-sm text-muted-foreground px-3 py-6 text-center border rounded-md bg-muted/30">
               No users found for &ldquo;{searchTerm}&rdquo;.
             </div>
