@@ -763,6 +763,61 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [interviewTime, setInterviewTime] = useState<string>('10:00');
   const [interviewDescription, setInterviewDescription] = useState('');
   const [isSubmittingInterview, setIsSubmittingInterview] = useState(false);
+  const [activeInterviewStatusMap, setActiveInterviewStatusMap] = useState<
+    Map<string, string>
+  >(new Map());
+
+  // Key includes interviewType so TALENT/HIRE interviews don't block PROJECT interviews for the same candidate
+  const buildInterviewKey = (
+    candidateId?: string,
+    talentId?: string,
+    interviewType?: string,
+  ) =>
+    `${String(candidateId || '').trim()}::${String(talentId || '').trim()}::${String(
+      interviewType || '',
+    )
+      .toUpperCase()
+      .trim()}`;
+
+  const fetchActiveInterviewStatusMap = useCallback(async () => {
+    const existingInterviewsRes = await axiosInstance.get(
+      '/interview/business',
+      {
+        params: { limit: 100 },
+      },
+    );
+    const grouped = existingInterviewsRes?.data?.data || {};
+    const allExistingInterviews = [
+      ...(grouped.PROJECT || []),
+      ...(grouped.TALENT || []),
+      ...(grouped.HIRE || []),
+      ...(grouped.GROWTH || []),
+      ...(grouped.PEERTOPEER || []),
+      ...(grouped.INTERVIEWER || []),
+    ];
+    // Only treat as 'active' if the interview is genuinely in-flight
+    const activeStatuses = new Set(['BIDDING', 'SCHEDULED', 'ONGOING']);
+    const map = new Map<string, string>();
+
+    allExistingInterviews.forEach((it: any) => {
+      const status = String(
+        it?.interviewStatus || it?.InterviewStatus || '',
+      ).toUpperCase();
+      const type = String(it?.interviewType || '').toUpperCase();
+      if (activeStatuses.has(status) && it?.intervieweeId && it?.talentId) {
+        map.set(
+          buildInterviewKey(
+            String(it.intervieweeId),
+            String(it.talentId),
+            type,
+          ),
+          status,
+        );
+      }
+    });
+
+    return map;
+  }, []);
 
   // Memoized bid counts
   const bidCounts = useMemo(
@@ -903,6 +958,18 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       fetchBid(profileId);
     }
   }, [profileId, fetchBid]);
+
+  useEffect(() => {
+    const syncActiveInterviewees = async () => {
+      try {
+        const statusMap = await fetchActiveInterviewStatusMap();
+        setActiveInterviewStatusMap(statusMap);
+      } catch (err) {
+        console.error('Failed to fetch active interviews:', err);
+      }
+    };
+    syncActiveInterviewees();
+  }, [fetchActiveInterviewStatusMap]);
 
   // Fetch profile data for dialog
   const fetchProfileData = useCallback(
@@ -1121,9 +1188,61 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       return;
     }
 
+    if (isSubmittingInterview) {
+      return;
+    }
+
+    let attemptedInterviewKey = '';
+    let attemptedInterviewStatus = '';
+
     try {
       setIsSubmittingInterview(true);
       const { bid, profile } = selectedBidForInterview;
+      const candidateId = bid.bidder_id || bid.freelancer?._id;
+      const selectedTalentId = profile.domain_id || profile._id;
+      const attemptedType = interviewMode === 'HIRE' ? 'HIRE' : 'PROJECT';
+      attemptedInterviewKey = buildInterviewKey(
+        String(candidateId),
+        String(selectedTalentId),
+        attemptedType,
+      );
+      attemptedInterviewStatus =
+        interviewMode === 'HIRE' ? 'BIDDING' : 'SCHEDULED';
+
+      if (!candidateId) {
+        notifyError(
+          'Candidate details are missing. Please refresh and try again.',
+          'Error',
+        );
+        setIsSubmittingInterview(false);
+        return;
+      }
+      if (!selectedTalentId) {
+        notifyError(
+          'Profile details are missing. Please refresh and try again.',
+          'Error',
+        );
+        setIsSubmittingInterview(false);
+        return;
+      }
+
+      // Frontend hard guard: block if this candidate already has an active interview.
+      // This prevents duplicate creation even if backend is not on latest process.
+      const latestActiveInterviewStatusMap =
+        await fetchActiveInterviewStatusMap();
+      setActiveInterviewStatusMap(latestActiveInterviewStatusMap);
+      const hasActiveInterview = latestActiveInterviewStatusMap.has(
+        attemptedInterviewKey,
+      );
+
+      if (hasActiveInterview) {
+        notifyError(
+          'An active interview already exists for this candidate. Please review or update the existing interview instead of creating a new one.',
+          'Duplicate Interview',
+        );
+        setIsSubmittingInterview(false);
+        return;
+      }
 
       // Combine date and time
       const finalDate = new Date(interviewDate);
@@ -1133,18 +1252,27 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       }
 
       const payload = {
-        intervieweeId: bid.bidder_id || bid.freelancer?._id,
+        intervieweeId: candidateId,
         interviewType: interviewMode === 'HIRE' ? 'HIRE' : 'PROJECT',
         description: interviewDescription,
         talentType: 'DOMAIN',
-        talentId: profile.domain_id || profile._id,
+        talentId: selectedTalentId,
         interviewDate: finalDate,
-        interviewStatus: interviewMode === 'HIRE' ? 'BIDDING' : 'SCHEDULED',
+        interviewStatus: attemptedInterviewStatus,
+        projectId: id,
       };
 
       const response = await axiosInstance.post('/interview', payload);
 
       if (response.status === 201 || response.status === 200) {
+        setActiveInterviewStatusMap((prev) => {
+          const next = new Map(prev);
+          next.set(attemptedInterviewKey, attemptedInterviewStatus);
+          return next;
+        });
+        const latestActiveInterviewStatusMap =
+          await fetchActiveInterviewStatusMap();
+        setActiveInterviewStatusMap(latestActiveInterviewStatusMap);
         notifySuccess(
           interviewMode === 'HIRE'
             ? 'Interviewer opportunity created successfully.'
@@ -1154,8 +1282,34 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         closeAndResetInterviewDialog();
       }
     } catch (error: any) {
+      const statusCode = error.response?.status;
+      const errorCode = error.response?.data?.code;
       const msg = error.response?.data?.message || 'Failed to create interview';
-      notifyError(msg, 'Error');
+
+      if (
+        statusCode === 409 ||
+        (statusCode === 400 && errorCode === 'DUPLICATE_INTERVIEW')
+      ) {
+        if (attemptedInterviewKey) {
+          setActiveInterviewStatusMap((prev) => {
+            const next = new Map(prev);
+            next.set(
+              attemptedInterviewKey,
+              attemptedInterviewStatus || 'BIDDING',
+            );
+            return next;
+          });
+        }
+        const latestActiveInterviewStatusMap =
+          await fetchActiveInterviewStatusMap();
+        setActiveInterviewStatusMap(latestActiveInterviewStatusMap);
+        notifyError(
+          'This candidate already has an active interview/opportunity. Please use the existing one.',
+          'Duplicate Interview',
+        );
+      } else {
+        notifyError(msg, 'Error');
+      }
       setIsSubmittingInterview(false);
     }
   };
@@ -1397,6 +1551,26 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                 };
 
                 const actionOptions = getActionOptions(status);
+                const profileTalentId = profile?.domain_id || profile?._id;
+                // Scope check to THIS project so other project's interviews don't block
+                const projectKey = buildInterviewKey(
+                  String(freelancerId),
+                  String(profileTalentId),
+                  'PROJECT',
+                );
+                const hireKey = buildInterviewKey(
+                  String(freelancerId),
+                  String(profileTalentId),
+                  'HIRE',
+                );
+                const activeInterviewStatus =
+                  activeInterviewStatusMap.get(projectKey) ||
+                  activeInterviewStatusMap.get(hireKey) ||
+                  '';
+                const hasActiveInterview = Boolean(activeInterviewStatus);
+                const interviewButtonLabel = hasActiveInterview
+                  ? 'Already Scheduled'
+                  : 'Interview';
 
                 return (
                   <TableRow
@@ -1455,9 +1629,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                         size="sm"
                         onClick={() => handleOpenInterviewDialog(data, profile)}
                         className="h-8"
+                        disabled={hasActiveInterview}
                       >
                         <Video className="h-4 w-4" />
-                        Interview
+                        {interviewButtonLabel}
                       </Button>
                     </TableCell>
 

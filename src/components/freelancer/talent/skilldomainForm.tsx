@@ -37,10 +37,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
-import {
-  getBadgeColor,
-  statusOutlineClasses,
-} from '@/utils/common/getBadgeStatus';
+import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import { StatusEnum, canVerify } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
@@ -69,6 +66,19 @@ interface SkillDomainData {
   originalTalentId: string;
 }
 
+const buildTalentKey = (type: 'SKILL' | 'DOMAIN', id?: string, name?: string) =>
+  `${type}:${String(id || name || '').trim()}`;
+
+const isExplicitDehixTalentEntry = (item: any) => {
+  // Skills/domains from profile settings should NOT appear in Dehix Talent table.
+  // Only entries explicitly added via Add Skill/Add Domain carry talentMonthlyPay.
+  return (
+    item?.talentMonthlyPay !== undefined &&
+    item?.talentMonthlyPay !== null &&
+    String(item.talentMonthlyPay).trim() !== ''
+  );
+};
+
 const SkillDomainForm: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
 
@@ -84,13 +94,13 @@ const SkillDomainForm: React.FC = () => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const result = await axiosInstance.get(
-          `/freelancer/${user.uid}/dehix-talent/status`,
-        );
+        const [talentResult, profileAttributesResult] = await Promise.all([
+          axiosInstance.get(`/freelancer/${user.uid}/dehix-talent/status`),
+          axiosInstance.get(`/freelancer/${user.uid}/profile-attributes`),
+        ]);
 
-        const talentData = result.data?.data ?? {};
-        setSkills(talentData.NOT_APPLIED?.SKILL ?? []);
-        setDomains(talentData.NOT_APPLIED?.DOMAIN ?? []);
+        const talentData = talentResult.data?.data ?? {};
+        const profileAttributes = profileAttributesResult.data?.data ?? {};
 
         const statusEntries = Object.entries(talentData ?? {});
 
@@ -105,17 +115,54 @@ const SkillDomainForm: React.FC = () => {
           return [...skillsGroup, ...domainsGroup];
         });
 
-        const formatted: SkillDomainData[] = talentFlat.map((t: any) => ({
-          uid: t._id,
-          label: t.talentName ?? t.name ?? '—',
-          level: t.level ?? '—',
-          experience: t.experience ?? '—',
-          monthlyPay: t.talentMonthlyPay ?? '—',
-          type: t.type,
-          status: (t.status ?? t.dehixTalentStatus) as StatusEnum,
-          activeStatus: t.talentActiveStatus === 'ACTIVE',
-          originalTalentId: t.talentId ?? t.type_id ?? '',
-        }));
+        const formatted: SkillDomainData[] = talentFlat
+          .filter(isExplicitDehixTalentEntry)
+          .map((t: any) => ({
+            uid: t._id,
+            label: t.talentName ?? t.name ?? '—',
+            level: t.level ?? '—',
+            experience: t.experience ?? '—',
+            monthlyPay: t.talentMonthlyPay ?? '—',
+            type: t.type,
+            status: (t.status ?? t.dehixTalentStatus) as StatusEnum,
+            activeStatus: t.talentActiveStatus === 'ACTIVE',
+            originalTalentId: t.talentId ?? t.type_id ?? '',
+          }));
+
+        const addedTalentKeys = new Set(
+          formatted.map((t) =>
+            buildTalentKey(t.type, t.originalTalentId, t.label),
+          ),
+        );
+
+        const profileSkills = Array.isArray(profileAttributes.skills)
+          ? profileAttributes.skills
+          : [];
+        const profileDomains = Array.isArray(profileAttributes.domains)
+          ? profileAttributes.domains
+          : [];
+
+        const uniqueByTalent = <T extends Skill | Domain>(
+          items: T[],
+          type: 'SKILL' | 'DOMAIN',
+        ) => {
+          const seen = new Set<string>();
+          return items.filter((item) => {
+            const key = buildTalentKey(
+              type,
+              item.type_id || item._id,
+              item.name,
+            );
+            if (seen.has(key) || addedTalentKeys.has(key)) {
+              return false;
+            }
+            seen.add(key);
+            return true;
+          });
+        };
+
+        setSkills(uniqueByTalent(profileSkills, 'SKILL'));
+        setDomains(uniqueByTalent(profileDomains, 'DOMAIN'));
         setRows(formatted);
         setVisibility(formatted.map((r) => r.activeStatus));
       } catch (err: any) {
@@ -190,6 +237,8 @@ const SkillDomainForm: React.FC = () => {
     </DomainDialog>
   );
 
+  const visibleRows = rows.map((row, index) => ({ row, index }));
+
   return (
     <section className="min-h-screen">
       <Card className="w-full shadow-lg">
@@ -217,7 +266,10 @@ const SkillDomainForm: React.FC = () => {
                     <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-300" />
                   </div>
                   <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-200 bg-clip-text text-transparent">
-                    {rows.filter((r) => r.type === 'SKILL').length}
+                    {
+                      visibleRows.filter(({ row }) => row.type === 'SKILL')
+                        .length
+                    }
                   </p>
                 </div>
                 <CardTitle className="text-xl font-semibold text-foreground/90">
@@ -239,7 +291,10 @@ const SkillDomainForm: React.FC = () => {
                     <Briefcase className="w-4 h-4 text-purple-600 dark:text-purple-300" />
                   </div>
                   <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-200 bg-clip-text text-transparent">
-                    {rows.filter((r) => r.type === 'DOMAIN').length}
+                    {
+                      visibleRows.filter(({ row }) => row.type === 'DOMAIN')
+                        .length
+                    }
                   </p>
                 </div>
                 <CardTitle className="text-xl font-semibold text-foreground/90">
@@ -284,13 +339,13 @@ const SkillDomainForm: React.FC = () => {
                   </div>
                   <p className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-200 bg-clip-text text-transparent">
                     {
-                      rows.filter(
-                        (r) =>
-                          (r.type === 'SKILL' || r.type === 'DOMAIN') &&
-                          r.status === StatusEnum.VERIFIED,
+                      visibleRows.filter(
+                        ({ row }) =>
+                          (row.type === 'SKILL' || row.type === 'DOMAIN') &&
+                          row.status === StatusEnum.VERIFIED,
                       ).length
                     }
-                    /{rows.length}
+                    /{visibleRows.length}
                   </p>
                 </div>
                 <CardTitle className="text-xl font-semibold text-foreground/90">
@@ -300,20 +355,29 @@ const SkillDomainForm: React.FC = () => {
               <CardContent className="relative z-10 px-4 py-1">
                 <p className="text-sm text-muted-foreground">
                   {
-                    rows.filter(
-                      (r) =>
-                        r.type === 'SKILL' && r.status === StatusEnum.VERIFIED,
+                    visibleRows.filter(
+                      ({ row }) =>
+                        row.type === 'SKILL' &&
+                        row.status === StatusEnum.VERIFIED,
                     ).length
                   }
-                  /{rows.filter((r) => r.type === 'SKILL').length} Skills
+                  /
+                  {visibleRows.filter(({ row }) => row.type === 'SKILL').length}{' '}
+                  Skills
                   <br />
                   {
-                    rows.filter(
-                      (r) =>
-                        r.type === 'DOMAIN' && r.status === StatusEnum.VERIFIED,
+                    visibleRows.filter(
+                      ({ row }) =>
+                        row.type === 'DOMAIN' &&
+                        row.status === StatusEnum.VERIFIED,
                     ).length
                   }
-                  /{rows.filter((r) => r.type === 'DOMAIN').length} Domains
+                  /
+                  {
+                    visibleRows.filter(({ row }) => row.type === 'DOMAIN')
+                      .length
+                  }{' '}
+                  Domains
                 </p>
               </CardContent>
             </Card>
@@ -368,7 +432,7 @@ const SkillDomainForm: React.FC = () => {
                       </TableRow>
                     ))}
                   </>
-                ) : rows.length === 0 ? (
+                ) : visibleRows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="py-12 text-center">
                       <div className="flex flex-col items-center space-y-4">
@@ -439,7 +503,7 @@ const SkillDomainForm: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  rows.map((r, idx) => (
+                  visibleRows.map(({ row: r, index: originalIdx }) => (
                     <TableRow
                       key={r.uid}
                       className="transition-colors hover:bg-muted/50"
@@ -489,9 +553,14 @@ const SkillDomainForm: React.FC = () => {
 
                       <TableCell className="text-center">
                         <Switch
-                          checked={visibility[idx]}
+                          checked={visibility[originalIdx]}
                           onCheckedChange={(v) =>
-                            toggleVisibility(idx, v, r.uid, visibility[idx])
+                            toggleVisibility(
+                              originalIdx,
+                              v,
+                              r.uid,
+                              visibility[originalIdx],
+                            )
                           }
                           aria-label={`Toggle visibility for ${r.label}`}
                         />

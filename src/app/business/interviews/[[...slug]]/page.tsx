@@ -85,11 +85,17 @@ interface Meeting {
   interviewDate?: string;
   name?: string;
   talentName?: string;
+  bidsCount?: number;
+  interviewBids?: any[];
 }
 
 const mapInterviewToMeeting = (interview: any): Meeting => {
   const rawInterviewStatus =
     interview.interviewStatus || interview.InterviewStatus || 'PENDING';
+
+  const bidsArray = Array.isArray(interview.interviewBids)
+    ? interview.interviewBids
+    : [];
 
   return {
     ...interview,
@@ -112,6 +118,8 @@ const mapInterviewToMeeting = (interview: any): Meeting => {
     status: rawInterviewStatus.toLowerCase(),
     interviewType: (interview.interviewType || 'TALENT').toUpperCase(),
     hangoutLink: interview.meetingLink,
+    bidsCount: bidsArray.length,
+    interviewBids: bidsArray,
   };
 };
 

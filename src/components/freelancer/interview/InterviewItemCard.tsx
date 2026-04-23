@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, ExternalLink, User2, CheckCircle, Star } from 'lucide-react';
+import {
+  Calendar,
+  ExternalLink,
+  User2,
+  CheckCircle,
+  Star,
+  Users,
+} from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,6 +45,8 @@ export type InterviewItemCardItem = {
   intervieweeCompletionConfirmed?: boolean;
   interviewerFeedback?: string;
   interviewerRating?: number;
+  bidsCount?: number;
+  interviewBids?: any[];
 };
 
 type InterviewItemCardProps = {
@@ -86,7 +95,7 @@ export default function InterviewItemCard({
       return `${base} border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300`;
     if (status === 'ONGOING')
       return `${base} border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300`;
-    if (status === 'PENDING' || status === 'APPLIED')
+    if (status === 'PENDING' || status === 'APPLIED' || status === 'BIDDING')
       return `${base} border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300`;
     if (status === 'REJECTED' || status === 'CANCELLED')
       return `${base} border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300`;
@@ -119,6 +128,12 @@ export default function InterviewItemCard({
   const isJoinableStatus = useMemo(() => {
     return ['SCHEDULED', 'ONGOING', 'APPROVED'].includes(statusLabel);
   }, [statusLabel]);
+
+  const bidsCount = useMemo(() => {
+    if (typeof item?.bidsCount === 'number') return item.bidsCount;
+    if (Array.isArray(item?.interviewBids)) return item.interviewBids.length;
+    return 0;
+  }, [item?.bidsCount, item?.interviewBids]);
 
   const bothConfirmed = localInterviewerConfirmed && localIntervieweeConfirmed;
 
@@ -269,6 +284,20 @@ export default function InterviewItemCard({
                 <div className="truncate">{dateLabel}</div>
               </div>
             </div>
+
+            {statusLabel === 'BIDDING' && (
+              <div className="flex items-start gap-2 text-sm">
+                <Users className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-muted-foreground">
+                    Total Candidates
+                  </div>
+                  <div className="font-medium">
+                    {bidsCount} {bidsCount === 1 ? 'bid' : 'bids'}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {item?.description ? (

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ChevronDownIcon } from 'lucide-react';
+import { ChevronDownIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -68,13 +68,16 @@ export function DateTimePicker({
           </PopoverContent>
         </Popover>
 
-        <Input
-          type="time"
-          value={time}
-          onChange={(e) => onTimeChange?.(e.target.value)}
-          className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none w-32"
-          disabled={disabled}
-        />
+        <div className="relative">
+          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            type="time"
+            value={time}
+            onChange={(e) => onTimeChange?.(e.target.value)}
+            className="bg-background pl-9 w-32 cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+            disabled={disabled}
+          />
+        </div>
       </div>
     </div>
   );

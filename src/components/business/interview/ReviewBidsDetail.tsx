@@ -262,8 +262,22 @@ export default function ReviewBidsDetail({
               <div className="p-2 rounded-xl bg-primary/10 text-primary">
                 <Users className="h-4 w-4" />
               </div>
-              <span className="text-muted-foreground">Total Candidates:</span>
-              <span className="font-bold">{bids.length}</span>
+              {interview.interviewStatus?.toUpperCase() === 'SCHEDULED' &&
+              bids.length === 0 ? (
+                <>
+                  <span className="text-muted-foreground">Interview Type:</span>
+                  <span className="font-bold text-blue-600 dark:text-blue-400">
+                    Direct
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-muted-foreground">
+                    Total Candidates:
+                  </span>
+                  <span className="font-bold">{bids.length}</span>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
