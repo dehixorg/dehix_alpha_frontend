@@ -769,13 +769,14 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
   // Key includes interviewType so TALENT/HIRE interviews don't block PROJECT interviews for the same candidate
   const buildInterviewKey = (
+    projectId?: string,
     candidateId?: string,
     talentId?: string,
     interviewType?: string,
   ) =>
-    `${String(candidateId || '').trim()}::${String(talentId || '').trim()}::${String(
-      interviewType || '',
-    )
+    `${String(projectId || '').trim()}::${String(candidateId || '').trim()}::${String(
+      talentId || '',
+    ).trim()}::${String(interviewType || '')
       .toUpperCase()
       .trim()}`;
 
@@ -807,6 +808,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       if (activeStatuses.has(status) && it?.intervieweeId && it?.talentId) {
         map.set(
           buildInterviewKey(
+            String((it?.projectId?._id as string) || it?.projectId || ''),
             String(it.intervieweeId),
             String(it.talentId),
             type,
@@ -1202,6 +1204,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       const selectedTalentId = profile.domain_id || profile._id;
       const attemptedType = interviewMode === 'HIRE' ? 'HIRE' : 'PROJECT';
       attemptedInterviewKey = buildInterviewKey(
+        String(id || ''),
         String(candidateId),
         String(selectedTalentId),
         attemptedType,
@@ -1554,11 +1557,13 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                 const profileTalentId = profile?.domain_id || profile?._id;
                 // Scope check to THIS project so other project's interviews don't block
                 const projectKey = buildInterviewKey(
+                  String(id || ''),
                   String(freelancerId),
                   String(profileTalentId),
                   'PROJECT',
                 );
                 const hireKey = buildInterviewKey(
+                  String(id || ''),
                   String(freelancerId),
                   String(profileTalentId),
                   'HIRE',
