@@ -783,7 +783,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     const existingInterviewsRes = await axiosInstance.get(
       '/interview/business',
       {
-        params: { limit: 100 },
+        params: { interviewStatus: 'current' },
       },
     );
     const grouped = existingInterviewsRes?.data?.data || {};

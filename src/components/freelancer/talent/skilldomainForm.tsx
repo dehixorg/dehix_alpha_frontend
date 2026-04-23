@@ -66,9 +66,6 @@ interface SkillDomainData {
   originalTalentId: string;
 }
 
-const buildTalentKey = (type: 'SKILL' | 'DOMAIN', id?: string, name?: string) =>
-  `${type}:${String(id || name || '').trim()}`;
-
 const isExplicitDehixTalentEntry = (item: any) => {
   // Skills/domains from profile settings should NOT appear in Dehix Talent table.
   // Only entries explicitly added via Add Skill/Add Domain carry talentMonthlyPay.
@@ -129,11 +126,17 @@ const SkillDomainForm: React.FC = () => {
             originalTalentId: t.talentId ?? t.type_id ?? '',
           }));
 
-        const addedTalentKeys = new Set(
-          formatted.map((t) =>
-            buildTalentKey(t.type, t.originalTalentId, t.label),
-          ),
-        );
+        const addedTalentIds = new Set<string>();
+        const addedTalentNames = new Set<string>();
+
+        formatted.forEach((t) => {
+          if (t.originalTalentId) {
+            addedTalentIds.add(`${t.type}:${t.originalTalentId}`);
+          }
+          if (t.label) {
+            addedTalentNames.add(`${t.type}:${t.label.toLowerCase().trim()}`);
+          }
+        });
 
         const profileSkills = Array.isArray(profileAttributes.skills)
           ? profileAttributes.skills
@@ -146,17 +149,28 @@ const SkillDomainForm: React.FC = () => {
           items: T[],
           type: 'SKILL' | 'DOMAIN',
         ) => {
-          const seen = new Set<string>();
+          const seenIds = new Set<string>();
+          const seenNames = new Set<string>();
+
           return items.filter((item) => {
-            const key = buildTalentKey(
-              type,
-              item.type_id || item._id,
-              item.name,
-            );
-            if (seen.has(key) || addedTalentKeys.has(key)) {
+            const itemId = item.type_id || item._id;
+            const itemName = (item.name || (item as any).label || '')
+              .toLowerCase()
+              .trim();
+
+            const idKey = itemId ? `${type}:${itemId}` : null;
+            const nameKey = itemName ? `${type}:${itemName}` : null;
+
+            if (
+              (idKey && (seenIds.has(idKey) || addedTalentIds.has(idKey))) ||
+              (nameKey &&
+                (seenNames.has(nameKey) || addedTalentNames.has(nameKey)))
+            ) {
               return false;
             }
-            seen.add(key);
+
+            if (idKey) seenIds.add(idKey);
+            if (nameKey) seenNames.add(nameKey);
             return true;
           });
         };
