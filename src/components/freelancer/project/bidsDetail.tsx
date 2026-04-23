@@ -781,44 +781,49 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       .trim()}`;
 
   const fetchActiveInterviewStatusMap = useCallback(async () => {
-    const existingInterviewsRes = await axiosInstance.get(
-      '/interview/business',
-      {
-        params: { interviewStatus: 'current' },
-      },
-    );
-    const grouped = existingInterviewsRes?.data?.data || {};
-    const allExistingInterviews = [
-      ...(grouped.PROJECT || []),
-      ...(grouped.TALENT || []),
-      ...(grouped.HIRE || []),
-      ...(grouped.GROWTH || []),
-      ...(grouped.PEERTOPEER || []),
-      ...(grouped.INTERVIEWER || []),
-    ];
-    // Only treat as 'active' if the interview is genuinely in-flight
-    const activeStatuses = new Set(['BIDDING', 'SCHEDULED', 'ONGOING']);
-    const map = new Map<string, string>();
+    try {
+      const existingInterviewsRes = await axiosInstance.get(
+        '/interview/business',
+        {
+          params: { interviewStatus: 'current' },
+        },
+      );
+      const grouped = existingInterviewsRes?.data?.data || {};
+      const allExistingInterviews = [
+        ...(grouped.PROJECT || []),
+        ...(grouped.TALENT || []),
+        ...(grouped.HIRE || []),
+        ...(grouped.GROWTH || []),
+        ...(grouped.PEERTOPEER || []),
+        ...(grouped.INTERVIEWER || []),
+      ];
+      // Only treat as 'active' if the interview is genuinely in-flight
+      const activeStatuses = new Set(['BIDDING', 'SCHEDULED', 'ONGOING']);
+      const map = new Map<string, string>();
 
-    allExistingInterviews.forEach((it: any) => {
-      const status = String(
-        it?.interviewStatus || it?.InterviewStatus || '',
-      ).toUpperCase();
-      const type = String(it?.interviewType || '').toUpperCase();
-      if (activeStatuses.has(status) && it?.intervieweeId && it?.talentId) {
-        map.set(
-          buildInterviewKey(
-            String((it?.projectId?._id as string) || it?.projectId || ''),
-            String(it.intervieweeId),
-            String(it.talentId),
-            type,
-          ),
-          status,
-        );
-      }
-    });
+      allExistingInterviews.forEach((it: any) => {
+        const status = String(
+          it?.interviewStatus || it?.InterviewStatus || '',
+        ).toUpperCase();
+        const type = String(it?.interviewType || '').toUpperCase();
+        if (activeStatuses.has(status) && it?.intervieweeId && it?.talentId) {
+          map.set(
+            buildInterviewKey(
+              String((it?.projectId?._id as string) || it?.projectId || ''),
+              String(it.intervieweeId),
+              String(it.talentId),
+              type,
+            ),
+            status,
+          );
+        }
+      });
 
-    return map;
+      return map;
+    } catch (err) {
+      console.warn('Failed to fetch active interview status map:', err);
+      return new Map<string, string>();
+    }
   }, []);
 
   // Memoized bid counts
