@@ -249,6 +249,36 @@ export const ChatComposer = memo(
 
       setRecordingStatus('uploading');
       try {
+        // Validate size (10MB limit)
+        if (audioBlob.size > 10 * 1024 * 1024) {
+          toast({
+            variant: 'destructive',
+            title: 'Voice message too large',
+            description: 'Voice messages must be 10MB or smaller.',
+          });
+          setRecordingStatus('recorded');
+          return;
+        }
+
+        // Validate type (common voice formats)
+        const allowedTypes = [
+          'audio/webm',
+          'audio/ogg',
+          'audio/mpeg',
+          'audio/wav',
+          'audio/mp4',
+          'audio/x-m4a',
+        ];
+        if (!allowedTypes.includes(audioBlob.type) && audioBlob.type !== '') {
+          toast({
+            variant: 'destructive',
+            title: 'Invalid audio format',
+            description: 'The recorded audio format is not supported.',
+          });
+          setRecordingStatus('recorded');
+          return;
+        }
+
         const file = new File([audioBlob], `voice_${Date.now()}.webm`, {
           type: audioBlob.type,
         });

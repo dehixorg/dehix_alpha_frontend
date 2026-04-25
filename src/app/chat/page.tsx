@@ -443,13 +443,17 @@ const HomePage = () => {
       return;
     }
 
-    if (isMobile) {
+    if (!conversations.length) {
       setActiveConversationId(null);
       return;
     }
 
-    if (!conversations.length) {
-      setActiveConversationId(null);
+    if (isMobile) {
+      // Don't auto-select a conversation on mobile; require explicit user action,
+      // but preserve any existing selection (set by URL or click).
+      setActiveConversationId((prev) =>
+        prev && conversationById.has(prev) ? prev : null,
+      );
       return;
     }
 
