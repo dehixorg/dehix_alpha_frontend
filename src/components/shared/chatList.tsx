@@ -96,7 +96,7 @@ const getTimestampMs = (ts: any) => {
   return Math.floor(new Date(ts as string).getTime() / 1000) || 0;
 };
 
-const getRelativeTimeLabel = (timestamp?: string, _refreshMarker?: number) => {
+const getRelativeTimeLabel = (timestamp?: string) => {
   if (!timestamp) return 'N/A';
 
   try {
@@ -223,7 +223,6 @@ export function ChatList({
   onSelectUser,
   openNewChat,
 }: ChatListProps) {
-  const [relativeTimeTick, setRelativeTimeTick] = useState(() => Date.now());
   const [searchTerm, setSearchTerm] = useState('');
   const currentUser = useSelector((state: RootState) => state.user);
   const currentUserId = currentUser.uid;
@@ -237,6 +236,7 @@ export function ChatList({
   } = useRemoteUserSearch(userSearchTerm);
   const [activeView, setActiveView] = useState<'inbox' | 'archived'>('inbox');
   const [isStartingChat, setIsStartingChat] = useState(false);
+  const [, setRelativeTimeTick] = useState<number>(Date.now());
 
   const searchResults = useMemo(
     () =>
@@ -293,14 +293,17 @@ export function ChatList({
         const otherParticipantUid =
           conversation.type === 'group'
             ? null
-            : conversation.participants.find((p) => p !== currentUserId) || null;
+            : conversation.participants.find((p) => p !== currentUserId) ||
+              null;
         const otherParticipantDetails = otherParticipantUid
           ? conversation.participantDetails?.[otherParticipantUid]
           : undefined;
         const { text: previewText, icon: previewIcon } = getLastMessagePreview(
           conversation.lastMessage,
         );
-        const messageTimestamp = getTimestampMs(conversation.lastMessage?.timestamp);
+        const messageTimestamp = getTimestampMs(
+          conversation.lastMessage?.timestamp,
+        );
         const lastReadAt = getTimestampMs(
           conversation.participantDetails?.[currentUserId]?.lastReadAt,
         );
@@ -327,7 +330,8 @@ export function ChatList({
           previewIcon,
           searchableText,
           viewState:
-            conversation.participantDetails?.[currentUserId]?.viewState || 'inbox',
+            conversation.participantDetails?.[currentUserId]?.viewState ||
+            'inbox',
           isUnread,
           timestampMs: getTimestampMs(conversation.timestamp),
         };
@@ -355,20 +359,12 @@ export function ChatList({
     [activeView, conversationEntries, normalizedSearchTerm],
   );
 
-  const displayedConversations = useMemo(
-    () => {
-      const refreshMarker = relativeTimeTick;
-
-      return visibleConversationEntries.map((entry) => ({
-        ...entry,
-        relativeTime: getRelativeTimeLabel(
-          entry.conversation.timestamp,
-          refreshMarker,
-        ),
-      }));
-    },
-    [relativeTimeTick, visibleConversationEntries],
-  );
+  const displayedConversations = useMemo(() => {
+    return visibleConversationEntries.map((entry) => ({
+      ...entry,
+      relativeTime: getRelativeTimeLabel(entry.conversation.timestamp),
+    }));
+  }, [visibleConversationEntries]);
 
   return (
     <div className="flex flex-col h-full w-full bg-[hsl(var(--card))] overflow-hidden">
@@ -531,8 +527,13 @@ export function ChatList({
                         onClick={(e) => handleProfileIconClick(e, conversation)}
                       >
                         <Avatar className="w-10 h-10 flex-shrink-0 mt-1">
-                          <AvatarImage src={entry.avatarSrc} alt={entry.displayName} />
-                          <AvatarFallback>{entry.avatarFallback}</AvatarFallback>
+                          <AvatarImage
+                            src={entry.avatarSrc}
+                            alt={entry.displayName}
+                          />
+                          <AvatarFallback>
+                            {entry.avatarFallback}
+                          </AvatarFallback>
                         </Avatar>
                       </div>
                       <div className="flex-1 min-w-0 overflow-hidden">

@@ -84,7 +84,10 @@ const HomePage = () => {
         (participantId) => participantId !== user.uid,
       );
 
-      if (otherParticipantId && !nextConversationByParticipantId.has(otherParticipantId)) {
+      if (
+        otherParticipantId &&
+        !nextConversationByParticipantId.has(otherParticipantId)
+      ) {
         nextConversationByParticipantId.set(otherParticipantId, conversation);
       }
     });
@@ -120,7 +123,9 @@ const HomePage = () => {
 
   const upsertConversation = useCallback((conversation: Conversation) => {
     setConversations((prev) => {
-      const existingIndex = prev.findIndex((item) => item.id === conversation.id);
+      const existingIndex = prev.findIndex(
+        (item) => item.id === conversation.id,
+      );
 
       if (existingIndex === -1) {
         return [conversation, ...prev];
@@ -254,7 +259,9 @@ const HomePage = () => {
       }
 
       // Check if conversation already exists
-      const existingConv = directConversationByParticipantId.get(selectedUser.id);
+      const existingConv = directConversationByParticipantId.get(
+        selectedUser.id,
+      );
 
       if (existingConv) {
         setActiveConversationId(existingConv.id);
@@ -425,7 +432,13 @@ const HomePage = () => {
     setActiveConversationId((prev) =>
       prev && conversationById.has(prev) ? prev : conversations[0].id,
     );
-  }, [conversationById, conversations, isMobile, loading, selectedConversationId]);
+  }, [
+    conversationById,
+    conversations,
+    isMobile,
+    loading,
+    selectedConversationId,
+  ]);
 
   const handleSelectConversation = useCallback(
     (conv: Conversation) => {

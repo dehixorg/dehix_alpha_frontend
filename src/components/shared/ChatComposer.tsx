@@ -14,17 +14,17 @@ import {
   StopCircle,
   X,
 } from 'lucide-react';
+
+import { EmojiPicker } from '../emojiPicker';
+
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { EmojiPicker } from '../emojiPicker';
-import { Conversation } from './chatList';
 
 type Message = {
   senderId: string;
@@ -34,14 +34,7 @@ type Message = {
   voiceMessage?: { duration: number; type: 'voice' };
 };
 
-type ComposerMessage = {
-  id?: string;
-  content: string;
-  voiceMessage?: { duration: number; type: 'voice' };
-};
-
 interface ChatComposerProps {
-  conversation: Conversation;
   userId: string;
   isSending: boolean;
   isBlocked: boolean;
@@ -70,7 +63,6 @@ const formatDuration = (seconds: number): string => {
 // Memoize composer to prevent re-renders from parent
 export const ChatComposer = memo(
   ({
-    conversation,
     userId,
     isSending,
     isBlocked,
@@ -85,15 +77,23 @@ export const ChatComposer = memo(
     const composerRef = useRef<HTMLDivElement | null>(null);
     const [input, setInput] = useState('');
     const [showFormattingOptions, setShowFormattingOptions] = useState(false);
-    const [tick, setTick] = useState(0);
+    const [, setTick] = useState(0);
 
     // Voice recording state
-    type RecordingStatus = 'idle' | 'permission_pending' | 'recording' | 'recorded' | 'uploading';
-    const [recordingStatus, setRecordingStatus] = useState<RecordingStatus>('idle');
+    type RecordingStatus =
+      | 'idle'
+      | 'permission_pending'
+      | 'recording'
+      | 'recorded'
+      | 'uploading';
+    const [recordingStatus, setRecordingStatus] =
+      useState<RecordingStatus>('idle');
     const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+    const [, setAudioBlob] = useState<Blob | null>(null);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
-    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+      null,
+    );
     const [recordingDuration, setRecordingDuration] = useState<number>(0);
     const recordingDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -175,7 +175,9 @@ export const ChatComposer = memo(
       if (recordingStatus === 'recording') return;
       setRecordingStatus('permission_pending');
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
         const recorder = new MediaRecorder(stream);
         setMediaRecorder(recorder);
 
@@ -200,7 +202,10 @@ export const ChatComposer = memo(
           setRecordingDuration((prev) => prev + 1);
         }, 1000);
         setRecordingStatus('recording');
-        toast({ title: 'Recording started', description: 'Speak into your microphone.' });
+        toast({
+          title: 'Recording started',
+          description: 'Speak into your microphone.',
+        });
       } catch (err) {
         console.error('Error accessing microphone:', err);
         toast({
@@ -273,7 +278,8 @@ export const ChatComposer = memo(
           <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
             <div className="flex items-center gap-2 min-w-0">
               <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full min-w-0">
-                Replying to: <span className="font-semibold">{replyMessage.content}</span>
+                Replying to:{' '}
+                <span className="font-semibold">{replyMessage.content}</span>
               </div>
             </div>
             <Button
@@ -341,7 +347,9 @@ export const ChatComposer = memo(
                   type="button"
                   variant="ghost"
                   size="icon"
-                  onClick={() => setShowFormattingOptions(!showFormattingOptions)}
+                  onClick={() =>
+                    setShowFormattingOptions(!showFormattingOptions)
+                  }
                   title="Formatting options"
                   aria-label="Formatting options"
                   className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"

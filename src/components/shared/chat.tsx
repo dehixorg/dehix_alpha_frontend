@@ -2,22 +2,11 @@
 //chat.tsx
 import * as React from 'react';
 import {
-  Send,
-  LoaderCircle,
   Video,
-  Upload,
   Maximize2,
   Search,
   MoreVertical,
   Minimize2,
-  Text,
-  Bold,
-  Italic,
-  Underline,
-  Flag,
-  Mic,
-  StopCircle,
-  Trash2,
   X,
   ArchiveRestore,
   Archive,
@@ -25,12 +14,10 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { doc, DocumentData, updateDoc } from 'firebase/firestore';
-import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import DOMPurify from 'dompurify';
 import Image from 'next/image';
 
-import { EmojiPicker } from '../emojiPicker';
+
 import {
   Tooltip,
   TooltipContent,
@@ -67,15 +54,6 @@ import {
 import { RootState } from '@/lib/store';
 import { useToast } from '@/components/ui/use-toast';
 import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-  DialogOverlay,
-} from '@/components/ui/dialog';
-import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { db } from '@/config/firebaseConfig';
 
 function useDebounce<T>(value: T, delay: number = 500): T {
@@ -297,32 +275,14 @@ export function CardsChat({
     fileInput.click();
   }, [conversation?.id, handleSendMessage, user.uid, toast]);
 
-  // States for voice recording
-  type RecordingStatus =
-    | 'idle'
-    | 'permission_pending'
-    | 'recording'
-    | 'recorded'
-    | 'uploading';
-  const [recordingStatus, setRecordingStatus] =
-    useState<RecordingStatus>('idle');
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null); // For preview
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null,
-  );
-  const [, setRecordingStartTime] = useState<number | null>(null);
-  const [recordingDuration, setRecordingDuration] = useState<number>(0); // In seconds
-  const recordingDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
+
 
   // State for image modal
   const [modalImage, setModalImage] = useState<string | null>(null);
 
   // Audio playback handlers and refs for ChatMessageItem
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
-  const handleLoadedMetadata = React.useCallback((id: string) => {
+  const handleLoadedMetadata = React.useCallback(() => {
     // Handle metadata loaded for audio - can be used to update duration display
   }, []);
   const handlePlay = React.useCallback((id: string) => {
@@ -365,23 +325,10 @@ export function CardsChat({
     }
   };
 
-  //Bold, italics and underline button should be highlighted when selected in chat
-  const [, setTick] = React.useState(0);
 
-  React.useEffect(() => {
-    const onSelectionChange = () => setTick((t) => t + 1);
-    document.addEventListener('selectionchange', onSelectionChange);
-    return () =>
-      document.removeEventListener('selectionchange', onSelectionChange);
-  }, []);
 
-  const isFormatActive = (command: string) => {
-    try {
-      return document.queryCommandState(command);
-    } catch {
-      return false;
-    }
-  };
+
+
 
   useEffect(() => {
     if (debouncedSearch.trim() && messages) {
@@ -480,16 +427,7 @@ export function CardsChat({
   /**
    * Apply bold using execCommand so the formatting appears live.
    */
-  function handleBold() {
-    // This function is provided by ChatComposer component
-  }
 
-  /**
-   * Underline uses <u> tags (markdown has no underline). Same logic as bold.
-   */
-  const handleUnderline = () => {
-    // This function is provided by ChatComposer component
-  };
 
   async function toggleReaction(
     messageId: string,
