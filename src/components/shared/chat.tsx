@@ -48,6 +48,7 @@ import { ScrollArea } from '../ui/scroll-area';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import ChatMessageItem from './ChatMessageItem';
+import { ChatComposer } from './ChatComposer';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -147,19 +148,154 @@ export function CardsChat({
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const debouncedSearch = useDebounce(searchValue, 500); /* wait for .5 sec */
   const [messages, setMessages] = useState<DocumentData[]>([]);
-  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
   const [, setHoveredMessageId] = useState<string | null>(null);
-  const composerRef = useRef<HTMLDivElement | null>(null);
-  const [showFormattingOptions, setShowFormattingOptions] =
-    useState<boolean>(false);
 
   const prevMessagesLength = useRef(messages.length);
   const [, setOpenDrawer] = useState(false);
+
+  // === OPTIMIZATION: Create messageById map for O(1) lookups ===
+  const messageById = React.useMemo(() => {
+    const map = new Map<string, DocumentData>();
+    messages.forEach((msg) => {
+      map.set(msg.id, msg);
+    });
+    return map;
+  }, [messages]);
+
+  // === Get reply message from map instead of repeated array scan ===
+  const replyMessage = React.useMemo(() => {
+    if (!replyToMessageId) return null;
+    const msg = messageById.get(replyToMessageId);
+    if (!msg) return null;
+    return {
+      content: msg.voiceMessage?.type === 'voice'
+        ? 'Voice message'
+        : msg.content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim() || 'Message',
+      voiceMessage: msg.voiceMessage,
+    };
+  }, [replyToMessageId, messageById]);
+
+  // === Stable callback for sending messages ===
+  const handleSendMessage = React.useCallback(
+    async (message: Partial<Message>) => {
+      try {
+        setIsSending(true);
+        const datentime = new Date().toISOString();
+
+        const result = await updateConversationWithMessageTransaction(
+          'conversations',
+          conversation?.id,
+          {
+            ...message,
+            timestamp: datentime,
+            replyTo: replyToMessageId || null,
+          },
+          datentime,
+        );
+
+        if (result === 'Transaction successful') {
+          setIsSending(false);
+        } else {
+          console.error('Failed to send message - unexpected result:', result);
+          throw new Error(`Failed to send message: ${result}`);
+        }
+      } catch (error: any) {
+        console.error('Error sending message:', error);
+        setIsSending(false);
+        throw error;
+      }
+    },
+    [conversation?.id, replyToMessageId],
+  );
+
+  // === Stable callback for file upload ===
+  const handleFileUpload = React.useCallback(async () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*,.pdf,.doc,.docx,.ppt,.pptx';
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: 'File size should not exceed 10MB',
+        });
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          variant: 'destructive',
+          title: 'Invalid file type',
+          description: 'Please upload an image, PDF, Word, or PowerPoint file',
+        });
+        return;
+      }
+
+      try {
+        setIsSending(true);
+        const { url: fileUrl } = await uploadFileViaSignedUrl(file, {
+          keyPrefix: `chat/${conversation?.id || 'conversation'}`,
+        });
+
+        const message: Partial<Message> = {
+          senderId: user.uid,
+          content: fileUrl,
+          timestamp: new Date().toISOString(),
+        };
+
+        await handleSendMessage(message);
+
+        toast({
+          title: 'Success',
+          description: 'File uploaded successfully',
+        });
+      } catch (error: any) {
+        console.error('Error uploading file:', error);
+        let errorMessage = 'Failed to upload file. Please try again.';
+        if (error.code === 'ERR_CANCELED') {
+          errorMessage = 'Upload was canceled. Please try again.';
+        } else if (error.code === 'ECONNABORTED') {
+          errorMessage =
+            'Connection was aborted. Please check your network connection and try again.';
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+
+        toast({
+          variant: 'destructive',
+          title: 'Upload failed',
+          description: errorMessage,
+        });
+      } finally {
+        setIsSending(false);
+      }
+    };
+
+    fileInput.click();
+  }, [conversation?.id, handleSendMessage, user.uid, toast]);
 
   // States for voice recording
   type RecordingStatus =
@@ -184,62 +320,19 @@ export function CardsChat({
   // State for image modal
   const [modalImage, setModalImage] = useState<string | null>(null);
 
-  // Reporting modal state & helpers
-  const [openReport, setOpenReport] = useState(false);
-  const pathname = usePathname();
-  const reportType = getReportTypeFromPath(pathname);
-
-  const reportData = {
-    subject: '',
-    description: '',
-    report_role: user.type || 'STUDENT',
-    report_type: reportType,
-    status: 'OPEN',
-    reportedbyId: user.uid,
-    reportedId: user.uid,
-  };
-  // For robust force update
-  const [, forceUpdate] = useState(0);
-
-  // For voice message duration display
+  // Audio playback handlers and refs for ChatMessageItem
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
-  const handleLoadedMetadata = (id: string) => {
-    const audio = audioRefs.current[id];
-    if (
-      audio &&
-      isFinite(audio.duration) &&
-      !isNaN(audio.duration) &&
-      audio.duration > 0
-    ) {
-      setAudioDurations((prev) => ({ ...prev, [id]: audio.duration }));
-    } else {
-      // Try again after a short delay if duration is not available yet
-      setTimeout(() => {
-        const audioRetry = audioRefs.current[id];
-        if (
-          audioRetry &&
-          isFinite(audioRetry.duration) &&
-          !isNaN(audioRetry.duration) &&
-          audioRetry.duration > 0
-        ) {
-          setAudioDurations((prev) => ({ ...prev, [id]: audioRetry.duration }));
-          forceUpdate((n) => n + 1); // force re-render
-        }
-      }, 500);
-    }
-  };
-
-  // Pause any other playing audio when a new one starts
-  const handlePlay = (id: string) => {
-    Object.entries(audioRefs.current).forEach(([key, audio]) => {
-      if (key !== id && audio && !audio.paused) {
-        audio.pause();
+  const handleLoadedMetadata = React.useCallback((id: string) => {
+    // Handle metadata loaded for audio - can be used to update duration display
+  }, []);
+  const handlePlay = React.useCallback((id: string) => {
+    // Handle audio play event - can be used to pause other audio elements
+    Object.keys(audioRefs.current).forEach((audioId) => {
+      if (audioId !== id && audioRefs.current[audioId]) {
+        audioRefs.current[audioId]?.pause();
       }
     });
-  };
-  const [, setAudioDurations] = useState<{
-    [key: string]: number;
-  }>({});
+  }, []);
 
   const handleHeaderClick = () => {
     if (!onOpenProfileSidebar) return;
@@ -375,150 +468,6 @@ export function CardsChat({
     prevMessagesLength.current = messages.length;
   }, [messages.length]);
 
-  async function sendMessage(
-    conversation: Conversation,
-    message: Partial<Message>,
-    setInput: React.Dispatch<React.SetStateAction<string>>,
-  ) {
-    // --- ADD THIS CHECK ---
-    if (conversation.blocked?.status === true) {
-      toast({
-        variant: 'destructive',
-        title: 'Action Denied',
-        description: 'You cannot send messages to a blocked conversation.',
-      });
-      return; // Stop the function
-    }
-    // --- END OF CHECK ---
-    try {
-      setIsSending(true);
-      const datentime = new Date().toISOString();
-
-      const result = await updateConversationWithMessageTransaction(
-        'conversations',
-        conversation?.id,
-        {
-          ...message,
-          timestamp: datentime,
-          replyTo: replyToMessageId || null,
-        },
-        datentime,
-      );
-
-      if (result === 'Transaction successful') {
-        setInput('');
-        setIsSending(false);
-      } else {
-        console.error('Failed to send message - unexpected result:', result);
-        throw new Error(`Failed to send message: ${result}`);
-      }
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        conversationId: conversation?.id,
-        messageContent: message.content,
-        hasVoiceMessage: !!message.voiceMessage,
-      });
-      throw error; // Re-throw the error so it can be caught by the calling function
-    } finally {
-      setIsSending(false);
-    }
-  }
-
-  // Always call hooks at the top level, not conditionally.
-  // Move this conditional return after all hooks.
-
-  async function handleFileUpload() {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*,.pdf,.doc,.docx,.ppt,.pptx';
-
-    fileInput.onchange = async () => {
-      const file = fileInput.files?.[0];
-      if (!file) return;
-
-      // Validate file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          variant: 'destructive',
-          title: 'File too large',
-          description: 'File size should not exceed 10MB',
-        });
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      ];
-
-      if (!allowedTypes.includes(file.type)) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid file type',
-          description: 'Please upload an image, PDF, Word, or PowerPoint file',
-        });
-        return;
-      }
-
-      try {
-        setIsSending(true);
-        const { url: fileUrl } = await uploadFileViaSignedUrl(file, {
-          keyPrefix: `chat/${conversation?.id || 'conversation'}`,
-        });
-
-        const message: Partial<Message> = {
-          senderId: user.uid,
-          content: fileUrl,
-          timestamp: new Date().toISOString(),
-        };
-
-        await sendMessage(conversation, message, setInput);
-
-        toast({
-          title: 'Success',
-          description: 'File uploaded successfully',
-        });
-      } catch (error: any) {
-        console.error('Error uploading file:', {
-          error: error.message,
-          code: error.code,
-          response: error.response?.data,
-          timestamp: new Date().toISOString(),
-        });
-
-        let errorMessage = 'Failed to upload file. Please try again.';
-        if (error.code === 'ERR_CANCELED') {
-          errorMessage = 'Upload was canceled. Please try again.';
-        } else if (error.code === 'ECONNABORTED') {
-          errorMessage =
-            'Connection was aborted. Please check your network connection and try again.';
-        } else if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        }
-
-        toast({
-          variant: 'destructive',
-          title: 'Upload failed',
-          description: errorMessage,
-        });
-      } finally {
-        setIsSending(false);
-      }
-    };
-
-    fileInput.click();
-  }
-
   async function handleCreateMeet() {
     // Video call functionality is currently disabled
     toast({
@@ -532,225 +481,14 @@ export function CardsChat({
    * Apply bold using execCommand so the formatting appears live.
    */
   function handleBold() {
-    composerRef.current?.focus();
-    document.execCommand('bold');
-    setTick((t) => t + 1);
+    // This function is provided by ChatComposer component
   }
 
   /**
    * Underline uses <u> tags (markdown has no underline). Same logic as bold.
    */
   const handleUnderline = () => {
-    composerRef.current?.focus();
-    document.execCommand('underline');
-    setTick((t) => t + 1);
-  };
-
-  /**
-   * Italic formatting with single * markers.
-   */
-  function handleitalics() {
-    composerRef.current?.focus();
-    document.execCommand('italic');
-    setTick((t) => t + 1);
-  }
-
-  const toggleFormattingOptions = () => {
-    setShowFormattingOptions((prev) => !prev);
-  };
-
-  // Insert emoji into composer at caret position
-  const handleInsertEmoji = (emoji: string) => {
-    if (composerRef.current) {
-      composerRef.current.focus();
-      const htmlEmoji = `<span class="chat-emoji">${emoji}</span>&nbsp;`;
-      document.execCommand('insertHTML', false, htmlEmoji);
-      // Update input state with new HTML
-      const html = composerRef.current.innerHTML;
-      setInput(html);
-    }
-  };
-
-  // Voice Recording Functions
-  const formatDuration = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-  };
-
-  const startRecording = async () => {
-    if (recordingStatus === 'recording') return;
-    setRecordingStatus('permission_pending');
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      setMediaRecorder(recorder);
-
-      recorder.ondataavailable = (event) => {
-        setAudioChunks((prev) => [...prev, event.data]);
-      };
-
-      recorder.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop()); // Stop mic access
-        setRecordingStatus('recorded');
-        if (recordingDurationIntervalRef.current) {
-          clearInterval(recordingDurationIntervalRef.current);
-        }
-      };
-
-      recorder.start();
-      setAudioChunks([]); // Clear previous chunks
-      setAudioBlob(null); // Clear previous blob
-      setAudioUrl(null); // Clear previous URL
-      setRecordingStartTime(Date.now());
-      setRecordingDuration(0);
-      recordingDurationIntervalRef.current = setInterval(() => {
-        setRecordingDuration((prev) => prev + 1);
-      }, 1000);
-      setRecordingStatus('recording');
-      toast({
-        title: 'Recording started',
-        description: 'Speak into your microphone.',
-      });
-    } catch (err) {
-      console.error('Error accessing microphone:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Microphone Error',
-        description: 'Could not access microphone. Please check permissions.',
-      });
-      setRecordingStatus('idle');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder && recordingStatus === 'recording') {
-      mediaRecorder.stop();
-      // The onstop event handler will set status to "recorded" and clear interval
-      // Create blob and URL after chunks are all collected in onstop, or here if preferred.
-      // For simplicity, let's assume onstop handles setting the final audioBlob and audioUrl
-    }
-    // Ensure interval is cleared if stopRecording is called unexpectedly
-    if (recordingDurationIntervalRef.current) {
-      clearInterval(recordingDurationIntervalRef.current);
-    }
-  };
-
-  useEffect(() => {
-    // This effect runs when audioChunks changes, specifically after recording stops and all chunks are in.
-    if (recordingStatus === 'recorded' && audioChunks.length > 0) {
-      const blob = new Blob(audioChunks, {
-        type: mediaRecorder?.mimeType || 'audio/webm',
-      });
-      setAudioBlob(blob);
-      const url = URL.createObjectURL(blob);
-      setAudioUrl(url);
-      setAudioChunks([]); // Clear chunks after creating blob
-    }
-  }, [audioChunks, recordingStatus, mediaRecorder?.mimeType]);
-
-  const discardRecording = () => {
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
-    }
-    setAudioChunks([]);
-    setAudioBlob(null);
-    setAudioUrl(null);
-    setMediaRecorder(null);
-    setRecordingStatus('idle');
-    setRecordingDuration(0);
-    if (recordingDurationIntervalRef.current) {
-      clearInterval(recordingDurationIntervalRef.current);
-    }
-    toast({ title: 'Recording discarded' });
-  };
-
-  const handleSendVoiceMessage = async () => {
-    if (!audioBlob || !user || !conversation) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No audio recorded or user/conversation not found.',
-      });
-      return;
-    }
-
-    setRecordingStatus('uploading');
-
-    try {
-      // Step 1: Convert audio blob to file (same as before)
-      const extPart = audioBlob.type.split('/')[1] || 'webm';
-      const cleanExt = extPart.split(';')[0]; // remove codec parameters like 'webm;codecs=opus'
-      const audioFile = new File([audioBlob], `voice-message.${cleanExt}`, {
-        type: audioBlob.type,
-      });
-
-      // Step 2: Create FormData (same as regular file upload)
-      const { url: fileUrl } = await uploadFileViaSignedUrl(audioFile, {
-        keyPrefix: `chat/${conversation?.id || 'conversation'}/voice`,
-      });
-
-      // Step 5: Create message with voice file URL and duration metadata
-      const message: Partial<Message> = {
-        senderId: user.uid,
-        content: fileUrl, // Voice file URL becomes message content
-        timestamp: new Date().toISOString(),
-        // Add voice message metadata
-        voiceMessage: {
-          duration: recordingDuration,
-          type: 'voice',
-        },
-      };
-
-      // Step 6: Send message using the same working sendMessage function
-      await sendMessage(conversation, message, setInput);
-
-      toast({ title: 'Success', description: 'Voice message sent!' });
-    } catch (error: any) {
-      console.error('Error sending voice message:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        code: error.code,
-        response: error.response?.data,
-        conversationId: conversation?.id,
-        duration: recordingDuration,
-      });
-
-      let errorMessage = 'Failed to upload voice message. Please try again.';
-
-      // Check if it's a file upload error
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-      // Check if it's a network error
-      else if (error.code === 'ERR_CANCELED') {
-        errorMessage = 'Upload was canceled. Please try again.';
-      } else if (error.code === 'ECONNABORTED') {
-        errorMessage =
-          'Connection was aborted. Please check your network connection and try again.';
-      }
-      // Check if it's a Firestore error
-      else if (
-        error.message &&
-        error.message.includes('Failed to send message')
-      ) {
-        errorMessage = 'Failed to save message to chat. Please try again.';
-      }
-      // Check if it's a general error
-      else if (error.message) {
-        errorMessage = `Error: ${error.message}`;
-      }
-
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: errorMessage,
-      });
-    } finally {
-      discardRecording(); // Clean up states regardless of success/failure
-      setRecordingStatus('idle');
-    }
+    // This function is provided by ChatComposer component
   };
 
   async function toggleReaction(
@@ -1183,40 +921,6 @@ export function CardsChat({
                           {isChatExpanded ? 'Collapse' : 'Expand'}
                         </span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setOpenReport(true)}
-                        className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                      >
-                        <Flag className="h-4 w-4" />
-                        <span className="text-sm font-medium">Report</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Desktop: existing more options menu (report) */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="More options"
-                        className="hidden sm:inline-flex text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      sideOffset={5}
-                      className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
-                    >
-                      <DropdownMenuItem
-                        onClick={() => setOpenReport(true)}
-                        className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                      >
-                        <Flag className="h-4 w-4" />
-                        <span className="text-sm font-medium">Report</span>
-                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -1246,420 +950,20 @@ export function CardsChat({
               </ScrollArea>
             </CardContent>
             <CardFooter className="sticky bottom-0 bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-b-xl">
-              {isBlocked ? (
-                // If blocked, show this message
-                <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                  <p>{blockMessage}</p>
-                </div>
-              ) : (
-                <form
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    if (input.trim().length === 0) return;
-                    const newMessage = {
-                      senderId: user.uid,
-                      content: input,
-                      timestamp: new Date().toISOString(),
-                      replyTo: replyToMessageId || null,
-                    };
-                    sendMessage(conversation, newMessage, setInput);
-                    setReplyToMessageId('');
-                  }}
-                  className="flex flex-col w-full space-y-2"
-                  aria-label="Message input form"
-                >
-                  {replyToMessageId && (
-                    <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
-                      {(() => {
-                        const replyMsg = messages.find(
-                          (msg) => msg.id === replyToMessageId,
-                        ) as any;
-                        const raw = replyMsg?.content || '';
-
-                        const isImage = /\.(jpeg|jpg|gif|png)(\?|$)/i.test(raw);
-                        const isFile =
-                          /\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt)(\?|$)/i.test(
-                            raw,
-                          );
-
-                        const label = replyMsg?.voiceMessage
-                          ? 'Voice message'
-                          : isImage
-                            ? 'Photo'
-                            : isFile
-                              ? 'Document'
-                              : raw
-                                  .replace(/<[^>]*>/g, '')
-                                  .replace(/&nbsp;/g, ' ')
-                                  .replace(/\*|__/g, '')
-                                  .trim() || 'Message';
-
-                        return (
-                          <div className="flex items-center gap-2 min-w-0">
-                            {isImage ? (
-                              <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded">
-                                <Image
-                                  src={raw}
-                                  alt="Reply preview"
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            ) : null}
-
-                            <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full min-w-0">
-                              Replying to:{' '}
-                              <span className="font-semibold">{label}</span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                      <Button
-                        onClick={() => setReplyToMessageId('')}
-                        variant="ghost"
-                        size="icon"
-                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
-                        aria-label="Cancel reply"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1 min-w-0">
-                      <div
-                        className="absolute inset-y-0 flex items-center justify-center 
-                    pl-0.1 z-10"
-                      >
-                        <EmojiPicker
-                          aria-label="Insert emoji"
-                          onSelect={handleInsertEmoji}
-                        />
-                      </div>
-                      <div
-                        ref={composerRef}
-                        contentEditable
-                        aria-label="Type a message"
-                        aria-placeholder="Type a message..."
-                        data-placeholder="Type a message..."
-                        className="w-full pl-12 min-h-[36px] max-h-60 overflow-y-auto break-words border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
-                        onInput={(e) => {
-                          const html = (e.currentTarget as HTMLElement)
-                            .innerHTML;
-                          setInput(html);
-                        }}
-                        onKeyUp={() => setTick((t) => t + 1)}
-                        onMouseUp={() => setTick((t) => t + 1)}
-                        onFocus={() => setTick((t) => t + 1)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey && !isSending) {
-                            e.preventDefault();
-                            const html = composerRef.current?.innerHTML || '';
-                            const textContent =
-                              composerRef.current?.innerText || '';
-                            if (textContent.trim().length > 0) {
-                              const sanitized = DOMPurify.sanitize(html, {
-                                ALLOWED_TAGS: [
-                                  'b',
-                                  'strong',
-                                  'i',
-                                  'em',
-                                  'u',
-                                  'br',
-                                  'div',
-                                  'span',
-                                  'a',
-                                ],
-                                ALLOWED_ATTR: [
-                                  'href',
-                                  'target',
-                                  'rel',
-                                  'style',
-                                  'class',
-                                ],
-                              });
-                              const newMessage = {
-                                senderId: user.uid,
-                                content: sanitized,
-                                timestamp: new Date().toISOString(),
-                                replyTo: replyToMessageId || null,
-                              };
-                              sendMessage(conversation, newMessage, setInput);
-                              setReplyToMessageId('');
-                              composerRef.current!.innerHTML = '';
-                              setInput('');
-                            }
-                          }
-                        }}
-                        suppressContentEditableWarning
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="rounded-full bg-[#96c] hover:bg-[#96c]/90 text-white disabled:bg-[#96c]/50"
-                      disabled={!input.trim().length || isSending}
-                      aria-label="Send message"
-                      onClick={() => {
-                        const html = composerRef.current?.innerHTML || '';
-                        const textContent =
-                          composerRef.current?.innerText || '';
-                        if (textContent.trim().length === 0) return;
-                        const sanitized = DOMPurify.sanitize(html, {
-                          ALLOWED_TAGS: [
-                            'b',
-                            'strong',
-                            'i',
-                            'em',
-                            'u',
-                            'br',
-                            'div',
-                            'span',
-                            'a',
-                          ],
-                        });
-                        const newMessage = {
-                          senderId: user.uid,
-                          content: sanitized,
-                          timestamp: new Date().toISOString(),
-                          replyTo: replyToMessageId || null,
-                        };
-                        sendMessage(conversation, newMessage, setInput);
-                        setReplyToMessageId('');
-                        composerRef.current!.innerHTML = '';
-                        setInput('');
-                      }}
-                    >
-                      {isSending ? (
-                        <LoaderCircle className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Send className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={toggleFormattingOptions}
-                            title="Formatting options"
-                            aria-label="Formatting options"
-                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
-                          >
-                            {' '}
-                            <Text className="h-4 w-4" />{' '}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p>Formatting</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    {showFormattingOptions && (
-                      <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] rounded-md">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleBold}
-                          title="Bold"
-                          aria-label="Bold"
-                          className={
-                            isFormatActive('bold')
-                              ? 'bg-primary text-white'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }
-                        >
-                          {' '}
-                          <Bold className="h-4 w-4" />{' '}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleitalics}
-                          title="Italic"
-                          aria-label="Italic"
-                          className={
-                            isFormatActive('italic')
-                              ? 'bg-primary text-white'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }
-                        >
-                          {' '}
-                          <Italic className="h-4 w-4" />{' '}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleUnderline}
-                          title="Underline"
-                          aria-label="Underline"
-                          className={
-                            isFormatActive('underline')
-                              ? 'bg-primary text-white'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }
-                        >
-                          {' '}
-                          <Underline className="h-4 w-4" />{' '}
-                        </Button>
-                      </div>
-                    )}
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleFileUpload}
-                            title="Upload file"
-                            aria-label="Upload file"
-                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                          >
-                            {' '}
-                            <Upload className="h-4 w-4" />{' '}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p>Upload file</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        {/* <TooltipTrigger asChild>
-                             <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Video className="h-4 w-4" /> </Button>
-                        </TooltipTrigger> */}
-                        <TooltipContent side="top">
-                          <p>Create Google Meet</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    {recordingStatus === 'idle' && (
-                      <TooltipProvider delayDuration={200}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={startRecording}
-                              title="Record voice message"
-                              aria-label="Record voice message"
-                              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                            >
-                              <Mic className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <p>Record voice</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                    <div className="ml-auto md:hidden"></div>
-                  </div>
-
-                  {/* Voice Recording UI */}
-                  {recordingStatus !== 'idle' &&
-                    recordingStatus !== 'uploading' && ( // Hide this part during uploading too
-                      <div className="p-2 border-t border-[hsl(var(--border))]">
-                        {recordingStatus === 'permission_pending' && (
-                          <div className="flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))]">
-                            <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
-                            Requesting microphone permission...
-                          </div>
-                        )}
-                        {recordingStatus === 'recording' && (
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center text-sm text-red-500">
-                              <Mic className="w-4 h-4 mr-2 animate-pulse" />
-                              Recording... {formatDuration(recordingDuration)}
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={stopRecording}
-                              title="Stop recording"
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <StopCircle className="h-6 w-6" />
-                            </Button>
-                          </div>
-                        )}
-                        {recordingStatus === 'recorded' && audioUrl && (
-                          <div className="flex flex-col space-y-2">
-                            <div className="text-sm font-medium">
-                              Recording complete (
-                              {formatDuration(recordingDuration)})
-                            </div>
-                            <audio
-                              ref={audioPreviewRef}
-                              src={audioUrl}
-                              controls
-                              className="w-full h-10"
-                            />
-                            <div className="flex items-center justify-end space-x-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={discardRecording}
-                                title="Discard recording"
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" /> Discard
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="default"
-                                size="sm"
-                                onClick={handleSendVoiceMessage}
-                                title="Send voice message"
-                              >
-                                <Send className="h-4 w-4 mr-1" /> Send
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                        {/* Uploading indicator was here, moved below */}
-                      </div>
-                    )}
-                  {/* Separate block for uploading indicator to ensure it's visible */}
-                  {recordingStatus === 'uploading' && (
-                    <div className="p-2 flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))] border-t border-[hsl(var(--border))]">
-                      <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
-                      Uploading voice message...
-                    </div>
-                  )}
-                </form>
-              )}
+              <ChatComposer
+                conversation={conversation}
+                userId={user.uid}
+                isSending={isSending}
+                isBlocked={isBlocked}
+                blockMessage={blockMessage}
+                replyToMessageId={replyToMessageId}
+                replyMessage={replyMessage}
+                onSendMessage={handleSendMessage}
+                onSetReplyToMessageId={setReplyToMessageId}
+                onFileUpload={handleFileUpload}
+              />
             </CardFooter>
           </Card>
-          <Dialog open={openReport} onOpenChange={setOpenReport}>
-            <DialogPortal>
-              <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[50] transition-opacity duration-300 animate-in fade-in" />
-
-              <DialogContent
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-             z-[50] bg-background border border-border
-             shadow-2xl rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6
-             transition-transform duration-300 animate-in fade-in zoom-in-95"
-              >
-                <DialogHeader></DialogHeader>
-                <NewReportTab reportData={reportData} />
-              </DialogContent>
-            </DialogPortal>
-          </Dialog>
         </>
       )}
     </>

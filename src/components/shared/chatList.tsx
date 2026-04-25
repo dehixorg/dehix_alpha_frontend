@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
 import {
@@ -83,6 +83,137 @@ interface ChatListProps {
   openNewChat?: (user: CombinedUser) => void | Promise<void>;
 }
 
+const stripHtml = (html: string): string =>
+  html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .trim();
+
+const getTimestampMs = (ts: any) => {
+  if (!ts) return 0;
+  if (typeof ts === 'object' && ts.seconds) return ts.seconds;
+  if (typeof ts === 'number') return Math.floor(ts / 1000);
+  return Math.floor(new Date(ts as string).getTime() / 1000) || 0;
+};
+
+const getRelativeTimeLabel = (timestamp?: string, _refreshMarker?: number) => {
+  if (!timestamp) return 'N/A';
+
+  try {
+    return formatDistanceToNow(new Date(timestamp)) + ' ago';
+  } catch {
+    return 'Invalid date';
+  }
+};
+
+const getLastMessagePreview = (lastMessage: Conversation['lastMessage']) => {
+  if (!lastMessage) return { text: 'No messages yet', icon: null };
+  const content = lastMessage.content;
+  const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
+
+  if (lastMessage.voiceMessage) {
+    return { text: 'Voice message', icon: <Mic className="h-3.5 w-3.5" /> };
+  }
+
+  const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
+  const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
+  const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac'];
+  const documentExtensions = [
+    'pdf',
+    'doc',
+    'docx',
+    'ppt',
+    'pptx',
+    'xls',
+    'xlsx',
+    'txt',
+  ];
+
+  const getExt = (raw: string) => {
+    try {
+      const url = new URL(raw);
+      return url.pathname.split('.').pop()?.toLowerCase() || '';
+    } catch {
+      return raw.split('?')[0].split('.').pop()?.toLowerCase() || '';
+    }
+  };
+
+  if (typeof content === 'string') {
+    const ext = getExt(content);
+    if (imageExtensions.includes(ext)) {
+      return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
+    }
+    if (videoExtensions.includes(ext)) {
+      return { text: 'Video', icon: <Video className="h-3.5 w-3.5" /> };
+    }
+    if (audioExtensions.includes(ext)) {
+      return { text: 'Audio', icon: <Music2 className="h-3.5 w-3.5" /> };
+    }
+    if (documentExtensions.includes(ext)) {
+      return { text: 'Document', icon: <FileText className="h-3.5 w-3.5" /> };
+    }
+  }
+
+  if (
+    typeof content === 'string' &&
+    s3BucketUrl &&
+    content.startsWith(s3BucketUrl)
+  ) {
+    try {
+      const url = new URL(content);
+      const fileName = decodeURIComponent(url.pathname.substring(1));
+      const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+
+      if (imageExtensions.includes(fileExtension)) {
+        return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
+      }
+      if (videoExtensions.includes(fileExtension)) {
+        return { text: 'Video', icon: <Video className="h-3.5 w-3.5" /> };
+      }
+      if (audioExtensions.includes(fileExtension)) {
+        return { text: 'Audio', icon: <Music2 className="h-3.5 w-3.5" /> };
+      }
+      if (documentExtensions.includes(fileExtension)) {
+        return {
+          text: 'Document',
+          icon: <FileText className="h-3.5 w-3.5" />,
+        };
+      }
+      return { text: 'File', icon: <FileText className="h-3.5 w-3.5" /> };
+    } catch (error) {
+      console.error('Error parsing S3 URL:', error);
+      return {
+        text: 'Attachment',
+        icon: <FileText className="h-3.5 w-3.5" />,
+      };
+    }
+  }
+
+  if (
+    lastMessage.attachments &&
+    Array.isArray(lastMessage.attachments) &&
+    lastMessage.attachments.length > 0
+  ) {
+    const attachment = lastMessage.attachments[0];
+    if (attachment.type) {
+      if (attachment.type.startsWith('image/')) {
+        return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
+      }
+      if (attachment.type.startsWith('video/')) {
+        return { text: 'Video', icon: <Video className="h-3.5 w-3.5" /> };
+      }
+      if (attachment.type.startsWith('audio/')) {
+        return { text: 'Audio', icon: <Music2 className="h-3.5 w-3.5" /> };
+      }
+      return { text: 'Document', icon: <FileText className="h-3.5 w-3.5" /> };
+    }
+    return { text: 'File', icon: <FileText className="h-3.5 w-3.5" /> };
+  }
+
+  const textContent = content ? stripHtml(content) : '';
+  return { text: textContent || 'Message', icon: null };
+};
+
 export function ChatList({
   conversations,
   active,
@@ -92,11 +223,10 @@ export function ChatList({
   onSelectUser,
   openNewChat,
 }: ChatListProps) {
-  const [lastUpdatedTimes, setLastUpdatedTimes] = useState<
-    Record<string, string>
-  >({});
+  const [relativeTimeTick, setRelativeTimeTick] = useState(() => Date.now());
   const [searchTerm, setSearchTerm] = useState('');
   const currentUser = useSelector((state: RootState) => state.user);
+  const currentUserId = currentUser.uid;
   const userSearchTerm = searchTerm;
   const trimmedSearchTerm = userSearchTerm.trim();
   const {
@@ -108,125 +238,13 @@ export function ChatList({
   const [activeView, setActiveView] = useState<'inbox' | 'archived'>('inbox');
   const [isStartingChat, setIsStartingChat] = useState(false);
 
-  const searchResults: CombinedUser[] =
-    trimmedSearchTerm.length >= CHAT_USER_SEARCH_MIN_CHARS
-      ? remoteUsers.filter((user) => user.id !== currentUser.uid)
-      : [];
-
-  const stripHtml = (html: string): string =>
-    html
-      .replace(/<[^>]*>/g, '')
-      .replace(/&nbsp;/g, ' ')
-      .trim();
-
-  // Utility function to detect and format media messages
-  const getLastMessagePreview = (lastMessage: Conversation['lastMessage']) => {
-    if (!lastMessage) return { text: 'No messages yet', icon: null };
-    const content = lastMessage.content;
-    const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
-
-    if (lastMessage.voiceMessage) {
-      return { text: 'Voice message', icon: <Mic className="h-3.5 w-3.5" /> };
-    }
-
-    const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
-    const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
-    const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac'];
-    const documentExtensions = [
-      'pdf',
-      'doc',
-      'docx',
-      'ppt',
-      'pptx',
-      'xls',
-      'xlsx',
-      'txt',
-    ];
-
-    const getExt = (raw: string) => {
-      try {
-        const url = new URL(raw);
-        return url.pathname.split('.').pop()?.toLowerCase() || '';
-      } catch {
-        return raw.split('?')[0].split('.').pop()?.toLowerCase() || '';
-      }
-    };
-
-    if (typeof content === 'string') {
-      const ext = getExt(content);
-      if (imageExtensions.includes(ext)) {
-        return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
-      }
-      if (videoExtensions.includes(ext)) {
-        return { text: 'Video', icon: <Video className="h-3.5 w-3.5" /> };
-      }
-      if (audioExtensions.includes(ext)) {
-        return { text: 'Audio', icon: <Music2 className="h-3.5 w-3.5" /> };
-      }
-      if (documentExtensions.includes(ext)) {
-        return { text: 'Document', icon: <FileText className="h-3.5 w-3.5" /> };
-      }
-    }
-
-    if (
-      typeof content === 'string' &&
-      s3BucketUrl &&
-      content.startsWith(s3BucketUrl)
-    ) {
-      try {
-        const url = new URL(content);
-        const fileName = decodeURIComponent(url.pathname.substring(1));
-        const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-
-        if (imageExtensions.includes(fileExtension)) {
-          return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
-        }
-        if (videoExtensions.includes(fileExtension)) {
-          return { text: 'Video', icon: <Video className="h-3.5 w-3.5" /> };
-        }
-        if (audioExtensions.includes(fileExtension)) {
-          return { text: 'Audio', icon: <Music2 className="h-3.5 w-3.5" /> };
-        }
-        if (documentExtensions.includes(fileExtension)) {
-          return {
-            text: 'Document',
-            icon: <FileText className="h-3.5 w-3.5" />,
-          };
-        }
-        return { text: 'File', icon: <FileText className="h-3.5 w-3.5" /> };
-      } catch (error) {
-        console.error('Error parsing S3 URL:', error);
-        return {
-          text: 'Attachment',
-          icon: <FileText className="h-3.5 w-3.5" />,
-        };
-      }
-    }
-
-    if (
-      lastMessage.attachments &&
-      Array.isArray(lastMessage.attachments) &&
-      lastMessage.attachments.length > 0
-    ) {
-      const attachment = lastMessage.attachments[0];
-      if (attachment.type) {
-        if (attachment.type.startsWith('image/')) {
-          return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
-        }
-        if (attachment.type.startsWith('video/')) {
-          return { text: 'Video', icon: <Video className="h-3.5 w-3.5" /> };
-        }
-        if (attachment.type.startsWith('audio/')) {
-          return { text: 'Audio', icon: <Music2 className="h-3.5 w-3.5" /> };
-        }
-        return { text: 'Document', icon: <FileText className="h-3.5 w-3.5" /> };
-      }
-      return { text: 'File', icon: <FileText className="h-3.5 w-3.5" /> };
-    }
-
-    const textContent = content ? stripHtml(content) : '';
-    return { text: textContent || 'Message', icon: null };
-  };
+  const searchResults = useMemo(
+    () =>
+      trimmedSearchTerm.length >= CHAT_USER_SEARCH_MIN_CHARS
+        ? remoteUsers.filter((user) => user.id !== currentUserId)
+        : [],
+    [currentUserId, remoteUsers, trimmedSearchTerm.length],
+  );
 
   const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
     e.stopPropagation();
@@ -238,7 +256,7 @@ export function ChatList({
       });
     } else {
       const otherParticipantUid = conv.participants.find(
-        (p) => p !== currentUser.uid,
+        (p) => p !== currentUserId,
       );
       if (otherParticipantUid) {
         const participantDetails =
@@ -252,26 +270,12 @@ export function ChatList({
     }
   };
 
-  const updateLastUpdated = useCallback(() => {
-    const updatedTimes: Record<string, string> = {};
-    conversations.forEach((conversation) => {
-      if (conversation.timestamp) {
-        try {
-          updatedTimes[conversation.id] =
-            formatDistanceToNow(new Date(conversation.timestamp)) + ' ago';
-        } catch {
-          updatedTimes[conversation.id] = 'Invalid date';
-        }
-      }
-    });
-    setLastUpdatedTimes(updatedTimes);
-  }, [conversations]);
-
   useEffect(() => {
-    updateLastUpdated();
-    const intervalId = setInterval(updateLastUpdated, 60000);
+    const intervalId = setInterval(() => {
+      setRelativeTimeTick(Date.now());
+    }, 60000);
     return () => clearInterval(intervalId);
-  }, [updateLastUpdated]);
+  }, []);
 
   const handleOpenArchivedChats = () => {
     setActiveView('archived');
@@ -281,62 +285,90 @@ export function ChatList({
     setActiveView('inbox');
   };
 
-  const getTimestampMs = (ts: any) => {
-    if (!ts) return 0;
-    if (typeof ts === 'object' && ts.seconds) return ts.seconds;
-    if (typeof ts === 'number') return Math.floor(ts / 1000);
-    return Math.floor(new Date(ts as string).getTime() / 1000) || 0;
-  };
+  const normalizedSearchTerm = searchTerm.toLowerCase();
 
-  const displayedConversations = conversations
-    .filter((conversation) => {
-      const userDetails = conversation.participantDetails?.[currentUser.uid];
-      if (activeView === 'archived') {
-        return userDetails?.viewState === 'archived';
-      } else {
-        return userDetails?.viewState !== 'archived';
-      }
-    })
-    .filter((conversation) => {
-      const name =
-        conversation.groupName ||
-        conversation.participantDetails?.[
-          conversation.participants.find((p) => p !== currentUser.uid) || ''
-        ]?.userName ||
-        '';
-      const lastMessageContent = getLastMessagePreview(
-        conversation.lastMessage,
-      ).text;
-      return (
-        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    })
-    .sort((a, b) => {
-      const getIsUnread = (conv: Conversation) => {
-        const msgTime = getTimestampMs(conv.lastMessage?.timestamp);
-        const readTime = getTimestampMs(
-          conv.participantDetails?.[currentUser.uid]?.lastReadAt,
+  const conversationEntries = useMemo(
+    () =>
+      conversations.map((conversation) => {
+        const otherParticipantUid =
+          conversation.type === 'group'
+            ? null
+            : conversation.participants.find((p) => p !== currentUserId) || null;
+        const otherParticipantDetails = otherParticipantUid
+          ? conversation.participantDetails?.[otherParticipantUid]
+          : undefined;
+        const { text: previewText, icon: previewIcon } = getLastMessagePreview(
+          conversation.lastMessage,
         );
-
-        return (
-          !!conv.lastMessage?.senderId &&
-          conv.lastMessage.senderId !== currentUser.uid &&
-          active?.id !== conv.id &&
-          msgTime > readTime
+        const messageTimestamp = getTimestampMs(conversation.lastMessage?.timestamp);
+        const lastReadAt = getTimestampMs(
+          conversation.participantDetails?.[currentUserId]?.lastReadAt,
         );
-      };
+        const isUnread =
+          !!conversation.lastMessage?.senderId &&
+          conversation.lastMessage.senderId !== currentUserId &&
+          active?.id !== conversation.id &&
+          messageTimestamp > lastReadAt;
+        const displayName =
+          conversation.type === 'group'
+            ? conversation.groupName || 'Group'
+            : otherParticipantDetails?.userName || 'Chat User';
+        const searchableText = `${displayName} ${previewText}`.toLowerCase();
 
-      const aUnread = getIsUnread(a);
-      const bUnread = getIsUnread(b);
+        return {
+          conversation,
+          displayName,
+          avatarSrc:
+            conversation.type === 'group'
+              ? conversation.avatar
+              : otherParticipantDetails?.profilePic,
+          avatarFallback: displayName.charAt(0).toUpperCase() || 'P',
+          previewText,
+          previewIcon,
+          searchableText,
+          viewState:
+            conversation.participantDetails?.[currentUserId]?.viewState || 'inbox',
+          isUnread,
+          timestampMs: getTimestampMs(conversation.timestamp),
+        };
+      }),
+    [active?.id, conversations, currentUserId],
+  );
 
-      if (aUnread !== bUnread) return aUnread ? -1 : 1;
+  const visibleConversationEntries = useMemo(
+    () =>
+      conversationEntries
+        .filter((entry) =>
+          activeView === 'archived'
+            ? entry.viewState === 'archived'
+            : entry.viewState !== 'archived',
+        )
+        .filter(
+          (entry) =>
+            !normalizedSearchTerm ||
+            entry.searchableText.includes(normalizedSearchTerm),
+        )
+        .sort((a, b) => {
+          if (a.isUnread !== b.isUnread) return a.isUnread ? -1 : 1;
+          return b.timestampMs - a.timestampMs;
+        }),
+    [activeView, conversationEntries, normalizedSearchTerm],
+  );
 
-      const aTime = getTimestampMs(a.timestamp);
-      const bTime = getTimestampMs(b.timestamp);
+  const displayedConversations = useMemo(
+    () => {
+      const refreshMarker = relativeTimeTick;
 
-      return bTime - aTime;
-    });
+      return visibleConversationEntries.map((entry) => ({
+        ...entry,
+        relativeTime: getRelativeTimeLabel(
+          entry.conversation.timestamp,
+          refreshMarker,
+        ),
+      }));
+    },
+    [relativeTimeTick, visibleConversationEntries],
+  );
 
   return (
     <div className="flex flex-col h-full w-full bg-[hsl(var(--card))] overflow-hidden">
@@ -482,28 +514,9 @@ export function ChatList({
           ) : (
             <>
               {displayedConversations.length > 0 ? (
-                displayedConversations.map((conversation) => {
-                  const lastUpdated =
-                    lastUpdatedTimes[conversation.id] || 'N/A';
+                displayedConversations.map((entry) => {
+                  const { conversation } = entry;
                   const isActive = active?.id === conversation.id;
-                  const { text: displayText, icon: displayIcon } =
-                    getLastMessagePreview(conversation.lastMessage);
-
-                  // Unread: incoming last message, not explicitly read, and not currently open
-                  const msgTime = getTimestampMs(
-                    conversation.lastMessage?.timestamp,
-                  );
-                  const readTime = getTimestampMs(
-                    conversation.participantDetails?.[currentUser.uid]
-                      ?.lastReadAt,
-                  );
-
-                  const isUnread =
-                    !!conversation.lastMessage?.senderId &&
-                    conversation.lastMessage.senderId !== currentUser.uid &&
-                    !isActive &&
-                    msgTime > readTime;
-
                   return (
                     <div
                       key={conversation.id}
@@ -518,36 +531,8 @@ export function ChatList({
                         onClick={(e) => handleProfileIconClick(e, conversation)}
                       >
                         <Avatar className="w-10 h-10 flex-shrink-0 mt-1">
-                          <AvatarImage
-                            src={
-                              conversation.type === 'group'
-                                ? conversation.avatar
-                                : conversation.participantDetails?.[
-                                    conversation.participants.find(
-                                      (p) => p !== currentUser.uid,
-                                    ) || ''
-                                  ]?.profilePic
-                            }
-                            alt={
-                              conversation.type === 'group'
-                                ? conversation.groupName
-                                : conversation.participantDetails?.[
-                                    conversation.participants.find(
-                                      (p) => p !== currentUser.uid,
-                                    ) || ''
-                                  ]?.userName
-                            }
-                          />
-                          <AvatarFallback>
-                            {(conversation.type === 'group'
-                              ? conversation.groupName?.charAt(0)
-                              : conversation.participantDetails?.[
-                                  conversation.participants.find(
-                                    (p) => p !== currentUser.uid,
-                                  ) || ''
-                                ]?.userName?.charAt(0)
-                            )?.toUpperCase() || 'P'}
-                          </AvatarFallback>
+                          <AvatarImage src={entry.avatarSrc} alt={entry.displayName} />
+                          <AvatarFallback>{entry.avatarFallback}</AvatarFallback>
                         </Avatar>
                       </div>
                       <div className="flex-1 min-w-0 overflow-hidden">
@@ -555,47 +540,41 @@ export function ChatList({
                           <p
                             className={cn(
                               'text-sm truncate',
-                              isUnread ? 'font-bold' : 'font-medium',
+                              entry.isUnread ? 'font-bold' : 'font-medium',
                             )}
                           >
-                            {conversation.type === 'group'
-                              ? conversation.groupName
-                              : conversation.participantDetails?.[
-                                  conversation.participants.find(
-                                    (p) => p !== currentUser.uid,
-                                  ) || ''
-                                ]?.userName || 'Chat User'}
+                            {entry.displayName}
                           </p>
                           <p
                             className={cn(
                               'text-xs flex-shrink-0 ml-2',
-                              isUnread
+                              entry.isUnread
                                 ? 'text-foreground font-semibold'
                                 : 'text-muted-foreground',
                             )}
                           >
-                            {lastUpdated}
+                            {entry.relativeTime}
                           </p>
                         </div>
                         <div className="flex items-center justify-between gap-1">
                           <p
                             className={cn(
                               'text-xs truncate flex items-center gap-1',
-                              isUnread
+                              entry.isUnread
                                 ? 'font-semibold text-foreground'
                                 : 'text-muted-foreground',
                             )}
                           >
-                            {displayIcon ? (
+                            {entry.previewIcon ? (
                               <span className="text-[hsl(var(--muted-foreground))]">
-                                {displayIcon}
+                                {entry.previewIcon}
                               </span>
                             ) : null}
-                            {displayText.length > 40
-                              ? displayText.substring(0, 40) + '...'
-                              : displayText}
+                            {entry.previewText.length > 40
+                              ? entry.previewText.substring(0, 40) + '...'
+                              : entry.previewText}
                           </p>
-                          {isUnread && (
+                          {entry.isUnread && (
                             <span className="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-primary" />
                           )}
                         </div>
