@@ -295,6 +295,7 @@ export const ChatComposer = memo(
         });
 
         discardRecording();
+        onSetReplyToMessageId('');
       } catch (error) {
         console.error('Error uploading voice message:', error);
         toast({
@@ -313,6 +314,7 @@ export const ChatComposer = memo(
       replyToMessageId,
       discardRecording,
       toast,
+      onSetReplyToMessageId,
     ]);
 
     // Cleanup recording resources on unmount or when changing
@@ -390,7 +392,7 @@ export const ChatComposer = memo(
         {/* Main Input Area */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1 min-w-0">
-            <div className="absolute inset-y-0 flex items-center justify-center pl-0.1 z-10">
+            <div className="absolute inset-y-0 flex items-center justify-center pl-0.5 z-10">
               <EmojiPicker
                 aria-label="Insert emoji"
                 onSelect={handleInsertEmoji}
