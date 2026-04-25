@@ -34,7 +34,6 @@ const SEARCH_ENDPOINTS = [
   '/chat/users/search',
   '/users/search',
   '/freelancer/search',
-  '/freelancer',
 ] as const;
 
 const normalizeUser = (user: SearchableApiUser): CombinedUser | null => {
@@ -126,17 +125,29 @@ export function useRemoteUserSearch(
 
             normalizedUsers = extractUsers(response.data)
               .map(normalizeUser)
-              .filter((user): user is CombinedUser => Boolean(user))
+              .filter((user): user is CombinedUser => {
+                if (!user) return false;
+                const term = trimmedTerm.toLowerCase();
+                return (
+                  user.displayName.toLowerCase().includes(term) ||
+                  user.email.toLowerCase().includes(term)
+                );
+              })
               .slice(0, limit);
 
-            if (normalizedUsers.length > 0 || endpoint !== '/freelancer') {
+            if (normalizedUsers.length > 0) {
               break;
             }
           } catch (endpointError: any) {
             lastError = endpointError;
             const statusCode = endpointError?.response?.status;
 
-            if (statusCode && statusCode !== 404 && statusCode !== 405) {
+            if (
+              statusCode &&
+              statusCode !== 404 &&
+              statusCode !== 405 &&
+              statusCode !== 422
+            ) {
               throw endpointError;
             }
           }

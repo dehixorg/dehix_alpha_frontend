@@ -109,7 +109,7 @@ const getRelativeTimeLabel = (timestamp?: string) => {
 const getLastMessagePreview = (lastMessage: Conversation['lastMessage']) => {
   if (!lastMessage) return { text: 'No messages yet', icon: null };
   const content = lastMessage.content;
-  const s3BucketUrl = process.env.NEXT_PUBLIC__S3_BUCKET_URL;
+  const s3BucketUrl = process.env.NEXT_PUBLIC_S3_BUCKET_URL;
 
   if (lastMessage.voiceMessage) {
     return { text: 'Voice message', icon: <Mic className="h-3.5 w-3.5" /> };
@@ -129,16 +129,16 @@ const getLastMessagePreview = (lastMessage: Conversation['lastMessage']) => {
     'txt',
   ];
 
+  const isHttpUrl = (raw: string) => /^https?:\/\//i.test(raw);
   const getExt = (raw: string) => {
     try {
-      const url = new URL(raw);
-      return url.pathname.split('.').pop()?.toLowerCase() || '';
+      return new URL(raw).pathname.split('.').pop()?.toLowerCase() || '';
     } catch {
-      return raw.split('?')[0].split('.').pop()?.toLowerCase() || '';
+      return '';
     }
   };
 
-  if (typeof content === 'string') {
+  if (typeof content === 'string' && isHttpUrl(content)) {
     const ext = getExt(content);
     if (imageExtensions.includes(ext)) {
       return { text: 'Photo', icon: <ImageIcon className="h-3.5 w-3.5" /> };
@@ -236,7 +236,7 @@ export function ChatList({
   } = useRemoteUserSearch(userSearchTerm);
   const [activeView, setActiveView] = useState<'inbox' | 'archived'>('inbox');
   const [isStartingChat, setIsStartingChat] = useState(false);
-  const [, setRelativeTimeTick] = useState<number>(Date.now());
+  const [relativeTimeTick, setRelativeTimeTick] = useState<number>(Date.now());
 
   const searchResults = useMemo(
     () =>
@@ -364,7 +364,7 @@ export function ChatList({
       ...entry,
       relativeTime: getRelativeTimeLabel(entry.conversation.timestamp),
     }));
-  }, [visibleConversationEntries]);
+  }, [visibleConversationEntries, relativeTimeTick]);
 
   return (
     <div className="flex flex-col h-full w-full bg-[hsl(var(--card))] overflow-hidden">

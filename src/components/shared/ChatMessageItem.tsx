@@ -412,7 +412,7 @@ function ChatMessageItem({
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="w-full break-words">
+                  <div className="w-full break-words [overflow-wrap:anywhere]">
                     {message.replyTo && (
                         <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
                         <div
@@ -507,7 +507,7 @@ function ChatMessageItem({
                         <>
                           <div
                             className={cn(
-                              'w-full break-words',
+                              'w-full break-words [overflow-wrap:anywhere]',
                               isEmojiOnly &&
                                 'text-4xl leading-snug text-center',
                             )}

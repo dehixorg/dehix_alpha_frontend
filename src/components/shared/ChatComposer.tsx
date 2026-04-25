@@ -19,6 +19,7 @@ import { EmojiPicker } from '../emojiPicker';
 
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 import {
   Tooltip,
   TooltipContent,
@@ -46,11 +47,18 @@ interface ChatComposerProps {
   onFileUpload: () => Promise<void>;
 }
 
+type RecordingStatus =
+  | 'idle'
+  | 'permission_pending'
+  | 'recording'
+  | 'recorded'
+  | 'uploading';
+
 // Consolidate all sanitization logic into one function
 const sanitizeMessage = (html: string): string => {
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'br', 'div', 'span', 'a'],
-    ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class'],
+    ALLOWED_ATTR: ['href', 'rel', 'class'],
   });
 };
 
@@ -80,16 +88,10 @@ export const ChatComposer = memo(
     const [, setTick] = useState(0);
 
     // Voice recording state
-    type RecordingStatus =
-      | 'idle'
-      | 'permission_pending'
-      | 'recording'
-      | 'recorded'
-      | 'uploading';
     const [recordingStatus, setRecordingStatus] =
       useState<RecordingStatus>('idle');
     const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-    const [, setAudioBlob] = useState<Blob | null>(null);
+    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
       null,
@@ -114,7 +116,7 @@ export const ChatComposer = memo(
 
       try {
         await onSendMessage(newMessage);
-        composerRef.current!.innerHTML = '';
+        if (composerRef.current) composerRef.current.innerHTML = '';
         setInput('');
         onSetReplyToMessageId('');
       } catch (error) {
@@ -241,6 +243,67 @@ export const ChatComposer = memo(
       }
       toast({ title: 'Recording discarded' });
     }, [audioUrl, toast]);
+
+    const sendVoiceMessage = useCallback(async () => {
+      if (!audioBlob || recordingStatus !== 'recorded') return;
+
+      setRecordingStatus('uploading');
+      try {
+        const file = new File([audioBlob], `voice_${Date.now()}.webm`, {
+          type: audioBlob.type,
+        });
+        const { url: fileUrl } = await uploadFileViaSignedUrl(file, {
+          keyPrefix: `chat/voice`,
+        });
+
+        await onSendMessage({
+          senderId: userId,
+          content: fileUrl,
+          timestamp: new Date().toISOString(),
+          voiceMessage: { duration: recordingDuration, type: 'voice' },
+          replyTo: replyToMessageId || null,
+        });
+
+        discardRecording();
+      } catch (error) {
+        console.error('Error uploading voice message:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Upload failed',
+          description: 'Failed to upload voice message. Please try again.',
+        });
+        setRecordingStatus('recorded');
+      }
+    }, [
+      audioBlob,
+      recordingStatus,
+      userId,
+      recordingDuration,
+      onSendMessage,
+      replyToMessageId,
+      discardRecording,
+      toast,
+    ]);
+
+    // Cleanup recording resources on unmount or when changing
+    useEffect(() => {
+      return () => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+          try {
+            mediaRecorder.stop();
+          } catch (err) {
+            // Ignore if already stopped
+          }
+        }
+        if (recordingDurationIntervalRef.current) {
+          clearInterval(recordingDurationIntervalRef.current);
+        }
+        if (audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+        }
+      };
+    }, [mediaRecorder, audioUrl]);
 
     // Create blob when recording stops
     useEffect(() => {
@@ -460,7 +523,7 @@ export const ChatComposer = memo(
         </div>
 
         {/* Voice Recording UI */}
-        {recordingStatus !== 'idle' && recordingStatus !== 'uploading' && (
+        {recordingStatus !== 'idle' && (
           <div className="p-2 border-t border-[hsl(var(--border))]">
             {recordingStatus === 'permission_pending' && (
               <div className="flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))]">
@@ -491,6 +554,15 @@ export const ChatComposer = memo(
                 <audio src={audioUrl} controls className="flex-1" />
                 <Button
                   type="button"
+                  size="icon"
+                  className="rounded-full bg-[#96c] hover:bg-[#96c]/90 text-white"
+                  onClick={sendVoiceMessage}
+                  aria-label="Send voice message"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
                   variant="ghost"
                   size="icon"
                   onClick={discardRecording}
@@ -499,6 +571,12 @@ export const ChatComposer = memo(
                 >
                   <X className="h-4 w-4" />
                 </Button>
+              </div>
+            )}
+            {recordingStatus === 'uploading' && (
+              <div className="flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))]">
+                <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                Uploading voice message...
               </div>
             )}
           </div>

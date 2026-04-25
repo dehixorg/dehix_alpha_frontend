@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { MessageSquare } from 'lucide-react';
@@ -59,6 +59,8 @@ const HomePage = () => {
 
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
+
+  const lastHandledSelectedIdRef = useRef<string | null>(null);
 
   const selectedConversationId = searchParams?.get('c') || null;
 
@@ -123,20 +125,33 @@ const HomePage = () => {
 
   const upsertConversation = useCallback((conversation: Conversation) => {
     setConversations((prev) => {
-      const existingIndex = prev.findIndex(
-        (item) => item.id === conversation.id,
-      );
-
-      if (existingIndex === -1) {
-        return [conversation, ...prev];
-      }
-
-      return prev.map((item) =>
-        item.id === conversation.id ? conversation : item,
-      );
+      const idx = prev.findIndex((c) => c.id === conversation.id);
+      return idx === -1
+        ? [conversation, ...prev]
+        : prev.map((c) => (c.id === conversation.id ? conversation : c));
     });
-    setActiveConversationId(conversation.id);
   }, []);
+
+  const updateUrlWithConversation = useCallback(
+    (id: string) => {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('c') !== id) {
+        url.searchParams.set('c', id);
+        router.replace(url.pathname + url.search, { scroll: false });
+      }
+      lastHandledSelectedIdRef.current = id;
+    },
+    [router],
+  );
+
+  const upsertAndActivateConversation = useCallback(
+    (conversation: Conversation) => {
+      upsertConversation(conversation);
+      setActiveConversationId(conversation.id);
+      updateUrlWithConversation(conversation.id);
+    },
+    [upsertConversation, updateUrlWithConversation],
+  );
 
   async function handleCreateGroupChat(
     selectedUsers: NewChatUser[],
@@ -226,7 +241,7 @@ const HomePage = () => {
         updatedAt: new Date().toISOString(),
       };
 
-      upsertConversation(groupDataForState);
+      upsertAndActivateConversation(groupDataForState);
       setIsNewChatDialogOpen(false);
     } catch (error) {
       console.error('Error creating group chat: ', error);
@@ -265,6 +280,7 @@ const HomePage = () => {
 
       if (existingConv) {
         setActiveConversationId(existingConv.id);
+        updateUrlWithConversation(existingConv.id);
         setIsNewChatDialogOpen(false);
         notifySuccess('Conversation already exists, switching to it.', 'Info');
         return existingConv;
@@ -307,7 +323,7 @@ const HomePage = () => {
           updatedAt: new Date().toISOString(),
         } as Conversation;
 
-        upsertConversation(newConversation);
+        upsertAndActivateConversation(newConversation);
         setIsNewChatDialogOpen(false);
         notifySuccess(
           `New chat started with ${selectedUser.displayName || 'User'}.`,
@@ -321,7 +337,12 @@ const HomePage = () => {
         return null;
       }
     },
-    [directConversationByParticipantId, upsertConversation, user],
+    [
+      directConversationByParticipantId,
+      upsertAndActivateConversation,
+      updateUrlWithConversation,
+      user,
+    ],
   );
 
   // Handle URL parameters for opening specific chats or starting new ones
@@ -356,6 +377,7 @@ const HomePage = () => {
 
         if (existingConversation) {
           setActiveConversationId(existingConversation.id);
+          updateUrlWithConversation(existingConversation.id);
           notifySuccess(
             'Conversation already exists, switching to it.',
             'Info',
@@ -410,12 +432,14 @@ const HomePage = () => {
   useEffect(() => {
     if (loading) return;
 
-    if (selectedConversationId) {
-      setActiveConversationId(
-        conversationById.has(selectedConversationId)
-          ? selectedConversationId
-          : null,
-      );
+    if (
+      selectedConversationId &&
+      selectedConversationId !== lastHandledSelectedIdRef.current
+    ) {
+      lastHandledSelectedIdRef.current = selectedConversationId;
+      if (conversationById.has(selectedConversationId)) {
+        setActiveConversationId(selectedConversationId);
+      }
       return;
     }
 
@@ -443,13 +467,9 @@ const HomePage = () => {
   const handleSelectConversation = useCallback(
     (conv: Conversation) => {
       setActiveConversationId(conv.id);
-      if (isMobile) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('c', conv.id);
-        router.push(url.pathname + url.search, { scroll: false });
-      }
+      updateUrlWithConversation(conv.id);
     },
-    [isMobile, router],
+    [updateUrlWithConversation],
   );
 
   const markConversationAsRead = useCallback(
@@ -497,9 +517,8 @@ const HomePage = () => {
   }, [activeConversation, markConversationAsRead]);
 
   const handleConversationUpdate = useCallback(
-    (updatedConversation: Conversation) => {
-      upsertConversation(updatedConversation);
-    },
+    (updatedConversation: Conversation) =>
+      upsertConversation(updatedConversation),
     [upsertConversation],
   );
 

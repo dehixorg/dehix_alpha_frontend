@@ -151,9 +151,13 @@ export function CardsChat({
     const msg = messageById.get(replyToMessageId);
     if (!msg) return null;
     return {
-      content: msg.voiceMessage?.type === 'voice'
-        ? 'Voice message'
-        : msg.content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim() || 'Message',
+      content:
+        msg.voiceMessage?.type === 'voice'
+          ? 'Voice message'
+          : (msg.content ?? '')
+              .replace(/<[^>]*>/g, '')
+              .replace(/&nbsp;/g, ' ')
+              .trim() || 'Message',
       voiceMessage: msg.voiceMessage,
     };
   }, [replyToMessageId, messageById]);
@@ -197,9 +201,12 @@ export function CardsChat({
     fileInput.type = 'file';
     fileInput.accept = 'image/*,.pdf,.doc,.docx,.ppt,.pptx';
 
-    fileInput.onchange = async () => {
+    fileInput.addEventListener('change', async () => {
       const file = fileInput.files?.[0];
-      if (!file) return;
+      if (!file) {
+        fileInput.remove();
+        return;
+      }
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
@@ -208,14 +215,17 @@ export function CardsChat({
           title: 'File too large',
           description: 'File size should not exceed 10MB',
         });
+        fileInput.remove();
         return;
       }
 
       // Validate file type
       const allowedTypes = [
         'image/jpeg',
+        'image/jpg',
         'image/png',
         'image/gif',
+        'image/webp',
         'application/pdf',
         'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -223,12 +233,31 @@ export function CardsChat({
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       ];
 
-      if (!allowedTypes.includes(file.type)) {
+      const allowedExtensions = [
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'webp',
+        'pdf',
+        'doc',
+        'docx',
+        'ppt',
+        'pptx',
+      ];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+
+      const isAllowedType = allowedTypes.includes(file.type);
+      const isAllowedExtension =
+        file.type === '' && allowedExtensions.includes(fileExtension);
+
+      if (!isAllowedType && !isAllowedExtension) {
         toast({
           variant: 'destructive',
           title: 'Invalid file type',
           description: 'Please upload an image, PDF, Word, or PowerPoint file',
         });
+        fileInput.remove();
         return;
       }
 
@@ -269,8 +298,9 @@ export function CardsChat({
         });
       } finally {
         setIsSending(false);
+        fileInput.remove();
       }
-    };
+    });
 
     fileInput.click();
   }, [conversation?.id, handleSendMessage, user.uid, toast]);
@@ -889,7 +919,6 @@ export function CardsChat({
             </CardContent>
             <CardFooter className="sticky bottom-0 bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-b-xl">
               <ChatComposer
-                conversation={conversation}
                 userId={user.uid}
                 isSending={isSending}
                 isBlocked={isBlocked}
