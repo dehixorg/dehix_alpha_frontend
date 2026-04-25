@@ -37,10 +37,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
-import {
-  getBadgeColor,
-  statusOutlineClasses,
-} from '@/utils/common/getBadgeStatus';
+import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
 import { StatusEnum, canVerify } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
