@@ -168,7 +168,10 @@ interface NoteCardProps {
     noteType: NoteType,
   ) => Promise<void>;
   onDeleteClick: (noteId: string | undefined) => void;
-  onUpdateNoteLabel?: (noteId: string | undefined, label: LabelType | undefined) => void;
+  onUpdateNoteLabel?: (
+    noteId: string | undefined,
+    label: LabelType | undefined,
+  ) => void;
 }
 
 const NoteCard = ({
