@@ -168,7 +168,7 @@ interface NoteCardProps {
     noteType: NoteType,
   ) => Promise<void>;
   onDeleteClick: (noteId: string | undefined) => void;
-  onUpdateNoteLabel?: (noteId: string | undefined, label: string) => void;
+  onUpdateNoteLabel?: (noteId: string | undefined, label: LabelType | undefined) => void;
 }
 
 const NoteCard = ({
@@ -489,7 +489,7 @@ const NoteCard = ({
                         onClick={() => {
                           setCurrentLabel(undefined);
                           if (onUpdateNoteLabel) {
-                            onUpdateNoteLabel(note._id, '');
+                            onUpdateNoteLabel(note._id, undefined);
                           }
                         }}
                         className="ml-1 hover:bg-black/10 dark:hover:bg-white/20 rounded-full p-0.5"

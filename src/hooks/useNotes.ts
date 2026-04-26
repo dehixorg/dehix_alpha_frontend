@@ -5,7 +5,11 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Note, NoteType, LabelType } from '@/utils/types/note';
 
-const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
+const useNotes = (
+  fetchNotes: () => Promise<void>,
+  notes: Note[],
+  setNotes?: (notes: Note[] | ((prev: Note[]) => Note[])) => void,
+) => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [selectedDeleteNote, setSelectedDeleteNote] = useState<Note | null>(
     null,
@@ -17,6 +21,14 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     if (!note._id) {
       notifyError('Missing required fields for updating the note.', 'Error');
       return;
+    }
+
+    // Optimistic update
+    const previousNotes = [...notes];
+    if (setNotes) {
+      setNotes((prev) =>
+        prev.map((n) => (n._id === note._id ? { ...n, ...note } : n)),
+      );
     }
 
     try {
@@ -33,10 +45,14 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
 
       if (response?.status === 200) {
         notifySuccess('Note updated successfully.', 'Success');
-        await fetchNotes();
         setSelectedNote(null);
+      } else {
+        // Rollback if status is not 200
+        if (setNotes) setNotes(previousNotes);
       }
     } catch (error: any) {
+      // Rollback on error
+      if (setNotes) setNotes(previousNotes);
       notifyError(
         error?.response?.data?.message || 'Failed to update the note.',
         'Error',
@@ -58,11 +74,17 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       setIsDeleting(false);
       return;
     }
+
+    const previousNotes = [...notes];
+    if (setNotes) {
+      setNotes((prev) => prev.filter((n) => n._id !== noteId));
+    }
+
     try {
       await axiosInstance.delete(`/notes/${noteId}`);
       notifySuccess('Note deleted permanently.', 'Success');
-      await fetchNotes();
     } catch (error) {
+      if (setNotes) setNotes(previousNotes);
       notifyError('Failed to delete the note.', 'Error');
     }
     setIsDeleting(false);
@@ -78,6 +100,14 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       notifyError('Note not found.', 'Error');
       return;
     }
+
+    const previousNotes = [...notes];
+    if (setNotes) {
+      setNotes((prev) =>
+        prev.map((n) => (n._id === noteId ? { ...n, banner } : n)),
+      );
+    }
+
     try {
       const response = await axiosInstance.put(`/notes/${noteToUpdate._id}`, {
         ...noteToUpdate,
@@ -86,16 +116,18 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
 
       if (response?.status == 200) {
         notifySuccess('Note banner updated.', 'Success');
+      } else {
+        if (setNotes) setNotes(previousNotes);
       }
-      await fetchNotes();
     } catch (error) {
+      if (setNotes) setNotes(previousNotes);
       notifyError('Failed to update the note banner.', 'Error');
     }
   };
 
   const handleUpdateNoteType = async (
     noteId: string | undefined,
-    type: string,
+    type: NoteType,
   ) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
@@ -103,6 +135,13 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       notifyError('Note not found.', 'Error');
       return;
     }
+
+    const previousNotes = [...notes];
+    if (setNotes) {
+      // When type changes, it moves out of the current list
+      setNotes((prev) => prev.filter((n) => n._id !== noteId));
+    }
+
     try {
       const response = await axiosInstance.put(`/notes/${noteToUpdate._id}`, {
         ...noteToUpdate,
@@ -111,16 +150,18 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
 
       if (response?.status == 200) {
         notifySuccess(`Note moved to ${type.toLowerCase()}.`, 'Success');
+      } else {
+        if (setNotes) setNotes(previousNotes);
       }
-      await fetchNotes();
     } catch (error) {
+      if (setNotes) setNotes(previousNotes);
       notifyError('Failed to update the note label.', 'Error');
     }
   };
 
   const handleUpdateNoteLabel = async (
     noteId: string | undefined,
-    type: string,
+    type: LabelType | undefined,
   ) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
@@ -128,6 +169,14 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       notifyError('Note not found.', 'Error');
       return;
     }
+
+    const previousNotes = [...notes];
+    if (setNotes) {
+      setNotes((prev) =>
+        prev.map((n) => (n._id === noteId ? { ...n, type } : n)),
+      );
+    }
+
     try {
       const response = await axiosInstance.put(`/notes/${noteToUpdate._id}`, {
         ...noteToUpdate,
@@ -136,9 +185,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
 
       if (response?.status == 200) {
         notifySuccess('Note label updated.', 'Success');
+      } else {
+        if (setNotes) setNotes(previousNotes);
       }
-      await fetchNotes();
     } catch (error) {
+      if (setNotes) setNotes(previousNotes);
       notifyError('Failed to update the note label.', 'Error');
     }
   };
