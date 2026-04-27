@@ -42,7 +42,7 @@ const useNotes = (
           isHTML: note.isHTML || false,
           entityID: note.entityID || '',
           noteType: note?.noteType || NoteType.NOTE,
-          type: note?.type || LabelType.PERSONAL,
+          type: note?.type,
         });
 
         if (response?.status === 200) {
@@ -86,8 +86,10 @@ const useNotes = (
         return;
       }
 
-      // Capture original note to restore if delete fails
-      const originalNote = notes.find((n) => n._id === noteId);
+      // Capture original note and its index to restore order if delete fails
+      const originalIndex = notes.findIndex((n) => n._id === noteId);
+      const originalNote =
+        originalIndex >= 0 ? notes[originalIndex] : undefined;
 
       // Optimistic removal
       if (setNotes) {
@@ -98,9 +100,13 @@ const useNotes = (
         await axiosInstance.delete(`/notes/${noteId}`);
         notifySuccess('Note deleted permanently.', 'Success');
       } catch (error) {
-        // Restore note on failure
-        if (setNotes && originalNote) {
-          setNotes((prev) => [originalNote, ...prev]);
+        // Restore note to its original position on failure
+        if (setNotes && originalNote && originalIndex >= 0) {
+          setNotes((prev) => {
+            const next = [...prev];
+            next.splice(Math.min(originalIndex, next.length), 0, originalNote);
+            return next;
+          });
         }
         notifyError('Failed to delete the note.', 'Error');
       }
@@ -164,6 +170,9 @@ const useNotes = (
         return;
       }
 
+      // Capture index to restore order if move fails
+      const originalIndex = notes.findIndex((n) => n._id === noteId);
+
       // Optimistic removal from current list
       if (setNotes) {
         setNotes((prev) => prev.filter((n) => n._id !== noteId));
@@ -177,15 +186,23 @@ const useNotes = (
 
         if (response?.status === 200) {
           notifySuccess(`Note moved to ${type.toLowerCase()}.`, 'Success');
-        } else if (setNotes) {
-          // Restore to list if failed
-          setNotes((prev) => [noteToUpdate, ...prev]);
+        } else if (setNotes && originalIndex >= 0) {
+          // Restore to exact original position if failed
+          setNotes((prev) => {
+            const next = [...prev];
+            next.splice(Math.min(originalIndex, next.length), 0, noteToUpdate);
+            return next;
+          });
         }
       } catch (error) {
-        if (setNotes) {
-          setNotes((prev) => [noteToUpdate, ...prev]);
+        if (setNotes && originalIndex >= 0) {
+          setNotes((prev) => {
+            const next = [...prev];
+            next.splice(Math.min(originalIndex, next.length), 0, noteToUpdate);
+            return next;
+          });
         }
-        notifyError('Failed to update the note label.', 'Error');
+        notifyError(`Failed to move the note to ${type.toLowerCase()}.`, 'Error');
       }
     },
     [notes, setNotes],
