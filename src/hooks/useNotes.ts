@@ -202,7 +202,10 @@ const useNotes = (
             return next;
           });
         }
-        notifyError(`Failed to move the note to ${type.toLowerCase()}.`, 'Error');
+        notifyError(
+          `Failed to move the note to ${type.toLowerCase()}.`,
+          'Error',
+        );
       }
     },
     [notes, setNotes],
