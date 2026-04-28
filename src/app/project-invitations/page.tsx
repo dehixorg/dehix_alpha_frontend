@@ -3,51 +3,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import {
-  Search,
-  LayoutGrid,
-  User,
-  Calendar,
-  CheckCircle2,
-  XCircle,
-  Clock4,
-  ArrowDownNarrowWide,
-  ArrowUpNarrowWide,
-  Trash2,
-  CircleX,
-  X,
-} from 'lucide-react';
 
 import {
   Card,
   CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
-import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
+import { notifyError } from '@/utils/toastMessage';
 import {
   ProjectInvitation,
   InvitationStatus,
@@ -63,18 +25,14 @@ import {
   menuItemsTop as freelancerMenuItemsTop,
   menuItemsBottom as freelancerMenuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import EmptyState from '@/components/shared/EmptyState';
-import StatusDot from '@/components/shared/StatusDot';
 import { useAppSelector } from '@/lib/hooks';
 import { projectInvitationService } from '@/services/projectInvitation';
 import { useProjectInvitationTour } from '@/components/tour/shared/useProjectInvitationTour';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const ProjectInvitationsPage: React.FC = () => {
-  const router = useRouter();
   const userTypeFromStore = useAppSelector((s) => s.user.type);
   const userType = userTypeFromStore || (Cookies.get('userType') as any);
-  const isBusiness = userType === 'business';
   const isFreelancer = userType === 'freelancer';
 
   const sidebarMenuItemsTop = isFreelancer
@@ -86,20 +44,10 @@ const ProjectInvitationsPage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [invitations, setInvitations] = useState<ProjectInvitation[]>([]);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [inviteToDelete, setInviteToDelete] =
-    useState<ProjectInvitation | null>(null);
-  const [deletingInviteId, setDeletingInviteId] = useState<string | null>(null);
-  const [rejectingInviteId, setRejectingInviteId] = useState<string | null>(
-    null,
-  );
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] =
-    useState<InvitationStatusFilter>('ALL');
-  const [sortBy, setSortBy] = useState<
-    'createdAt' | 'projectName' | 'freelancerName'
-  >('createdAt');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const statusFilter = 'ALL';
+  const sortBy = 'createdAt';
+  const sortDir = 'desc';
 
   useProjectInvitationTour(true);
 
@@ -160,34 +108,6 @@ const ProjectInvitationsPage: React.FC = () => {
 
     load();
   }, [isFreelancer]);
-
-  const filtered = useMemo(() => {
-    let arr = invitations.slice();
-    if (search) {
-      const q = search.toLowerCase();
-      arr = arr.filter((inv) =>
-        [inv.projectName, inv.profileDomain || '', inv.freelancerName]
-          .join(' ')
-          .toLowerCase()
-          .includes(q),
-      );
-    }
-    if (statusFilter !== 'ALL') {
-      arr = arr.filter((i) => i.status === statusFilter);
-    }
-    arr.sort((a, b) => {
-      const dir = sortDir === 'asc' ? 1 : -1;
-      if (sortBy === 'projectName')
-        return dir * a.projectName.localeCompare(b.projectName);
-      if (sortBy === 'freelancerName')
-        return dir * a.freelancerName.localeCompare(b.freelancerName);
-      return (
-        dir *
-        (new Date(a.invitedAt).getTime() - new Date(b.invitedAt).getTime())
-      );
-    });
-    return arr;
-  }, [invitations, search, statusFilter, sortBy, sortDir]);
 
   const InvitationsContent = () => (
     <CardContent>{/* unchanged content */}</CardContent>

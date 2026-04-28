@@ -6,35 +6,13 @@ import {
   Table as TableIcon,
   LayoutGrid,
   PackageOpen,
-  Play,
-  CheckCircle2,
-  Undo2,
   Loader2,
-  ListFilter,
-  Clock,
-  Calendar,
-  ArrowDownAZ,
-  ArrowUpAZ,
-  Search,
 } from 'lucide-react';
 
 import { ProjectCard } from '@/components/cards/projectCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -66,11 +44,9 @@ const BusinessProjectsPage: React.FC = () => {
   const [isTableView, setIsTableView] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [sortBy, setSortBy] = useState<'createdAt' | 'projectName'>(
-    'createdAt',
-  );
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const statusFilter = 'ALL';
+  const sortBy = 'createdAt';
+  const sortDir = 'desc';
 
   const user = useSelector((state: RootState) => state.user);
 
