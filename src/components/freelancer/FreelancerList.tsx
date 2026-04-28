@@ -23,6 +23,7 @@ import FreelancerListItem from '@/components/freelancer/FreelancerListItem';
 import { CreateProjectTeamGroupDialog } from '@/components/shared/CreateProjectTeamGroupDialog';
 import EmptyState from '@/components/shared/EmptyState';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Types
 interface Freelancer {
@@ -401,7 +402,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
       </CardHeader>
 
       <CardContent className="flex-1 min-h-0 pb-3">
-        <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <ScrollArea className="h-full">
           {loading ? (
             <div className="space-y-4 py-4">
               <div className="flex items-center space-x-4">
@@ -500,7 +501,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
               )}
             </div>
           )}
-        </div>
+        </ScrollArea>
         {/* Create Project Team Group Dialog */}
         <CreateProjectTeamGroupDialog
           isOpen={showCreateGroupDialog}

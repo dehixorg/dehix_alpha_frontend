@@ -47,6 +47,7 @@ import { TransactionSummaryComponent } from '@/components/transactions/Transacti
 import { TransactionExportDropdown } from '@/components/transactions/TransactionExportDropdown';
 import { TransactionTable } from '@/components/transactions/TransactionTable';
 import { useTransactionsTour } from '@/components/tour/business-profile/useTransactionsTour';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function TransactionsPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -288,7 +289,7 @@ export default function TransactionsPage() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-full overflow-y-auto">
+              <SheetContent className="w-full"><ScrollArea className="h-full">
                 <SheetHeader>
                   <SheetTitle>Filter Transactions</SheetTitle>
                   <SheetDescription>
@@ -457,7 +458,8 @@ export default function TransactionsPage() {
                     </div>
                   </div>
                 </div>
-              </SheetContent>
+              </ScrollArea>
+      </SheetContent>
             </Sheet>
             <TransactionExportDropdown transactions={transactions} />
           </div>

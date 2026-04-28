@@ -43,6 +43,7 @@ import InterviewItemCard from '@/components/freelancer/interview/InterviewItemCa
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import { notifyError } from '@/utils/toastMessage';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 type InterviewApiRole = 'interviewer' | 'interviewee';
 
@@ -304,7 +305,7 @@ export default function CurrentComponent({
 
     if (isLoading) {
       return (
-        <div className="overflow-x-auto rounded-lg border">
+        <ScrollArea className="rounded-lg border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
@@ -337,7 +338,8 @@ export default function CurrentComponent({
               ))}
             </tbody>
           </table>
-        </div>
+        <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       );
     }
 
@@ -352,7 +354,7 @@ export default function CurrentComponent({
     }
 
     return (
-      <div className="overflow-x-auto rounded-lg border">
+      <ScrollArea className="rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr className="text-left">
@@ -444,7 +446,8 @@ export default function CurrentComponent({
             })}
           </tbody>
         </table>
-      </div>
+      <ScrollBar orientation="horizontal" />
+      </ScrollArea>
     );
   };
 

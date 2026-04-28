@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ProjectDetailsDialogProps {
   isOpen: boolean;
@@ -81,7 +82,8 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[900px] max-h-[80vh] p-0">
+  <ScrollArea className="h-[80vh] p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <DialogTitle className="text-2xl font-bold">
@@ -280,7 +282,8 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
           onConfirm={handleDelete}
           confirmLoading={isDeleting}
         />
-      </DialogContent>
+      </ScrollArea>
+    </DialogContent>
     </Dialog>
   );
 };

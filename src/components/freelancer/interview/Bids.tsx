@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import EmptyState from '@/components/shared/EmptyState';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
 type InterviewBid = {
@@ -183,7 +183,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
     <div>
       {loading ? (
         // Table skeleton
-        <div className="w-full overflow-x-auto">
+        <ScrollArea className="w-full">
           <Table>
             <TableHeader>
               <TableRow>
@@ -216,7 +216,8 @@ const BidsPage = ({ userId }: { userId?: string }) => {
               ))}
             </TableBody>
           </Table>
-        </div>
+        <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       ) : errorMessage ? (
         <EmptyState
           className="py-10"
@@ -256,7 +257,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           }
         />
       ) : bidsData?.length > 0 ? (
-        <div className="w-full overflow-x-auto">
+        <ScrollArea className="w-full">
           <Table>
             <TableHeader>
               <TableRow>
@@ -313,7 +314,8 @@ const BidsPage = ({ userId }: { userId?: string }) => {
               })}
             </TableBody>
           </Table>
-        </div>
+        <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       ) : (
         <EmptyState
           className="py-12"
@@ -386,7 +388,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
                       </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                      <div className="w-full overflow-x-auto">
+                      <ScrollArea className="w-full">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -443,7 +445,8 @@ const BidsPage = ({ userId }: { userId?: string }) => {
                             ))}
                           </TableBody>
                         </Table>
-                      </div>
+                      <ScrollBar orientation="horizontal" />
+                      </ScrollArea>
                     </CardContent>
                   </Card>
                 ) : (

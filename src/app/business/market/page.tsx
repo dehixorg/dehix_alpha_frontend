@@ -11,6 +11,7 @@ import { BusinessFilterSheet } from '@/components/business/market/BusinessFilter
 import BusinessFilterComponent from '@/components/business/market/BusinessFilterComponent';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
 import { useBusinessMarketTour } from '@/components/tour/business/useBusinessMarketTour';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export interface FilterState {
   location: string[];
@@ -251,15 +252,16 @@ const Market: React.FC = () => {
               />
             </aside>
           )}
-          <div
-            className="flex-1 overflow-y-auto"
+          <ScrollArea
+            className="flex-1"
             data-tour="business-market-list"
           >
             <FreelancerList
               freelancers={freelancers}
               isLoading={isDataLoading}
             />
-          </div>
+             
+         </ScrollArea>
         </div>
       </div>
     </BusinessDashboardLayout>

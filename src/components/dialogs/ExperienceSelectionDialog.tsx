@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Experience {
   _id: string;
@@ -150,7 +151,7 @@ export default function ExperienceSelectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[900px] max-h-[80vh]"><ScrollArea className="max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>Select Experiences for Profile</DialogTitle>
           <DialogDescription>
@@ -170,7 +171,7 @@ export default function ExperienceSelectionDialog({
           </p>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-2">
+            <div className="grid grid-cols-1 gap-3 max-h-[60vh] pr-2">
               {experiences.map((exp) => {
                 const isAlreadyInProfile = existingExperienceIds.includes(
                   exp._id,
@@ -251,6 +252,7 @@ export default function ExperienceSelectionDialog({
             </div>
           </>
         )}
+      </ScrollArea>
       </DialogContent>
     </Dialog>
   );

@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 import useDraft from '@/hooks/useDraft';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const toDateOnly = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -268,7 +269,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="lg:max-w-screen-lg overflow-y-auto max-h-[90vh] no-scrollbar">
+      <DialogContent className="lg:max-w-screen-lg max-h-[90vh]"><ScrollArea className="max-h-[90vh]">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -488,7 +489,8 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollArea>
+    </DialogContent>
       {confirmExitDialog && (
         <DraftDialog
           dialogChange={confirmExitDialog}

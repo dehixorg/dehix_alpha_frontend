@@ -46,6 +46,7 @@ import ThumbnailUpload from '@/components/fileUpload/thumbnailUpload';
 import useDraft from '@/hooks/useDraft';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { ScrollArea } from '@/components/ui/scroll-area';
 // Schema for form validation using zod
 const projectFormSchema = z
   .object({
@@ -398,7 +399,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="lg:max-w-screen-lg overflow-y-auto max-h-[90vh] no-scrollbar">
+      <DialogContent className="lg:max-w-screen-lg max-h-[90vh]"><ScrollArea className="max-h-[90vh]">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -693,7 +694,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollArea>
+    </DialogContent>
       {confirmExitDialog && (
         <DraftDialog
           dialogChange={confirmExitDialog}

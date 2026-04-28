@@ -49,6 +49,7 @@ import { Label } from '@/components/ui/label';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
 import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
 import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export type CreateProfileDialogProfileType = 'Freelancer' | 'Consultant';
 
@@ -177,7 +178,7 @@ export default function CreateProfileDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh]"><ScrollArea className="max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Create New {profileType} Profile</DialogTitle>
             <DialogDescription>
@@ -516,7 +517,8 @@ export default function CreateProfileDialog({
               </DialogFooter>
             </form>
           </Form>
-        </DialogContent>
+        </ScrollArea>
+      </DialogContent>
       </Dialog>
 
       {showProjectDialog && freelancerId && (

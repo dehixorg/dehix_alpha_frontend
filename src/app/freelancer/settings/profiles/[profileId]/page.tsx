@@ -66,6 +66,7 @@ import { FreelancerProfile } from '@/types/freelancer';
 import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
 import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function ProfileDetailPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -1386,24 +1387,26 @@ export default function ProfileDetailPage() {
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Profile</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this profile? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteProfile}>
-              Delete Profile
-            </Button>
-          </DialogFooter>
+          <ScrollArea>
+            <DialogHeader>
+              <DialogTitle>Delete Profile</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this profile? This action cannot
+                be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteProfile}>
+                Delete Profile
+              </Button>
+            </DialogFooter>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
@@ -1412,100 +1415,102 @@ export default function ProfileDetailPage() {
           open={isProjectDetailsOpen}
           onOpenChange={handleCloseProjectDetails}
         >
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">
-                {selectedProject.projectName}
-              </DialogTitle>
-            </DialogHeader>
+          <DialogContent className="max-w-4xl max-h-[90vh]">
+            <ScrollArea className="max-h-[90vh]">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold">
+                  {selectedProject.projectName}
+                </DialogTitle>
+              </DialogHeader>
 
-            <div className="space-y-6">
-              {selectedProject.thumbnail && (
-                <div className="w-full">
-                  <Image
-                    src={selectedProject.thumbnail}
-                    alt={`${selectedProject.projectName} thumbnail`}
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Description</h3>
-                    <p className="text-muted-foreground">
-                      {selectedProject.description}
-                    </p>
+              <div className="space-y-6">
+                {selectedProject.thumbnail && (
+                  <div className="w-full">
+                    <Image
+                      src={selectedProject.thumbnail}
+                      alt={`${selectedProject.projectName} thumbnail`}
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
                   </div>
+                )}
 
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Role</h3>
-                    <p className="text-muted-foreground">
-                      {selectedProject.role}
-                    </p>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Description</h3>
+                      <p className="text-muted-foreground">
+                        {selectedProject.description}
+                      </p>
+                    </div>
 
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Project Type</h3>
-                    <Badge variant="outline">
-                      {selectedProject.projectType}
-                    </Badge>
-                  </div>
-                </div>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Role</h3>
+                      <p className="text-muted-foreground">
+                        {selectedProject.role}
+                      </p>
+                    </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Duration</h3>
-                    <p className="text-muted-foreground">
-                      {new Date(selectedProject.start).toLocaleDateString()} -{' '}
-                      {new Date(selectedProject.end).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">
-                      Technologies Used
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedProject.techUsed?.map(
-                        (tech: string, index: number) => (
-                          <Badge key={index} variant="secondary">
-                            {tech}
-                          </Badge>
-                        ),
-                      )}
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Project Type</h3>
+                      <Badge variant="outline">
+                        {selectedProject.projectType}
+                      </Badge>
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Links</h3>
-                    <div className="space-y-2">
-                      {selectedProject.githubLink && (
-                        <a
-                          href={selectedProject.githubLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                        >
-                          GitHub Repository
-                        </a>
-                      )}
-                      {selectedProject.liveDemoLink && (
-                        <a
-                          href={selectedProject.liveDemoLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                        >
-                          Live Demo
-                        </a>
-                      )}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Duration</h3>
+                      <p className="text-muted-foreground">
+                        {new Date(selectedProject.start).toLocaleDateString()} -{' '}
+                        {new Date(selectedProject.end).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">
+                        Technologies Used
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedProject.techUsed?.map(
+                          (tech: string, index: number) => (
+                            <Badge key={index} variant="secondary">
+                              {tech}
+                            </Badge>
+                          ),
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Links</h3>
+                      <div className="space-y-2">
+                        {selectedProject.githubLink && (
+                          <a
+                            href={selectedProject.githubLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                          >
+                            GitHub Repository
+                          </a>
+                        )}
+                        {selectedProject.liveDemoLink && (
+                          <a
+                            href={selectedProject.liveDemoLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                          >
+                            Live Demo
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       )}

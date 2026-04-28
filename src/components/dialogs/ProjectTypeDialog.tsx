@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { Plus, User, Users } from 'lucide-react';
@@ -23,6 +25,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ProjectTypeCard = ({
   title,
@@ -76,8 +79,12 @@ export function ProjectTypeDialog({
           </Button>
         )}
       </DialogTrigger>
+
       <DialogContent className="w-[95vw] max-w-5xl p-0 overflow-hidden flex flex-col h-[90vh] max-h-[800px] sm:max-h-[90vh] m-0 sm:m-4 rounded-lg">
+        
         <div className="grid grid-cols-1 md:grid-cols-[350px,1fr] flex-1 overflow-hidden">
+          
+          {/* ✅ LEFT SIDE (NO ScrollArea — static content) */}
           <div className="hidden md:flex flex-col bg-primary/5 p-6 overflow-y-auto">
             <div className="h-full flex flex-col justify-center space-y-6">
               <div>
@@ -89,6 +96,7 @@ export function ProjectTypeDialog({
                   always change this later.
                 </p>
               </div>
+
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
@@ -98,6 +106,7 @@ export function ProjectTypeDialog({
                     Select project type
                   </span>
                 </div>
+
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-medium">
                     2
@@ -108,7 +117,8 @@ export function ProjectTypeDialog({
             </div>
           </div>
 
-          <div className="p-6 overflow-y-auto">
+          {/* ✅ RIGHT SIDE (Scrollable content only here) */}
+          <ScrollArea className="p-6">
             <DialogHeader className="mb-6 sm:mb-8">
               <DialogTitle className="text-xl sm:text-2xl">
                 Create New Project
@@ -144,12 +154,14 @@ export function ProjectTypeDialog({
                       Learn more
                     </button>
                   </PopoverTrigger>
+
                   <PopoverContent
                     className="w-[280px] sm:w-80 p-4 space-y-4"
                     align="center"
                     sideOffset={8}
                   >
                     <h4 className="font-medium leading-none">Project Types</h4>
+
                     <div className="space-y-3">
                       <div className="border-l-2 border-primary pl-3">
                         <h5 className="font-medium text-sm">Single Profile</h5>
@@ -159,6 +171,7 @@ export function ProjectTypeDialog({
                           for focused, individual contributions.
                         </p>
                       </div>
+
                       <div className="border-l-2 border-primary pl-3">
                         <h5 className="font-medium text-sm">
                           Multiple Profiles
@@ -175,7 +188,7 @@ export function ProjectTypeDialog({
                 about each project type.
               </p>
             </div>
-          </div>
+          </ScrollArea>
         </div>
       </DialogContent>
     </Dialog>

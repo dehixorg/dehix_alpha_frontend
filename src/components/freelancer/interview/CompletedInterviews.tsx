@@ -37,6 +37,7 @@ import { notifyError } from '@/utils/toastMessage';
 import EmptyState from '@/components/shared/EmptyState';
 import InterviewItemCard from '@/components/freelancer/interview/InterviewItemCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 type InterviewApiRole = 'interviewer' | 'interviewee';
 
@@ -282,7 +283,7 @@ export default function HistoryInterviews({
 
     if (isLoading) {
       return (
-        <div className="overflow-x-auto rounded-lg border">
+        <ScrollArea className="rounded-lg border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
@@ -315,7 +316,8 @@ export default function HistoryInterviews({
               ))}
             </tbody>
           </table>
-        </div>
+        <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       );
     }
 
@@ -330,7 +332,7 @@ export default function HistoryInterviews({
     }
 
     return (
-      <div className="overflow-x-auto rounded-lg border">
+      <ScrollArea className="rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr className="text-left">
@@ -422,7 +424,8 @@ export default function HistoryInterviews({
             })}
           </tbody>
         </table>
-      </div>
+      <ScrollBar orientation="horizontal" />
+      </ScrollArea>
     );
   };
 

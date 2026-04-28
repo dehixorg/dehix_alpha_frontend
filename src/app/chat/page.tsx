@@ -30,6 +30,7 @@ import {
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 import { useChatTour } from '@/components/tour/shared/useChatTour';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const HomePage = () => {
   const router = useRouter();
@@ -466,7 +467,7 @@ const HomePage = () => {
         </div>
 
         {/* Messages Skeleton */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-6">
+        <ScrollArea className="flex-1 p-4 space-y-6">
           {/* Incoming message skeleton */}
           <div className="flex items-start space-x-2">
             <Skeleton className="h-8 w-8 rounded-full" />
@@ -483,7 +484,7 @@ const HomePage = () => {
               <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
             </div>
           </div>
-        </div>
+        </ScrollArea>
 
         {/* Input area skeleton */}
         <div className="p-3 border-t border-[hsl(var(--border))]">
