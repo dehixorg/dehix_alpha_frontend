@@ -269,228 +269,229 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="lg:max-w-screen-lg max-h-[90vh]"><ScrollArea className="max-h-[90vh]">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <GraduationCap className="h-5 w-5" />
+      <DialogContent className="lg:max-w-screen-lg max-h-[90vh]">
+        <ScrollArea className="max-h-[90vh]">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle>Add Education</DialogTitle>
+                <DialogDescription>
+                  {step === 1
+                    ? 'Tell us about your degree and institute.'
+                    : 'Add the timeline and optional grade.'}
+                </DialogDescription>
+              </div>
             </div>
-            <div>
-              <DialogTitle>Add Education</DialogTitle>
-              <DialogDescription>
-                {step === 1
-                  ? 'Tell us about your degree and institute.'
-                  : 'Add the timeline and optional grade.'}
-              </DialogDescription>
+            {/* Stepper */}
+            <div className="mt-3 flex items-center gap-2">
+              <div
+                className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}
+              ></div>
+              <div
+                className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}
+              ></div>
             </div>
-          </div>
-          {/* Stepper */}
-          <div className="mt-3 flex items-center gap-2">
-            <div
-              className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}
-            ></div>
-            <div
-              className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}
-            ></div>
-          </div>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, (_errors) => {
-              // Only show validation error if we're actually submitting (on step 2)
-              if (step === 2) {
-                notifyError(
-                  'Please fill in all required fields',
-                  'Validation Error',
-                );
-              }
-            })}
-            className="space-y-4"
-          >
-            <button type="submit" style={{ display: 'none' }} />
-            {step === 1 && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="degree"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Degree</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <GraduationCap className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="e.g., B.Tech in Computer Science"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="universityName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>University / Institute</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <School className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="e.g., IIT Delhi"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="fieldOfStudy"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Field of Study</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <BookOpen className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="e.g., Computer Science"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-
-            {step === 2 && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <DatePicker {...field} max={currentDate} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center justify-between gap-3">
-                        <FormLabel>End Date</FormLabel>
-                        <FormField
-                          control={form.control}
-                          name="ongoing"
-                          render={({ field: ongoingField }) => (
-                            <div className="flex items-center gap-2">
-                              <FormLabel className="text-xs text-muted-foreground">
-                                Currently studying
-                              </FormLabel>
-                              <Switch
-                                checked={Boolean(ongoingField.value)}
-                                onCheckedChange={(val) => {
-                                  ongoingField.onChange(Boolean(val));
-                                  if (val) {
-                                    form.setValue('endDate', '');
-                                    form.clearErrors('endDate');
-                                  }
-                                }}
-                              />
-                            </div>
-                          )}
-                        />
-                      </div>
-                      <FormControl>
-                        <DatePicker {...field} disabled={ongoing} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="grade"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Grade (optional)</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <Award className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="e.g., 8.5 CGPA / A"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-
-            <DialogFooter className="flex justify-between pt-4">
-              {step === 2 ? (
+          </DialogHeader>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit, (_errors) => {
+                // Only show validation error if we're actually submitting (on step 2)
+                if (step === 2) {
+                  notifyError(
+                    'Please fill in all required fields',
+                    'Validation Error',
+                  );
+                }
+              })}
+              className="space-y-4"
+            >
+              <button type="submit" style={{ display: 'none' }} />
+              {step === 1 && (
                 <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      prevStep();
-                    }}
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" /> Back
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? 'Saving...' : 'Save'}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div />
-                  <Button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      nextStep();
-                    }}
-                  >
-                    Next <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
+                  <FormField
+                    control={form.control}
+                    name="degree"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Degree</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <GraduationCap className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="e.g., B.Tech in Computer Science"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="universityName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>University / Institute</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <School className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="e.g., IIT Delhi"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="fieldOfStudy"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Field of Study</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <BookOpen className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="e.g., Computer Science"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </>
               )}
-            </DialogFooter>
-          </form>
-        </Form>
-      </ScrollArea>
-    </DialogContent>
+
+              {step === 2 && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <DatePicker {...field} max={currentDate} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between gap-3">
+                          <FormLabel>End Date</FormLabel>
+                          <FormField
+                            control={form.control}
+                            name="ongoing"
+                            render={({ field: ongoingField }) => (
+                              <div className="flex items-center gap-2">
+                                <FormLabel className="text-xs text-muted-foreground">
+                                  Currently studying
+                                </FormLabel>
+                                <Switch
+                                  checked={Boolean(ongoingField.value)}
+                                  onCheckedChange={(val) => {
+                                    ongoingField.onChange(Boolean(val));
+                                    if (val) {
+                                      form.setValue('endDate', '');
+                                      form.clearErrors('endDate');
+                                    }
+                                  }}
+                                />
+                              </div>
+                            )}
+                          />
+                        </div>
+                        <FormControl>
+                          <DatePicker {...field} disabled={ongoing} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="grade"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grade (optional)</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <Award className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="e.g., 8.5 CGPA / A"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              <DialogFooter className="flex justify-between pt-4">
+                {step === 2 ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        prevStep();
+                      }}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" /> Back
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? 'Saving...' : 'Save'}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div />
+                    <Button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        nextStep();
+                      }}
+                    >
+                      Next <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </>
+                )}
+              </DialogFooter>
+            </form>
+          </Form>
+        </ScrollArea>
+      </DialogContent>
       {confirmExitDialog && (
         <DraftDialog
           dialogChange={confirmExitDialog}

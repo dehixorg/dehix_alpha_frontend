@@ -399,303 +399,304 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="lg:max-w-screen-lg max-h-[90vh]"><ScrollArea className="max-h-[90vh]">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <FolderKanban className="h-5 w-5" />
+      <DialogContent className="lg:max-w-screen-lg max-h-[90vh]">
+        <ScrollArea className="max-h-[90vh]">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <FolderKanban className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle>Add Project</DialogTitle>
+                <DialogDescription>
+                  {step === 1
+                    ? 'Start with core details, timeline, and skills.'
+                    : 'Add links, media, and more context.'}
+                </DialogDescription>
+              </div>
             </div>
-            <div>
-              <DialogTitle>Add Project</DialogTitle>
-              <DialogDescription>
-                {step === 1
-                  ? 'Start with core details, timeline, and skills.'
-                  : 'Add links, media, and more context.'}
-              </DialogDescription>
+            <div className="mt-3 flex items-center gap-2">
+              <div
+                className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}
+              ></div>
+              <div
+                className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}
+              ></div>
             </div>
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <div
-              className={`h-1 rounded-full transition-all w-1/2 ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}
-            ></div>
-            <div
-              className={`h-1 rounded-full transition-all w-1/2 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}
-            ></div>
-          </div>
-        </DialogHeader>
+          </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Step 1: Basic Project Information */}
-            {step === 1 && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="projectName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project Name</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <FolderKanban className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="Enter project name"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter project description"
-                          className="min-h-[110px]"
-                          {...field}
-                        />
-                      </FormControl>
-
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="start"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <DatePicker {...field} max={currentDate} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="end"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date</FormLabel>
-                      <FormControl>
-                        <DatePicker {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="md:col-span-2">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Step 1: Basic Project Information */}
+              {step === 1 && (
+                <>
                   <FormField
                     control={form.control}
-                    name="techUsed"
-                    render={({ field }) => {
-                      return (
-                        <FormItem className="mb-4">
-                          <FormLabel>Skills</FormLabel>
-                          <FormControl>
-                            <MultiSelect
-                              options={skills}
-                              value={currSkills}
-                              onChange={(selectedValues) => {
-                                setCurrSkills(selectedValues);
-                                field.onChange(selectedValues);
-                              }}
+                    name="projectName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Name</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <FolderKanban className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter project name"
+                              {...field}
                             />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-              </>
-            )}
 
-            {/* Step 2: Additional Project Information */}
-            {step === 2 && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="githubLink"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>GitHub Repo Link</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <Github className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="Enter GitHub repository link (optional)"
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Enter project description"
+                            className="min-h-[110px]"
                             {...field}
                           />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="liveDemoLink"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Live Demo Link</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <Globe className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="Enter live demo link (optional)"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />{' '}
-                <FormField
-                  control={form.control}
-                  name="thumbnail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <ThumbnailUpload
-                          onThumbnailUpdate={(url) => field.onChange(url)}
-                          existingThumbnailUrl={field.value}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="refer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reference</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <Link className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="Enter project reference"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <User className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="Enter role"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="projectType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project Type</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <FolderKanban className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="Enter project type (optional)"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="comments"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Comments</FormLabel>
-                      <FormControl>
-                        <InputGroup>
-                          <InputGroupText>
-                            <MessageSquare className="h-4 w-4" />
-                          </InputGroupText>
-                          <InputGroupInput
-                            placeholder="Enter any comments (optional)"
-                            {...field}
-                          />
-                        </InputGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
+                        </FormControl>
 
-            <DialogFooter className="flex justify-between">
-              {step === 2 ? (
-                <>
-                  <Button type="button" variant="outline" onClick={prevStep}>
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? 'Loading...' : 'Add Project'}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div></div> {/* Empty div to create space */}
-                  <Button type="button" onClick={nextStep}>
-                    Next
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="start"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <DatePicker {...field} max={currentDate} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="end"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Date</FormLabel>
+                        <FormControl>
+                          <DatePicker {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="techUsed"
+                      render={({ field }) => {
+                        return (
+                          <FormItem className="mb-4">
+                            <FormLabel>Skills</FormLabel>
+                            <FormControl>
+                              <MultiSelect
+                                options={skills}
+                                value={currSkills}
+                                onChange={(selectedValues) => {
+                                  setCurrSkills(selectedValues);
+                                  field.onChange(selectedValues);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  </div>
                 </>
               )}
-            </DialogFooter>
-          </form>
-        </Form>
-      </ScrollArea>
-    </DialogContent>
+
+              {/* Step 2: Additional Project Information */}
+              {step === 2 && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="githubLink"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>GitHub Repo Link</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <Github className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter GitHub repository link (optional)"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="liveDemoLink"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Live Demo Link</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <Globe className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter live demo link (optional)"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />{' '}
+                  <FormField
+                    control={form.control}
+                    name="thumbnail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ThumbnailUpload
+                            onThumbnailUpdate={(url) => field.onChange(url)}
+                            existingThumbnailUrl={field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="refer"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reference</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <Link className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter project reference"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <User className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter role"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="projectType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Type</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <FolderKanban className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter project type (optional)"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="comments"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Comments</FormLabel>
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupText>
+                              <MessageSquare className="h-4 w-4" />
+                            </InputGroupText>
+                            <InputGroupInput
+                              placeholder="Enter any comments (optional)"
+                              {...field}
+                            />
+                          </InputGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              <DialogFooter className="flex justify-between">
+                {step === 2 ? (
+                  <>
+                    <Button type="button" variant="outline" onClick={prevStep}>
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                      {loading ? 'Loading...' : 'Add Project'}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div></div> {/* Empty div to create space */}
+                    <Button type="button" onClick={nextStep}>
+                      Next
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </>
+                )}
+              </DialogFooter>
+            </form>
+          </Form>
+        </ScrollArea>
+      </DialogContent>
       {confirmExitDialog && (
         <DraftDialog
           dialogChange={confirmExitDialog}

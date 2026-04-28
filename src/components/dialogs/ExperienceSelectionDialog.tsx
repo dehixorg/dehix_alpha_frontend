@@ -151,108 +151,111 @@ export default function ExperienceSelectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[80vh]"><ScrollArea className="max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle>Select Experiences for Profile</DialogTitle>
-          <DialogDescription>
-            Choose from your existing experiences to add. You can select
-            multiple.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[900px] max-h-[80vh]">
+        <ScrollArea className="max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Select Experiences for Profile</DialogTitle>
+            <DialogDescription>
+              Choose from your existing experiences to add. You can select
+              multiple.
+            </DialogDescription>
+          </DialogHeader>
 
-        {isLoading ? (
-          <p className="text-center py-8 text-muted-foreground">
-            Loading experiences...
-          </p>
-        ) : experiences.length === 0 ? (
-          <p className="text-center py-8 text-muted-foreground">
-            No experiences found. Add professional experiences from your profile
-            first.
-          </p>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 gap-3 max-h-[60vh] pr-2">
-              {experiences.map((exp) => {
-                const isAlreadyInProfile = existingExperienceIds.includes(
-                  exp._id,
-                );
-                const isSelected = selectedExperiences.includes(exp._id);
-                return (
-                  <Card
-                    key={exp._id}
-                    onClick={() => !isAlreadyInProfile && handleToggle(exp._id)}
-                    className={`cursor-pointer p-3 border rounded-lg shadow-md transition-all relative
+          {isLoading ? (
+            <p className="text-center py-8 text-muted-foreground">
+              Loading experiences...
+            </p>
+          ) : experiences.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">
+              No experiences found. Add professional experiences from your
+              profile first.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-3 max-h-[60vh] pr-2">
+                {experiences.map((exp) => {
+                  const isAlreadyInProfile = existingExperienceIds.includes(
+                    exp._id,
+                  );
+                  const isSelected = selectedExperiences.includes(exp._id);
+                  return (
+                    <Card
+                      key={exp._id}
+                      onClick={() =>
+                        !isAlreadyInProfile && handleToggle(exp._id)
+                      }
+                      className={`cursor-pointer p-3 border rounded-lg shadow-md transition-all relative
           ${isAlreadyInProfile ? 'opacity-60 pointer-events-none' : ''}
           ${
             isSelected
               ? 'border-primary bg-primary/10 dark:bg-primary/20'
               : 'border-gray-300 bg-white dark:bg-black dark:border-gray-700'
           }`}
-                  >
-                    {/* Visual Indicator */}
-                    <div className="absolute top-2 right-2 z-10">
-                      {isAlreadyInProfile ? (
-                        <Badge className="bg-green-600 hover:bg-green-600 text-xs">
-                          Already Added
-                        </Badge>
-                      ) : isSelected ? (
-                        <div className="bg-green-500 rounded-full p-1">
-                          <CheckCircle className="h-4 w-4 text-white" />
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <CardHeader className="pb-1">
-                      <CardTitle className="text-md flex items-center gap-2 text-gray-900 dark:text-white pr-24">
-                        <Briefcase className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                        {exp.jobTitle}
-                      </CardTitle>
-                      <p className="text-gray-700 dark:text-gray-300 font-medium text-sm">
-                        {exp.company}
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-1">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
-                        {exp.workDescription}
-                      </p>
-                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                        <Calendar className="h-3 w-3 text-gray-500 dark:text-gray-400" />
-                        {formatDate(exp.workFrom)} - {formatDate(exp.workTo)}
+                    >
+                      {/* Visual Indicator */}
+                      <div className="absolute top-2 right-2 z-10">
+                        {isAlreadyInProfile ? (
+                          <Badge className="bg-green-600 hover:bg-green-600 text-xs">
+                            Already Added
+                          </Badge>
+                        ) : isSelected ? (
+                          <div className="bg-green-500 rounded-full p-1">
+                            <CheckCircle className="h-4 w-4 text-white" />
+                          </div>
+                        ) : null}
                       </div>
-                      {exp.referencePersonName && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Reference: {exp.referencePersonName}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
 
-            <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700 mt-3">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {selectedExperiences.length} selected,{' '}
-                {existingExperienceIds.length} already in profile
-              </p>
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleAddExperiences}
-                  disabled={selectedExperiences.length === 0 || isAdding}
-                  className="flex items-center gap-2"
-                >
-                  {isAdding
-                    ? 'Adding...'
-                    : `Add ${selectedExperiences.length} Experience(s)`}
-                </Button>
+                      <CardHeader className="pb-1">
+                        <CardTitle className="text-md flex items-center gap-2 text-gray-900 dark:text-white pr-24">
+                          <Briefcase className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                          {exp.jobTitle}
+                        </CardTitle>
+                        <p className="text-gray-700 dark:text-gray-300 font-medium text-sm">
+                          {exp.company}
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
+                          {exp.workDescription}
+                        </p>
+                        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                          <Calendar className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                          {formatDate(exp.workFrom)} - {formatDate(exp.workTo)}
+                        </div>
+                        {exp.referencePersonName && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Reference: {exp.referencePersonName}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
-            </div>
-          </>
-        )}
-      </ScrollArea>
+
+              <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700 mt-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedExperiences.length} selected,{' '}
+                  {existingExperienceIds.length} already in profile
+                </p>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAddExperiences}
+                    disabled={selectedExperiences.length === 0 || isAdding}
+                    className="flex items-center gap-2"
+                  >
+                    {isAdding
+                      ? 'Adding...'
+                      : `Add ${selectedExperiences.length} Experience(s)`}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

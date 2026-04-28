@@ -338,7 +338,7 @@ export default function CurrentComponent({
               ))}
             </tbody>
           </table>
-        <ScrollBar orientation="horizontal" />
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       );
     }
@@ -446,7 +446,7 @@ export default function CurrentComponent({
             })}
           </tbody>
         </table>
-      <ScrollBar orientation="horizontal" />
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     );
   };

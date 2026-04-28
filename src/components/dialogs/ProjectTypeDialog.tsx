@@ -81,9 +81,7 @@ export function ProjectTypeDialog({
       </DialogTrigger>
 
       <DialogContent className="w-[95vw] max-w-5xl p-0 overflow-hidden flex flex-col h-[90vh] max-h-[800px] sm:max-h-[90vh] m-0 sm:m-4 rounded-lg">
-        
         <div className="grid grid-cols-1 md:grid-cols-[350px,1fr] flex-1 overflow-hidden">
-          
           {/* ✅ LEFT SIDE (NO ScrollArea — static content) */}
           <div className="hidden md:flex flex-col bg-primary/5 p-6 overflow-y-auto">
             <div className="h-full flex flex-col justify-center space-y-6">

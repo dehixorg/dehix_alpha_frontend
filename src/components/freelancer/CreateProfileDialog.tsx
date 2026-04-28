@@ -178,347 +178,351 @@ export default function CreateProfileDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh]"><ScrollArea className="max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>Create New {profileType} Profile</DialogTitle>
-            <DialogDescription>
-              Fill in all the details for your new professional profile.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(() => {
-                onCreate();
-              })}
-              className="space-y-6"
-            >
-              <FormField
-                control={form.control}
-                name="profileName"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label htmlFor="profile-name">Profile Name</Label>
-                    <FormControl>
-                      <InputGroup>
-                        <InputGroupText>
-                          <User className="h-4 w-4" />
-                        </InputGroupText>
-                        <InputGroupInput
-                          id="profile-name"
-                          placeholder="e.g., Frontend Developer, Backend Engineer"
+        <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh]">
+          <ScrollArea className="max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>Create New {profileType} Profile</DialogTitle>
+              <DialogDescription>
+                Fill in all the details for your new professional profile.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(() => {
+                  onCreate();
+                })}
+                className="space-y-6"
+              >
+                <FormField
+                  control={form.control}
+                  name="profileName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label htmlFor="profile-name">Profile Name</Label>
+                      <FormControl>
+                        <InputGroup>
+                          <InputGroupText>
+                            <User className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            id="profile-name"
+                            placeholder="e.g., Frontend Developer, Backend Engineer"
+                            value={field.value}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              setNewProfileName(e.target.value);
+                            }}
+                          />
+                        </InputGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label htmlFor="profile-description">Description</Label>
+                      <FormControl>
+                        <Textarea
+                          id="profile-description"
+                          placeholder="Describe your expertise and experience in this area... (minimum 10 characters)"
                           value={field.value}
                           onChange={(e) => {
                             field.onChange(e);
-                            setNewProfileName(e.target.value);
+                            setNewProfileDescription(e.target.value);
                           }}
+                          rows={4}
                         />
-                      </InputGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        {String(field.value || '').length}/500 characters
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label htmlFor="profile-description">Description</Label>
-                    <FormControl>
-                      <Textarea
-                        id="profile-description"
-                        placeholder="Describe your expertise and experience in this area... (minimum 10 characters)"
-                        value={field.value}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          setNewProfileDescription(e.target.value);
-                        }}
-                        rows={4}
-                      />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      {String(field.value || '').length}/500 characters
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="hourlyRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label
+                        htmlFor="hourly-rate"
+                        className="flex items-center gap-2"
+                      >
+                        Hourly Rate
+                      </Label>
+                      <FormControl>
+                        <InputGroup>
+                          <InputGroupText>
+                            <DollarSign className="h-4 w-4" />
+                          </InputGroupText>
+                          <InputGroupInput
+                            id="hourly-rate"
+                            type="number"
+                            min={0}
+                            step={1}
+                            placeholder="50"
+                            value={String(field.value ?? '')}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value) || 0;
+                              field.onChange(value);
+                              setNewProfileHourlyRate(value);
+                            }}
+                          />
+                          <InputGroupText>/hr</InputGroupText>
+                        </InputGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="hourlyRate"
-                render={({ field }) => (
-                  <FormItem>
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Award className="h-4 w-4" /> Skills
+                    </Label>
+                    <SelectTagPicker
+                      label=""
+                      options={skillsOptions}
+                      selected={newProfileSkills.map((skill: any) => ({
+                        name: skill?.label || skill?.name || '',
+                        interviewerStatus:
+                          skill?.interviewerStatus || 'NOT_APPLIED',
+                      }))}
+                      onAdd={(value: string) => {
+                        const selectedSkill = skillsOptions.find(
+                          (s: any) => (s.label || s.name) === value,
+                        );
+                        if (
+                          selectedSkill &&
+                          !newProfileSkills.some(
+                            (s: any) =>
+                              (s._id || s.type_id) ===
+                              (selectedSkill._id || selectedSkill.type_id),
+                          )
+                        ) {
+                          setNewProfileSkills([
+                            ...newProfileSkills,
+                            {
+                              ...selectedSkill,
+                              interviewerStatus: 'NOT_APPLIED',
+                            },
+                          ]);
+                        }
+                      }}
+                      onRemove={(name: string) => {
+                        setNewProfileSkills(
+                          newProfileSkills.filter(
+                            (skill: any) =>
+                              (skill.label || skill.name) !== name,
+                          ),
+                        );
+                      }}
+                      optionLabelKey="label"
+                      selectedNameKey="name"
+                      selectPlaceholder="Select skill"
+                      searchPlaceholder="Search skills..."
+                      hideRemoveButtonInSettings={true}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Layers className="h-4 w-4" /> Domains
+                    </Label>
+                    <SelectTagPicker
+                      label=""
+                      options={domainsOptions}
+                      selected={newProfileDomains.map((domain: any) => ({
+                        name: domain?.label || domain?.name || '',
+                        interviewerStatus:
+                          domain?.interviewerStatus || 'NOT_APPLIED',
+                      }))}
+                      onAdd={(value: string) => {
+                        const selectedDomain = domainsOptions.find(
+                          (d: any) => (d.label || d.name) === value,
+                        );
+                        if (
+                          selectedDomain &&
+                          !newProfileDomains.some(
+                            (d: any) =>
+                              (d._id || d.type_id) ===
+                              (selectedDomain._id || selectedDomain.type_id),
+                          )
+                        ) {
+                          setNewProfileDomains([
+                            ...newProfileDomains,
+                            {
+                              ...selectedDomain,
+                              interviewerStatus: 'NOT_APPLIED',
+                            },
+                          ]);
+                        }
+                      }}
+                      onRemove={(name: string) => {
+                        setNewProfileDomains(
+                          newProfileDomains.filter(
+                            (domain: any) =>
+                              (domain.label || domain.name) !== name,
+                          ),
+                        );
+                      }}
+                      optionLabelKey="label"
+                      selectedNameKey="name"
+                      selectPlaceholder="Select domain"
+                      searchPlaceholder="Search domains..."
+                      hideRemoveButtonInSettings={true}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" /> Projects
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowProjectDialog(true)}
+                      className="w-full justify-start"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {newProfileProjects.length > 0
+                        ? `${newProfileProjects.length} project(s) selected`
+                        : 'Add Projects'}
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <User className="h-4 w-4" /> Experiences
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowExperienceDialog(true)}
+                      className="w-full justify-start"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {newProfileExperiences.length > 0
+                        ? `${newProfileExperiences.length} experience(s) selected`
+                        : 'Add Experiences'}
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                  <div className="space-y-2">
                     <Label
-                      htmlFor="hourly-rate"
+                      htmlFor="github-link"
                       className="flex items-center gap-2"
                     >
-                      Hourly Rate
+                      <Github className="h-4 w-4" /> GitHub
                     </Label>
-                    <FormControl>
-                      <InputGroup>
-                        <InputGroupText>
-                          <DollarSign className="h-4 w-4" />
-                        </InputGroupText>
-                        <InputGroupInput
-                          id="hourly-rate"
-                          type="number"
-                          min={0}
-                          step={1}
-                          placeholder="50"
-                          value={String(field.value ?? '')}
-                          onChange={(e) => {
-                            const value = parseFloat(e.target.value) || 0;
-                            field.onChange(value);
-                            setNewProfileHourlyRate(value);
-                          }}
-                        />
-                        <InputGroupText>/hr</InputGroupText>
-                      </InputGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    <FormField
+                      control={form.control}
+                      name="githubLink"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <InputGroup className="h-10">
+                              <InputGroupText>
+                                <Github className="h-4 w-4" />
+                              </InputGroupText>
+                              <InputGroupInput
+                                id="github-link"
+                                placeholder="https://github.com/username"
+                                value={field.value || ''}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  setNewProfileGithubLink(e.target.value);
+                                }}
+                              />
+                            </InputGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <Separator />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Award className="h-4 w-4" /> Skills
-                  </Label>
-                  <SelectTagPicker
-                    label=""
-                    options={skillsOptions}
-                    selected={newProfileSkills.map((skill: any) => ({
-                      name: skill?.label || skill?.name || '',
-                      interviewerStatus:
-                        skill?.interviewerStatus || 'NOT_APPLIED',
-                    }))}
-                    onAdd={(value: string) => {
-                      const selectedSkill = skillsOptions.find(
-                        (s: any) => (s.label || s.name) === value,
-                      );
-                      if (
-                        selectedSkill &&
-                        !newProfileSkills.some(
-                          (s: any) =>
-                            (s._id || s.type_id) ===
-                            (selectedSkill._id || selectedSkill.type_id),
-                        )
-                      ) {
-                        setNewProfileSkills([
-                          ...newProfileSkills,
-                          {
-                            ...selectedSkill,
-                            interviewerStatus: 'NOT_APPLIED',
-                          },
-                        ]);
-                      }
-                    }}
-                    onRemove={(name: string) => {
-                      setNewProfileSkills(
-                        newProfileSkills.filter(
-                          (skill: any) => (skill.label || skill.name) !== name,
-                        ),
-                      );
-                    }}
-                    optionLabelKey="label"
-                    selectedNameKey="name"
-                    selectPlaceholder="Select skill"
-                    searchPlaceholder="Search skills..."
-                    hideRemoveButtonInSettings={true}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Layers className="h-4 w-4" /> Domains
-                  </Label>
-                  <SelectTagPicker
-                    label=""
-                    options={domainsOptions}
-                    selected={newProfileDomains.map((domain: any) => ({
-                      name: domain?.label || domain?.name || '',
-                      interviewerStatus:
-                        domain?.interviewerStatus || 'NOT_APPLIED',
-                    }))}
-                    onAdd={(value: string) => {
-                      const selectedDomain = domainsOptions.find(
-                        (d: any) => (d.label || d.name) === value,
-                      );
-                      if (
-                        selectedDomain &&
-                        !newProfileDomains.some(
-                          (d: any) =>
-                            (d._id || d.type_id) ===
-                            (selectedDomain._id || selectedDomain.type_id),
-                        )
-                      ) {
-                        setNewProfileDomains([
-                          ...newProfileDomains,
-                          {
-                            ...selectedDomain,
-                            interviewerStatus: 'NOT_APPLIED',
-                          },
-                        ]);
-                      }
-                    }}
-                    onRemove={(name: string) => {
-                      setNewProfileDomains(
-                        newProfileDomains.filter(
-                          (domain: any) =>
-                            (domain.label || domain.name) !== name,
-                        ),
-                      );
-                    }}
-                    optionLabelKey="label"
-                    selectedNameKey="name"
-                    selectPlaceholder="Select domain"
-                    searchPlaceholder="Search domains..."
-                    hideRemoveButtonInSettings={true}
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Briefcase className="h-4 w-4" /> Projects
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowProjectDialog(true)}
-                    className="w-full justify-start"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    {newProfileProjects.length > 0
-                      ? `${newProfileProjects.length} project(s) selected`
-                      : 'Add Projects'}
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <User className="h-4 w-4" /> Experiences
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowExperienceDialog(true)}
-                    className="w-full justify-start"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    {newProfileExperiences.length > 0
-                      ? `${newProfileExperiences.length} experience(s) selected`
-                      : 'Add Experiences'}
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="github-link"
-                    className="flex items-center gap-2"
-                  >
-                    <Github className="h-4 w-4" /> GitHub
-                  </Label>
-                  <FormField
-                    control={form.control}
-                    name="githubLink"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <InputGroup className="h-10">
-                            <InputGroupText>
-                              <Github className="h-4 w-4" />
-                            </InputGroupText>
-                            <InputGroupInput
-                              id="github-link"
-                              placeholder="https://github.com/username"
-                              value={field.value || ''}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                setNewProfileGithubLink(e.target.value);
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="availability"
+                      className="flex items-center gap-2"
+                    >
+                      <UserCog className="h-4 w-4" /> Availability
+                    </Label>
+                    <FormField
+                      control={form.control}
+                      name="availability"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Select
+                              value={field.value}
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                setNewProfileAvailability(value);
                               }}
-                            />
-                          </InputGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                            >
+                              <SelectTrigger className="h-10">
+                                <SelectValue placeholder="Select availability" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="FULL_TIME">
+                                  Full Time
+                                </SelectItem>
+                                <SelectItem value="PART_TIME">
+                                  Part Time
+                                </SelectItem>
+                                <SelectItem value="CONTRACT">
+                                  Contract
+                                </SelectItem>
+                                <SelectItem value="FREELANCE">
+                                  Freelance
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="availability"
-                    className="flex items-center gap-2"
+                <DialogFooter className="mt-6">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => {
+                      form.reset();
+                      onCancel();
+                    }}
                   >
-                    <UserCog className="h-4 w-4" /> Availability
-                  </Label>
-                  <FormField
-                    control={form.control}
-                    name="availability"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Select
-                            value={field.value}
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              setNewProfileAvailability(value);
-                            }}
-                          >
-                            <SelectTrigger className="h-10">
-                              <SelectValue placeholder="Select availability" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="FULL_TIME">
-                                Full Time
-                              </SelectItem>
-                              <SelectItem value="PART_TIME">
-                                Part Time
-                              </SelectItem>
-                              <SelectItem value="CONTRACT">Contract</SelectItem>
-                              <SelectItem value="FREELANCE">
-                                Freelance
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter className="mt-6">
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={() => {
-                    form.reset();
-                    onCancel();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Create Profile</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </ScrollArea>
-      </DialogContent>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Create Profile</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </ScrollArea>
+        </DialogContent>
       </Dialog>
 
       {showProjectDialog && freelancerId && (

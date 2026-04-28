@@ -67,7 +67,9 @@ const BusinessProjectsPage: React.FC = () => {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [sortBy, setSortBy] = useState<'createdAt' | 'projectName'>('createdAt');
+  const [sortBy, setSortBy] = useState<'createdAt' | 'projectName'>(
+    'createdAt',
+  );
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const user = useSelector((state: RootState) => state.user);

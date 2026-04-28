@@ -1437,7 +1437,9 @@ export default function ProfileDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">Description</h3>
+                      <h3 className="font-semibold text-lg mb-2">
+                        Description
+                      </h3>
                       <p className="text-muted-foreground">
                         {selectedProject.description}
                       </p>
@@ -1451,7 +1453,9 @@ export default function ProfileDetailPage() {
                     </div>
 
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">Project Type</h3>
+                      <h3 className="font-semibold text-lg mb-2">
+                        Project Type
+                      </h3>
                       <Badge variant="outline">
                         {selectedProject.projectType}
                       </Badge>

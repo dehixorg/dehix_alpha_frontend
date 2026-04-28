@@ -252,16 +252,12 @@ const Market: React.FC = () => {
               />
             </aside>
           )}
-          <ScrollArea
-            className="flex-1"
-            data-tour="business-market-list"
-          >
+          <ScrollArea className="flex-1" data-tour="business-market-list">
             <FreelancerList
               freelancers={freelancers}
               isLoading={isDataLoading}
             />
-             
-         </ScrollArea>
+          </ScrollArea>
         </div>
       </div>
     </BusinessDashboardLayout>

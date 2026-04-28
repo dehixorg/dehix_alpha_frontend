@@ -90,7 +90,9 @@ const ProjectInvitationsPage: React.FC = () => {
   const [inviteToDelete, setInviteToDelete] =
     useState<ProjectInvitation | null>(null);
   const [deletingInviteId, setDeletingInviteId] = useState<string | null>(null);
-  const [rejectingInviteId, setRejectingInviteId] = useState<string | null>(null);
+  const [rejectingInviteId, setRejectingInviteId] = useState<string | null>(
+    null,
+  );
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] =
     useState<InvitationStatusFilter>('ALL');
@@ -114,8 +116,8 @@ const ProjectInvitationsPage: React.FC = () => {
             rawStatus === InvitationStatus.ACCEPTED
               ? InvitationStatus.ACCEPTED
               : rawStatus === InvitationStatus.REJECTED
-              ? InvitationStatus.REJECTED
-              : InvitationStatus.PENDING;
+                ? InvitationStatus.REJECTED
+                : InvitationStatus.PENDING;
 
           return {
             _id:
@@ -181,8 +183,7 @@ const ProjectInvitationsPage: React.FC = () => {
         return dir * a.freelancerName.localeCompare(b.freelancerName);
       return (
         dir *
-        (new Date(a.invitedAt).getTime() -
-          new Date(b.invitedAt).getTime())
+        (new Date(a.invitedAt).getTime() - new Date(b.invitedAt).getTime())
       );
     });
     return arr;
@@ -211,7 +212,6 @@ const ProjectInvitationsPage: React.FC = () => {
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
           <div className="card rounded-xl border shadow-sm mb-6 max-w-full">
             <Tabs value={statusFilter}>
-              
               {/* ✅ FIXED SCROLL AREA */}
               <div className="border-b px-4 sm:px-6">
                 <ScrollArea className="w-full whitespace-nowrap">
