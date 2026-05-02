@@ -6,7 +6,7 @@ import { Note } from '@/utils/types/note';
 
 interface NotesRenderProps {
   notes: Note[];
-  setNotes: (notes: Note[]) => void;
+  setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void;
   isArchive: boolean;
   isTrash?: boolean;
   fetchNotes: () => Promise<void>;
