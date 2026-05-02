@@ -317,7 +317,7 @@ export const ChatComposer = memo(
       onSetReplyToMessageId,
     ]);
 
-    // Cleanup recording resources on unmount or when changing
+    // Cleanup media recorder resources when mediaRecorder changes or on unmount
     useEffect(() => {
       return () => {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
@@ -328,14 +328,26 @@ export const ChatComposer = memo(
             // Ignore if already stopped
           }
         }
-        if (recordingDurationIntervalRef.current) {
-          clearInterval(recordingDurationIntervalRef.current);
-        }
+      };
+    }, [mediaRecorder]);
+
+    // Cleanup audio URL when it changes or on unmount
+    useEffect(() => {
+      return () => {
         if (audioUrl) {
           URL.revokeObjectURL(audioUrl);
         }
       };
-    }, [mediaRecorder, audioUrl]);
+    }, [audioUrl]);
+
+    // Cleanup recording duration interval on unmount only
+    useEffect(() => {
+      return () => {
+        if (recordingDurationIntervalRef.current) {
+          clearInterval(recordingDurationIntervalRef.current);
+        }
+      };
+    }, []);
 
     // Create blob when recording stops
     useEffect(() => {
