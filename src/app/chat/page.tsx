@@ -417,6 +417,12 @@ const HomePage = () => {
       (data) => {
         if (!isMounted) return;
         const typedData = data as Conversation[];
+        // Push conversations with no messages to the end
+        typedData.sort((a, b) => {
+          const aHasMsg = a.lastMessage ? 1 : 0;
+          const bHasMsg = b.lastMessage ? 1 : 0;
+          return bHasMsg - aHasMsg;
+        });
         setConversations(typedData);
 
         setLoading(false);
@@ -627,7 +633,6 @@ const HomePage = () => {
   } else if (activeConversation) {
     chatWindowComponentContent = (
       <CardsChat
-        key={activeConversation.id}
         conversation={activeConversation}
         isChatExpanded={isChatExpanded}
         onToggleExpand={toggleChatExpanded}
@@ -664,7 +669,7 @@ const HomePage = () => {
 
   return (
     <div
-      className="flex min-h-screen w-full flex-col overflow-x-hidden"
+      className="flex h-screen w-full flex-col overflow-hidden"
       data-tour="chat"
     >
       <SidebarMenu
@@ -680,7 +685,7 @@ const HomePage = () => {
         }
         active="Chats"
       />
-      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14">
+      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14 overflow-hidden">
         <Header
           menuItemsTop={
             user.type === 'business'
@@ -696,7 +701,7 @@ const HomePage = () => {
           breadcrumbItems={[{ label: 'Chats', link: '/chat' }]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[96vh]" data-tour="chat-main">
+        <main className="flex-1 overflow-hidden" data-tour="chat-main">
           {isMobile ? (
             <div className="h-full">
               {activeConversation

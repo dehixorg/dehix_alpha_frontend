@@ -373,11 +373,11 @@ function ChatMessageItem({
                 isEmojiOnly ||
                 (message.voiceMessage && message.voiceMessage.type === 'voice')
                 ? isSender
-                  ? 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
-                  : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-tl-none'
+                  ? 'bg-transparent text-[hsl(var(--foreground))] dark:text-gray-50 rounded-2xl rounded-tr-none'
+                  : 'bg-transparent text-[hsl(var(--foreground))] dark:text-[hsl(var(--secondary-foreground))] rounded-2xl rounded-tl-none'
                 : isSender
-                  ? 'bg-muted-foreground/20 dark:bg-muted-foreground/20 dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
-                  : 'bg-muted-foreground/20 dark:bg-muted-foreground/20 dark:text-[hsl(var(--secondary-foreground))] rounded-tl-none relative flex justify-center items-center pr-20 min-w-[180px]',
+                  ? 'bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/30 text-[hsl(var(--foreground))] dark:text-gray-50 rounded-2xl rounded-tr-none relative flex justify-center items-center pr-20 min-w-[140px] shadow-sm border border-primary/5'
+                  : 'bg-muted/50 dark:bg-muted/20 text-[hsl(var(--foreground))] dark:text-[hsl(var(--secondary-foreground))] rounded-2xl rounded-tl-none relative flex justify-center items-center pr-20 min-w-[140px] shadow-sm border border-border/50',
             )}
             onClick={() => {
               if (message.replyTo) {
@@ -509,7 +509,7 @@ function ChatMessageItem({
                             className={cn(
                               'w-full break-words [overflow-wrap:anywhere]',
                               isEmojiOnly &&
-                                'text-4xl leading-snug text-center',
+                                'text-4xl leading-normal text-center py-2',
                             )}
                             dangerouslySetInnerHTML={{
                               __html: sanitizedContent,
