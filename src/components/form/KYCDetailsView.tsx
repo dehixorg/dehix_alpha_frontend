@@ -6,8 +6,8 @@ import { Separator } from '../ui/separator';
 
 interface KYCDetailsViewProps {
   kycData: {
-    aadharOrGovtId?: string;
-    salaryOrEarning?: number;
+    documentId?: string;
+    income?: number;
     frontImageUrl?: string;
     backImageUrl?: string;
     liveCaptureUrl?: string;
@@ -20,14 +20,14 @@ const KYCDetailsView: React.FC<KYCDetailsViewProps> = ({ kycData }) => {
       <div className="space-y-4 text-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <p className="text-muted-foreground">Aadhar/Govt ID</p>
+            <p className="text-muted-foreground">Document ID</p>
             <p className="font-medium break-words">
-              {kycData.aadharOrGovtId || '-'}
+              {kycData.documentId || '-'}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Salary/Earning</p>
-            <p className="font-medium">{kycData.salaryOrEarning || '-'}</p>
+            <p className="text-muted-foreground">Annual Income/Profit</p>
+            <p className="font-medium">{kycData.income || '-'}</p>
           </div>
         </div>
         <Separator />
