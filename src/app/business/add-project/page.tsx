@@ -1,8 +1,15 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+
 import { Skeleton } from '@/components/ui/skeleton';
-const CreateProjectBusinessForm = dynamic(() => import('@/components/form/businessCreateProjectForm').then(m => ({ default: m.CreateProjectBusinessForm })), { loading: () => <Skeleton className="h-96 w-full" /> });
+const CreateProjectBusinessForm = dynamic(
+  () =>
+    import('@/components/form/businessCreateProjectForm').then((m) => ({
+      default: m.CreateProjectBusinessForm,
+    })),
+  { loading: () => <Skeleton className="h-96 w-full" /> },
+);
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
 
 export default function Dashboard() {

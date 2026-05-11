@@ -3,14 +3,17 @@
 import { Activity, CheckCircle, Clock } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import StatItem from '@/components/shared/StatItem';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
-import dynamic from 'next/dynamic';
-const ProjectTableCard = dynamic(() => import('@/components/freelancer/homeTableComponent'), { loading: () => <Skeleton className="h-48 w-full" /> });
+const ProjectTableCard = dynamic(
+  () => import('@/components/freelancer/homeTableComponent'),
+  { loading: () => <Skeleton className="h-48 w-full" /> },
+);
 import { InterviewsSection } from '@/components/interviews/InterviewsSection';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';

@@ -1,33 +1,26 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Loader2, Search, Sliders, X } from 'lucide-react';
-
 import dynamic from 'next/dynamic';
 
 // ✅ Lazy load better candidates
 const InvitedProfileCards = dynamic(
   () =>
-    import(
-      './sidebar-projectComponents/profileCards.tsx/invitedProfileCards'
-    ),
-  { loading: () => <></> }
+    import('./sidebar-projectComponents/profileCards.tsx/invitedProfileCards'),
+  { loading: () => <></> },
 );
 
 const RejectedProfileCards = dynamic(
   () =>
-    import(
-      './sidebar-projectComponents/profileCards.tsx/rejectedProfileCards'
-    ),
-  { loading: () => <></> }
+    import('./sidebar-projectComponents/profileCards.tsx/rejectedProfileCards'),
+  { loading: () => <></> },
 );
 
 // ❌ Removed lazy loading (core UI → normal import)
 import SkillDomainForm from '@/components/business/hireTalent.tsx/skillDomainForm';
 import TalentCard from '@/components/business/hireTalent.tsx/talentCard';
-
 import { calculateExperience } from '@/components/marketComponents/TalentLayout';
 import { CardTitle } from '@/components/ui/card';
-
 import {
   Select,
   SelectContent,

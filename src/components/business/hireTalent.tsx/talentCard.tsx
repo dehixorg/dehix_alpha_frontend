@@ -5,6 +5,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Expand, Github, Linkedin, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import dynamic from 'next/dynamic';
 
 import { fetchAndUpdateConnects } from '@/lib/updateConnects';
 import {
@@ -34,8 +35,10 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import dynamic from 'next/dynamic';
-const AddToLobbyDialog = dynamic(() => import('@/components/shared/AddToLobbyDialog'), { loading: () => <></> });
+const AddToLobbyDialog = dynamic(
+  () => import('@/components/shared/AddToLobbyDialog'),
+  { loading: () => <></> },
+);
 import type { RootState } from '@/lib/store';
 
 interface Education {

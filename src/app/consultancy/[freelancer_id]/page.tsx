@@ -6,8 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
-
 import dynamic from 'next/dynamic';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import ConsultantCard from '@/components/cards/ConsultantCard';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -39,7 +39,13 @@ import {
 import { CardTitle } from '@/components/ui/card';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-const ProjectCard = dynamic(() => import('@/components/cards/projectCard').then(m => ({ default: m.ProjectCard })), { loading: () => <Skeleton className="h-32 w-full" /> });
+const ProjectCard = dynamic(
+  () =>
+    import('@/components/cards/projectCard').then((m) => ({
+      default: m.ProjectCard,
+    })),
+  { loading: () => <Skeleton className="h-32 w-full" /> },
+);
 import { Separator } from '@/components/ui/separator';
 import { ProjectStatus } from '@/utils/freelancer/enum';
 import { Input } from '@/components/ui/input';

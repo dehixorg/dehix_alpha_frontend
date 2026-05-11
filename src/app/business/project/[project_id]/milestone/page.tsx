@@ -13,7 +13,6 @@ import FreelancerList from '@/components/freelancer/FreelancerList';
 import EmptyState from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
-
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { Milestone, Story } from '@/utils/types/Milestone';
@@ -131,8 +130,7 @@ const Page = () => {
     try {
       const response = await axiosInstance.get(`/project/${project_id}`);
 
-      const projectData =
-        response?.data?.data?.data || response?.data?.data;
+      const projectData = response?.data?.data?.data || response?.data?.data;
 
       setProject(projectData);
     } catch (error) {
@@ -312,9 +310,7 @@ const Page = () => {
                 milestones={milestones}
                 handleStorySubmit={handleStorySubmit}
                 selectedIndex={selectedMilestoneIndex}
-                onMilestoneSelect={(index) =>
-                  setSelectedMilestoneIndex(index)
-                }
+                onMilestoneSelect={(index) => setSelectedMilestoneIndex(index)}
               />
 
               {selectedMilestoneIndex !== null && (

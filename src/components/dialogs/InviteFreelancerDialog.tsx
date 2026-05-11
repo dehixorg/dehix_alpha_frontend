@@ -11,6 +11,7 @@ import {
   Zap,
   ArrowLeft,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -25,21 +26,22 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import dynamic from 'next/dynamic';
-
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifySuccess, notifyError } from '@/utils/toastMessage';
 
 /* ✅ Lazy loaded (NEW) */
 const ProjectTypeDialog = dynamic(
-  () => import('./ProjectTypeDialog').then(m => ({ default: m.ProjectTypeDialog })),
-  { loading: () => null }
+  () =>
+    import('./ProjectTypeDialog').then((m) => ({
+      default: m.ProjectTypeDialog,
+    })),
+  { loading: () => null },
 );
 
 /* ✅ Already correct */
 const ConnectsDialog = dynamic(
   () => import('@/components/dialogs/ConnectsDialog'),
-  { loading: () => null }
+  { loading: () => null },
 );
 
 interface Profile {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Users, Plus, Search, ChevronDown } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import dynamic from 'next/dynamic';
 
 import { Badge } from '../ui/badge';
 
@@ -20,8 +21,13 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import FreelancerListItem from '@/components/freelancer/FreelancerListItem';
-import dynamic from 'next/dynamic';
-const CreateProjectTeamGroupDialog = dynamic(() => import('@/components/shared/CreateProjectTeamGroupDialog').then(m => ({ default: m.CreateProjectTeamGroupDialog })), { loading: () => <></> });
+const CreateProjectTeamGroupDialog = dynamic(
+  () =>
+    import('@/components/shared/CreateProjectTeamGroupDialog').then((m) => ({
+      default: m.CreateProjectTeamGroupDialog,
+    })),
+  { loading: () => <></> },
+);
 import EmptyState from '@/components/shared/EmptyState';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 

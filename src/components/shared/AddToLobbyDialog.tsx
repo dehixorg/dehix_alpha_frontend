@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+import dynamic from 'next/dynamic';
 
 import {
   Dialog,
@@ -8,8 +9,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import dynamic from 'next/dynamic';
-const ConnectsDialog = dynamic(() => import('@/components/shared/ConnectsDialog'), { loading: () => <></> });
+const ConnectsDialog = dynamic(
+  () => import('@/components/shared/ConnectsDialog'),
+  { loading: () => <></> },
+);
 import { RootState } from '@/lib/store';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
 

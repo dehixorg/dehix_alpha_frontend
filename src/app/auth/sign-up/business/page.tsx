@@ -1,11 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
 import { ThemeToggle } from '@/components/shared/themeToggle';
-import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
-const BusinessRegisterForm = dynamic(() => import('@/components/form/register/business'), { loading: () => <Skeleton className="h-96 w-full" /> });
+const BusinessRegisterForm = dynamic(
+  () => import('@/components/form/register/business'),
+  { loading: () => <Skeleton className="h-96 w-full" /> },
+);
 import { Button } from '@/components/ui/button';
 
 export default function SignUp() {
