@@ -20,7 +20,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import FreelancerListItem from '@/components/freelancer/FreelancerListItem';
-import { CreateProjectTeamGroupDialog } from '@/components/shared/CreateProjectTeamGroupDialog';
+import dynamic from 'next/dynamic';
+const CreateProjectTeamGroupDialog = dynamic(() => import('@/components/shared/CreateProjectTeamGroupDialog').then(m => ({ default: m.CreateProjectTeamGroupDialog })), { loading: () => <></> });
 import EmptyState from '@/components/shared/EmptyState';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 

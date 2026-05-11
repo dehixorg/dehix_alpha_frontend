@@ -24,7 +24,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { FullLeaderboard } from '@/types/leaderboard';
-import { ContestCard } from '@/components/leaderboard/ContestCard';
+import dynamic from 'next/dynamic';
+const ContestCard = dynamic(() => import('@/components/leaderboard/ContestCard').then(m => ({ default: m.ContestCard })), { loading: () => <Skeleton className="h-48 w-full" /> });
 import {
   Select,
   SelectContent,

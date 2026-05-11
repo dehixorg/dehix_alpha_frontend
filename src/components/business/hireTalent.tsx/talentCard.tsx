@@ -34,7 +34,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import AddToLobbyDialog from '@/components/shared/AddToLobbyDialog';
+import dynamic from 'next/dynamic';
+const AddToLobbyDialog = dynamic(() => import('@/components/shared/AddToLobbyDialog'), { loading: () => <></> });
 import type { RootState } from '@/lib/store';
 
 interface Education {

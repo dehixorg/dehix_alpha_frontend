@@ -5,19 +5,39 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 import MilestoneTimeline from '@/components/shared/MilestoneTimeline';
 import StoriesSection from '@/components/shared/StoriesSection';
 import FreelancerList from '@/components/freelancer/FreelancerList';
 import EmptyState from '@/components/shared/EmptyState';
-import { CreateMilestoneDialog } from '@/components/shared/CreateMilestoneDialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
+
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { Milestone, Story } from '@/utils/types/Milestone';
 import type { RootState } from '@/lib/store';
-import { CreateProjectGroupDialog } from '@/components/shared/CreateProjectGroupDialog';
-import { Skeleton } from '@/components/ui/skeleton';
-import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
+
+const CreateMilestoneDialog = dynamic(
+  () =>
+    import('@/components/shared/CreateMilestoneDialog').then((m) => ({
+      default: m.CreateMilestoneDialog,
+    })),
+  {
+    loading: () => <Skeleton className="h-10 w-full" />,
+  },
+);
+
+const CreateProjectGroupDialog = dynamic(
+  () =>
+    import('@/components/shared/CreateProjectGroupDialog').then((m) => ({
+      default: m.CreateProjectGroupDialog,
+    })),
+  {
+    loading: () => <Skeleton className="h-10 w-full" />,
+  },
+);
 
 interface Project {
   _id: string;
@@ -62,15 +82,15 @@ const Page = () => {
       }
 
       try {
-        // Generate a unique session key
         const sessionKey = crypto.randomUUID();
 
-        // Fetch freelancer details to get complete user information
         let freelancerData;
+
         try {
           const response = await axiosInstance.get(
             `/public/freelancer/${freelancerId}`,
           );
+
           freelancerData = response.data?.data?.data || response.data?.data;
         } catch (error) {
           console.error('Failed to fetch freelancer details:', error);
@@ -78,7 +98,6 @@ const Page = () => {
           return;
         }
 
-        // Create chat data object
         const chatData = {
           newChat: true,
           userId: freelancerId,
@@ -88,10 +107,8 @@ const Page = () => {
           userType: 'freelancer',
         };
 
-        // Store in localStorage (accessible across tabs)
         localStorage.setItem(sessionKey, JSON.stringify(chatData));
 
-        // Open in new tab
         window.open(`/chat?session=${sessionKey}`, '_blank');
 
         notifySuccess(`Opening chat with ${freelancerName}...`, 'Chat');
@@ -113,7 +130,10 @@ const Page = () => {
   const fetchProject = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/project/${project_id}`);
-      const projectData = response?.data?.data?.data || response?.data?.data;
+
+      const projectData =
+        response?.data?.data?.data || response?.data?.data;
+
       setProject(projectData);
     } catch (error) {
       console.error('Error fetching project:', error);
@@ -128,6 +148,7 @@ const Page = () => {
       });
 
       const allStories: { [key: string]: Story[] | null } = {};
+
       const fetchedMilestones = response.data?.data.map(
         (milestone: Milestone) => {
           const storiesForMilestone = milestone.stories?.length
@@ -177,6 +198,7 @@ const Page = () => {
                 tasks: [...(story.tasks || []), newTask.formData],
               };
             }
+
             return story;
           })
         : [...(updateMilestone.stories || []), storyData];
@@ -203,6 +225,7 @@ const Page = () => {
         'Error updating milestone:',
         (error as any).response?.data || (error as any).message,
       );
+
       notifyError('Failed to update milestone.', 'Error');
     }
   };
@@ -214,6 +237,7 @@ const Page = () => {
 
   useEffect(() => {
     if (milestones.length === 0) return;
+
     if (
       selectedMilestoneIndex == null ||
       selectedMilestoneIndex >= milestones.length
@@ -250,7 +274,6 @@ const Page = () => {
         </div>
       </div>
 
-      {/* Main content area */}
       <div className="mt-4 w-full max-w-full">
         {loading ? (
           <div className="w-full max-w-full">
@@ -274,46 +297,40 @@ const Page = () => {
             </div>
           </div>
         ) : milestones.length > 0 ? (
-          <>
-            <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
-              {/* Left Part: FreelancerList */}
-              <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full">
-                <FreelancerList
-                  projectId={project_id}
-                  onChatClick={handleChatClick}
-                  className="w-full max-w-full"
-                />
-              </div>
-
-              {/* Right Part */}
-              <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
-                {/* Top: MilestoneTimeline */}
-                <MilestoneTimeline
-                  fetchMilestones={fetchMilestones}
-                  milestones={milestones}
-                  handleStorySubmit={handleStorySubmit}
-                  selectedIndex={selectedMilestoneIndex}
-                  onMilestoneSelect={(index) =>
-                    setSelectedMilestoneIndex(index)
-                  }
-                />
-
-                {/* Bottom: StoriesSection (milestone cards) */}
-                {selectedMilestoneIndex !== null && (
-                  <StoriesSection
-                    key={
-                      milestones[selectedMilestoneIndex]?._id ??
-                      selectedMilestoneIndex
-                    }
-                    milestone={milestones[selectedMilestoneIndex]}
-                    fetchMilestones={fetchMilestones}
-                    handleStorySubmit={handleStorySubmit}
-                    isFreelancer={false}
-                  />
-                )}
-              </div>
+          <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
+            <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full">
+              <FreelancerList
+                projectId={project_id}
+                onChatClick={handleChatClick}
+                className="w-full max-w-full"
+              />
             </div>
-          </>
+
+            <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
+              <MilestoneTimeline
+                fetchMilestones={fetchMilestones}
+                milestones={milestones}
+                handleStorySubmit={handleStorySubmit}
+                selectedIndex={selectedMilestoneIndex}
+                onMilestoneSelect={(index) =>
+                  setSelectedMilestoneIndex(index)
+                }
+              />
+
+              {selectedMilestoneIndex !== null && (
+                <StoriesSection
+                  key={
+                    milestones[selectedMilestoneIndex]?._id ??
+                    selectedMilestoneIndex
+                  }
+                  milestone={milestones[selectedMilestoneIndex]}
+                  fetchMilestones={fetchMilestones}
+                  handleStorySubmit={handleStorySubmit}
+                  isFreelancer={false}
+                />
+              )}
+            </div>
+          </div>
         ) : (
           <EmptyState
             className="h-[40vh] border-0 bg-transparent py-0"
@@ -323,7 +340,6 @@ const Page = () => {
         )}
       </div>
 
-      {/* Create Project Group Dialog */}
       <CreateProjectGroupDialog
         isOpen={showCreateGroupDialog}
         onClose={() => setShowCreateGroupDialog(false)}

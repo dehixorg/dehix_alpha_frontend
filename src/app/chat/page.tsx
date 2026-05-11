@@ -594,3 +594,175 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
+// 'use client';
+
+// import { useCallback, useEffect, useMemo, useState } from 'react';
+// import { useRouter, useSearchParams } from 'next/navigation';
+// import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+// import { useSelector } from 'react-redux';
+
+// import { db } from '@/config/firebaseConfig';
+// import { notifyError, notifySuccess } from '@/utils/toastMessage';
+// import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
+// import { RootState } from '@/lib/store';
+// import type { Conversation } from '@/components/shared/chatList';
+// import type { CombinedUser as NewChatUser } from '@/hooks/useAllUsers';
+
+// const getConvKey = (a: string, b: string) =>
+//   a < b ? `${a}_${b}` : `${b}_${a}`;
+
+// const HomePage = () => {
+//   const router = useRouter();
+//   const searchParams = useSearchParams();
+//   const user = useSelector((state: RootState) => state.user);
+
+//   const [conversations, setConversations] = useState<Conversation[]>([]);
+//   const [activeConversation, setActiveConversation] =
+//     useState<Conversation | null>(null);
+//   const [loading, setLoading] = useState(true);
+
+//   // 🔥 O(1) lookup map
+//   const conversationMap = useMemo(() => {
+//     const map = new Map<string, Conversation>();
+
+//     conversations.forEach((conv) => {
+//       if (conv.type === 'individual') {
+//         const key = getConvKey(conv.participants[0], conv.participants[1]);
+//         map.set(key, conv);
+//       } else {
+//         map.set(conv.id, conv);
+//       }
+//     });
+
+//     return map;
+//   }, [conversations]);
+
+//   // 🚀 Subscribe to conversations
+//   useEffect(() => {
+//     if (!user?.uid) return;
+
+//     setLoading(true);
+
+//     const unsubscribe = subscribeToUserConversations(
+//       'conversations',
+//       user.uid,
+//       (data) => {
+//         setConversations(data as Conversation[]);
+//         setLoading(false);
+//       },
+//     );
+
+//     return () => unsubscribe && unsubscribe();
+//   }, [user?.uid]);
+
+//   // 🔥 Unified active conversation logic
+//   useEffect(() => {
+//     if (!user?.uid || loading) return;
+
+//     const convId = searchParams?.get('c');
+
+//     if (convId) {
+//       const match = conversations.find((c) => c.id === convId);
+//       setActiveConversation(match || null);
+//     } else if (conversations.length > 0) {
+//       setActiveConversation((prev) => prev ?? conversations[0]);
+//     }
+//   }, [user?.uid, loading, conversations, searchParams]);
+
+//   // 🚀 Start new chat (O(1))
+//   const handleStartNewChat = useCallback(
+//     async (selectedUser: NewChatUser) => {
+//       if (!user?.uid) {
+//         notifyError('Login required', 'Error');
+//         return null;
+//       }
+
+//       const key = getConvKey(user.uid, selectedUser.id);
+//       const existingConv = conversationMap.get(key);
+
+//       // ✅ Already exists
+//       if (existingConv) {
+//         setActiveConversation(existingConv);
+//         notifySuccess('Switched to existing chat', 'Info');
+//         return existingConv;
+//       }
+
+//       // 🚀 Create new conversation
+//       try {
+//         const newConvData = {
+//           participants: [user.uid, selectedUser.id].sort(),
+//           type: 'individual' as const,
+//           createdAt: serverTimestamp(),
+//           updatedAt: serverTimestamp(),
+//           lastMessage: null,
+//         };
+
+//         const docRef = await addDoc(
+//           collection(db, 'conversations'),
+//           newConvData,
+//         );
+
+//         const newConversation: Conversation = {
+//           ...newConvData,
+//           id: docRef.id,
+//           createdAt: new Date().toISOString(),
+//           updatedAt: new Date().toISOString(),
+//         };
+
+//         setConversations((prev) => [...prev, newConversation]);
+//         setActiveConversation(newConversation);
+
+//         notifySuccess('New chat created', 'Success');
+//         return newConversation;
+//       } catch (err) {
+//         console.error(err);
+//         notifyError('Failed to create chat', 'Error');
+//         return null;
+//       }
+//     },
+//     [user, conversationMap],
+//   );
+
+//   // 🚀 Select conversation
+//   const handleSelectConversation = useCallback(
+//     (conv: Conversation) => {
+//       setActiveConversation(conv);
+
+//       const url = new URL(window.location.href);
+//       url.searchParams.set('c', conv.id);
+//       router.push(url.pathname + url.search, { scroll: false });
+//     },
+//     [router],
+//   );
+
+//   return (
+//     <div>
+//       {/* Chat List */}
+//       {loading ? (
+//         <p>Loading...</p>
+//       ) : (
+//         <ul>
+//           {conversations.map((conv) => (
+//             <li key={conv.id} onClick={() => handleSelectConversation(conv)}>
+//               {conv.type === 'group'
+//                 ? conv.groupName
+//                 : 'Private Chat'}
+//             </li>
+//           ))}
+//         </ul>
+//       )}
+
+//       {/* Chat Window */}
+//       <div>
+//         {activeConversation ? (
+//           <p>Chat ID: {activeConversation.id}</p>
+//         ) : (
+//           <p>Select a conversation</p>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default HomePage;

@@ -14,7 +14,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Note } from '@/utils/types/note';
-import { CreateNoteDialog } from '@/components/shared/CreateNoteDialog';
+import dynamic from 'next/dynamic';
+const CreateNoteDialog = dynamic(() => import('@/components/shared/CreateNoteDialog').then(m => ({ default: m.CreateNoteDialog })), { loading: () => <></> });
 
 const NotesHeader = ({
   onNoteCreate,

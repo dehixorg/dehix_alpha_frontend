@@ -3,8 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ProjectMarketTab from '@/components/market/ProjectMarketTab';
-import TalentMarketTab from '@/components/market/TalentMarketTab';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+const ProjectMarketTab = dynamic(() => import('@/components/market/ProjectMarketTab'), { loading: () => <Skeleton className="h-64 w-full" /> });
+const TalentMarketTab = dynamic(() => import('@/components/market/TalentMarketTab'), { loading: () => <Skeleton className="h-64 w-full" /> });
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 import { useMarketTour } from '@/components/tour/freelancer/useMarketTour';
 

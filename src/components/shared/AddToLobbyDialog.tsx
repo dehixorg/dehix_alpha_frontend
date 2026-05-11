@@ -8,7 +8,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import dynamic from 'next/dynamic';
+const ConnectsDialog = dynamic(() => import('@/components/shared/ConnectsDialog'), { loading: () => <></> });
 import { RootState } from '@/lib/store';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
 

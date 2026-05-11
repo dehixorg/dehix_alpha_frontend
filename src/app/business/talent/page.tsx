@@ -5,8 +5,10 @@ import { Users2, FileText } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { CardTitle } from '@/components/ui/card';
-import SkillDomainForm from '@/components/business/hireTalent.tsx/skillDomainForm';
-import TalentCard from '@/components/business/hireTalent.tsx/talentCard';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+const SkillDomainForm = dynamic(() => import('@/components/business/hireTalent.tsx/skillDomainForm'), { loading: () => <Skeleton className="h-32 w-full" /> });
+const TalentCard = dynamic(() => import('@/components/business/hireTalent.tsx/talentCard'), { loading: () => <Skeleton className="h-48 w-full" /> });
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Select,
