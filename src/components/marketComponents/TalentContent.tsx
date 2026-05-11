@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Loader2, Search, Sliders, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
-// ✅ Lazy load better candidates
+
 const InvitedProfileCards = dynamic(
   () =>
     import('./sidebar-projectComponents/profileCards.tsx/invitedProfileCards'),
@@ -16,7 +16,7 @@ const RejectedProfileCards = dynamic(
   { loading: () => <></> },
 );
 
-// ❌ Removed lazy loading (core UI → normal import)
+
 import SkillDomainForm from '@/components/business/hireTalent.tsx/skillDomainForm';
 import TalentCard from '@/components/business/hireTalent.tsx/talentCard';
 import { calculateExperience } from '@/components/marketComponents/TalentLayout';
