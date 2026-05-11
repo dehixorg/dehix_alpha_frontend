@@ -235,7 +235,7 @@ const Market: React.FC = () => {
         <div className="flex flex-1 px-4 sm:px-8 pb-8">
           {isLargeScreen && (
             <aside
-              className="w-80 flex-shrink-0 pr-6"
+              className="w-80 flex-shrink-0 pr-6 sticky top-[3.5rem] self-start h-[calc(100vh-3.5rem)] overflow-y-auto"
               data-tour="business-market-filters"
             >
               <BusinessFilterComponent
@@ -252,7 +252,7 @@ const Market: React.FC = () => {
             </aside>
           )}
           <div
-            className="flex-1 overflow-y-auto"
+            className="flex-1 min-w-0"
             data-tour="business-market-list"
           >
             <FreelancerList

@@ -37,7 +37,7 @@ export default function BusinessDashboardLayout({
   return (
     <div
       className={cn(
-        'flex min-h-screen w-full !max-w-none overflow-x-hidden',
+        'flex min-h-screen w-full !max-w-none overflow-x-clip',
         containerClassName,
       )}
     >
