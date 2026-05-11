@@ -68,8 +68,9 @@ type KYCFormValues = z.infer<typeof kycFormSchema>;
 // Helper function to transform form data for KYCDetailsView
 const transformKYCDataForView = (formValues: KYCFormValues) => {
   return {
-    businessProof: formValues.businessProof,
-    businessProfit: formValues.businessProfit,
+    // Map business fields to the generic fields expected by KYCDetailsView
+    aadharOrGovtId: formValues.businessProof,
+    salaryOrEarning: formValues.businessProfit,
     frontImageUrl:
       typeof formValues.frontImageUrl === 'string'
         ? formValues.frontImageUrl

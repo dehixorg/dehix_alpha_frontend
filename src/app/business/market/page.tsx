@@ -251,10 +251,7 @@ const Market: React.FC = () => {
               />
             </aside>
           )}
-          <div
-            className="flex-1 min-w-0"
-            data-tour="business-market-list"
-          >
+          <div className="flex-1 min-w-0" data-tour="business-market-list">
             <FreelancerList
               freelancers={freelancers}
               isLoading={isDataLoading}
