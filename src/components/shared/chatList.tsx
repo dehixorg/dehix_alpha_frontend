@@ -107,7 +107,7 @@ const getRelativeTimeLabel = (timestamp?: string) => {
 };
 
 const getLastMessagePreview = (lastMessage: Conversation['lastMessage']) => {
-  if (!lastMessage) return { text: 'No messages yet', icon: null };
+  if (!lastMessage) return { text: 'Tap to start a conversation', icon: null };
   const content = lastMessage.content;
   const s3BucketUrl = process.env.NEXT_PUBLIC_S3_BUCKET_URL;
 
@@ -369,24 +369,30 @@ export function ChatList({
   return (
     <div className="flex flex-col h-full w-full bg-[hsl(var(--card))] overflow-hidden">
       <div className="p-3 border-b border-[hsl(var(--border))]">
-        <div className="flex space-x-2 mb-3">
-          <Button
-            variant="default"
-            className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-lg"
-            onClick={onOpenNewChatDialog}
-          >
-            <SquarePen className="h-4 w-4 mr-2" /> New Chat
-          </Button>
-          {activeView !== 'archived' && (
+        <div className="flex items-center justify-between mb-3 px-1">
+          <h2 className="text-lg font-bold tracking-tight">Chats</h2>
+          <div className="flex items-center space-x-1">
             <Button
-              variant="outline"
-              className="flex items-center justify-center text-sm px-3 py-2 rounded-full shadow-lg"
-              onClick={handleOpenArchivedChats}
-              aria-label="View archived chats"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-muted"
+              onClick={onOpenNewChatDialog}
+              title="New Chat"
             >
-              <Archive className="h-4 w-4" />
+              <SquarePen className="h-4 w-4" />
             </Button>
-          )}
+            {activeView !== 'archived' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-muted"
+                onClick={handleOpenArchivedChats}
+                title="Archived Chats"
+              >
+                <Archive className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
         <div className="relative">
           <Search
@@ -517,8 +523,10 @@ export function ChatList({
                     <div
                       key={conversation.id}
                       className={cn(
-                        'flex items-start p-3 rounded-lg cursor-pointer space-x-3 hover:bg-[#d6dae2a8] dark:hover:bg-[#35383b9e]',
-                        isActive && 'bg-[#d6dae2a8] dark:bg-[#35383b9e]',
+                        'flex items-start p-3 rounded-xl cursor-pointer space-x-3 transition-all duration-200 ease-out mx-1 group/item',
+                        'hover:bg-muted/80 hover:scale-[1.01] active:scale-[0.99]',
+                        isActive &&
+                          'bg-primary/10 dark:bg-primary/20 shadow-sm border border-primary/10',
                       )}
                       onClick={() => setConversation(conversation)}
                     >
@@ -540,8 +548,8 @@ export function ChatList({
                         <div className="flex justify-between items-baseline">
                           <p
                             className={cn(
-                              'text-sm truncate',
-                              entry.isUnread ? 'font-bold' : 'font-medium',
+                              'text-[15px] truncate',
+                              entry.isUnread ? 'font-semibold' : 'font-medium',
                             )}
                           >
                             {entry.displayName}

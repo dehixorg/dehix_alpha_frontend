@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { doc, DocumentData, updateDoc } from 'firebase/firestore';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
 
@@ -125,8 +125,10 @@ export function CardsChat({
   const [searchValue, setSearchValue] = useState<string>('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const debouncedSearch = useDebounce(searchValue, 500); /* wait for .5 sec */
-  const [messages, setMessages] = useState<DocumentData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [messagesCache, setMessagesCache] = useState<Record<string, DocumentData[]>>({});
+  const [cacheStatus, setCacheStatus] = useState<Record<string, boolean>>({});
+  const messages = messagesCache[conversation?.id || ''] || [];
+  const loading = conversation?.id ? !cacheStatus[conversation.id] : false;
   const [isSending, setIsSending] = useState(false);
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -155,9 +157,9 @@ export function CardsChat({
         msg.voiceMessage?.type === 'voice'
           ? 'Voice message'
           : (msg.content ?? '')
-              .replace(/<[^>]*>/g, '')
-              .replace(/&nbsp;/g, ' ')
-              .trim() || 'Message',
+            .replace(/<[^>]*>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .trim() || 'Message',
       voiceMessage: msg.voiceMessage,
     };
   }, [replyToMessageId, messageById]);
@@ -400,15 +402,23 @@ export function CardsChat({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Reset UI state when conversation changes
+  useEffect(() => {
+    setSearchValue('');
+    setIsSearchVisible(false);
+    setReplyToMessageId('');
+    setModalImage(null);
+  }, [conversation?.id]);
+
   // Subscribe to messages for this conversation and manage loading state
   useEffect(() => {
     if (!conversation?.id) return;
-    setLoading(true);
+
     const unsubscribe = subscribeToFirestoreCollection(
       `conversations/${conversation.id}/messages/`,
       (data) => {
-        setMessages(data);
-        setLoading(false);
+        setMessagesCache(prev => ({ ...prev, [conversation.id]: data }));
+        setCacheStatus(prev => ({ ...prev, [conversation.id]: true }));
       },
       'asc',
     );
@@ -438,12 +448,18 @@ export function CardsChat({
     });
   }, [conversation, user.uid]);
 
-  useEffect(() => {
-    if (messages.length > prevMessagesLength.current) {
+  const prevConversationId = useRef(conversation?.id);
+  useLayoutEffect(() => {
+    if (loading) return;
+
+    if (conversation?.id !== prevConversationId.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      prevConversationId.current = conversation?.id;
+    } else if (messages.length > prevMessagesLength.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
     prevMessagesLength.current = messages.length;
-  }, [messages.length]);
+  }, [conversation?.id, messages.length, loading]);
 
   async function handleCreateMeet() {
     // Video call functionality is currently disabled
@@ -596,7 +612,7 @@ export function CardsChat({
         </div>
       )}
       {loading ? (
-        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] rounded-none border-0 shadow-none">
           {/* Header Skeleton */}
           <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
             <div className="flex items-center space-x-3">
@@ -643,8 +659,8 @@ export function CardsChat({
         </Card>
       ) : (
         <>
-          <Card className="col-span-3 flex flex-col h-full w-full overflow-hidden bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-none sm:rounded-xl">
-            <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-t-xl">
+          <Card className="col-span-3 flex flex-col h-full w-full overflow-hidden bg-[hsl(var(--card))] rounded-none border-0 shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between bg-gradient text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm">
               {onBack && (
                 <button
                   onClick={onBack}
@@ -917,7 +933,7 @@ export function CardsChat({
                 ))}
               </ScrollArea>
             </CardContent>
-            <CardFooter className="sticky bottom-0 bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-none sm:rounded-b-xl">
+            <CardFooter className="sticky bottom-0 bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm">
               <ChatComposer
                 userId={user.uid}
                 isSending={isSending}

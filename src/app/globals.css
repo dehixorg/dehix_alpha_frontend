@@ -427,3 +427,11 @@
   white-space: nowrap;
 }
 
+
+.chat-emoji {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+  margin: 0 0.1em;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
