@@ -77,8 +77,8 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 // Helper function to transform form data for KYCDetailsView
 const transformKYCDataForView = (formValues: ProfileFormValues) => {
   return {
-    aadharOrGovtId: formValues.aadharOrGovtId,
-    salaryOrEarning: formValues.salaryOrEarning,
+    documentId: formValues.aadharOrGovtId,
+    income: formValues.salaryOrEarning,
     frontImageUrl:
       typeof formValues.frontImageUrl === 'string'
         ? formValues.frontImageUrl
