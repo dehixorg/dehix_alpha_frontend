@@ -29,7 +29,6 @@ import { Card } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifySuccess, notifyError } from '@/utils/toastMessage';
 
-
 const ProjectTypeDialog = dynamic(
   () =>
     import('./ProjectTypeDialog').then((m) => ({
@@ -37,7 +36,6 @@ const ProjectTypeDialog = dynamic(
     })),
   { loading: () => null },
 );
-
 
 const ConnectsDialog = dynamic(
   () => import('@/components/dialogs/ConnectsDialog'),
@@ -194,10 +192,9 @@ export default function InviteFreelancerDialog({
     return project.profiles.find((p) => p._id === selectedProfileId);
   };
 
-  
   return (
     <>
-     <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="space-y-2">
             <div className="flex items-center gap-3">
