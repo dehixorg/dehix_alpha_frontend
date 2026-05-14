@@ -10,7 +10,7 @@ import {
   X,
   UserCheck,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -80,7 +80,6 @@ const SearchInput = ({
   );
 };
 
-// Helper function to create unique DOM IDs
 const toDomId = (prefix: string, value: string): string => {
   return `${prefix}-${value.replace(/\s+/g, '-').toLowerCase()}`;
 };
@@ -98,6 +97,22 @@ export default function BusinessFilterComponent({
 }: BusinessFilterComponentProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [domainSearchQuery, setDomainSearchQuery] = useState('');
+
+  const filteredSkills = useMemo(
+    () =>
+      skills.filter((item) =>
+        item.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [skills, searchQuery],
+  );
+
+  const filteredDomains = useMemo(
+    () =>
+      domains.filter((item) =>
+        item.toLowerCase().includes(domainSearchQuery.toLowerCase()),
+      ),
+    [domains, domainSearchQuery],
+  );
 
   const clearSearch = (type: 'skills' | 'domains') => {
     switch (type) {
@@ -151,47 +166,46 @@ export default function BusinessFilterComponent({
               />
             )}
             <div
-              className={`${title.toLowerCase() === 'skills' || title.toLowerCase() === 'domains' ? ' h-60 overflow-hidden' : 'h-auto'}`}
+              className={`${
+                title.toLowerCase() === 'skills' ||
+                title.toLowerCase() === 'domains'
+                  ? ' h-60 overflow-hidden'
+                  : 'h-auto'
+              }`}
             >
               <ScrollArea className="h-full w-full pr-2">
                 <div className="space-y-1 py-1">
-                  {items.filter((item) =>
-                    item.toLowerCase().includes(searchQuery.toLowerCase()),
-                  ).length === 0 ? (
+                  {items.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No items found
                     </p>
                   ) : (
-                    items
-                      .filter((item) =>
-                        item.toLowerCase().includes(searchQuery.toLowerCase()),
-                      )
-                      .map((item) => (
-                        <div
-                          key={item}
-                          className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
-                        >
-                          <Checkbox
-                            id={toDomId(String(filterKey), item)}
-                            checked={filterValues.includes(item)}
-                            onCheckedChange={(checked) => {
-                              const isChecked = checked === true;
-                              const newValues = isChecked
-                                ? [...filterValues, item]
-                                : filterValues.filter((v) => v !== item);
+                    items.map((item) => (
+                      <div
+                        key={item}
+                        className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1.5 transition-colors group"
+                      >
+                        <Checkbox
+                          id={toDomId(String(filterKey), item)}
+                          checked={filterValues.includes(item)}
+                          onCheckedChange={(checked) => {
+                            const isChecked = checked === true;
+                            const newValues = isChecked
+                              ? [...filterValues, item]
+                              : filterValues.filter((v) => v !== item);
 
-                              onFilterChange({ [filterKey]: newValues } as any);
-                            }}
-                            className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                          />
-                          <label
-                            htmlFor={toDomId(String(filterKey), item)}
-                            className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
-                          >
-                            {item}
-                          </label>
-                        </div>
-                      ))
+                            onFilterChange({ [filterKey]: newValues } as any);
+                          }}
+                          className="h-4 w-4 rounded border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                        <label
+                          htmlFor={toDomId(String(filterKey), item)}
+                          className="text-sm font-medium leading-none cursor-pointer flex-1 group-hover:text-primary transition-colors"
+                        >
+                          {item}
+                        </label>
+                      </div>
+                    ))
                   )}
                 </div>
               </ScrollArea>
@@ -237,7 +251,7 @@ export default function BusinessFilterComponent({
         >
           {renderFilterSection(
             'Skills',
-            skills,
+            filteredSkills,
             'skills',
             searchQuery,
             setSearchQuery,
@@ -247,7 +261,7 @@ export default function BusinessFilterComponent({
 
           {renderFilterSection(
             'Domains',
-            domains,
+            filteredDomains,
             'domain',
             domainSearchQuery,
             setDomainSearchQuery,

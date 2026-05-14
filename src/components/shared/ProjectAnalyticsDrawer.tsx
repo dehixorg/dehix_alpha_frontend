@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   User,
   Briefcase,
@@ -90,6 +90,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
   setShowAnalyticsDrawer,
 }) => {
   const [, setActiveTab] = useState<string>('insights');
+
   if (!projectData) {
     return (
       <Card className="flex flex-col h-full w-full overflow-auto bg-white dark:bg-black text-black dark:text-white items-center justify-center">
@@ -212,30 +213,38 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
     };
   };
 
-  const analyticsData = calculateAnalytics();
+  const analyticsData = useMemo(() => calculateAnalytics(), [project]);
 
-  const metricItems = [
-    {
-      icon: <User className="h-4 w-4" />,
-      label: 'Applied',
-      value: analyticsData.applied,
-    },
-    {
-      icon: <MessageSquare className="h-4 w-4" />,
-      label: 'Interviews',
-      value: analyticsData.interviews,
-    },
-    {
-      icon: <CheckCircle className="h-4 w-4" />,
-      label: 'Hired',
-      value: analyticsData.hired,
-    },
-    {
-      icon: <XCircle className="h-4 w-4" />,
-      label: 'Terminated',
-      value: analyticsData.terminated,
-    },
-  ];
+  const metricItems = useMemo(
+    () => [
+      {
+        icon: <User className="h-4 w-4" />,
+        label: 'Applied',
+        value: analyticsData.applied,
+      },
+      {
+        icon: <MessageSquare className="h-4 w-4" />,
+        label: 'Interviews',
+        value: analyticsData.interviews,
+      },
+      {
+        icon: <CheckCircle className="h-4 w-4" />,
+        label: 'Hired',
+        value: analyticsData.hired,
+      },
+      {
+        icon: <XCircle className="h-4 w-4" />,
+        label: 'Terminated',
+        value: analyticsData.terminated,
+      },
+    ],
+    [
+      analyticsData.applied,
+      analyticsData.interviews,
+      analyticsData.hired,
+      analyticsData.terminated,
+    ],
+  );
 
   return (
     <Card className="flex flex-col h-full w-full overflow-auto bg-white dark:bg-black text-black dark:text-white">
@@ -608,6 +617,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
               </Card>
             </div>
           </TabsContent>
+
           <TabsContent value="timeline" className="mt-0">
             <Card className=" dark:bg-black bg-gray-100 border-gray-200 dark:border-gray-800">
               <CardHeader>
@@ -641,6 +651,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
               </CardContent>
             </Card>
           </TabsContent>
+
           <TabsContent value="competition" className="mt-0">
             <Card className=" dark:bg-black bg-gray-100 border-gray-200 dark:border-gray-800">
               <CardHeader>
@@ -786,6 +797,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
             </Card>
           </TabsContent>
         </div>
+
         <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex justify-between">
             <Button

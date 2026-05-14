@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Github,
   Linkedin,
@@ -59,11 +59,13 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   freelancer_id,
   freelancer_professional_profile_id,
 }) => {
-  const skills = attributes.filter(
-    (attr) => attr?.type === 'SKILL' && attr?.name,
+  const skills = useMemo(
+    () => attributes.filter((attr) => attr?.type === 'SKILL' && attr?.name),
+    [attributes],
   );
-  const domains = attributes.filter(
-    (attr) => attr?.type === 'DOMAIN' && attr?.name,
+  const domains = useMemo(
+    () => attributes.filter((attr) => attr?.type === 'DOMAIN' && attr?.name),
+    [attributes],
   );
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
