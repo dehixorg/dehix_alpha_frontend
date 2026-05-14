@@ -554,9 +554,7 @@ export default function StreakPage() {
               title="Total earned"
               value={totalEarnedConnects}
               additionalInfo={
-                totalEarnedConnects === 1
-                  ? 'connect earned'
-                  : 'connects earned'
+                totalEarnedConnects === 1 ? 'connect earned' : 'connects earned'
               }
               icon={
                 <div className="rounded-lg border bg-green-500/10 p-2">

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   User,
   Briefcase,
@@ -90,23 +90,17 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
   setShowAnalyticsDrawer,
 }) => {
   const [, setActiveTab] = useState<string>('insights');
-
-  if (!projectData) {
-    return (
-      <Card className="flex flex-col h-full w-full overflow-auto bg-white dark:bg-black text-black dark:text-white items-center justify-center">
-        <p>Loading project data...</p>
-      </Card>
-    );
-  }
-
   const project = projectData;
 
-  const calculateAnalytics = () => {
+  const analyticsData = useMemo(() => {
+    if (!project) return null;
+
     const totalBids =
       project.profiles?.reduce(
         (sum, profile) => sum + (profile.totalBid?.length || 0),
         0,
       ) || 0;
+
     const totalFreelancersHired =
       project.profiles?.reduce(
         (sum, profile) => sum + (profile.selectedFreelancer?.length || 0),
@@ -141,8 +135,10 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
         10,
       100,
     );
+
     const rateCompetitiveness =
       maxRate > 0 ? Math.max(0, 100 - (avgRate / maxRate) * 50) : 0;
+
     const bidScore = Math.round((experienceScore + rateCompetitiveness) / 2);
 
     const daysUntilDeadline = project.maxBidDate
@@ -173,7 +169,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
       avgBid: `$${Math.round(avgRate)}/hr`,
       topBid: `$${maxRate}/hr`,
       lowBid: `$${minRate}/hr`,
-      totalBids: totalBids,
+      totalBids,
       status: project.status,
       clientResponsiveness: 85 + Math.floor(Math.random() * 15),
       projectComplexity: Math.min(
@@ -211,12 +207,12 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
         bidRange: `$${minRate}-${maxRate}/hr`,
       },
     };
-  };
+  }, [project]);
 
-  const analyticsData = useMemo(() => calculateAnalytics(), [project]);
+  const metricItems = useMemo(() => {
+    if (!analyticsData) return [];
 
-  const metricItems = useMemo(
-    () => [
+    return [
       {
         icon: <User className="h-4 w-4" />,
         label: 'Applied',
@@ -237,14 +233,21 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
         label: 'Terminated',
         value: analyticsData.terminated,
       },
-    ],
-    [
-      analyticsData.applied,
-      analyticsData.interviews,
-      analyticsData.hired,
-      analyticsData.terminated,
-    ],
-  );
+    ];
+  }, [
+    analyticsData?.applied,
+    analyticsData?.interviews,
+    analyticsData?.hired,
+    analyticsData?.terminated,
+  ]);
+
+  if (!project || !analyticsData) {
+    return (
+      <Card className="flex flex-col h-full w-full overflow-auto bg-white dark:bg-black text-black dark:text-white items-center justify-center">
+        <p>Loading project data...</p>
+      </Card>
+    );
+  }
 
   return (
     <Card className="flex flex-col h-full w-full overflow-auto bg-white dark:bg-black text-black dark:text-white">
@@ -312,7 +315,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                 </CardContent>
               </Card>
 
-              <Card className="md:col-span-2  dark:bg-black border-gray-200 dark:border-gray-800">
+              <Card className="md:col-span-2 dark:bg-black border-gray-200 dark:border-gray-800">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Metrics
