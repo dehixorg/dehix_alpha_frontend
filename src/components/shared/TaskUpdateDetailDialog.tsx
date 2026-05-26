@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
-import { AlertCircle, FileText, Tag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  AlertCircle,
+  ChevronDown,
+  FileText,
+  Loader2,
+  Tag,
+  User,
+  X,
+} from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 import {
   Dialog,
@@ -13,6 +22,17 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
+import { Badge } from '../ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '../ui/command';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 import {
   Select,
   SelectTrigger,
@@ -26,12 +46,12 @@ import { cn } from '@/lib/utils';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { TaskStatus } from '@/utils/types/Milestone';
+import { freelancers as FreelancerType } from '@/utils/types/freeelancers';
 
 interface TaskUpdateDetailDialogProps {
   task: any;
   milestoneId?: string;
   storyId: string;
-  taskId: string;
   userType: string;
   showPermissionDialog: boolean;
   setShowPermissionDialog: React.Dispatch<React.SetStateAction<boolean>>;
@@ -48,17 +68,68 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
   task,
   milestoneId,
   storyId,
-  taskId,
   userType,
   showPermissionDialog,
   setShowPermissionDialog,
   fetchMilestones,
 }) => {
+  const { project_id } = useParams<{ project_id: string }>();
   const [taskData, setTaskData] = useState({
     title: task?.title || '',
     summary: task?.summary || '',
     taskStatus: task?.taskStatus || TaskStatus.NOT_STARTED,
   });
+
+  // Freelancer assignment state
+  const existingFreelancer = task?.freelancers?.[0];
+  const isTaskUnassigned = !existingFreelancer?.freelancerId;
+  const [freelancersData, setFreelancersData] = useState<FreelancerType[]>([]);
+  const [filteredFreelancers, setFilteredFreelancers] = useState<
+    FreelancerType[]
+  >([]);
+  const [selectedFreelancer, setSelectedFreelancer] = useState<string | null>(
+    null,
+  );
+  const [isFreelancerPopoverOpen, setIsFreelancerPopoverOpen] = useState(false);
+  const [isLoadingFreelancers, setIsLoadingFreelancers] = useState(false);
+  const [assignedFreelancerData, setAssignedFreelancerData] = useState<{
+    freelancerId: string;
+    freelancerName: string;
+    cost: number;
+  } | null>(null);
+
+  // Fetch freelancers when dialog opens (only for business users with unassigned tasks)
+  useEffect(() => {
+    const fetchFreelancers = async () => {
+      setIsLoadingFreelancers(true);
+      try {
+        const response = await axiosInstance.get(
+          `/project/get-freelancer/${project_id}/FREELANCER`,
+        );
+        const data = response.data.freelancers.data || [];
+        setFreelancersData(data);
+        setFilteredFreelancers(data);
+      } catch (error) {
+        console.error('Failed to fetch freelancers:', error);
+      } finally {
+        setIsLoadingFreelancers(false);
+      }
+    };
+
+    if (showPermissionDialog && userType === 'business' && isTaskUnassigned) {
+      fetchFreelancers();
+    }
+  }, [showPermissionDialog, project_id, userType, isTaskUnassigned]);
+
+  const handleFreelancerSearch = (query: string) => {
+    const lowerCaseQuery = query.toLowerCase();
+    const filtered = freelancersData.filter(
+      (freelancer) =>
+        freelancer.userName.toLowerCase().includes(lowerCaseQuery) ||
+        freelancer.email.toLowerCase().includes(lowerCaseQuery),
+    );
+    setFilteredFreelancers(filtered);
+  };
 
   // Initial task data for comparison
   const initialTaskData = {
@@ -130,23 +201,35 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
 
   const handleSave = async () => {
     // Check if any field has been updated
-    if (JSON.stringify(taskData) === JSON.stringify(initialTaskData)) {
+    const hasFieldChanges =
+      JSON.stringify(taskData) !== JSON.stringify(initialTaskData);
+    const hasFreelancerChange = !!assignedFreelancerData;
+
+    if (!hasFieldChanges && !hasFreelancerChange) {
       notifySuccess('No changes detected. Task update not required.', 'Info');
       return;
     }
 
     const url = `/milestones/${milestoneId}/story/${storyId}/task/${task._id}`;
 
+    const payload: any = {
+      title: taskData.title,
+      summary: taskData.summary,
+      taskStatus: taskData.taskStatus,
+    };
+
+    if (assignedFreelancerData) {
+      payload.freelancers = [
+        {
+          freelancerId: assignedFreelancerData.freelancerId,
+          freelancerName: assignedFreelancerData.freelancerName,
+          cost: assignedFreelancerData.cost,
+        },
+      ];
+    }
+
     try {
-      await axiosInstance.patch(url, {
-        milestoneId,
-        storyId,
-        taskId,
-        userType,
-        title: taskData.title,
-        summary: taskData.summary,
-        taskStatus: taskData.taskStatus,
-      });
+      await axiosInstance.patch(url, payload);
       notifySuccess('Task updated', 'Success');
       setShowPermissionDialog(false);
       fetchMilestones();
@@ -160,7 +243,8 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
     isPermissionSent ||
     (!isUpdatePermissionAllowed && userType === 'freelancer');
   const hasChanges =
-    JSON.stringify(taskData) !== JSON.stringify(initialTaskData);
+    JSON.stringify(taskData) !== JSON.stringify(initialTaskData) ||
+    !!assignedFreelancerData;
 
   return (
     <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
@@ -267,6 +351,160 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Freelancer Assignment (only for business users with unassigned tasks) */}
+            {userType === 'business' && isTaskUnassigned && (
+              <div className="grid gap-2">
+                <Label className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  Assign Freelancer
+                </Label>
+                {isLoadingFreelancers ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading freelancers...
+                  </div>
+                ) : (
+                  <>
+                    <Popover
+                      open={isFreelancerPopoverOpen}
+                      onOpenChange={setIsFreelancerPopoverOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={isFreelancerPopoverOpen}
+                          className="w-full justify-between"
+                          disabled={isDisabled}
+                        >
+                          {selectedFreelancer ? (
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-5 w-5">
+                                <AvatarFallback>
+                                  {freelancersData
+                                    .find((f) => f._id === selectedFreelancer)
+                                    ?.userName?.charAt(0)
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              {
+                                freelancersData.find(
+                                  (f) => f._id === selectedFreelancer,
+                                )?.userName
+                              }
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              Select freelancer...
+                            </span>
+                          )}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search freelancers..."
+                            onValueChange={handleFreelancerSearch}
+                          />
+                          <CommandEmpty>No freelancer found.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup>
+                              {filteredFreelancers.map((freelancer) => (
+                                <CommandItem
+                                  key={freelancer._id}
+                                  value={freelancer._id}
+                                  onSelect={() => {
+                                    setSelectedFreelancer(freelancer._id);
+                                    setAssignedFreelancerData({
+                                      freelancerId: freelancer._id,
+                                      freelancerName: freelancer.userName,
+                                      cost:
+                                        Number(freelancer.perHourPrice) || 0,
+                                    });
+                                    setIsFreelancerPopoverOpen(false);
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarFallback>
+                                        {freelancer.userName
+                                          ?.charAt(0)
+                                          .toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium">
+                                        {freelancer.userName}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {freelancer.email}
+                                      </p>
+                                    </div>
+                                    {freelancer.perHourPrice && (
+                                      <Badge variant="outline" className="ml-2">
+                                        ${freelancer.perHourPrice}/hr
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+
+                    {selectedFreelancer && (
+                      <div className="p-3 bg-muted/20 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-7 w-7">
+                              <AvatarFallback>
+                                {freelancersData
+                                  .find((f) => f._id === selectedFreelancer)
+                                  ?.userName?.charAt(0)
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm font-medium">
+                                {
+                                  freelancersData.find(
+                                    (f) => f._id === selectedFreelancer,
+                                  )?.userName
+                                }
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {
+                                  freelancersData.find(
+                                    (f) => f._id === selectedFreelancer,
+                                  )?.email
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              setSelectedFreelancer(null);
+                              setAssignedFreelancerData(null);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter>
