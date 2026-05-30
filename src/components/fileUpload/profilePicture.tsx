@@ -10,6 +10,7 @@ import { setUser } from '@/lib/userSlice';
 import { RootState } from '@/lib/store';
 import { Type } from '@/utils/enum';
 import { compressImageFile } from '@/utils/imageCompression';
+import { uploadFileViaSignedUrl } from '@/services/imageSignedUpload';
 
 const allowedImageFormats = [
   'image/png',
@@ -78,23 +79,12 @@ const ProfilePictureUpload = ({
     setIsUploading(true);
 
     try {
-      // Build FormData for multipart upload to Azure via backend
-      const formData = new FormData();
-      formData.append('file', selectedProfilePicture);
-
-      // Upload to Azure Blob Storage via the new backend endpoint
-      const uploadResponse = await axiosInstance.post(
-        `/register/upload-profile-image?userId=${uid}`,
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        },
-      );
-
-      const url = uploadResponse.data?.data?.url;
-      if (!url) {
-        throw new Error('No URL returned from upload.');
-      }
+      const extFromType = (selectedProfilePicture.type || '').split('/')[1];
+      const ext = (extFromType || 'jpg').split(';')[0];
+      const { url } = await uploadFileViaSignedUrl(selectedProfilePicture, {
+        key: `profile/${uid}/profile-picture.${ext}`,
+        methods: ['upload', 'get'],
+      });
 
       dispatch(setUser({ ...user, photoURL: url }));
 
