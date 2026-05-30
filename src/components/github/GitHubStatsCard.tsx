@@ -15,13 +15,13 @@ import {
   GitFork,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { GitHubStats } from '@/hooks/useGitHubStats';
-import Image from 'next/image';
 
 // GitHub SVG Icon component
 function GitHubIcon({ className }: { className?: string }) {
