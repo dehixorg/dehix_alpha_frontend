@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   User,
   Tags,
@@ -8,11 +8,13 @@ import {
   Phone,
   Globe,
   AtSign,
+  Github,
 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
@@ -21,6 +23,8 @@ import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
 import { usePersonalInfoTour } from '../tour/freelancer-profile/usePersonalInfo';
 
+import GitHubStatsCard from '@/components/github/GitHubStatsCard';
+import { useGitHubStats } from '@/hooks/useGitHubStats';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
@@ -125,6 +129,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [dialogType, setDialogType] = useState<
     'skill' | 'domain' | 'projectDomain' | null
   >(null);
+
+  // GitHub Connect state
+  const [githubToken, setGithubToken] = useState<string | null>(null);
+  const [githubUsername, setGithubUsername] = useState<string | null>(null);
+  const [githubConnecting, setGithubConnecting] = useState(false);
+  const [githubDisconnecting, setGithubDisconnecting] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const {
+    data: githubStats,
+    isLoading: githubLoading,
+    error: githubError,
+  } = useGitHubStats(githubToken, githubUsername);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -617,11 +634,90 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
+  // GitHub OAuth: handle code from URL after redirect
+  const handleGithubCallback = useCallback(async () => {
+    const code = searchParams.get('code');
+    const githubError = searchParams.get('github_error');
+
+    if (githubError) {
+      notifyError(`GitHub connection failed: ${githubError}`);
+      // Clean URL params
+      router.replace('/freelancer/settings/personal-info');
+      return;
+    }
+
+    if (code && !githubConnecting && !githubToken) {
+      setGithubConnecting(true);
+      try {
+        const redirectUri = `${window.location.origin}/freelancer/settings/personal-info`;
+        const response = await axiosInstance.put('/freelancer/github', {
+          code,
+          redirectUri,
+        });
+        if (response.data?.success) {
+          setGithubUsername(response.data.data.githubUsername);
+          setGithubToken(response.data.data.githubAccessToken);
+          notifySuccess('GitHub connected successfully!');
+        }
+      } catch (error: any) {
+        console.error('GitHub connect error:', error);
+        notifyError(
+          error.response?.data?.message ||
+            'Failed to connect GitHub. Please try again.',
+        );
+      } finally {
+        setGithubConnecting(false);
+        // Clean URL params
+        router.replace('/freelancer/settings/personal-info');
+      }
+    }
+  }, [searchParams, githubConnecting, githubToken, router]);
+
+  useEffect(() => {
+    handleGithubCallback();
+  }, [handleGithubCallback]);
+
+  const handleConnectGithub = () => {
+    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
+    if (!clientId) {
+      notifyError('GitHub integration is not configured.');
+      return;
+    }
+    const redirectUri = `${window.location.origin}/freelancer/settings/personal-info`;
+    const scope = 'read:user repo';
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
+    window.location.href = githubAuthUrl;
+  };
+
+  const handleDisconnectGithub = async () => {
+    setGithubDisconnecting(true);
+    try {
+      await axiosInstance.delete('/freelancer/github');
+      setGithubToken(null);
+      setGithubUsername(null);
+      notifySuccess('GitHub disconnected successfully.');
+    } catch (error: any) {
+      console.error('GitHub disconnect error:', error);
+      notifyError('Failed to disconnect GitHub. Please try again.');
+    } finally {
+      setGithubDisconnecting(false);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
         setUser(userResponse.data.data);
+
+        // Initialize GitHub state from existing user data
+        if (
+          userResponse.data.data.githubUsername &&
+          userResponse.data.data.githubAccessToken
+        ) {
+          setGithubUsername(userResponse.data.data.githubUsername);
+          setGithubToken(userResponse.data.data.githubAccessToken);
+        }
 
         const skillsResponse = await axiosInstance.get('/skills/all');
         const domainsResponse = await axiosInstance.get('/domain/all');
@@ -939,6 +1035,49 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 </FormItem>
               )}
             />
+          </div>
+
+          <Separator className="my-6 bg-muted-foreground/20" />
+
+          {/* GitHub Integration */}
+          <div className="col-span-1 md:col-span-2">
+            <h3 className="text-xs font-semibold mb-3 uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+              <Github className="h-4 w-4" /> GitHub Integration
+            </h3>
+            {githubUsername && githubToken ? (
+              <GitHubStatsCard
+                stats={githubStats}
+                isLoading={githubLoading}
+                error={githubError}
+                onDisconnect={handleDisconnectGithub}
+                disconnecting={githubDisconnecting}
+              />
+            ) : (
+              <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border/60 bg-muted/20 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground/5">
+                    <Github className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Connect your GitHub</p>
+                    <p className="text-xs text-muted-foreground">
+                      Showcase your repos, commits, stars, and contribution
+                      activity
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleConnectGithub}
+                  disabled={githubConnecting}
+                  className="gap-2"
+                >
+                  <Github className="h-4 w-4" />
+                  {githubConnecting ? 'Connecting...' : 'Connect GitHub'}
+                </Button>
+              </div>
+            )}
           </div>
 
           <Separator className="my-6 bg-muted-foreground/20" />
