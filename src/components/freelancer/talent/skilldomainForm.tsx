@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
 import { ArrowUpRight, Award, Briefcase, Eye, Zap } from 'lucide-react';
@@ -76,6 +76,26 @@ const SkillDomainForm: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
   const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
+
+  const talentStats = useMemo(() => {
+    const skillRows = rows.filter((r) => r.type === 'SKILL');
+    const domainRows = rows.filter((r) => r.type === 'DOMAIN');
+    const verifiedSkillRows = skillRows.filter(
+      (r) => r.status === StatusEnum.VERIFIED,
+    );
+    const verifiedDomainRows = domainRows.filter(
+      (r) => r.status === StatusEnum.VERIFIED,
+    );
+
+    return {
+      skillCount: skillRows.length,
+      domainCount: domainRows.length,
+      activeCount: visibility.filter(Boolean).length,
+      verifiedSkillCount: verifiedSkillRows.length,
+      verifiedDomainCount: verifiedDomainRows.length,
+      verifiedCount: verifiedSkillRows.length + verifiedDomainRows.length,
+    };
+  }, [rows, visibility]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -214,7 +234,7 @@ const SkillDomainForm: React.FC = () => {
                     <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-300" />
                   </div>
                   <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-200 bg-clip-text text-transparent">
-                    {rows.filter((r) => r.type === 'SKILL').length}
+                    {talentStats.skillCount}
                   </p>
                 </div>
                 <CardTitle className="text-xl font-semibold text-foreground/90">
@@ -236,7 +256,7 @@ const SkillDomainForm: React.FC = () => {
                     <Briefcase className="w-4 h-4 text-purple-600 dark:text-purple-300" />
                   </div>
                   <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-200 bg-clip-text text-transparent">
-                    {rows.filter((r) => r.type === 'DOMAIN').length}
+                    {talentStats.domainCount}
                   </p>
                 </div>
                 <CardTitle className="text-xl font-semibold text-foreground/90">
@@ -258,7 +278,7 @@ const SkillDomainForm: React.FC = () => {
                     <Eye className="w-4 h-4 text-green-600 dark:text-green-300" />
                   </div>
                   <p className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-800 dark:from-green-400 dark:to-green-200 bg-clip-text text-transparent">
-                    {visibility.filter(Boolean).length}
+                    {talentStats.activeCount}
                   </p>
                 </div>
                 <CardTitle className="text-xl font-semibold text-foreground/90">
@@ -280,14 +300,7 @@ const SkillDomainForm: React.FC = () => {
                     <Zap className="w-4 h-4 text-amber-600 dark:text-amber-300" />
                   </div>
                   <p className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-200 bg-clip-text text-transparent">
-                    {
-                      rows.filter(
-                        (r) =>
-                          (r.type === 'SKILL' || r.type === 'DOMAIN') &&
-                          r.status === StatusEnum.VERIFIED,
-                      ).length
-                    }
-                    /{rows.length}
+                    {talentStats.verifiedCount}/{rows.length}
                   </p>
                 </div>
                 <CardTitle className="text-xl font-semibold text-foreground/90">
@@ -296,21 +309,11 @@ const SkillDomainForm: React.FC = () => {
               </CardHeader>
               <CardContent className="relative z-10 px-4 py-1">
                 <p className="text-sm text-muted-foreground">
-                  {
-                    rows.filter(
-                      (r) =>
-                        r.type === 'SKILL' && r.status === StatusEnum.VERIFIED,
-                    ).length
-                  }
-                  /{rows.filter((r) => r.type === 'SKILL').length} Skills
+                  {talentStats.verifiedSkillCount}/{talentStats.skillCount}{' '}
+                  Skills
                   <br />
-                  {
-                    rows.filter(
-                      (r) =>
-                        r.type === 'DOMAIN' && r.status === StatusEnum.VERIFIED,
-                    ).length
-                  }
-                  /{rows.filter((r) => r.type === 'DOMAIN').length} Domains
+                  {talentStats.verifiedDomainCount}/{talentStats.domainCount}{' '}
+                  Domains
                 </p>
               </CardContent>
             </Card>
