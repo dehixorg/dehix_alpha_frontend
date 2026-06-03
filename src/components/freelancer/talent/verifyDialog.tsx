@@ -1,6 +1,6 @@
 import React from 'react';
-import { BadgeCheck, Calendar } from 'lucide-react';
-import { format, endOfDay } from 'date-fns';
+import { BadgeCheck, Calendar, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 
 import {
   Dialog,
@@ -41,6 +41,7 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
   originalTalentId,
 }) => {
   const [date, setDate] = React.useState<Date>();
+  const [time, setTime] = React.useState('10:00');
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
@@ -54,16 +55,24 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
       return;
     }
 
-    // Set the time to end of day in local timezone
-    const localDate = endOfDay(date);
+    if (!time) {
+      notifyError('Please select an interview time', 'Error');
+      setLoading(false);
+      return;
+    }
+
+    // Combine the selected date and time
+    const [hours, minutes] = time.split(':').map(Number);
+    const localDate = new Date(date);
+    localDate.setHours(hours, minutes, 0, 0);
 
     const formData = {
       creatorId: userId,
       intervieweeId: userId,
-      interviewType: 'INTERVIEWER',
+      interviewType: 'TALENT',
       talentType: talentType.toUpperCase(),
       talentId: originalTalentId, // Use the global skill id
-      interviewDate: localDate.toISOString(), // Using the adjusted date
+      interviewDate: localDate.toISOString(),
       description: (event.target as any).description.value,
     };
 
@@ -158,6 +167,25 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="interviewTime"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Interview Time
+            </label>
+            <div className="relative">
+              <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="interviewTime"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

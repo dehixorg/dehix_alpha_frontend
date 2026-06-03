@@ -51,6 +51,8 @@ type BiddableInterview = {
   talentName?: string;
   description?: string;
   interviewDate?: string;
+  interviewType?: string;
+  creatorType?: string;
 };
 
 type MyBid = {
@@ -66,6 +68,8 @@ type BiddedInterview = {
   talentName?: string;
   talentType?: string;
   interviewStatus?: string;
+  interviewType?: string;
+  creatorType?: string;
   interviewDate?: string;
   description?: string;
   myBid?: MyBid;
@@ -203,7 +207,12 @@ export default function InterviewerBids() {
           ? res.data
           : [];
 
-      const sorted = [...list].sort((a, b) => {
+      // Filter out invalid/mock database entries like 'temp-biddable-kapil-001'
+      const validList = list.filter(
+        (item) => !String(item._id).includes('temp'),
+      );
+
+      const sorted = [...validList].sort((a, b) => {
         const at = a?.interviewDate ? new Date(a.interviewDate).getTime() : 0;
         const bt = b?.interviewDate ? new Date(b.interviewDate).getTime() : 0;
         return at - bt;
@@ -403,9 +412,26 @@ export default function InterviewerBids() {
                         <CardTitle className="text-base">
                           {iv.talentName || 'Interview'}
                         </CardTitle>
-                        {bidStatus ? (
-                          <Badge variant="secondary">{bidStatus}</Badge>
-                        ) : null}
+                        <div className="flex flex-col items-end gap-1">
+                          {bidStatus ? (
+                            <Badge variant="secondary">{bidStatus}</Badge>
+                          ) : null}
+                          {iv.interviewType === 'HIRE' ? (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] border-blue-500 text-blue-500"
+                            >
+                              Business
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] border-green-500 text-green-500"
+                            >
+                              Talent
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <CardDescription>
                         {date} • {time}
@@ -543,6 +569,21 @@ export default function InterviewerBids() {
                               <Badge variant="secondary" className="text-xs">
                                 Available
                               </Badge>
+                              {iv.interviewType === 'HIRE' ? (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] bg-blue-50 border-blue-200 text-blue-600"
+                                >
+                                  Business Opportunity
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] bg-green-50 border-green-200 text-green-600"
+                                >
+                                  Talent Verification
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -657,6 +698,11 @@ export default function InterviewerBids() {
                 onChange={(e) => setBidDescription(e.target.value)}
                 rows={4}
               />
+            </div>
+
+            <div className="rounded-md border border-amber-500/20 bg-amber-500/10 p-3 text-sm font-medium text-amber-700 dark:text-amber-400">
+              Note: When your bid is selected, 50 connects will be deducted
+              automatically.
             </div>
 
             <div className="flex items-center justify-end gap-2">

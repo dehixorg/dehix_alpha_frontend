@@ -7,7 +7,7 @@ const BASE_URL = (process.env.NEXT_PUBLIC__BASE_URL || '').replace(/\/$/, '');
 export interface InterviewBid {
   _id: string;
   intervieweeId: string;
-  interviewType: 'INTERVIEWER' | string;
+  interviewType: 'TALENT' | 'INTERVIEWER' | string;
   InterviewStatus: 'BIDDING' | string;
   interviewDate: string;
   description: string;

@@ -5,7 +5,7 @@ import React, { RefObject, useMemo, memo, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
 import { formatDistanceToNow, format } from 'date-fns';
-import { CheckCheck, Reply, Flag, MoreVertical, Copy } from 'lucide-react';
+import { CheckCheck, Reply, Flag, MoreVertical, Copy, Trash2 } from 'lucide-react';
 
 import { EmojiPicker } from '../emojiPicker';
 
@@ -31,6 +31,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { apiHelperService } from '@/services/report';
+import { deleteMessageFromFirestore } from '@/utils/common/firestoreUtils';
 
 // Local helpers to keep component self-contained
 function formatChatTimestamp(timestamp: string) {
@@ -280,6 +281,23 @@ function ChatMessageItem({
     }
   };
 
+  const handleDeleteMessage = async () => {
+    try {
+      await deleteMessageFromFirestore(conversation.id, message.id, userId);
+      toast({
+        title: 'Deleted',
+        description: 'Message deleted.',
+      });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete message. Please try again.',
+      });
+    }
+  };
+
   return (
     <div className="w-full" key={message.id}>
       {isNewDay && (
@@ -302,7 +320,7 @@ function ChatMessageItem({
           <div
             role="button"
             tabIndex={0}
-            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex-shrink-0 mr-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => {
               if (onOpenProfileSidebar) {
                 onOpenProfileSidebar(message.senderId, 'user', {
@@ -337,7 +355,7 @@ function ChatMessageItem({
           className={cn(
             'flex flex-col',
             isSender ? 'items-end' : 'items-start',
-            'max-w-[80%]',
+            'max-w-[80%] min-w-0',
           )}
         >
           {isGroupChat && showSenderName && !isSender && (
@@ -350,16 +368,16 @@ function ChatMessageItem({
 
           <div
             className={cn(
-              'flex w-max max-w-full flex-col gap-1 rounded-lg p-2 text-sm',
+              'flex min-w-0 max-w-full flex-col gap-1 rounded-lg p-2 text-sm',
               message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ||
                 isEmojiOnly ||
                 (message.voiceMessage && message.voiceMessage.type === 'voice')
                 ? isSender
-                  ? 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
-                  : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-tl-none'
+                  ? 'bg-transparent text-[hsl(var(--foreground))] dark:text-gray-50 rounded-2xl rounded-tr-none'
+                  : 'bg-transparent text-[hsl(var(--foreground))] dark:text-[hsl(var(--secondary-foreground))] rounded-2xl rounded-tl-none'
                 : isSender
-                  ? 'bg-muted-foreground/20 dark:bg-muted-foreground/20 dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
-                  : 'bg-muted-foreground/20 dark:bg-muted-foreground/20 dark:text-[hsl(var(--secondary-foreground))] rounded-tl-none relative flex justify-center items-center pr-20 min-w-[180px]',
+                  ? 'bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/30 text-[hsl(var(--foreground))] dark:text-gray-50 rounded-2xl rounded-tr-none relative flex justify-center items-center pr-20 min-w-[140px] shadow-sm border border-primary/5'
+                  : 'bg-muted/50 dark:bg-muted/20 text-[hsl(var(--foreground))] dark:text-[hsl(var(--secondary-foreground))] rounded-2xl rounded-tl-none relative flex justify-center items-center pr-20 min-w-[140px] shadow-sm border border-border/50',
             )}
             onClick={() => {
               if (message.replyTo) {
@@ -394,12 +412,12 @@ function ChatMessageItem({
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="break-words w-full">
+                  <div className="w-full break-words [overflow-wrap:anywhere]">
                     {message.replyTo && (
-                      <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
+                        <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
                         <div
                           className={cn(
-                            'italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2',
+                            'italic overflow-hidden whitespace-pre-wrap break-words text-ellipsis max-h-[3em] line-clamp-2',
                             isSender
                               ? 'text-primary-foreground dark:text-primary-foreground'
                               : 'text-primary dark:text-primary',
@@ -489,9 +507,9 @@ function ChatMessageItem({
                         <>
                           <div
                             className={cn(
-                              'w-full break-words',
+                              'w-full break-words [overflow-wrap:anywhere]',
                               isEmojiOnly &&
-                                'text-4xl leading-snug text-center',
+                                'text-4xl leading-normal text-center py-2',
                             )}
                             dangerouslySetInnerHTML={{
                               __html: sanitizedContent,
@@ -655,7 +673,7 @@ function ChatMessageItem({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" sideOffset={5} collisionPadding={10} avoidCollisions className="w-48">
                 <DropdownMenuItem onClick={handleCopyMessage}>
                   <Copy className="mr-2 h-4 w-4" />
                   <span>Copy message</span>
@@ -668,6 +686,15 @@ function ChatMessageItem({
                   <Flag className="mr-2 h-4 w-4" />
                   <span>Report message</span>
                 </DropdownMenuItem>
+                {isSender && (
+                  <DropdownMenuItem
+                    onClick={handleDeleteMessage}
+                    className="text-red-500 focus:text-red-500"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Delete message</span>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

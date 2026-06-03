@@ -71,7 +71,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
         </aside>
       </Panel>
       <PanelResizeHandle
-        className="w-1 bg-border hover:bg-primary transition-colors duration-200 data-[resize-handle-active]:bg-primary"
+        className="w-px bg-border hover:bg-primary transition-colors duration-200 data-[resize-handle-active]:bg-primary"
         aria-label="Resize chat sidebar"
       />
       <Panel
@@ -82,7 +82,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
         order={2}
       >
         <main
-          className="h-full bg-background text-foreground p-4"
+          className="h-full bg-background text-foreground"
           aria-label="Main Chat Area"
         >
           {/* Pass onOpenProfileSidebar to chatWindowComponent if it's a React element that can accept it */}

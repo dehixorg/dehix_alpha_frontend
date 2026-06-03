@@ -12,7 +12,7 @@ export default function Talent() {
     <div data-tour="talent">
       <FreelancerAppLayout
         active="Talent"
-        activeMenu="Projects"
+        activeMenu="Talent"
         breadcrumbItems={[
           { label: 'Freelancer', link: '/dashboard/freelancer' },
           { label: 'Dehix Talent', link: '#' },

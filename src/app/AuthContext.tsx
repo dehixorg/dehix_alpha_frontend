@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 import { UserType, setUser, clearUser } from '@/lib/userSlice';
 import { initializeAxiosWithToken } from '@/lib/axiosinstance';
@@ -73,6 +74,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             setLocalStorageItem('user', JSON.stringify(userData));
             setLocalStorageItem('token', accessToken);
+            // Sync cookies so middleware always has a fresh token
+            Cookies.set('token', accessToken, {
+              expires: 1,
+              sameSite: 'Lax',
+            });
+            if (userType) {
+              Cookies.set('userType', userType, {
+                expires: 1,
+                sameSite: 'Lax',
+              });
+            }
             setUserState(firebaseUser); // Keep the full user object in local state
             initializeAxiosWithToken(accessToken);
             dispatch(setUser(userData)); // Only pass serializable data to Redux
@@ -81,10 +93,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error('Token Refresh Error:', error);
         }
       } else {
+        // If there was a stored token/user, the session expired — flag it for the login page
+        const hadSession =
+          getLocalStorageItem('token') || getLocalStorageItem('user');
         removeLocalStorageItem('user');
         removeLocalStorageItem('token');
+        // Clear cookies so middleware redirects correctly
+        Cookies.remove('token');
+        Cookies.remove('userType');
         setUserState(null);
         dispatch(clearUser());
+        if (hadSession && typeof window !== 'undefined') {
+          sessionStorage.setItem('sessionExpired', 'true');
+        }
         router.replace('/auth/login');
       }
     });

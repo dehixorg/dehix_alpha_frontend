@@ -152,6 +152,12 @@ export default function BidedInterviews() {
     loadBids();
   }, [intervieweeId]);
 
+  const confirmAccept = (bid: PendingBid) => {
+    if (window.confirm(`Accepting this bid will automatically charge your connects equal to the interviewer's fee ($${bid.fee}) upon successful verification. Proceed?`)) {
+      handleAccept(bid);
+    }
+  };
+
   const handleAccept = async (bid: PendingBid) => {
     try {
       setAcceptingId(getRowKey(bid));
@@ -372,7 +378,7 @@ export default function BidedInterviews() {
                         <Button
                           size="sm"
                           disabled={!!acceptingId}
-                          onClick={() => handleAccept(bid)}
+                          onClick={() => confirmAccept(bid)}
                           className="bg-green-600 hover:bg-green-700"
                         >
                           {acceptingId === getRowKey(bid) ? (

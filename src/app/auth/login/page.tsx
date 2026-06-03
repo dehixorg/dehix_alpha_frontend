@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import Cookies from 'js-cookie';
@@ -56,6 +56,17 @@ export default function Login() {
   const [forgotError, setForgotError] = useState<string>('');
   const [forgotMsg, setForgotMsg] = useState<string>('');
   const [isForgotLoading, setIsForgotLoading] = useState<boolean>(false);
+  const [sessionExpired, setSessionExpired] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const expired = sessionStorage.getItem('sessionExpired');
+      if (expired === 'true') {
+        setSessionExpired(true);
+        sessionStorage.removeItem('sessionExpired');
+      }
+    }
+  }, []);
 
   const fetchKYCDetails = async (userId: string, userType: string) => {
     try {
@@ -199,6 +210,18 @@ export default function Login() {
               Enter your email below to login to your account
             </p>
           </div>
+          {sessionExpired && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-md border border-amber-400/50 bg-amber-400/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400"
+            >
+              <span className="mt-0.5 text-base leading-none">⚠️</span>
+              <span>
+                <strong>Session expired.</strong> Please log in again to
+                continue.
+              </span>
+            </div>
+          )}
           <form onSubmit={handleLogin} noValidate>
             <div className="grid gap-4">
               {/* SR live updates */}

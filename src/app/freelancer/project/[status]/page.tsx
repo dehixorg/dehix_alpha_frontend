@@ -269,7 +269,7 @@ export default function ProjectPage() {
   return (
     <FreelancerAppLayout
       active="Projects"
-      activeMenu="Dashboard"
+      activeMenu="Projects"
       breadcrumbItems={[
         { label: 'Freelancer', link: '/dashboard/freelancer' },
         { label: 'Projects', link: '/freelancer/project' },

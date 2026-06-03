@@ -1,8 +1,5 @@
-'use client';
-
 import React from 'react';
 import { useSelector } from 'react-redux';
-import dynamic from 'next/dynamic';
 
 import {
   Dialog,
@@ -11,15 +8,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import { RootState } from '@/lib/store';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
-
-
-const ConnectsDialog = dynamic(
-  () => import('@/components/shared/ConnectsDialog'),
-  { loading: () => <></> },
-);
 
 const AddToLobbyDialog = ({
   skillDomainData = [],
@@ -28,7 +19,6 @@ const AddToLobbyDialog = ({
   handleDeleteSkill,
   handleAddToLobby,
   talent,
-  setTmpSkill,
   open,
   setOpen,
   isLoading,
@@ -36,11 +26,15 @@ const AddToLobbyDialog = ({
 }: any) => {
   const user = useSelector((state: RootState) => state.user);
 
-
-  const requiredConnects = parseInt(
-    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-    10,
+  const requiredConnects = Number(
+    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST, // 5 connects
   );
+
+  if (!Number.isFinite(requiredConnects)) {
+    console.error(
+      'NEXT_PUBLIC__APP_HIRE_TALENT_COST is not configured properly',
+    );
+  }
 
   const existingInvites = Array.isArray(talent?.dehixTalent)
     ? talent.dehixTalent
@@ -49,9 +43,11 @@ const AddToLobbyDialog = ({
   const freelancerTalentNames = new Set(
     (Array.isArray(talent?.talents) ? talent.talents : [])
       .map((t: any) =>
-        String(t?.talentName || '').trim().toLowerCase(),
+        String(t?.talentName || '')
+          .trim()
+          .toLowerCase(),
       )
-      .filter(Boolean),
+      .filter((v: any) => Boolean(v)),
   );
 
   const existingHireIds = new Set(
@@ -60,14 +56,17 @@ const AddToLobbyDialog = ({
       .filter((id: any) => typeof id === 'string' && id.length > 0),
   );
 
- 
   const uniqueSkillDomainData = (skillDomainData || []).filter(
     (item: any, index: number, self: any[]) =>
       index ===
       self.findIndex(
         (t) =>
-          String(t?.label || '').toLowerCase().trim() ===
-          String(item?.label || '').toLowerCase().trim(),
+          String(t?.label || '')
+            .toLowerCase()
+            .trim() ===
+          String(item?.label || '')
+            .toLowerCase()
+            .trim(),
       ),
   );
 
@@ -78,24 +77,28 @@ const AddToLobbyDialog = ({
   });
 
   const inDeveloperProfileOptions = filteredOptions.filter((opt: any) => {
-    const label = String(opt?.label || '').trim().toLowerCase();
-    return label && freelancerTalentNames.has(label);
+    const label = String(opt?.label || '')
+      .trim()
+      .toLowerCase();
+    if (!label) return false;
+    return freelancerTalentNames.has(label);
   });
-
 
   const selectedSkillNames = new Set(
     (currSkills || []).map((s: any) =>
-      String(s?.name || '').toLowerCase().trim(),
+      String(s?.name || '')
+        .toLowerCase()
+        .trim(),
     ),
   );
 
   const notInDeveloperProfileOptions = filteredOptions.filter((opt: any) => {
-    const label = String(opt?.label || '').trim().toLowerCase();
-    return (
-      label &&
-      !freelancerTalentNames.has(label) &&
-      !selectedSkillNames.has(label)
-    );
+    const label = String(opt?.label || '')
+      .trim()
+      .toLowerCase();
+    if (!label) return false;
+
+    return !freelancerTalentNames.has(label) && !selectedSkillNames.has(label);
   });
 
   const formatUpdatedAt = (v: any) => {
@@ -108,10 +111,12 @@ const AddToLobbyDialog = ({
   };
 
   const isValidCheck = async () => {
-    if (!currSkills || currSkills.length === 0) return false;
+    if (!currSkills || currSkills.length === 0) {
+      // reuse existing error toast in parent path if desired; keeping lightweight here
+      return false;
+    }
     return true;
   };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-md">
@@ -122,11 +127,11 @@ const AddToLobbyDialog = ({
         <div className="mt-2 space-y-4">
           <SelectTagPicker
             label="Select hires"
+            key="hire-selector"
             options={inDeveloperProfileOptions}
             selected={currSkills}
             onAdd={(value: string) => {
-              setTmpSkill(value);
-              handleAddSkill();
+              handleAddSkill(value);
             }}
             onRemove={(name: string) => handleDeleteSkill(name)}
             optionLabelKey="label"
@@ -181,15 +186,15 @@ const AddToLobbyDialog = ({
 
         <DialogFooter className="mt-4">
           <ConnectsDialog
+            // form is unused internally; provide a dummy to satisfy types
             loading={isLoading}
             setLoading={setLoading}
             onSubmit={async () => {
-              if (!talent?.freelancer_id) return;
-
-              const success = await handleAddToLobby(
-                talent.freelancer_id,
-              );
-
+              if (!talent?.freelancer_id) {
+                console.error('Invalid freelancer id');
+                return;
+              }
+              const success = await handleAddToLobby(talent.freelancer_id);
               if (success) setOpen(false);
             }}
             isValidCheck={isValidCheck}

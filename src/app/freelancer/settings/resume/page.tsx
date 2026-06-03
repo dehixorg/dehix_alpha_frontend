@@ -81,7 +81,7 @@ export default function Resume() {
 
   if (showResumeEditor) {
     return (
-      <div className="flex min-h-screen w-full flex-col">
+      <div className="flex h-auto w-full flex-col overflow-x-hidden">
         <ResumeEditor
           initialResume={selectedResume}
           onCancel={() => {

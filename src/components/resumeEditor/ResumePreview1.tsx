@@ -114,14 +114,13 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
   };
 
   return (
-    <div className="flex justify-center w-full h-full rounded-md">
+    <div className="flex justify-center w-full">
       <div
         ref={containerRef}
-        className="bg-white w-[900px] p-10 flex flex-col rounded-md border border-gray-300"
+        className="bg-white p-10 flex flex-col w-full text-black print-exact"
         style={{
           width: '210mm',
-          minHeight: '297mm',
-          padding: '15mm',
+          padding: '10mm 15mm 15mm 15mm',
           boxSizing: 'border-box',
         }}
       >

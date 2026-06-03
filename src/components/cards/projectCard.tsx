@@ -183,6 +183,21 @@ export function ProjectCard({
       icon: CheckCircle2,
       text: 'Rejected',
     },
+    [StatusEnum.APPLIED]: {
+      color: 'bg-blue-400',
+      icon: Activity,
+      text: 'Applied',
+    },
+    [StatusEnum.VERIFIED]: {
+      color: 'bg-indigo-500',
+      icon: ShieldCheck,
+      text: 'Verified',
+    },
+    [StatusEnum.NOT_APPLIED]: {
+      color: 'bg-slate-400',
+      icon: Briefcase,
+      text: 'Not Applied',
+    },
     default: {
       color: 'bg-gray-400',
       icon: Briefcase,

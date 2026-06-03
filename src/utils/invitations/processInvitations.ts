@@ -8,6 +8,8 @@ export const mapFreelancerStatus = (s: string): InvitationStatus => {
   if (up === 'SELECTED' || up === 'ACCEPTED') return InvitationStatus.ACCEPTED;
   if (up === 'REJECTED') return InvitationStatus.REJECTED;
   if (up === 'APPLIED') return InvitationStatus.PENDING;
+  if (up === 'LOBBY') return InvitationStatus.PENDING;
+  if (up === 'INTERVIEW') return InvitationStatus.PENDING;
   return InvitationStatus.PENDING;
 };
 
@@ -87,7 +89,9 @@ const processInvitations = (
         s === 'INVITED' ||
         s === 'SELECTED' ||
         s === 'REJECTED' ||
-        s === 'APPLIED'
+        s === 'APPLIED' ||
+        s === 'LOBBY' ||
+        s === 'INTERVIEW'
       );
     });
 

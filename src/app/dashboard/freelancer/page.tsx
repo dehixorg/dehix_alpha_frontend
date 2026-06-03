@@ -34,7 +34,19 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [profileImageUrl, setProfileImageUrl] = useState<string>(''); // Cache the image URL
   useDashboardTour(true);
+
+  // Add cache-busting for profile images - only update when URL actually changes
+  useEffect(() => {
+    if (user?.photoURL) {
+      const separator = user.photoURL.includes('?') ? '&' : '?';
+      const newUrl = `${user.photoURL}${separator}t=${Date.now()}`;
+      setProfileImageUrl(newUrl);
+    } else {
+      setProfileImageUrl('');
+    }
+  }, [user?.photoURL]);
 
   const fetchProjectData = async () => {
     setLoading(true);
@@ -58,6 +70,9 @@ export default function Dashboard() {
       [StatusEnum.PENDING]: 0,
       [StatusEnum.COMPLETED]: 0,
       [StatusEnum.REJECTED]: 0,
+      [StatusEnum.APPLIED]: 0,
+      [StatusEnum.VERIFIED]: 0,
+      [StatusEnum.NOT_APPLIED]: 0,
     };
 
     // Track unique project IDs for each status to avoid counting duplicate bids on the same project
@@ -66,6 +81,9 @@ export default function Dashboard() {
       [StatusEnum.PENDING]: new Set(),
       [StatusEnum.COMPLETED]: new Set(),
       [StatusEnum.REJECTED]: new Set(),
+      [StatusEnum.APPLIED]: new Set(),
+      [StatusEnum.VERIFIED]: new Set(),
+      [StatusEnum.NOT_APPLIED]: new Set(),
     };
 
     for (const p of projects) {
@@ -127,7 +145,7 @@ export default function Dashboard() {
                   </CardDescription>
                 </div>
                 <Avatar className="h-12 w-12 flex-shrink-0">
-                  <AvatarImage src={user?.photoURL || ''} alt={user?.name} />
+                  <AvatarImage src={profileImageUrl} alt={user?.name} />
                   <AvatarFallback>
                     {user?.displayName?.charAt(0).toUpperCase() || 'X'}
                   </AvatarFallback>

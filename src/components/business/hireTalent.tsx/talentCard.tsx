@@ -82,9 +82,14 @@ interface DehixTalent {
   talentName?: string;
   experience: number;
   level?: string;
-  status?: HireDehixTalentStatusEnum;
+  status?: HireDehixTalentStatusEnum | 'INVITED';
   activeStatus?: string;
   talentMonthlyPay?: number;
+
+  hireId?: string;
+  attributeId?: string;
+  attributeName?: string;
+  updatedAt?: string;
 }
 
 interface Talent {
@@ -93,7 +98,7 @@ interface Talent {
   userName: string;
   profilePic: string | null;
   talents: DehixTalent[];
-  dehixTalent?: any[];
+  dehixTalent?: Partial<DehixTalent>[];
   Github: any;
   LinkedIn: any;
   education?: Record<string, Education>;
@@ -131,12 +136,6 @@ interface SkillDomainData {
 
 const SHEET_SIDES = ['left'] as const;
 
-let cachedHireData: {
-  skillDomainData: SkillDomainData[];
-  filterSkills: SkillOption[];
-  filterDomains: DomainOption[];
-} | null = null;
-
 // type SheetSide = (typeof SHEET_SIDES)[number];
 
 const TalentCard: React.FC<TalentCardProps> = ({
@@ -160,10 +159,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>(
     skillDomainDataProp || [],
   );
-  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(new Set());
+
   const [selectedTalent, setSelectedTalent] = useState<any>();
   const [currSkills, setCurrSkills] = useState<any>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
   const [isDialogOpen, setIsDialogOpen] = useState<any>(false);
   const [isLoading, setIsLoading] = useState<any>(false);
   const [openSheetId, setOpenSheetId] = useState<string | null>(null);
@@ -205,13 +203,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
   useEffect(() => {
     if (Array.isArray(skillDomainDataProp)) return;
 
-    if (cachedHireData) {
-      setSkillDomainData(cachedHireData.skillDomainData);
-      setFilterSkill?.(cachedHireData.filterSkills);
-      setFilterDomain?.(cachedHireData.filterDomains);
-      return;
-    }
-
     const run = async () => {
       try {
         const res = await axiosInstance.get('/business/hire-dehixtalent');
@@ -244,6 +235,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         const filterDomains: DomainOption[] = Array.from(domainsMap.values());
 
         const formatted: SkillDomainData[] = (hireTalentData || [])
+          .filter((item: any) => item?.visible)
           .map((item: any) => ({
             uid: item?._id,
             label: item?.talentName || 'N/A',
@@ -252,14 +244,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
             status: item?.status,
             visible: Boolean(item?.visible),
             talentId: item?.talentId,
-          }))
-          .filter((i: any) => Boolean(i?.uid) && i?.label !== 'N/A');
-
-        cachedHireData = {
-          skillDomainData: formatted,
-          filterSkills,
-          filterDomains,
-        };
+          }));
 
         setSkillDomainData(formatted);
         setFilterSkill?.(filterSkills);
@@ -273,22 +258,22 @@ const TalentCard: React.FC<TalentCardProps> = ({
     void run();
   }, [skillDomainDataProp, setFilterDomain, setFilterSkill]);
 
-  const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
-      setCurrSkills([
-        ...currSkills,
-        {
-          name: tmpSkill,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
-      setTmpSkill('');
-    }
+  const handleAddSkill = (value: string) => {
+    if (!value || currSkills.some((s: any) => s.name === value)) return;
+
+    setCurrSkills((prev: any) => [
+      ...prev,
+      {
+        name: value,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+      },
+    ]);
   };
+
   const handleDeleteSkill = (skillToDelete: string) => {
     setCurrSkills(
       currSkills.filter((skill: any) => skill.name !== skillToDelete),
@@ -350,12 +335,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
         }
 
         if (rawData) {
-          setTalents((prev) =>
-            reset ? fetchedData : [...prev, ...fetchedData],
-          );
-          skipRef.current = reset
-            ? Dehix_Talent_Card_Pagination.BATCH
-            : skipRef.current + Dehix_Talent_Card_Pagination.BATCH;
+          if (reset) {
+            setTalents(fetchedData);
+            skipRef.current = fetchedData.length;
+          } else {
+            setTalents((prev) => [...prev, ...fetchedData]);
+            skipRef.current += fetchedData.length;
+          }
         } else {
           throw new Error('Fail to fetch data');
         }
@@ -422,20 +408,17 @@ const TalentCard: React.FC<TalentCardProps> = ({
       if (response.status === 200) {
         notifySuccess('Invitation sent successfully', 'Success');
 
+        await fetchTalentData(0, true);
+
         // Sync connects balance after invitation (fire-and-forget)
         fetchAndUpdateConnects('business').catch((error) => {
           console.warn('Failed to sync connects after invitation:', error);
         });
 
         setCurrSkills([]);
-        setInvitedTalents((prev) => {
-          const next = new Set(prev);
-          next.add(freelancerId);
-          return next;
-        });
 
         const nowIso = new Date().toISOString();
-        const nextInvites = hires.map((h) => ({
+        const nextInvites: Partial<DehixTalent>[] = hires.map((h) => ({
           hireId: h.hireId,
           attributeId: h.attributeId,
           attributeName: h.attributeName,
@@ -443,8 +426,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
           updatedAt: nowIso,
         }));
 
-        const mergeInvites = (existing: any[] = []) => {
-          const keyOf = (i: any) =>
+        const mergeInvites = (existing: Partial<DehixTalent>[] = []) => {
+          const keyOf = (i: Partial<DehixTalent>) =>
             `${i?.hireId || ''}:${i?.attributeId || ''}`;
           const seen = new Set(existing.map(keyOf));
           const merged = [...existing];
@@ -456,19 +439,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
           }
           return merged;
         };
-
-        setTalents((prev) =>
-          prev.map((t) =>
-            t.freelancer_id === freelancerId
-              ? {
-                  ...t,
-                  dehixTalent: mergeInvites(
-                    Array.isArray(t.dehixTalent) ? t.dehixTalent : [],
-                  ),
-                }
-              : t,
-          ),
-        );
 
         setSelectedTalent((prev: any) => {
           if (!prev || prev.freelancer_id !== freelancerId) return prev;
@@ -554,7 +524,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
           const education = talent.education;
           const professionalInfo = talent.professionalInfo;
           const projects = talent.projects;
-          const isInvited = invitedTalents.has(talent.freelancer_id);
+
+          const isInvited = talentEntries.some((t) => t?.status === 'INVITED');
 
           if (!talentEntry) return null;
 
@@ -597,43 +568,36 @@ const TalentCard: React.FC<TalentCardProps> = ({
               <CardContent className="px-6 py-3">
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    {talentEntries.map((t) => (
-                      <div
-                        key={`${talent.freelancer_id}:${t.type}:${t.talentName}`}
-                        className="p-3 rounded-lg border bg-muted/30"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Badge
-                                variant="outline"
-                                className="rounded-full text-[11px] px-2 py-0.5"
-                              >
-                                {t.type}
-                              </Badge>
-                              <span className="text-sm font-medium truncate">
-                                {t.talentName || 'N/A'}
-                              </span>
-                            </div>
-                            <div className="mt-1 text-[11px] text-muted-foreground">
-                              Exp: {t.experience ?? 'N/A'}y | Level:{' '}
-                              {t.level || 'N/A'} | Pay: $
-                              {t.talentMonthlyPay ?? 'N/A'}
+                    {talentEntries
+                      .filter((t) => t.activeStatus === 'ACTIVE')
+                      .map((t) => (
+                        <div
+                          key={`${talent.freelancer_id}:${t.type}:${t.talentName}`}
+                          className="p-3 rounded-lg border bg-muted/30"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Badge
+                                  variant="outline"
+                                  className="rounded-full text-[11px] px-2 py-0.5"
+                                >
+                                  {t.type}
+                                </Badge>
+                                <span className="text-sm font-medium truncate">
+                                  {t.talentName || 'N/A'}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-[11px] text-muted-foreground">
+                                Exp: {t.experience ?? 'N/A'}y | Level:{' '}
+                                {t.level || 'N/A'} | Pay: $
+                                {t.talentMonthlyPay ?? 'N/A'}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
-
-                  {isInvited && (
-                    <Badge
-                      variant="outline"
-                      className="rounded-full text-xs font-medium px-3 py-1 border-blue-300 text-blue-700 dark:text-blue-300"
-                    >
-                      Invited
-                    </Badge>
-                  )}
 
                   <div className="pt-1">
                     {SHEET_SIDES.map((View) => (
@@ -721,33 +685,35 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               </div>
                             </div>
                             <div className="mt-4 space-y-2">
-                              {talentEntries.map((t) => (
-                                <div
-                                  key={`sheet-${talent.freelancer_id}:${t.type}:${t.talentName}`}
-                                  className="p-3 rounded-lg border border-border/60 bg-muted/30"
-                                >
-                                  <div className="flex items-center justify-between gap-2">
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-2 min-w-0">
-                                        <Badge
-                                          variant="outline"
-                                          className="rounded-full text-[11px] px-2 py-0.5"
-                                        >
-                                          {t.type}
-                                        </Badge>
-                                        <span className="text-sm font-medium truncate">
-                                          {t.talentName || 'N/A'}
-                                        </span>
-                                      </div>
-                                      <div className="mt-1 text-[11px] text-muted-foreground">
-                                        Exp: {t.experience ?? 'N/A'}y | Level:{' '}
-                                        {t.level || 'N/A'} | Pay: $
-                                        {t.talentMonthlyPay ?? 'N/A'}
+                              {talentEntries
+                                .filter((t) => t.activeStatus === 'ACTIVE')
+                                .map((t) => (
+                                  <div
+                                    key={`sheet-${talent.freelancer_id}:${t.type}:${t.talentName}`}
+                                    className="p-3 rounded-lg border border-border/60 bg-muted/30"
+                                  >
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div className="min-w-0">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <Badge
+                                            variant="outline"
+                                            className="rounded-full text-[11px] px-2 py-0.5"
+                                          >
+                                            {t.type}
+                                          </Badge>
+                                          <span className="text-sm font-medium truncate">
+                                            {t.talentName || 'N/A'}
+                                          </span>
+                                        </div>
+                                        <div className="mt-1 text-[11px] text-muted-foreground">
+                                          Exp: {t.experience ?? 'N/A'}y | Level:{' '}
+                                          {t.level || 'N/A'} | Pay: $
+                                          {t.talentMonthlyPay ?? 'N/A'}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
                             </div>
                           </div>
 
@@ -1029,8 +995,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
                           <div className="px-6 pb-6 pt-2">
                             <div className="flex flex-col sm:flex-row gap-3 justify-center space-between">
                               <Button
+                                disabled={isInvited}
                                 className={`w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
                                 onClick={() => {
+                                  setCurrSkills([]);
                                   setOpenSheetId(null);
                                   setIsDialogOpen(true);
                                   setSelectedTalent(talent);
@@ -1063,9 +1031,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
               <CardFooter className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
                 <div className="flex flex-col sm:flex-row gap-3 w-full">
                   <Button
+                    disabled={isInvited}
                     className={`w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg ${isInvited ? 'from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
+                      setCurrSkills([]);
                       setOpenSheetId(null);
                       setIsDialogOpen(true);
                       setSelectedTalent(talent);
@@ -1084,12 +1054,12 @@ const TalentCard: React.FC<TalentCardProps> = ({
         {selectedTalent && (
           <AddToLobbyDialog
             skillDomainData={skillDomainData}
+            key={JSON.stringify(skillDomainData)}
             currSkills={currSkills}
             handleAddSkill={handleAddSkill}
             handleDeleteSkill={handleDeleteSkill}
             handleAddToLobby={handleAddToLobby}
             talent={selectedTalent}
-            setTmpSkill={setTmpSkill}
             open={isDialogOpen}
             setOpen={(v: boolean) => {
               setIsDialogOpen(v);
@@ -1134,6 +1104,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
               ))}
             </div>
           )}
+          {/* Sentinel element: InfiniteScroll observes its last child to trigger the next load.
+              This must always render so the observer has an element to watch even when not loading. */}
+          <div className="w-full h-1" />
         </InfiniteScroll>
       </div>
     </TooltipProvider>

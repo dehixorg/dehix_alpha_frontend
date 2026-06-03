@@ -19,6 +19,7 @@ import TourMenu from '@/components/tour/shared/TourMenu';
 import { RootState } from '@/lib/store';
 import type { TourTarget } from '@/lib/tourSlice';
 import { fetchAndUpdateConnects } from '@/lib/updateConnects';
+import { notifyError } from '@/utils/toastMessage';
 
 interface HeaderProps {
   menuItemsTop: MenuItem[];
@@ -72,11 +73,17 @@ const Header: React.FC<HeaderProps> = ({
   const refreshConnectsFromServer = useCallback(async () => {
     if (!user?.uid || !userType) return;
     try {
-      const balance = await fetchAndUpdateConnects(userType);
-      if (balance != null) setConnects(balance);
-      else fetchConnects();
-    } catch {
+      const balance = await fetchAndUpdateConnects(userType, true);
+      if (balance != null) {
+        setConnects(balance);
+        // notifySuccess('Connects refreshed successfully!', 'Success');
+      } else {
+        fetchConnects();
+        // notifySuccess('Connects data updated from cache', 'Updated');
+      }
+    } catch (error) {
       fetchConnects();
+      notifyError('Failed to refresh connects. Please try again.', 'Error');
     }
   }, [user?.uid, userType]);
 
@@ -144,15 +151,10 @@ const Header: React.FC<HeaderProps> = ({
     fetchConnects();
     refreshRef.current();
     const updateConnects = () => fetchConnects();
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') refreshRef.current();
-    };
     window.addEventListener('connectsUpdated', updateConnects);
-    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       window.removeEventListener('connectsUpdated', updateConnects);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [user?.uid, userType]);
 
@@ -191,7 +193,7 @@ const Header: React.FC<HeaderProps> = ({
     <header
       role="banner"
       aria-label="Site header"
-      className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-muted-foreground/20 dark:bg-muted/20 px-4 sm:px-6 backdrop-blur-md"
+      className="sticky top-0 z-50 flex h-14 !w-full !max-w-none items-center py-6 gap-4 border-b bg-muted-foreground/20 dark:bg-muted/20 px-4 sm:px-6 backdrop-blur-md"
     >
       {/* Sidebar Menu */}
       <CollapsibleSidebarMenu
@@ -258,7 +260,7 @@ const Header: React.FC<HeaderProps> = ({
         </div>
 
         {user?.uid ? (
-          <div data-tour="header-connects">
+          <div data-tour="header-connects" className="flex items-center gap-2">
             <DisplayConnectsDialog
               userId={user.uid}
               connects={connects}
