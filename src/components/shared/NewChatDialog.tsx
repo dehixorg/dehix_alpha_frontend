@@ -18,7 +18,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers';
+import type { CombinedUser } from '@/hooks/useAllUsers';
+import {
+  CHAT_USER_SEARCH_MIN_CHARS,
+  useRemoteUserSearch,
+} from '@/hooks/useRemoteUserSearch';
 import { notifyError } from '@/utils/toastMessage';
 
 interface NewChatDialogProps {
@@ -48,23 +52,19 @@ export function NewChatDialog({
     CombinedUser[]
   >([]);
 
-  // Use the hook you provided. It fetches all users on mount.
   const {
-    users: allFetchedUsers,
+    users: remoteUsers,
     isLoading: isLoadingUsers,
     error: usersError,
-  } = useAllUsers();
+    hasSearched,
+  } = useRemoteUserSearch(userSearchTerm);
 
-  // Perform client-side filtering based on the search term
   const searchResults =
-    userSearchTerm.length >= 3
-      ? allFetchedUsers.filter(
+    userSearchTerm.trim().length >= CHAT_USER_SEARCH_MIN_CHARS
+      ? remoteUsers.filter(
           (user) =>
             user.id !== currentUserUid &&
-            (user.displayName
-              ?.toLowerCase()
-              .includes(userSearchTerm.toLowerCase()) ||
-              user.email?.toLowerCase().includes(userSearchTerm.toLowerCase())),
+            !selectedGroupMembers.some((member) => member.id === user.id),
         )
       : [];
 
@@ -109,21 +109,28 @@ export function NewChatDialog({
         <div className="text-center text-red-500 p-4">Error: {usersError}</div>
       );
     }
-    if (userSearchTerm.length > 0 && userSearchTerm.length < 3) {
+    if (
+      userSearchTerm.length > 0 &&
+      userSearchTerm.trim().length < CHAT_USER_SEARCH_MIN_CHARS
+    ) {
       return (
         <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4">
-          Type 3+ characters to search.
+          Type {CHAT_USER_SEARCH_MIN_CHARS}+ characters to search.
         </div>
       );
     }
-    if (userSearchTerm.length >= 3 && searchResults.length === 0) {
+    if (
+      userSearchTerm.trim().length >= CHAT_USER_SEARCH_MIN_CHARS &&
+      hasSearched &&
+      searchResults.length === 0
+    ) {
       return (
         <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4">
           No users found.
         </div>
       );
     }
-    if (userSearchTerm.length < 3) {
+    if (userSearchTerm.trim().length < CHAT_USER_SEARCH_MIN_CHARS) {
       return (
         <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4">
           Search for users above.

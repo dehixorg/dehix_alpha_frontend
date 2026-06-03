@@ -14,8 +14,11 @@ export enum ProjectStatus {
 export enum StatusEnum {
   ACTIVE = 'ACTIVE',
   PENDING = 'PENDING',
+  APPLIED = 'APPLIED',
   REJECTED = 'REJECTED',
   COMPLETED = 'COMPLETED',
+  VERIFIED = 'VERIFIED',
+  NOT_APPLIED = 'NOT_APPLIED',
 }
 
 export enum InterviewPermission {
@@ -29,4 +32,12 @@ export const kycBadgeColors: { [key: string]: string } = {
   VERIFIED: 'bg-yellow-500 text-black hover:text-black',
   REUPLOAD: 'bg-red-500 text-white hover:text-black',
   STOPPED: 'bg-red-500 text-white hover:text-black',
+};
+
+export const canVerify = (status?: string | StatusEnum): boolean => {
+  return (
+    status === StatusEnum.NOT_APPLIED ||
+    status === StatusEnum.APPLIED ||
+    status === 'NOT_APPLIED'
+  );
 };

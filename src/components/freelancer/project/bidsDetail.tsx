@@ -13,10 +13,15 @@ import {
   DollarSign,
   MoreVertical,
   File,
+  CalendarDays,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
+import { DateTimePicker } from '@/components/ui/date-picker';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import {
   Accordion,
@@ -746,8 +751,18 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [selectedBidData, setSelectedBidData] = useState<any>(null);
 
-  // Interview dialog state
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
+  const [selectedBidForInterview, setSelectedBidForInterview] =
+    useState<any>(null);
+  const [interviewMode, setInterviewMode] = useState<'DIRECT' | 'HIRE'>(
+    'DIRECT',
+  );
+  const [interviewDate, setInterviewDate] = useState<Date | undefined>(
+    new Date(),
+  );
+  const [interviewTime, setInterviewTime] = useState<string>('10:00');
+  const [interviewDescription, setInterviewDescription] = useState('');
+  const [isSubmittingInterview, setIsSubmittingInterview] = useState(false);
 
   // Memoized bid counts
   const bidCounts = useMemo(
@@ -1085,9 +1100,65 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   }, []);
 
   // Interview dialog handlers
-  const handleOpenInterviewDialog = useCallback(() => {
+  const closeAndResetInterviewDialog = useCallback(() => {
+    setIsInterviewDialogOpen(false);
+    setInterviewDescription('');
+    setInterviewMode('DIRECT');
+    setInterviewDate(undefined);
+    setInterviewTime('');
+    setSelectedBidForInterview(null);
+    setIsSubmittingInterview(false);
+  }, []);
+
+  const handleOpenInterviewDialog = useCallback((bid: any, profile: any) => {
+    setSelectedBidForInterview({ bid, profile });
     setIsInterviewDialogOpen(true);
   }, []);
+
+  const handleCreateInterview = async () => {
+    if (!selectedBidForInterview || !interviewDate) {
+      notifyError('Please fill all required fields.', 'Error');
+      return;
+    }
+
+    try {
+      setIsSubmittingInterview(true);
+      const { bid, profile } = selectedBidForInterview;
+
+      // Combine date and time
+      const finalDate = new Date(interviewDate);
+      if (interviewTime) {
+        const [hours, minutes] = interviewTime.split(':').map(Number);
+        finalDate.setHours(hours || 0, minutes || 0, 0, 0);
+      }
+
+      const payload = {
+        intervieweeId: bid.bidder_id || bid.freelancer?._id,
+        interviewType: interviewMode === 'HIRE' ? 'HIRE' : 'PROJECT',
+        description: interviewDescription,
+        talentType: 'DOMAIN',
+        talentId: profile.domain_id || profile._id,
+        interviewDate: finalDate,
+        interviewStatus: interviewMode === 'HIRE' ? 'BIDDING' : 'SCHEDULED',
+      };
+
+      const response = await axiosInstance.post('/interview', payload);
+
+      if (response.status === 201 || response.status === 200) {
+        notifySuccess(
+          interviewMode === 'HIRE'
+            ? 'Interviewer opportunity created successfully.'
+            : 'Interview scheduled successfully.',
+          'Success',
+        );
+        closeAndResetInterviewDialog();
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || 'Failed to create interview';
+      notifyError(msg, 'Error');
+      setIsSubmittingInterview(false);
+    }
+  };
 
   // Update bid status
   const handleUpdateStatus = useCallback(
@@ -1201,7 +1272,13 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     );
   };
 
-  const BidsTable = ({ status }: { status: BidStatus }) => {
+  const BidsTable = ({
+    status,
+    profile,
+  }: {
+    status: BidStatus;
+    profile: any;
+  }) => {
     const rows = bids.filter((bid) => bid.bid_status === status);
     const router = useRouter();
 
@@ -1274,9 +1351,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                 </TableHead>
                 <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Bid Amount
-                </TableHead>
-                <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Profile Used
                 </TableHead>
                 <TableHead className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Status
@@ -1360,34 +1434,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     </TableCell>
 
                     <TableCell className="text-center">
-                      {freelancerProfile ? (
-                        <div className="space-y-0.5">
-                          <div className="text-sm font-medium text-foreground">
-                            {freelancerProfile.profileName}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {freelancerProfile.skills
-                              ?.slice(0, 2)
-                              .map((skill: any) => skill.label)
-                              .join(', ')}
-                            {freelancerProfile.skills?.length > 2
-                              ? ` +${freelancerProfile.skills.length - 2}`
-                              : ''}
-                          </div>
-                          {freelancerProfile.hourlyRate && (
-                            <div className="text-xs text-muted-foreground">
-                              {formatUSD(freelancerProfile.hourlyRate)}/hr
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">
-                          No profile selected
-                        </span>
-                      )}
-                    </TableCell>
-
-                    <TableCell className="text-center">
                       {renderStatusBadge(data.bid_status)}
                     </TableCell>
 
@@ -1398,7 +1444,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                         onClick={handleViewProfile}
                         className="h-8"
                       >
-                        <Eye className="mr-2 h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                         View
                       </Button>
                     </TableCell>
@@ -1407,10 +1453,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={handleOpenInterviewDialog}
+                        onClick={() => handleOpenInterviewDialog(data, profile)}
                         className="h-8"
                       >
-                        <Video className="mr-2 h-4 w-4" />
+                        <Video className="h-4 w-4" />
                         Interview
                       </Button>
                     </TableCell>
@@ -1641,7 +1687,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                 </div>
                               </div>
                             ) : (
-                              <BidsTable status={status as BidStatus} />
+                              <BidsTable
+                                status={status as BidStatus}
+                                profile={profile}
+                              />
                             )}
                           </CardContent>
                         </TabsContent>
@@ -1666,19 +1715,104 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
       <Dialog
         open={isInterviewDialogOpen}
-        onOpenChange={setIsInterviewDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeAndResetInterviewDialog();
+          } else {
+            setIsInterviewDialogOpen(true);
+          }
+        }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="text-center text-xl font-semibold">
-              Work in Progress
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              Schedule Interview
             </DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="text-6xl mb-4">🚧</div>
-            <p className="text-gray-600 dark:text-gray-400 text-center">
-              Interview functionality is currently under development.
-            </p>
+
+          <div className="py-4 space-y-6">
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">
+                How would you like to interview?
+              </Label>
+              <RadioGroup
+                value={interviewMode}
+                onValueChange={(val: any) => setInterviewMode(val)}
+                className="grid grid-cols-1 gap-4"
+              >
+                <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors">
+                  <RadioGroupItem value="DIRECT" id="direct" />
+                  <Label htmlFor="direct" className="flex-1 cursor-pointer">
+                    <div className="font-semibold">Interview Directly</div>
+                    <div className="text-xs text-muted-foreground">
+                      You will be the interviewer for this candidate.
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors">
+                  <RadioGroupItem value="HIRE" id="hire" />
+                  <Label htmlFor="hire" className="flex-1 cursor-pointer">
+                    <div className="font-semibold">Hire an Interviewer</div>
+                    <div className="text-xs text-muted-foreground">
+                      Post this as an opportunity for qualified freelancers to
+                      bid on.
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <DateTimePicker
+                  date={interviewDate}
+                  onDateChange={setInterviewDate}
+                  time={interviewTime}
+                  onTimeChange={setInterviewTime}
+                  label="Interview Date & Time"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="desc" className="text-sm font-semibold">
+                  Description / Notes
+                </Label>
+                <Textarea
+                  id="desc"
+                  placeholder="Additional details about the interview process..."
+                  value={interviewDescription}
+                  onChange={(e) => setInterviewDescription(e.target.value)}
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={closeAndResetInterviewDialog}
+                disabled={isSubmittingInterview}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateInterview}
+                disabled={isSubmittingInterview}
+                className="bg-primary hover:bg-primary/90 min-w-[120px]"
+              >
+                {isSubmittingInterview ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                    Processing...
+                  </span>
+                ) : interviewMode === 'HIRE' ? (
+                  'Post Opportunity'
+                ) : (
+                  'Schedule Interview'
+                )}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

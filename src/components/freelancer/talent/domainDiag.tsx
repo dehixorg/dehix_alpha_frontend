@@ -97,7 +97,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       experience: '',
       monthlyPay: '',
       activeStatus: false,
-      status: StatusEnum.PENDING,
+      status: StatusEnum.NOT_APPLIED,
       type: 'DOMAIN',
     },
   });

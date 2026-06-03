@@ -3,14 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
-import {
-  ArrowUpRight,
-  Award,
-  Briefcase,
-  Eye,
-  Zap,
-  VideoIcon,
-} from 'lucide-react';
+import { ArrowUpRight, Award, Briefcase, Eye, Zap } from 'lucide-react';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -44,11 +37,8 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { axiosInstance, cancelAllRequests } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
-import {
-  getBadgeColor,
-  statusOutlineClasses,
-} from '@/utils/common/getBadgeStatus';
-import { StatusEnum } from '@/utils/freelancer/enum';
+import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
+import { StatusEnum, canVerify } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
 import { formatCurrency } from '@/utils/format';
 
@@ -91,10 +81,10 @@ const SkillDomainForm: React.FC = () => {
     const skillRows = rows.filter((r) => r.type === 'SKILL');
     const domainRows = rows.filter((r) => r.type === 'DOMAIN');
     const verifiedSkillRows = skillRows.filter(
-      (r) => r.status === StatusEnum.ACTIVE,
+      (r) => r.status === StatusEnum.VERIFIED,
     );
     const verifiedDomainRows = domainRows.filter(
-      (r) => r.status === StatusEnum.ACTIVE,
+      (r) => r.status === StatusEnum.VERIFIED,
     );
 
     return {
@@ -121,14 +111,14 @@ const SkillDomainForm: React.FC = () => {
 
         const statusEntries = Object.entries(talentData ?? {});
 
-        const nonNotAppliedGroups = statusEntries
-          .filter(([statusKey]) => statusKey !== 'NOT_APPLIED')
-          .map(([, group]) => group);
-
-        const talentFlat = nonNotAppliedGroups.flatMap((group: any) => {
+        const talentFlat = statusEntries.flatMap(([, group]) => {
           if (!group || typeof group !== 'object') return [];
-          const skillsGroup = Array.isArray(group.SKILL) ? group.SKILL : [];
-          const domainsGroup = Array.isArray(group.DOMAIN) ? group.DOMAIN : [];
+          const skillsGroup = Array.isArray((group as any).SKILL)
+            ? (group as any).SKILL
+            : [];
+          const domainsGroup = Array.isArray((group as any).DOMAIN)
+            ? (group as any).DOMAIN
+            : [];
           return [...skillsGroup, ...domainsGroup];
         });
 
@@ -163,6 +153,7 @@ const SkillDomainForm: React.FC = () => {
 
   const toggleVisibility = useCallback(
     async (idx: number, checked: boolean, id: string, previous: boolean) => {
+      // Optimistically update UI
       setVisibility((v) => {
         const copy = [...v];
         copy[idx] = checked;
@@ -180,6 +171,7 @@ const SkillDomainForm: React.FC = () => {
         }
       } catch (e) {
         console.error(e);
+        // Revert UI on failure
         setVisibility((v) => {
           const copy = [...v];
           copy[idx] = previous;
@@ -233,7 +225,6 @@ const SkillDomainForm: React.FC = () => {
               <AddDomainBtn />
             </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
             <Card className="relative overflow-hidden group hover:shadow-md transition-all duration-300 border border-muted/40 bg-gradient-to-br from-blue-50/70 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 h-36">
               <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-200/30 dark:bg-blue-900/20 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
@@ -342,7 +333,9 @@ const SkillDomainForm: React.FC = () => {
                   <TableHead className="w-32 text-center">Pay</TableHead>
                   <TableHead className="w-28 text-center">Status</TableHead>
                   <TableHead className="w-28 text-center">Visible</TableHead>
-                  <TableHead className="w-32 text-center">Actions</TableHead>
+                  <TableHead className="w-32 text-center">
+                    Request for verification
+                  </TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -486,22 +479,12 @@ const SkillDomainForm: React.FC = () => {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className={statusOutlineClasses(r.status)}
-                          >
-                            {r.status?.toUpperCase()}
-                          </Badge>
-                          {r.status === StatusEnum.PENDING && r.uid && (
-                            <VerifyDialog
-                              talentType={r.type}
-                              _id={r.uid}
-                              userId={user.uid}
-                              originalTalentId={r.originalTalentId}
-                            />
-                          )}
-                        </div>
+                        <Badge
+                          variant="outline"
+                          className={statusOutlineClasses(r.status)}
+                        >
+                          {r.status?.toUpperCase()}
+                        </Badge>
                       </TableCell>
 
                       <TableCell className="text-center">
@@ -516,7 +499,7 @@ const SkillDomainForm: React.FC = () => {
 
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          {r.originalTalentId ? (
+                          {r.originalTalentId && (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -541,43 +524,16 @@ const SkillDomainForm: React.FC = () => {
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                          ) : (
-                            <div className="flex items-center justify-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className={statusOutlineClasses(r.status)}
-                              >
-                                {r.status?.toUpperCase()}
-                              </Badge>
-                              {r.status === StatusEnum.PENDING && r.uid && (
-                                <VerifyDialog
-                                  talentType={r.type}
-                                  _id={r.uid}
-                                  userId={user.uid}
-                                  originalTalentId={r.originalTalentId}
-                                />
-                              )}
-                            </div>
                           )}
 
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label={`Schedule interview for ${r.label}`}
-                                  onClick={() => setMeetingDialogOpen(true)}
-                                >
-                                  <VideoIcon className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Schedule interview</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          {canVerify(r.status) && r.uid && (
+                            <VerifyDialog
+                              talentType={r.type}
+                              _id={r.uid}
+                              userId={user.uid}
+                              originalTalentId={r.originalTalentId}
+                            />
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -585,123 +541,6 @@ const SkillDomainForm: React.FC = () => {
                 )}
               </TableBody>
             </Table>
-          </div>
-
-          {/* Mobile Card View */}
-          <div className="md:hidden space-y-4 p-4">
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} className="p-4">
-                  <Skeleton className="h-6 w-20 mb-2" />
-                  <Skeleton className="h-5 w-32 mb-3" />
-                  <div className="flex justify-between">
-                    <Skeleton className="h-5 w-16" />
-                    <Skeleton className="h-5 w-20" />
-                  </div>
-                </Card>
-              ))
-            ) : rows.length === 0 ? (
-              <Card className="p-6 text-center">
-                <svg
-                  width="80"
-                  height="80"
-                  viewBox="0 0 120 120"
-                  className="mx-auto text-muted-foreground/40 mb-4"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M30 20h60a10 10 0 0 1 10 10v60a10 10 0 0 1-10 10H30a10 10 0 0 1-10-10V30a10 10 0 0 1 10-10z"
-                    opacity=".2"
-                  />
-                  <circle
-                    cx="40"
-                    cy="45"
-                    r="8"
-                    fill="currentColor"
-                    opacity=".4"
-                  />
-                  <circle
-                    cx="60"
-                    cy="45"
-                    r="8"
-                    fill="currentColor"
-                    opacity=".4"
-                  />
-                  <circle
-                    cx="80"
-                    cy="45"
-                    r="8"
-                    fill="currentColor"
-                    opacity=".4"
-                  />
-                </svg>
-                <p className="font-medium">No talents yet</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Add a skill or domain to get started.
-                </p>
-                <div className="flex gap-2 justify-center mt-4">
-                  <AddSkillBtn />
-                  <AddDomainBtn />
-                </div>
-              </Card>
-            ) : (
-              rows.map((r, idx) => (
-                <Card key={r.uid} className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    {r.type === 'SKILL' ? (
-                      <Badge
-                        variant="default"
-                        className="font-medium text-xs px-2.5 py-0.5 rounded-full border bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
-                      >
-                        Skill
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="font-medium text-xs px-2.5 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-300"
-                      >
-                        Domain
-                      </Badge>
-                    )}
-                    <Switch
-                      checked={visibility[idx]}
-                      onCheckedChange={(v) =>
-                        toggleVisibility(idx, v, r.uid, visibility[idx])
-                      }
-                      aria-label={`Toggle visibility for ${r.label}`}
-                    />
-                  </div>
-
-                  <h3 className="font-semibold text-lg">{r.label}</h3>
-
-                  <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Exp:</span>{' '}
-                      {r.experience} yrs
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Pay:</span>{' '}
-                      {formatCurrency(r.monthlyPay)}
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex justify-center items-center gap-2">
-                    <Badge className={getBadgeColor(r.status)}>
-                      {r.status?.toUpperCase()}
-                    </Badge>
-                    {r.status === StatusEnum.PENDING && r.uid && (
-                      <VerifyDialog
-                        talentType={r.type}
-                        _id={r.uid}
-                        userId={user.uid}
-                        originalTalentId={r.originalTalentId}
-                      />
-                    )}
-                  </div>
-                </Card>
-              ))
-            )}
           </div>
         </CardContent>
       </Card>

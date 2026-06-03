@@ -1,13 +1,11 @@
 'use client';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PackageOpen } from 'lucide-react';
 
 import { CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { notifyError } from '@/utils/toastMessage';
 import { VerificationStatus } from '@/utils/verificationStatus';
 import OracleVerificationLayout from '@/components/freelancer/oracleDashboard/OracleVerificationLayout';
 import EmptyState from '@/components/shared/EmptyState';
@@ -28,95 +26,71 @@ interface WorkExperience {
   verificationStatus: string;
 }
 
-interface VerificationEntry {
+interface CombinedData extends WorkExperience {
+  verification_id: string;
   document_id: string;
   verification_status: VerificationStatus;
-  comments: string;
-  requester_id: string;
-  verifier_id: string;
+  comment: string;
 }
 
-interface CombinedData extends WorkExperience, VerificationEntry {}
+interface WorkExpVerificationProps {
+  data: any[];
+  loading: boolean;
+}
 
-const WorkExpVerification = () => {
-  const [jobData, setJobData] = useState<CombinedData[]>([]);
+const WorkExpVerification = ({ data, loading }: WorkExpVerificationProps) => {
   const [filter, setFilter] = useState<FilterOption>('all');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [localData, setLocalData] = useState<CombinedData[]>([]);
+  const [initialized, setInitialized] = useState(false);
+
+  const jobData = useMemo(() => {
+    const transformed: CombinedData[] = data
+      .map((entry: any) => {
+        const expDocs = entry.result?.professionalInfo
+          ? (Object.values(entry.result.professionalInfo) as WorkExperience[])
+          : [];
+
+        const matchingDoc = expDocs.find(
+          (doc) => doc._id === entry.document_id,
+        );
+
+        if (!matchingDoc) return null;
+        return {
+          ...matchingDoc,
+          verification_id: entry._id,
+          document_id: entry.document_id,
+          verification_status: entry.verification_status as VerificationStatus,
+          comment: entry.comment,
+        } as CombinedData;
+      })
+      .filter(Boolean) as CombinedData[];
+
+    if (!initialized && transformed.length > 0) {
+      setLocalData(transformed);
+      setInitialized(true);
+    }
+    return transformed;
+  }, [data, initialized]);
+
+  const displayData = initialized ? localData : jobData;
+
   const handleFilterChange = (newFilter: FilterOption) => {
     setFilter(newFilter);
   };
 
-  const filteredData = jobData.filter((data) => {
+  const filteredData = displayData.filter((d) => {
     if (filter === 'all') return true;
     if (filter === 'pending')
-      return data.verification_status === VerificationStatus.PENDING;
+      return d.verification_status === VerificationStatus.PENDING;
     if (filter === 'verified')
-      return data.verification_status === VerificationStatus.APPROVED;
+      return d.verification_status === VerificationStatus.APPROVED;
     if (filter === 'rejected')
-      return data.verification_status === VerificationStatus.DENIED;
+      return d.verification_status === VerificationStatus.DENIED;
     return true;
   });
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const verificationResponse = await axiosInstance.get(
-        `/verification/oracle?doc_type=experience`,
-      );
-      const verificationEntries = verificationResponse.data.data;
-
-      if (!verificationEntries || verificationEntries.length === 0) {
-        setJobData([]);
-        return;
-      }
-
-      const transformedDataPromises = verificationEntries.map(
-        async (entry: VerificationEntry) => {
-          try {
-            const workExpResponse = await axiosInstance.get(
-              `/freelancer/${entry.requester_id}/experience`,
-            );
-            const workExpDocuments = workExpResponse.data.data;
-            const workExpArray = Object.values(workExpDocuments);
-            const matchingWorkExpDoc = workExpArray.find(
-              (doc: any) => doc._id === entry.document_id,
-            );
-            if (matchingWorkExpDoc) {
-              return {
-                ...matchingWorkExpDoc,
-                ...entry,
-                verification_status:
-                  entry.verification_status as VerificationStatus,
-              };
-            }
-            return null;
-          } catch (error) {
-            console.error(
-              `Failed to fetch work experience for requester ID ${entry.requester_id}:`,
-              error,
-            );
-            return null;
-          }
-        },
-      );
-
-      const combinedData = (await Promise.all(transformedDataPromises)).filter(
-        Boolean,
-      );
-      setJobData(combinedData as CombinedData[]);
-    } catch (error) {
-      notifyError('Something went wrong. Please try again.', 'Error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
   const updateJobStatus = (documentId: string, newStatus: string) => {
-    setJobData((prev) =>
+    setLocalData((prev) =>
       prev.map((item) =>
         item.document_id === documentId
           ? { ...item, verification_status: newStatus as VerificationStatus }
@@ -126,10 +100,10 @@ const WorkExpVerification = () => {
   };
 
   const updateCommentStatus = (documentId: string, newComment: string) => {
-    setJobData((prev) =>
+    setLocalData((prev) =>
       prev.map((item) =>
         item.document_id === documentId
-          ? { ...item, comments: newComment }
+          ? { ...item, comment: newComment }
           : item,
       ),
     );
@@ -244,7 +218,7 @@ const WorkExpVerification = () => {
                     filteredData.map((data) => (
                       <WorkExpVerificationCard
                         key={data.document_id}
-                        _id={data._id}
+                        _id={data.verification_id}
                         jobTitle={data.jobTitle}
                         company={data.company}
                         startFrom={data.workFrom}
@@ -252,7 +226,7 @@ const WorkExpVerification = () => {
                         referencePersonName={data.referencePersonName}
                         referencePersonContact={data.referencePersonContact}
                         githubRepoLink={data.githubRepoLink}
-                        comments={data.comments}
+                        comments={data.comment}
                         status={data.verification_status}
                         onStatusUpdate={(newStatus) =>
                           updateJobStatus(data.document_id, newStatus)

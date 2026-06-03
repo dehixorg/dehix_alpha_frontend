@@ -217,7 +217,7 @@ export default function BusinessFilterComponent({
   };
 
   return (
-    <div className="h-full sm:border rounded-lg flex flex-col lg:sticky lg:top-[4rem] lg:h-[calc(100vh-6rem)]">
+    <div className="h-full sm:border rounded-lg flex flex-col">
       <div className="bg-gradient border-b p-4 rounded-t-lg">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Filters</h2>
@@ -237,7 +237,7 @@ export default function BusinessFilterComponent({
           </Button>
         </div>
       </div>
-      <ScrollArea className="flex-1 min-h-0 max-h-[calc(100vh-12rem)] px-4 pb-2 pt-4">
+      <ScrollArea className="flex-1 min-h-0 px-4 pb-2 pt-4">
         <Accordion
           type="multiple"
           defaultValue={[

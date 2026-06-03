@@ -60,6 +60,7 @@ interface Props {
     item: TalentMarketItem,
     next: boolean,
   ) => void | Promise<void>;
+  hasApplied?: boolean;
 }
 
 const TalentMarketCard: React.FC<Props> = ({
@@ -67,6 +68,7 @@ const TalentMarketCard: React.FC<Props> = ({
   onNotInterested,
   onApply,
   onToggleBookmark,
+  hasApplied = false,
 }) => {
   const title =
     item.skillName || item.domainName || item.talentName || 'Opportunity';
@@ -216,15 +218,25 @@ const TalentMarketCard: React.FC<Props> = ({
             )}
           </div>
           <div className="flex gap-3 w-full sm:w-auto">
-            <Button variant="outline" onClick={onNotInterested}>
+            <Button
+              variant="outline"
+              onClick={onNotInterested}
+              disabled={hasApplied}
+            >
               Not Interested
             </Button>
             <Button
-              className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-md hover:shadow-lg"
+              className={cn(
+                'w-full sm:w-auto transition-all duration-300 shadow-md hover:shadow-lg',
+                hasApplied
+                  ? 'bg-gray-300 text-gray-700 cursor-not-allowed hover:bg-gray-300'
+                  : 'bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary',
+              )}
               onClick={() => onApply(item)}
+              disabled={hasApplied}
             >
-              <span>Apply Now</span>
-              <ChevronRight className="ml-1.5 h-4 w-4" />
+              <span>{hasApplied ? 'Already Applied' : 'Apply Now'}</span>
+              {!hasApplied && <ChevronRight className="ml-1.5 h-4 w-4" />}
             </Button>
           </div>
         </div>

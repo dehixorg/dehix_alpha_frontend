@@ -96,8 +96,16 @@ export const getUserData = async (
     };
     const userType = claims.type as string;
     // Storing user type and token in cookies
-    Cookies.set('userType', userType, { expires: 1, path: '/' });
-    Cookies.set('token', accessToken, { expires: 1, path: '/' });
+    Cookies.set('userType', userType, {
+      expires: 1,
+      path: '/',
+      sameSite: 'Lax',
+    });
+    Cookies.set('token', accessToken, {
+      expires: 1,
+      path: '/',
+      sameSite: 'Lax',
+    });
 
     // Return the user data and claims as JSON
     return {
