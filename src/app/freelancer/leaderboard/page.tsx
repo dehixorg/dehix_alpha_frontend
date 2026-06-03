@@ -9,6 +9,7 @@ import {
   Trophy,
   Zap,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError } from '@/utils/toastMessage';
@@ -24,7 +25,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { FullLeaderboard } from '@/types/leaderboard';
-import { ContestCard } from '@/components/leaderboard/ContestCard';
+const ContestCard = dynamic(
+  () =>
+    import('@/components/leaderboard/ContestCard').then((m) => ({
+      default: m.ContestCard,
+    })),
+  { loading: () => <Skeleton className="h-48 w-full" /> },
+);
 import {
   Select,
   SelectContent,

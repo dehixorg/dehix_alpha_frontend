@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { MessageSquare } from 'lucide-react';
@@ -27,10 +27,7 @@ import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import {
-  subscribeToUserConversations,
-  updateDataInFirestore,
-} from '@/utils/common/firestoreUtils';
+import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 import { useChatTour } from '@/components/tour/shared/useChatTour';
 
@@ -39,9 +36,8 @@ const HomePage = () => {
   const searchParams = useSearchParams();
   const user = useSelector((state: RootState) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<
-    string | null
-  >(null);
+  const [activeConversation, setActiveConversation] =
+    useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -59,47 +55,6 @@ const HomePage = () => {
 
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
-
-  const lastHandledSelectedIdRef = useRef<string | null>(null);
-
-  const selectedConversationId = searchParams?.get('c') || null;
-
-  const conversationById = useMemo(() => {
-    const nextConversationById = new Map<string, Conversation>();
-    conversations.forEach((conversation) => {
-      nextConversationById.set(conversation.id, conversation);
-    });
-    return nextConversationById;
-  }, [conversations]);
-
-  const directConversationByParticipantId = useMemo(() => {
-    const nextConversationByParticipantId = new Map<string, Conversation>();
-
-    if (!user?.uid) {
-      return nextConversationByParticipantId;
-    }
-
-    conversations.forEach((conversation) => {
-      if (conversation.type !== 'individual') return;
-
-      const otherParticipantId = conversation.participants.find(
-        (participantId) => participantId !== user.uid,
-      );
-
-      if (
-        otherParticipantId &&
-        !nextConversationByParticipantId.has(otherParticipantId)
-      ) {
-        nextConversationByParticipantId.set(otherParticipantId, conversation);
-      }
-    });
-
-    return nextConversationByParticipantId;
-  }, [conversations, user?.uid]);
-
-  const activeConversation = activeConversationId
-    ? conversationById.get(activeConversationId) || null
-    : null;
 
   useChatTour(true);
 
@@ -122,36 +77,6 @@ const HomePage = () => {
   const toggleChatExpanded = () => {
     setIsChatExpanded((prev) => !prev);
   };
-
-  const upsertConversation = useCallback((conversation: Conversation) => {
-    setConversations((prev) => {
-      const idx = prev.findIndex((c) => c.id === conversation.id);
-      return idx === -1
-        ? [conversation, ...prev]
-        : prev.map((c) => (c.id === conversation.id ? conversation : c));
-    });
-  }, []);
-
-  const updateUrlWithConversation = useCallback(
-    (id: string) => {
-      const url = new URL(window.location.href);
-      if (url.searchParams.get('c') !== id) {
-        url.searchParams.set('c', id);
-        router.replace(url.pathname + url.search, { scroll: false });
-      }
-      lastHandledSelectedIdRef.current = id;
-    },
-    [router],
-  );
-
-  const upsertAndActivateConversation = useCallback(
-    (conversation: Conversation) => {
-      upsertConversation(conversation);
-      setActiveConversationId(conversation.id);
-      updateUrlWithConversation(conversation.id);
-    },
-    [upsertConversation, updateUrlWithConversation],
-  );
 
   async function handleCreateGroupChat(
     selectedUsers: NewChatUser[],
@@ -241,7 +166,7 @@ const HomePage = () => {
         updatedAt: new Date().toISOString(),
       };
 
-      upsertAndActivateConversation(groupDataForState);
+      setActiveConversation(groupDataForState);
       setIsNewChatDialogOpen(false);
     } catch (error) {
       console.error('Error creating group chat: ', error);
@@ -274,13 +199,14 @@ const HomePage = () => {
       }
 
       // Check if conversation already exists
-      const existingConv = directConversationByParticipantId.get(
-        selectedUser.id,
+      const existingConv = conversations.find(
+        (conv) =>
+          conv.type === 'individual' &&
+          conv.participants.includes(selectedUser.id),
       );
 
       if (existingConv) {
-        setActiveConversationId(existingConv.id);
-        updateUrlWithConversation(existingConv.id);
+        setActiveConversation(existingConv);
         setIsNewChatDialogOpen(false);
         notifySuccess('Conversation already exists, switching to it.', 'Info');
         return existingConv;
@@ -323,7 +249,8 @@ const HomePage = () => {
           updatedAt: new Date().toISOString(),
         } as Conversation;
 
-        upsertAndActivateConversation(newConversation);
+        setActiveConversation(newConversation);
+        setConversations((prev) => [...prev, newConversation]);
         setIsNewChatDialogOpen(false);
         notifySuccess(
           `New chat started with ${selectedUser.displayName || 'User'}.`,
@@ -337,12 +264,7 @@ const HomePage = () => {
         return null;
       }
     },
-    [
-      directConversationByParticipantId,
-      upsertAndActivateConversation,
-      updateUrlWithConversation,
-      user,
-    ],
+    [conversations, user],
   );
 
   // Handle URL parameters for opening specific chats or starting new ones
@@ -371,13 +293,14 @@ const HomePage = () => {
       // Only proceed if it's a new chat request with valid data
       if (chatData.newChat && chatData.userId) {
         // Check if conversation already exists
-        const existingConversation = directConversationByParticipantId.get(
-          chatData.userId,
+        const existingConversation = conversations.find(
+          (conv) =>
+            conv.type === 'individual' &&
+            conv.participants.includes(chatData.userId),
         );
 
         if (existingConversation) {
-          setActiveConversationId(existingConversation.id);
-          updateUrlWithConversation(existingConversation.id);
+          setActiveConversation(existingConversation);
           notifySuccess(
             'Conversation already exists, switching to it.',
             'Info',
@@ -396,13 +319,7 @@ const HomePage = () => {
     } catch (error) {
       console.error('Error processing chat session:', error);
     }
-  }, [
-    directConversationByParticipantId,
-    handleStartNewChat,
-    loading,
-    searchParams,
-    user?.uid,
-  ]);
+  }, [searchParams, user?.uid, loading, conversations, handleStartNewChat]);
 
   // Load all conversations
   useEffect(() => {
@@ -417,13 +334,21 @@ const HomePage = () => {
       (data) => {
         if (!isMounted) return;
         const typedData = data as Conversation[];
-        // Push conversations with no messages to the end
-        typedData.sort((a, b) => {
-          const aHasMsg = a.lastMessage ? 1 : 0;
-          const bHasMsg = b.lastMessage ? 1 : 0;
-          return bHasMsg - aHasMsg;
-        });
         setConversations(typedData);
+
+        const convId = searchParams?.get('c');
+        if (convId) {
+          const match = typedData.find((c) => c.id === convId) || null;
+          setActiveConversation(match);
+        } else if (!isMobile) {
+          // Desktop default behavior: auto-select first conversation.
+          if (typedData.length > 0 && !searchParams?.get('userId')) {
+            setActiveConversation((prev) => prev ?? typedData[0]);
+          }
+        } else {
+          // Mobile behavior: show list first (no active chat) unless URL explicitly selects one.
+          setActiveConversation(null);
+        }
 
         setLoading(false);
       },
@@ -433,103 +358,42 @@ const HomePage = () => {
       isMounted = false;
       if (unsubscribe) unsubscribe();
     };
-  }, [user?.uid]);
+  }, [user?.uid, searchParams, isMobile]);
 
   useEffect(() => {
-    if (loading) return;
+    const convId = searchParams?.get('c');
+    if (!conversations.length) return;
+
+    if (convId) {
+      const match = conversations.find((c) => c.id === convId) || null;
+      setActiveConversation(match);
+      return;
+    }
 
     if (
-      selectedConversationId &&
-      selectedConversationId !== lastHandledSelectedIdRef.current
+      !isMobile &&
+      !loading &&
+      conversations.length > 0 &&
+      !activeConversation
     ) {
-      lastHandledSelectedIdRef.current = selectedConversationId;
-      if (conversationById.has(selectedConversationId)) {
-        setActiveConversationId(selectedConversationId);
-      }
-      return;
+      setActiveConversation(conversations[0]);
     }
 
-    if (!conversations.length) {
-      setActiveConversationId(null);
-      return;
+    if (isMobile && !convId) {
+      setActiveConversation(null);
     }
-
-    if (isMobile) {
-      // Don't auto-select a conversation on mobile; require explicit user action,
-      // but preserve any existing selection (set by URL or click).
-      setActiveConversationId((prev) =>
-        prev && conversationById.has(prev) ? prev : null,
-      );
-      return;
-    }
-
-    setActiveConversationId((prev) =>
-      prev && conversationById.has(prev) ? prev : conversations[0].id,
-    );
-  }, [
-    conversationById,
-    conversations,
-    isMobile,
-    loading,
-    selectedConversationId,
-  ]);
+  }, [loading, conversations, activeConversation, searchParams, isMobile]);
 
   const handleSelectConversation = useCallback(
     (conv: Conversation) => {
-      setActiveConversationId(conv.id);
-      updateUrlWithConversation(conv.id);
-    },
-    [updateUrlWithConversation],
-  );
-
-  const markConversationAsRead = useCallback(
-    async (conv: Conversation | null) => {
-      if (!conv?.id || !user?.uid) return;
-      const lastMessage = conv.lastMessage;
-
-      const getTimestampMs = (ts: any) => {
-        if (!ts) return 0;
-        if (typeof ts === 'object' && ts.seconds) return ts.seconds;
-        if (typeof ts === 'number') return Math.floor(ts / 1000);
-        return Math.floor(new Date(ts as string).getTime() / 1000) || 0;
-      };
-
-      const msgTime = getTimestampMs(lastMessage?.timestamp);
-      const readTime = getTimestampMs(
-        conv.participantDetails?.[user.uid]?.lastReadAt,
-      );
-
-      if (
-        !lastMessage?.senderId ||
-        lastMessage.senderId === user.uid ||
-        readTime >= msgTime
-      ) {
-        return;
-      }
-
-      try {
-        await updateDataInFirestore('conversations', conv.id, {
-          [`participantDetails.${user.uid}.lastReadAt`]: serverTimestamp(),
-        });
-
-        // We don't strictly need to update local React state synchronously
-        // because the onSnapshot listener from subscribeToUserConversations
-        // will push the updated participant details structure automatically.
-      } catch (error) {
-        console.error('Failed to mark conversation as read:', error);
+      setActiveConversation(conv);
+      if (isMobile) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('c', conv.id);
+        router.push(url.pathname + url.search, { scroll: false });
       }
     },
-    [user?.uid],
-  );
-
-  useEffect(() => {
-    markConversationAsRead(activeConversation);
-  }, [activeConversation, markConversationAsRead]);
-
-  const handleConversationUpdate = useCallback(
-    (updatedConversation: Conversation) =>
-      upsertConversation(updatedConversation),
-    [upsertConversation],
+    [isMobile, router],
   );
 
   let chatListComponentContent;
@@ -633,19 +497,12 @@ const HomePage = () => {
   } else if (activeConversation) {
     chatWindowComponentContent = (
       <CardsChat
+        key={activeConversation.id}
         conversation={activeConversation}
         isChatExpanded={isChatExpanded}
         onToggleExpand={toggleChatExpanded}
         onOpenProfileSidebar={handleOpenProfileSidebar}
-        onConversationUpdate={handleConversationUpdate}
-        onBack={() => {
-          setActiveConversationId(null);
-          const url = new URL(window.location.href);
-          if (url.searchParams.has('c')) {
-            url.searchParams.delete('c');
-            router.replace(url.pathname + url.search, { scroll: false });
-          }
-        }}
+        onConversationUpdate={setActiveConversation}
       />
     );
   } else if (!loading && conversations.length > 0) {
@@ -668,10 +525,7 @@ const HomePage = () => {
   }
 
   return (
-    <div
-      className="flex h-screen w-full flex-col overflow-hidden"
-      data-tour="chat"
-    >
+    <div className="flex min-h-screen w-full flex-col" data-tour="chat">
       <SidebarMenu
         menuItemsTop={
           user.type === 'business'
@@ -685,7 +539,7 @@ const HomePage = () => {
         }
         active="Chats"
       />
-      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14 overflow-hidden">
+      <div className="flex flex-col flex-1 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={
             user.type === 'business'
@@ -701,7 +555,7 @@ const HomePage = () => {
           breadcrumbItems={[{ label: 'Chats', link: '/chat' }]}
           searchPlaceholder="Search chats..."
         />
-        <main className="flex-1 overflow-hidden" data-tour="chat-main">
+        <main className="h-[96vh]" data-tour="chat-main">
           {isMobile ? (
             <div className="h-full">
               {activeConversation
@@ -723,7 +577,7 @@ const HomePage = () => {
           profileId={profileSidebarId}
           profileType={profileSidebarType}
           initialData={profileSidebarInitialData}
-          onConversationUpdate={handleConversationUpdate}
+          onConversationUpdate={setActiveConversation}
         />
         {user && (
           <NewChatDialog

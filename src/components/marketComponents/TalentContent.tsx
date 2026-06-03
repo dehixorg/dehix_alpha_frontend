@@ -1,4 +1,3 @@
-// src/components/marketComponents/TalentContent.tsx
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Loader2, Search, Sliders, X } from 'lucide-react';
