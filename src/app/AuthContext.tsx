@@ -77,12 +77,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Sync cookies so middleware always has a fresh token
             Cookies.set('token', accessToken, {
               expires: 1,
-              sameSite: 'Strict',
+              sameSite: 'Lax',
             });
             if (userType) {
               Cookies.set('userType', userType, {
                 expires: 1,
-                sameSite: 'Strict',
+                sameSite: 'Lax',
               });
             }
             setUserState(firebaseUser); // Keep the full user object in local state

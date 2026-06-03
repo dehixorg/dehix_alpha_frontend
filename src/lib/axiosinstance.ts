@@ -85,7 +85,7 @@ function attachInterceptors(instance: AxiosInstance) {
                 localStorage.setItem('token', newToken);
                 Cookies.set('token', newToken, {
                   expires: 1,
-                  sameSite: 'Strict',
+                  sameSite: 'Lax',
                 });
 
                 // Re-initialize the instance if needed (though interceptors are shared)
