@@ -44,6 +44,9 @@ interface TokenRequest {
   amount: number | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   dateTime: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  paidAmountInPaise?: number;
   [key: string]: any;
 }
 
@@ -285,7 +288,7 @@ export const DisplayConnectsDialog = React.forwardRef<
               <div>
                 <h3 className="text-lg font-semibold">Connects</h3>
                 <p className="text-sm text-muted-foreground">
-                  Manage your connect requests
+                  Purchase history & balance
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -297,18 +300,15 @@ export const DisplayConnectsDialog = React.forwardRef<
           {/* Tabs */}
           <div className="px-4 pt-2">
             <Tabs value={filter} onValueChange={setFilter} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-muted/30 h-9">
+              <TabsList className="grid w-full grid-cols-3 bg-muted/30 h-9">
                 <TabsTrigger value="ALL" className="text-xs py-1">
                   All
                 </TabsTrigger>
                 <TabsTrigger value="APPROVED" className="text-xs py-1">
-                  Approved
+                  Completed
                 </TabsTrigger>
                 <TabsTrigger value="PENDING" className="text-xs py-1">
                   Pending
-                </TabsTrigger>
-                <TabsTrigger value="REJECTED" className="text-xs py-1">
-                  Rejected
                 </TabsTrigger>
               </TabsList>
 
@@ -318,8 +318,11 @@ export const DisplayConnectsDialog = React.forwardRef<
                   <Table className="min-w-full">
                     <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                       <TableRow className="h-9">
-                        <TableHead className="w-[120px] text-xs font-medium text-muted-foreground">
+                        <TableHead className="w-[90px] text-xs font-medium text-muted-foreground">
                           Connects
+                        </TableHead>
+                        <TableHead className="text-xs font-medium text-muted-foreground">
+                          Paid
                         </TableHead>
                         <TableHead className="text-xs font-medium text-muted-foreground">
                           Status
@@ -335,6 +338,9 @@ export const DisplayConnectsDialog = React.forwardRef<
                           <TableRow key={i}>
                             <TableCell>
                               <Skeleton className="h-4 w-10 mx-auto" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-12 mx-auto" />
                             </TableCell>
                             <TableCell>
                               <Skeleton className="h-4 w-20 mx-auto" />
@@ -355,6 +361,11 @@ export const DisplayConnectsDialog = React.forwardRef<
                                 {item.amount}
                               </span>
                             </TableCell>
+                            <TableCell className="text-sm text-center text-muted-foreground">
+                              {item.paidAmountInPaise
+                                ? `₹${(item.paidAmountInPaise / 100).toFixed(0)}`
+                                : '-'}
+                            </TableCell>
                             <TableCell>
                               <div className="flex justify-center">
                                 <StatusBadge status={item.status} />
@@ -367,7 +378,7 @@ export const DisplayConnectsDialog = React.forwardRef<
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={3} className="h-40 text-center">
+                          <TableCell colSpan={4} className="h-40 text-center">
                             <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
                               <Wallet className="h-8 w-8 opacity-40" />
                               <p className="text-sm font-medium">
