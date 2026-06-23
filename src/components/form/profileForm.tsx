@@ -70,7 +70,7 @@ const profileFormSchema = z.object({
     message: 'Phone number must be at least 10 digits.',
   }),
   role: z.string(),
-  personalWebsite: z.string().url().optional(),
+  personalWebsite: z.string().url().or(z.literal('')).optional(),
   coverLetter: z
     .string()
     .optional()

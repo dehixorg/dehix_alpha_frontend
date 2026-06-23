@@ -129,6 +129,8 @@ export default function GitHubStatsCard({
                 <Image
                   src={stats.avatarUrl}
                   alt={stats.username}
+                  width={48}
+                  height={48}
                   className="h-12 w-12 rounded-full ring-2 ring-green-500/30 ring-offset-2 ring-offset-[#0d1117]"
                 />
               ) : (

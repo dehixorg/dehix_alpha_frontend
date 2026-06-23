@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Flame, Trophy, Gift, Check, Lock } from 'lucide-react';
 
+import { RootState } from '@/lib/store';
 import { updateConnectsBalance } from '@/lib/updateConnects';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -96,11 +98,10 @@ interface StreakReward {
   updatedAt: string;
 }
 
-const fetchStreakInfo = async (): Promise<StreakInfo> => {
+const fetchStreakInfo = async (userId: string): Promise<StreakInfo> => {
   try {
-    const response = await axiosInstance.get('/freelancer/me');
+    const response = await axiosInstance.get(`/freelancer/${userId}`);
     const streakData = response.data.data.streak;
-    const userId = response.data.data._id;
 
     if (!streakData) {
       return {
@@ -163,6 +164,7 @@ const fetchStreakRewards = async (): Promise<StreakReward[]> => {
 };
 
 export default function StreakPage() {
+  const user = useSelector((state: RootState) => state.user);
   const [claimingMilestone, setClaimingMilestone] = useState<number | null>(
     null,
   );
@@ -174,8 +176,9 @@ export default function StreakPage() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['streak-info'],
-    queryFn: fetchStreakInfo,
+    queryKey: ['streak-info', user.uid],
+    queryFn: () => fetchStreakInfo(user.uid),
+    enabled: !!user.uid,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -286,7 +289,9 @@ export default function StreakPage() {
     return streakData.claimableMilestones.includes(milestone);
   };
 
-  if (isLoading || isLoadingRewards) {
+  const isProfileLoading = !user.uid || isLoading || isLoadingRewards;
+
+  if (isProfileLoading) {
     return (
       <FreelancerSettingsLayout
         active="Streak"

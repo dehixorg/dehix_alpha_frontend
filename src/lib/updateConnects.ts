@@ -33,8 +33,26 @@ export const resetMeApiCallFlag = (): void => {
 export const fetchAndUpdateConnects = async (
   userType?: 'freelancer' | 'business',
   force: boolean = false,
+  passedUserId?: string,
 ): Promise<number | null> => {
   if (userType === undefined) {
+    return null;
+  }
+
+  // Retrieve userId if not passed
+  let userId = passedUserId;
+  if (!userId) {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        userId = JSON.parse(storedUser).uid;
+      }
+    } catch (error) {
+      console.error('Failed to parse user from localStorage:', error);
+    }
+  }
+
+  if (!userId) {
     return null;
   }
 
@@ -53,12 +71,12 @@ export const fetchAndUpdateConnects = async (
     try {
       lastFetchTime = Date.now();
 
-      const endpoints: Array<'/freelancer/me' | '/business/me'> =
+      const endpoints: string[] =
         userType === 'business'
-          ? ['/business/me']
+          ? [`/business/${userId}`]
           : userType === 'freelancer'
-            ? ['/freelancer/me']
-            : ['/freelancer/me', '/business/me'];
+            ? [`/freelancer/${userId}`]
+            : [`/freelancer/${userId}`, `/business/${userId}`];
 
       for (const endpoint of endpoints) {
         try {
