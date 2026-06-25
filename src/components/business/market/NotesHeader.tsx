@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ListFilter, Palette, Clock, History, StickyNote } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +15,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Note } from '@/utils/types/note';
-import { CreateNoteDialog } from '@/components/shared/CreateNoteDialog';
+const CreateNoteDialog = dynamic(
+  () =>
+    import('@/components/shared/CreateNoteDialog').then((m) => ({
+      default: m.CreateNoteDialog,
+    })),
+  { loading: () => <></> },
+);
 
 const NotesHeader = ({
   onNoteCreate,

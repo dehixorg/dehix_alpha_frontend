@@ -26,16 +26,30 @@ interface TalentLayoutProps {
   activeTab: 'applications' | 'overview';
   talents?: FreelancerApplication[];
   loading?: boolean;
-  statusFilter?: 'invited' | 'accepted' | 'rejected' | 'applications';
+  statusFilter?:
+    | 'invited'
+    | 'accepted'
+    | 'rejected'
+    | 'applications'
+    | 'lobby'
+    | 'interview';
   onStatusFilterChange?: (
-    value: 'invited' | 'accepted' | 'rejected' | 'applications' | undefined,
+    value:
+      | 'invited'
+      | 'accepted'
+      | 'rejected'
+      | 'applications'
+      | 'lobby'
+      | 'interview'
+      | undefined,
   ) => void;
   talentFilter?: string;
   onTalentFilterChange?: (value: string | undefined) => void;
   talentOptions?: { label: string; value: string }[];
   onUpdateApplicationStatus?: (
     freelancerId: string,
-    status: 'SELECTED' | 'REJECTED',
+    status: 'SELECTED' | 'REJECTED' | 'LOBBY' | 'INTERVIEW',
+    freelancer_professional_profile_id: string | undefined,
   ) => Promise<void>;
 }
 

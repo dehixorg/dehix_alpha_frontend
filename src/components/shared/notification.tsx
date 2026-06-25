@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Bell,
   Check,
@@ -28,10 +28,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RootState } from '@/lib/store';
-import {
-  markAllNotificationsAsRead,
-  subscribeToUserNotifications,
-} from '@/utils/common/firestoreUtils';
+import { subscribeToUserNotifications } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { fetchAndUpdateConnects } from '@/lib/updateConnects';
 import { notifyError } from '@/utils/toastMessage';
@@ -66,20 +63,35 @@ const getSafeDate = (timestamp: any): Date | null => {
   return !isNaN(d.getTime()) ? d : null;
 };
 
+/** Degraded polling interval (ms) used only when Firestore subscription fails. */
+const FALLBACK_POLL_INTERVAL = 60_000;
+
 export const NotificationButton = () => {
   const user = useSelector((state: RootState) => state.user);
   const [notifications, setNotifications] = useState<DocumentData[]>([]);
   const [showAll, setShowAll] = useState(false);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
-  const sortedNotifications = [...notifications].sort(
-    (a, b) =>
-      (getSafeDate(b.timestamp)?.getTime() ?? 0) -
-      (getSafeDate(a.timestamp)?.getTime() ?? 0),
+  // --- Memoized derived state (no recalc unless notifications/showAll change) ---
+  const sortedNotifications = useMemo(
+    () =>
+      [...notifications].sort(
+        (a, b) =>
+          (getSafeDate(b.timestamp)?.getTime() ?? 0) -
+          (getSafeDate(a.timestamp)?.getTime() ?? 0),
+      ),
+    [notifications],
   );
-  const displayedNotifications = showAll
-    ? sortedNotifications
-    : sortedNotifications.slice(0, 5);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.isRead).length,
+    [notifications],
+  );
+
+  const displayedNotifications = useMemo(
+    () => (showAll ? sortedNotifications : sortedNotifications.slice(0, 5)),
+    [sortedNotifications, showAll],
+  );
+
   const hasMoreNotifications = sortedNotifications.length > 5;
 
   const userType =
@@ -175,7 +187,9 @@ export const NotificationButton = () => {
   useEffect(() => {
     if (!user?.uid) return;
 
-    // Firestore real-time (works when same Firebase project)
+    let fallbackInterval: ReturnType<typeof setInterval> | undefined;
+
+    // Firestore real-time is the PRIMARY notification source
     let unsubscribe: (() => void) | undefined;
     try {
       unsubscribe = subscribeToUserNotifications(user.uid, (data) => {
@@ -185,7 +199,8 @@ export const NotificationButton = () => {
         }
       });
     } catch {
-      // Firestore subscription failed - API polling is the fallback
+      // Firestore subscription failed — fall back to degraded API polling
+      fallbackInterval = setInterval(fetchFromApi, FALLBACK_POLL_INTERVAL);
     }
 
     // API: fetch immediately and listen to manual refresh events
@@ -195,6 +210,9 @@ export const NotificationButton = () => {
     return () => {
       unsubscribe?.();
       window.removeEventListener('refreshNotifications', fetchFromApi);
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+      }
     };
   }, [user?.uid, fetchFromApi, maybeRefreshConnects]);
 
@@ -446,23 +464,16 @@ export const NotificationButton = () => {
                 className="w-full text-xs sm:text-sm"
                 onClick={async () => {
                   try {
-                    await axiosInstance.put(
-                      '/token-request/me/notifications/read',
-                    );
+                    // Optimistic local update
                     setNotifications((prev) =>
                       prev.map((n) => ({ ...n, isRead: true })),
                     );
 
-                    try {
-                      if (user?.uid) {
-                        await markAllNotificationsAsRead(user.uid);
-                      }
-                    } catch (firestoreError) {
-                      console.error(
-                        'Firestore mark-read failed (non-blocking):',
-                        firestoreError,
-                      );
-                    }
+                    // Backend handles both Mongo and Firestore sync;
+                    // Firestore listener will pick up the isRead changes automatically.
+                    await axiosInstance.put(
+                      '/token-request/me/notifications/read',
+                    );
                   } catch (error) {
                     console.error(
                       'Failed to mark notifications as read:',

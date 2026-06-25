@@ -8,7 +8,7 @@ import type { Note } from '@/utils/types/note';
 
 interface NotesContainerProps {
   notes: Note[];
-  setNotes: (notes: Note[]) => void;
+  setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void;
   isArchive: boolean;
   isTrash?: boolean;
   fetchNotes: () => Promise<void>;
@@ -21,8 +21,12 @@ const NotesContainer = ({
   isTrash,
   fetchNotes,
 }: NotesContainerProps) => {
-  const { handleSaveEditNote, handleDeletePermanently, handleUpdateNoteType } =
-    useNotes(fetchNotes, notes);
+  const {
+    handleSaveEditNote,
+    handleDeletePermanently,
+    handleUpdateNoteType,
+    handleUpdateNoteLabel,
+  } = useNotes(fetchNotes, notes, setNotes);
 
   const { handleDragStart, handleDragOver, handleDrop } = useDragAndDrop(
     notes,
@@ -56,6 +60,7 @@ const NotesContainer = ({
               isArchive={isArchive}
               onEditNote={handleSaveEditNote}
               onUpdateNoteType={handleUpdateNoteType}
+              onUpdateNoteLabel={handleUpdateNoteLabel}
               onDeleteClick={(noteId: string | undefined) => {
                 if (noteId) handleDeletePermanently(noteId);
               }}

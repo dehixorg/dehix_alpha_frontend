@@ -466,7 +466,6 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
         task={task}
         milestoneId={milestoneId}
         storyId={storyId}
-        taskId={task._id}
         showPermissionDialog={showPermissionDialog}
         setShowPermissionDialog={setShowPermissionDialog}
         handleConfirmPermissionRequest={handleConfirmPermissionRequest}

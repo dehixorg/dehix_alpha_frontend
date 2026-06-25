@@ -7,6 +7,7 @@ import { UserCredential } from 'firebase/auth';
 import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,10 @@ import {
 } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
 import { axiosInstance } from '@/lib/axiosinstance';
-import OtpLogin from '@/components/shared/otpDialog';
+const OtpLogin = dynamic(() => import('@/components/shared/otpDialog'), {
+  loading: () => <></>,
+  ssr: false,
+});
 import {
   Dialog,
   DialogContent,

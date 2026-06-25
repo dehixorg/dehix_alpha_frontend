@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import {
   Table as TableIcon,
@@ -35,14 +36,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import { RootState } from '@/lib/store';
@@ -79,7 +72,9 @@ const BusinessProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isTableView, setIsTableView] = useState(true);
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [updatingStatusIds, setUpdatingStatusIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<'createdAt' | 'projectName'>(
@@ -126,11 +121,15 @@ const BusinessProjectsPage: React.FC = () => {
 
   // Handle status update
   const handleStatusUpdate = async (projectId: string, newStatus: string) => {
-    if (updatingStatus === projectId) {
+    if (updatingStatusIds.has(projectId)) {
       return;
     }
 
-    setUpdatingStatus(projectId);
+    setUpdatingStatusIds((prev) => {
+      const next = new Set(prev);
+      next.add(projectId);
+      return next;
+    });
 
     try {
       // Try the primary endpoint
@@ -202,7 +201,11 @@ const BusinessProjectsPage: React.FC = () => {
         );
       }
     } finally {
-      setUpdatingStatus(null);
+      setUpdatingStatusIds((prev) => {
+        const next = new Set(prev);
+        next.delete(projectId);
+        return next;
+      });
     }
   };
 
@@ -234,26 +237,29 @@ const BusinessProjectsPage: React.FC = () => {
         { label: 'Business', link: '/dashboard/business' },
         { label: 'Projects', link: '/business/projects' },
       ]}
-      contentClassName="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8"
-      mainClassName="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8"
+      containerClassName="overflow-x-visible lg:overflow-x-hidden"
+      contentClassName="mb-8 flex flex-col w-full !max-w-none sm:gap-4 sm:py-0 sm:pl-14"
+      mainClassName="grid min-w-0 flex-1 items-start gap-4 p-4 w-full !max-w-none sm:px-6 sm:py-2 md:px-8 lg:gap-8"
     >
-      <Card className="p-6 max-w-[92vw]" data-tour="business-projects">
+      <Card
+        className="w-full max-w-none p-4 sm:p-5 md:p-6 lg:p-8 shrink-0"
+        data-tour="business-projects"
+      >
         {/* Header section */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex flex-col space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Projects
             </h1>
-            <p className="hidden md:block text-muted-foreground">
-              Manage your projects.
-            </p>
+            <p className="hidden md:block text-muted-foreground"></p>
           </div>
           {/* View toggle buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 self-start">
             <Button
               variant={isTableView ? 'default' : 'outline'}
               size="sm"
               onClick={() => setIsTableView(true)}
+              aria-label="Table view"
             >
               <TableIcon className="h-4 w-4" />
             </Button>
@@ -261,6 +267,7 @@ const BusinessProjectsPage: React.FC = () => {
               variant={!isTableView ? 'default' : 'outline'}
               size="sm"
               onClick={() => setIsTableView(false)}
+              aria-label="Card view"
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
@@ -308,15 +315,15 @@ const BusinessProjectsPage: React.FC = () => {
             {isTableView ? (
               /* Table View */
               <div className="space-y-4">
-                <div className="flex flex-col gap-3 md:gap-4">
-                  <div className="flex items-center justify-between gap-3 border-b">
+                <div className="flex flex-col gap-3 lg:gap-4">
+                  <div className="flex flex-col gap-3 border-b pb-3 lg:flex-row lg:items-center lg:justify-between lg:pb-0">
                     <Tabs
                       value={statusFilter}
                       onValueChange={(v) => setStatusFilter(v)}
                       className="w-full"
                     >
                       <div className="max-w-full overflow-x-auto">
-                        <TabsList className="bg-transparent h-12 w-max min-w-max sm:w-auto p-0 whitespace-nowrap">
+                        <TabsList className="h-12 w-max min-w-max whitespace-nowrap bg-transparent p-0 sm:w-auto">
                           <TabsTrigger
                             value="ALL"
                             className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
@@ -335,8 +342,8 @@ const BusinessProjectsPage: React.FC = () => {
                         </TabsList>
                       </div>
                     </Tabs>
-                    <div className="hidden sm:flex items-center gap-2">
-                      <div className="sm:max-w-xs w-64">
+                    <div className="hidden items-center gap-2 md:flex">
+                      <div className="w-64 max-w-xs">
                         <Input
                           placeholder="Search projects..."
                           value={search}
@@ -435,162 +442,175 @@ const BusinessProjectsPage: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center sm:hidden gap-2">
+                  <div className="flex flex-col gap-2 md:hidden sm:flex-row sm:items-center">
                     <Input
                       className="flex-1"
                       placeholder="Search projects..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
-                    <TooltipProvider>
-                      <DropdownMenu>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                aria-label="Sort"
-                              >
-                                <ListFilter className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>Sort options</TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSortBy('createdAt');
-                              setSortDir('desc');
-                            }}
-                            className={
-                              sortBy === 'createdAt' && sortDir === 'desc'
-                                ? 'font-medium'
-                                : ''
-                            }
-                          >
-                            <Clock className="mr-2 h-4 w-4" /> Newest first
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSortBy('createdAt');
-                              setSortDir('asc');
-                            }}
-                            className={
-                              sortBy === 'createdAt' && sortDir === 'asc'
-                                ? 'font-medium'
-                                : ''
-                            }
-                          >
-                            <Calendar className="mr-2 h-4 w-4" /> Oldest first
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSortBy('projectName');
-                              setSortDir('asc');
-                            }}
-                            className={
-                              sortBy === 'projectName' && sortDir === 'asc'
-                                ? 'font-medium'
-                                : ''
-                            }
-                          >
-                            <ArrowDownAZ className="mr-2 h-4 w-4" /> Name A → Z
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSortBy('projectName');
-                              setSortDir('desc');
-                            }}
-                            className={
-                              sortBy === 'projectName' && sortDir === 'desc'
-                                ? 'font-medium'
-                                : ''
-                            }
-                          >
-                            <ArrowUpAZ className="mr-2 h-4 w-4" /> Name Z → A
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TooltipProvider>
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <TooltipProvider>
+                        <DropdownMenu>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  aria-label="Sort"
+                                >
+                                  <ListFilter className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>Sort options</TooltipContent>
+                          </Tooltip>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSortBy('createdAt');
+                                setSortDir('desc');
+                              }}
+                              className={
+                                sortBy === 'createdAt' && sortDir === 'desc'
+                                  ? 'font-medium'
+                                  : ''
+                              }
+                            >
+                              <Clock className="mr-2 h-4 w-4" /> Newest first
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSortBy('createdAt');
+                                setSortDir('asc');
+                              }}
+                              className={
+                                sortBy === 'createdAt' && sortDir === 'asc'
+                                  ? 'font-medium'
+                                  : ''
+                              }
+                            >
+                              <Calendar className="mr-2 h-4 w-4" /> Oldest first
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSortBy('projectName');
+                                setSortDir('asc');
+                              }}
+                              className={
+                                sortBy === 'projectName' && sortDir === 'asc'
+                                  ? 'font-medium'
+                                  : ''
+                              }
+                            >
+                              <ArrowDownAZ className="mr-2 h-4 w-4" /> Name A →
+                              Z
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSortBy('projectName');
+                                setSortDir('desc');
+                              }}
+                              className={
+                                sortBy === 'projectName' && sortDir === 'desc'
+                                  ? 'font-medium'
+                                  : ''
+                              }
+                            >
+                              <ArrowUpAZ className="mr-2 h-4 w-4" /> Name Z → A
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TooltipProvider>
+                      {(statusFilter !== 'ALL' ||
+                        search ||
+                        sortBy !== 'createdAt' ||
+                        sortDir !== 'desc') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setStatusFilter('ALL');
+                            setSearch('');
+                            setSortBy('createdAt');
+                            setSortDir('desc');
+                          }}
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border shadow-sm max-w-full overflow-x-auto">
-                  <Table className="min-w-[720px]">
-                    <TableHeader>
-                      <TableRow className="bg-muted/40">
-                        <TableHead className="sticky top-0 z-10">
-                          Project
-                        </TableHead>
-                        <TableHead className="text-center sticky top-0 z-10">
-                          Status
-                        </TableHead>
-                        <TableHead className="sticky top-0 z-10">
-                          Created
-                        </TableHead>
-                        <TableHead className="text-center sticky top-0 z-10">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredSortedProjects.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={4} className="h-40 p-0">
-                            <EmptyState
-                              icon={
-                                <Search className="h-8 w-8 text-muted-foreground" />
-                              }
-                              title="No matching projects"
-                              className="h-full border-0 bg-transparent py-6"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {filteredSortedProjects.map((p) => {
-                        const status = PROJECT_STATUS_FORMATS.find(
-                          (s) => s.value === p.status,
-                        );
-                        return (
-                          <TableRow
-                            key={p._id}
-                            className="hover:bg-muted/40 cursor-pointer"
-                            onClick={() =>
-                              (window.location.href = `/business/project/${p._id}`)
-                            }
-                          >
-                            <TableCell className="">
-                              <div className="flex flex-col">
-                                <span className="font-medium leading-tight">
-                                  {p.projectName}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {p.companyName}
-                                </span>
+                <div className="space-y-3 lg:hidden">
+                  {filteredSortedProjects.length === 0 ? (
+                    <div className="rounded-lg border shadow-sm">
+                      <EmptyState
+                        icon={
+                          <Search className="h-8 w-8 text-muted-foreground" />
+                        }
+                        title="No matching projects"
+                        className="border-0 bg-transparent py-10"
+                      />
+                    </div>
+                  ) : (
+                    filteredSortedProjects.map((p) => {
+                      const status = PROJECT_STATUS_FORMATS.find(
+                        (s) => s.value === p.status,
+                      );
+
+                      return (
+                        <div
+                          key={p._id}
+                          className="rounded-lg border bg-background p-4 shadow-sm transition-colors hover:bg-muted/20"
+                        >
+                          <div className="space-y-4">
+                            <div className="min-w-0">
+                              <Link
+                                href={`/business/project/${p._id}`}
+                                className="block truncate text-base font-semibold underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm"
+                              >
+                                {p.projectName}
+                              </Link>
+                              <p className="truncate text-sm text-muted-foreground">
+                                {p.companyName}
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                  Status
+                                </p>
+                                {status ? (
+                                  <Badge
+                                    variant="secondary"
+                                    className={`uppercase rounded-full px-2.5 py-1 text-xs shadow-sm ${statusOutlineClasses(status.value)}`}
+                                  >
+                                    {status.textValue}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">
+                                    {p.status}
+                                  </span>
+                                )}
                               </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {status ? (
-                                <Badge
-                                  variant="secondary"
-                                  className={`uppercase rounded-full px-2.5 py-1 text-xs shadow-sm ${statusOutlineClasses(status.value)}`}
-                                >
-                                  {status.textValue}
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">
-                                  {p.status}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {p.createdAt
-                                ? new Date(p.createdAt).toLocaleDateString()
-                                : '-'}
-                            </TableCell>
-                            <TableCell className="text-center">
+
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                  Created
+                                </p>
+                                <p className="whitespace-nowrap">
+                                  {p.createdAt
+                                    ? new Date(p.createdAt).toLocaleDateString()
+                                    : '-'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="pt-1">
                               {p.status === 'COMPLETED' ? (
                                 <Button
                                   variant="outline"
@@ -599,10 +619,10 @@ const BusinessProjectsPage: React.FC = () => {
                                     e.stopPropagation();
                                     handleStatusUpdate(p._id, 'ACTIVE');
                                   }}
-                                  disabled={updatingStatus === p._id}
-                                  className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
+                                  disabled={updatingStatusIds.has(p._id)}
+                                  className="w-full justify-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
                                 >
-                                  {updatingStatus === p._id ? (
+                                  {updatingStatusIds.has(p._id) ? (
                                     <>
                                       <Loader2 className="h-4 w-4 animate-spin" />
                                       Updating...
@@ -622,10 +642,10 @@ const BusinessProjectsPage: React.FC = () => {
                                     e.stopPropagation();
                                     handleStatusUpdate(p._id, 'ACTIVE');
                                   }}
-                                  disabled={updatingStatus === p._id}
-                                  className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50"
+                                  disabled={updatingStatusIds.has(p._id)}
+                                  className="w-full justify-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50"
                                 >
-                                  {updatingStatus === p._id ? (
+                                  {updatingStatusIds.has(p._id) ? (
                                     <>
                                       <Loader2 className="h-4 w-4 animate-spin" />
                                       Starting...
@@ -644,10 +664,10 @@ const BusinessProjectsPage: React.FC = () => {
                                     e.stopPropagation();
                                     handleStatusUpdate(p._id, 'COMPLETED');
                                   }}
-                                  disabled={updatingStatus === p._id}
-                                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                                  disabled={updatingStatusIds.has(p._id)}
+                                  className="w-full justify-center gap-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
                                 >
-                                  {updatingStatus === p._id ? (
+                                  {updatingStatusIds.has(p._id) ? (
                                     <>
                                       <Loader2 className="h-4 w-4 animate-spin" />
                                       Completing...
@@ -664,18 +684,182 @@ const BusinessProjectsPage: React.FC = () => {
                                   -
                                 </span>
                               )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className="hidden lg:block">
+                  <div className="rounded-lg border shadow-sm">
+                    <table className="w-full table-auto caption-bottom text-sm">
+                      <thead className="[&_tr]:border-b">
+                        <tr className="border-b bg-muted/40 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                          <th className="sticky top-0 z-10 h-12 min-w-[220px] whitespace-nowrap px-4 text-left align-middle font-medium text-muted-foreground">
+                            Project
+                          </th>
+                          <th className="sticky top-0 z-10 h-12 min-w-[120px] whitespace-nowrap px-4 text-center align-middle font-medium text-muted-foreground">
+                            Status
+                          </th>
+                          <th className="sticky top-0 z-10 h-12 min-w-[110px] whitespace-nowrap px-4 text-left align-middle font-medium text-muted-foreground">
+                            Created
+                          </th>
+                          <th className="sticky top-0 z-10 h-12 min-w-[190px] whitespace-nowrap px-4 text-center align-middle font-medium text-muted-foreground">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="[&_tr:last-child]:border-0">
+                        {filteredSortedProjects.length === 0 && (
+                          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <td colSpan={4} className="h-40 p-0 align-middle">
+                              <EmptyState
+                                icon={
+                                  <Search className="h-8 w-8 text-muted-foreground" />
+                                }
+                                title="No matching projects"
+                                className="h-full border-0 bg-transparent py-6"
+                              />
+                            </td>
+                          </tr>
+                        )}
+                        {filteredSortedProjects.map((p) => {
+                          const status = PROJECT_STATUS_FORMATS.find(
+                            (s) => s.value === p.status,
+                          );
+                          return (
+                            <tr
+                              key={p._id}
+                              className="border-b transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted"
+                            >
+                              <td className="min-w-[220px] p-4 align-middle">
+                                <div className="flex min-w-0 flex-col">
+                                  <Link
+                                    href={`/business/project/${p._id}`}
+                                    className="truncate font-medium leading-tight underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm"
+                                  >
+                                    {p.projectName}
+                                  </Link>
+                                  <span className="truncate text-xs text-muted-foreground">
+                                    {p.companyName}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="min-w-[120px] whitespace-nowrap p-4 text-center align-middle">
+                                {status ? (
+                                  <Badge
+                                    variant="secondary"
+                                    className={`uppercase rounded-full px-2.5 py-1 text-xs shadow-sm ${statusOutlineClasses(status.value)}`}
+                                  >
+                                    {status.textValue}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">
+                                    {p.status}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="min-w-[110px] whitespace-nowrap p-4 align-middle">
+                                {p.createdAt
+                                  ? new Date(p.createdAt).toLocaleDateString()
+                                  : '-'}
+                              </td>
+                              <td className="min-w-[190px] whitespace-nowrap p-4 text-center align-middle">
+                                {p.status === 'COMPLETED' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStatusUpdate(p._id, 'ACTIVE');
+                                    }}
+                                    disabled={updatingStatusIds.has(p._id)}
+                                    className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 disabled:opacity-50"
+                                  >
+                                    {updatingStatusIds.has(p._id) ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Updating...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Undo2 className="h-4 w-4" /> Mark as
+                                        Incomplete
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : p.status === 'PENDING' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStatusUpdate(p._id, 'ACTIVE');
+                                    }}
+                                    disabled={updatingStatusIds.has(p._id)}
+                                    className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50"
+                                  >
+                                    {updatingStatusIds.has(p._id) ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Starting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Play className="h-4 w-4" /> Start
+                                        Project
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : p.status === 'ACTIVE' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStatusUpdate(p._id, 'COMPLETED');
+                                    }}
+                                    disabled={updatingStatusIds.has(p._id)}
+                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                                  >
+                                    {updatingStatusIds.has(p._id) ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Completing...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle2 className="h-4 w-4" />{' '}
+                                        Mark as Completed
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">
+                                    -
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
+            ) : /* Card View */
+            filteredSortedProjects.length === 0 ? (
+              <EmptyState
+                icon={<Search className="h-8 w-8 text-muted-foreground" />}
+                title="No matching projects"
+                className="mt-4 border-0 bg-transparent py-10"
+              />
             ) : (
-              /* Card View */
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
-                {projects.map((project) => (
+              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredSortedProjects.map((project) => (
                   <ProjectCard key={project._id} project={project} />
                 ))}
               </div>

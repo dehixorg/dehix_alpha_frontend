@@ -3,13 +3,17 @@
 import { Activity, CheckCircle, Clock } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import StatItem from '@/components/shared/StatItem';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
-import ProjectTableCard from '@/components/freelancer/homeTableComponent';
+const ProjectTableCard = dynamic(
+  () => import('@/components/freelancer/homeTableComponent'),
+  { loading: () => <Skeleton className="h-48 w-full" /> },
+);
 import { InterviewsSection } from '@/components/interviews/InterviewsSection';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
@@ -66,6 +70,9 @@ export default function Dashboard() {
       [StatusEnum.PENDING]: 0,
       [StatusEnum.COMPLETED]: 0,
       [StatusEnum.REJECTED]: 0,
+      [StatusEnum.APPLIED]: 0,
+      [StatusEnum.VERIFIED]: 0,
+      [StatusEnum.NOT_APPLIED]: 0,
     };
 
     // Track unique project IDs for each status to avoid counting duplicate bids on the same project
@@ -74,6 +81,9 @@ export default function Dashboard() {
       [StatusEnum.PENDING]: new Set(),
       [StatusEnum.COMPLETED]: new Set(),
       [StatusEnum.REJECTED]: new Set(),
+      [StatusEnum.APPLIED]: new Set(),
+      [StatusEnum.VERIFIED]: new Set(),
+      [StatusEnum.NOT_APPLIED]: new Set(),
     };
 
     for (const p of projects) {

@@ -7,6 +7,7 @@ import {
   Building2,
   Save,
   User,
+  AtSign,
   Mail,
   Phone,
   Briefcase,
@@ -55,6 +56,7 @@ const profileFormSchema = z.object({
   lastName: z.string().min(2, {
     message: 'Last Name must be at least 2 characters.',
   }),
+  userName: z.string().optional(),
   email: z.string().email({
     message: 'Email must be a valid email address.',
   }),
@@ -86,6 +88,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
     defaultValues: {
       firstName: '',
       lastName: '',
+      userName: '',
       email: '',
       phone: '',
       companyName: '',
@@ -110,6 +113,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         form.reset({
           firstName: data.firstName || '',
           lastName: data.lastName || '',
+          userName: data.userName || '',
           email: data.email || '',
           phone: data.phone || '',
           companyName: data.companyName || '',
@@ -265,9 +269,34 @@ export function BusinessForm({ user_id }: { user_id: string }) {
             </div>
           </div>
           <div
-            className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-6"
             data-tour="business-readonly-fields"
           >
+            <div className="space-y-2">
+              <Label>Username</Label>
+              <FormField
+                control={form.control}
+                name="userName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <InputGroup>
+                        <InputGroupText>
+                          <AtSign className="h-4 w-4" />
+                        </InputGroupText>
+                        <InputGroupInput
+                          placeholder="Username"
+                          {...field}
+                          readOnly
+                        />
+                      </InputGroup>
+                    </FormControl>
+                    <FormMessage />
+                    <FormDescription>Non editable field</FormDescription>
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="space-y-2">
               <Label>Email</Label>
               <FormField
@@ -281,7 +310,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                           <Mail className="h-4 w-4" />
                         </InputGroupText>
                         <InputGroupInput
-                          disabled={true}
                           placeholder="Enter your email"
                           type="email"
                           {...field}
@@ -308,7 +336,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                           <Phone className="h-4 w-4" />
                         </InputGroupText>
                         <InputGroupInput
-                          disabled={true}
                           placeholder="Enter your phone number"
                           type="tel"
                           {...field}

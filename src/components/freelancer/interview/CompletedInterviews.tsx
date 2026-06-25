@@ -6,7 +6,6 @@ import {
   ArrowDown,
   ArrowUp,
   GraduationCap,
-  Handshake,
   Search,
   Table,
   TrendingUp,
@@ -188,25 +187,27 @@ export default function HistoryInterviews({
       iconClassName: 'bg-emerald-500/10 text-emerald-600',
     },
     {
-      key: 'PEERTOPEER',
-      title: 'Peer to Peer',
-      description: 'Peer-to-peer interviews and mock sessions',
-      icon: Users2,
-      iconClassName: 'bg-sky-500/10 text-sky-600',
+      key: 'HIRE',
+      title: 'Business Opportunities',
+      description: 'Direct hiring interviews with businesses',
+      icon: Briefcase,
+      iconClassName: 'bg-indigo-500/10 text-indigo-600',
     },
     {
-      key: 'HIRE',
-      title: 'Hire',
-      description: 'Hiring interviews and related processes',
-      icon: Handshake,
-      iconClassName: 'bg-amber-500/10 text-amber-600',
+      key: 'PEERTOPEER',
+      title: 'Peer to Peer',
+      description: 'Peer-to-peer interviews and mock sessions (Disabled)',
+      icon: Users2,
+      iconClassName: 'bg-sky-500/10 text-sky-600',
+      disabled: true,
     },
     {
       key: 'GROWTH',
       title: 'Growth',
-      description: 'Growth interviews and mentorship sessions',
+      description: 'Growth interviews and mentorship sessions (Disabled)',
       icon: TrendingUp,
       iconClassName: 'bg-pink-500/10 text-pink-600',
+      disabled: true,
     },
   ] as const;
 
@@ -264,9 +265,11 @@ export default function HistoryInterviews({
 
     const direction = tableSort === 'dateAsc' ? 1 : -1;
 
-    const rows = sections.flatMap((s) =>
-      normalizeList(grouped[s.key]).map((item) => ({ item, section: s })),
-    );
+    const rows = sections
+      .filter((s) => !(s as any).disabled)
+      .flatMap((s) =>
+        normalizeList(grouped[s.key]).map((item) => ({ item, section: s })),
+      );
 
     return rows
       .slice()
@@ -389,7 +392,7 @@ export default function HistoryInterviews({
                   <td className="px-4 py-3 min-w-[220px]">
                     {hideIds
                       ? `${rowTalentTypeLabel}${rowTalentName ? ` - ${rowTalentName}` : ''}`
-                      : `${rowTalentTypeLabel} / ${item?.talentId || '-'}${rowTalentName ? ` (${rowTalentName})` : ''}`}
+                      : `${rowTalentTypeLabel}${rowTalentName ? ` - ${rowTalentName}` : ` - ${item?.talentId || '-'}`}`}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">{dateLabel}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -429,9 +432,9 @@ export default function HistoryInterviews({
   return (
     <>
       <div className="flex flex-col gap-4 md:gap-6 p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="w-full sm:w-48">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between md:max-lg:flex-wrap">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center md:max-lg:min-w-0 md:max-lg:flex-1">
+            <div className="w-full sm:w-48 md:max-lg:shrink-0">
               <Select value={filter} onValueChange={(v) => setFilter(v as any)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter" />
@@ -444,7 +447,7 @@ export default function HistoryInterviews({
               </Select>
             </div>
 
-            <div className="relative w-full sm:w-80">
+            <div className="relative w-full sm:w-80 md:max-lg:min-w-0 md:max-lg:flex-1 md:max-lg:w-auto">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search interviews..."
@@ -458,7 +461,7 @@ export default function HistoryInterviews({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:max-lg:w-full md:max-lg:justify-end">
             {enableViewToggle ? (
               <>
                 <Button
@@ -488,15 +491,20 @@ export default function HistoryInterviews({
 
         {!enableViewToggle || view === 'cards' ? (
           <Accordion type="single" collapsible defaultValue={sections[0].key}>
-            {sections.map((section, idx) => {
-              const items = normalizeList(grouped[section.key]);
+            {sections
+              .filter((s) => !(s as any).disabled)
+              .map((section, idx) => {
+                const items = normalizeList(grouped[section.key]);
               const Icon = section.icon;
 
               return (
                 <AccordionItem
                   key={section.key}
                   value={section.key}
-                  className={`border rounded-lg${idx === 0 ? '' : ' mt-4'}`}
+                  disabled={(section as any).disabled}
+                  className={`border rounded-lg${idx === 0 ? '' : ' mt-4'} ${
+                    (section as any).disabled ? 'opacity-50 pointer-events-none' : ''
+                  }`}
                 >
                   <AccordionTrigger className="group rounded-lg px-4 py-3 transition-colors hover:bg-muted/50 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                     <div className="flex w-full items-start justify-between gap-4">

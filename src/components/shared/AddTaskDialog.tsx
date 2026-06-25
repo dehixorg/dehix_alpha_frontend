@@ -78,7 +78,6 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
     title: false,
     summary: false,
     taskStatus: false,
-    freelancer: false,
   });
 
   const [freelancersData, setFreelancersData] = useState<freelancers[]>([]);
@@ -96,7 +95,6 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
       title: !formData.title.trim(),
       summary: !formData.summary.trim(),
       taskStatus: !formData.taskStatus,
-      freelancer: !selectedFreelancer,
     };
     setErrors(newErrors);
     return !Object.values(newErrors).some((error) => error);
@@ -117,13 +115,6 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
           `/project/get-freelancer/${project_id}/FREELANCER`,
         );
         const freelancerData = response.data.freelancers.data || [];
-
-        if (freelancerData.length === 0) {
-          notifyError(
-            'No freelancers with accepted bids found for this project. Please accept some bids first.',
-            'No Freelancers Available',
-          );
-        }
 
         setFreelancersData(freelancerData);
         setFilteredFreelancers(freelancerData);
@@ -276,6 +267,9 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
                 <Label className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   Assignee
+                  <span className="text-xs text-muted-foreground font-normal">
+                    (optional)
+                  </span>
                 </Label>
                 <Popover
                   open={isFreelancerPopoverOpen}
@@ -363,12 +357,6 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
                     </Command>
                   </PopoverContent>
                 </Popover>
-                {errors.freelancer && (
-                  <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-                    <AlertCircle className="h-4 w-4" />
-                    Please select a freelancer
-                  </p>
-                )}
               </div>
 
               {selectedFreelancer && (
@@ -446,9 +434,7 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
               </Button>
               <Button
                 type="submit"
-                disabled={
-                  !formData.title || !formData.summary || !selectedFreelancer
-                }
+                disabled={!formData.title || !formData.summary}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Create Task
