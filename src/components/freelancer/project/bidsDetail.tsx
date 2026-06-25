@@ -1288,6 +1288,9 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           'Success',
         );
         closeAndResetInterviewDialog();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('interview-created'));
+        }
       }
     } catch (error: any) {
       const statusCode = error.response?.status;

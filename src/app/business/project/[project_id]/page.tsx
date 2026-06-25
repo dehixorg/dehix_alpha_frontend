@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -89,6 +91,53 @@ export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
+  const [interviews, setInterviews] = useState<any[]>([]);
+  const [loadingInterviews, setLoadingInterviews] = useState(true);
+
+  const fetchInterviews = async () => {
+    if (!project_id) return;
+    try {
+      setLoadingInterviews(true);
+      const response = await axiosInstance.get('/interview/business', {
+        params: { interviewStatus: 'current' },
+      });
+      const data = response?.data?.data || {};
+      const allInterviews = [
+        ...(data.PROJECT || []),
+        ...(data.TALENT || []),
+        ...(data.HIRE || []),
+        ...(data.GROWTH || []),
+        ...(data.PEERTOPEER || []),
+        ...(data.INTERVIEWER || []),
+      ];
+      const projectInterviews = allInterviews.filter((it: any) => {
+        const pId =
+          typeof it.projectId === 'object' && it.projectId !== null
+            ? it.projectId._id
+            : it.projectId;
+        return String(pId || '') === String(project_id || '');
+      });
+      setInterviews(projectInterviews);
+    } catch (error) {
+      console.error('Error fetching project interviews:', error);
+    } finally {
+      setLoadingInterviews(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInterviews();
+  }, [project_id]);
+
+  useEffect(() => {
+    const handleInterviewCreated = () => {
+      fetchInterviews();
+    };
+    window.addEventListener('interview-created', handleInterviewCreated);
+    return () => {
+      window.removeEventListener('interview-created', handleInterviewCreated);
+    };
+  }, [project_id]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -398,13 +447,158 @@ export default function Dashboard() {
       </div>
 
       <div className="w-full lg:col-span-1 lg:w-auto mt-8 lg:mt-0 space-y-6 min-w-0">
-        <CardTitle className="group flex items-center gap-2 text-xl">
-          Interviews
-        </CardTitle>
-        <div className="text-center py-6">
-          <CalendarX2 className="mx-auto mb-2 text-gray-500" size="80" />
-          <p className="text-gray-500 text-sm">No interviews scheduled</p>
+        <div className="flex items-center justify-between">
+          <CardTitle className="group flex items-center gap-2 text-xl">
+            Interviews
+          </CardTitle>
+          {interviews.length > 0 && (
+            <Badge
+              variant="outline"
+              className="text-xs bg-primary/5 text-primary border-primary/20"
+            >
+              {interviews.length}{' '}
+              {interviews.length === 1 ? 'Interview' : 'Interviews'}
+            </Badge>
+          )}
         </div>
+
+        {loadingInterviews ? (
+          <div className="space-y-4">
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+          </div>
+        ) : interviews.length === 0 ? (
+          <div className="text-center py-10 border rounded-xl bg-muted/10">
+            <CalendarX2
+              className="mx-auto mb-3 text-muted-foreground/60"
+              size="64"
+            />
+            <p className="text-muted-foreground text-sm font-medium">
+              No active interviews
+            </p>
+            <p className="text-xs text-muted-foreground/80 mt-1">
+              Interviews scheduled for this project will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 no-scrollbar">
+            {interviews.map((interview) => {
+              const date = interview.interviewDate
+                ? new Date(interview.interviewDate)
+                : null;
+              const type = String(interview.interviewType || '').toUpperCase();
+              const status = String(
+                interview.interviewStatus || '',
+              ).toUpperCase();
+
+              // Get status pill class
+              let statusColor =
+                'bg-amber-500/10 text-amber-500 border-amber-500/20';
+              if (status === 'SCHEDULED' || status === 'APPROVED') {
+                statusColor = 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+              } else if (status === 'ONGOING') {
+                statusColor =
+                  'bg-green-500/10 text-green-500 border-green-500/20';
+              } else if (status === 'COMPLETED') {
+                statusColor =
+                  'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+              } else if (status === 'REJECTED' || status === 'CANCELLED') {
+                statusColor = 'bg-red-500/10 text-red-500 border-red-500/20';
+              }
+
+              return (
+                <Card
+                  key={interview._id}
+                  className="overflow-hidden transition-all duration-200 hover:shadow-md border-muted/60 bg-card/50 backdrop-blur-sm"
+                >
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge
+                        variant="secondary"
+                        className="font-semibold text-[10px] tracking-wide uppercase px-2 py-0.5 rounded-md"
+                      >
+                        {type}
+                      </Badge>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusColor}`}
+                      >
+                        {status}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold truncate">
+                        {interview.talentName ||
+                          interview.name ||
+                          'Freelancer Interview'}
+                      </p>
+                      {interview.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          {interview.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="pt-1 flex flex-col gap-1.5 text-xs text-muted-foreground border-t border-dashed mt-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground/80">
+                          Candidate:
+                        </span>
+                        <span className="truncate">
+                          {interview.interviewee?.firstName
+                            ? `${interview.interviewee.firstName} ${interview.interviewee.lastName || ''}`
+                            : interview.interviewee?.userName || 'Pending...'}
+                        </span>
+                      </div>
+
+                      {interview.interviewer && (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground/80">
+                            Interviewer:
+                          </span>
+                          <span className="truncate">
+                            {interview.interviewer?.firstName
+                              ? `${interview.interviewer.firstName} ${interview.interviewer.lastName || ''}`
+                              : interview.interviewer?.userName || '-'}
+                          </span>
+                        </div>
+                      )}
+
+                      {date && (
+                        <div className="flex items-center gap-2 mt-1 text-[11px] bg-muted/40 p-1.5 rounded-lg">
+                          <span className="font-medium">Date:</span>
+                          <span>
+                            {date.toLocaleDateString()}{' '}
+                            {date.toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {status === 'ONGOING' && interview.meetingLink && (
+                      <Button
+                        size="sm"
+                        className="w-full mt-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-medium shadow-sm transition-all duration-200"
+                        onClick={() =>
+                          window.open(
+                            interview.meetingLink,
+                            '_blank',
+                            'noopener,noreferrer',
+                          )
+                        }
+                      >
+                        Join Meeting
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Add Profile Dialog */}

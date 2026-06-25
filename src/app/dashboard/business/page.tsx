@@ -12,16 +12,8 @@ import {
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-// import {
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   Tooltip,
-//   CartesianGrid,
-//   ResponsiveContainer,
-// } from 'recharts';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -31,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ProjectTypeDialog } from '@/components/dialogs/ProjectTypeDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -58,6 +51,36 @@ export default function Dashboard() {
   const [, setModalOpen] = useState(false);
   const [, setMode] = useState<'single' | 'multiple' | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string>(''); // Cache the image URL
+  const [interviews, setInterviews] = useState<any[]>([]);
+  const [loadingInterviews, setLoadingInterviews] = useState(true);
+
+  useEffect(() => {
+    const fetchInterviews = async () => {
+      try {
+        setLoadingInterviews(true);
+        const response = await axiosInstance.get('/interview/business', {
+          params: { interviewStatus: 'current' },
+        });
+        const data = response?.data?.data || {};
+        const allInterviews = [
+          ...(data.PROJECT || []),
+          ...(data.TALENT || []),
+          ...(data.HIRE || []),
+          ...(data.GROWTH || []),
+          ...(data.PEERTOPEER || []),
+          ...(data.INTERVIEWER || []),
+        ];
+        setInterviews(allInterviews);
+      } catch (error) {
+        console.error('Error fetching dashboard interviews:', error);
+      } finally {
+        setLoadingInterviews(false);
+      }
+    };
+    if (user?.uid) {
+      fetchInterviews();
+    }
+  }, [user?.uid]);
 
   // Add cache-busting for profile images - only update when URL actually changes
   useEffect(() => {
@@ -448,10 +471,129 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card> */}
-        <div className="text-center py-10 w-full">
-          <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
-          <p className="text-gray-500">No interviews scheduled</p>
-        </div>
+        <Card className="shadow-sm border">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-bold">
+                Upcoming Interviews
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Manage scheduled candidate evaluations
+              </CardDescription>
+            </div>
+            {interviews.length > 0 && (
+              <Badge
+                variant="secondary"
+                className="text-xs font-semibold px-2 py-0.5 bg-primary/5 text-primary border-primary/20"
+              >
+                {interviews.length}
+              </Badge>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4 max-h-[450px] overflow-y-auto pr-1 no-scrollbar">
+            {loadingInterviews ? (
+              <div className="space-y-3">
+                <Skeleton className="h-20 w-full rounded-lg" />
+                <Skeleton className="h-20 w-full rounded-lg" />
+              </div>
+            ) : interviews.length === 0 ? (
+              <div className="text-center py-8">
+                <CalendarX2
+                  className="mx-auto mb-2 text-muted-foreground/60"
+                  size="48"
+                />
+                <p className="text-muted-foreground text-sm font-medium">
+                  No interviews scheduled
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {interviews.map((interview) => {
+                  const date = interview.interviewDate
+                    ? new Date(interview.interviewDate)
+                    : null;
+                  const type = String(
+                    interview.interviewType || '',
+                  ).toUpperCase();
+                  const status = String(
+                    interview.interviewStatus || '',
+                  ).toUpperCase();
+
+                  let statusColor =
+                    'bg-amber-500/10 text-amber-500 border-amber-500/20';
+                  if (status === 'SCHEDULED' || status === 'APPROVED') {
+                    statusColor =
+                      'bg-blue-500/10 text-blue-500 border-blue-500/20';
+                  } else if (status === 'ONGOING') {
+                    statusColor =
+                      'bg-green-500/10 text-green-500 border-green-500/20';
+                  } else if (status === 'COMPLETED') {
+                    statusColor =
+                      'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+                  }
+
+                  return (
+                    <div
+                      key={interview._id}
+                      className="p-3 border rounded-xl hover:bg-muted/10 transition-colors space-y-2 bg-card/40"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge
+                          variant="outline"
+                          className="font-semibold text-[9px] uppercase px-1.5 py-0"
+                        >
+                          {type}
+                        </Badge>
+                        <span
+                          className={`inline-flex items-center rounded-full border px-1.5 py-0 text-[9px] font-semibold ${statusColor}`}
+                        >
+                          {status}
+                        </span>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-semibold truncate">
+                          {interview.talentName ||
+                            interview.name ||
+                            'Freelancer Interview'}
+                        </p>
+                        {interview.description && (
+                          <p className="text-[10px] text-muted-foreground line-clamp-1">
+                            {interview.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground pt-1 border-t border-dashed mt-1.5">
+                        <div className="flex items-center justify-between">
+                          <span>Candidate:</span>
+                          <span className="font-medium text-foreground/80 truncate max-w-[120px]">
+                            {interview.interviewee?.firstName
+                              ? `${interview.interviewee.firstName} ${interview.interviewee.lastName || ''}`
+                              : interview.interviewee?.userName || 'Pending...'}
+                          </span>
+                        </div>
+
+                        {date && (
+                          <div className="flex items-center justify-between text-[9px] text-primary/80 mt-0.5 font-medium">
+                            <span>Date:</span>
+                            <span>
+                              {date.toLocaleDateString()}{' '}
+                              {date.toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </BusinessDashboardLayout>
   );
