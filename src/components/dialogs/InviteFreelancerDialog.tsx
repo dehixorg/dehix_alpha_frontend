@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifySuccess, notifyError } from '@/utils/toastMessage';
+import { toast } from '@/components/ui/use-toast';
 
 const ProjectTypeDialog = dynamic(
   () =>
@@ -119,9 +120,18 @@ export default function InviteFreelancerDialog({
           profiles: project.profiles || [],
         }));
       setProjects(filteredProjects);
-    } catch (error) {
-      notifyError('Failed to fetch projects');
+    } catch (error: any) {
       console.error('Error fetching projects:', error);
+      if (error.response?.status === 404) {
+        setProjects([]);
+        toast({
+          title: 'No projects found',
+          description:
+            'You have no projects currently. Please create a new project to get started.',
+        });
+      } else {
+        notifyError('Failed to fetch projects');
+      }
     } finally {
       setLoading(false);
     }

@@ -18,6 +18,7 @@ import { InterviewsSection } from '@/components/interviews/InterviewsSection';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
 import { notifyError } from '@/utils/toastMessage';
+import { toast } from '@/components/ui/use-toast';
 import { Project } from '@/types/project';
 import {
   Card,
@@ -56,9 +57,19 @@ export default function Dashboard() {
         setProjects(response.data.data);
         setLoadingStats(false);
       }
-    } catch (error) {
-      notifyError('Something went wrong. Please try again.', 'Error');
+    } catch (error: any) {
       console.error('API Error:', error);
+      if (error.response?.status === 404) {
+        setProjects([]);
+        setLoadingStats(false);
+        toast({
+          title: 'No projects found',
+          description:
+            'You do not have any projects yet. Please check the market or apply for new projects.',
+        });
+      } else {
+        notifyError('Something went wrong. Please try again.', 'Error');
+      }
     } finally {
       setLoading(false);
     }
