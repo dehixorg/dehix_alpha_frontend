@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
+import { ListVideo, Users2, History, Briefcase, Star } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -17,6 +17,7 @@ import CompletedInterviews from '@/components/freelancer/interview/CompletedInte
 import InterviewerBids from '@/components/freelancer/interview/InterviewerBids';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 import { useInterviewerProfileTour } from '@/components/tour/freelancer/useInterviewTour';
+import SubmitResult from '@/components/freelancer/interview/SubmitResult';
 
 export default function InterviewerPage() {
   const params = useParams();
@@ -94,6 +95,13 @@ export default function InterviewerPage() {
                       <span>Bids</span>
                     </TabsTrigger>
                     <TabsTrigger
+                      value="submit-result"
+                      className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <Star className="h-4 w-4" />
+                      <span>Submit Result</span>
+                    </TabsTrigger>
+                    <TabsTrigger
                       value="history"
                       className="relative h-12 px-4 rounded-none flex items-center justify-center gap-2 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
                       data-tour="interview-history"
@@ -114,6 +122,9 @@ export default function InterviewerPage() {
                 </TabsContent>
                 <TabsContent value="bids" className="m-0">
                   <InterviewerBids />
+                </TabsContent>
+                <TabsContent value="submit-result" className="m-0">
+                  <SubmitResult />
                 </TabsContent>
                 <TabsContent value="history" className="m-0">
                   <CompletedInterviews enableViewToggle />

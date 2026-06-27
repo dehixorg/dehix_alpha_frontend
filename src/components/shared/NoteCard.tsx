@@ -168,7 +168,10 @@ interface NoteCardProps {
     noteType: NoteType,
   ) => Promise<void>;
   onDeleteClick: (noteId: string | undefined) => void;
-  onUpdateNoteLabel?: (noteId: string | undefined, label: string) => void;
+  onUpdateNoteLabel?: (
+    noteId: string | undefined,
+    label: LabelType | undefined,
+  ) => void;
 }
 
 const NoteCard = ({
@@ -489,7 +492,7 @@ const NoteCard = ({
                         onClick={() => {
                           setCurrentLabel(undefined);
                           if (onUpdateNoteLabel) {
-                            onUpdateNoteLabel(note._id, '');
+                            onUpdateNoteLabel(note._id, undefined);
                           }
                         }}
                         className="ml-1 hover:bg-black/10 dark:hover:bg-white/20 rounded-full p-0.5"
@@ -650,7 +653,6 @@ const NoteCard = ({
                         title="Move to trash"
                         onClick={async (e) => {
                           e.stopPropagation();
-                          console.log('Moving to trash:', note._id);
                           try {
                             await onUpdateNoteType(note._id, NoteType.TRASH);
                             setIsExpanded(false);
@@ -670,7 +672,6 @@ const NoteCard = ({
                           title="Restore"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            console.log('Restoring note:', note._id);
                             try {
                               await onUpdateNoteType(note._id, NoteType.NOTE);
                               setIsExpanded(false);
@@ -688,7 +689,6 @@ const NoteCard = ({
                           title="Delete permanently"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            console.log('Permanently deleting note:', note._id);
                             try {
                               onDeleteClick(note._id);
                               setIsExpanded(false);

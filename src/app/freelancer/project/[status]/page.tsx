@@ -17,6 +17,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
+import { toast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -150,9 +151,18 @@ const ProjectList = ({
         } else {
           setProjects(projectsData);
         }
-      } catch (error) {
-        notifyError('Something went wrong. Please try again.', 'Error');
+      } catch (error: any) {
         console.error('API Error:', error);
+        if (error.response?.status === 404) {
+          setProjects([]);
+          toast({
+            title: 'No projects found',
+            description:
+              'You do not have any projects yet. Please check the market or apply for new projects.',
+          });
+        } else {
+          notifyError('Something went wrong. Please try again.', 'Error');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -269,7 +279,7 @@ export default function ProjectPage() {
   return (
     <FreelancerAppLayout
       active="Projects"
-      activeMenu="Dashboard"
+      activeMenu="Projects"
       breadcrumbItems={[
         { label: 'Freelancer', link: '/dashboard/freelancer' },
         { label: 'Projects', link: '/freelancer/project' },

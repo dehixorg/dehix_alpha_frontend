@@ -1,19 +1,50 @@
 'use client';
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { BookOpen, Briefcase, User, Package } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import BusinessVerification from '@/components/freelancer/oracleDashboard/BusinessVerification';
 import EducationVerification from '@/components/freelancer/oracleDashboard/EducationVerification';
 import ProjectVerification from '@/components/freelancer/oracleDashboard/ProjectVerification';
 import WorkExpVerification from '@/components/freelancer/oracleDashboard/WorkExpVerification';
+import OracleApplicationCard from '@/components/freelancer/oracle/OracleApplicationCard';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import FreelancerAppLayout from '@/components/layout/FreelancerAppLayout';
 import { useOracleTour } from '@/components/tour/freelancer/useOracleTour';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { notifyError } from '@/utils/toastMessage';
+import { OracleStatusEnum } from '@/utils/enum';
 
 export default function OracleDashboardPage() {
   const router = useRouter();
   const params = useParams();
+  const user = useSelector((state: RootState) => state.user);
+
+  const [verificationData, setVerificationData] = useState<
+    Record<string, any[]>
+  >({
+    business: [],
+    experience: [],
+    project: [],
+    education: [],
+  });
+  const [loading, setLoading] = useState<Record<string, boolean>>({
+    business: false,
+    experience: false,
+    project: false,
+    education: false,
+  });
+  const [fetched, setFetched] = useState<Record<string, boolean>>({
+    business: false,
+    experience: false,
+    project: false,
+    education: false,
+  });
+  const [oracleStatus, setOracleStatus] = useState<string | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
 
   // Determine active tab from dynamic route params
   const slugParam = (params as any)?.slug;
@@ -29,6 +60,56 @@ export default function OracleDashboardPage() {
   const handleTabChange = (tab: string) => {
     router.push(`/freelancer/oracleDashboard/${tab}`);
   };
+
+  const fetchVerificationData = useCallback(
+    async (docType: string) => {
+      if (!user?.uid || fetched[docType]) return;
+      try {
+        setLoading((prev) => ({ ...prev, [docType]: true }));
+        const response = await axiosInstance.get(
+          `/verification/${user.uid}/oracle?doc_type=${docType}`,
+        );
+        setVerificationData((prev) => ({
+          ...prev,
+          [docType]: response.data.data || [],
+        }));
+        setFetched((prev) => ({ ...prev, [docType]: true }));
+      } catch (error) {
+        notifyError('Something went wrong. Please try again.', 'Error');
+        console.error(error);
+      } finally {
+        setLoading((prev) => ({ ...prev, [docType]: false }));
+      }
+    },
+    [user?.uid, fetched],
+  );
+
+  const fetchOracleStatus = useCallback(async () => {
+    if (!user?.uid) {
+      setStatusLoading(false);
+      return;
+    }
+    try {
+      setStatusLoading(true);
+      const res = await axiosInstance.get(`/freelancer/${user.uid}`);
+      const status =
+        res.data?.data?.oracleStatus ?? OracleStatusEnum.NOT_APPLIED;
+      setOracleStatus(status);
+    } catch {
+      notifyError('Failed to fetch Oracle status.', 'Error');
+    } finally {
+      setStatusLoading(false);
+    }
+  }, [user?.uid]);
+
+  useEffect(() => {
+    fetchOracleStatus();
+  }, [fetchOracleStatus]);
+
+  useEffect(() => {
+    if (oracleStatus !== OracleStatusEnum.APPROVED) return;
+    fetchVerificationData(currentTabFromURL);
+  }, [currentTabFromURL, fetchVerificationData, oracleStatus]);
 
   useOracleTour(true);
 
@@ -47,58 +128,147 @@ export default function OracleDashboardPage() {
       mainClassName="flex-1 px-4"
     >
       <div className="mx-auto w-full max-w-7xl mt-4 md:mt-0">
-        <Tabs
-          value={currentTabFromURL}
-          onValueChange={handleTabChange}
-          className="w-full"
-        >
-          <TabsList
-            className="grid w-full grid-cols-4 gap-2"
-            data-tour="oracle-tabs"
-          >
-            <TabsTrigger
-              value="business"
-              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
-            >
-              <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Business</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="experience"
-              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
-            >
-              <User className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Experience</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="project"
-              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
-            >
-              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Projects</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="education"
-              className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
-            >
-              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Education</span>
-            </TabsTrigger>
-          </TabsList>
+        {statusLoading ? (
+          <div className="space-y-6">
+            {/* Skeleton for Tabs */}
+            <div className="w-full">
+              <div className="grid w-full grid-cols-4 gap-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-10 w-full rounded-md" />
+                ))}
+              </div>
+            </div>
 
-          <TabsContent value="business" data-tour="oracle-page">
-            <BusinessVerification />
-          </TabsContent>
-          <TabsContent value="experience">
-            <WorkExpVerification />
-          </TabsContent>
-          <TabsContent value="project">
-            <ProjectVerification />
-          </TabsContent>
-          <TabsContent value="education">
-            <EducationVerification />
-          </TabsContent>
-        </Tabs>
+            {/* Skeleton for Tab Content */}
+            <div className="space-y-4">
+              {/* Header Section */}
+              <div className="space-y-3">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+
+              {/* Content Cards Grid */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="space-y-3 rounded-lg border p-4">
+                    {/* Card Header */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+
+                    {/* Card Actions */}
+                    <div className="flex gap-2 pt-2">
+                      <Skeleton className="h-8 w-20 rounded-md" />
+                      <Skeleton className="h-8 w-20 rounded-md" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Additional Content Section */}
+              <div className="space-y-3 rounded-lg border p-6">
+                <Skeleton className="h-6 w-40" />
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : oracleStatus === OracleStatusEnum.APPROVED ? (
+          <Tabs
+            value={currentTabFromURL}
+            onValueChange={handleTabChange}
+            className="w-full"
+          >
+            <TabsList
+              className="grid w-full grid-cols-4 gap-2"
+              data-tour="oracle-tabs"
+            >
+              <TabsTrigger
+                value="business"
+                className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+              >
+                <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Business</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="experience"
+                className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+              >
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Experience</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="project"
+                className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+              >
+                <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Projects</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="education"
+                className="flex items-center gap-1 px-1.5 text-xs sm:text-sm sm:px-3"
+              >
+                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Education</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="business" data-tour="oracle-page">
+              <BusinessVerification
+                data={verificationData.business}
+                loading={loading.business}
+              />
+            </TabsContent>
+            <TabsContent value="experience">
+              <WorkExpVerification
+                data={verificationData.experience}
+                loading={loading.experience}
+              />
+            </TabsContent>
+            <TabsContent value="project">
+              <ProjectVerification
+                data={verificationData.project}
+                loading={loading.project}
+              />
+            </TabsContent>
+            <TabsContent value="education">
+              <EducationVerification
+                data={verificationData.education}
+                loading={loading.education}
+              />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="max-w-3xl">
+            <OracleApplicationCard userId={user?.uid} />
+          </div>
+        )}
       </div>
     </FreelancerAppLayout>
   );

@@ -122,7 +122,6 @@ async function fetchGamificationInfo(): Promise<GamificationInfoResponse> {
 async function fetchStatus(): Promise<GamificationStatusResponse> {
   try {
     const response = await axiosInstance.get('/freelancer/gamification/status');
-    console.log('the gamification status is', response);
     return response.data;
   } catch (error) {
     console.error('Error fetching gamification status:', error);

@@ -11,8 +11,7 @@ import {
   Zap,
   ArrowLeft,
 } from 'lucide-react';
-
-import { ProjectTypeDialog } from './ProjectTypeDialog';
+import dynamic from 'next/dynamic';
 
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -27,9 +26,23 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import ConnectsDialog from '@/components/dialogs/ConnectsDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifySuccess, notifyError } from '@/utils/toastMessage';
+import { toast } from '@/components/ui/use-toast';
+
+const ProjectTypeDialog = dynamic(
+  () =>
+    import('./ProjectTypeDialog').then((m) => ({
+      default: m.ProjectTypeDialog,
+    })),
+  { loading: () => null },
+);
+
+const ConnectsDialog = dynamic(
+  () => import('@/components/dialogs/ConnectsDialog'),
+  { loading: () => null },
+);
+
 interface Profile {
   _id: string;
   title?: string;
@@ -43,11 +56,11 @@ interface ProjectWithProfiles {
   title: string;
   status: 'ACTIVE' | 'PENDING' | 'COMPLETED';
   profiles: Profile[];
-  name?: string; // For backward compatibility
+  name?: string;
   profileType?: string;
   freelancersRequired?: number;
   required?: number;
-  projectName?: string; // For backward compatibility
+  projectName?: string;
 }
 
 interface InviteFreelancerDialogProps {
@@ -77,14 +90,12 @@ export default function InviteFreelancerDialog({
     process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '10',
   );
 
-  // Fetch projects when dialog opens
   useEffect(() => {
     if (open) {
       fetchProjects();
     }
   }, [open]);
 
-  // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
       setStep(1);
@@ -109,9 +120,18 @@ export default function InviteFreelancerDialog({
           profiles: project.profiles || [],
         }));
       setProjects(filteredProjects);
-    } catch (error) {
-      notifyError('Failed to fetch projects');
+    } catch (error: any) {
       console.error('Error fetching projects:', error);
+      if (error.response?.status === 404) {
+        setProjects([]);
+        toast({
+          title: 'No projects found',
+          description:
+            'You have no projects currently. Please create a new project to get started.',
+        });
+      } else {
+        notifyError('Failed to fetch projects');
+      }
     } finally {
       setLoading(false);
     }
@@ -154,17 +174,14 @@ export default function InviteFreelancerDialog({
 
       await axiosInstance.post('/business/invite', payload);
 
-      // Dispatch wallet update events
       window.dispatchEvent(new Event('refreshWallet'));
       window.dispatchEvent(new Event('connectsUpdated'));
 
       notifySuccess('Freelancer invited successfully!');
 
-      // Close dialogs
       setIsConnectsDialogOpen(false);
       onOpenChange(false);
 
-      // Call success callback
       onSuccess?.();
     } catch (error: any) {
       const errorMessage =
@@ -176,11 +193,10 @@ export default function InviteFreelancerDialog({
     }
   };
 
-  const getSelectedProject = (): ProjectWithProfiles | undefined => {
-    return projects.find((p) => p._id === selectedProjectId);
-  };
+  const getSelectedProject = () =>
+    projects.find((p) => p._id === selectedProjectId);
 
-  const getSelectedProfile = (): Profile | undefined => {
+  const getSelectedProfile = () => {
     const project = getSelectedProject();
     if (!project || !project.profiles) return undefined;
     return project.profiles.find((p) => p._id === selectedProfileId);

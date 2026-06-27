@@ -9,6 +9,7 @@ import {
   CheckCircle,
   Clock,
   XCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
@@ -43,6 +44,9 @@ interface TokenRequest {
   amount: number | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   dateTime: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  paidAmountInPaise?: number;
   [key: string]: any;
 }
 
@@ -69,16 +73,13 @@ export const DisplayConnectsDialog = React.forwardRef<
 
       const newData = (response.data.data || []) as TokenRequest[];
 
-      // Get the set of processed request IDs from localStorage
       const processedRequests = new Set(
         JSON.parse(localStorage.getItem('PROCESSED_REQUESTS') || '[]'),
       );
 
       const newApprovedRequests: TokenRequest[] = [];
 
-      // Process new data - identify approved requests that haven't been processed yet
       newData.forEach((newItem: TokenRequest) => {
-        // Only process approved requests that haven't been processed yet
         if (
           newItem.status === 'APPROVED' &&
           !processedRequests.has(newItem._id)
@@ -87,7 +88,6 @@ export const DisplayConnectsDialog = React.forwardRef<
         }
       });
 
-      // Update processed requests in localStorage if there are new ones
       setData(newData);
       setFilteredData(newData);
 
@@ -95,7 +95,7 @@ export const DisplayConnectsDialog = React.forwardRef<
         try {
           let success = false;
           if (userType) {
-            const balance = await fetchAndUpdateConnects(userType);
+            const balance = await fetchAndUpdateConnects(userType, true);
             success = balance !== null;
           } else {
             const totalNewConnects = newApprovedRequests.reduce(
@@ -103,7 +103,6 @@ export const DisplayConnectsDialog = React.forwardRef<
               0,
             );
 
-            // CAS retry logic for local storage update
             let retries = 3;
             let updated = false;
 
@@ -112,8 +111,6 @@ export const DisplayConnectsDialog = React.forwardRef<
               const currentConnects = parseInt(currentStr, 10);
               const newTotal = currentConnects + totalNewConnects;
 
-              // Optimistic update attempt
-              // Check if value changed during computation (simple collision check)
               if (
                 localStorage.getItem('DHX_CONNECTS') ===
                 (currentStr === '0' && !localStorage.getItem('DHX_CONNECTS')
@@ -124,26 +121,19 @@ export const DisplayConnectsDialog = React.forwardRef<
                 updated = true;
               } else {
                 retries--;
-                await new Promise((r) => setTimeout(r, 50)); // backoff
+                await new Promise((r) => setTimeout(r, 50));
               }
 
-              // Fallback if strict CAS is not possible with just localStorage:
-              // Just verify we are writing fresh data.
-              // Since we don't have atomic hardware CAS for localStorage,
-              // we just minimize the window. The above check is best-effort.
               if (!updated && retries === 0) {
-                // Final attempt force write
                 updateConnectsBalance(currentConnects + totalNewConnects);
                 updated = true;
               }
             }
 
-            // Wait for event dispatch propagation if needed, though updateConnectsBalance is sync-like for localStorage
             await new Promise((resolve) => setTimeout(resolve, 0));
             success = true;
           }
 
-          // Only update PROCESSED_REQUESTS after fetch succeeds
           if (success) {
             const updatedProcessedRequests = new Set(processedRequests);
             newApprovedRequests.forEach((req) => {
@@ -298,7 +288,7 @@ export const DisplayConnectsDialog = React.forwardRef<
               <div>
                 <h3 className="text-lg font-semibold">Connects</h3>
                 <p className="text-sm text-muted-foreground">
-                  Manage your connect requests
+                  Purchase history & balance
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -310,18 +300,15 @@ export const DisplayConnectsDialog = React.forwardRef<
           {/* Tabs */}
           <div className="px-4 pt-2">
             <Tabs value={filter} onValueChange={setFilter} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-muted/30 h-9">
+              <TabsList className="grid w-full grid-cols-3 bg-muted/30 h-9">
                 <TabsTrigger value="ALL" className="text-xs py-1">
                   All
                 </TabsTrigger>
                 <TabsTrigger value="APPROVED" className="text-xs py-1">
-                  Approved
+                  Completed
                 </TabsTrigger>
                 <TabsTrigger value="PENDING" className="text-xs py-1">
                   Pending
-                </TabsTrigger>
-                <TabsTrigger value="REJECTED" className="text-xs py-1">
-                  Rejected
                 </TabsTrigger>
               </TabsList>
 
@@ -331,8 +318,11 @@ export const DisplayConnectsDialog = React.forwardRef<
                   <Table className="min-w-full">
                     <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                       <TableRow className="h-9">
-                        <TableHead className="w-[120px] text-xs font-medium text-muted-foreground">
+                        <TableHead className="w-[90px] text-xs font-medium text-muted-foreground">
                           Connects
+                        </TableHead>
+                        <TableHead className="text-xs font-medium text-muted-foreground">
+                          Paid
                         </TableHead>
                         <TableHead className="text-xs font-medium text-muted-foreground">
                           Status
@@ -348,6 +338,9 @@ export const DisplayConnectsDialog = React.forwardRef<
                           <TableRow key={i}>
                             <TableCell>
                               <Skeleton className="h-4 w-10 mx-auto" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-12 mx-auto" />
                             </TableCell>
                             <TableCell>
                               <Skeleton className="h-4 w-20 mx-auto" />
@@ -368,6 +361,11 @@ export const DisplayConnectsDialog = React.forwardRef<
                                 {item.amount}
                               </span>
                             </TableCell>
+                            <TableCell className="text-sm text-center text-muted-foreground">
+                              {item.paidAmountInPaise
+                                ? `₹${(item.paidAmountInPaise / 100).toFixed(0)}`
+                                : '-'}
+                            </TableCell>
                             <TableCell>
                               <div className="flex justify-center">
                                 <StatusBadge status={item.status} />
@@ -380,7 +378,7 @@ export const DisplayConnectsDialog = React.forwardRef<
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={3} className="h-40 text-center">
+                          <TableCell colSpan={4} className="h-40 text-center">
                             <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
                               <Wallet className="h-8 w-8 opacity-40" />
                               <p className="text-sm font-medium">
@@ -411,17 +409,20 @@ export const DisplayConnectsDialog = React.forwardRef<
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs h-7"
+              className="text-xs h-7 gap-1.5"
               onClick={fetchConnectsRequest}
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                  <Loader2 className="h-3 w-3 animate-spin" />
                   Refreshing...
                 </>
               ) : (
-                'Refresh'
+                <>
+                  <RefreshCw className="h-3 w-3" />
+                  Refresh
+                </>
               )}
             </Button>
           </div>

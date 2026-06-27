@@ -19,13 +19,22 @@ const AddToLobbyDialog = ({
   handleDeleteSkill,
   handleAddToLobby,
   talent,
-  setTmpSkill,
   open,
   setOpen,
   isLoading,
   setLoading,
 }: any) => {
   const user = useSelector((state: RootState) => state.user);
+
+  const requiredConnects = Number(
+    process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST, // 5 connects
+  );
+
+  if (!Number.isFinite(requiredConnects)) {
+    console.error(
+      'NEXT_PUBLIC__APP_HIRE_TALENT_COST is not configured properly',
+    );
+  }
 
   const existingInvites = Array.isArray(talent?.dehixTalent)
     ? talent.dehixTalent
@@ -47,7 +56,21 @@ const AddToLobbyDialog = ({
       .filter((id: any) => typeof id === 'string' && id.length > 0),
   );
 
-  const filteredOptions = (skillDomainData || []).filter((opt: any) => {
+  const uniqueSkillDomainData = (skillDomainData || []).filter(
+    (item: any, index: number, self: any[]) =>
+      index ===
+      self.findIndex(
+        (t) =>
+          String(t?.label || '')
+            .toLowerCase()
+            .trim() ===
+          String(item?.label || '')
+            .toLowerCase()
+            .trim(),
+      ),
+  );
+
+  const filteredOptions = uniqueSkillDomainData.filter((opt: any) => {
     const id = opt?.uid || opt?._id;
     if (!id) return false;
     return !existingHireIds.has(id);
@@ -61,15 +84,22 @@ const AddToLobbyDialog = ({
     return freelancerTalentNames.has(label);
   });
 
-  const notInDeveloperProfileOptions = (skillDomainData || []).filter(
-    (opt: any) => {
-      const label = String(opt?.label || '')
-        .trim()
-        .toLowerCase();
-      if (!label) return false;
-      return !freelancerTalentNames.has(label);
-    },
+  const selectedSkillNames = new Set(
+    (currSkills || []).map((s: any) =>
+      String(s?.name || '')
+        .toLowerCase()
+        .trim(),
+    ),
   );
+
+  const notInDeveloperProfileOptions = filteredOptions.filter((opt: any) => {
+    const label = String(opt?.label || '')
+      .trim()
+      .toLowerCase();
+    if (!label) return false;
+
+    return !freelancerTalentNames.has(label) && !selectedSkillNames.has(label);
+  });
 
   const formatUpdatedAt = (v: any) => {
     if (!v) return 'N/A';
@@ -97,11 +127,11 @@ const AddToLobbyDialog = ({
         <div className="mt-2 space-y-4">
           <SelectTagPicker
             label="Select hires"
+            key="hire-selector"
             options={inDeveloperProfileOptions}
             selected={currSkills}
             onAdd={(value: string) => {
-              setTmpSkill(value);
-              handleAddSkill();
+              handleAddSkill(value);
             }}
             onRemove={(name: string) => handleDeleteSkill(name)}
             optionLabelKey="label"
@@ -160,6 +190,10 @@ const AddToLobbyDialog = ({
             loading={isLoading}
             setLoading={setLoading}
             onSubmit={async () => {
+              if (!talent?.freelancer_id) {
+                console.error('Invalid freelancer id');
+                return;
+              }
               const success = await handleAddToLobby(talent.freelancer_id);
               if (success) setOpen(false);
             }}
@@ -167,10 +201,7 @@ const AddToLobbyDialog = ({
             userId={user?.uid}
             buttonText="Save"
             userType="BUSINESS"
-            requiredConnects={parseInt(
-              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
-              10,
-            )}
+            requiredConnects={requiredConnects}
             skipRedirect={true}
           />
         </DialogFooter>

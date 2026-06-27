@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Flame, Trophy, Gift, Check, Lock } from 'lucide-react';
 
+import { RootState } from '@/lib/store';
 import { updateConnectsBalance } from '@/lib/updateConnects';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -15,14 +17,13 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
 import StatCard from '@/components/shared/statCard';
 
-// TypeScript Interfaces
 interface StreakInfo {
   freelancerId: string;
   currentStreak: number;
   longestStreak: number;
   lastLoginDate: string | null;
   streakStartDate: string | null;
-  claimableMilestones: number[]; // Array of milestones that can be claimed
+  claimableMilestones: number[];
 }
 
 function Illustration({ className }: { className?: string }) {
@@ -97,12 +98,10 @@ interface StreakReward {
   updatedAt: string;
 }
 
-// API Service Functions
-const fetchStreakInfo = async (): Promise<StreakInfo> => {
+const fetchStreakInfo = async (userId: string): Promise<StreakInfo> => {
   try {
-    const response = await axiosInstance.get('/freelancer/me');
+    const response = await axiosInstance.get(`/freelancer/${userId}`);
     const streakData = response.data.data.streak;
-    const userId = response.data.data._id;
 
     if (!streakData) {
       return {
@@ -165,11 +164,11 @@ const fetchStreakRewards = async (): Promise<StreakReward[]> => {
 };
 
 export default function StreakPage() {
+  const user = useSelector((state: RootState) => state.user);
   const [claimingMilestone, setClaimingMilestone] = useState<number | null>(
     null,
   );
 
-  // React Query Hooks
   const {
     data: streakData,
     isLoading,
@@ -177,8 +176,9 @@ export default function StreakPage() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['streak-info'],
-    queryFn: fetchStreakInfo,
+    queryKey: ['streak-info', user.uid],
+    queryFn: () => fetchStreakInfo(user.uid),
+    enabled: !!user.uid,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -197,13 +197,12 @@ export default function StreakPage() {
   const claimRewardMutation = useMutation({
     mutationFn: (milestone?: number) => claimStreakReward(milestone),
     onSuccess: async (data) => {
-      // Prefer server-provided remaining connects to avoid drift
       const remaining = (data?.data as { remainingConnects?: number })
         ?.remainingConnects;
+
       if (typeof remaining === 'number') {
         updateConnectsBalance(remaining);
       } else {
-        // Fallback: calculate locally if backend doesn't return remainingConnects
         const currentConnects = localStorage.getItem('DHX_CONNECTS');
         const connectsValue = currentConnects
           ? parseInt(currentConnects, 10)
@@ -212,11 +211,9 @@ export default function StreakPage() {
         updateConnectsBalance(newConnects);
       }
 
-      // Refetch streak data
       await refetch();
       setClaimingMilestone(null);
 
-      // Show success toast after refetch
       toast({
         title: 'Reward Claimed!',
         description: `You received ${data.data.finalAmount} connects.`,
@@ -224,7 +221,6 @@ export default function StreakPage() {
       });
     },
     onError: async (error: Error) => {
-      // If reward already claimed, refresh the data to sync state
       if (error.message.includes('already claimed')) {
         await refetch();
       }
@@ -239,7 +235,22 @@ export default function StreakPage() {
     },
   });
 
-  // Reward Claim Handler
+  const totalEarnedConnects = useMemo(() => {
+    if (!streakData || !rewardsData) return 0;
+
+    return rewardsData.reduce((total, reward) => {
+      const isClaimed =
+        streakData.currentStreak >= reward.days &&
+        !streakData.claimableMilestones.includes(reward.days);
+
+      return total + (isClaimed ? reward.reward : 0);
+    }, 0);
+  }, [streakData, rewardsData]);
+
+  const orderedRewards = useMemo(() => {
+    return (rewardsData || []).slice().sort((a, b) => a.days - b.days);
+  }, [rewardsData]);
+
   const handleClaimReward = async (milestone?: number) => {
     if (!streakData) return;
 
@@ -252,23 +263,19 @@ export default function StreakPage() {
     }
   };
 
-  // Helper Functions
   const getMilestoneStatus = (milestone: number) => {
     if (!streakData) return 'locked';
 
     const canClaim = streakData.claimableMilestones.includes(milestone);
 
-    // If this milestone is in claimable list, it's available
     if (canClaim) {
       return 'available';
     }
 
-    // Check if milestone is already passed or matched (user moved beyond it)
     if (streakData.currentStreak >= milestone && !canClaim) {
-      return 'claimed'; // Either claimed or outside 7-day window
+      return 'claimed';
     }
 
-    // Otherwise locked (user hasn't reached this milestone yet)
     return 'locked';
   };
 
@@ -282,21 +289,9 @@ export default function StreakPage() {
     return streakData.claimableMilestones.includes(milestone);
   };
 
-  const calculateTotalEarnedConnects = () => {
-    if (!streakData || !rewardsData) return 0;
+  const isProfileLoading = !user.uid || isLoading || isLoadingRewards;
 
-    // Sum up rewards for milestones that have been claimed
-    // A milestone is claimed if: currentStreak >= milestone.days AND milestone is NOT in claimableMilestones
-    return rewardsData.reduce((total, reward) => {
-      const isClaimed =
-        streakData.currentStreak >= reward.days &&
-        !streakData.claimableMilestones.includes(reward.days);
-      return total + (isClaimed ? reward.reward : 0);
-    }, 0);
-  };
-
-  // Loading State
-  if (isLoading || isLoadingRewards) {
+  if (isProfileLoading) {
     return (
       <FreelancerSettingsLayout
         active="Streak"
@@ -421,7 +416,6 @@ export default function StreakPage() {
     );
   }
 
-  // Error State
   if (isError) {
     return (
       <FreelancerSettingsLayout
@@ -467,7 +461,6 @@ export default function StreakPage() {
     );
   }
 
-  // Empty State
   if (!streakData) {
     return (
       <FreelancerSettingsLayout
@@ -520,7 +513,6 @@ export default function StreakPage() {
       isKycCheck={true}
     >
       <div className="max-w-7xl mx-auto space-y-6" data-tour="streak">
-        {/* Page Title */}
         <div className="flex items-center justify-between space-y-2">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Login Streak</h1>
@@ -565,11 +557,9 @@ export default function StreakPage() {
             />
             <StatCard
               title="Total earned"
-              value={calculateTotalEarnedConnects()}
+              value={totalEarnedConnects}
               additionalInfo={
-                calculateTotalEarnedConnects() === 1
-                  ? 'connect earned'
-                  : 'connects earned'
+                totalEarnedConnects === 1 ? 'connect earned' : 'connects earned'
               }
               icon={
                 <div className="rounded-lg border bg-green-500/10 p-2">
@@ -590,12 +580,11 @@ export default function StreakPage() {
           <Card className="overflow-hidden">
             <CardContent className="pt-6">
               {(() => {
-                const ordered = (rewardsData || [])
-                  .slice()
-                  .sort((a, b) => a.days - b.days);
                 const next =
-                  ordered.find((m) => m.days > streakData.currentStreak) ||
-                  ordered[ordered.length - 1];
+                  orderedRewards.find(
+                    (m) => m.days > streakData.currentStreak,
+                  ) || orderedRewards[orderedRewards.length - 1];
+
                 if (!next) {
                   return (
                     <div>
@@ -610,6 +599,7 @@ export default function StreakPage() {
                 }
 
                 const progress = getMilestoneProgress(next.days);
+
                 return (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
@@ -674,118 +664,114 @@ export default function StreakPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {(rewardsData || [])
-                .slice()
-                .sort((a, b) => a.days - b.days)
-                .map((milestone) => {
-                  const status = getMilestoneStatus(milestone.days);
-                  const progress = getMilestoneProgress(milestone.days);
-                  const claimable = isClaimable(milestone.days);
-                  const isPending = claimingMilestone === milestone.days;
+              {orderedRewards.map((milestone) => {
+                const status = getMilestoneStatus(milestone.days);
+                const progress = getMilestoneProgress(milestone.days);
+                const claimable = isClaimable(milestone.days);
+                const isPending = claimingMilestone === milestone.days;
 
-                  const badgeText =
-                    status === 'claimed'
-                      ? 'Claimed'
-                      : claimable
-                        ? 'Available'
-                        : 'Locked';
-                  const badgeVariant = claimable
-                    ? 'default'
-                    : status === 'claimed'
-                      ? 'secondary'
-                      : 'outline';
+                const badgeText =
+                  status === 'claimed'
+                    ? 'Claimed'
+                    : claimable
+                      ? 'Available'
+                      : 'Locked';
 
-                  const accentClass = claimable
-                    ? 'border-l-blue-500 bg-blue-500/5'
-                    : status === 'claimed'
-                      ? 'border-l-emerald-500 bg-emerald-500/5'
-                      : 'border-l-muted-foreground/30 bg-muted/20';
-                  const iconWrapClass = claimable
-                    ? 'border-blue-500/20 bg-blue-500/10'
-                    : status === 'claimed'
-                      ? 'border-emerald-500/20 bg-emerald-500/10'
-                      : 'border-muted-foreground/20 bg-muted/40';
-                  const iconClass = claimable
-                    ? 'text-blue-600'
-                    : status === 'claimed'
-                      ? 'text-emerald-600'
-                      : 'text-muted-foreground';
-                  const badgeClass = claimable
-                    ? 'bg-blue-600 hover:bg-blue-600 text-white'
-                    : status === 'claimed'
-                      ? 'bg-emerald-600 hover:bg-emerald-600 text-white'
-                      : '';
+                const badgeVariant = claimable
+                  ? 'default'
+                  : status === 'claimed'
+                    ? 'secondary'
+                    : 'outline';
 
-                  return (
-                    <Card
-                      key={milestone.days}
-                      className={`relative overflow-hidden border-l-2 shadow-sm transition-colors ${accentClass}`}
-                    >
-                      <CardHeader className="space-y-2">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <CardTitle className="text-base truncate flex items-center gap-2">
-                              <div
-                                className={`rounded-md border p-2 inline-block ${iconWrapClass}`}
-                              >
-                                {status === 'claimed' ? (
-                                  <Check className={`h-4 w-4 ${iconClass}`} />
-                                ) : status === 'available' ? (
-                                  <Gift className={`h-4 w-4 ${iconClass}`} />
-                                ) : (
-                                  <Lock className={`h-4 w-4 ${iconClass}`} />
-                                )}
-                              </div>
-                              {milestone.days} day streak
-                            </CardTitle>
-                            <p className="text-sm text-muted-foreground">
-                              {milestone.reward} connects
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={badgeVariant}
-                              className={badgeClass}
+                const accentClass = claimable
+                  ? 'border-l-blue-500 bg-blue-500/5'
+                  : status === 'claimed'
+                    ? 'border-l-emerald-500 bg-emerald-500/5'
+                    : 'border-l-muted-foreground/30 bg-muted/20';
+
+                const iconWrapClass = claimable
+                  ? 'border-blue-500/20 bg-blue-500/10'
+                  : status === 'claimed'
+                    ? 'border-emerald-500/20 bg-emerald-500/10'
+                    : 'border-muted-foreground/20 bg-muted/40';
+
+                const iconClass = claimable
+                  ? 'text-blue-600'
+                  : status === 'claimed'
+                    ? 'text-emerald-600'
+                    : 'text-muted-foreground';
+
+                const badgeClass = claimable
+                  ? 'bg-blue-600 hover:bg-blue-600 text-white'
+                  : status === 'claimed'
+                    ? 'bg-emerald-600 hover:bg-emerald-600 text-white'
+                    : '';
+
+                return (
+                  <Card
+                    key={milestone.days}
+                    className={`relative overflow-hidden border-l-2 shadow-sm transition-colors ${accentClass}`}
+                  >
+                    <CardHeader className="space-y-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <CardTitle className="text-base truncate flex items-center gap-2">
+                            <div
+                              className={`rounded-md border p-2 inline-block ${iconWrapClass}`}
                             >
-                              {badgeText}
-                            </Badge>
-                          </div>
+                              {status === 'claimed' ? (
+                                <Check className={`h-4 w-4 ${iconClass}`} />
+                              ) : status === 'available' ? (
+                                <Gift className={`h-4 w-4 ${iconClass}`} />
+                              ) : (
+                                <Lock className={`h-4 w-4 ${iconClass}`} />
+                              )}
+                            </div>
+                            {milestone.days} day streak
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            {milestone.reward} connects
+                          </p>
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Progress value={progress} className="h-2" />
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>
-                              {streakData.currentStreak} / {milestone.days} days
-                            </span>
-                            <span>{Math.round(progress)}%</span>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={badgeVariant} className={badgeClass}>
+                            {badgeText}
+                          </Badge>
                         </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Progress value={progress} className="h-2" />
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>
+                            {streakData.currentStreak} / {milestone.days} days
+                          </span>
+                          <span>{Math.round(progress)}%</span>
+                        </div>
+                      </div>
 
-                        {claimable ? (
-                          <Button
-                            onClick={() => handleClaimReward(milestone.days)}
-                            disabled={
-                              isPending || claimRewardMutation.isPending
-                            }
-                            className="w-full"
-                          >
-                            {isPending ? 'Claiming...' : 'Claim reward'}
-                          </Button>
-                        ) : status === 'claimed' ? (
-                          <Button disabled className="w-full">
-                            Claimed
-                          </Button>
-                        ) : (
-                          <Button disabled variant="outline" className="w-full">
-                            Keep logging in
-                          </Button>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                      {claimable ? (
+                        <Button
+                          onClick={() => handleClaimReward(milestone.days)}
+                          disabled={isPending || claimRewardMutation.isPending}
+                          className="w-full"
+                        >
+                          {isPending ? 'Claiming...' : 'Claim reward'}
+                        </Button>
+                      ) : status === 'claimed' ? (
+                        <Button disabled className="w-full">
+                          Claimed
+                        </Button>
+                      ) : (
+                        <Button disabled variant="outline" className="w-full">
+                          Keep logging in
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </section>

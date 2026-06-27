@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { toast } from '@/components/ui/use-toast';
 import { ProjectWithProfiles, Profile } from '@/types/project';
 
 interface Props {
@@ -63,9 +64,18 @@ const ProjectProfileSelectionDialog: React.FC<Props> = ({
               p.status === 'ACTIVE' || p.status === 'PENDING',
           ),
         );
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to load projects', err);
-        notifyError('Failed to load projects', 'Error');
+        if (err.response?.status === 404) {
+          setProjects([]);
+          toast({
+            title: 'No projects found',
+            description:
+              'You have no projects currently. Please create a new project to get started.',
+          });
+        } else {
+          notifyError('Failed to load projects', 'Error');
+        }
       } finally {
         setLoading(false);
       }

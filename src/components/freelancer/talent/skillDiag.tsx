@@ -96,7 +96,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
       experience: '',
       monthlyPay: '',
       activeStatus: false,
-      status: StatusEnum.PENDING,
+      status: StatusEnum.NOT_APPLIED,
     },
   });
 

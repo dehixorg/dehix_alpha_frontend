@@ -236,122 +236,140 @@ const Page = () => {
           { label: 'Marketplace', link: '/freelancer/market' },
           { label: 'Loading...', link: '#' },
         ]}
-        containerClassName="flex min-h-screen w-full bg-background"
-        mainClassName="p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto"
+        mainClassName="p-4 sm:px-8"
       >
-        {/* Header Skeleton */}
-        <div className="space-y-8">
-          <div className="bg-gradient p-6 rounded-lg border">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-8 w-64" />
-                    <Skeleton className="h-6 w-16" />
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-8 w-full"
+          >
+            {/* Header Skeleton */}
+            <div className="bg-gradient p-6 rounded-lg border w-full">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-64" />
+                      <Skeleton className="h-6 w-16" />
+                    </div>
+                    <Skeleton className="h-4 w-48" />
                   </div>
-                  <Skeleton className="h-4 w-48" />
                 </div>
+                <Skeleton className="h-9 w-32" />
               </div>
-              <Skeleton className="h-9 w-32" />
             </div>
-          </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Left Column Skeleton */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Project Overview Skeleton */}
-              <Card>
-                <CardHeader className="border-b">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded-full" />
-                    <Skeleton className="h-6 w-40" />
-                  </div>
-                  <Skeleton className="h-4 w-64 mt-2" />
-                </CardHeader>
-                <CardContent className="pt-6 space-y-4">
-                  <Skeleton className="h-5 w-32 mb-2" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-4 w-4/5" />
-                </CardContent>
-              </Card>
-
-              {/* Requirements & Skills Skeleton */}
-              <Card>
-                <CardHeader className="border-b">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded-full" />
-                    <Skeleton className="h-6 w-48" />
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-6">
-                  <div>
-                    <Skeleton className="h-5 w-32 mb-3" />
-                    <div className="flex flex-wrap gap-2">
-                      {[...Array(4)].map((_, i) => (
-                        <Skeleton key={i} className="h-6 w-20" />
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <Skeleton className="h-5 w-32 mb-3" />
+            <div className="grid gap-6 lg:grid-cols-10 w-full">
+              {/* Left Column Skeleton - Matches lg:col-span-6 */}
+              <div className="lg:col-span-6 space-y-6">
+                {/* Project Overview Skeleton */}
+                <Card>
+                  <CardHeader className="bg-gradient p-6 rounded-t-lg border">
                     <div className="flex items-center gap-2">
-                      <div className="w-full max-w-[200px]">
-                        <Skeleton className="h-2 w-full" />
+                      <Skeleton className="h-6 w-40" />
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-5 w-32" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-6">
+                    {/* Summary Grid in Skeleton */}
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        {[...Array(2)].map((_, i) => (
+                          <div key={i} className="flex items-center gap-4">
+                            <Skeleton className="h-10 w-10 rounded-lg" />
+                            <div className="space-y-2 flex-1">
+                              <Skeleton className="h-4 w-20" />
+                              <Skeleton className="h-5 w-32" />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <Skeleton className="h-4 w-16" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Column Skeleton */}
-            <div className="space-y-6">
-              {/* Project Summary Skeleton */}
-              <Card className="sticky top-6">
-                <CardHeader className="border-b">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded-full" />
-                    <Skeleton className="h-6 w-36" />
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <Skeleton className="h-10 w-10 rounded-lg" />
-                      <div className="space-y-2 flex-1">
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-5 w-32" />
+                      <div className="space-y-4">
+                        {[...Array(2)].map((_, i) => (
+                          <div key={i} className="flex items-center gap-4">
+                            <Skeleton className="h-10 w-10 rounded-lg" />
+                            <div className="space-y-2 flex-1">
+                              <Skeleton className="h-4 w-20" />
+                              <Skeleton className="h-5 w-32" />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Application Form Skeleton */}
-              <Card>
-                <CardHeader className="border-b">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded-full" />
-                    <Skeleton className="h-6 w-40" />
-                  </div>
-                  <Skeleton className="h-4 w-56 mt-1" />
-                </CardHeader>
-                <CardContent className="pt-6 space-y-4">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-10 w-full" />
+                    <div className="border-t pt-6 space-y-4">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                      <Skeleton className="h-4 w-4/5" />
                     </div>
-                  ))}
-                  <Skeleton className="h-10 w-full mt-4" />
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+
+                {/* Application Form Skeleton */}
+                <Card>
+                  <CardHeader className="border-b">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-5 rounded-full" />
+                      <Skeleton className="h-6 w-40" />
+                    </div>
+                    <Skeleton className="h-4 w-56 mt-1" />
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    ))}
+                    <Skeleton className="h-10 w-full mt-4" />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column Skeleton - Matches lg:col-span-4 */}
+              <div className="lg:col-span-4 space-y-6">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded-full" />
+                  <Skeleton className="h-6 w-48" />
+                </div>
+
+                {/* Requirements & Skills Card Skeleton */}
+                <Card>
+                  <CardHeader className="border-b">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-5 rounded-full" />
+                      <Skeleton className="h-6 w-32" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-6">
+                    <div>
+                      <Skeleton className="h-5 w-32 mb-3" />
+                      <div className="flex flex-wrap gap-2">
+                        {[...Array(4)].map((_, i) => (
+                          <Skeleton key={i} className="h-6 w-20" />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Skeleton className="h-5 w-32 mb-3" />
+                      <div className="flex items-center gap-2">
+                        <div className="w-full max-w-[200px]">
+                          <Skeleton className="h-2 w-full" />
+                        </div>
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </FreelancerAppLayout>
     );
   }

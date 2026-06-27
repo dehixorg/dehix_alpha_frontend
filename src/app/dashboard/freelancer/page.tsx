@@ -3,17 +3,22 @@
 import { Activity, CheckCircle, Clock } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import StatItem from '@/components/shared/StatItem';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
-import ProjectTableCard from '@/components/freelancer/homeTableComponent';
+const ProjectTableCard = dynamic(
+  () => import('@/components/freelancer/homeTableComponent'),
+  { loading: () => <Skeleton className="h-48 w-full" /> },
+);
 import { InterviewsSection } from '@/components/interviews/InterviewsSection';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
 import { notifyError } from '@/utils/toastMessage';
+import { toast } from '@/components/ui/use-toast';
 import { Project } from '@/types/project';
 import {
   Card,
@@ -30,7 +35,19 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [profileImageUrl, setProfileImageUrl] = useState<string>(''); // Cache the image URL
   useDashboardTour(true);
+
+  // Add cache-busting for profile images - only update when URL actually changes
+  useEffect(() => {
+    if (user?.photoURL) {
+      const separator = user.photoURL.includes('?') ? '&' : '?';
+      const newUrl = `${user.photoURL}${separator}t=${Date.now()}`;
+      setProfileImageUrl(newUrl);
+    } else {
+      setProfileImageUrl('');
+    }
+  }, [user?.photoURL]);
 
   const fetchProjectData = async () => {
     setLoading(true);
@@ -40,9 +57,19 @@ export default function Dashboard() {
         setProjects(response.data.data);
         setLoadingStats(false);
       }
-    } catch (error) {
-      notifyError('Something went wrong. Please try again.', 'Error');
+    } catch (error: any) {
       console.error('API Error:', error);
+      if (error.response?.status === 404) {
+        setProjects([]);
+        setLoadingStats(false);
+        toast({
+          title: 'No projects found',
+          description:
+            'You do not have any projects yet. Please check the market or apply for new projects.',
+        });
+      } else {
+        notifyError('Something went wrong. Please try again.', 'Error');
+      }
     } finally {
       setLoading(false);
     }
@@ -54,6 +81,9 @@ export default function Dashboard() {
       [StatusEnum.PENDING]: 0,
       [StatusEnum.COMPLETED]: 0,
       [StatusEnum.REJECTED]: 0,
+      [StatusEnum.APPLIED]: 0,
+      [StatusEnum.VERIFIED]: 0,
+      [StatusEnum.NOT_APPLIED]: 0,
     };
 
     // Track unique project IDs for each status to avoid counting duplicate bids on the same project
@@ -62,6 +92,9 @@ export default function Dashboard() {
       [StatusEnum.PENDING]: new Set(),
       [StatusEnum.COMPLETED]: new Set(),
       [StatusEnum.REJECTED]: new Set(),
+      [StatusEnum.APPLIED]: new Set(),
+      [StatusEnum.VERIFIED]: new Set(),
+      [StatusEnum.NOT_APPLIED]: new Set(),
     };
 
     for (const p of projects) {
@@ -123,7 +156,7 @@ export default function Dashboard() {
                   </CardDescription>
                 </div>
                 <Avatar className="h-12 w-12 flex-shrink-0">
-                  <AvatarImage src={user?.photoURL || ''} alt={user?.name} />
+                  <AvatarImage src={profileImageUrl} alt={user?.name} />
                   <AvatarFallback>
                     {user?.displayName?.charAt(0).toUpperCase() || 'X'}
                   </AvatarFallback>

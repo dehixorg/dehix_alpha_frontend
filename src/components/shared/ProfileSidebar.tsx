@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
-  VolumeX,
+  Flag,
   ShieldX,
   Trash2,
   UserPlus,
@@ -893,7 +893,7 @@ export function ProfileSidebar({
     return (
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent
-          className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
+          className="w-full max-w-[350px] sm:max-w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
           aria-labelledby="profile-sidebar-title"
           aria-describedby="profile-sidebar-description"
         >
@@ -926,7 +926,7 @@ export function ProfileSidebar({
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
-        className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
+        className="w-full max-w-[350px] sm:max-w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
         aria-labelledby="profile-sidebar-title"
         aria-describedby="profile-sidebar-description"
       >
@@ -943,7 +943,7 @@ export function ProfileSidebar({
             </p>
           </div>
         </SheetHeader>
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 overflow-y-scroll">
           <div className="p-4 space-y-6">
             {loading && (
               <Card>
@@ -1217,13 +1217,6 @@ export function ProfileSidebar({
                       <CardContent className="space-y-2">
                         <Button
                           variant="outline"
-                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
-                          disabled
-                        >
-                          <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
-                        </Button>
-                        <Button
-                          variant="outline"
                           className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))]"
                           disabled={
                             blockStatus.isBlocked &&
@@ -1266,17 +1259,58 @@ export function ProfileSidebar({
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
-                          disabled
+                          className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-orange-600 hover:border-orange-600"
+                          onClick={() => {
+                            setConfirmDialogProps({
+                              title: 'Report this User?',
+                              description:
+                                'Are you sure you want to report this user? This will be reviewed by the admin team.',
+                              onConfirm: async () => {
+                                try {
+                                  setConfirmDialogProps((prev) => ({
+                                    ...prev,
+                                    isLoading: true,
+                                  }));
+                                  const { apiHelperService: reportService } =
+                                    await import('@/services/report');
+                                  await reportService.createReport({
+                                    subject: `User Report: ${profileData?.displayName || profileId}`,
+                                    description: `Reported user ${profileData?.displayName || 'Unknown'} (${(profileData as ProfileUser)?.email || 'N/A'}) from chat sidebar.`,
+                                    report_role: user?.type || 'freelancer',
+                                    report_type: 'USER',
+                                    status: 'OPEN',
+                                    reportedbyId: user?.uid || '',
+                                    reportedId: profileId || '',
+                                  });
+                                  toast({
+                                    title: 'User Reported',
+                                    description:
+                                      'The user has been reported and will be reviewed by an admin.',
+                                  });
+                                } catch (error) {
+                                  console.error('Error reporting user:', error);
+                                  toast({
+                                    variant: 'destructive',
+                                    title: 'Error',
+                                    description:
+                                      'Failed to report user. Please try again.',
+                                  });
+                                } finally {
+                                  setConfirmDialogProps((prev) => ({
+                                    ...prev,
+                                    isLoading: false,
+                                  }));
+                                  setIsConfirmDialogOpen(false);
+                                }
+                              },
+                              confirmButtonText: 'Report User',
+                              confirmButtonVariant: 'destructive',
+                              isLoading: false,
+                            });
+                            setIsConfirmDialogOpen(true);
+                          }}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          className="w-full justify-start"
-                          disabled
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
+                          <Flag className="h-4 w-4 mr-2" /> Report User
                         </Button>
                       </CardContent>
                     </Card>

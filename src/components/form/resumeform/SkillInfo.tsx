@@ -32,7 +32,7 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const res = await axiosInstance.get('/skills');
+        const res = await axiosInstance.get('/skills/all');
         setOptions(res?.data?.data || []);
       } catch (e) {
         // silent fail; picker will just not show options
