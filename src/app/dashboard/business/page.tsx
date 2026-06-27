@@ -39,6 +39,7 @@ import { ProjectCard } from '@/components/cards/projectCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
+import { toast } from '@/components/ui/use-toast';
 import StatItem from '@/components/shared/StatItem';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -78,9 +79,18 @@ export default function Dashboard() {
 
           setResponseData(response.data.data); // Store response data in state
         }
-      } catch (error) {
-        notifyError('Something went wrong. Please try again.', 'Error');
+      } catch (error: any) {
         console.error('API Error:', error);
+        if (error.response?.status === 404) {
+          setResponseData([]);
+          toast({
+            title: 'No projects found',
+            description:
+              'You have no projects currently. Please create a new project to get started.',
+          });
+        } else {
+          notifyError('Something went wrong. Please try again.', 'Error');
+        }
       }
     };
     fetchData();

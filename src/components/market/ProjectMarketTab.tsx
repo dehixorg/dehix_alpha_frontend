@@ -323,8 +323,15 @@ const ProjectMarketTab: React.FC = () => {
         );
 
         setJobs(jobsRes.data?.data || []);
-      } catch (err) {
-        if (err instanceof Error && err.name !== 'AbortError') {
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          setJobs([]);
+          toast({
+            title: 'No projects found',
+            description:
+              'There are no active project listings at the moment. Please check back later.',
+          });
+        } else if (err instanceof Error && err.name !== 'AbortError') {
           console.error('Fetch jobs error:', err);
           notifyError('Failed to load job listings.');
         } else if (!(err instanceof Error)) {

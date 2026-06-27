@@ -51,6 +51,7 @@ import { ProjectStatus } from '@/utils/freelancer/enum';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/header/header';
 import { notifyError } from '@/utils/toastMessage';
+import { toast } from '@/components/ui/use-toast';
 
 interface Skill {
   label: string;
@@ -103,9 +104,18 @@ export default function ConsultancyPage() {
 
         const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
-      } catch (error) {
-        notifyError('Something went wrong. Please try again.', 'Error');
+      } catch (error: any) {
         console.error('API Error:', error);
+        if (error.response?.status === 404) {
+          setResponseData([]);
+          toast({
+            title: 'No projects found',
+            description:
+              'You have no projects currently. Please create a new project to get started.',
+          });
+        } else {
+          notifyError('Something went wrong. Please try again.', 'Error');
+        }
       }
     };
 
