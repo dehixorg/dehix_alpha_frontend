@@ -337,9 +337,6 @@ function BusinessRegisterForm({
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
   const [dialogEmail, setDialogEmail] = useState<string>('');
   const searchParams = useSearchParams();
-  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(
-    null,
-  );
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -378,40 +375,48 @@ function BusinessRegisterForm({
         'confirmPassword',
       ]);
       if (isValid) {
-        const currentEmail = form.getValues('email');
-        if (!isEmailVerified || verifiedEmail !== currentEmail) {
-          const email = currentEmail;
-          if (email) {
-            setDialogEmail(email);
-            setIsEmailOtpDialogOpen(true);
-          }
-          return;
-        }
-
-        const { userName } = form.getValues();
+        const { userName, email } = form.getValues();
         try {
           setIsVerified(true);
-          const username = userName;
-          if (username === lastCheckedUsername) {
-            setCurrentStep(currentStep + 1);
-            return;
-          }
-          const response = await axiosInstance.get(
-            `/public/username/check-duplicate?username=${username}&is_business=true`,
-          );
 
-          if (response.data.duplicate === false) {
-            setCurrentStep(currentStep + 1);
-          } else {
+          // 1. Check duplicate username
+          const usernameResponse = await axiosInstance.get(
+            `/public/username/check-duplicate?username=${userName}&is_business=true`,
+          );
+          if (usernameResponse.data.duplicate === true) {
             notifyError(
               'This username is already taken. Please choose another one.',
               'User Already Exists',
             );
-            setLastCheckedUsername(username);
+            return;
           }
+
+          // 2. Check duplicate email
+          const emailResponse = await axiosInstance.get(
+            `/public/user_email?user=${email}`,
+          );
+          if (emailResponse.data && !emailResponse.data.error) {
+            notifyError(
+              'This email is already registered. Please choose another one.',
+              'Email Already Registered',
+            );
+            return;
+          }
+
+          // 3. Email verification
+          if (!isEmailVerified || verifiedEmail !== email) {
+            if (email) {
+              setDialogEmail(email);
+              setIsEmailOtpDialogOpen(true);
+            }
+            return;
+          }
+
+          // If email is verified, proceed
+          setCurrentStep(currentStep + 1);
         } catch (error: any) {
           notifyError(
-            'There was an error while checking the username.',
+            'There was an error while checking the email or username.',
             'API Error',
           );
         } finally {
