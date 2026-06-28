@@ -381,7 +381,7 @@ function BusinessRegisterForm({
 
           // 1. Check duplicate username
           const usernameResponse = await axiosInstance.get(
-            `/public/username/check-duplicate?username=${userName}&is_business=true`,
+            `/public/username/check-duplicate?username=${encodeURIComponent(userName)}&is_business=true`,
           );
           if (usernameResponse.data.duplicate === true) {
             notifyError(
@@ -393,7 +393,7 @@ function BusinessRegisterForm({
 
           // 2. Check duplicate email
           const emailResponse = await axiosInstance.get(
-            `/public/user_email?user=${email}`,
+            `/public/user_email?user=${encodeURIComponent(email)}`,
           );
           if (emailResponse.data && !emailResponse.data.error) {
             notifyError(
