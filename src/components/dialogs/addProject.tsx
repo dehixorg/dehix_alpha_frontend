@@ -262,7 +262,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const skillsResponse = await axiosInstance.get('/skills');
+        const skillsResponse = await axiosInstance.get('/skills/all');
         const transformedSkills =
           skillsResponse?.data?.data?.map((skill: Skill) => ({
             value: skill.label,

@@ -965,7 +965,7 @@ function FreelancerRegisterForm({
                             max={300}
                             step={1}
                             placeholder="0"
-                            value={field.value ?? 0}
+                            value={field.value === 0 ? '' : (field.value ?? '')}
                             onChange={(e) => {
                               const v = e.target.value;
                               field.onChange(v === '' ? 0 : Number(v));
