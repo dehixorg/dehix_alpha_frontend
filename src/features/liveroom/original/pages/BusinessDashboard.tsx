@@ -54,6 +54,9 @@ export default function BusinessDashboard() {
   const [profileWallet, setProfileWallet] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
+  const [publishingProjectId, setPublishingProjectId] = useState<string | null>(
+    null,
+  );
 
   if (!isAuthenticated) {
     return (
@@ -150,6 +153,52 @@ export default function BusinessDashboard() {
       toast.error(error?.message ?? 'Failed to delete room');
     } finally {
       setDeletingRoomId(null);
+    }
+  };
+
+  const publishProject = async (event: React.MouseEvent, room: any) => {
+    event.stopPropagation();
+    const projectId = room.projectId || room.project?._id;
+    if (!projectId || publishingProjectId) return;
+    setPublishingProjectId(projectId);
+    try {
+      const res = await fetch(
+        `/api/projects/${projectId}/marketplace/publish`,
+        { method: 'PUT' },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || data.message || 'Failed to publish');
+      }
+      queryClient.setQueryData(getGetMyRoomsQueryKey(), (current: any) =>
+        Array.isArray(current)
+          ? current.map((item: any) =>
+              (item.projectId || item.project?._id) === projectId
+                ? {
+                    ...item,
+                    marketplaceStatus: 'live',
+                    project: {
+                      ...(item.project || {}),
+                      ...(data.project || {}),
+                      marketplaceStatus: 'live',
+                    },
+                  }
+                : item,
+            )
+          : current,
+      );
+      await queryClient.invalidateQueries({
+        queryKey: getGetMyRoomsQueryKey(),
+      });
+      toast.success(
+        data.alreadyPublished
+          ? 'Project is already live'
+          : 'Project published to marketplace',
+      );
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to publish project');
+    } finally {
+      setPublishingProjectId(null);
     }
   };
 
@@ -412,6 +461,21 @@ export default function BusinessDashboard() {
                           <span className="text-[10px] font-mono text-muted-foreground/60 border border-border/30 bg-muted/10 rounded px-1.5 py-0.5">
                             {room.roomCode}
                           </span>
+                          {(room.projectId || room.project?._id) && (
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded border capitalize tracking-wider ${
+                                room.marketplaceStatus === 'live' ||
+                                room.project?.marketplaceStatus === 'live'
+                                  ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/25 dark:text-emerald-400'
+                                  : 'text-zinc-500 bg-zinc-500/10 border-zinc-500/25 dark:text-zinc-300'
+                              }`}
+                            >
+                              {room.marketplaceStatus === 'live' ||
+                              room.project?.marketplaceStatus === 'live'
+                                ? 'market live'
+                                : 'hidden draft'}
+                            </span>
+                          )}
                         </div>
                         <div>
                           <h3 className="font-bold text-foreground text-base group-hover:text-primary transition-colors flex items-center gap-1.5">
@@ -488,6 +552,24 @@ export default function BusinessDashboard() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
+                        {(room.projectId || room.project?._id) &&
+                          room.marketplaceStatus !== 'live' &&
+                          room.project?.marketplaceStatus !== 'live' && (
+                            <button
+                              onClick={(e) => void publishProject(e, room)}
+                              disabled={
+                                publishingProjectId ===
+                                (room.projectId || room.project?._id)
+                              }
+                              className="text-[11px] text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 hover:border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/15 rounded px-2.5 py-1 font-bold transition-all shadow-sm flex items-center gap-1 disabled:opacity-50"
+                            >
+                              <Play className="h-3 w-3 fill-current" />
+                              {publishingProjectId ===
+                              (room.projectId || room.project?._id)
+                                ? 'Publishing'
+                                : 'Publish'}
+                            </button>
+                          )}
                         <button
                           onClick={() => navigate(`/talent/discovery`)}
                           className="text-[11px] font-semibold text-primary hover:underline transition-colors flex items-center gap-0.5"

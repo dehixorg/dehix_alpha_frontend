@@ -124,6 +124,7 @@ type HireOffer = {
 
 type WorkspacePayload = {
   room: any;
+  project?: any | null;
   roles: any[];
   participants: any[];
   tickets: any[];
@@ -306,6 +307,7 @@ export default function LiveRoomPage() {
   const [customChannelParticipantIds, setCustomChannelParticipantIds] =
     useState<string[]>([]);
   const [channelSaving, setChannelSaving] = useState(false);
+  const [publishingProject, setPublishingProject] = useState(false);
 
   const selectedChannel = useMemo(
     () =>
@@ -1131,6 +1133,32 @@ export default function LiveRoomPage() {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
     } finally {
       setSending(false);
+    }
+  };
+
+  const publishMarketplaceProject = async () => {
+    const projectId = workspace?.project?._id || room?.projectId;
+    if (!projectId || publishingProject) return;
+    setPublishingProject(true);
+    try {
+      const res = await fetch(
+        `/api/projects/${projectId}/marketplace/publish`,
+        { method: 'PUT' },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || data.message || 'Failed to publish');
+      }
+      await loadWorkspace(selectedChannelId, true);
+      toast.success(
+        data.alreadyPublished
+          ? 'Project is already live'
+          : 'Project published to marketplace',
+      );
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to publish project');
+    } finally {
+      setPublishingProject(false);
     }
   };
 
@@ -2599,6 +2627,8 @@ export default function LiveRoomPage() {
                 userRole={user.role}
                 onNavigate={navigate}
                 onSelectChannel={setSelectedChannelId}
+                onPublishMarketplace={publishMarketplaceProject}
+                isPublishingMarketplace={publishingProject}
               />
 
               {/* Participants Section */}
@@ -3157,12 +3187,16 @@ function PlatformSyncCockpit({
   userRole,
   onNavigate,
   onSelectChannel,
+  onPublishMarketplace,
+  isPublishingMarketplace,
 }: {
   workspace: WorkspacePayload;
   isOwner: boolean;
   userRole?: string;
   onNavigate: (path: string) => void;
   onSelectChannel: (channelId: string) => void;
+  onPublishMarketplace: () => void;
+  isPublishingMarketplace: boolean;
 }) {
   const {
     room,
@@ -3174,6 +3208,11 @@ function PlatformSyncCockpit({
     tickets,
     documents,
   } = workspace;
+  const project = workspace.project;
+  const projectId = project?._id || room.projectId;
+  const marketplaceStatus = String(
+    project?.marketplaceStatus || room.marketplaceStatus || '',
+  ).toLowerCase();
   const interviewChannels = channels.filter(
     (channel) => channel.type === 'interview',
   );
@@ -3262,8 +3301,14 @@ function PlatformSyncCockpit({
               {room.roomCode} · platform project mirror
             </div>
           </div>
-          <span className="shrink-0 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
-            synced
+          <span
+            className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${
+              marketplaceStatus === 'live'
+                ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                : 'border-zinc-500/25 bg-zinc-500/10 text-zinc-500 dark:text-zinc-300'
+            }`}
+          >
+            {marketplaceStatus === 'live' ? 'market live' : 'hidden'}
           </span>
         </div>
 
@@ -3314,6 +3359,20 @@ function PlatformSyncCockpit({
             </span>
           </button>
         </div>
+        {isOwner && projectId && marketplaceStatus !== 'live' && (
+          <button
+            onClick={onPublishMarketplace}
+            disabled={isPublishingMarketplace}
+            className="mt-2 w-full rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-2 text-left text-[10px] font-bold text-emerald-600 transition-colors hover:bg-emerald-500/15 disabled:opacity-50 dark:text-emerald-400"
+          >
+            {isPublishingMarketplace
+              ? 'Publishing...'
+              : 'Publish to marketplace'}
+            <span className="block pt-0.5 text-[9px] font-medium text-muted-foreground">
+              Deducts project creation connects once
+            </span>
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-5 gap-1.5">

@@ -72,9 +72,22 @@ function transformSession(session: any) {
 
 export function transformRoom(room: any) {
   if (!room) return room;
+  const project = room.project
+    ? {
+        ...room.project,
+        marketplaceStatus: lower(room.project.marketplaceStatus),
+      }
+    : null;
   return {
     ...room,
+    project,
+    projectId: room.projectId || project?._id || null,
     status: lower(room.status),
+    marketplaceStatus: lower(
+      room.marketplaceStatus || project?.marketplaceStatus,
+    ),
+    marketplacePublishedAt:
+      room.marketplacePublishedAt || project?.marketplacePublishedAt || null,
     ticketStats: room.ticketStats || { total: 0, done: 0 },
     milestoneStats: room.milestoneStats || { totalUsd: 0, releasedUsd: 0 },
     participantCount: room.participantCount || 0,
@@ -459,9 +472,36 @@ export async function liveRoomApiFetch(
       return jsonResponse(
         (entries || []).map((entry: any) => ({
           ...entry,
+          project: entry.project
+            ? {
+                ...entry.project,
+                marketplaceStatus: lower(entry.project.marketplaceStatus),
+              }
+            : entry.project,
           room: transformRoom(entry.room || entry),
         })),
       );
+    }
+
+    const publishProject = path.match(
+      /^\/projects\/([^/]+)\/marketplace\/publish$/,
+    );
+    if (publishProject && method === 'PUT') {
+      const res = await backend(
+        `/project/${publishProject[1]}/marketplace/publish`,
+        { method: 'PUT' },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          data?.message || data?.error || `Request failed (${res.status})`,
+        );
+      }
+      return jsonResponse({
+        project: data?.data ?? data,
+        remainingConnects: data?.remainingConnects,
+        alreadyPublished: data?.alreadyPublished,
+      });
     }
 
     if (path === '/talent/enquiries' || path === '/talent/offers') {
