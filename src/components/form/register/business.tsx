@@ -403,6 +403,14 @@ function BusinessRegisterForm({
             return;
           }
 
+          const latestValues = form.getValues();
+          if (
+            latestValues.userName !== userName ||
+            latestValues.email !== email
+          ) {
+            return;
+          }
+
           // 3. Email verification
           if (!isEmailVerified || verifiedEmail !== email) {
             if (email) {
