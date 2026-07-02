@@ -266,11 +266,14 @@ export default function CreateProfileDialog({
                           min={0}
                           step={1}
                           placeholder="50"
-                          value={String(field.value ?? '')}
+                          value={
+                            field.value === 0 ? '' : String(field.value ?? '')
+                          }
                           onChange={(e) => {
-                            const value = parseFloat(e.target.value) || 0;
-                            field.onChange(value);
-                            setNewProfileHourlyRate(value);
+                            const val = e.target.value;
+                            const num = val === '' ? 0 : parseFloat(val) || 0;
+                            field.onChange(num);
+                            setNewProfileHourlyRate(num);
                           }}
                         />
                         <InputGroupText>/hr</InputGroupText>

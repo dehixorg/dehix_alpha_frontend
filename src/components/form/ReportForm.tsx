@@ -21,13 +21,6 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
 import { apiHelperService } from '@/services/report';
 import { RootState } from '@/lib/store';
 import ImageUploader from '@/components/fileUpload/ImageUploader';
@@ -38,8 +31,8 @@ const reportSchema = z.object({
   description: z
     .string()
     .min(10, { message: 'Description must be more detailed' }),
-  report_role: z.string().min(1, { message: 'Report role is required' }),
-  report_type: z.string().min(1, { message: 'Report type is required' }),
+  report_role: z.string().optional(),
+  report_type: z.string().optional(),
   reportedId: z.string().min(1, { message: 'Reported ID is required' }),
   status: z.string().optional(),
   reportedById: z.string().optional(),
@@ -121,6 +114,8 @@ export function ReportForm({
 
       const finalPayload = {
         ...data,
+        report_role: data.report_role || user?.type || 'freelancer',
+        report_type: data.report_type || 'GENERAL',
         reportedById: user?.uid,
         status: 'OPEN',
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
@@ -156,7 +151,7 @@ export function ReportForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="flex flex-wrap gap-4">
-            <div className="flex-[2] min-w-[200px]">
+            <div className="w-full">
               <FormField
                 control={form.control}
                 name="subject"
@@ -175,64 +170,6 @@ export function ReportForm({
                         />
                       </InputGroup>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex-1 min-w-[150px]">
-              <FormField
-                control={form.control}
-                name="report_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label>Report Type</Label>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={() => {}}
-                      disabled
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-muted cursor-not-allowed h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={field.value}>
-                          {field.value}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex-1 min-w-[150px]">
-              <FormField
-                control={form.control}
-                name="report_role"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label>Role</Label>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={() => {}}
-                      disabled
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-muted cursor-not-allowed h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={field.value}>
-                          {field.value}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

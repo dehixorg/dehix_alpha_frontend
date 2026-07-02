@@ -5,22 +5,12 @@ import {
   Plus,
   FolderOpen,
   SendHorizontal,
-  // CalendarDays,
   Clock3,
   CalendarX2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-// import {
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   Tooltip,
-//   CartesianGrid,
-//   ResponsiveContainer,
-// } from 'recharts';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -39,20 +29,12 @@ import { ProjectCard } from '@/components/cards/projectCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { notifyError } from '@/utils/toastMessage';
-import { toast } from '@/components/ui/use-toast';
 import StatItem from '@/components/shared/StatItem';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
 import { useBusinessDashboardTour } from '@/components/tour/business/useBusinessDashTour';
 
-// Define the activity type
-// type Activity = {
-//   id: number;
-//   title: string;
-//   time: string;
-//   description: string;
-// };
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
@@ -83,11 +65,6 @@ export default function Dashboard() {
         console.error('API Error:', error);
         if (error.response?.status === 404) {
           setResponseData([]);
-          toast({
-            title: 'No projects found',
-            description:
-              'You have no projects currently. Please create a new project to get started.',
-          });
         } else {
           notifyError('Something went wrong. Please try again.', 'Error');
         }
@@ -104,38 +81,6 @@ export default function Dashboard() {
   );
 
   useBusinessDashboardTour(true);
-
-  // Sample data for the chart
-  // const chartData = [
-  //   { name: 'Jan', value: 65 },
-  //   { name: 'Feb', value: 59 },
-  //   { name: 'Mar', value: 80 },
-  //   { name: 'Apr', value: 81 },
-  //   { name: 'May', value: 56 },
-  //   { name: 'Jun', value: 55 },
-  // ];
-
-  // Sample activity data
-  // const activities: Activity[] = [
-  //   {
-  //     id: 1,
-  //     title: 'Project Review',
-  //     time: '10:30 AM',
-  //     description: 'Review design mockups with the team',
-  //   },
-  //   {
-  //     id: 2,
-  //     title: 'Client Meeting',
-  //     time: '2:00 PM',
-  //     description: 'Weekly sync with ABC Corp',
-  //   },
-  //   {
-  //     id: 3,
-  //     title: 'Project Delivery',
-  //     time: '4:45 PM',
-  //     description: 'Deliver final assets to client',
-  //   },
-  // ];
 
   return (
     <BusinessDashboardLayout
@@ -244,54 +189,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Project Performance Chart */}
-        {/* <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Project Performance</CardTitle>
-                  <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" className="h-8 gap-1">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      <span>This Month</span>
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#f0f0f0"
-                    />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip
-                      wrapperStyle={{ outline: 'none' }}
-                      contentStyle={{
-                        background: 'hsl(var(--popover))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: 6,
-                        color: 'hsl(var(--popover-foreground))',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                      }}
-                      labelStyle={{
-                        color: 'hsl(var(--popover-foreground))',
-                        fontWeight: 600,
-                      }}
-                      cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.2 }}
-                    />
-                    <Bar
-                      dataKey="value"
-                      barSize={12}
-                      fill="hsl(var(--primary))"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card> */}
         {/* Projects Section */}
         <Tabs
           defaultValue="current"
@@ -427,37 +324,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Upcoming Tasks */}
-        {/* <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Upcoming Tasks</CardTitle>
-                  <Button variant="ghost" size="sm" className="h-8">
-                    View All
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {activities.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                        <CalendarDays className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{activity.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {activity.description}
-                        </p>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {activity.time}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card> */}
         <div className="text-center py-10 w-full">
           <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
           <p className="text-gray-500">No interviews scheduled</p>
