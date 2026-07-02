@@ -180,6 +180,31 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
     return item.subItems?.some((subItem) => isActive(subItem.href));
   };
 
+  const activateMenuItem = (
+    label: string,
+    href?: string,
+    event?: React.MouseEvent<HTMLAnchorElement>,
+  ) => {
+    setActive(label);
+    if (!href?.includes('#') || typeof window === 'undefined') return;
+
+    const nextUrl = new URL(href, window.location.origin);
+    const currentUrl = new URL(window.location.href);
+    const isSamePage =
+      nextUrl.pathname === currentUrl.pathname &&
+      nextUrl.search === currentUrl.search;
+
+    if (!isSamePage) return;
+
+    event?.preventDefault();
+    window.history.pushState(
+      null,
+      '',
+      `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+    );
+    window.dispatchEvent(new Event('hashchange'));
+  };
+
   const finalMenuItemsTop = [...menuItemsTop];
 
   if (
@@ -227,7 +252,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   };
 
   const MenuIcon = ({ item }: { item: MenuItem }) => {
-    const shouldHighlight = isActive(item.href || '') || item.label === 'Dehix';
+    const shouldHighlight =
+      isActive(item.href || '') ||
+      item.label === active ||
+      item.label === 'Dehix';
 
     if (item.subItems) {
       return (
@@ -254,7 +282,9 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                 <Link
                   key={subIndex}
                   href={subItem.href}
-                  onClick={() => setActive(subItem.label)}
+                  onClick={(event) =>
+                    activateMenuItem(subItem.label, subItem.href, event)
+                  }
                   className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
                     isActive(subItem.href)
                       ? 'bg-accent text-accent-foreground'
@@ -280,7 +310,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
             <TooltipTrigger asChild>
               <button
                 onClick={item.onClick}
-                className={`flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors md:h-8 md:w-8`}
+                className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8 ${
+                  item.label === active
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
                 aria-label={item.label}
               >
                 {item.icon}
@@ -300,7 +334,9 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
           <TooltipTrigger asChild>
             <Link
               href={item.href ? item.href : ''}
-              onClick={() => setActive(item.label)}
+              onClick={(event) =>
+                activateMenuItem(item.label, item.href, event)
+              }
               data-tour={item.tourId}
               className={`flex h-9 w-9 items-center justify-center rounded-lg ${
                 shouldHighlight

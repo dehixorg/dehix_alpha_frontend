@@ -14,6 +14,7 @@ import {
   Trash2,
   Trophy,
   SendHorizontal,
+  RadioTower,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -56,6 +57,11 @@ export const menuItemsTop: MenuItem[] = [
     icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
     tourId: 'nav-projects',
+  },
+  {
+    href: '/freelancer/liveroom',
+    icon: <RadioTower className="h-5 w-5" />,
+    label: 'LiveRoom',
   },
   {
     href: '#',

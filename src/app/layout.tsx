@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 
 import './globals.css';
+import '@/features/liveroom/original/styles.css';
 import StoreProvider from './storeProvider';
 import { AuthProvider } from './AuthContext';
 

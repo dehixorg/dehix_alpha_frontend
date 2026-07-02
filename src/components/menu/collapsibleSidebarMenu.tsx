@@ -29,6 +29,31 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
   setActiveConversation,
   activeConversation,
 }) => {
+  const activateMenuItem = (
+    label: string,
+    href?: string,
+    event?: React.MouseEvent<HTMLAnchorElement>,
+  ) => {
+    setActive(label);
+    if (!href?.includes('#') || typeof window === 'undefined') return;
+
+    const nextUrl = new URL(href, window.location.origin);
+    const currentUrl = new URL(window.location.href);
+    const isSamePage =
+      nextUrl.pathname === currentUrl.pathname &&
+      nextUrl.search === currentUrl.search;
+
+    if (!isSamePage) return;
+
+    event?.preventDefault();
+    window.history.pushState(
+      null,
+      '',
+      `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+    );
+    window.dispatchEvent(new Event('hashchange'));
+  };
+
   const ChatAvatar = ({ conversation }: { conversation: any }) => {
     if (
       !conversation ||
@@ -81,7 +106,9 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
             <Link
               key={index}
               href={item.href ? item.href : ''}
-              onClick={() => setActive(item.label)}
+              onClick={(event) =>
+                activateMenuItem(item.label, item.href, event)
+              }
               className={`flex items-center gap-4 px-2.5 ${
                 item.label === 'Dehix'
                   ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
@@ -111,7 +138,9 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
             <React.Fragment key={index}>
               <Link
                 href={item.href ? item.href : ''}
-                onClick={() => setActive(item.label)}
+                onClick={(event) =>
+                  activateMenuItem(item.label, item.href, event)
+                }
                 className={`flex items-center gap-4 px-2.5 ${
                   item.label === 'Dehix'
                     ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'

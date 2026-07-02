@@ -25,6 +25,7 @@ interface HeaderProps {
   menuItemsTop: MenuItem[];
   menuItemsBottom: MenuItem[];
   activeMenu: string;
+  setActive?: (page: string) => void;
   breadcrumbItems?: BreadcrumbMenuItem[];
   searchPlaceholder?: string;
   setActiveConversation?: any;
@@ -41,6 +42,7 @@ const Header: React.FC<HeaderProps> = ({
   menuItemsTop,
   menuItemsBottom,
   activeMenu,
+  setActive,
   breadcrumbItems,
   searchPlaceholder,
   conversations,
@@ -200,6 +202,7 @@ const Header: React.FC<HeaderProps> = ({
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active={activeMenu}
+        setActive={setActive}
         setActiveConversation={setActiveConversation}
         conversations={conversations}
         activeConversation={activeConversation}
