@@ -529,6 +529,14 @@ function FreelancerRegisterForm({
             return;
           }
 
+          const latestValues = form.getValues();
+          if (
+            latestValues.userName !== userName ||
+            latestValues.email !== email
+          ) {
+            return;
+          }
+
           // 3. Email verification OTP
           if (isEmailVerified && verifiedEmail === email) {
             // Email already verified and matches, proceed to next step
@@ -965,7 +973,7 @@ function FreelancerRegisterForm({
                             max={300}
                             step={1}
                             placeholder="0"
-                            value={field.value ?? 0}
+                            value={field.value === 0 ? '' : (field.value ?? '')}
                             onChange={(e) => {
                               const v = e.target.value;
                               field.onChange(v === '' ? 0 : Number(v));

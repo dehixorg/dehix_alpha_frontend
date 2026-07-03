@@ -427,6 +427,17 @@ export default function ProfileDetailPage() {
       return;
     }
 
+    if (
+      (!editingProfileData.skills || editingProfileData.skills.length === 0) &&
+      (!editingProfileData.domains || editingProfileData.domains.length === 0)
+    ) {
+      notifyError(
+        'At least one skill or domain is required',
+        'Validation Error',
+      );
+      return;
+    }
+
     setIsUpdating(true);
     try {
       const updatePayload: any = {
@@ -860,13 +871,18 @@ export default function ProfileDetailPage() {
                         inputMode="decimal"
                         min="0"
                         step="1"
-                        value={editingProfileData.hourlyRate || ''}
-                        onChange={(e) =>
+                        value={
+                          editingProfileData.hourlyRate === 0
+                            ? ''
+                            : editingProfileData.hourlyRate || ''
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
                           handleInputChange(
                             'hourlyRate',
-                            parseFloat(e.target.value) || 0,
-                          )
-                        }
+                            val === '' ? 0 : parseFloat(val) || 0,
+                          );
+                        }}
                         placeholder="50"
                         className="pl-9"
                       />
