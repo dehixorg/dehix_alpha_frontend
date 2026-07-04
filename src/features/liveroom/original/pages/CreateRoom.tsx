@@ -82,8 +82,10 @@ type AnalysisResult = {
     competitive_moat?: string;
     revenue_model?: string;
     unit_economics?: string;
-    cost_estimation?: string;
+    cost_estimation?: any;
     go_to_market_strategy?: string;
+    core_mvp_features?: string[];
+    recommended_tech_stack?: string[];
     risks?: string[];
     suggestions?: string[];
     assumptions?: string[];
@@ -93,8 +95,8 @@ type AnalysisResult = {
       opportunities?: string[];
       threats?: string[];
     };
-    dimensional_scores?: Record<string, number>;
-    overall_score?: number;
+    dimensional_scores?: Record<string, any>;
+    overall_score?: any;
     final_verdict?: string;
     verdict_reasoning?: string;
   };
@@ -193,11 +195,11 @@ const EXAMPLE_PROMPTS = [
 ];
 
 const SCORE_LABELS: Record<string, string> = {
-  market_opportunity: 'Market opportunity',
-  problem_clarity: 'Problem clarity',
-  solution_differentiation: 'Differentiation',
-  execution_feasibility: 'Execution feasibility',
-  revenue_potential: 'Revenue potential',
+  scope_clarity: 'Scope clarity',
+  mvp_practicality: 'MVP practicality',
+  technical_feasibility: 'Technical feasibility',
+  resource_availability: 'Resource availability',
+  market_viability: 'Market viability',
 };
 
 const FALLBACK_MANDATORY_QUESTIONS: Question[] = [
@@ -277,7 +279,15 @@ function isPrimitive(value: unknown) {
 }
 
 function formatPrimitive(value: unknown) {
-  if (value === null || value === undefined) return 'Not available';
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'object') {
+    // Prevent [object Object] from ever rendering
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return '';
+    }
+  }
   return String(value);
 }
 
@@ -340,8 +350,7 @@ function TextBlock({ children }: { children?: ReactNode }) {
 }
 
 function BulletList({ items }: { items?: string[] }) {
-  if (!items || items.length === 0)
-    return <p className="text-sm text-muted-foreground">Not available</p>;
+  if (!items || items.length === 0) return null;
   return (
     <ul className="space-y-2">
       {items.map((item, index) => (
@@ -360,9 +369,42 @@ function BulletList({ items }: { items?: string[] }) {
 function KeyValueGrid({ data }: { data: Record<string, unknown> }) {
   const entries = Object.entries(data).filter(
     ([, value]) =>
-      value !== undefined && value !== null && !Array.isArray(value),
+      value !== undefined && value !== null,
   );
   if (entries.length === 0) return null;
+
+  const renderValue = (value: unknown): ReactNode => {
+    if (value === null || value === undefined) return '';
+    if (typeof value !== 'object') return String(value);
+    if (Array.isArray(value)) {
+      if (value.every(isPrimitive)) {
+        return value.map(v => String(v)).join(', ');
+      }
+      return (
+        <ul className="space-y-1">
+          {value.map((item, idx) => (
+            <li key={idx} className="text-sm leading-6 text-foreground">
+              {renderValue(item)}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    // nested object
+    return (
+      <div className="space-y-1 mt-1">
+        {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
+          <div key={k} className="pl-2 border-l-2 border-border/40 mb-1">
+            <span className="font-semibold text-muted-foreground capitalize text-xs">
+              {humanizeKey(k)}:{' '}
+            </span>
+            <span className="text-foreground/90 text-sm">{renderValue(v)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="grid gap-3 md:grid-cols-2">
       {entries.map(([key, value]) => (
@@ -374,7 +416,7 @@ function KeyValueGrid({ data }: { data: Record<string, unknown> }) {
             {humanizeKey(key)}
           </div>
           <div className="text-sm leading-6 text-foreground">
-            {formatPrimitive(value)}
+            {renderValue(value)}
           </div>
         </div>
       ))}
@@ -389,8 +431,7 @@ function SimpleTable({
   rows: Array<Record<string, unknown>>;
   columns: string[];
 }) {
-  if (rows.length === 0)
-    return <p className="text-xs text-muted-foreground">Not available</p>;
+  if (rows.length === 0) return null;
   return (
     <div className="overflow-hidden rounded-xl border border-border/50 bg-background/30 shadow-sm">
       <div className="overflow-x-auto">
@@ -995,7 +1036,7 @@ function BlueprintValue({ value }: { value: unknown }): ReactNode {
 
   if (Array.isArray(value)) {
     if (value.length === 0) {
-      return <p className="text-sm text-muted-foreground">Not available</p>;
+      return null;
     }
 
     if (value.every(isPrimitive)) {
@@ -1055,7 +1096,7 @@ function renderRoadmap(value: unknown) {
   const roadmap = asRecord(value);
   const phases = Object.entries(roadmap);
   if (phases.length === 0)
-    return <p className="text-xs text-muted-foreground">Not available</p>;
+    return null;
 
   return (
     <div className="relative border-l border-primary/25 pl-6 ml-3 space-y-6 py-2">
@@ -1095,13 +1136,51 @@ function renderRoadmap(value: unknown) {
 
 function renderCostEstimation(value: unknown) {
   const cost = asRecord(value);
+
+  const formatCurrency = (val: any) => {
+    if (val === undefined || val === null) return 'TBD';
+    const str = String(val);
+    const num = Number(str.replace(/[^0-9.-]+/g, ''));
+    if (!isNaN(num) && num > 0) {
+      return `$${num.toLocaleString('en-US')}`;
+    }
+    return str.includes('$') ? str : `$${str}`;
+  };
+
+  const renderNestedObject = (obj: any): ReactNode => {
+    if (typeof obj !== 'object' || obj === null) {
+      const valStr = String(obj);
+      if (!isNaN(Number(valStr)) && Number(valStr) > 100) return formatCurrency(valStr);
+      return valStr;
+    }
+    if (Array.isArray(obj)) {
+      return (
+        <ul className="list-disc pl-4 space-y-1">
+          {obj.map((item, idx) => (
+            <li key={idx}>{renderNestedObject(item)}</li>
+          ))}
+        </ul>
+      );
+    }
+    return (
+      <div className="space-y-1 mt-1">
+        {Object.entries(obj).map(([k, v]) => (
+          <div key={k} className="pl-2 border-l border-border/40 mb-1">
+            <span className="font-semibold text-muted-foreground capitalize text-[11px]">{k.replace(/_/g, ' ')}: </span>
+            <span className="text-foreground/90">{renderNestedObject(v)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         {Object.entries(cost)
           .filter(
-            ([, item]) =>
-              typeof item === 'object' && item !== null && !Array.isArray(item),
+            ([k, item]) =>
+              k !== 'major_cost_drivers' && item !== undefined && item !== null
           )
           .map(([key, item]) => (
             <div
@@ -1111,7 +1190,9 @@ function renderCostEstimation(value: unknown) {
               <h3 className="mb-3 text-xs font-bold text-foreground uppercase tracking-tight border-b border-border/20 pb-2">
                 {humanizeKey(key)}
               </h3>
-              <KeyValueGrid data={asRecord(item)} />
+              <div className="text-sm leading-6 text-foreground">
+                {renderNestedObject(item)}
+              </div>
             </div>
           ))}
       </div>
@@ -1575,12 +1656,15 @@ function AnalysisDetails({
       body: (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {Object.entries(SCORE_LABELS).map(([key, label]) => {
-            const rawVal = scores[key];
+            let rawVal = scores[key];
+            if (typeof rawVal === 'object' && rawVal !== null) {
+              rawVal = (rawVal as any).score ?? (rawVal as any).value ?? 0;
+            }
             const numVal =
               typeof rawVal === 'number'
                 ? rawVal
                 : parseFloat(String(rawVal)) || 0;
-            const displayVal = rawVal !== undefined ? rawVal : 'N/A';
+            const displayVal = rawVal !== undefined ? rawVal : '—';
 
             let colorClass =
               'text-amber-500 bg-amber-500/10 border-amber-500/20';
@@ -3192,11 +3276,11 @@ Please return ONLY the modified text itself, without any introductory or convers
                           className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider shadow-sm ${
                             research.final_verdict
                               .toLowerCase()
-                              .includes('viable')
+                              .includes('ready') || research.final_verdict.toLowerCase().includes('viable')
                               ? 'bg-green-500/10 text-green-500 border border-green-500/20'
                               : research.final_verdict
                                     .toLowerCase()
-                                    .includes('work')
+                                    .includes('scoping') || research.final_verdict.toLowerCase().includes('work')
                                 ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                                 : 'bg-red-500/10 text-red-500 border border-red-500/20'
                           }`}
@@ -3209,9 +3293,11 @@ Please return ONLY the modified text itself, without any introductory or convers
                       <h3 className="text-2xl font-bold text-foreground">
                         {research?.final_verdict
                           ?.toLowerCase()
-                          .includes('viable')
+                          .includes('ready') || research?.final_verdict?.toLowerCase().includes('viable')
                           ? 'Strong Potential'
-                          : 'Needs Refinement'}
+                          : research?.final_verdict?.toLowerCase().includes('scoping')
+                            ? 'Needs Refinement'
+                            : 'Needs Attention'}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {research?.verdict_reasoning ??
@@ -3245,7 +3331,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                             2 *
                             Math.PI *
                             40 *
-                            (1 - (research?.overall_score ?? 0) / 10)
+                            (1 - (typeof research?.overall_score === 'object' && research.overall_score !== null ? Number((research.overall_score as any).score ?? (research.overall_score as any).value) || 0 : Number(research?.overall_score) || 0) / 10)
                           }
                           strokeLinecap="round"
                           fill="transparent"
@@ -3253,7 +3339,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-2xl font-extrabold font-mono text-foreground leading-none">
-                          {research?.overall_score ?? 'N/A'}
+                          {typeof research?.overall_score === 'object' && research.overall_score !== null ? Number((research.overall_score as any).score ?? (research.overall_score as any).value) || '—' : Number(research?.overall_score) || '—'}
                         </span>
                         <span className="text-[10px] text-muted-foreground mt-0.5">
                           / 10

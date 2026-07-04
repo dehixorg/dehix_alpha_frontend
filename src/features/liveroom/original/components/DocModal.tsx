@@ -212,7 +212,7 @@ export function DocModal({ doc, onClose }: DocModalProps) {
 
           {/* Paper Footer Details */}
           <div className="border-t border-border/20 pt-6 mt-8 flex justify-between items-center text-[10px] text-muted-foreground">
-            <span>Workspace ID: {doc._id ?? 'N/A'}</span>
+            <span>Workspace ID: {doc._id ?? '—'}</span>
             <span>DEHIX Documentation Platform</span>
           </div>
         </div>
@@ -993,9 +993,26 @@ function renderFreelancerHiringBrief(teamData: any) {
   );
 }
 
-function renderRoadmapBudget(roadmapData: any, costData: any) {
+function renderRoadmapBudget(roadmapData: any, costData: any, regionHint?: string) {
   const hasRoadmap = roadmapData && Object.keys(roadmapData).length > 0;
   const hasCost = costData && Object.keys(costData).length > 0;
+
+  const formatCurrency = (val: any) => {
+    if (val === undefined || val === null) return 'TBD';
+    const str = String(val);
+    const num = Number(str.replace(/[^0-9.-]+/g, ''));
+    if (!isNaN(num) && num > 0) {
+      return `$${num.toLocaleString('en-US')}`;
+    }
+    return str.includes('$') ? str : `$${str}`;
+  };
+
+  const minBudget = costData?.mvp_budget?.minimum ?? costData?.mvp_budget_minimum ?? costData?.total_mvp_budget_range_usd?.min;
+  const expectedBudget = costData?.mvp_budget?.expected ?? costData?.mvp_budget_expected ?? (costData?.total_mvp_budget_range_usd?.max || costData?.total_mvp_budget_range_usd?.expected);
+  const highEndBudget = costData?.mvp_budget?.high_end ?? costData?.mvp_budget_high_end ?? costData?.total_mvp_budget_range_usd?.max;
+  const hasBudget = minBudget !== undefined || expectedBudget !== undefined || highEndBudget !== undefined;
+
+  const monthlyOps = costData?.monthly_operational_cost || (costData?.monthly_operational_expected !== undefined ? { expected: costData.monthly_operational_expected } : null);
 
   return (
     <div className="space-y-6 text-foreground font-sans animate-fadeIn text-left">
@@ -1010,28 +1027,33 @@ function renderRoadmapBudget(roadmapData: any, costData: any) {
             <h3 className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
               <DollarSign className="h-4 w-4 text-primary" /> Cost Estimation &
               Capital Requirement
+              {regionHint && (
+                <span className="ml-2 text-[9px] bg-muted px-2 py-0.5 rounded border border-border/50 text-foreground/70">
+                  Region: {regionHint}
+                </span>
+              )}
             </h3>
 
-            {costData.mvp_budget && (
+            {hasBudget && (
               <div className="grid gap-3 grid-cols-3">
                 {[
                   {
                     key: 'minimum',
                     label: 'Minimum Budget',
                     color: 'border-blue-500/20 bg-blue-500/5',
-                    text: costData.mvp_budget.minimum,
+                    text: minBudget,
                   },
                   {
                     key: 'expected',
                     label: 'Expected Budget',
                     color: 'border-emerald-500/30 bg-emerald-500/5',
-                    text: costData.mvp_budget.expected,
+                    text: expectedBudget,
                   },
                   {
                     key: 'high_end',
                     label: 'High-End Budget',
                     color: 'border-purple-500/20 bg-purple-500/5',
-                    text: costData.mvp_budget.high_end,
+                    text: highEndBudget,
                   },
                 ].map((item) => (
                   <div
@@ -1042,20 +1064,20 @@ function renderRoadmapBudget(roadmapData: any, costData: any) {
                       {item.label}
                     </span>
                     <div className="text-sm font-black text-foreground">
-                      {item.text || 'TBD'}
+                      {formatCurrency(item.text)}
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {costData.monthly_operational_cost && (
+            {monthlyOps && (
               <div className="pt-2">
                 <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-2">
                   Estimated Monthly Operations
                 </h4>
                 <div className="grid gap-3 grid-cols-3">
-                  {Object.entries(costData.monthly_operational_cost).map(
+                  {Object.entries(monthlyOps).map(
                     ([tier, value]: [string, any]) => {
                       const label = tier
                         .replace(/_/g, ' ')
@@ -1069,7 +1091,7 @@ function renderRoadmapBudget(roadmapData: any, costData: any) {
                             {label}
                           </span>
                           <div className="text-xs font-bold text-foreground mt-0.5">
-                            {value || 'TBD'}
+                            {formatCurrency(value)}
                           </div>
                         </div>
                       );
@@ -1162,7 +1184,11 @@ function JsonDocumentRenderer({
 
   if (isAnalysis) {
     const research = data.research_analysis ?? {};
-    const overallScore = research.overall_score;
+    let overallScoreVal = research.overall_score;
+    if (typeof overallScoreVal === 'object' && overallScoreVal !== null) {
+      overallScoreVal = overallScoreVal.score ?? overallScoreVal.value ?? 0;
+    }
+    const overallScore = Number(overallScoreVal) || 0;
     const finalVerdict = research.final_verdict;
     const verdictReasoning = research.verdict_reasoning;
     const swot = research.swot;
@@ -1276,7 +1302,12 @@ function JsonDocumentRenderer({
                       const label = key
                         .replace(/_/g, ' ')
                         .replace(/\b\w/g, (c) => c.toUpperCase());
-                      const score = Number(scoreVal) || 0;
+                      let score = 0;
+                      if (typeof scoreVal === 'object' && scoreVal !== null) {
+                        score = Number(scoreVal.score ?? scoreVal.value) || 0;
+                      } else {
+                        score = Number(scoreVal) || 0;
+                      }
                       return (
                         <div key={key} className="space-y-1">
                           <div className="flex items-center justify-between text-xs font-bold">
@@ -1389,67 +1420,92 @@ function JsonDocumentRenderer({
             Market Research & Strategy
           </h3>
           <div className="space-y-4">
-            {[
-              {
-                key: 'market_demand',
-                title: 'Market Demand Analysis',
-                icon: <TrendingUp className="h-4 w-4" />,
-              },
-              {
-                key: 'target_audience',
-                title: 'Target Audience',
-                icon: <Users className="h-4 w-4" />,
-              },
-              {
-                key: 'competitor_analysis',
-                title: 'Competitor Landscape',
-                icon: <Layers className="h-4 w-4" />,
-              },
-              {
-                key: 'competitive_moat',
-                title: 'Competitive Moat',
-                icon: <Award className="h-4 w-4" />,
-              },
-              {
-                key: 'revenue_model',
-                title: 'Revenue Model',
-                icon: <DollarSign className="h-4 w-4" />,
-              },
-              {
-                key: 'unit_economics',
-                title: 'Unit Economics',
-                icon: <DollarSign className="h-4 w-4" />,
-              },
-              {
-                key: 'cost_estimation',
-                title: 'Cost Estimation & Capital Requirement',
-                icon: <DollarSign className="h-4 w-4" />,
-              },
-              {
-                key: 'go_to_market_strategy',
-                title: 'Go To Market Strategy',
-                icon: <Clock className="h-4 w-4" />,
-              },
-            ].map(({ key, title, icon }) => {
-              const textContent = research[key];
-              if (!textContent) return null;
-              return (
-                <div
-                  key={key}
-                  className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-2 hover:border-border/60 transition-colors"
-                >
-                  <h4 className="text-xs font-bold text-foreground/90 flex items-center gap-2 border-b border-border/10 pb-1.5">
-                    <span className="p-1 rounded bg-primary/10 text-primary border border-primary/15">
-                      {icon}
-                    </span>
-                    {title}
-                  </h4>
-                  <p className="text-xs text-foreground/80 leading-relaxed text-justify whitespace-pre-line">
-                    {textContent}
-                  </p>
-                </div>
-              );
-            })}
+            {(() => {
+              const renderNestedObject = (obj: any): ReactNode => {
+                if (typeof obj !== 'object' || obj === null) return String(obj);
+                if (Array.isArray(obj)) {
+                  return (
+                    <ul className="list-disc pl-4 space-y-1">
+                      {obj.map((item, idx) => (
+                        <li key={idx}>{renderNestedObject(item)}</li>
+                      ))}
+                    </ul>
+                  );
+                }
+                return (
+                  <div className="space-y-1 mt-1">
+                    {Object.entries(obj).map(([k, v]) => (
+                      <div key={k} className="pl-2 border-l border-border/40 mb-1">
+                        <span className="font-semibold text-muted-foreground capitalize text-[11px]">{k.replace(/_/g, ' ')}: </span>
+                        <span className="text-foreground/90">{renderNestedObject(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              };
+
+              return [
+                {
+                  key: 'market_demand',
+                  title: 'Market Demand Analysis',
+                  icon: <TrendingUp className="h-4 w-4" />,
+                },
+                {
+                  key: 'target_audience',
+                  title: 'Target Audience',
+                  icon: <Users className="h-4 w-4" />,
+                },
+                {
+                  key: 'competitor_analysis',
+                  title: 'Competitor Landscape',
+                  icon: <Layers className="h-4 w-4" />,
+                },
+                {
+                  key: 'competitive_moat',
+                  title: 'Competitive Moat',
+                  icon: <Award className="h-4 w-4" />,
+                },
+                {
+                  key: 'revenue_model',
+                  title: 'Revenue Model',
+                  icon: <DollarSign className="h-4 w-4" />,
+                },
+                {
+                  key: 'unit_economics',
+                  title: 'Unit Economics',
+                  icon: <DollarSign className="h-4 w-4" />,
+                },
+                {
+                  key: 'cost_estimation',
+                  title: 'Cost Estimation & Capital Requirement',
+                  icon: <DollarSign className="h-4 w-4" />,
+                },
+                {
+                  key: 'go_to_market_strategy',
+                  title: 'Go To Market Strategy',
+                  icon: <Clock className="h-4 w-4" />,
+                },
+              ].map(({ key, title, icon }) => {
+                const textContent = research[key];
+                if (!textContent) return null;
+                return (
+                  <div
+                    key={key}
+                    className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-2 hover:border-border/60 transition-colors"
+                  >
+                    <h4 className="text-xs font-bold text-foreground/90 flex items-center gap-2 border-b border-border/10 pb-1.5">
+                      <span className="p-1 rounded bg-primary/10 text-primary border border-primary/15">
+                        {icon}
+                      </span>
+                      {title}
+                    </h4>
+                    <div className="text-xs text-foreground/80 leading-relaxed text-justify whitespace-pre-line">
+                      {typeof textContent === 'object' ? renderNestedObject(textContent) : String(textContent)}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
 
@@ -1757,7 +1813,8 @@ function JsonDocumentRenderer({
             <div className="space-y-6">
               {renderRoadmapBudget(
                 data.development_roadmap,
-                data.cost_estimation,
+                data.cost_estimation || data.cost_estimation_usd,
+                data.region_used || data.region
               )}
               {renderFreelancerHiringBrief(data.team_requirements)}
             </div>
@@ -1793,11 +1850,13 @@ function JsonDocumentRenderer({
   if (
     documentType === 'roadmap_budget' ||
     data.development_roadmap !== undefined ||
-    data.cost_estimation !== undefined
+    data.cost_estimation !== undefined ||
+    data.cost_estimation_usd !== undefined
   ) {
     return renderRoadmapBudget(
       data.development_roadmap || data,
-      data.cost_estimation || data,
+      data.cost_estimation || data.cost_estimation_usd || data,
+      data.region_used || data.region
     );
   }
 
