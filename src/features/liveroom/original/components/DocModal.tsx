@@ -993,7 +993,11 @@ function renderFreelancerHiringBrief(teamData: any) {
   );
 }
 
-function renderRoadmapBudget(roadmapData: any, costData: any, regionHint?: string) {
+function renderRoadmapBudget(
+  roadmapData: any,
+  costData: any,
+  regionHint?: string,
+) {
   const hasRoadmap = roadmapData && Object.keys(roadmapData).length > 0;
   const hasCost = costData && Object.keys(costData).length > 0;
 
@@ -1007,12 +1011,29 @@ function renderRoadmapBudget(roadmapData: any, costData: any, regionHint?: strin
     return str.includes('$') ? str : `$${str}`;
   };
 
-  const minBudget = costData?.mvp_budget?.minimum ?? costData?.mvp_budget_minimum ?? costData?.total_mvp_budget_range_usd?.min;
-  const expectedBudget = costData?.mvp_budget?.expected ?? costData?.mvp_budget_expected ?? (costData?.total_mvp_budget_range_usd?.max || costData?.total_mvp_budget_range_usd?.expected);
-  const highEndBudget = costData?.mvp_budget?.high_end ?? costData?.mvp_budget_high_end ?? costData?.total_mvp_budget_range_usd?.max;
-  const hasBudget = minBudget !== undefined || expectedBudget !== undefined || highEndBudget !== undefined;
+  const minBudget =
+    costData?.mvp_budget?.minimum ??
+    costData?.mvp_budget_minimum ??
+    costData?.total_mvp_budget_range_usd?.min;
+  const expectedBudget =
+    costData?.mvp_budget?.expected ??
+    costData?.mvp_budget_expected ??
+    (costData?.total_mvp_budget_range_usd?.max ||
+      costData?.total_mvp_budget_range_usd?.expected);
+  const highEndBudget =
+    costData?.mvp_budget?.high_end ??
+    costData?.mvp_budget_high_end ??
+    costData?.total_mvp_budget_range_usd?.max;
+  const hasBudget =
+    minBudget !== undefined ||
+    expectedBudget !== undefined ||
+    highEndBudget !== undefined;
 
-  const monthlyOps = costData?.monthly_operational_cost || (costData?.monthly_operational_expected !== undefined ? { expected: costData.monthly_operational_expected } : null);
+  const monthlyOps =
+    costData?.monthly_operational_cost ||
+    (costData?.monthly_operational_expected !== undefined
+      ? { expected: costData.monthly_operational_expected }
+      : null);
 
   return (
     <div className="space-y-6 text-foreground font-sans animate-fadeIn text-left">
@@ -1435,9 +1456,16 @@ function JsonDocumentRenderer({
                 return (
                   <div className="space-y-1 mt-1">
                     {Object.entries(obj).map(([k, v]) => (
-                      <div key={k} className="pl-2 border-l border-border/40 mb-1">
-                        <span className="font-semibold text-muted-foreground capitalize text-[11px]">{k.replace(/_/g, ' ')}: </span>
-                        <span className="text-foreground/90">{renderNestedObject(v)}</span>
+                      <div
+                        key={k}
+                        className="pl-2 border-l border-border/40 mb-1"
+                      >
+                        <span className="font-semibold text-muted-foreground capitalize text-[11px]">
+                          {k.replace(/_/g, ' ')}:{' '}
+                        </span>
+                        <span className="text-foreground/90">
+                          {renderNestedObject(v)}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -1500,7 +1528,9 @@ function JsonDocumentRenderer({
                       {title}
                     </h4>
                     <div className="text-xs text-foreground/80 leading-relaxed text-justify whitespace-pre-line">
-                      {typeof textContent === 'object' ? renderNestedObject(textContent) : String(textContent)}
+                      {typeof textContent === 'object'
+                        ? renderNestedObject(textContent)
+                        : String(textContent)}
                     </div>
                   </div>
                 );
@@ -1814,7 +1844,7 @@ function JsonDocumentRenderer({
               {renderRoadmapBudget(
                 data.development_roadmap,
                 data.cost_estimation || data.cost_estimation_usd,
-                data.region_used || data.region
+                data.region_used || data.region,
               )}
               {renderFreelancerHiringBrief(data.team_requirements)}
             </div>
@@ -1856,7 +1886,7 @@ function JsonDocumentRenderer({
     return renderRoadmapBudget(
       data.development_roadmap || data,
       data.cost_estimation || data.cost_estimation_usd || data,
-      data.region_used || data.region
+      data.region_used || data.region,
     );
   }
 

@@ -368,8 +368,7 @@ function BulletList({ items }: { items?: string[] }) {
 
 function KeyValueGrid({ data }: { data: Record<string, unknown> }) {
   const entries = Object.entries(data).filter(
-    ([, value]) =>
-      value !== undefined && value !== null,
+    ([, value]) => value !== undefined && value !== null,
   );
   if (entries.length === 0) return null;
 
@@ -378,7 +377,7 @@ function KeyValueGrid({ data }: { data: Record<string, unknown> }) {
     if (typeof value !== 'object') return String(value);
     if (Array.isArray(value)) {
       if (value.every(isPrimitive)) {
-        return value.map(v => String(v)).join(', ');
+        return value.map((v) => String(v)).join(', ');
       }
       return (
         <ul className="space-y-1">
@@ -1095,8 +1094,7 @@ function BlueprintValue({ value }: { value: unknown }): ReactNode {
 function renderRoadmap(value: unknown) {
   const roadmap = asRecord(value);
   const phases = Object.entries(roadmap);
-  if (phases.length === 0)
-    return null;
+  if (phases.length === 0) return null;
 
   return (
     <div className="relative border-l border-primary/25 pl-6 ml-3 space-y-6 py-2">
@@ -1150,7 +1148,8 @@ function renderCostEstimation(value: unknown) {
   const renderNestedObject = (obj: any): ReactNode => {
     if (typeof obj !== 'object' || obj === null) {
       const valStr = String(obj);
-      if (!isNaN(Number(valStr)) && Number(valStr) > 100) return formatCurrency(valStr);
+      if (!isNaN(Number(valStr)) && Number(valStr) > 100)
+        return formatCurrency(valStr);
       return valStr;
     }
     if (Array.isArray(obj)) {
@@ -1166,7 +1165,9 @@ function renderCostEstimation(value: unknown) {
       <div className="space-y-1 mt-1">
         {Object.entries(obj).map(([k, v]) => (
           <div key={k} className="pl-2 border-l border-border/40 mb-1">
-            <span className="font-semibold text-muted-foreground capitalize text-[11px]">{k.replace(/_/g, ' ')}: </span>
+            <span className="font-semibold text-muted-foreground capitalize text-[11px]">
+              {k.replace(/_/g, ' ')}:{' '}
+            </span>
             <span className="text-foreground/90">{renderNestedObject(v)}</span>
           </div>
         ))}
@@ -1180,7 +1181,7 @@ function renderCostEstimation(value: unknown) {
         {Object.entries(cost)
           .filter(
             ([k, item]) =>
-              k !== 'major_cost_drivers' && item !== undefined && item !== null
+              k !== 'major_cost_drivers' && item !== undefined && item !== null,
           )
           .map(([key, item]) => (
             <div
@@ -3276,11 +3277,17 @@ Please return ONLY the modified text itself, without any introductory or convers
                           className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider shadow-sm ${
                             research.final_verdict
                               .toLowerCase()
-                              .includes('ready') || research.final_verdict.toLowerCase().includes('viable')
+                              .includes('ready') ||
+                            research.final_verdict
+                              .toLowerCase()
+                              .includes('viable')
                               ? 'bg-green-500/10 text-green-500 border border-green-500/20'
                               : research.final_verdict
                                     .toLowerCase()
-                                    .includes('scoping') || research.final_verdict.toLowerCase().includes('work')
+                                    .includes('scoping') ||
+                                  research.final_verdict
+                                    .toLowerCase()
+                                    .includes('work')
                                 ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                                 : 'bg-red-500/10 text-red-500 border border-red-500/20'
                           }`}
@@ -3293,9 +3300,14 @@ Please return ONLY the modified text itself, without any introductory or convers
                       <h3 className="text-2xl font-bold text-foreground">
                         {research?.final_verdict
                           ?.toLowerCase()
-                          .includes('ready') || research?.final_verdict?.toLowerCase().includes('viable')
+                          .includes('ready') ||
+                        research?.final_verdict
+                          ?.toLowerCase()
+                          .includes('viable')
                           ? 'Strong Potential'
-                          : research?.final_verdict?.toLowerCase().includes('scoping')
+                          : research?.final_verdict
+                                ?.toLowerCase()
+                                .includes('scoping')
                             ? 'Needs Refinement'
                             : 'Needs Attention'}
                       </h3>
@@ -3331,7 +3343,15 @@ Please return ONLY the modified text itself, without any introductory or convers
                             2 *
                             Math.PI *
                             40 *
-                            (1 - (typeof research?.overall_score === 'object' && research.overall_score !== null ? Number((research.overall_score as any).score ?? (research.overall_score as any).value) || 0 : Number(research?.overall_score) || 0) / 10)
+                            (1 -
+                              (typeof research?.overall_score === 'object' &&
+                              research.overall_score !== null
+                                ? Number(
+                                    (research.overall_score as any).score ??
+                                      (research.overall_score as any).value,
+                                  ) || 0
+                                : Number(research?.overall_score) || 0) /
+                                10)
                           }
                           strokeLinecap="round"
                           fill="transparent"
@@ -3339,7 +3359,13 @@ Please return ONLY the modified text itself, without any introductory or convers
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-2xl font-extrabold font-mono text-foreground leading-none">
-                          {typeof research?.overall_score === 'object' && research.overall_score !== null ? Number((research.overall_score as any).score ?? (research.overall_score as any).value) || '—' : Number(research?.overall_score) || '—'}
+                          {typeof research?.overall_score === 'object' &&
+                          research.overall_score !== null
+                            ? Number(
+                                (research.overall_score as any).score ??
+                                  (research.overall_score as any).value,
+                              ) || '—'
+                            : Number(research?.overall_score) || '—'}
                         </span>
                         <span className="text-[10px] text-muted-foreground mt-0.5">
                           / 10
