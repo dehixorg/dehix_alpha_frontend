@@ -351,13 +351,6 @@ export const AtsScore: React.FC<ResumeScoreProps> = ({
             </div>
           )}
 
-          {aiLoading && (
-            <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Gemini is analyzing your current resume…
-            </div>
-          )}
-
           {aiTips && !aiLoading && (
             <div className="space-y-4">
               {aiTips.strengths.length > 0 && (
