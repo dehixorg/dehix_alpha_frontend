@@ -577,6 +577,26 @@ export async function liveRoomApiFetch(
       });
     }
 
+    const validationPdf = path.match(/^\/launch\/([^/]+)\/business-validation\.pdf$/);
+    if (validationPdf) {
+      return backend(`/liveroom/launch/${validationPdf[1]}/business-validation.pdf`, init);
+    }
+
+    const blueprintPdf = path.match(/^\/launch\/([^/]+)\/business-blueprint\.pdf$/);
+    if (blueprintPdf) {
+      return backend(`/liveroom/launch/${blueprintPdf[1]}/business-blueprint.pdf`, init);
+    }
+
+    const roomPdf = path.match(/^\/rooms\/([^/]+)\/documents\/([^/]+)\/pdf$/);
+    if (roomPdf) {
+      return backend(`/liveroom/rooms/${roomPdf[1]}/documents/${roomPdf[2]}/pdf`, init);
+    }
+
+    const roomZip = path.match(/^\/rooms\/([^/]+)\/documents-zip$/);
+    if (roomZip) {
+      return backend(`/liveroom/rooms/${roomZip[1]}/documents-zip`, init);
+    }
+
     if (
       path.includes('/commands/execute') ||
       path.includes('/document-permissions') ||

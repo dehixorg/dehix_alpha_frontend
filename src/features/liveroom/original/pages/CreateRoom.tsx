@@ -2232,6 +2232,15 @@ Please return ONLY the modified answer itself, without any introductory or conve
   }, [analysis, phase1ReviewTouched]);
 
   useEffect(() => {
+    if (sessionData?.technicalAnswers) {
+      setAnswers((prev) => ({
+        ...sessionData.technicalAnswers,
+        ...prev,
+      }));
+    }
+  }, [sessionData?.technicalAnswers]);
+
+  useEffect(() => {
     if (phase !== 'technical') {
       setActiveQuestion(null);
     }
