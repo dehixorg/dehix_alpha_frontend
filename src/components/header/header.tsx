@@ -19,7 +19,7 @@ import TourMenu from '@/components/tour/shared/TourMenu';
 import { RootState } from '@/lib/store';
 import type { TourTarget } from '@/lib/tourSlice';
 import { fetchAndUpdateConnects } from '@/lib/updateConnects';
-import { notifySuccess, notifyError } from '@/utils/toastMessage';
+import { notifyError } from '@/utils/toastMessage';
 
 interface HeaderProps {
   menuItemsTop: MenuItem[];
@@ -86,15 +86,7 @@ const Header: React.FC<HeaderProps> = ({
       if (balance != null) {
         setConnects(balance);
       } else {
-        const cachedBalance = await fetchConnects();
-        if (cachedBalance) {
-          notifySuccess('Connects data updated from cache', 'Updated');
-        } else if (cachedBalance === null) {
-          notifyError(
-            'Unable to refresh connects and no cached data found.',
-            'Error',
-          );
-        }
+        await fetchConnects();
       }
 
       // Refresh notifications only after connects refresh/fallback completes.

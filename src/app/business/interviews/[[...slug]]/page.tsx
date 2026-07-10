@@ -9,8 +9,6 @@ import {
   GraduationCap,
   Briefcase,
   UserPlus,
-  TrendingUp,
-  Users,
   UserCheck,
 } from 'lucide-react';
 import { BoxModelIcon } from '@radix-ui/react-icons';
@@ -33,7 +31,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { notifyError } from '@/utils/toastMessage';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import EmptyState from '@/components/shared/EmptyState';
 import InterviewItemCard from '@/components/freelancer/interview/InterviewItemCard';
 import ReviewBidsDetail from '@/components/business/interview/ReviewBidsDetail';
@@ -85,6 +83,11 @@ interface Meeting {
   interviewDate?: string;
   name?: string;
   talentName?: string;
+  projectId?: string;
+  intervieweeId?: string;
+  creatorId?: string;
+  interviewerId?: string;
+  price?: string;
 }
 
 const mapInterviewToMeeting = (interview: any): Meeting => {
@@ -143,6 +146,124 @@ const getInterviewStatus = (meeting: Meeting): InterviewStatus => {
     return 'history';
   }
 };
+
+function ProjectInterviewDecision({
+  projectId,
+  intervieweeId,
+}: {
+  projectId: string;
+  intervieweeId: string;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [bid, setBid] = useState<any>(null);
+  const [updating, setUpdating] = useState(false);
+
+  const fetchBidStatus = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get(`/bid/${projectId}/bids`);
+      const bids = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+          ? res.data
+          : [];
+      const myBid = bids.find(
+        (b: any) => String(b.bidder_id) === String(intervieweeId),
+      );
+      setBid(myBid || null);
+    } catch (err) {
+      console.error('Error fetching bid status:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (projectId && intervieweeId) {
+      fetchBidStatus();
+    }
+  }, [projectId, intervieweeId]);
+
+  const handleUpdateStatus = async (status: 'ACCEPTED' | 'REJECTED') => {
+    if (!bid?._id) return;
+    try {
+      setUpdating(true);
+      await axiosInstance.put(`/bid/${bid._id}/status`, { bid_status: status });
+      notifySuccess(
+        `Candidate status updated to ${status.toLowerCase()}!`,
+        'Success',
+      );
+      setBid((prev: any) => ({ ...prev, bid_status: status }));
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message || 'Failed to update candidate status';
+      notifyError(msg, 'Error');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="mt-2 text-xs text-muted-foreground animate-pulse">
+        Loading decision options...
+      </div>
+    );
+  }
+
+  if (!bid) {
+    return null;
+  }
+
+  const currentStatus = String(bid.bid_status || '').toUpperCase();
+
+  if (currentStatus === 'ACCEPTED') {
+    return (
+      <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-2.5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+          ✓ Freelancer Hired for Project
+        </span>
+      </div>
+    );
+  }
+
+  if (currentStatus === 'REJECTED') {
+    return (
+      <div className="mt-3 rounded-lg border border-red-200 bg-red-50/50 p-2.5 dark:border-red-900/50 dark:bg-red-950/20">
+        <span className="text-xs font-semibold text-red-700 dark:text-red-400">
+          ✕ Freelancer Rejected
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-lg border border-border bg-card p-3 shadow-sm">
+      <div className="text-xs font-semibold text-foreground/80 mb-2">
+        Project Decision after Interview
+      </div>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          className="flex-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+          onClick={() => handleUpdateStatus('ACCEPTED')}
+          disabled={updating}
+        >
+          {updating ? 'Processing...' : 'Hire'}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 text-xs border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/10 font-bold"
+          onClick={() => handleUpdateStatus('REJECTED')}
+          disabled={updating}
+        >
+          {updating ? 'Processing...' : 'Reject'}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function BusinessInterviewsPage() {
   const params = useParams();
@@ -253,20 +374,6 @@ export default function BusinessInterviewsPage() {
       iconClassName: 'bg-purple-500/10 text-purple-500',
     },
     {
-      key: 'GROWTH',
-      title: 'Growth',
-      description: 'Career growth interviews',
-      icon: TrendingUp,
-      iconClassName: 'bg-orange-500/10 text-orange-500',
-    },
-    {
-      key: 'PEERTOPEER',
-      title: 'Peer to Peer',
-      description: 'Peer to peer interviews',
-      icon: Users,
-      iconClassName: 'bg-indigo-500/10 text-indigo-500',
-    },
-    {
       key: 'INTERVIEWER',
       title: 'Interviewer',
       description: 'Interviews where you are the interviewer',
@@ -280,8 +387,6 @@ export default function BusinessInterviewsPage() {
       TALENT: [],
       PROJECT: [],
       HIRE: [],
-      GROWTH: [],
-      PEERTOPEER: [],
       INTERVIEWER: [],
     };
 
@@ -295,10 +400,6 @@ export default function BusinessInterviewsPage() {
         grouped['TALENT'].push(m);
       } else if (type === 'HIRE') {
         grouped['HIRE'].push(m);
-      } else if (type === 'GROWTH') {
-        grouped['GROWTH'].push(m);
-      } else if (type === 'PEERTOPEER') {
-        grouped['PEERTOPEER'].push(m);
       } else if (type === 'INTERVIEWER') {
         grouped['INTERVIEWER'].push(m);
       }
@@ -428,6 +529,17 @@ export default function BusinessInterviewsPage() {
                       >
                         Review Bids
                       </Button>
+                    ) : slug === 'history' &&
+                      (item.interviewType === 'PROJECT' ||
+                        item.interviewType === 'HIRE') &&
+                      item.projectId &&
+                      item.intervieweeId ? (
+                      <div className="max-w-[200px]">
+                        <ProjectInterviewDecision
+                          projectId={item.projectId}
+                          intervieweeId={item.intervieweeId}
+                        />
+                      </div>
                     ) : meetingLink ? (
                       <Button
                         variant="outline"
@@ -712,6 +824,22 @@ export default function BusinessInterviewsPage() {
                                                   </Button>
                                                 </div>
                                               )}
+                                              {slug === 'history' &&
+                                                (meeting.interviewType ===
+                                                  'PROJECT' ||
+                                                  meeting.interviewType ===
+                                                    'HIRE') &&
+                                                meeting.projectId &&
+                                                meeting.intervieweeId && (
+                                                  <ProjectInterviewDecision
+                                                    projectId={
+                                                      meeting.projectId
+                                                    }
+                                                    intervieweeId={
+                                                      meeting.intervieweeId
+                                                    }
+                                                  />
+                                                )}
                                             </div>
                                           ))}
                                         </div>
