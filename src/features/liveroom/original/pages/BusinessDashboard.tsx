@@ -39,7 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function BusinessDashboard() {
   const [, navigate] = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const { data: rooms, isLoading } = useGetMyRooms({
     query: { enabled: isAuthenticated, queryKey: getGetMyRoomsQueryKey() },
@@ -63,7 +63,6 @@ export default function BusinessDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Please sign in</p>
-          <Button onClick={() => navigate('/login')}>Sign in</Button>
         </div>
       </div>
     );
@@ -225,20 +224,6 @@ export default function BusinessDashboard() {
             </Button>
             <Button size="sm" onClick={() => navigate('/room/create')}>
               New Live Room
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setProfileName(user?.name ?? '');
-                setProfileWallet((user as any)?.walletAddress ?? '');
-                setEditingProfile(true);
-              }}
-            >
-              Edit Profile
-            </Button>
-            <Button variant="ghost" size="sm" onClick={logout}>
-              Sign out
             </Button>
           </div>
         </div>
@@ -612,14 +597,16 @@ export default function BusinessDashboard() {
                             <Play className="h-3 w-3 fill-current" /> Contract
                           </button>
                         )}
-                        <button
-                          onClick={(e) => void deleteRoom(e, room)}
-                          disabled={deletingRoomId === room._id}
-                          className="text-[11px] text-red-500 dark:text-red-400 border border-red-500/25 hover:border-red-500/40 bg-red-500/5 hover:bg-red-500/10 rounded px-2.5 py-1 font-bold transition-all shadow-sm flex items-center gap-1 disabled:opacity-50"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          {deletingRoomId === room._id ? 'Deleting' : 'Delete'}
-                        </button>
+                        {(!room.joinedParticipantCount || room.joinedParticipantCount === 0) && (
+                          <button
+                            onClick={(e) => void deleteRoom(e, room)}
+                            disabled={deletingRoomId === room._id}
+                            className="text-[11px] text-red-500 dark:text-red-400 border border-red-500/25 hover:border-red-500/40 bg-red-500/5 hover:bg-red-500/10 rounded px-2.5 py-1 font-bold transition-all shadow-sm flex items-center gap-1 disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            {deletingRoomId === room._id ? 'Deleting' : 'Delete'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

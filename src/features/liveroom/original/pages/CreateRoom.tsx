@@ -195,11 +195,11 @@ const EXAMPLE_PROMPTS = [
 ];
 
 const SCORE_LABELS: Record<string, string> = {
-  scope_clarity: 'Scope clarity',
-  mvp_practicality: 'MVP practicality',
-  technical_feasibility: 'Technical feasibility',
-  resource_availability: 'Resource availability',
-  market_viability: 'Market viability',
+  market_opportunity: 'Market opportunity',
+  problem_clarity: 'Problem clarity',
+  solution_differentiation: 'Solution differentiation',
+  execution_feasibility: 'Execution feasibility',
+  revenue_potential: 'Revenue potential',
 };
 
 const FALLBACK_MANDATORY_QUESTIONS: Question[] = [
@@ -2411,7 +2411,6 @@ Please return ONLY the modified answer itself, without any introductory or conve
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-3">
           <p className="text-muted-foreground">Business account required</p>
-          <Button onClick={() => navigate('/login')}>Sign in</Button>
         </div>
       </div>
     );
@@ -3092,7 +3091,10 @@ Please return ONLY the modified text itself, without any introductory or convers
             {sessionData?.projectTitle && (
               <>
                 <span className="text-border shrink-0">/</span>
-                <span className="text-sm text-muted-foreground truncate max-w-[240px]">
+                <span
+                  className="text-sm text-muted-foreground truncate max-w-[500px] cursor-help"
+                  title={sessionData.projectTitle}
+                >
                   {sessionData.projectTitle}
                 </span>
               </>

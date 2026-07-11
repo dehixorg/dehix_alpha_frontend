@@ -4,6 +4,7 @@ const API_BASE = (
   process.env.NEXT_PUBLIC__BASE_URL || 'http://localhost:8080'
 ).replace(/\/+$/, '');
 let nativeFetch: typeof fetch | null = null;
+const originalFetch = typeof window !== 'undefined' ? window.fetch : null;
 let fetchBridgeRefCount = 0;
 let restoreNativeFetch: typeof fetch | null = null;
 
@@ -44,7 +45,10 @@ async function backend(path: string, init: RequestInit = {}) {
   Object.entries(authHeaders()).forEach(([key, value]) =>
     headers.set(key, value),
   );
-  return (nativeFetch || fetch)(`${API_BASE}${path}`, { ...init, headers });
+  return (nativeFetch || originalFetch || fetch)(`${API_BASE}${path}`, {
+    ...init,
+    headers,
+  });
 }
 
 async function backendJson(path: string, init: RequestInit = {}) {
@@ -91,6 +95,7 @@ export function transformRoom(room: any) {
     ticketStats: room.ticketStats || { total: 0, done: 0 },
     milestoneStats: room.milestoneStats || { totalUsd: 0, releasedUsd: 0 },
     participantCount: room.participantCount || 0,
+    joinedParticipantCount: room.joinedParticipantCount || 0,
     roleCount: room.roleCount || room.roles?.length || 0,
   };
 }
@@ -242,12 +247,18 @@ function transformWorkspace(payload: any) {
           canView: doc.canView !== false,
         })),
       })),
-    currentUserAccess: workspace.currentUserAccess ||
-      workspace.access || {
-        isOwner: false,
-        canManageDocuments: false,
-        canSeeAllChannels: false,
-      },
+    currentUserAccess: workspace.currentUserAccess
+      ? {
+          ...workspace.currentUserAccess,
+          status: workspace.currentUserAccess.status
+            ? lower(workspace.currentUserAccess.status)
+            : null,
+        }
+      : {
+          isOwner: false,
+          canManageDocuments: false,
+          canSeeAllChannels: false,
+        },
   };
 }
 
@@ -270,7 +281,7 @@ export async function liveRoomApiFetch(
         ? input.toString()
         : input.url;
   if (!rawUrl.startsWith('/api/')) {
-    return (nativeFetch || fetch)(input, init);
+    return (nativeFetch || originalFetch || fetch)(input, init);
   }
 
   const url = new URL(rawUrl, window.location.origin);
@@ -564,32 +575,164 @@ export async function liveRoomApiFetch(
       });
     }
 
-    if (path.includes('/commands/preview')) {
-      return jsonResponse({
-        commandId: `placeholder-${Date.now()}`,
-        action: 'not_synced',
-        summary:
-          'This LiveRoom command UI is preserved. Command execution will be synced in the next backend pass.',
-        targets: [],
-        warnings: ['Backend command sync is not enabled yet.'],
-        requiresConfirmation: false,
-        payload: {},
-      });
+    const customChannelMatch = path.match(/^\/rooms\/([^/]+)\/channels$/);
+    if (customChannelMatch && method === 'POST') {
+      const body = await parseJson(init);
+      const data = await backendJson(
+        `/liveroom/rooms/${customChannelMatch[1]}/channels`,
+        {
+          method: 'POST',
+          body: JSON.stringify(body),
+        },
+      );
+      return jsonResponse(data);
     }
 
-    const validationPdf = path.match(/^\/launch\/([^/]+)\/business-validation\.pdf$/);
+    const customChannelEditMatch = path.match(
+      /^\/rooms\/([^/]+)\/channels\/([^/]+)$/,
+    );
+    if (customChannelEditMatch && method === 'PATCH') {
+      const body = await parseJson(init);
+      const data = await backendJson(
+        `/liveroom/rooms/${customChannelEditMatch[1]}/channels/${customChannelEditMatch[2]}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        },
+      );
+      return jsonResponse(data);
+    }
+
+    const commandsPreview = path.match(/^\/rooms\/([^/]+)\/commands\/preview$/);
+    if (commandsPreview && method === 'POST') {
+      const body = await parseJson(init);
+      const data = await backendJson(
+        `/liveroom/rooms/${commandsPreview[1]}/commands/preview`,
+        {
+          method: 'POST',
+          body: JSON.stringify(body),
+        },
+      );
+      return jsonResponse(data);
+    }
+
+    const commandsExecute = path.match(/^\/rooms\/([^/]+)\/commands\/execute$/);
+    if (commandsExecute && method === 'POST') {
+      const body = await parseJson(init);
+      const data = await backendJson(
+        `/liveroom/rooms/${commandsExecute[1]}/commands/execute`,
+        {
+          method: 'POST',
+          body: JSON.stringify(body),
+        },
+      );
+      return jsonResponse(data);
+    }
+
+    const docPerms = path.match(/^\/rooms\/([^/]+)\/document-permissions$/);
+    if (docPerms && method === 'PATCH') {
+      const body = await parseJson(init);
+      const data = await backendJson(
+        `/liveroom/participants/${body.participantId}/permissions`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            docType: body.docType,
+            allowed: body.canView,
+          }),
+        },
+      );
+      return jsonResponse(data);
+    }
+
+    const interviewMeet = path.match(
+      /^\/rooms\/([^/]+)\/interviews\/([^/]+)\/meet$/,
+    );
+    if (interviewMeet && method === 'POST') {
+      const body = await parseJson(init);
+      const data = await backendJson(
+        `/liveroom/rooms/${interviewMeet[1]}/interviews/${interviewMeet[2]}/meet`,
+        {
+          method: 'POST',
+          body: JSON.stringify(body),
+        },
+      );
+      return jsonResponse(data);
+    }
+
+    const interviewStatus = path.match(/^\/rooms\/([^/]+)\/interviews\/([^/]+)$/);
+    if (interviewStatus && method === 'PATCH') {
+      const body = await parseJson(init);
+      const data = await backendJson(
+        `/liveroom/rooms/${interviewStatus[1]}/interviews/${interviewStatus[2]}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        },
+      );
+      return jsonResponse(data);
+    }
+
+    const offersMatch = path.match(/^\/rooms\/([^/]+)\/offers$/);
+    if (offersMatch) {
+      if (method === 'GET') {
+        const data = await backendJson(
+          `/liveroom/rooms/${offersMatch[1]}/offers`,
+        );
+        return jsonResponse(data);
+      }
+      if (method === 'POST') {
+        const body = await parseJson(init);
+        const data = await backendJson(
+          `/liveroom/rooms/${offersMatch[1]}/offers`,
+          {
+            method: 'POST',
+            body: JSON.stringify(body),
+          },
+        );
+        return jsonResponse(data);
+      }
+    }
+
+    const offerRespond = path.match(/^\/offers\/([^/]+)\/respond$/);
+    if (offerRespond && method === 'PUT') {
+      const body = await parseJson(init);
+      const data = await backendJson(
+        `/liveroom/offers/${offerRespond[1]}/respond`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(body),
+        },
+      );
+      return jsonResponse(data);
+    }
+
+    const validationPdf = path.match(
+      /^\/launch\/([^/]+)\/business-validation\.pdf$/,
+    );
     if (validationPdf) {
-      return backend(`/liveroom/launch/${validationPdf[1]}/business-validation.pdf`, init);
+      return backend(
+        `/liveroom/launch/${validationPdf[1]}/business-validation.pdf`,
+        init,
+      );
     }
 
-    const blueprintPdf = path.match(/^\/launch\/([^/]+)\/business-blueprint\.pdf$/);
+    const blueprintPdf = path.match(
+      /^\/launch\/([^/]+)\/business-blueprint\.pdf$/,
+    );
     if (blueprintPdf) {
-      return backend(`/liveroom/launch/${blueprintPdf[1]}/business-blueprint.pdf`, init);
+      return backend(
+        `/liveroom/launch/${blueprintPdf[1]}/business-blueprint.pdf`,
+        init,
+      );
     }
 
     const roomPdf = path.match(/^\/rooms\/([^/]+)\/documents\/([^/]+)\/pdf$/);
     if (roomPdf) {
-      return backend(`/liveroom/rooms/${roomPdf[1]}/documents/${roomPdf[2]}/pdf`, init);
+      return backend(
+        `/liveroom/rooms/${roomPdf[1]}/documents/${roomPdf[2]}/pdf`,
+        init,
+      );
     }
 
     const roomZip = path.match(/^\/rooms\/([^/]+)\/documents-zip$/);
@@ -597,18 +740,33 @@ export async function liveRoomApiFetch(
       return backend(`/liveroom/rooms/${roomZip[1]}/documents-zip`, init);
     }
 
-    if (
-      path.includes('/commands/execute') ||
-      path.includes('/document-permissions') ||
-      path.includes('/offers') ||
-      path.includes('/interviews') ||
-      path.includes('/documents-zip') ||
-      path.endsWith('.pdf')
-    ) {
+    const roomDeleteMatch = path.match(/^\/rooms\/([^/]+)$/);
+    if (roomDeleteMatch && method === 'DELETE') {
+      const data = await backendJson(
+        `/liveroom/rooms/${roomDeleteMatch[1]}`,
+        {
+          method: 'DELETE',
+        },
+      );
+      return jsonResponse(data);
+    }
+
+    if (path.includes('/documents-zip') || path.endsWith('.pdf')) {
       return jsonResponse({
         message:
           'This LiveRoom action will be synced in the next backend phase.',
       });
+    }
+
+    const ndaSign = path.match(/^\/rooms\/([^/]+)\/nda\/sign$/);
+    if (ndaSign && method === 'PUT') {
+      const data = await backendJson(
+        `/liveroom/rooms/${ndaSign[1]}/nda/sign`,
+        {
+          method: 'PUT',
+        },
+      );
+      return jsonResponse(data);
     }
 
     const inviteRespond = path.match(/^\/talent\/invites\/([^/]+)\/respond$/);

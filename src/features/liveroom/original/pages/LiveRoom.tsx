@@ -308,6 +308,11 @@ export default function LiveRoomPage() {
     useState<string[]>([]);
   const [channelSaving, setChannelSaving] = useState(false);
   const [publishingProject, setPublishingProject] = useState(false);
+  const [respondingOfferId, setRespondingOfferId] = useState<string | null>(null);
+  const [signingNda, setSigningNda] = useState(false);
+  const [showNdaModal, setShowNdaModal] = useState(false);
+  const [hasReadNda, setHasReadNda] = useState(false);
+  const [respondingInvite, setRespondingInvite] = useState(false);
 
   const selectedChannel = useMemo(
     () =>
@@ -317,6 +322,12 @@ export default function LiveRoomPage() {
     [workspace, selectedChannelId],
   );
   const isOwner = Boolean(workspace?.currentUserAccess?.isOwner);
+  const visibleDocuments = useMemo(() => {
+    if (!workspace?.documents) return [];
+    return isOwner
+      ? workspace.documents
+      : workspace.documents.filter((doc) => doc.canView);
+  }, [workspace?.documents, isOwner]);
   const room = workspace?.room;
 
   useEffect(() => {
@@ -342,7 +353,22 @@ export default function LiveRoomPage() {
   // Sorting logic from old codebase
   const sortedChannels = useMemo(() => {
     if (!workspace?.channels) return [];
-    return [...workspace.channels].sort((a, b) => {
+    let channels = [...workspace.channels];
+    if (!isOwner && !workspace?.currentUserAccess?.canSeeAllChannels) {
+      const participant = workspace.participants?.find(
+        (p: any) =>
+          String(p.userId?._id ?? p.talentId ?? p.userId) === String(user?._id),
+      );
+      channels = channels.filter(
+        (channel) =>
+          channel.type === 'general' ||
+          channel.name === 'general' ||
+          (channel.participantIds ?? []).map(String).includes(String(user?._id)) ||
+          (participant && (channel.participantIds ?? []).map(String).includes(String(participant._id))) ||
+          (channel.roleId && participant && String(channel.roleId) === String(participant.roleId)),
+      );
+    }
+    return channels.sort((a, b) => {
       const order = {
         general: 0,
         ai: 1,
@@ -356,7 +382,7 @@ export default function LiveRoomPage() {
       if (b.name === 'general') return 1;
       return a.displayName.localeCompare(b.displayName);
     });
-  }, [workspace?.channels]);
+  }, [workspace?.channels, workspace?.participants, workspace?.currentUserAccess, isOwner, user?._id]);
 
   // Filtering for access control panel
   const filteredMatrix = useMemo(() => {
@@ -391,18 +417,28 @@ export default function LiveRoomPage() {
     [sortedChannels],
   );
 
-  const talentParticipants = useMemo(
-    () =>
-      (workspace?.participants ?? []).filter(
+  const talentParticipants = useMemo(() => {
+    const list = workspace?.participants ?? [];
+    if (isOwner) {
+      return list.filter(
         (participant: any) =>
           String(
             participant.userId?._id ??
               participant.talentId ??
               participant.userId,
           ) !== String(room?.businessId),
-      ),
-    [workspace, room?.businessId],
-  );
+      );
+    }
+    // Freelancer: defensively only see themselves
+    return list.filter(
+      (participant: any) =>
+        String(
+          participant.userId?._id ??
+            participant.talentId ??
+            participant.userId,
+        ) === String(user?._id),
+    );
+  }, [workspace, room?.businessId, isOwner, user?._id]);
 
   const commandSuggestions = useMemo(() => {
     if (!isOwner) return [{ command: '/help', label: 'Show commands' }];
@@ -411,6 +447,7 @@ export default function LiveRoomPage() {
       selectedChannel?.type === 'custom';
     return [
       { command: '/interview @', label: 'Create interview channel' },
+      { command: '/dm @', label: 'Create direct message channel' },
       ...(canManageCurrentChannel
         ? [{ command: '/add @', label: 'Add talent to channel' }]
         : []),
@@ -474,10 +511,10 @@ export default function LiveRoomPage() {
   const roomOffers = workspace?.offers ?? [];
 
   useEffect(() => {
-    if (workspace?.documents.length && expandedDocType === null) {
-      setExpandedDocType(workspace.documents[0].docType);
+    if (visibleDocuments.length && expandedDocType === null) {
+      setExpandedDocType(visibleDocuments[0].docType);
     }
-  }, [workspace, expandedDocType]);
+  }, [visibleDocuments, expandedDocType]);
 
   const mergeMessage = (incoming: RoomMessage) => {
     setMessages((prev) => {
@@ -753,7 +790,7 @@ export default function LiveRoomPage() {
   };
 
   const runParticipantCommand = (
-    action: 'interview' | 'hire' | 'remove',
+    action: 'interview' | 'hire' | 'remove' | 'dm',
     participant: any,
   ) => {
     const person = participant.user ?? participant.userId;
@@ -771,7 +808,7 @@ export default function LiveRoomPage() {
   const createMeet = async () => {
     if (
       !selectedChannel ||
-      selectedChannel.type !== 'interview' ||
+      selectedChannel.type === 'ai' ||
       commandLoading
     )
       return;
@@ -794,7 +831,7 @@ export default function LiveRoomPage() {
   const shareMeetLink = async () => {
     if (
       !selectedChannel ||
-      selectedChannel.type !== 'interview' ||
+      selectedChannel.type === 'ai' ||
       commandLoading
     )
       return;
@@ -935,36 +972,54 @@ export default function LiveRoomPage() {
   };
 
   const canSendOfferToParticipant = (participant: any) => {
-    if (
-      !selectedChannel ||
-      selectedChannel.type !== 'interview' ||
-      selectedChannel.interviewStatus !== 'completed'
-    )
-      return false;
-    return selectedChannelParticipants.some(
-      (item: any) => String(item._id) === String(participant._id),
+    const person = participant.user ?? participant.userId;
+    const freelancerId = String(
+      person?._id ?? participant.talentId ?? participant.userId,
+    );
+    return (
+      workspace?.channels.some(
+        (channel) =>
+          channel.type === 'interview' &&
+          channel.participantIds.map(String).includes(freelancerId),
+      ) ?? false
     );
   };
 
+  const hasDmChannel = (participant: any) => {
+    const person = participant.user ?? participant.userId;
+    const freelancerId = String(
+      person?._id ?? participant.talentId ?? participant.userId,
+    );
+    return (
+      workspace?.channels.some(
+        (channel) =>
+          channel.type === 'direct' &&
+          channel.participantIds.map(String).includes(freelancerId),
+      ) ?? false
+    );
+  };
+ 
   const openOfferForm = (participant?: any) => {
-    if (!selectedChannel || selectedChannel.type !== 'interview') {
-      toast.error('Select an interview channel first');
-      return;
-    }
-    if (selectedChannel.interviewStatus !== 'completed') {
-      toast.error('Mark the interview complete before sending an offer');
-      return;
-    }
     const target = participant ?? selectedChannelParticipants[0];
     if (!target) {
-      toast.error('No interview participant selected');
+      toast.error('No participant selected');
       return;
     }
     const person = target.user ?? target.userId;
-    const role = participantRole(target);
-    setOfferCandidateId(
-      String(person?._id ?? target.talentId ?? target.userId),
+    const freelancerId = String(
+      person?._id ?? target.talentId ?? target.userId,
     );
+    const interviewChannel = workspace?.channels.find(
+      (channel) =>
+        channel.type === 'interview' &&
+        channel.participantIds.map(String).includes(freelancerId),
+    );
+    if (!interviewChannel) {
+      toast.error('Please create an interview channel for this talent first.');
+      return;
+    }
+    const role = participantRole(target);
+    setOfferCandidateId(freelancerId);
     setOfferDraft({
       amountUsd: '',
       rateType: 'fixed',
@@ -976,6 +1031,7 @@ export default function LiveRoomPage() {
         'Milestone releases are simulated in DEHIX until a real payment gateway is connected. Final IP transfers after accepted milestone release.',
       milestonePlanText: '',
     });
+    setSelectedChannelId(interviewChannel._id);
     setShowOfferForm(true);
   };
 
@@ -1033,7 +1089,7 @@ export default function LiveRoomPage() {
           amountUsd: offerDraft.amountUsd
             ? Number(offerDraft.amountUsd)
             : undefined,
-          rateType: offerDraft.rateType,
+          rateType: String(offerDraft.rateType || 'fixed').toUpperCase(),
           rateAmountUsd: offerDraft.rateAmountUsd
             ? Number(offerDraft.rateAmountUsd)
             : undefined,
@@ -1053,6 +1109,75 @@ export default function LiveRoomPage() {
       toast.error(err.message ?? 'Failed to send offer');
     } finally {
       setOfferSubmitting(false);
+    }
+  };
+
+  const handleRespondToOffer = async (offerId: string, action: 'accept' | 'decline') => {
+    if (action === 'accept') {
+      const hasNda = !!workspace?.nda;
+      const ndaSigned = workspace?.nda?.signedBy?.includes(user?._id);
+      if (hasNda && !ndaSigned) {
+        toast.error('Please read and sign the NDA agreement first.');
+        setShowNdaModal(true);
+        setHasReadNda(false);
+        return;
+      }
+    }
+    setRespondingOfferId(offerId);
+    try {
+      const res = await fetch(`/api/offers/${offerId}/respond`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? `Failed to ${action} offer`);
+      toast.success(`Offer ${action}ed successfully`);
+      await loadWorkspace(selectedChannelId, true);
+    } catch (err: any) {
+      toast.error(err.message ?? `Failed to ${action} offer`);
+    } finally {
+      setRespondingOfferId(null);
+    }
+  };
+
+  const handleSignNda = async () => {
+    setSigningNda(true);
+    try {
+      const res = await fetch(`/api/rooms/${roomId}/nda/sign`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? 'Failed to sign NDA');
+      toast.success('NDA agreement signed successfully');
+      await loadWorkspace(selectedChannelId, true);
+      setShowNdaModal(false);
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to sign NDA');
+    } finally {
+      setSigningNda(false);
+    }
+  };
+
+  const handleRespondInvite = async (action: 'accept' | 'decline') => {
+    const participantId = workspace?.currentUserAccess?.participantId;
+    if (!participantId) return;
+    setRespondingInvite(true);
+    try {
+      const res = await fetch(`/api/talent/invites/${participantId}/respond`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? `Failed to ${action} invitation`);
+      toast.success(`Invitation ${action}ed successfully`);
+      await loadWorkspace(selectedChannelId, true);
+    } catch (err: any) {
+      toast.error(err.message ?? `Failed to ${action} invitation`);
+    } finally {
+      setRespondingInvite(false);
     }
   };
 
@@ -1414,7 +1539,6 @@ export default function LiveRoomPage() {
           <p className="text-sm text-muted-foreground">
             Please sign in to join this room
           </p>
-          <Button onClick={() => navigate('/login')}>Sign in</Button>
         </div>
       </div>
     );
@@ -1455,13 +1579,49 @@ export default function LiveRoomPage() {
 
   return (
     <>
-      <div className="h-screen bg-background text-foreground flex overflow-hidden">
+      <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
+        {/* Accept/Decline Invitation Banner for Freelancers */}
+        {!isOwner && workspace?.currentUserAccess?.status === 'invited' && (
+          <div className="bg-primary/10 border-b border-primary/20 px-6 py-3 shrink-0 flex items-center justify-between gap-4 animate-slideDown shadow-sm">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <Shield className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-foreground">
+                  You have been invited to join this LiveRoom
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  Accept the invitation to join project channels and start collaborating.
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                disabled={respondingInvite}
+                onClick={() => void handleRespondInvite('accept')}
+                className="rounded-lg bg-primary hover:bg-primary/95 text-primary-foreground px-4 py-1.5 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-sm active:scale-95"
+              >
+                {respondingInvite ? 'Joining...' : 'Accept & Join'}
+              </button>
+              <button
+                disabled={respondingInvite}
+                onClick={() => void handleRespondInvite('decline')}
+                className="rounded-lg border border-border/40 hover:bg-muted bg-background px-4 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 flex overflow-hidden">
         {/* Left Side Panel - Secondary Sidebar (280px) */}
         <aside className="w-[280px] shrink-0 border-r border-border/40 bg-card/30 flex flex-col">
           {/* Header of Secondary Sidebar */}
           <div className="h-14 px-4 border-b border-border/40 flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold truncate">{room.title}</div>
+              <div className="text-sm font-bold truncate" title={room.title}>{room.title}</div>
               <div className="text-[10px] text-muted-foreground font-mono truncate">
                 {room.roomCode} · {room.status}
               </div>
@@ -1921,7 +2081,8 @@ export default function LiveRoomPage() {
                     <Settings className="h-3.5 w-3.5 mr-1" /> Manage
                   </Button>
                 )}
-                {selectedChannel?.type === 'interview' ? (
+                {/* 1. If it is an interview channel, render interview-specific buttons */}
+                {selectedChannel?.type === 'interview' && (
                   <div className="flex items-center gap-2">
                     {isOwner &&
                       selectedChannelParticipants
@@ -1937,27 +2098,6 @@ export default function LiveRoomPage() {
                             </span>
                           );
                         })}
-                    {selectedChannel.interviewMeetLink && (
-                      <a
-                        href={selectedChannel.interviewMeetLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-primary/25 bg-primary/5 px-2.5 text-[10px] font-bold text-primary"
-                      >
-                        <Video className="h-3.5 w-3.5" /> Join Meet
-                      </a>
-                    )}
-                    {isOwner && !selectedChannel.interviewMeetLink && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => void createMeet()}
-                        disabled={commandLoading}
-                        className="h-8 text-xs"
-                      >
-                        <Video className="h-3.5 w-3.5 mr-1" /> Create Meet
-                      </Button>
-                    )}
                     {isOwner && (
                       <>
                         <Button
@@ -1985,7 +2125,6 @@ export default function LiveRoomPage() {
                           size="sm"
                           onClick={() => openOfferForm()}
                           disabled={
-                            selectedChannel.interviewStatus !== 'completed' ||
                             selectedChannelParticipants.length === 0
                           }
                           className="h-8 text-xs"
@@ -1995,7 +2134,36 @@ export default function LiveRoomPage() {
                       </>
                     )}
                   </div>
-                ) : (
+                )}
+
+                {/* 2. Meet Link Buttons for Business User (visible only to isOwner, for any channel except AI) */}
+                {isOwner && selectedChannel && selectedChannel.type !== 'ai' && (
+                  <div className="flex items-center gap-2">
+                    {selectedChannel.interviewMeetLink ? (
+                      <a
+                        href={selectedChannel.interviewMeetLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-primary/25 bg-primary/5 px-2.5 text-[10px] font-bold text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <Video className="h-3.5 w-3.5" /> Join Meet
+                      </a>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void createMeet()}
+                        disabled={commandLoading}
+                        className="h-8 text-xs"
+                      >
+                        <Video className="h-3.5 w-3.5 mr-1" /> Create Meet
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. Render decoration if not Owner and not in Interview channel */}
+                {!isOwner && selectedChannel?.type !== 'interview' && (
                   <div className="hidden md:flex items-center gap-2 text-[10px] text-muted-foreground">
                     <Sparkles className="h-3.5 w-3.5 text-primary" />
                     Permission-aware AI
@@ -2045,33 +2213,23 @@ export default function LiveRoomPage() {
               </div>
             </header>
 
-            {selectedChannel?.type === 'interview' &&
+            {selectedChannel &&
+              selectedChannel.type !== 'ai' &&
               isOwner &&
               showMeetLinkForm &&
               !selectedChannel.interviewMeetLink && (
-                <div className="shrink-0 border-b border-border/40 bg-card/35 px-5 py-3">
+                <div className="shrink-0 border-b border-border/40 bg-card/35 px-5 py-3 flex flex-col gap-1.5">
+                  <div className="text-[10px] text-primary/80 font-medium">
+                    Step 2: Copy the Google Meet link from the opened tab, paste it below, and click Share:
+                  </div>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <input
                       value={meetLinkDraft}
                       onChange={(event) => setMeetLinkDraft(event.target.value)}
-                      placeholder="https://meet.google.com/xxx-yyyy-zzz"
+                      placeholder="Paste link here (e.g., https://meet.google.com/xxx-yyyy-zzz)"
                       className="h-9 min-w-0 flex-1 rounded-md border border-border/45 bg-background/70 px-3 text-xs text-foreground outline-none focus:border-primary/40"
                     />
                     <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          window.open(
-                            'https://meet.google.com/new',
-                            '_blank',
-                            'noopener,noreferrer',
-                          )
-                        }
-                        className="h-9 text-xs"
-                      >
-                        <Video className="h-3.5 w-3.5 mr-1" /> Open Meet
-                      </Button>
                       <Button
                         size="sm"
                         onClick={() => void shareMeetLink()}
@@ -2632,201 +2790,237 @@ export default function LiveRoomPage() {
               />
 
               {/* Participants Section */}
-              <section className="space-y-3">
-                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-primary/80" />
-                    Participants
-                  </span>
-                  <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[9px] lowercase">
-                    {workspace.participants.length} Total
-                  </span>
-                </div>
-
-                {/* Joined Sub-section */}
-                <div className="space-y-2 animate-fadeIn">
-                  <div className="text-[10px] font-bold text-muted-foreground/70 tracking-wider uppercase pl-0.5">
-                    Joined
+              {isOwner && (
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-primary/80" />
+                      Participants
+                    </span>
+                    <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[9px] lowercase">
+                      {workspace.participants.length} Total
+                    </span>
                   </div>
-                  {workspace.participants.filter(
-                    (p) => p.status === 'joined' || p.status === 'accepted',
-                  ).length === 0 ? (
-                    <div className="text-[10px] text-muted-foreground/50 italic px-1">
-                      No participants joined yet
+
+                  {/* Joined Sub-section */}
+                  <div className="space-y-2 animate-fadeIn">
+                    <div className="text-[10px] font-bold text-muted-foreground/70 tracking-wider uppercase pl-0.5">
+                      Joined
                     </div>
-                  ) : (
-                    workspace.participants
-                      .filter(
-                        (p) => p.status === 'joined' || p.status === 'accepted',
-                      )
-                      .map((participant: any) => {
-                        const person = participant.user ?? participant.userId;
-                        const role = workspace.roles.find(
-                          (item) =>
-                            String(item._id) === String(participant.roleId),
-                        );
-                        return (
-                          <div
-                            key={participant._id}
-                            className="rounded-xl border border-border/40 bg-background/45 p-2.5 shadow-sm hover:bg-background/80 hover:border-border/60 transition-all duration-200"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              {/* Initials Avatar with Green Active Dot */}
-                              <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs shrink-0 relative shadow-sm">
-                                {person?.name?.[0]?.toUpperCase() ?? 'T'}
-                                <span className="absolute bottom-[-1.5px] right-[-1.5px] h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse"></span>
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-xs font-bold truncate text-foreground">
-                                  {person?.name ?? 'Talent'}
+                    {workspace.participants.filter(
+                      (p) => p.status === 'joined' || p.status === 'accepted',
+                    ).length === 0 ? (
+                      <div className="text-[10px] text-muted-foreground/50 italic px-1">
+                        No participants joined yet
+                      </div>
+                    ) : (
+                      workspace.participants
+                        .filter(
+                          (p) =>
+                            p.status === 'joined' || p.status === 'accepted',
+                        )
+                        .map((participant: any) => {
+                          const person = participant.user ?? participant.userId;
+                          const role = workspace.roles.find(
+                            (item) =>
+                              String(item._id) === String(participant.roleId),
+                          );
+                          return (
+                            <div
+                              key={participant._id}
+                              className="rounded-xl border border-border/40 bg-background/45 p-2.5 shadow-sm hover:bg-background/80 hover:border-border/60 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                {/* Initials Avatar with Green Active Dot */}
+                                <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs shrink-0 relative shadow-sm">
+                                  {person?.name?.[0]?.toUpperCase() ?? 'T'}
+                                  <span className="absolute bottom-[-1.5px] right-[-1.5px] h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse"></span>
                                 </div>
-                                {role?.roleTitle && (
-                                  <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
-                                    {role.roleTitle}
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-xs font-bold truncate text-foreground">
+                                    {person?.name ?? 'Talent'}
                                   </div>
-                                )}
+                                  {role?.roleTitle && (
+                                    <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
+                                      {role.roleTitle}
+                                    </div>
+                                  )}
+                                  <button
+                                    onClick={() => {
+                                      setAccessSearch(person?.name ?? '');
+                                      window.location.hash = '#access';
+                                    }}
+                                    className="text-[10px] text-primary hover:underline mt-1.5 flex items-center gap-1 cursor-pointer font-medium"
+                                  >
+                                    <Shield className="h-3 w-3" /> Manage Document Access
+                                  </button>
+                                </div>
                               </div>
+
+                              {/* Command action buttons for room owner */}
+                              {isOwner && (
+                                <div className="mt-2.5 grid grid-cols-2 gap-1.5 border-t border-border/20 pt-2 animate-fadeIn">
+                                  <button
+                                    onClick={() =>
+                                      runParticipantCommand(
+                                        'interview',
+                                        participant,
+                                      )
+                                    }
+                                    disabled={
+                                      !['invited', 'joined', 'accepted'].includes(
+                                        participant.status,
+                                      ) || canSendOfferToParticipant(participant)
+                                    }
+                                    className="rounded-md border border-border/40 px-1.5 py-1 text-[9px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-40 hover:bg-muted/40 cursor-pointer text-center"
+                                    title={canSendOfferToParticipant(participant) ? "Interview channel already created" : "Create interview"}
+                                  >
+                                    Interview
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      runParticipantCommand(
+                                        'dm',
+                                        participant,
+                                      )
+                                    }
+                                    disabled={
+                                      !['invited', 'joined', 'accepted'].includes(
+                                        participant.status,
+                                      ) || hasDmChannel(participant)
+                                    }
+                                    className="rounded-md border border-border/40 px-1.5 py-1 text-[9px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-40 hover:bg-muted/40 cursor-pointer text-center"
+                                    title={hasDmChannel(participant) ? "Direct message chat active" : "Send direct message"}
+                                  >
+                                    Message
+                                  </button>
+                                  <button
+                                    onClick={() => openOfferForm(participant)}
+                                    disabled={
+                                      !canSendOfferToParticipant(participant)
+                                    }
+                                    className="rounded-md border border-emerald-500/30 bg-emerald-500/5 px-1.5 py-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40 cursor-pointer text-center"
+                                    title="Send offer after completed interview"
+                                  >
+                                    Offer
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      runParticipantCommand(
+                                        'remove',
+                                        participant,
+                                      )
+                                    }
+                                    className="rounded-md border border-rose-500/30 bg-rose-500/5 px-1.5 py-1 text-[9px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer text-center"
+                                    title="Remove talent"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              )}
                             </div>
-
-                            {/* Command action buttons for room owner */}
-                            {isOwner && (
-                              <div className="mt-2.5 grid grid-cols-3 gap-1.5 border-t border-border/20 pt-2 animate-fadeIn">
-                                <button
-                                  onClick={() =>
-                                    runParticipantCommand(
-                                      'interview',
-                                      participant,
-                                    )
-                                  }
-                                  disabled={
-                                    !['joined', 'accepted'].includes(
-                                      participant.status,
-                                    )
-                                  }
-                                  className="rounded-md border border-border/40 px-1.5 py-1 text-[9px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-40 hover:bg-muted/40 cursor-pointer text-center"
-                                  title="Create interview"
-                                >
-                                  Interview
-                                </button>
-                                <button
-                                  onClick={() => openOfferForm(participant)}
-                                  disabled={
-                                    !canSendOfferToParticipant(participant)
-                                  }
-                                  className="rounded-md border border-emerald-500/30 bg-emerald-500/5 px-1.5 py-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40 cursor-pointer text-center"
-                                  title="Send offer after completed interview"
-                                >
-                                  Offer
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    runParticipantCommand('remove', participant)
-                                  }
-                                  className="rounded-md border border-rose-500/30 bg-rose-500/5 px-1.5 py-1 text-[9px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer text-center"
-                                  title="Remove talent"
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })
-                  )}
-                </div>
-
-                {/* Invited/Pending Sub-section */}
-                <div className="space-y-2 pt-2 animate-fadeIn">
-                  <div className="text-[10px] font-bold text-muted-foreground/70 tracking-wider uppercase pl-0.5">
-                    Invited / Pending
+                          );
+                        })
+                    )}
                   </div>
-                  {workspace.participants.filter(
-                    (p) => p.status !== 'joined' && p.status !== 'accepted',
-                  ).length === 0 ? (
-                    <div className="text-[10px] text-muted-foreground/50 italic px-1">
-                      No pending invitations
-                    </div>
-                  ) : (
-                    workspace.participants
-                      .filter(
-                        (p) => p.status !== 'joined' && p.status !== 'accepted',
-                      )
-                      .map((participant: any) => {
-                        const person = participant.user ?? participant.userId;
-                        const role = workspace.roles.find(
-                          (item) =>
-                            String(item._id) === String(participant.roleId),
-                        );
-                        return (
-                          <div
-                            key={participant._id}
-                            className="rounded-xl border border-border/40 bg-background/45 p-2.5 shadow-sm hover:bg-background/80 hover:border-border/60 transition-all duration-200"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              {/* Initials Avatar with Orange Pending Dot */}
-                              <div className="h-9 w-9 rounded-xl bg-muted border border-border flex items-center justify-center font-bold text-xs text-muted-foreground shrink-0 relative shadow-sm">
-                                {person?.name?.[0]?.toUpperCase() ?? 'T'}
-                                <span className="absolute bottom-[-1.5px] right-[-1.5px] h-3 w-3 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm"></span>
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-xs italic font-medium text-muted-foreground truncate">
-                                  {person?.name ?? 'Invited Talent'}
-                                </div>
-                                {role?.roleTitle && (
-                                  <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
-                                    {role.roleTitle}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
 
-                            {/* Command action buttons for room owner */}
-                            {isOwner && (
-                              <div className="mt-2.5 grid grid-cols-3 gap-1.5 border-t border-border/20 pt-2 animate-fadeIn">
-                                <button
-                                  onClick={() =>
-                                    runParticipantCommand(
-                                      'interview',
-                                      participant,
-                                    )
-                                  }
-                                  disabled={
-                                    !['joined', 'accepted'].includes(
-                                      participant.status,
-                                    )
-                                  }
-                                  className="rounded-md border border-border/40 px-1.5 py-1 text-[9px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-40 hover:bg-muted/40 cursor-pointer text-center"
-                                  title="Create interview"
-                                >
-                                  Interview
-                                </button>
-                                <button
-                                  onClick={() => openOfferForm(participant)}
-                                  disabled={
-                                    !canSendOfferToParticipant(participant)
-                                  }
-                                  className="rounded-md border border-emerald-500/30 bg-emerald-500/5 px-1.5 py-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40 cursor-pointer text-center"
-                                  title="Send offer after completed interview"
-                                >
-                                  Offer
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    runParticipantCommand('remove', participant)
-                                  }
-                                  className="rounded-md border border-rose-500/30 bg-rose-500/5 px-1.5 py-1 text-[9px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer text-center"
-                                  title="Remove talent"
-                                >
-                                  Remove
-                                </button>
+                  {/* Invited/Pending Sub-section */}
+                  <div className="space-y-2 pt-2 animate-fadeIn">
+                    <div className="text-[10px] font-bold text-muted-foreground/70 tracking-wider uppercase pl-0.5">
+                      Invited / Pending
+                    </div>
+                    {workspace.participants.filter(
+                      (p) => p.status !== 'joined' && p.status !== 'accepted',
+                    ).length === 0 ? (
+                      <div className="text-[10px] text-muted-foreground/50 italic px-1">
+                        No pending invitations
+                      </div>
+                    ) : (
+                      workspace.participants
+                        .filter(
+                          (p) =>
+                            p.status !== 'joined' && p.status !== 'accepted',
+                        )
+                        .map((participant: any) => {
+                          const person = participant.user ?? participant.userId;
+                          const role = workspace.roles.find(
+                            (item) =>
+                              String(item._id) === String(participant.roleId),
+                          );
+                          return (
+                            <div
+                              key={participant._id}
+                              className="rounded-xl border border-border/40 bg-background/45 p-2.5 shadow-sm hover:bg-background/80 hover:border-border/60 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                {/* Initials Avatar with Orange Pending Dot */}
+                                <div className="h-9 w-9 rounded-xl bg-muted border border-border flex items-center justify-center font-bold text-xs text-muted-foreground shrink-0 relative shadow-sm">
+                                  {person?.name?.[0]?.toUpperCase() ?? 'T'}
+                                  <span className="absolute bottom-[-1.5px] right-[-1.5px] h-3 w-3 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm"></span>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-xs italic font-medium text-muted-foreground truncate">
+                                    {person?.name ?? 'Invited Talent'}
+                                  </div>
+                                  {role?.roleTitle && (
+                                    <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
+                                      {role.roleTitle}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        );
-                      })
-                  )}
-                </div>
-              </section>
+
+                              {/* Command action buttons for room owner */}
+                              {isOwner && (
+                                <div className="mt-2.5 grid grid-cols-3 gap-1.5 border-t border-border/20 pt-2 animate-fadeIn">
+                                  <button
+                                    onClick={() =>
+                                      runParticipantCommand(
+                                        'interview',
+                                        participant,
+                                      )
+                                    }
+                                    disabled={
+                                      !['joined', 'accepted'].includes(
+                                        participant.status,
+                                      )
+                                    }
+                                    className="rounded-md border border-border/40 px-1.5 py-1 text-[9px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-40 hover:bg-muted/40 cursor-pointer text-center"
+                                    title="Create interview"
+                                  >
+                                    Interview
+                                  </button>
+                                  <button
+                                    onClick={() => openOfferForm(participant)}
+                                    disabled={
+                                      !canSendOfferToParticipant(participant)
+                                    }
+                                    className="rounded-md border border-emerald-500/30 bg-emerald-500/5 px-1.5 py-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40 cursor-pointer text-center"
+                                    title="Send offer after completed interview"
+                                  >
+                                    Offer
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      runParticipantCommand(
+                                        'remove',
+                                        participant,
+                                      )
+                                    }
+                                    className="rounded-md border border-rose-500/30 bg-rose-500/5 px-1.5 py-1 text-[9px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer text-center"
+                                    title="Remove talent"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                    )}
+                  </div>
+                </section>
+              )}
 
               {/* Hiring Flow Section */}
               <section className="space-y-3">
@@ -2857,11 +3051,11 @@ export default function LiveRoomPage() {
                           </div>
                           <span
                             className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold capitalize ${
-                              offer.status === 'accepted' ||
-                              offer.status === 'contracted'
+                              offer.status?.toLowerCase() === 'accepted' ||
+                              offer.status?.toLowerCase() === 'contracted'
                                 ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                : offer.status === 'declined' ||
-                                    offer.status === 'withdrawn'
+                                : offer.status?.toLowerCase() === 'declined' ||
+                                    offer.status?.toLowerCase() === 'withdrawn'
                                   ? 'border-rose-500/25 bg-rose-500/10 text-rose-600 dark:text-rose-400'
                                   : 'border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400'
                             }`}
@@ -2889,24 +3083,59 @@ export default function LiveRoomPage() {
                             {offer.responseMessage}
                           </p>
                         )}
+                        {!isOwner &&
+                          offer.freelancerId === user?._id &&
+                          offer.status?.toUpperCase() === 'SENT' && (
+                            <div className="mt-3 flex items-center gap-2">
+                              <button
+                                disabled={respondingOfferId === offer._id}
+                                onClick={() => handleRespondToOffer(offer._id, 'accept')}
+                                className="flex-1 rounded-md bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700 dark:hover:bg-emerald-600 py-1 text-[10px] font-bold text-white disabled:opacity-50 transition-all cursor-pointer text-center"
+                              >
+                                {respondingOfferId === offer._id ? 'Accepting...' : 'Accept'}
+                              </button>
+                              <button
+                                disabled={respondingOfferId === offer._id}
+                                onClick={() => handleRespondToOffer(offer._id, 'decline')}
+                                className="flex-1 rounded-md border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 py-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 disabled:opacity-50 transition-all cursor-pointer text-center"
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          )}
                       </div>
                     ))
                   )}
                 </div>
-                <div className="rounded-xl border border-border/40 bg-background/45 p-3">
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <span className="font-bold text-foreground">Agreement</span>
-                    <span className="text-[10px] font-bold capitalize text-muted-foreground">
-                      {workspace.nda?.status?.replace(/_/g, ' ') ??
-                        'not generated'}
-                    </span>
+                {workspace.nda && (
+                  <div className="rounded-xl border border-border/40 bg-background/45 p-3">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span className="font-bold text-foreground">Agreement</span>
+                      <span className="text-[10px] font-bold capitalize text-muted-foreground">
+                        {workspace.nda?.status?.replace(/_/g, ' ') ??
+                          'not generated'}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      {`${workspace.nda.signedBy?.length ?? 0}/2 signatures recorded`}
+                    </div>
+                    {!isOwner &&
+                      workspace.nda.status === 'pending_signatures' &&
+                      !workspace.nda.signedBy.includes(user?._id) && (
+                        <div className="mt-2.5">
+                          <button
+                            onClick={() => {
+                              setShowNdaModal(true);
+                              setHasReadNda(false);
+                            }}
+                            className="w-full text-center text-xs font-bold bg-primary hover:bg-primary/95 text-primary-foreground py-1.5 rounded-lg transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.98]"
+                          >
+                            Read & Sign NDA
+                          </button>
+                        </div>
+                      )}
                   </div>
-                  <div className="mt-1 text-[10px] text-muted-foreground">
-                    {workspace.nda
-                      ? `${workspace.nda.signedBy?.length ?? 0}/2 signatures recorded`
-                      : 'Accepted offer will prepare the agreement.'}
-                  </div>
-                </div>
+                )}
                 <div className="rounded-xl border border-border/40 bg-background/45 p-3">
                   <div className="flex items-center justify-between gap-2 text-xs">
                     <span className="font-bold text-foreground">
@@ -2935,16 +3164,16 @@ export default function LiveRoomPage() {
                 <PanelHeader
                   icon={<FileText className="h-3.5 w-3.5 text-primary/80" />}
                   label={isOwner ? 'Required Documents' : 'Allowed Docs'}
-                  count={workspace.documents.length}
+                  count={visibleDocuments.length}
                 />
 
-                {workspace.documents.length === 0 ? (
+                {visibleDocuments.length === 0 ? (
                   <p className="rounded-xl border border-dashed border-border/40 p-3.5 text-xs text-muted-foreground">
                     No documents are available yet.
                   </p>
                 ) : (
                   <div className="space-y-2.5">
-                    {workspace.documents.map((doc) => {
+                    {visibleDocuments.map((doc) => {
                       const isExpanded = expandedDocType === doc.docType;
                       return (
                         <div
@@ -3033,6 +3262,7 @@ export default function LiveRoomPage() {
           </aside>
         )}
       </div>
+    </div>
 
       {showChannelForm && isOwner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
@@ -3153,6 +3383,95 @@ export default function LiveRoomPage() {
       {docModal && (
         <DocModal doc={docModal} onClose={() => setDocModal(null)} />
       )}
+
+      {showNdaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-2xl rounded-xl border border-border bg-background shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fadeIn">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">
+                  Mutual Non-Disclosure & IP Assignment Agreement
+                </h3>
+                <p className="text-[10px] text-muted-foreground">
+                  Please read the agreement details carefully before signing.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowNdaModal(false)}
+                className="h-8 px-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Scrollable NDA Text Body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs leading-relaxed text-muted-foreground max-h-[50vh] border-b border-border/40">
+              <p className="font-semibold text-foreground">
+                MUTUAL NON-DISCLOSURE AGREEMENT (NDA)
+              </p>
+              
+              <div className="space-y-3 bg-muted/30 rounded-lg p-4 border border-border/50 text-[11px] font-mono leading-normal text-foreground">
+                <p>
+                  <strong>Introduction:</strong> This Agreement is entered into by and between the Client (Disclosing Party) and the freelancer (Receiving Party) to protect and regulate Confidential Information and Intellectual Property associated with the project.
+                </p>
+                <p>
+                  <strong>1. Confidentiality Period:</strong> The Receiving Party agrees to maintain strict confidentiality of all private data, business plans, source codes, documents, and assets for a period of three (3) years from the date of disclosure.
+                </p>
+                <p>
+                  <strong>2. Intellectual Property (IP) Transfer:</strong> All code, documentation, specifications, artwork, designs, and files developed or produced in connection with this project shall belong exclusively to the Disclosing Party. The Receiving Party hereby permanently assigns all copyrights, patents, and other IP rights to the Disclosing Party, effective immediately upon the successful release/payout of the corresponding project milestones.
+                </p>
+                <p>
+                  <strong>3. Governing Law:</strong> This agreement and any disputes arising out of or related to it shall be governed by and construed in accordance with the laws of the jurisdiction of the Disclosing Party.
+                </p>
+              </div>
+
+              <div className="text-[11px]">
+                <p className="font-bold text-foreground mb-1">
+                  Signing Terms & Conditions:
+                </p>
+                <p>
+                  By checking the consent box below and clicking "Sign & Accept Agreement", you are applying your electronic signature to this document, binding yourself to all the terms, confidentiality regulations, and IP transfer conditions defined above.
+                </p>
+              </div>
+            </div>
+
+            {/* Consent Checkbox and Actions */}
+            <div className="p-4 bg-muted/10 space-y-3 flex flex-col">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hasReadNda}
+                  onChange={(e) => setHasReadNda(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-border"
+                />
+                <span className="text-[11px] text-foreground font-medium">
+                  I have thoroughly read, understood, and agree to be bound by the terms of this Mutual Non-Disclosure Agreement.
+                </span>
+              </label>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-border/20">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowNdaModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => void handleSignNda()}
+                  disabled={!hasReadNda || signingNda}
+                >
+                  {signingNda ? 'Signing NDA...' : 'Sign & Accept NDA'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -3208,6 +3527,9 @@ function PlatformSyncCockpit({
     tickets,
     documents,
   } = workspace;
+  const visibleDocuments = isOwner
+    ? documents
+    : documents.filter((doc) => doc.canView);
   const project = workspace.project;
   const projectId = project?._id || room.projectId;
   const marketplaceStatus = String(
@@ -3330,7 +3652,7 @@ function PlatformSyncCockpit({
           />
           <SyncMetric
             label="Docs"
-            value={documents.length}
+            value={visibleDocuments.length}
             detail={
               workspace.nda?.status?.replace(/_/g, ' ') ?? 'agreement pending'
             }
@@ -3404,48 +3726,50 @@ function PlatformSyncCockpit({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-[10px] font-bold uppercase text-muted-foreground">
-          <span>Candidate Sync</span>
-          <span>{participants.length}</span>
-        </div>
-        {candidateRows.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border/40 p-3 text-xs text-muted-foreground">
-            Invites, bids, interviews, and selected talent will mirror here.
-          </p>
-        ) : (
-          candidateRows.map((row: any) => (
-            <button
-              key={row.id}
-              onClick={() => row.channelId && onSelectChannel(row.channelId)}
-              disabled={!row.channelId}
-              className="w-full rounded-xl border border-border/40 bg-background/45 p-2.5 text-left shadow-sm transition-all hover:border-border/70 hover:bg-background disabled:cursor-default disabled:hover:border-border/40 disabled:hover:bg-background/45"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="truncate text-xs font-bold text-foreground">
-                    {row.name}
+      {isOwner && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-[10px] font-bold uppercase text-muted-foreground">
+            <span>Candidate Sync</span>
+            <span>{participants.length}</span>
+          </div>
+          {candidateRows.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border/40 p-3 text-xs text-muted-foreground">
+              Invites, bids, interviews, and selected talent will mirror here.
+            </p>
+          ) : (
+            candidateRows.map((row: any) => (
+              <button
+                key={row.id}
+                onClick={() => row.channelId && onSelectChannel(row.channelId)}
+                disabled={!row.channelId}
+                className="w-full rounded-xl border border-border/40 bg-background/45 p-2.5 text-left shadow-sm transition-all hover:border-border/70 hover:bg-background disabled:cursor-default disabled:hover:border-border/40 disabled:hover:bg-background/45"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-bold text-foreground">
+                      {row.name}
+                    </div>
+                    <div className="truncate text-[10px] text-muted-foreground">
+                      {row.role}
+                    </div>
                   </div>
-                  <div className="truncate text-[10px] text-muted-foreground">
-                    {row.role}
-                  </div>
+                  <span
+                    className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${row.className}`}
+                  >
+                    {row.stage}
+                  </span>
                 </div>
-                <span
-                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${row.className}`}
-                >
-                  {row.stage}
-                </span>
-              </div>
-              <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
-                <span className="truncate">{row.detail}</span>
-                {row.channelId ? (
-                  <span className="font-bold text-primary">open</span>
-                ) : null}
-              </div>
-            </button>
-          ))
-        )}
-      </div>
+                <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                  <span className="truncate">{row.detail}</span>
+                  {row.channelId ? (
+                    <span className="font-bold text-primary">open</span>
+                  ) : null}
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </section>
   );
 }
@@ -3658,10 +3982,27 @@ function MessageBubble({
   isMine: boolean;
 }) {
   if (message.type === 'system') {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = message.message.split(urlRegex);
     return (
       <div className="flex justify-center my-2">
         <div className="rounded-full border border-border/40 bg-muted/40 px-3.5 py-1 text-[11px] text-muted-foreground shadow-sm font-medium">
-          {message.message}
+          {parts.map((part, index) => {
+            if (part.match(urlRegex)) {
+              return (
+                <a
+                  key={index}
+                  href={part}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-bold"
+                >
+                  {part}
+                </a>
+              );
+            }
+            return part;
+          })}
         </div>
       </div>
     );

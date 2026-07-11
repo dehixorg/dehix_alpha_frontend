@@ -7,8 +7,6 @@ import { usePathname } from 'next/navigation';
 
 import Header from '@/components/header/header';
 import SidebarMenu, { type MenuItem } from '@/components/menu/sidebarMenu';
-import { menuItemsBottom as businessMenuItemsBottom } from '@/config/menuItems/business/dashboardMenuItems';
-import { menuItemsBottom as freelancerMenuItemsBottom } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 type BreadcrumbItem = {
   label: string;
@@ -103,10 +101,7 @@ export default function LiveRoomWorkspaceLayout({
     return items;
   }, [backHref, includeAccessControl, roomPath]);
 
-  const menuItemsBottom =
-    userType === 'business'
-      ? businessMenuItemsBottom
-      : freelancerMenuItemsBottom;
+  const menuItemsBottom: MenuItem[] = [];
 
   return (
     <section className="flex min-h-screen w-full flex-col">

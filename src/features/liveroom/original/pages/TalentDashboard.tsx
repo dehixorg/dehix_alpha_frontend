@@ -33,7 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function TalentDashboard() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const inviteQueryKey = useMemo(
     () => [...getGetTalentInvitesQueryKey(), user?._id ?? 'anonymous'],
     [user?._id],
@@ -105,7 +105,15 @@ export default function TalentDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setMyRooms(Array.isArray(data) ? data : []);
+      const rooms = Array.isArray(data) ? data : [];
+      setMyRooms(
+        rooms.filter(
+          (entry: any) =>
+            !['invited', 'INVITED'].includes(
+              String(entry.participant?.status || entry.status),
+            ),
+        ),
+      );
     } catch {
       setMyRooms([]);
     }
@@ -211,7 +219,6 @@ export default function TalentDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Please sign in</p>
-          <Button onClick={() => navigate('/login')}>Sign in</Button>
         </div>
       </div>
     );
@@ -382,23 +389,9 @@ export default function TalentDashboard() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                setProfileName(user?.name ?? '');
-                setProfileWallet((user as any)?.walletAddress ?? '');
-                setEditingProfile(true);
-              }}
-            >
-              Edit Profile
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
               onClick={() => navigate(`/talent/profile/${user?._id}`)}
             >
               My Profile
-            </Button>
-            <Button variant="ghost" size="sm" onClick={logout}>
-              Sign out
             </Button>
           </div>
         </div>
@@ -922,6 +915,11 @@ export default function TalentDashboard() {
                       <h3 className="font-semibold text-sm leading-tight">
                         {invite.room?.title ?? 'Unknown project'}
                       </h3>
+                      {(invite.room?.rawDescription || invite.project?.description) && (
+                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-1 border-l-2 border-primary/20 pl-2 italic">
+                          {invite.room?.rawDescription || invite.project?.description}
+                        </p>
+                      )}
                       {invite.role && (
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-xs text-primary font-medium">
