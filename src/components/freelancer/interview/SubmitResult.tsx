@@ -238,6 +238,7 @@ const SubmitResult: React.FC = () => {
               ? `${selectedInterview.interviewee.firstName || ''} ${selectedInterview.interviewee.lastName || ''}`.trim()
               : undefined
           }
+          interviewType={selectedInterview.interviewType}
           onReviewSubmitted={handleReviewSubmitted}
         />
       )}
