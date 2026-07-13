@@ -90,28 +90,20 @@ export default function LiveRoomWorkspaceLayout({
       },
     ];
 
-    if (includeAccessControl) {
-      items.push({
-        href: `${roomPath}#access`,
-        icon: <Shield className="h-5 w-5" />,
-        label: TAB_LABELS.access,
-      });
-    }
-
     return items;
   }, [backHref, includeAccessControl, roomPath]);
 
   const menuItemsBottom: MenuItem[] = [];
 
   return (
-    <section className="flex min-h-screen w-full flex-col">
+    <section className="flex h-screen w-full flex-col overflow-hidden bg-background">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active={activeMenu}
         setActive={setActiveMenu}
       />
-      <div className="flex min-w-0 flex-1 flex-col sm:gap-4 sm:py-0 sm:pl-14">
+      <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -119,7 +111,7 @@ export default function LiveRoomWorkspaceLayout({
           setActive={setActiveMenu}
           breadcrumbItems={breadcrumbItems}
         />
-        <main className="flex-1 p-0">{children}</main>
+        <main className="flex-1 p-0 min-h-0 overflow-hidden">{children}</main>
       </div>
     </section>
   );

@@ -350,8 +350,12 @@ export default function TalentDashboard() {
       <div className="sticky top-0 z-10 border-b border-border/40 bg-background/80 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-primary/20 border border-primary/40 flex items-center justify-center">
-              <span className="text-primary font-bold text-[10px]">DX</span>
+            <div className="w-6 h-6 rounded bg-neutral-950 dark:bg-white border border-neutral-800 dark:border-neutral-200 flex items-center justify-center overflow-hidden">
+              <img
+                src="/dehix.png"
+                alt="Dehix"
+                className="w-3.5 h-3.5 invert-0 dark:invert object-contain"
+              />
             </div>
             <span className="font-medium text-sm">{user?.name}</span>
             <span className="text-xs text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
@@ -915,9 +919,11 @@ export default function TalentDashboard() {
                       <h3 className="font-semibold text-sm leading-tight">
                         {invite.room?.title ?? 'Unknown project'}
                       </h3>
-                      {(invite.room?.rawDescription || invite.project?.description) && (
+                      {(invite.room?.rawDescription ||
+                        invite.project?.description) && (
                         <p className="text-xs text-muted-foreground mt-1.5 line-clamp-1 border-l-2 border-primary/20 pl-2 italic">
-                          {invite.room?.rawDescription || invite.project?.description}
+                          {invite.room?.rawDescription ||
+                            invite.project?.description}
                         </p>
                       )}
                       {invite.role && (

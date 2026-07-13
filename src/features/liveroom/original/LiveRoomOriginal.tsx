@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ComponentType, type ReactNode } from 'react';
-import { Toaster as SonnerToaster } from 'sonner';
+import { useEffect, type ComponentType, type ReactNode } from 'react';
 
 import { installLiveRoomFetchBridge } from './api/runtime';
 import { AuthProvider } from './context/AuthContext';
@@ -11,24 +10,13 @@ import LiveRoom from './pages/LiveRoom';
 import TalentDashboard from './pages/TalentDashboard';
 
 function LiveRoomRuntime({ children }: { children: ReactNode }) {
-  const restoreFetchBridgeRef = useRef<(() => void) | null>(null);
-
-  if (!restoreFetchBridgeRef.current) {
-    restoreFetchBridgeRef.current = installLiveRoomFetchBridge();
-  }
-
-  useEffect(
-    () => () => {
-      restoreFetchBridgeRef.current?.();
-      restoreFetchBridgeRef.current = null;
-    },
-    [],
-  );
+  useEffect(() => {
+    installLiveRoomFetchBridge();
+  }, []);
 
   return (
     <AuthProvider>
       <div className="liveroom-scope min-w-0">{children}</div>
-      <SonnerToaster position="bottom-right" richColors />
     </AuthProvider>
   );
 }

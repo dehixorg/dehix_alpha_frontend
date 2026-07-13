@@ -1,5 +1,12 @@
 /* eslint-disable import/order, jsx-a11y/label-has-associated-control, prefer-const, @typescript-eslint/no-unused-vars */
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import { useParams, useLocation } from '../adapters/wouter';
 import { io, type Socket } from '../adapters/socket';
 import { liveRoomApiFetch as fetch } from '../api/runtime';
@@ -30,6 +37,7 @@ import {
   Users,
   Video,
   X,
+  Trash2,
 } from 'lucide-react';
 
 type Channel = {
@@ -247,6 +255,40 @@ function MarkdownMini({ text, isMine }: { text: string; isMine?: boolean }) {
   return <>{out}</>;
 }
 
+export const getCanonicalDocTitle = (
+  docType: string,
+  defaultTitle: string = '',
+): string => {
+  const cleanKey = (docType || '').toLowerCase().replace(/-/g, '_');
+  const labels: Record<string, string> = {
+    pitch_deck: 'Pitch Deck',
+    technical_deck: 'Technical Deck',
+    bd_strategy: 'BD Strategy',
+    sow: 'Statement of Work',
+    sow_document: 'Statement of Work',
+    project_brief: 'Project Brief',
+    idea_validation_report: 'Idea Validation Report',
+    business_validation: 'Idea Validation Report',
+    business_requirement_document: 'Business Requirement Document',
+    project_requirement_document: 'Project Requirement Document',
+    mvp_scope: 'MVP Scope Document',
+    mvp_scope_document: 'MVP Scope Document',
+    technical_architecture: 'Technical Architecture Document',
+    technical_architecture_document: 'Technical Architecture Document',
+    feature_list: 'Feature List Document',
+    feature_list_document: 'Feature List Document',
+    development_roadmap: 'Development Roadmap',
+    development_roadmap_document: 'Development Roadmap',
+    roadmap_budget: 'Development Roadmap',
+    freelancer_hiring_brief: 'Freelancer Hiring Brief',
+    freelancer_hiring_brief_document: 'Freelancer Hiring Brief',
+    business_blueprint: 'Business Blueprint',
+    full_business_blueprint: 'Business Blueprint',
+    nda: 'Mutual NDA Agreement',
+  };
+  return labels[cleanKey] || defaultTitle;
+};
+
 export default function LiveRoomPage() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -308,11 +350,17 @@ export default function LiveRoomPage() {
     useState<string[]>([]);
   const [channelSaving, setChannelSaving] = useState(false);
   const [publishingProject, setPublishingProject] = useState(false);
-  const [respondingOfferId, setRespondingOfferId] = useState<string | null>(null);
+  const [respondingOfferId, setRespondingOfferId] = useState<string | null>(
+    null,
+  );
   const [signingNda, setSigningNda] = useState(false);
   const [showNdaModal, setShowNdaModal] = useState(false);
   const [hasReadNda, setHasReadNda] = useState(false);
   const [respondingInvite, setRespondingInvite] = useState(false);
+  const [expandedPermissions, setExpandedPermissions] = useState<
+    Record<string, boolean>
+  >({});
+  const [invitedOpen, setInvitedOpen] = useState(false);
 
   const selectedChannel = useMemo(
     () =>
@@ -363,9 +411,16 @@ export default function LiveRoomPage() {
         (channel) =>
           channel.type === 'general' ||
           channel.name === 'general' ||
-          (channel.participantIds ?? []).map(String).includes(String(user?._id)) ||
-          (participant && (channel.participantIds ?? []).map(String).includes(String(participant._id))) ||
-          (channel.roleId && participant && String(channel.roleId) === String(participant.roleId)),
+          (channel.participantIds ?? [])
+            .map(String)
+            .includes(String(user?._id)) ||
+          (participant &&
+            (channel.participantIds ?? [])
+              .map(String)
+              .includes(String(participant._id))) ||
+          (channel.roleId &&
+            participant &&
+            String(channel.roleId) === String(participant.roleId)),
       );
     }
     return channels.sort((a, b) => {
@@ -382,7 +437,13 @@ export default function LiveRoomPage() {
       if (b.name === 'general') return 1;
       return a.displayName.localeCompare(b.displayName);
     });
-  }, [workspace?.channels, workspace?.participants, workspace?.currentUserAccess, isOwner, user?._id]);
+  }, [
+    workspace?.channels,
+    workspace?.participants,
+    workspace?.currentUserAccess,
+    isOwner,
+    user?._id,
+  ]);
 
   // Filtering for access control panel
   const filteredMatrix = useMemo(() => {
@@ -433,12 +494,21 @@ export default function LiveRoomPage() {
     return list.filter(
       (participant: any) =>
         String(
-          participant.userId?._id ??
-            participant.talentId ??
-            participant.userId,
+          participant.userId?._id ?? participant.talentId ?? participant.userId,
         ) === String(user?._id),
     );
   }, [workspace, room?.businessId, isOwner, user?._id]);
+
+  const getChannelDisplayName = useCallback(
+    (channel: any) => {
+      if (!channel) return 'Channel';
+      if (channel.type === 'direct' && !isOwner) {
+        return workspace?.project?.companyName || room?.companyName || 'Client';
+      }
+      return channel.displayName;
+    },
+    [isOwner, workspace?.project?.companyName, room?.companyName],
+  );
 
   const commandSuggestions = useMemo(() => {
     if (!isOwner) return [{ command: '/help', label: 'Show commands' }];
@@ -806,11 +876,7 @@ export default function LiveRoomPage() {
   };
 
   const createMeet = async () => {
-    if (
-      !selectedChannel ||
-      selectedChannel.type === 'ai' ||
-      commandLoading
-    )
+    if (!selectedChannel || selectedChannel.type === 'ai' || commandLoading)
       return;
     if (selectedChannel.interviewMeetLink) {
       window.open(
@@ -829,11 +895,7 @@ export default function LiveRoomPage() {
   };
 
   const shareMeetLink = async () => {
-    if (
-      !selectedChannel ||
-      selectedChannel.type === 'ai' ||
-      commandLoading
-    )
+    if (!selectedChannel || selectedChannel.type === 'ai' || commandLoading)
       return;
     const meetLink = meetLinkDraft.trim();
     if (!meetLink) {
@@ -998,7 +1060,24 @@ export default function LiveRoomPage() {
       ) ?? false
     );
   };
- 
+
+  const handleMessageParticipant = (participant: any) => {
+    const person = participant.user ?? participant.userId;
+    const freelancerId = String(
+      person?._id ?? participant.talentId ?? participant.userId,
+    );
+    const existingDm = workspace?.channels.find(
+      (channel) =>
+        channel.type === 'direct' &&
+        channel.participantIds.map(String).includes(freelancerId),
+    );
+    if (existingDm) {
+      setSelectedChannelId(existingDm._id);
+    } else {
+      runParticipantCommand('dm', participant);
+    }
+  };
+
   const openOfferForm = (participant?: any) => {
     const target = participant ?? selectedChannelParticipants[0];
     if (!target) {
@@ -1112,7 +1191,10 @@ export default function LiveRoomPage() {
     }
   };
 
-  const handleRespondToOffer = async (offerId: string, action: 'accept' | 'decline') => {
+  const handleRespondToOffer = async (
+    offerId: string,
+    action: 'accept' | 'decline',
+  ) => {
     if (action === 'accept') {
       const hasNda = !!workspace?.nda;
       const ndaSigned = workspace?.nda?.signedBy?.includes(user?._id);
@@ -1171,7 +1253,8 @@ export default function LiveRoomPage() {
         body: JSON.stringify({ action }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? `Failed to ${action} invitation`);
+      if (!res.ok)
+        throw new Error(data.error ?? `Failed to ${action} invitation`);
       toast.success(`Invitation ${action}ed successfully`);
       await loadWorkspace(selectedChannelId, true);
     } catch (err: any) {
@@ -1321,7 +1404,10 @@ export default function LiveRoomPage() {
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objectUrl;
-      a.download = `${doc.title.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+
+      const canonicalTitle = getCanonicalDocTitle(doc.docType, doc.title);
+      a.download = `${canonicalTitle.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+
       a.click();
       URL.revokeObjectURL(objectUrl);
     } catch (err: any) {
@@ -1579,7 +1665,7 @@ export default function LiveRoomPage() {
 
   return (
     <>
-      <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
+      <div className="h-[calc(100vh-56px)] bg-background text-foreground flex flex-col overflow-hidden">
         {/* Accept/Decline Invitation Banner for Freelancers */}
         {!isOwner && workspace?.currentUserAccess?.status === 'invited' && (
           <div className="bg-primary/10 border-b border-primary/20 px-6 py-3 shrink-0 flex items-center justify-between gap-4 animate-slideDown shadow-sm">
@@ -1592,7 +1678,8 @@ export default function LiveRoomPage() {
                   You have been invited to join this LiveRoom
                 </p>
                 <p className="text-[10px] text-muted-foreground truncate">
-                  Accept the invitation to join project channels and start collaborating.
+                  Accept the invitation to join project channels and start
+                  collaborating.
                 </p>
               </div>
             </div>
@@ -1616,1181 +1703,1200 @@ export default function LiveRoomPage() {
         )}
 
         <div className="flex-1 flex overflow-hidden">
-        {/* Left Side Panel - Secondary Sidebar (280px) */}
-        <aside className="w-[280px] shrink-0 border-r border-border/40 bg-card/30 flex flex-col">
-          {/* Header of Secondary Sidebar */}
-          <div className="h-14 px-4 border-b border-border/40 flex items-center justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold truncate" title={room.title}>{room.title}</div>
-              <div className="text-[10px] text-muted-foreground font-mono truncate">
-                {room.roomCode} · {room.status}
-              </div>
-            </div>
-            <button
-              onClick={() => void loadWorkspace(selectedChannelId, true)}
-              className="h-8 w-8 rounded-md hover:bg-muted/70 inline-flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 transition-colors"
-              title="Refresh Workspace"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Dynamic Content based on activeTab */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {activeTab === 'channels' && (
-              <div className="space-y-4">
-                {/* Standard Channels Group */}
-                <div>
-                  <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5" />
-                      Channels
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[9px]">
-                        {regularChannels.length}
-                      </span>
-                      {isOwner && (
-                        <button
-                          onClick={() => openCustomChannelForm()}
-                          className="inline-flex h-5 w-5 items-center justify-center rounded border border-border/45 bg-background/65 text-muted-foreground hover:text-foreground"
-                          title="Create custom channel"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </button>
-                      )}
-                    </span>
-                  </div>
-                  <div className="space-y-1 mt-1.5">
-                    {regularChannels.map((channel) => (
-                      <button
-                        key={channel._id}
-                        onClick={() => setSelectedChannelId(channel._id)}
-                        className={`w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-all ${
-                          selectedChannelId === channel._id
-                            ? 'bg-primary/12 text-primary border border-primary/20 shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/45 border border-transparent'
-                        }`}
-                      >
-                        <Hash className="h-3.5 w-3.5" />
-                        <span className="truncate font-semibold">
-                          {channel.displayName}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+          {/* Left Side Panel - Secondary Sidebar (280px) */}
+          <aside className="w-[280px] shrink-0 border-r border-border/40 bg-card/30 flex flex-col">
+            {/* Header of Secondary Sidebar */}
+            <div className="h-14 px-4 border-b border-border/40 flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold truncate" title={room.title}>
+                  {room.title}
                 </div>
-
-                {/* Personal AI Group */}
-                <div>
-                  <PanelHeader
-                    icon={<Bot className="h-3.5 w-3.5 text-primary" />}
-                    label="Personal AI"
-                    count={aiChannels.length}
-                  />
-                  <div className="space-y-1 mt-1.5">
-                    {aiChannels.map((channel) => (
-                      <button
-                        key={channel._id}
-                        onClick={() => setSelectedChannelId(channel._id)}
-                        className={`w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-all ${
-                          selectedChannelId === channel._id
-                            ? 'bg-primary/12 text-primary border border-primary/20 shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/45 border border-transparent'
-                        }`}
-                      >
-                        <Bot className="h-3.5 w-3.5 text-primary" />
-                        <span className="truncate font-semibold">
-                          {channel.displayName}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                <div className="text-[10px] text-muted-foreground font-mono truncate">
+                  {room.roomCode} · {room.status}
                 </div>
-
-                {/* Interview Channels Group */}
-                {interviewChannels.length > 0 && (
-                  <div>
-                    <PanelHeader
-                      icon={<Calendar className="h-3.5 w-3.5" />}
-                      label="Interviews"
-                      count={interviewChannels.length}
-                    />
-                    <div className="space-y-1 mt-1.5">
-                      {interviewChannels.map((channel) => (
-                        <button
-                          key={channel._id}
-                          onClick={() => setSelectedChannelId(channel._id)}
-                          className={`w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-all ${
-                            selectedChannelId === channel._id
-                              ? 'bg-primary/12 text-primary border border-primary/20 shadow-sm'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/45 border border-transparent'
-                          }`}
-                        >
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span className="truncate font-semibold">
-                            {channel.displayName}
-                          </span>
-                          <span className="ml-auto rounded border border-border/35 px-1.5 py-0.5 text-[9px] capitalize opacity-75">
-                            {channel.interviewStatus ?? 'scheduled'}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Direct Messages Group */}
-                <div>
-                  <PanelHeader
-                    icon={<User className="h-3.5 w-3.5" />}
-                    label="Direct Messages"
-                    count={directChannels.length}
-                  />
-                  <div className="space-y-1 mt-1.5">
-                    {directChannels.length === 0 ? (
-                      <div className="text-[10px] text-muted-foreground/50 italic px-2 py-1">
-                        No direct messages
-                      </div>
-                    ) : (
-                      directChannels.map((channel) => (
-                        <button
-                          key={channel._id}
-                          onClick={() => setSelectedChannelId(channel._id)}
-                          className={`w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-all ${
-                            selectedChannelId === channel._id
-                              ? 'bg-primary/12 text-primary border border-primary/20 shadow-sm'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/45 border border-transparent'
-                          }`}
-                        >
-                          <User className="h-3.5 w-3.5 text-muted-foreground/80" />
-                          <span className="truncate font-semibold">
-                            {channel.displayName}
-                          </span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'roles' && (
-              <div className="space-y-4">
-                <PanelHeader
-                  icon={<Briefcase className="h-3.5 w-3.5" />}
-                  label="Roles and Tasks"
-                  count={workspace.roles.length}
-                />
-                <div className="space-y-2 mt-1.5">
-                  {workspace.roles.map((role) => {
-                    const roleTickets = workspace.tickets.filter(
-                      (ticket) =>
-                        String(ticket.assignedRole ?? '') === String(role._id),
-                    );
-                    return (
-                      <div
-                        key={role._id}
-                        className="rounded-md border border-border/40 bg-background/45 p-2.5 shadow-sm"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-xs font-semibold truncate">
-                            {role.roleTitle}
-                          </div>
-                          <span className="text-[9px] rounded border border-border/45 px-1.5 py-0.5 text-muted-foreground uppercase">
-                            {role.status}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground truncate mt-1">
-                          {role.skillDomain}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground mt-1">
-                          {roleTickets.length} assigned ticket
-                          {roleTickets.length === 1 ? '' : 's'}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'access' && isOwner && (
-              <div className="space-y-4">
-                <PanelHeader
-                  icon={<Shield className="h-3.5 w-3.5" />}
-                  label="Access Settings"
-                />
-                <div className="rounded-lg border border-border/30 bg-muted/20 p-3 text-[11px] text-muted-foreground leading-relaxed animate-fadeIn">
-                  You are editing permissions in the central panel. Use the
-                  toggles to configure{' '}
-                  <span className="font-semibold text-foreground">View</span>{' '}
-                  access.
-                </div>
-                <div className="space-y-1.5 pt-2">
-                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Quick Filter
-                  </div>
-                  {workspace.permissionMatrix.map((talent) => {
-                    const totalDocs = talent.documents.length;
-                    const grantedViewCount = talent.documents.filter(
-                      (d) => d.canView,
-                    ).length;
-                    const isFullyGranted = grantedViewCount === totalDocs;
-                    return (
-                      <button
-                        key={talent.participantId}
-                        onClick={() => {
-                          setAccessSearch(talent.name);
-                        }}
-                        className={`w-full flex items-center justify-between rounded-md p-2 text-left text-xs hover:bg-muted/40 transition-colors border ${
-                          accessSearch === talent.name
-                            ? 'border-primary/30 bg-primary/5'
-                            : 'border-transparent'
-                        }`}
-                      >
-                        <span className="truncate font-semibold text-foreground">
-                          {talent.name}
-                        </span>
-                        <span
-                          className={`text-[9px] px-1 rounded ${isFullyGranted ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}
-                        >
-                          {grantedViewCount}/{totalDocs}
-                        </span>
-                      </button>
-                    );
-                  })}
-                  {accessSearch && (
-                    <button
-                      onClick={() => setAccessSearch('')}
-                      className="w-full text-center text-[10px] text-primary hover:underline mt-2 cursor-pointer"
-                    >
-                      Clear Filter
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </aside>
-
-        {/* Middle Main Chat Panel OR Access Control Section */}
-        {activeTab === 'access' && isOwner ? (
-          <main className="flex-1 min-w-0 flex flex-col bg-white dark:bg-card border border-border/40 rounded-[24px] my-3 mx-2 shadow-sm overflow-hidden animate-fadeIn">
-            {/* Header */}
-            <header className="h-14 shrink-0 border-b border-[#F1F2F6] dark:border-border/30 px-5 flex items-center justify-between gap-3 bg-background/75">
-              <div className="flex items-center gap-2 min-w-0">
-                <Shield className="h-4 w-4 text-primary" />
-                <div className="min-w-0">
-                  <div className="text-sm font-bold text-foreground">
-                    Document Access Control
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    Manage view permissions for workspace participants.
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => void grantFullAccessToAll()}
-                  className="text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 bg-emerald-500/5 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 animate-fadeIn"
-                >
-                  Grant All View Access
-                </button>
-                <button
-                  onClick={() => void revokeFullAccessFromAll()}
-                  className="text-xs font-bold text-destructive border border-destructive/25 bg-destructive/5 hover:bg-destructive/10 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 animate-fadeIn"
-                >
-                  Revoke All View Access
-                </button>
-              </div>
-            </header>
-
-            {/* Content: A list of participants in a table/grid style */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Search and Filters */}
-              <div className="relative max-w-md animate-fadeIn">
-                <input
-                  type="text"
-                  value={accessSearch}
-                  onChange={(e) => setAccessSearch(e.target.value)}
-                  placeholder="Search participants by name or role..."
-                  className="w-full bg-muted/45 border border-border/60 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/45 transition-colors text-foreground"
-                />
-                {accessSearch && (
-                  <button
-                    onClick={() => setAccessSearch('')}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {filteredMatrix.length === 0 ? (
-                <div className="text-center py-12 border border-dashed border-border/40 rounded-2xl bg-muted/10">
-                  <Shield className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground">
-                    No participants matched your search.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredMatrix.map((talent) => {
-                    return (
-                      <div
-                        key={talent.participantId}
-                        className="border border-border/40 rounded-2xl bg-card/45 shadow-sm p-4 hover:border-border/70 transition-all"
-                      >
-                        {/* Participant info header */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/20 pb-3 mb-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-sm text-primary">
-                              {talent.name?.[0]?.toUpperCase() ?? 'T'}
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-bold text-foreground">
-                                {talent.name}
-                              </h4>
-                              <p className="text-[10px] text-muted-foreground">
-                                {talent.roleTitle ?? 'No Role Assigned'} ·{' '}
-                                {talent.email ?? 'No Email'} · Status:{' '}
-                                <span className="font-semibold uppercase text-primary/80">
-                                  {talent.status}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() =>
-                                void grantFullAccessToParticipant(talent)
-                              }
-                              className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
-                            >
-                              Grant All
-                            </button>
-                            <button
-                              onClick={() =>
-                                void revokeAllAccessForParticipant(talent)
-                              }
-                              className="text-[11px] font-bold text-destructive bg-destructive/5 hover:bg-destructive/10 border border-destructive/20 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
-                            >
-                              Revoke All
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Document grid inside participant block */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {talent.documents.map((doc) => {
-                            const permissionKey = `${talent.participantId}:${doc.docType}`;
-                            return (
-                              <div
-                                key={doc.docType}
-                                className="flex items-center justify-between p-3 rounded-xl border border-border/30 bg-background/50 hover:bg-background/80 transition-colors"
-                              >
-                                <div className="flex items-center gap-2 min-w-0 mr-3">
-                                  <FileText className="h-4 w-4 text-muted-foreground/70 shrink-0" />
-                                  <span className="text-xs font-semibold text-foreground/90 truncate">
-                                    {doc.title}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-4 shrink-0">
-                                  {/* View Permission Toggle */}
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-muted-foreground font-medium">
-                                      View Access
-                                    </span>
-                                    <button
-                                      onClick={() =>
-                                        void togglePermission(talent, doc)
-                                      }
-                                      disabled={
-                                        permissionSaving === permissionKey
-                                      }
-                                      className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 relative cursor-pointer ${
-                                        doc.canView
-                                          ? 'bg-primary'
-                                          : 'bg-muted-foreground/30'
-                                      }`}
-                                    >
-                                      <div
-                                        className={`bg-white w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${
-                                          doc.canView
-                                            ? 'translate-x-3.5'
-                                            : 'translate-x-0'
-                                        }`}
-                                      />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </main>
-        ) : (
-          <main className="flex-1 min-w-0 flex flex-col bg-white dark:bg-card border border-border/40 rounded-[24px] my-3 mx-2 shadow-sm overflow-hidden">
-            <header className="h-14 shrink-0 border-b border-[#F1F2F6] dark:border-border/30 px-5 flex items-center justify-between gap-3 bg-background/75">
-              <div className="flex items-center gap-2 min-w-0">
-                {selectedChannel?.type === 'ai' ? (
-                  <Bot className="h-4 w-4 text-primary" />
-                ) : selectedChannel?.type === 'general' ? (
-                  <Hash className="h-4 w-4 text-muted-foreground" />
-                ) : selectedChannel?.type === 'interview' ? (
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                ) : selectedChannel?.type === 'custom' ? (
-                  <Hash className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Lock className="h-4 w-4 text-muted-foreground" />
-                )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm font-bold truncate text-foreground">
-                      {selectedChannel?.displayName ?? 'Channel'}
-                    </div>
-                  </div>
-                  <div className="text-[10px] text-muted-foreground truncate">
-                    {selectedChannel?.type === 'ai'
-                      ? 'Private DEHIX AI channel. Only your permitted context is used.'
-                      : selectedChannel?.type === 'general'
-                        ? 'General chat. Mention @dehixai when you want AI to participate.'
-                        : selectedChannel?.type === 'interview'
-                          ? `Interview workspace · ${selectedChannel.interviewStatus ?? 'scheduled'}`
-                          : selectedChannel?.type === 'custom'
-                            ? 'Custom channel. Add or remove talent any time.'
-                            : 'Private business-talent conversation.'}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                {selectedChannel?.type === 'custom' && isOwner && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openCustomChannelForm(selectedChannel)}
-                    className="h-8 text-xs"
-                  >
-                    <Settings className="h-3.5 w-3.5 mr-1" /> Manage
-                  </Button>
-                )}
-                {/* 1. If it is an interview channel, render interview-specific buttons */}
-                {selectedChannel?.type === 'interview' && (
-                  <div className="flex items-center gap-2">
-                    {isOwner &&
-                      selectedChannelParticipants
-                        .slice(0, 3)
-                        .map((participant: any) => {
-                          const person = participant.user ?? participant.userId;
-                          return (
-                            <span
-                              key={participant._id}
-                              className="hidden lg:inline-flex rounded-full border border-border/40 px-2 py-1 text-[10px] font-semibold text-muted-foreground"
-                            >
-                              {person?.name ?? participant.name ?? 'Talent'}
-                            </span>
-                          );
-                        })}
-                    {isOwner && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            setShowInterviewNotes((value) => !value)
-                          }
-                          className="h-8 text-xs"
-                        >
-                          Notes
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            void updateInterview({ status: 'completed' })
-                          }
-                          disabled={interviewSaving}
-                          className="h-8 text-xs"
-                        >
-                          Mark Complete
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => openOfferForm()}
-                          disabled={
-                            selectedChannelParticipants.length === 0
-                          }
-                          className="h-8 text-xs"
-                        >
-                          <Briefcase className="h-3.5 w-3.5 mr-1" /> Send Offer
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* 2. Meet Link Buttons for Business User (visible only to isOwner, for any channel except AI) */}
-                {isOwner && selectedChannel && selectedChannel.type !== 'ai' && (
-                  <div className="flex items-center gap-2">
-                    {selectedChannel.interviewMeetLink ? (
-                      <a
-                        href={selectedChannel.interviewMeetLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-primary/25 bg-primary/5 px-2.5 text-[10px] font-bold text-primary hover:bg-primary/10 transition-colors"
-                      >
-                        <Video className="h-3.5 w-3.5" /> Join Meet
-                      </a>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => void createMeet()}
-                        disabled={commandLoading}
-                        className="h-8 text-xs"
-                      >
-                        <Video className="h-3.5 w-3.5 mr-1" /> Create Meet
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {/* 3. Render decoration if not Owner and not in Interview channel */}
-                {!isOwner && selectedChannel?.type !== 'interview' && (
-                  <div className="hidden md:flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                    Permission-aware AI
-                  </div>
-                )}
-                <button
-                  onClick={() => setRightPanelVisible(!rightPanelVisible)}
-                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors border border-border/25 cursor-pointer shrink-0"
-                  title={
-                    rightPanelVisible
-                      ? 'Hide details panel'
-                      : 'Show details panel'
-                  }
-                >
-                  {rightPanelVisible ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M8.25 9v10.5A2.25 2.25 0 0010.5 22h6a2.25 2.25 0 002.25-2.25V5.25A2.25 2.25 0 0016.5 3h-6a2.25 2.25 0 00-2.25 2.25V9m13.5-3L21 9m0 0l-3 3m3-3H8.25"
-                      />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </header>
-
-            {selectedChannel &&
-              selectedChannel.type !== 'ai' &&
-              isOwner &&
-              showMeetLinkForm &&
-              !selectedChannel.interviewMeetLink && (
-                <div className="shrink-0 border-b border-border/40 bg-card/35 px-5 py-3 flex flex-col gap-1.5">
-                  <div className="text-[10px] text-primary/80 font-medium">
-                    Step 2: Copy the Google Meet link from the opened tab, paste it below, and click Share:
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <input
-                      value={meetLinkDraft}
-                      onChange={(event) => setMeetLinkDraft(event.target.value)}
-                      placeholder="Paste link here (e.g., https://meet.google.com/xxx-yyyy-zzz)"
-                      className="h-9 min-w-0 flex-1 rounded-md border border-border/45 bg-background/70 px-3 text-xs text-foreground outline-none focus:border-primary/40"
-                    />
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => void shareMeetLink()}
-                        disabled={commandLoading}
-                        className="h-9 text-xs"
-                      >
-                        Share
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setShowMeetLinkForm(false);
-                          setMeetLinkDraft('');
-                        }}
-                        className="h-9 px-2"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            {/* Notes editor drawer for interview channel */}
-            {selectedChannel?.type === 'interview' &&
-              showInterviewNotes &&
-              isOwner && (
-                <div className="shrink-0 border-b border-border/40 bg-card/35 px-5 py-3">
-                  <div className="flex items-start gap-2">
-                    <textarea
-                      value={interviewNotesDraft}
-                      onChange={(event) =>
-                        setInterviewNotesDraft(event.target.value)
-                      }
-                      rows={3}
-                      placeholder="Private interview notes for the business..."
-                      className="min-h-20 flex-1 resize-none rounded-lg border border-border/45 bg-background/70 px-3 py-2 text-xs outline-none focus:border-primary/40 text-foreground"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        void updateInterview({
-                          interviewNotes: interviewNotesDraft,
-                        })
-                      }
-                      disabled={interviewSaving}
-                      className="h-9 text-xs"
-                    >
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-            {selectedChannel?.type === 'interview' &&
-              showOfferForm &&
-              isOwner && (
-                <div className="shrink-0 border-b border-border/40 bg-card/40 px-5 py-4">
-                  <div className="grid gap-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-sm font-bold text-foreground">
-                          Send hire offer
-                        </div>
-                        <div className="text-[11px] text-muted-foreground">
-                          Offer becomes active only after freelancer accepts and
-                          both parties sign.
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setShowOfferForm(false)}
-                        className="h-8 px-2"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-
-                    <div className="grid gap-3 md:grid-cols-3">
-                      <label className="space-y-1 text-xs">
-                        <span className="font-semibold text-muted-foreground">
-                          Freelancer
-                        </span>
-                        <select
-                          value={offerCandidateId}
-                          onChange={(event) =>
-                            setOfferCandidateId(event.target.value)
-                          }
-                          className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
-                        >
-                          {selectedChannelParticipants.map(
-                            (participant: any) => {
-                              const person =
-                                participant.user ?? participant.userId;
-                              const value = String(
-                                person?._id ??
-                                  participant.talentId ??
-                                  participant.userId,
-                              );
-                              return (
-                                <option key={participant._id} value={value}>
-                                  {person?.name ?? participant.name ?? 'Talent'}
-                                </option>
-                              );
-                            },
-                          )}
-                        </select>
-                      </label>
-                      <label className="space-y-1 text-xs">
-                        <span className="font-semibold text-muted-foreground">
-                          Total amount
-                        </span>
-                        <input
-                          value={offerDraft.amountUsd}
-                          onChange={(event) =>
-                            setOfferDraft((prev) => ({
-                              ...prev,
-                              amountUsd: event.target.value,
-                            }))
-                          }
-                          placeholder="5000"
-                          inputMode="decimal"
-                          className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
-                        />
-                      </label>
-                      <label className="space-y-1 text-xs">
-                        <span className="font-semibold text-muted-foreground">
-                          Rate type
-                        </span>
-                        <select
-                          value={offerDraft.rateType}
-                          onChange={(event) =>
-                            setOfferDraft((prev) => ({
-                              ...prev,
-                              rateType: event.target.value,
-                            }))
-                          }
-                          className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
-                        >
-                          <option value="fixed">Fixed</option>
-                          <option value="hourly">Hourly</option>
-                          <option value="weekly">Weekly</option>
-                          <option value="monthly">Monthly</option>
-                        </select>
-                      </label>
-                    </div>
-
-                    <div className="grid gap-3 md:grid-cols-3">
-                      <label className="space-y-1 text-xs">
-                        <span className="font-semibold text-muted-foreground">
-                          Rate amount
-                        </span>
-                        <input
-                          value={offerDraft.rateAmountUsd}
-                          onChange={(event) =>
-                            setOfferDraft((prev) => ({
-                              ...prev,
-                              rateAmountUsd: event.target.value,
-                            }))
-                          }
-                          placeholder="Optional"
-                          inputMode="decimal"
-                          className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
-                        />
-                      </label>
-                      <label className="space-y-1 text-xs">
-                        <span className="font-semibold text-muted-foreground">
-                          Start date
-                        </span>
-                        <input
-                          type="date"
-                          value={offerDraft.startDate}
-                          onChange={(event) =>
-                            setOfferDraft((prev) => ({
-                              ...prev,
-                              startDate: event.target.value,
-                            }))
-                          }
-                          className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
-                        />
-                      </label>
-                      <label className="space-y-1 text-xs">
-                        <span className="font-semibold text-muted-foreground">
-                          Expected end
-                        </span>
-                        <input
-                          type="date"
-                          value={offerDraft.expectedEndDate}
-                          onChange={(event) =>
-                            setOfferDraft((prev) => ({
-                              ...prev,
-                              expectedEndDate: event.target.value,
-                            }))
-                          }
-                          className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
-                        />
-                      </label>
-                    </div>
-
-                    <label className="space-y-1 text-xs">
-                      <span className="font-semibold text-muted-foreground">
-                        Scope summary
-                      </span>
-                      <textarea
-                        rows={3}
-                        value={offerDraft.scopeSummary}
-                        onChange={(event) =>
-                          setOfferDraft((prev) => ({
-                            ...prev,
-                            scopeSummary: event.target.value,
-                          }))
-                        }
-                        className="w-full resize-none rounded-md border border-border/45 bg-background/70 px-3 py-2 text-xs outline-none focus:border-primary/40"
-                      />
-                    </label>
-                    <label className="space-y-1 text-xs">
-                      <span className="font-semibold text-muted-foreground">
-                        Terms
-                      </span>
-                      <textarea
-                        rows={3}
-                        value={offerDraft.terms}
-                        onChange={(event) =>
-                          setOfferDraft((prev) => ({
-                            ...prev,
-                            terms: event.target.value,
-                          }))
-                        }
-                        className="w-full resize-none rounded-md border border-border/45 bg-background/70 px-3 py-2 text-xs outline-none focus:border-primary/40"
-                      />
-                    </label>
-                    <label className="space-y-1 text-xs">
-                      <span className="font-semibold text-muted-foreground">
-                        Milestone plan
-                      </span>
-                      <textarea
-                        rows={3}
-                        value={offerDraft.milestonePlanText}
-                        onChange={(event) =>
-                          setOfferDraft((prev) => ({
-                            ...prev,
-                            milestonePlanText: event.target.value,
-                          }))
-                        }
-                        placeholder="One per line: Title | Amount | YYYY-MM-DD | Description"
-                        className="w-full resize-none rounded-md border border-border/45 bg-background/70 px-3 py-2 text-xs outline-none focus:border-primary/40"
-                      />
-                    </label>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setShowOfferForm(false)}
-                        disabled={offerSubmitting}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => void sendHireOffer()}
-                        disabled={offerSubmitting}
-                      >
-                        {offerSubmitting ? 'Sending...' : 'Send Offer'}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            <div className="flex-1 overflow-y-auto p-5 space-y-3">
-              {loadingMessages ? (
-                <div className="text-sm text-muted-foreground animate-pulse">
-                  Loading messages...
-                </div>
-              ) : messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto space-y-6 animate-fadeIn">
-                  <div className="w-16 h-16 rounded-2xl bg-muted border border-border/60 flex items-center justify-center text-primary shadow-inner">
-                    <Bot className="h-8 w-8 text-foreground" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-base font-bold text-foreground">
-                      {selectedChannel?.type === 'ai'
-                        ? 'Welcome to your personal DEHIX AI'
-                        : 'Welcome to the Workspace Chat'}
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      {selectedChannel?.type === 'ai'
-                        ? 'Ask anything about the project validation, blueprints, features, roadmap, and technologies. The AI will assist you instantly.'
-                        : 'Start a conversation with your team or call @dehixai for permission-aware AI assistance with project tasks, contracts, or milestones.'}
-                    </p>
-                  </div>
-                  <div className="w-full space-y-2 pt-2">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-left px-1">
-                      Suggested Prompt Actions
-                    </div>
-                    <div className="flex flex-wrap gap-2 justify-start">
-                      {[
-                        {
-                          label: 'Analyze project scope',
-                          text:
-                            selectedChannel?.type === 'ai'
-                              ? 'what is the core scope of this project?'
-                              : '@dehixai what is the core scope of this project?',
-                        },
-                        {
-                          label: 'Check required documents',
-                          text:
-                            selectedChannel?.type === 'ai'
-                              ? 'which documents are pending for my role?'
-                              : '@dehixai which documents are pending for my role?',
-                        },
-                        {
-                          label: 'Generate team milestones',
-                          text:
-                            selectedChannel?.type === 'ai'
-                              ? 'can you outline the main milestones for our roles?'
-                              : '@dehixai can you outline the main milestones for our roles?',
-                        },
-                      ].map((chip, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            setMessageInput(chip.text);
-                          }}
-                          className="text-left text-[12px] font-[600] rounded-xl border border-[#E5E7EB] bg-white text-[#4b5563] hover:bg-slate-50 px-3.5 py-1.5 transition-all cursor-pointer shadow-sm hover:shadow dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200 animate-fadeIn"
-                        >
-                          ⚡ {chip.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                messages.map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    isMine={message.senderId === user._id}
-                  />
-                ))
-              )}
-
-              {/* AI thinking loader animation */}
-              {sending &&
-                (lastSentText.toLowerCase().includes('@dehixai') ||
-                  selectedChannel?.type === 'ai') && (
-                  <div className="flex gap-3 my-4 flex-row animate-pulse">
-                    <div className="shrink-0 self-end mb-1">
-                      <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-sm shrink-0">
-                        <Sparkles className="h-4 w-4" />
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-start max-w-[74%]">
-                      <div className="flex items-center gap-2 mb-1 px-1.5">
-                        <span className="text-[13px] font-[800] uppercase tracking-widest text-foreground/80">
-                          DEHIX AI
-                        </span>
-                        <span className="text-[11px] font-[400] text-[#6B7280]">
-                          thinking...
-                        </span>
-                      </div>
-                      <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-sm shadow-sm border border-border/40 bg-card text-foreground flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-foreground/60 animate-bounce [animation-delay:-0.3s]" />
-                        <span className="h-2 w-2 rounded-full bg-foreground/60 animate-bounce [animation-delay:-0.15s]" />
-                        <span className="h-2 w-2 rounded-full bg-foreground/60 animate-bounce" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              <div ref={endRef} />
-            </div>
-
-            {/* Input area */}
-            <div className="shrink-0 border-t border-border/40 p-4 bg-background/80">
-              {pendingCommand && (
-                <div className="mb-3 rounded-xl border border-primary/25 bg-primary/5 p-3 animate-fadeIn">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold text-primary">
-                        /{pendingCommand.action}
-                      </div>
-                      <div className="mt-1 whitespace-pre-wrap text-sm font-semibold text-foreground">
-                        {pendingCommand.summary}
-                      </div>
-                      {pendingCommand.targets.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {pendingCommand.targets.map((target) => (
-                            <span
-                              key={target.participantId}
-                              className="rounded-full border border-border/40 bg-background/60 px-2 py-1 text-[10px] font-bold text-muted-foreground"
-                            >
-                              {target.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {pendingCommand.warnings &&
-                        pendingCommand.warnings.length > 0 && (
-                          <div className="mt-2 text-[11px] text-amber-500">
-                            {pendingCommand.warnings.join(' ')}
-                          </div>
-                        )}
-                    </div>
-                    <div className="flex shrink-0 gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setPendingCommand(null)}
-                        disabled={commandLoading}
-                        className="h-8 text-xs"
-                      >
-                        {pendingCommand.requiresConfirmation
-                          ? 'Cancel'
-                          : 'Close'}
-                      </Button>
-                      {pendingCommand.requiresConfirmation && (
-                        <Button
-                          size="sm"
-                          onClick={() => void executeCommand()}
-                          disabled={commandLoading}
-                          className="h-8 text-xs"
-                        >
-                          {commandLoading ? 'Running...' : 'Confirm'}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {messageInput.startsWith('/') && !pendingCommand && (
-                <div className="mb-2 flex flex-wrap gap-1.5 rounded-lg border border-border/40 bg-card/45 p-2 animate-fadeIn">
-                  {commandSuggestions.map((item) => (
-                    <button
-                      key={item.command}
-                      onClick={() => setMessageInput(item.command)}
-                      className="rounded-md border border-border/35 bg-background/50 px-2 py-1 text-[10px] font-bold text-muted-foreground hover:text-foreground"
-                    >
-                      {item.command}{' '}
-                      <span className="font-normal opacity-70">
-                        {item.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-              {mentionSuggestions.length > 0 && !pendingCommand && (
-                <div className="mb-2 flex flex-wrap gap-1.5 rounded-lg border border-border/40 bg-card/45 p-2 animate-fadeIn">
-                  {mentionSuggestions.map((participant: any) => {
-                    const person = participant.user ?? participant.userId;
-                    return (
-                      <button
-                        key={participant._id}
-                        onClick={() => insertMention(participant)}
-                        className="rounded-md border border-border/35 bg-background/50 px-2 py-1 text-[10px] font-bold text-muted-foreground hover:text-foreground"
-                      >
-                        @{person?.name ?? participant.name ?? 'Talent'}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              <div className="rounded-2xl border border-[#E5E7EB] dark:border-border/40 bg-card p-2.5 focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/45 transition-all duration-200">
-                <textarea
-                  value={messageInput}
-                  onChange={(event) => setMessageInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault();
-                      void sendMessage();
-                    }
-                  }}
-                  rows={2}
-                  placeholder={
-                    selectedChannel?.type === 'ai'
-                      ? 'Ask the AI Agent anything...'
-                      : isOwner
-                        ? `Message ${selectedChannel?.displayName ?? 'channel'}... /help for commands`
-                        : `Message ${selectedChannel?.displayName ?? 'channel'}...`
-                  }
-                  className="w-full resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground/45 text-foreground"
-                />
-                <div className="flex items-center justify-between gap-3 px-1 mt-2 pt-2 border-t border-border/10">
-                  <div className="flex items-center gap-2">
-                    {selectedChannel?.type !== 'ai' && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!messageInput.includes('@dehixai')) {
-                            setMessageInput((prev) => '@dehixai ' + prev);
-                          }
-                        }}
-                        className="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 px-2.5 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer shrink-0"
-                        title="Ask AI"
-                      >
-                        <Bot className="h-3 w-3" /> Mention @dehixai
-                      </button>
-                    )}
-                    <span className="text-[10px] font-[500] text-[#9CA3AF] hidden sm:inline">
-                      {selectedChannel?.type === 'ai'
-                        ? 'Personal AI answers with only your permitted room context.'
-                        : isOwner
-                          ? 'Use @dehixai for AI, @name to notify talent, or / commands.'
-                          : 'Use @dehixai for AI or @name mentions in conversations.'}
-                    </span>
-                  </div>
-                  <Button
-                    onClick={() => void sendMessage()}
-                    disabled={!messageInput.trim() || sending}
-                    className="h-8 px-4 text-xs font-bold bg-[#7E8590] text-white hover:bg-[#6c727c] rounded-lg disabled:opacity-50 transition-all shadow hover:shadow-md cursor-pointer border border-transparent"
-                  >
-                    {sending ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="h-3 w-3 rounded-full border border-white/40 border-t-white animate-spin" />
-                        Sending
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Send className="h-3.5 w-3.5" /> Send
-                      </span>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </main>
-        )}
-
-        {/* Right Side Panel - Participants & Documents (300px) */}
-        {rightPanelVisible && (
-          <aside className="w-[300px] shrink-0 border-l border-border/40 bg-card/30 flex flex-col overflow-hidden animate-fadeIn">
-            {/* Header */}
-            <div className="h-14 px-4 border-b border-border/40 flex items-center justify-between shrink-0 bg-background/75">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
-                Workspace Details
               </div>
               <button
-                onClick={() => setRightPanelVisible(false)}
-                className="h-8 w-8 rounded-md hover:bg-muted/70 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                title="Hide details panel"
+                onClick={() => void loadWorkspace(selectedChannelId, true)}
+                className="h-8 w-8 rounded-md hover:bg-muted/70 inline-flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+                title="Refresh Workspace"
               >
-                <X className="h-4 w-4" />
+                <RefreshCw className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Scrollable content inside panel */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              <PlatformSyncCockpit
-                workspace={workspace}
-                isOwner={isOwner}
-                userRole={user.role}
-                onNavigate={navigate}
-                onSelectChannel={setSelectedChannelId}
-                onPublishMarketplace={publishMarketplaceProject}
-                isPublishingMarketplace={publishingProject}
-              />
+            {/* Dynamic Content based on activeTab */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {activeTab === 'channels' && (
+                <div className="space-y-4">
+                  {/* Standard Channels Group */}
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5" />
+                        Channels
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[9px]">
+                          {regularChannels.length}
+                        </span>
+                        {isOwner && (
+                          <button
+                            onClick={() => openCustomChannelForm()}
+                            className="inline-flex h-5 w-5 items-center justify-center rounded border border-border/45 bg-background/65 text-muted-foreground hover:text-foreground"
+                            title="Create custom channel"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        )}
+                      </span>
+                    </div>
+                    <div className="space-y-1 mt-1.5">
+                      {regularChannels.map((channel) => (
+                        <button
+                          key={channel._id}
+                          onClick={() => setSelectedChannelId(channel._id)}
+                          className={`w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-all ${
+                            selectedChannelId === channel._id
+                              ? 'bg-primary/12 text-primary border border-primary/20 shadow-sm'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/45 border border-transparent'
+                          }`}
+                        >
+                          <Hash className="h-3.5 w-3.5" />
+                          <span className="truncate font-semibold">
+                            {channel.displayName}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Participants Section */}
-              {isOwner && (
+                  {/* Personal AI Group */}
+                  <div>
+                    <PanelHeader
+                      icon={<Bot className="h-3.5 w-3.5 text-primary" />}
+                      label="Personal AI"
+                      count={aiChannels.length}
+                    />
+                    <div className="space-y-1 mt-1.5">
+                      {aiChannels.map((channel) => (
+                        <button
+                          key={channel._id}
+                          onClick={() => setSelectedChannelId(channel._id)}
+                          className={`w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-all ${
+                            selectedChannelId === channel._id
+                              ? 'bg-primary/12 text-primary border border-primary/20 shadow-sm'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/45 border border-transparent'
+                          }`}
+                        >
+                          <Bot className="h-3.5 w-3.5 text-primary" />
+                          <span className="truncate font-semibold">
+                            {channel.displayName}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Interview Channels Group */}
+                  {interviewChannels.length > 0 && (
+                    <div>
+                      <PanelHeader
+                        icon={<Calendar className="h-3.5 w-3.5" />}
+                        label="Interviews"
+                        count={interviewChannels.length}
+                      />
+                      <div className="space-y-1 mt-1.5">
+                        {interviewChannels.map((channel) => (
+                          <button
+                            key={channel._id}
+                            onClick={() => setSelectedChannelId(channel._id)}
+                            className={`w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-all ${
+                              selectedChannelId === channel._id
+                                ? 'bg-primary/12 text-primary border border-primary/20 shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/45 border border-transparent'
+                            }`}
+                          >
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span className="truncate font-semibold">
+                              {channel.displayName}
+                            </span>
+                            <span className="ml-auto rounded border border-border/35 px-1.5 py-0.5 text-[9px] capitalize opacity-75">
+                              {channel.interviewStatus ?? 'scheduled'}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Direct Messages Group */}
+                  <div>
+                    <PanelHeader
+                      icon={<User className="h-3.5 w-3.5" />}
+                      label="Direct Messages"
+                      count={directChannels.length}
+                    />
+                    <div className="space-y-1 mt-1.5">
+                      {directChannels.length === 0 ? (
+                        <div className="text-[10px] text-muted-foreground/50 italic px-2 py-1">
+                          No direct messages
+                        </div>
+                      ) : (
+                        directChannels.map((channel) => (
+                          <button
+                            key={channel._id}
+                            onClick={() => setSelectedChannelId(channel._id)}
+                            className={`w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-all ${
+                              selectedChannelId === channel._id
+                                ? 'bg-primary/12 text-primary border border-primary/20 shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/45 border border-transparent'
+                            }`}
+                          >
+                            <User className="h-3.5 w-3.5 text-muted-foreground/80" />
+                            <span className="truncate font-semibold">
+                              {getChannelDisplayName(channel)}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'roles' && (
+                <div className="space-y-4">
+                  <PanelHeader
+                    icon={<Briefcase className="h-3.5 w-3.5" />}
+                    label="Roles and Tasks"
+                    count={workspace.roles.length}
+                  />
+                  <div className="space-y-2 mt-1.5">
+                    {workspace.roles.map((role) => {
+                      const roleTickets = workspace.tickets.filter(
+                        (ticket) =>
+                          String(ticket.assignedRole ?? '') ===
+                          String(role._id),
+                      );
+                      return (
+                        <div
+                          key={role._id}
+                          className="rounded-md border border-border/40 bg-background/45 p-2.5 shadow-sm"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-xs font-semibold truncate">
+                              {role.roleTitle}
+                            </div>
+                            <span className="text-[9px] rounded border border-border/45 px-1.5 py-0.5 text-muted-foreground uppercase">
+                              {role.status}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground truncate mt-1">
+                            {role.skillDomain}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground mt-1">
+                            {roleTickets.length} assigned ticket
+                            {roleTickets.length === 1 ? '' : 's'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'access' && isOwner && (
+                <div className="space-y-4">
+                  <PanelHeader
+                    icon={<Shield className="h-3.5 w-3.5" />}
+                    label="Access Settings"
+                  />
+                  <div className="rounded-lg border border-border/30 bg-muted/20 p-3 text-[11px] text-muted-foreground leading-relaxed animate-fadeIn">
+                    You are editing permissions in the central panel. Use the
+                    toggles to configure{' '}
+                    <span className="font-semibold text-foreground">View</span>{' '}
+                    access.
+                  </div>
+                  <div className="space-y-1.5 pt-2">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Quick Filter
+                    </div>
+                    {workspace.permissionMatrix.map((talent) => {
+                      const totalDocs = talent.documents.length;
+                      const grantedViewCount = talent.documents.filter(
+                        (d) => d.canView,
+                      ).length;
+                      const isFullyGranted = grantedViewCount === totalDocs;
+                      return (
+                        <button
+                          key={talent.participantId}
+                          onClick={() => {
+                            setAccessSearch(talent.name);
+                          }}
+                          className={`w-full flex items-center justify-between rounded-md p-2 text-left text-xs hover:bg-muted/40 transition-colors border ${
+                            accessSearch === talent.name
+                              ? 'border-primary/30 bg-primary/5'
+                              : 'border-transparent'
+                          }`}
+                        >
+                          <span className="truncate font-semibold text-foreground">
+                            {talent.name}
+                          </span>
+                          <span
+                            className={`text-[9px] px-1 rounded ${isFullyGranted ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}
+                          >
+                            {grantedViewCount}/{totalDocs}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {accessSearch && (
+                      <button
+                        onClick={() => setAccessSearch('')}
+                        className="w-full text-center text-[10px] text-primary hover:underline mt-2 cursor-pointer"
+                      >
+                        Clear Filter
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </aside>
+
+          {/* Middle Main Chat Panel OR Access Control Section */}
+          {activeTab === 'access' && isOwner ? (
+            <main className="flex-1 min-w-0 flex flex-col bg-white dark:bg-card border border-border/40 rounded-[24px] my-3 mx-2 shadow-sm overflow-hidden animate-fadeIn">
+              {/* Header */}
+              <header className="h-14 shrink-0 border-b border-[#F1F2F6] dark:border-border/30 px-5 flex items-center justify-between gap-3 bg-background/75">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-foreground">
+                      Document Access Control
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      Manage view permissions for workspace participants.
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => void grantFullAccessToAll()}
+                    className="text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 bg-emerald-500/5 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 animate-fadeIn"
+                  >
+                    Grant All View Access
+                  </button>
+                  <button
+                    onClick={() => void revokeFullAccessFromAll()}
+                    className="text-xs font-bold text-destructive border border-destructive/25 bg-destructive/5 hover:bg-destructive/10 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 animate-fadeIn"
+                  >
+                    Revoke All View Access
+                  </button>
+                </div>
+              </header>
+
+              {/* Content: A list of participants in a table/grid style */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Search and Filters */}
+                <div className="relative max-w-md animate-fadeIn">
+                  <input
+                    type="text"
+                    value={accessSearch}
+                    onChange={(e) => setAccessSearch(e.target.value)}
+                    placeholder="Search participants by name or role..."
+                    className="w-full bg-muted/45 border border-border/60 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/45 transition-colors text-foreground"
+                  />
+                  {accessSearch && (
+                    <button
+                      onClick={() => setAccessSearch('')}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {filteredMatrix.length === 0 ? (
+                  <div className="text-center py-12 border border-dashed border-border/40 rounded-2xl bg-muted/10">
+                    <Shield className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">
+                      No participants matched your search.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredMatrix.map((talent) => {
+                      return (
+                        <div
+                          key={talent.participantId}
+                          className="border border-border/40 rounded-2xl bg-card/45 shadow-sm p-4 hover:border-border/70 transition-all"
+                        >
+                          {/* Participant info header */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/20 pb-3 mb-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-sm text-primary">
+                                {talent.name?.[0]?.toUpperCase() ?? 'T'}
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-bold text-foreground">
+                                  {talent.name}
+                                </h4>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {talent.roleTitle ?? 'No Role Assigned'} ·{' '}
+                                  {talent.email ?? 'No Email'} · Status:{' '}
+                                  <span className="font-semibold uppercase text-primary/80">
+                                    {talent.status}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() =>
+                                  void grantFullAccessToParticipant(talent)
+                                }
+                                className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                              >
+                                Grant All
+                              </button>
+                              <button
+                                onClick={() =>
+                                  void revokeAllAccessForParticipant(talent)
+                                }
+                                className="text-[11px] font-bold text-destructive bg-destructive/5 hover:bg-destructive/10 border border-destructive/20 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                              >
+                                Revoke All
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Document grid inside participant block */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {talent.documents.map((doc) => {
+                              const permissionKey = `${talent.participantId}:${doc.docType}`;
+                              return (
+                                <div
+                                  key={doc.docType}
+                                  className="flex items-center justify-between p-3 rounded-xl border border-border/30 bg-background/50 hover:bg-background/80 transition-colors"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0 mr-3">
+                                    <FileText className="h-4 w-4 text-muted-foreground/70 shrink-0" />
+                                    <span className="text-xs font-semibold text-foreground/90 truncate">
+                                      {getCanonicalDocTitle(
+                                        doc.docType,
+                                        doc.title,
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-4 shrink-0">
+                                    {/* View Permission Toggle */}
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[10px] text-muted-foreground font-medium">
+                                        View Access
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          void togglePermission(talent, doc)
+                                        }
+                                        disabled={
+                                          permissionSaving === permissionKey
+                                        }
+                                        className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 relative cursor-pointer ${
+                                          doc.canView
+                                            ? 'bg-primary'
+                                            : 'bg-muted-foreground/30'
+                                        }`}
+                                      >
+                                        <div
+                                          className={`bg-white w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${
+                                            doc.canView
+                                              ? 'translate-x-3.5'
+                                              : 'translate-x-0'
+                                          }`}
+                                        />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </main>
+          ) : (
+            <main className="flex-1 min-w-0 flex flex-col bg-white dark:bg-card border border-border/40 rounded-[24px] my-3 mx-2 shadow-sm overflow-hidden">
+              <header className="h-14 shrink-0 border-b border-[#F1F2F6] dark:border-border/30 px-5 flex items-center justify-between gap-3 bg-background/75">
+                <div className="flex items-center gap-2 min-w-0">
+                  {selectedChannel?.type === 'ai' ? (
+                    <Bot className="h-4 w-4 text-primary" />
+                  ) : selectedChannel?.type === 'general' ? (
+                    <Hash className="h-4 w-4 text-muted-foreground" />
+                  ) : selectedChannel?.type === 'interview' ? (
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  ) : selectedChannel?.type === 'custom' ? (
+                    <Hash className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-bold truncate text-foreground">
+                        {getChannelDisplayName(selectedChannel)}
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground truncate">
+                      {selectedChannel?.type === 'ai'
+                        ? 'Private DEHIX AI channel. Only your permitted context is used.'
+                        : selectedChannel?.type === 'general'
+                          ? 'General chat. Mention @dehixai when you want AI to participate.'
+                          : selectedChannel?.type === 'interview'
+                            ? `Interview workspace · ${selectedChannel.interviewStatus ?? 'scheduled'}`
+                            : selectedChannel?.type === 'custom'
+                              ? 'Custom channel. Add or remove talent any time.'
+                              : 'Private business-talent conversation.'}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {selectedChannel?.type === 'custom' && isOwner && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openCustomChannelForm(selectedChannel)}
+                      className="h-8 text-xs"
+                    >
+                      <Settings className="h-3.5 w-3.5 mr-1" /> Manage
+                    </Button>
+                  )}
+                  {/* 1. If it is an interview channel, render interview-specific buttons */}
+                  {selectedChannel?.type === 'interview' && (
+                    <div className="flex items-center gap-2">
+                      {isOwner &&
+                        selectedChannelParticipants
+                          .slice(0, 3)
+                          .map((participant: any) => {
+                            const person =
+                              participant.user ?? participant.userId;
+                            return (
+                              <span
+                                key={participant._id}
+                                className="hidden lg:inline-flex rounded-full border border-border/40 px-2 py-1 text-[10px] font-semibold text-muted-foreground"
+                              >
+                                {person?.name ?? participant.name ?? 'Talent'}
+                              </span>
+                            );
+                          })}
+                      {isOwner && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              setShowInterviewNotes((value) => !value)
+                            }
+                            className="h-8 text-xs"
+                          >
+                            Notes
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              void updateInterview({ status: 'completed' })
+                            }
+                            disabled={interviewSaving}
+                            className="h-8 text-xs"
+                          >
+                            Mark Complete
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => openOfferForm()}
+                            disabled={selectedChannelParticipants.length === 0}
+                            className="h-8 text-xs"
+                          >
+                            <Briefcase className="h-3.5 w-3.5 mr-1" /> Send
+                            Offer
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 2. Meet Link Buttons for Business User (visible only to isOwner, for any channel except AI) */}
+                  {isOwner &&
+                    selectedChannel &&
+                    selectedChannel.type !== 'ai' && (
+                      <div className="flex items-center gap-2">
+                        {selectedChannel.interviewMeetLink ? (
+                          <a
+                            href={selectedChannel.interviewMeetLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-primary/25 bg-primary/5 px-2.5 text-[10px] font-bold text-primary hover:bg-primary/10 transition-colors"
+                          >
+                            <Video className="h-3.5 w-3.5" /> Join Meet
+                          </a>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => void createMeet()}
+                            disabled={commandLoading}
+                            className="h-8 text-xs"
+                          >
+                            <Video className="h-3.5 w-3.5 mr-1" /> Create Meet
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                  {/* 3. Render decoration if not Owner and not in Interview channel */}
+                  {!isOwner && selectedChannel?.type !== 'interview' && (
+                    <div className="hidden md:flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      Permission-aware AI
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setRightPanelVisible(!rightPanelVisible)}
+                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors border border-border/25 cursor-pointer shrink-0"
+                    title={
+                      rightPanelVisible
+                        ? 'Hide details panel'
+                        : 'Show details panel'
+                    }
+                  >
+                    {rightPanelVisible ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M8.25 9v10.5A2.25 2.25 0 0010.5 22h6a2.25 2.25 0 002.25-2.25V5.25A2.25 2.25 0 0016.5 3h-6a2.25 2.25 0 00-2.25 2.25V9m13.5-3L21 9m0 0l-3 3m3-3H8.25"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </header>
+
+              {selectedChannel &&
+                selectedChannel.type !== 'ai' &&
+                isOwner &&
+                showMeetLinkForm &&
+                !selectedChannel.interviewMeetLink && (
+                  <div className="shrink-0 border-b border-border/40 bg-card/35 px-5 py-3 flex flex-col gap-1.5">
+                    <div className="text-[10px] text-primary/80 font-medium">
+                      Step 2: Copy the Google Meet link from the opened tab,
+                      paste it below, and click Share:
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <input
+                        value={meetLinkDraft}
+                        onChange={(event) =>
+                          setMeetLinkDraft(event.target.value)
+                        }
+                        placeholder="Paste link here (e.g., https://meet.google.com/xxx-yyyy-zzz)"
+                        className="h-9 min-w-0 flex-1 rounded-md border border-border/45 bg-background/70 px-3 text-xs text-foreground outline-none focus:border-primary/40"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => void shareMeetLink()}
+                          disabled={commandLoading}
+                          className="h-9 text-xs"
+                        >
+                          Share
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setShowMeetLinkForm(false);
+                            setMeetLinkDraft('');
+                          }}
+                          className="h-9 px-2"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              {/* Notes editor drawer for interview channel */}
+              {selectedChannel?.type === 'interview' &&
+                showInterviewNotes &&
+                isOwner && (
+                  <div className="shrink-0 border-b border-border/40 bg-card/35 px-5 py-3">
+                    <div className="flex items-start gap-2">
+                      <textarea
+                        value={interviewNotesDraft}
+                        onChange={(event) =>
+                          setInterviewNotesDraft(event.target.value)
+                        }
+                        rows={3}
+                        placeholder="Private interview notes for the business..."
+                        className="min-h-20 flex-1 resize-none rounded-lg border border-border/45 bg-background/70 px-3 py-2 text-xs outline-none focus:border-primary/40 text-foreground"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          void updateInterview({
+                            interviewNotes: interviewNotesDraft,
+                          })
+                        }
+                        disabled={interviewSaving}
+                        className="h-9 text-xs"
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+              {selectedChannel?.type === 'interview' &&
+                showOfferForm &&
+                isOwner && (
+                  <div className="shrink-0 border-b border-border/40 bg-card/40 px-5 py-4">
+                    <div className="grid gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-bold text-foreground">
+                            Send hire offer
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            Offer becomes active only after freelancer accepts
+                            and both parties sign.
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setShowOfferForm(false)}
+                          className="h-8 px-2"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <label className="space-y-1 text-xs">
+                          <span className="font-semibold text-muted-foreground">
+                            Freelancer
+                          </span>
+                          <select
+                            value={offerCandidateId}
+                            onChange={(event) =>
+                              setOfferCandidateId(event.target.value)
+                            }
+                            className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
+                          >
+                            {selectedChannelParticipants.map(
+                              (participant: any) => {
+                                const person =
+                                  participant.user ?? participant.userId;
+                                const value = String(
+                                  person?._id ??
+                                    participant.talentId ??
+                                    participant.userId,
+                                );
+                                return (
+                                  <option key={participant._id} value={value}>
+                                    {person?.name ??
+                                      participant.name ??
+                                      'Talent'}
+                                  </option>
+                                );
+                              },
+                            )}
+                          </select>
+                        </label>
+                        <label className="space-y-1 text-xs">
+                          <span className="font-semibold text-muted-foreground">
+                            Total amount
+                          </span>
+                          <input
+                            value={offerDraft.amountUsd}
+                            onChange={(event) =>
+                              setOfferDraft((prev) => ({
+                                ...prev,
+                                amountUsd: event.target.value,
+                              }))
+                            }
+                            placeholder="5000"
+                            inputMode="decimal"
+                            className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
+                          />
+                        </label>
+                        <label className="space-y-1 text-xs">
+                          <span className="font-semibold text-muted-foreground">
+                            Rate type
+                          </span>
+                          <select
+                            value={offerDraft.rateType}
+                            onChange={(event) =>
+                              setOfferDraft((prev) => ({
+                                ...prev,
+                                rateType: event.target.value,
+                              }))
+                            }
+                            className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
+                          >
+                            <option value="fixed">Fixed</option>
+                            <option value="hourly">Hourly</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                          </select>
+                        </label>
+                      </div>
+
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <label className="space-y-1 text-xs">
+                          <span className="font-semibold text-muted-foreground">
+                            Rate amount
+                          </span>
+                          <input
+                            value={offerDraft.rateAmountUsd}
+                            onChange={(event) =>
+                              setOfferDraft((prev) => ({
+                                ...prev,
+                                rateAmountUsd: event.target.value,
+                              }))
+                            }
+                            placeholder="Optional"
+                            inputMode="decimal"
+                            className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
+                          />
+                        </label>
+                        <label className="space-y-1 text-xs">
+                          <span className="font-semibold text-muted-foreground">
+                            Start date
+                          </span>
+                          <input
+                            type="date"
+                            value={offerDraft.startDate}
+                            onChange={(event) =>
+                              setOfferDraft((prev) => ({
+                                ...prev,
+                                startDate: event.target.value,
+                              }))
+                            }
+                            className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
+                          />
+                        </label>
+                        <label className="space-y-1 text-xs">
+                          <span className="font-semibold text-muted-foreground">
+                            Expected end
+                          </span>
+                          <input
+                            type="date"
+                            value={offerDraft.expectedEndDate}
+                            onChange={(event) =>
+                              setOfferDraft((prev) => ({
+                                ...prev,
+                                expectedEndDate: event.target.value,
+                              }))
+                            }
+                            className="h-9 w-full rounded-md border border-border/45 bg-background/70 px-2 text-xs outline-none focus:border-primary/40"
+                          />
+                        </label>
+                      </div>
+
+                      <label className="space-y-1 text-xs">
+                        <span className="font-semibold text-muted-foreground">
+                          Scope summary
+                        </span>
+                        <textarea
+                          rows={3}
+                          value={offerDraft.scopeSummary}
+                          onChange={(event) =>
+                            setOfferDraft((prev) => ({
+                              ...prev,
+                              scopeSummary: event.target.value,
+                            }))
+                          }
+                          className="w-full resize-none rounded-md border border-border/45 bg-background/70 px-3 py-2 text-xs outline-none focus:border-primary/40"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-semibold text-muted-foreground">
+                          Terms
+                        </span>
+                        <textarea
+                          rows={3}
+                          value={offerDraft.terms}
+                          onChange={(event) =>
+                            setOfferDraft((prev) => ({
+                              ...prev,
+                              terms: event.target.value,
+                            }))
+                          }
+                          className="w-full resize-none rounded-md border border-border/45 bg-background/70 px-3 py-2 text-xs outline-none focus:border-primary/40"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-semibold text-muted-foreground">
+                          Milestone plan
+                        </span>
+                        <textarea
+                          rows={3}
+                          value={offerDraft.milestonePlanText}
+                          onChange={(event) =>
+                            setOfferDraft((prev) => ({
+                              ...prev,
+                              milestonePlanText: event.target.value,
+                            }))
+                          }
+                          placeholder="One per line: Title | Amount | YYYY-MM-DD | Description"
+                          className="w-full resize-none rounded-md border border-border/45 bg-background/70 px-3 py-2 text-xs outline-none focus:border-primary/40"
+                        />
+                      </label>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowOfferForm(false)}
+                          disabled={offerSubmitting}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => void sendHireOffer()}
+                          disabled={offerSubmitting}
+                        >
+                          {offerSubmitting ? 'Sending...' : 'Send Offer'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              <div className="flex-1 overflow-y-auto p-5 space-y-3">
+                {loadingMessages ? (
+                  <div className="text-sm text-muted-foreground animate-pulse">
+                    Loading messages...
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto space-y-6 animate-fadeIn">
+                    {/* Premium Glowing Bot Badge */}
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute -inset-2 bg-primary/10 rounded-full blur-xl animate-pulse" />
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary/15 via-primary/5 to-transparent border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/5 relative z-10">
+                        <Bot className="h-8 w-8 text-primary" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-bold tracking-tight text-foreground">
+                        {selectedChannel?.type === 'ai'
+                          ? 'Welcome to your personal DEHIX AI'
+                          : 'Welcome to the Workspace Chat'}
+                      </h3>
+                      <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                        {selectedChannel?.type === 'ai'
+                          ? 'Ask anything about the project validation, blueprints, features, roadmap, and technologies. The AI will assist you instantly.'
+                          : 'Start a conversation with your team or call @dehixai for permission-aware AI assistance with project tasks, contracts, or milestones.'}
+                      </p>
+                    </div>
+
+                    <div className="w-full space-y-2 pt-2">
+                      <div className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest text-center">
+                        Suggested Prompt Actions
+                      </div>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {[
+                          {
+                            label: 'Analyze project scope',
+                            text:
+                              selectedChannel?.type === 'ai'
+                                ? 'what is the core scope of this project?'
+                                : '@dehixai what is the core scope of this project?',
+                          },
+                          {
+                            label: 'Check required documents',
+                            text:
+                              selectedChannel?.type === 'ai'
+                                ? 'which documents are pending for my role?'
+                                : '@dehixai which documents are pending for my role?',
+                          },
+                          {
+                            label: 'Generate team milestones',
+                            text:
+                              selectedChannel?.type === 'ai'
+                                ? 'can you outline the main milestones for our roles?'
+                                : '@dehixai can you outline the main milestones for our roles?',
+                          },
+                        ].map((chip, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setMessageInput(chip.text);
+                            }}
+                            className="text-left text-xs font-semibold rounded-2xl border border-border/30 bg-card/45 hover:bg-primary/5 hover:border-primary/30 text-muted-foreground hover:text-foreground px-4 py-2.5 transition-all duration-200 cursor-pointer shadow-sm hover:shadow hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2 animate-in fade-in duration-200"
+                          >
+                            <Sparkles className="h-3.5 w-3.5 text-foreground/70 shrink-0" />{' '}
+                            {chip.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  messages.map((message) => (
+                    <MessageBubble
+                      key={message.id}
+                      message={message}
+                      isMine={message.senderId === user._id}
+                    />
+                  ))
+                )}
+
+                {/* AI thinking loader animation */}
+                {sending &&
+                  (lastSentText.toLowerCase().includes('@dehixai') ||
+                    selectedChannel?.type === 'ai') && (
+                    <div className="flex gap-3 my-4 flex-row animate-pulse">
+                      <div className="shrink-0 self-end mb-1">
+                        <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-sm shrink-0">
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-start max-w-[74%]">
+                        <div className="flex items-center gap-2 mb-1 px-1.5">
+                          <span className="text-[13px] font-[800] uppercase tracking-widest text-foreground/80">
+                            DEHIX AI
+                          </span>
+                          <span className="text-[11px] font-[400] text-[#6B7280]">
+                            thinking...
+                          </span>
+                        </div>
+                        <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-sm shadow-sm border border-border/40 bg-card text-foreground flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-foreground/60 animate-bounce [animation-delay:-0.3s]" />
+                          <span className="h-2 w-2 rounded-full bg-foreground/60 animate-bounce [animation-delay:-0.15s]" />
+                          <span className="h-2 w-2 rounded-full bg-foreground/60 animate-bounce" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                <div ref={endRef} />
+              </div>
+
+              {/* Input area */}
+              <div className="shrink-0 border-t border-border/40 p-4 bg-background/80">
+                {pendingCommand && (
+                  <div className="mb-3 rounded-xl border border-primary/25 bg-primary/5 p-3 animate-fadeIn">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-primary">
+                          /{pendingCommand.action}
+                        </div>
+                        <div className="mt-1 whitespace-pre-wrap text-sm font-semibold text-foreground">
+                          {pendingCommand.summary}
+                        </div>
+                        {pendingCommand.targets.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {pendingCommand.targets.map((target) => (
+                              <span
+                                key={target.participantId}
+                                className="rounded-full border border-border/40 bg-background/60 px-2 py-1 text-[10px] font-bold text-muted-foreground"
+                              >
+                                {target.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {pendingCommand.warnings &&
+                          pendingCommand.warnings.length > 0 && (
+                            <div className="mt-2 text-[11px] text-amber-500">
+                              {pendingCommand.warnings.join(' ')}
+                            </div>
+                          )}
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setPendingCommand(null)}
+                          disabled={commandLoading}
+                          className="h-8 text-xs"
+                        >
+                          {pendingCommand.requiresConfirmation
+                            ? 'Cancel'
+                            : 'Close'}
+                        </Button>
+                        {pendingCommand.requiresConfirmation && (
+                          <Button
+                            size="sm"
+                            onClick={() => void executeCommand()}
+                            disabled={commandLoading}
+                            className="h-8 text-xs"
+                          >
+                            {commandLoading ? 'Running...' : 'Confirm'}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {messageInput.startsWith('/') && !pendingCommand && (
+                  <div className="mb-2 flex flex-wrap gap-1.5 rounded-lg border border-border/40 bg-card/45 p-2 animate-fadeIn">
+                    {commandSuggestions.map((item) => (
+                      <button
+                        key={item.command}
+                        onClick={() => setMessageInput(item.command)}
+                        className="rounded-md border border-border/35 bg-background/50 px-2 py-1 text-[10px] font-bold text-muted-foreground hover:text-foreground"
+                      >
+                        {item.command}{' '}
+                        <span className="font-normal opacity-70">
+                          {item.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {mentionSuggestions.length > 0 && !pendingCommand && (
+                  <div className="mb-2 flex flex-wrap gap-1.5 rounded-lg border border-border/40 bg-card/45 p-2 animate-fadeIn">
+                    {mentionSuggestions.map((participant: any) => {
+                      const person = participant.user ?? participant.userId;
+                      return (
+                        <button
+                          key={participant._id}
+                          onClick={() => insertMention(participant)}
+                          className="rounded-md border border-border/35 bg-background/50 px-2 py-1 text-[10px] font-bold text-muted-foreground hover:text-foreground"
+                        >
+                          @{person?.name ?? participant.name ?? 'Talent'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="rounded-2xl border border-[#E5E7EB] dark:border-border/40 bg-card p-2.5 focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/45 transition-all duration-200">
+                  <textarea
+                    value={messageInput}
+                    onChange={(event) => setMessageInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        void sendMessage();
+                      }
+                    }}
+                    rows={2}
+                    placeholder={
+                      selectedChannel?.type === 'ai'
+                        ? 'Ask the AI Agent anything...'
+                        : isOwner
+                          ? `Message ${getChannelDisplayName(selectedChannel)}... /help for commands`
+                          : `Message ${getChannelDisplayName(selectedChannel)}...`
+                    }
+                    className="w-full resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground/45 text-foreground"
+                  />
+                  <div className="flex items-center justify-between gap-3 px-1 mt-2 pt-2 border-t border-border/10">
+                    <div className="flex items-center gap-2">
+                      {selectedChannel?.type !== 'ai' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!messageInput.includes('@dehixai')) {
+                              setMessageInput((prev) => '@dehixai ' + prev);
+                            }
+                          }}
+                          className="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 px-2.5 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer shrink-0"
+                          title="Ask AI"
+                        >
+                          <Bot className="h-3 w-3" /> Mention @dehixai
+                        </button>
+                      )}
+                      <span className="text-[10px] font-[500] text-[#9CA3AF] hidden sm:inline">
+                        {selectedChannel?.type === 'ai'
+                          ? 'Personal AI answers with only your permitted room context.'
+                          : isOwner
+                            ? 'Use @dehixai for AI, @name to notify talent, or / commands.'
+                            : 'Use @dehixai for AI or @name mentions in conversations.'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => void sendMessage()}
+                      disabled={!messageInput.trim() || sending}
+                      className="h-8 px-4 text-xs font-bold bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-900 dark:hover:bg-neutral-100 rounded-lg disabled:opacity-50 transition-all shadow hover:shadow-md cursor-pointer border border-transparent active:scale-[0.98]"
+                    >
+                      {sending ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="h-3 w-3 rounded-full border border-white/40 border-t-white animate-spin" />
+                          Sending
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Send className="h-3.5 w-3.5" /> Send
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </main>
+          )}
+
+          {/* Right Side Panel - Participants & Documents (300px) */}
+          {rightPanelVisible && (
+            <aside className="w-[300px] shrink-0 border-l border-border/40 bg-card/30 flex flex-col overflow-hidden animate-fadeIn">
+              {/* Header */}
+              <div className="h-14 px-4 border-b border-border/40 flex items-center justify-between shrink-0 bg-background/75">
+                <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
+                  Workspace Details
+                </div>
+                <button
+                  onClick={() => setRightPanelVisible(false)}
+                  className="h-8 w-8 rounded-md hover:bg-muted/70 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  title="Hide details panel"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Scrollable content inside panel */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                <PlatformSyncCockpit
+                  workspace={workspace}
+                  isOwner={isOwner}
+                  userRole={user.role}
+                  onNavigate={navigate}
+                  onSelectChannel={setSelectedChannelId}
+                  onPublishMarketplace={publishMarketplaceProject}
+                  isPublishingMarketplace={publishingProject}
+                />
+
+                {/* Participants Section */}
                 <section className="space-y-3">
                   <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
@@ -2821,89 +2927,55 @@ export default function LiveRoomPage() {
                         )
                         .map((participant: any) => {
                           const person = participant.user ?? participant.userId;
+                          const isSelf =
+                            String(
+                              person?._id ??
+                                participant.userId ??
+                                participant.freelancerId,
+                            ) === String(user?._id);
                           const role = workspace.roles.find(
                             (item) =>
                               String(item._id) === String(participant.roleId),
                           );
+                          const talentMatrix = workspace.permissionMatrix.find(
+                            (t) =>
+                              String(t.participantId) ===
+                              String(participant._id),
+                          );
+                          const totalDocs = talentMatrix?.documents.length ?? 0;
+                          const grantedViewCount =
+                            talentMatrix?.documents.filter((d) => d.canView)
+                              .length ?? 0;
+
                           return (
                             <div
                               key={participant._id}
                               className="rounded-xl border border-border/40 bg-background/45 p-2.5 shadow-sm hover:bg-background/80 hover:border-border/60 transition-all duration-200"
                             >
-                              <div className="flex items-center gap-2.5">
-                                {/* Initials Avatar with Green Active Dot */}
-                                <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs shrink-0 relative shadow-sm">
-                                  {person?.name?.[0]?.toUpperCase() ?? 'T'}
-                                  <span className="absolute bottom-[-1.5px] right-[-1.5px] h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse"></span>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-xs font-bold truncate text-foreground">
-                                    {person?.name ?? 'Talent'}
+                              <div className="flex items-center justify-between gap-2.5">
+                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                  {/* Initials Avatar with Green Active Dot */}
+                                  <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs shrink-0 relative shadow-sm">
+                                    {person?.name?.[0]?.toUpperCase() ?? 'T'}
+                                    <span className="absolute bottom-[-1.5px] right-[-1.5px] h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse"></span>
                                   </div>
-                                  {role?.roleTitle && (
-                                    <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
-                                      {role.roleTitle}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-xs font-bold truncate text-foreground flex items-center gap-1.5">
+                                      <span>{person?.name ?? 'Talent'}</span>
+                                      {isSelf && (
+                                        <span className="inline-flex items-center px-1 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                          You
+                                        </span>
+                                      )}
                                     </div>
-                                  )}
-                                  <button
-                                    onClick={() => {
-                                      setAccessSearch(person?.name ?? '');
-                                      window.location.hash = '#access';
-                                    }}
-                                    className="text-[10px] text-primary hover:underline mt-1.5 flex items-center gap-1 cursor-pointer font-medium"
-                                  >
-                                    <Shield className="h-3 w-3" /> Manage Document Access
-                                  </button>
+                                    {role?.roleTitle && (
+                                      <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
+                                        {role.roleTitle}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-
-                              {/* Command action buttons for room owner */}
-                              {isOwner && (
-                                <div className="mt-2.5 grid grid-cols-2 gap-1.5 border-t border-border/20 pt-2 animate-fadeIn">
-                                  <button
-                                    onClick={() =>
-                                      runParticipantCommand(
-                                        'interview',
-                                        participant,
-                                      )
-                                    }
-                                    disabled={
-                                      !['invited', 'joined', 'accepted'].includes(
-                                        participant.status,
-                                      ) || canSendOfferToParticipant(participant)
-                                    }
-                                    className="rounded-md border border-border/40 px-1.5 py-1 text-[9px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-40 hover:bg-muted/40 cursor-pointer text-center"
-                                    title={canSendOfferToParticipant(participant) ? "Interview channel already created" : "Create interview"}
-                                  >
-                                    Interview
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      runParticipantCommand(
-                                        'dm',
-                                        participant,
-                                      )
-                                    }
-                                    disabled={
-                                      !['invited', 'joined', 'accepted'].includes(
-                                        participant.status,
-                                      ) || hasDmChannel(participant)
-                                    }
-                                    className="rounded-md border border-border/40 px-1.5 py-1 text-[9px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-40 hover:bg-muted/40 cursor-pointer text-center"
-                                    title={hasDmChannel(participant) ? "Direct message chat active" : "Send direct message"}
-                                  >
-                                    Message
-                                  </button>
-                                  <button
-                                    onClick={() => openOfferForm(participant)}
-                                    disabled={
-                                      !canSendOfferToParticipant(participant)
-                                    }
-                                    className="rounded-md border border-emerald-500/30 bg-emerald-500/5 px-1.5 py-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40 cursor-pointer text-center"
-                                    title="Send offer after completed interview"
-                                  >
-                                    Offer
-                                  </button>
+                                {isOwner && (
                                   <button
                                     onClick={() =>
                                       runParticipantCommand(
@@ -2911,68 +2983,17 @@ export default function LiveRoomPage() {
                                         participant,
                                       )
                                     }
-                                    className="rounded-md border border-rose-500/30 bg-rose-500/5 px-1.5 py-1 text-[9px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer text-center"
+                                    className="h-8 w-8 rounded-lg border border-border text-foreground hover:bg-muted/50 inline-flex items-center justify-center cursor-pointer transition-all shrink-0"
                                     title="Remove talent"
                                   >
-                                    Remove
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                    )}
-                  </div>
-
-                  {/* Invited/Pending Sub-section */}
-                  <div className="space-y-2 pt-2 animate-fadeIn">
-                    <div className="text-[10px] font-bold text-muted-foreground/70 tracking-wider uppercase pl-0.5">
-                      Invited / Pending
-                    </div>
-                    {workspace.participants.filter(
-                      (p) => p.status !== 'joined' && p.status !== 'accepted',
-                    ).length === 0 ? (
-                      <div className="text-[10px] text-muted-foreground/50 italic px-1">
-                        No pending invitations
-                      </div>
-                    ) : (
-                      workspace.participants
-                        .filter(
-                          (p) =>
-                            p.status !== 'joined' && p.status !== 'accepted',
-                        )
-                        .map((participant: any) => {
-                          const person = participant.user ?? participant.userId;
-                          const role = workspace.roles.find(
-                            (item) =>
-                              String(item._id) === String(participant.roleId),
-                          );
-                          return (
-                            <div
-                              key={participant._id}
-                              className="rounded-xl border border-border/40 bg-background/45 p-2.5 shadow-sm hover:bg-background/80 hover:border-border/60 transition-all duration-200"
-                            >
-                              <div className="flex items-center gap-2.5">
-                                {/* Initials Avatar with Orange Pending Dot */}
-                                <div className="h-9 w-9 rounded-xl bg-muted border border-border flex items-center justify-center font-bold text-xs text-muted-foreground shrink-0 relative shadow-sm">
-                                  {person?.name?.[0]?.toUpperCase() ?? 'T'}
-                                  <span className="absolute bottom-[-1.5px] right-[-1.5px] h-3 w-3 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm"></span>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-xs italic font-medium text-muted-foreground truncate">
-                                    {person?.name ?? 'Invited Talent'}
-                                  </div>
-                                  {role?.roleTitle && (
-                                    <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
-                                      {role.roleTitle}
-                                    </div>
-                                  )}
-                                </div>
+                                )}
                               </div>
 
                               {/* Command action buttons for room owner */}
                               {isOwner && (
-                                <div className="mt-2.5 grid grid-cols-3 gap-1.5 border-t border-border/20 pt-2 animate-fadeIn">
+                                <div className="mt-2.5 grid grid-cols-2 gap-1.5 border-t border-border/20 pt-2 animate-fadeIn w-full">
                                   <button
                                     onClick={() =>
                                       runParticipantCommand(
@@ -2985,284 +3006,509 @@ export default function LiveRoomPage() {
                                         participant.status,
                                       )
                                     }
-                                    className="rounded-md border border-border/40 px-1.5 py-1 text-[9px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-40 hover:bg-muted/40 cursor-pointer text-center"
+                                    className="w-full text-center rounded-md border border-border/60 bg-background/50 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] truncate"
                                     title="Create interview"
                                   >
                                     Interview
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleMessageParticipant(participant)
+                                    }
+                                    disabled={
+                                      !['joined', 'accepted'].includes(
+                                        participant.status,
+                                      )
+                                    }
+                                    className="w-full text-center rounded-md border border-border/60 bg-background/50 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] truncate"
+                                    title="Send direct message"
+                                  >
+                                    Message
                                   </button>
                                   <button
                                     onClick={() => openOfferForm(participant)}
                                     disabled={
                                       !canSendOfferToParticipant(participant)
                                     }
-                                    className="rounded-md border border-emerald-500/30 bg-emerald-500/5 px-1.5 py-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40 cursor-pointer text-center"
+                                    className="w-full text-center rounded-md border border-border/60 bg-background/50 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] truncate"
                                     title="Send offer after completed interview"
                                   >
                                     Offer
                                   </button>
                                   <button
                                     onClick={() =>
-                                      runParticipantCommand(
-                                        'remove',
-                                        participant,
-                                      )
+                                      setExpandedPermissions((prev) => ({
+                                        ...prev,
+                                        [participant._id]:
+                                          !prev[participant._id],
+                                      }))
                                     }
-                                    className="rounded-md border border-rose-500/30 bg-rose-500/5 px-1.5 py-1 text-[9px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer text-center"
-                                    title="Remove talent"
+                                    className={`w-full text-center rounded-md border py-1.5 text-[10px] font-bold cursor-pointer transition-all active:scale-[0.98] truncate ${
+                                      expandedPermissions[participant._id]
+                                        ? 'border-foreground bg-foreground text-background dark:border-foreground dark:bg-foreground dark:text-background'
+                                        : 'border-border/60 bg-background/50 text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                    }`}
+                                    title="Manage Document Access Control"
                                   >
-                                    Remove
+                                    Access
                                   </button>
                                 </div>
                               )}
+
+                              {/* Collapsible Document Access Matrix inside Card */}
+                              {isOwner &&
+                                expandedPermissions[participant._id] &&
+                                talentMatrix && (
+                                  <div className="mt-2.5 border-t border-border/20 pt-2 space-y-2 animate-fadeIn">
+                                    <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-widest pl-0.5">
+                                      <span>Document Access</span>
+                                      <div className="flex gap-1.5">
+                                        <button
+                                          onClick={() =>
+                                            void grantFullAccessToParticipant(
+                                              talentMatrix,
+                                            )
+                                          }
+                                          className="text-primary hover:underline cursor-pointer"
+                                        >
+                                          Grant All
+                                        </button>
+                                        <span>·</span>
+                                        <button
+                                          onClick={() =>
+                                            void revokeAllAccessForParticipant(
+                                              talentMatrix,
+                                            )
+                                          }
+                                          className="text-destructive hover:underline cursor-pointer"
+                                        >
+                                          Revoke All
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      {talentMatrix.documents.map((doc) => {
+                                        const permissionKey = `${talentMatrix.participantId}:${doc.docType}`;
+                                        return (
+                                          <div
+                                            key={doc.docType}
+                                            className="flex items-center justify-between text-[10px] p-1.5 rounded-lg bg-background/50 border border-border/10"
+                                          >
+                                            <div className="flex items-center gap-1.5 min-w-0 mr-2">
+                                              <FileText className="h-3 w-3 text-muted-foreground/75 shrink-0" />
+                                              <span
+                                                className="truncate text-foreground/80 font-medium"
+                                                title={getCanonicalDocTitle(
+                                                  doc.docType,
+                                                  doc.title,
+                                                )}
+                                              >
+                                                {getCanonicalDocTitle(
+                                                  doc.docType,
+                                                  doc.title,
+                                                )}
+                                              </span>
+                                            </div>
+                                            <button
+                                              onClick={() =>
+                                                void togglePermission(
+                                                  talentMatrix,
+                                                  doc,
+                                                )
+                                              }
+                                              disabled={
+                                                permissionSaving ===
+                                                permissionKey
+                                              }
+                                              className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-200 shrink-0 relative cursor-pointer ${
+                                                doc.canView
+                                                  ? 'bg-primary'
+                                                  : 'bg-muted-foreground/30'
+                                              }`}
+                                            >
+                                              <div
+                                                className={`bg-white w-3 h-3 rounded-full shadow-sm transform transition-transform duration-200 ${
+                                                  doc.canView
+                                                    ? 'translate-x-3'
+                                                    : 'translate-x-0'
+                                                }`}
+                                              />
+                                            </button>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
                             </div>
                           );
                         })
                     )}
                   </div>
-                </section>
-              )}
 
-              {/* Hiring Flow Section */}
-              <section className="space-y-3">
-                <PanelHeader
-                  icon={<Briefcase className="h-3.5 w-3.5 text-primary/80" />}
-                  label="Hiring Flow"
-                  count={roomOffers.length}
-                />
-                <div className="space-y-2">
-                  {roomOffers.length === 0 ? (
-                    <p className="rounded-xl border border-dashed border-border/40 p-3 text-xs text-muted-foreground">
-                      Complete an interview to send a formal offer.
-                    </p>
-                  ) : (
-                    roomOffers.slice(0, 5).map((offer) => (
-                      <div
-                        key={offer._id}
-                        className="rounded-xl border border-border/40 bg-background/45 p-3"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="truncate text-xs font-bold text-foreground">
-                              {offer.freelancer?.name ?? 'Freelancer'}
-                            </div>
-                            <div className="truncate text-[10px] text-muted-foreground">
-                              {offer.role?.roleTitle ?? 'Project role'}
-                            </div>
+                  {/* Invited/Pending Collapsible Dropdown */}
+                  <div className="space-y-2 pt-2 animate-fadeIn border-t border-border/10">
+                    <button
+                      onClick={() => setInvitedOpen(!invitedOpen)}
+                      className="w-full flex items-center justify-between text-[10px] font-bold text-muted-foreground/70 tracking-wider uppercase pl-0.5 py-1.5 hover:text-foreground transition-all"
+                    >
+                      <span>
+                        Invited / Pending (
+                        {
+                          workspace.participants.filter(
+                            (p) =>
+                              p.status !== 'joined' && p.status !== 'accepted',
+                          ).length
+                        }
+                        )
+                      </span>
+                      <ChevronDown
+                        className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${
+                          invitedOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+
+                    {invitedOpen && (
+                      <div className="space-y-2 animate-fadeIn mt-1">
+                        {workspace.participants.filter(
+                          (p) =>
+                            p.status !== 'joined' && p.status !== 'accepted',
+                        ).length === 0 ? (
+                          <div className="text-[10px] text-muted-foreground/50 italic px-1 py-1">
+                            No pending invitations
                           </div>
-                          <span
-                            className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold capitalize ${
-                              offer.status?.toLowerCase() === 'accepted' ||
-                              offer.status?.toLowerCase() === 'contracted'
-                                ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                : offer.status?.toLowerCase() === 'declined' ||
-                                    offer.status?.toLowerCase() === 'withdrawn'
-                                  ? 'border-rose-500/25 bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                                  : 'border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                            }`}
-                          >
-                            {offer.status.replace(/_/g, ' ')}
-                          </span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
-                          {offer.amountUsd ? (
-                            <span className="rounded bg-muted px-1.5 py-0.5 font-mono">
-                              ${offer.amountUsd.toLocaleString()}
-                            </span>
-                          ) : null}
-                          <span className="rounded bg-muted px-1.5 py-0.5">
-                            {offer.rateType}
-                          </span>
-                          {offer.sentAt ? (
-                            <span>
-                              {new Date(offer.sentAt).toLocaleDateString()}
-                            </span>
-                          ) : null}
-                        </div>
-                        {offer.responseMessage && (
-                          <p className="mt-2 line-clamp-2 text-[10px] text-muted-foreground">
-                            {offer.responseMessage}
-                          </p>
+                        ) : (
+                          workspace.participants
+                            .filter(
+                              (p) =>
+                                p.status !== 'joined' &&
+                                p.status !== 'accepted',
+                            )
+                            .map((participant: any) => {
+                              const person =
+                                participant.user ?? participant.userId;
+                              const isSelf =
+                                String(
+                                  person?._id ??
+                                    participant.userId ??
+                                    participant.freelancerId,
+                                ) === String(user?._id);
+                              const role = workspace.roles.find(
+                                (item) =>
+                                  String(item._id) ===
+                                  String(participant.roleId),
+                              );
+                              return (
+                                <div
+                                  key={participant._id}
+                                  className="rounded-xl border border-border/40 bg-background/45 p-2.5 shadow-sm hover:bg-background/80 hover:border-border/60 transition-all duration-200"
+                                >
+                                  <div className="flex items-center justify-between gap-2.5">
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      {/* Initials Avatar with Orange Pending Dot */}
+                                      <div className="h-9 w-9 rounded-xl bg-muted border border-border flex items-center justify-center font-bold text-xs text-muted-foreground shrink-0 relative shadow-sm">
+                                        {person?.name?.[0]?.toUpperCase() ??
+                                          'T'}
+                                        <span className="absolute bottom-[-1.5px] right-[-1.5px] h-3 w-3 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm"></span>
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="text-xs italic font-medium text-muted-foreground truncate flex items-center gap-1.5">
+                                          <span>
+                                            {person?.name ?? 'Invited Talent'}
+                                          </span>
+                                          {isSelf && (
+                                            <span className="inline-flex items-center px-1 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 shrink-0 not-italic">
+                                              You
+                                            </span>
+                                          )}
+                                        </div>
+                                        {role?.roleTitle && (
+                                          <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
+                                            {role.roleTitle}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {isOwner && (
+                                      <button
+                                        onClick={() =>
+                                          runParticipantCommand(
+                                            'remove',
+                                            participant,
+                                          )
+                                        }
+                                        className="h-8 w-8 rounded-lg border border-border text-foreground hover:bg-muted/50 inline-flex items-center justify-center cursor-pointer transition-all shrink-0"
+                                        title="Cancel invitation and remove"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })
                         )}
-                        {!isOwner &&
-                          offer.freelancerId === user?._id &&
-                          offer.status?.toUpperCase() === 'SENT' && (
-                            <div className="mt-3 flex items-center gap-2">
-                              <button
-                                disabled={respondingOfferId === offer._id}
-                                onClick={() => handleRespondToOffer(offer._id, 'accept')}
-                                className="flex-1 rounded-md bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700 dark:hover:bg-emerald-600 py-1 text-[10px] font-bold text-white disabled:opacity-50 transition-all cursor-pointer text-center"
-                              >
-                                {respondingOfferId === offer._id ? 'Accepting...' : 'Accept'}
-                              </button>
-                              <button
-                                disabled={respondingOfferId === offer._id}
-                                onClick={() => handleRespondToOffer(offer._id, 'decline')}
-                                className="flex-1 rounded-md border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 py-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 disabled:opacity-50 transition-all cursor-pointer text-center"
-                              >
-                                Decline
-                              </button>
-                            </div>
-                          )}
                       </div>
-                    ))
+                    )}
+                  </div>
+                </section>
+
+                {/* Hiring Flow Section */}
+                <section className="space-y-3">
+                  <PanelHeader
+                    icon={<Briefcase className="h-3.5 w-3.5 text-primary/80" />}
+                    label="Hiring Flow"
+                    count={roomOffers.length}
+                  />
+                  <div className="space-y-2">
+                    {roomOffers.length === 0 ? (
+                      <p className="rounded-xl border border-dashed border-border/40 p-3 text-xs text-muted-foreground">
+                        Complete an interview to send a formal offer.
+                      </p>
+                    ) : (
+                      roomOffers.slice(0, 5).map((offer) => (
+                        <div
+                          key={offer._id}
+                          className="rounded-xl border border-border/40 bg-background/45 p-3"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="truncate text-xs font-bold text-foreground">
+                                {offer.freelancer?.name ?? 'Freelancer'}
+                              </div>
+                              <div className="truncate text-[10px] text-muted-foreground">
+                                {offer.role?.roleTitle ?? 'Project role'}
+                              </div>
+                            </div>
+                            <span
+                              className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold capitalize ${
+                                offer.status?.toLowerCase() === 'accepted' ||
+                                offer.status?.toLowerCase() === 'contracted'
+                                  ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                  : offer.status?.toLowerCase() ===
+                                        'declined' ||
+                                      offer.status?.toLowerCase() ===
+                                        'withdrawn'
+                                    ? 'border-rose-500/25 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                                    : 'border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                              }`}
+                            >
+                              {offer.status.replace(/_/g, ' ')}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+                            {offer.amountUsd ? (
+                              <span className="rounded bg-muted px-1.5 py-0.5 font-mono">
+                                ${offer.amountUsd.toLocaleString()}
+                              </span>
+                            ) : null}
+                            <span className="rounded bg-muted px-1.5 py-0.5">
+                              {offer.rateType}
+                            </span>
+                            {offer.sentAt ? (
+                              <span>
+                                {new Date(offer.sentAt).toLocaleDateString()}
+                              </span>
+                            ) : null}
+                          </div>
+                          {offer.responseMessage && (
+                            <p className="mt-2 line-clamp-2 text-[10px] text-muted-foreground">
+                              {offer.responseMessage}
+                            </p>
+                          )}
+                          {!isOwner &&
+                            offer.freelancerId === user?._id &&
+                            offer.status?.toUpperCase() === 'SENT' && (
+                              <div className="mt-3 flex items-center gap-2">
+                                <button
+                                  disabled={respondingOfferId === offer._id}
+                                  onClick={() =>
+                                    handleRespondToOffer(offer._id, 'accept')
+                                  }
+                                  className="flex-1 rounded-lg bg-black text-white hover:bg-neutral-900 hover:text-white border border-black dark:bg-white dark:text-black dark:hover:bg-neutral-100 dark:hover:text-black dark:border-white py-1.5 text-xs font-bold disabled:opacity-50 transition-all duration-200 cursor-pointer shadow-sm text-center active:scale-[0.98]"
+                                >
+                                  {respondingOfferId === offer._id
+                                    ? 'Accepting...'
+                                    : 'Accept'}
+                                </button>
+                                <button
+                                  disabled={respondingOfferId === offer._id}
+                                  onClick={() =>
+                                    handleRespondToOffer(offer._id, 'decline')
+                                  }
+                                  className="flex-1 rounded-lg border border-border/80 bg-white hover:bg-slate-50 text-slate-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-100 dark:border-neutral-700 py-1.5 text-xs font-bold disabled:opacity-50 transition-all duration-200 cursor-pointer shadow-sm text-center active:scale-[0.98]"
+                                >
+                                  Decline
+                                </button>
+                              </div>
+                            )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {workspace.nda && (
+                    <div className="rounded-xl border border-border/40 bg-background/45 p-3">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <span className="font-bold text-foreground">
+                          Agreement
+                        </span>
+                        <span className="text-[10px] font-bold capitalize text-muted-foreground">
+                          {workspace.nda?.status?.replace(/_/g, ' ') ??
+                            'not generated'}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-[10px] text-muted-foreground">
+                        {`${workspace.nda.signedBy?.length ?? 0}/2 signatures recorded`}
+                      </div>
+                      {!isOwner &&
+                        workspace.nda.status === 'pending_signatures' &&
+                        !workspace.nda.signedBy.includes(user?._id) && (
+                          <div className="mt-2.5">
+                            <button
+                              onClick={() => {
+                                setShowNdaModal(true);
+                                setHasReadNda(false);
+                              }}
+                              className="w-full text-center text-xs font-bold bg-primary hover:bg-primary/95 text-primary-foreground py-1.5 rounded-lg transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.98]"
+                            >
+                              Read & Sign NDA
+                            </button>
+                          </div>
+                        )}
+                    </div>
                   )}
-                </div>
-                {workspace.nda && (
                   <div className="rounded-xl border border-border/40 bg-background/45 p-3">
                     <div className="flex items-center justify-between gap-2 text-xs">
-                      <span className="font-bold text-foreground">Agreement</span>
-                      <span className="text-[10px] font-bold capitalize text-muted-foreground">
-                        {workspace.nda?.status?.replace(/_/g, ' ') ??
-                          'not generated'}
+                      <span className="font-bold text-foreground">
+                        Escrow Simulation
+                      </span>
+                      <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400">
+                        $
+                        {workspace.milestones
+                          .filter((m: any) => m.status === 'released')
+                          .reduce(
+                            (sum: number, m: any) => sum + (m.amountUsd ?? 0),
+                            0,
+                          )
+                          .toLocaleString()}
                       </span>
                     </div>
                     <div className="mt-1 text-[10px] text-muted-foreground">
-                      {`${workspace.nda.signedBy?.length ?? 0}/2 signatures recorded`}
+                      {workspace.milestones.length} milestone
+                      {workspace.milestones.length !== 1 ? 's' : ''}
                     </div>
-                    {!isOwner &&
-                      workspace.nda.status === 'pending_signatures' &&
-                      !workspace.nda.signedBy.includes(user?._id) && (
-                        <div className="mt-2.5">
-                          <button
-                            onClick={() => {
-                              setShowNdaModal(true);
-                              setHasReadNda(false);
-                            }}
-                            className="w-full text-center text-xs font-bold bg-primary hover:bg-primary/95 text-primary-foreground py-1.5 rounded-lg transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.98]"
-                          >
-                            Read & Sign NDA
-                          </button>
-                        </div>
-                      )}
                   </div>
-                )}
-                <div className="rounded-xl border border-border/40 bg-background/45 p-3">
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <span className="font-bold text-foreground">
-                      Escrow Simulation
-                    </span>
-                    <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400">
-                      $
-                      {workspace.milestones
-                        .filter((m: any) => m.status === 'released')
-                        .reduce(
-                          (sum: number, m: any) => sum + (m.amountUsd ?? 0),
-                          0,
-                        )
-                        .toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-[10px] text-muted-foreground">
-                    {workspace.milestones.length} milestone
-                    {workspace.milestones.length !== 1 ? 's' : ''}
-                  </div>
-                </div>
-              </section>
+                </section>
 
-              {/* Documents Section with Accordion List */}
-              <section className="space-y-3">
-                <PanelHeader
-                  icon={<FileText className="h-3.5 w-3.5 text-primary/80" />}
-                  label={isOwner ? 'Required Documents' : 'Allowed Docs'}
-                  count={visibleDocuments.length}
-                />
+                {/* Documents Section with Accordion List */}
+                <section className="space-y-3">
+                  <PanelHeader
+                    icon={<FileText className="h-3.5 w-3.5 text-primary/80" />}
+                    label={isOwner ? 'Required Documents' : 'Allowed Docs'}
+                    count={visibleDocuments.length}
+                  />
 
-                {visibleDocuments.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border/40 p-3.5 text-xs text-muted-foreground">
-                    No documents are available yet.
-                  </p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {visibleDocuments.map((doc) => {
-                      const isExpanded = expandedDocType === doc.docType;
-                      return (
-                        <div
-                          key={`${doc.source}:${doc.documentId ?? doc.docType}`}
-                          className="rounded-xl border border-border/40 bg-background/45 overflow-hidden shadow-sm hover:border-border/60 transition-all duration-200"
-                        >
-                          {/* Accordion Header */}
-                          <button
-                            onClick={() =>
-                              setExpandedDocType(
-                                isExpanded ? null : doc.docType,
-                              )
-                            }
-                            className={`w-full flex items-center justify-between p-3 text-left text-xs transition-colors ${
-                              isExpanded
-                                ? 'bg-primary/5 text-foreground border-b border-border/30 font-bold'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
-                            }`}
+                  {visibleDocuments.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-border/40 p-3.5 text-xs text-muted-foreground">
+                      No documents are available yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {visibleDocuments.map((doc) => {
+                        const isExpanded = expandedDocType === doc.docType;
+                        return (
+                          <div
+                            key={`${doc.source}:${doc.documentId ?? doc.docType}`}
+                            className="rounded-xl border border-border/40 bg-background/45 overflow-hidden shadow-sm hover:border-border/60 transition-all duration-200"
                           >
-                            <span className="flex items-center gap-2.5 truncate font-semibold">
-                              <FileText className="h-4 w-4 text-primary shrink-0" />
-                              <span className="truncate">{doc.title}</span>
-                            </span>
-                            {isExpanded ? (
-                              <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            {/* Accordion Header */}
+                            <button
+                              onClick={() =>
+                                setExpandedDocType(
+                                  isExpanded ? null : doc.docType,
+                                )
+                              }
+                              className={`w-full flex items-center justify-between p-3 text-left text-xs transition-colors ${
+                                isExpanded
+                                  ? 'bg-primary/5 text-foreground border-b border-border/30 font-bold'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2.5 truncate font-semibold">
+                                <FileText className="h-4 w-4 text-primary shrink-0" />
+                                <span className="truncate">
+                                  {getCanonicalDocTitle(doc.docType, doc.title)}
+                                </span>
+                              </span>
+                              {isExpanded ? (
+                                <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              )}
+                            </button>
+
+                            {/* Accordion Content */}
+                            {isExpanded && (
+                              <div className="p-3.5 bg-background/30 space-y-3 animate-fadeIn">
+                                <div className="flex items-center justify-between text-[10px] font-medium text-muted-foreground">
+                                  <span className="capitalize">
+                                    Source: {doc.source}
+                                  </span>
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full font-semibold ${
+                                      doc.canView
+                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                    }`}
+                                  >
+                                    {doc.canView
+                                      ? 'Access Granted'
+                                      : 'Pending Access'}
+                                  </span>
+                                </div>
+
+                                <div className="space-y-2 pt-1">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => void openDocument(doc)}
+                                    disabled={openingDoc === doc.docType}
+                                    className="w-full text-center text-xs font-bold py-2 rounded-lg transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow h-9 border border-border bg-slate-50 hover:bg-slate-100 text-slate-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-100 dark:border-neutral-700 active:scale-[0.98]"
+                                  >
+                                    {openingDoc === doc.docType
+                                      ? 'Opening...'
+                                      : 'View Securely'}
+                                  </Button>
+                                  <button
+                                    onClick={() => void downloadDocument(doc)}
+                                    className="w-full text-center text-xs font-bold py-2 rounded-lg transition-all duration-200 inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow-md h-9 bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-900 dark:hover:bg-neutral-100 active:scale-[0.98] border border-transparent"
+                                  >
+                                    <Download className="h-3.5 w-3.5" />{' '}
+                                    Download PDF
+                                  </button>
+                                </div>
+                              </div>
                             )}
-                          </button>
+                          </div>
+                        );
+                      })}
 
-                          {/* Accordion Content */}
-                          {isExpanded && (
-                            <div className="p-3.5 bg-background/30 space-y-3 animate-fadeIn">
-                              <div className="flex items-center justify-between text-[10px] font-medium text-muted-foreground">
-                                <span className="capitalize">
-                                  Source: {doc.source}
-                                </span>
-                                <span
-                                  className={`px-2 py-0.5 rounded-full font-semibold ${
-                                    doc.canView
-                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                  }`}
-                                >
-                                  {doc.canView
-                                    ? 'Access Granted'
-                                    : 'Pending Access'}
-                                </span>
-                              </div>
-
-                              <div className="space-y-2 pt-1">
-                                <button
-                                  onClick={() => void openDocument(doc)}
-                                  disabled={openingDoc === doc.docType}
-                                  className="w-full text-center text-xs font-bold border border-border/60 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/80 text-foreground py-2 rounded-lg transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow active:scale-[0.98]"
-                                >
-                                  {openingDoc === doc.docType
-                                    ? 'Opening...'
-                                    : 'View Securely'}
-                                </button>
-                                <button
-                                  onClick={() => void downloadDocument(doc)}
-                                  className="w-full text-center text-xs font-bold border border-border/60 bg-[#7E8590] text-white hover:bg-[#6c727c] py-2 rounded-lg transition-all duration-200 inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98]"
-                                >
-                                  <Download className="h-3.5 w-3.5" /> Download
-                                  PDF
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    <button
-                      onClick={() => void downloadZip()}
-                      className="w-full text-xs font-bold rounded-lg border border-primary/25 text-primary bg-primary/5 px-3 py-2.5 hover:bg-primary/10 hover:shadow-sm active:scale-[0.98] transition-all duration-200 mt-2.5 cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      Download visible docs as ZIP
-                    </button>
-                  </div>
-                )}
-              </section>
-            </div>
-          </aside>
-        )}
+                      <Button
+                        variant="outline"
+                        onClick={() => void downloadZip()}
+                        className="w-full text-xs font-bold rounded-lg px-3 py-2.5 active:scale-[0.98] transition-all duration-200 mt-2.5 cursor-pointer flex items-center justify-center gap-2 h-9 border border-primary/25 text-primary bg-primary/5 hover:bg-primary/10 hover:shadow-sm"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download visible docs as ZIP
+                      </Button>
+                    </div>
+                  )}
+                </section>
+              </div>
+            </aside>
+          )}
+        </div>
       </div>
-    </div>
 
       {showChannelForm && isOwner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
@@ -3381,7 +3627,11 @@ export default function LiveRoomPage() {
       )}
 
       {docModal && (
-        <DocModal doc={docModal} onClose={() => setDocModal(null)} />
+        <DocModal
+          doc={docModal}
+          roomId={roomId}
+          onClose={() => setDocModal(null)}
+        />
       )}
 
       {showNdaModal && (
@@ -3412,19 +3662,36 @@ export default function LiveRoomPage() {
               <p className="font-semibold text-foreground">
                 MUTUAL NON-DISCLOSURE AGREEMENT (NDA)
               </p>
-              
+
               <div className="space-y-3 bg-muted/30 rounded-lg p-4 border border-border/50 text-[11px] font-mono leading-normal text-foreground">
                 <p>
-                  <strong>Introduction:</strong> This Agreement is entered into by and between the Client (Disclosing Party) and the freelancer (Receiving Party) to protect and regulate Confidential Information and Intellectual Property associated with the project.
+                  <strong>Introduction:</strong> This Agreement is entered into
+                  by and between the Client (Disclosing Party) and the
+                  freelancer (Receiving Party) to protect and regulate
+                  Confidential Information and Intellectual Property associated
+                  with the project.
                 </p>
                 <p>
-                  <strong>1. Confidentiality Period:</strong> The Receiving Party agrees to maintain strict confidentiality of all private data, business plans, source codes, documents, and assets for a period of three (3) years from the date of disclosure.
+                  <strong>1. Confidentiality Period:</strong> The Receiving
+                  Party agrees to maintain strict confidentiality of all private
+                  data, business plans, source codes, documents, and assets for
+                  a period of three (3) years from the date of disclosure.
                 </p>
                 <p>
-                  <strong>2. Intellectual Property (IP) Transfer:</strong> All code, documentation, specifications, artwork, designs, and files developed or produced in connection with this project shall belong exclusively to the Disclosing Party. The Receiving Party hereby permanently assigns all copyrights, patents, and other IP rights to the Disclosing Party, effective immediately upon the successful release/payout of the corresponding project milestones.
+                  <strong>2. Intellectual Property (IP) Transfer:</strong> All
+                  code, documentation, specifications, artwork, designs, and
+                  files developed or produced in connection with this project
+                  shall belong exclusively to the Disclosing Party. The
+                  Receiving Party hereby permanently assigns all copyrights,
+                  patents, and other IP rights to the Disclosing Party,
+                  effective immediately upon the successful release/payout of
+                  the corresponding project milestones.
                 </p>
                 <p>
-                  <strong>3. Governing Law:</strong> This agreement and any disputes arising out of or related to it shall be governed by and construed in accordance with the laws of the jurisdiction of the Disclosing Party.
+                  <strong>3. Governing Law:</strong> This agreement and any
+                  disputes arising out of or related to it shall be governed by
+                  and construed in accordance with the laws of the jurisdiction
+                  of the Disclosing Party.
                 </p>
               </div>
 
@@ -3433,7 +3700,10 @@ export default function LiveRoomPage() {
                   Signing Terms & Conditions:
                 </p>
                 <p>
-                  By checking the consent box below and clicking "Sign & Accept Agreement", you are applying your electronic signature to this document, binding yourself to all the terms, confidentiality regulations, and IP transfer conditions defined above.
+                  By checking the consent box below and clicking &quot;Sign &amp; Accept
+                  Agreement&quot;, you are applying your electronic signature to this
+                  document, binding yourself to all the terms, confidentiality
+                  regulations, and IP transfer conditions defined above.
                 </p>
               </div>
             </div>
@@ -3448,7 +3718,8 @@ export default function LiveRoomPage() {
                   className="mt-0.5 h-4 w-4 rounded border-border"
                 />
                 <span className="text-[11px] text-foreground font-medium">
-                  I have thoroughly read, understood, and agree to be bound by the terms of this Mutual Non-Disclosure Agreement.
+                  I have thoroughly read, understood, and agree to be bound by
+                  the terms of this Mutual Non-Disclosure Agreement.
                 </span>
               </label>
 
@@ -3697,14 +3968,14 @@ function PlatformSyncCockpit({
         )}
       </div>
 
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-5 gap-1">
         {pipeline.map((stage) => (
           <div
             key={stage.label}
-            className={`rounded-lg border px-1.5 py-2 text-center ${stage.className}`}
+            className={`rounded-xl border px-1 py-2 text-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-sm hover:shadow ${stage.className}`}
           >
             <div className="text-sm font-black leading-none">{stage.count}</div>
-            <div className="mt-1 truncate text-[9px] font-bold">
+            <div className="mt-1 text-[8px] font-extrabold leading-none tracking-tighter whitespace-nowrap">
               {stage.label}
             </div>
           </div>

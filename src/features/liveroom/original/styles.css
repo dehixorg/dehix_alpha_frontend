@@ -97,10 +97,27 @@
 }
 
 .liveroom-scope .bg-gradient {
-  background-image: linear-gradient(
-    to bottom left,
-    hsl(var(--background) / 0),
-    hsl(var(--primary) / 0.05),
-    hsl(var(--primary) / 0.1)
-  );
+  background-image: linear-gradient(to bottom left,
+      hsl(var(--background) / 0),
+      hsl(var(--primary) / 0.05),
+      hsl(var(--primary) / 0.1));
+}
+
+.back-to-top-chat-open {
+  right: 1.5rem;
+  bottom: 8rem;
+}
+
+@media (min-width: 1024px) {
+  .back-to-top-chat-open {
+    right: 475px;
+    bottom: 8.5rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .back-to-top-chat-open {
+    right: calc(50vw - 330px);
+    bottom: 8.5rem;
+  }
 }

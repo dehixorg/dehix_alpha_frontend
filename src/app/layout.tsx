@@ -9,6 +9,7 @@ import { AuthProvider } from './AuthContext';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
+import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import NetworkProvider from '@/utils/NetworkProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
 
@@ -40,6 +41,7 @@ export default function RootLayout({
                   <NetworkProvider>
                     {children}
                     <Toaster />
+                    <SonnerToaster position="bottom-right" />
                   </NetworkProvider>
                 </TooltipProvider>
               </ThemeProvider>

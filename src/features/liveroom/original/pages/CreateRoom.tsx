@@ -1,9 +1,4 @@
-/* eslint-disable import/order, react/no-unescaped-entities, prefer-const, @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useLocation } from '../adapters/wouter';
-import { liveRoomApiFetch as fetch } from '../api/runtime';
-import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/button';
 import {
   Search,
   Sparkles,
@@ -13,6 +8,8 @@ import {
   Award,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
+  ShieldCheck,
   RefreshCw,
   ChevronRight,
   HelpCircle,
@@ -29,8 +26,24 @@ import {
   Lightbulb,
   Activity,
   DollarSign,
+  Users,
+  Briefcase,
+  Check,
+  Clock,
+  Github,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { useLocation } from '../adapters/wouter';
+import { liveRoomApiFetch as fetch } from '../api/runtime';
+import { useAuth } from '../context/AuthContext';
+import { Button } from '../components/ui/button';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from '../../../../components/ui/tooltip';
 
 type WizardPhase =
   | 'idea'
@@ -82,10 +95,8 @@ type AnalysisResult = {
     competitive_moat?: string;
     revenue_model?: string;
     unit_economics?: string;
-    cost_estimation?: any;
+    cost_estimation?: string;
     go_to_market_strategy?: string;
-    core_mvp_features?: string[];
-    recommended_tech_stack?: string[];
     risks?: string[];
     suggestions?: string[];
     assumptions?: string[];
@@ -95,8 +106,8 @@ type AnalysisResult = {
       opportunities?: string[];
       threats?: string[];
     };
-    dimensional_scores?: Record<string, any>;
-    overall_score?: any;
+    dimensional_scores?: Record<string, number>;
+    overall_score?: number;
     final_verdict?: string;
     verdict_reasoning?: string;
   };
@@ -197,7 +208,7 @@ const EXAMPLE_PROMPTS = [
 const SCORE_LABELS: Record<string, string> = {
   market_opportunity: 'Market opportunity',
   problem_clarity: 'Problem clarity',
-  solution_differentiation: 'Solution differentiation',
+  solution_differentiation: 'Differentiation',
   execution_feasibility: 'Execution feasibility',
   revenue_potential: 'Revenue potential',
 };
@@ -279,15 +290,7 @@ function isPrimitive(value: unknown) {
 }
 
 function formatPrimitive(value: unknown) {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'object') {
-    // Prevent [object Object] from ever rendering
-    try {
-      return JSON.stringify(value);
-    } catch {
-      return '';
-    }
-  }
+  if (value === null || value === undefined) return 'Not available';
   return String(value);
 }
 
@@ -350,7 +353,8 @@ function TextBlock({ children }: { children?: ReactNode }) {
 }
 
 function BulletList({ items }: { items?: string[] }) {
-  if (!items || items.length === 0) return null;
+  if (!items || items.length === 0)
+    return <p className="text-sm text-muted-foreground">Not available</p>;
   return (
     <ul className="space-y-2">
       {items.map((item, index) => (
@@ -368,57 +372,58 @@ function BulletList({ items }: { items?: string[] }) {
 
 function KeyValueGrid({ data }: { data: Record<string, unknown> }) {
   const entries = Object.entries(data).filter(
-    ([, value]) => value !== undefined && value !== null,
+    ([, value]) =>
+      value !== undefined && value !== null && !Array.isArray(value),
   );
   if (entries.length === 0) return null;
-
-  const renderValue = (value: unknown): ReactNode => {
-    if (value === null || value === undefined) return '';
-    if (typeof value !== 'object') return String(value);
-    if (Array.isArray(value)) {
-      if (value.every(isPrimitive)) {
-        return value.map((v) => String(v)).join(', ');
-      }
-      return (
-        <ul className="space-y-1">
-          {value.map((item, idx) => (
-            <li key={idx} className="text-sm leading-6 text-foreground">
-              {renderValue(item)}
-            </li>
-          ))}
-        </ul>
-      );
-    }
-    // nested object
-    return (
-      <div className="space-y-1 mt-1">
-        {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
-          <div key={k} className="pl-2 border-l-2 border-border/40 mb-1">
-            <span className="font-semibold text-muted-foreground capitalize text-xs">
-              {humanizeKey(k)}:{' '}
-            </span>
-            <span className="text-foreground/90 text-sm">{renderValue(v)}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="grid gap-3 md:grid-cols-2">
-      {entries.map(([key, value]) => (
-        <div
-          key={key}
-          className="rounded-lg border border-border/40 bg-background/35 p-3"
-        >
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {humanizeKey(key)}
+    <div className="grid gap-4 md:grid-cols-2">
+      {entries.map(([key, value]) => {
+        const titleLower = key.toLowerCase();
+        let dotColorClass = 'bg-primary/65';
+
+        if (
+          titleLower.includes('revenue') ||
+          titleLower.includes('economics') ||
+          titleLower.includes('cost') ||
+          titleLower.includes('budget')
+        ) {
+          dotColorClass = 'bg-emerald-500';
+        } else if (
+          titleLower.includes('market') ||
+          titleLower.includes('demand') ||
+          titleLower.includes('competitor') ||
+          titleLower.includes('moat')
+        ) {
+          dotColorClass = 'bg-blue-500';
+        } else if (
+          titleLower.includes('audience') ||
+          titleLower.includes('user') ||
+          titleLower.includes('customer')
+        ) {
+          dotColorClass = 'bg-indigo-500';
+        }
+
+        return (
+          <div
+            key={key}
+            className="rounded-xl border border-border/40 bg-card/35 p-4 hover:border-primary/20 hover:bg-card/45 transition-all duration-200"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColorClass}`}
+              />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                {humanizeKey(key)}
+              </span>
+            </div>
+
+            <div className="text-xs sm:text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap pl-3.5">
+              {formatPrimitive(value)}
+            </div>
           </div>
-          <div className="text-sm leading-6 text-foreground">
-            {renderValue(value)}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -430,7 +435,8 @@ function SimpleTable({
   rows: Array<Record<string, unknown>>;
   columns: string[];
 }) {
-  if (rows.length === 0) return null;
+  if (rows.length === 0)
+    return <p className="text-xs text-muted-foreground">Not available</p>;
   return (
     <div className="overflow-hidden rounded-xl border border-border/50 bg-background/30 shadow-sm">
       <div className="overflow-x-auto">
@@ -751,7 +757,7 @@ function PremiumLoader({
   const currentQuote = quotes[quoteIndex];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[450px] p-8 rounded-2xl border border-primary/20 bg-card/45 backdrop-blur-md relative overflow-hidden shadow-2xl animate-in fade-in duration-500">
+    <div className="flex flex-col items-center justify-center min-h-[460px] p-8 md:p-10 rounded-3xl border border-primary/20 bg-card/45 backdrop-blur-md relative overflow-hidden shadow-2xl animate-in fade-in duration-500">
       {/* Animated Glowing Ambient Orbs */}
       <div className="absolute -top-16 -left-16 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" />
       <div
@@ -759,37 +765,41 @@ function PremiumLoader({
         style={{ animationDelay: '1s' }}
       />
 
-      {/* Cybernetic Pulse Spinner */}
-      <div className="relative flex items-center justify-center w-24 h-24 mb-8">
-        <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
-        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary animate-spin" />
-        <div
-          className="absolute inset-2 rounded-full border border-blue-500/20 border-b-blue-500 animate-spin"
-          style={{ animationDuration: '1.5s', animationDirection: 'reverse' }}
-        />
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
-          <span className="text-primary text-lg font-bold font-mono">DX</span>
+      {/* Cybernetic Pulse Spinner with new logo style */}
+      <div className="relative flex items-center justify-center w-24 h-24 mb-10 mt-2">
+        <div className="w-14 h-14 rounded-xl bg-black dark:bg-white border border-neutral-800 dark:border-neutral-200 flex items-center justify-center shadow-lg hover:scale-105 transition-all duration-300 relative z-10">
+          <img
+            src="/dehix.png"
+            alt="Dehix"
+            className="w-7 h-7 invert dark:invert-0 object-contain"
+          />
         </div>
+        {/* Radar Scanner Ring */}
+        <div
+          className="absolute inset-[-12px] rounded-2xl border border-primary/20 animate-ping opacity-60"
+          style={{ animationDuration: '3s' }}
+        />
+        <div className="absolute inset-[-6px] rounded-2xl border border-blue-500/10 animate-pulse" />
       </div>
 
-      <h3 className="text-xl font-semibold text-foreground tracking-tight text-center mb-2 animate-pulse">
+      <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight text-center mb-3 animate-pulse">
         {title}
       </h3>
       {subtitle && (
-        <p className="text-sm text-muted-foreground text-center max-w-md mb-8">
+        <p className="text-xs text-muted-foreground text-center max-w-md mb-10 leading-relaxed">
           {subtitle}
         </p>
       )}
 
       {/* Quote Container with Premium Fade */}
-      <div className="border-t border-border/30 pt-6 w-full max-w-lg flex flex-col items-center min-h-[90px]">
+      <div className="border-t border-border/20 pt-6 w-full max-w-md flex flex-col items-center min-h-[90px] relative z-10">
         <div
           className={`transition-all duration-300 transform ${fade ? 'opacity-100 translate-y-0 animate-in fade-in' : 'opacity-0 translate-y-2'} text-center`}
         >
-          <p className="text-sm italic text-foreground/80 leading-relaxed font-medium">
-            "{currentQuote.text}"
+          <p className="text-xs italic text-foreground/80 leading-relaxed max-w-sm mx-auto">
+            &quot;{currentQuote.text}&quot;
           </p>
-          <p className="text-xs text-primary/70 mt-2 font-mono">
+          <p className="text-[10px] text-primary/70 mt-2.5 font-mono uppercase tracking-wider font-semibold">
             — {currentQuote.author}
           </p>
         </div>
@@ -1035,7 +1045,7 @@ function BlueprintValue({ value }: { value: unknown }): ReactNode {
 
   if (Array.isArray(value)) {
     if (value.length === 0) {
-      return null;
+      return <p className="text-sm text-muted-foreground">Not available</p>;
     }
 
     if (value.every(isPrimitive)) {
@@ -1059,7 +1069,7 @@ function BlueprintValue({ value }: { value: unknown }): ReactNode {
         {value.map((item, index) => (
           <div
             key={index}
-            className="rounded-lg border border-border/40 bg-background/35 p-3"
+            className="rounded-xl border border-border/40 bg-card/35 p-4 hover:border-primary/20 hover:bg-card/45 transition-all duration-200"
           >
             <BlueprintValue value={item} />
           </div>
@@ -1070,19 +1080,56 @@ function BlueprintValue({ value }: { value: unknown }): ReactNode {
 
   if (typeof value === 'object' && value !== null) {
     return (
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {Object.entries(value as Record<string, unknown>).map(
-          ([key, nestedValue]) => (
-            <div
-              key={key}
-              className="space-y-1 rounded-lg border border-border/40 bg-background/35 p-3"
-            >
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {humanizeKey(key)}
-              </h4>
-              <BlueprintValue value={nestedValue} />
-            </div>
-          ),
+          ([key, nestedValue]) => {
+            const titleLower = key.toLowerCase();
+            let dotColorClass = 'bg-primary/65';
+
+            if (
+              titleLower.includes('cost') ||
+              titleLower.includes('budget') ||
+              titleLower.includes('price') ||
+              titleLower.includes('revenue')
+            ) {
+              dotColorClass = 'bg-emerald-500';
+            } else if (
+              titleLower.includes('tech') ||
+              titleLower.includes('db') ||
+              titleLower.includes('database') ||
+              titleLower.includes('stack') ||
+              titleLower.includes('api') ||
+              titleLower.includes('security')
+            ) {
+              dotColorClass = 'bg-blue-500';
+            } else if (
+              titleLower.includes('team') ||
+              titleLower.includes('role') ||
+              titleLower.includes('user') ||
+              titleLower.includes('persona')
+            ) {
+              dotColorClass = 'bg-indigo-500';
+            }
+
+            return (
+              <div
+                key={key}
+                className="rounded-xl border border-border/40 bg-card/35 p-4 hover:border-primary/20 hover:bg-card/45 transition-all duration-200"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColorClass}`}
+                  />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    {humanizeKey(key)}
+                  </span>
+                </div>
+                <div className="pl-3.5 mt-1 text-xs sm:text-sm leading-relaxed text-foreground/85">
+                  <BlueprintValue value={nestedValue} />
+                </div>
+              </div>
+            );
+          },
         )}
       </div>
     );
@@ -1092,128 +1139,482 @@ function BlueprintValue({ value }: { value: unknown }): ReactNode {
 }
 
 function renderRoadmap(value: unknown) {
-  const roadmap = asRecord(value);
-  const phases = Object.entries(roadmap);
-  if (phases.length === 0) return null;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed) value = parsed;
+    } catch (e) {
+      // Ignore JSON parsing failure
+    }
+  }
+
+  let phasesList: Array<{
+    title: string;
+    duration?: any;
+    deliverables: string[];
+  }> = [];
+
+  if (Array.isArray(value)) {
+    phasesList = value.map((item: any, idx: number) => {
+      const rec = asRecord(item);
+      const title = String(
+        rec.phase_name ?? rec.name ?? rec.title ?? `Phase ${idx + 1}`,
+      );
+      const duration =
+        rec.estimated_weeks ?? rec.duration ?? rec.weeks ?? rec.time;
+      const deliverables = asStringList(
+        rec.deliverables ?? rec.tasks ?? rec.milestones,
+      );
+      return { title, duration, deliverables };
+    });
+  } else if (typeof value === 'object' && value !== null) {
+    phasesList = Object.entries(value as Record<string, unknown>).map(
+      ([key, phase], idx) => {
+        const rec = asRecord(phase);
+        const title = String(
+          rec.phase_name ?? rec.name ?? rec.title ?? humanizeKey(key),
+        );
+        const duration =
+          rec.estimated_weeks ?? rec.duration ?? rec.weeks ?? rec.time;
+        const deliverables = asStringList(
+          rec.deliverables ?? rec.tasks ?? rec.milestones,
+        );
+        return { title, duration, deliverables };
+      },
+    );
+  }
+
+  if (phasesList.length === 0) {
+    if (value && typeof value === 'string') {
+      return <MarkdownMini text={value} />;
+    }
+    return <p className="text-xs text-muted-foreground">Not available</p>;
+  }
 
   return (
     <div className="relative border-l border-primary/25 pl-6 ml-3 space-y-6 py-2">
-      {phases.map(([key, phase], idx) => {
-        const data = asRecord(phase);
-        return (
-          <div key={key} className="relative group">
-            {/* Timeline Dot */}
-            <div className="absolute -left-[31px] top-1.5 h-4 w-4 rounded-full border-2 border-primary bg-background flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-            </div>
-
-            <div className="rounded-xl border border-border/50 bg-gradient-to-br from-card to-background/50 p-5 shadow-sm transition-all duration-200 hover:border-primary/20">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border/30 pb-3 mb-3">
-                <div>
-                  <span className="text-[9px] text-primary uppercase font-bold tracking-wider">
-                    Phase {idx + 1}
-                  </span>
-                  <h3 className="text-xs font-bold text-foreground">
-                    {humanizeKey(key)}
-                  </h3>
-                </div>
-                {data.duration !== undefined && (
-                  <span className="w-fit rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-                    ⏱️ {formatPrimitive(data.duration)}
-                  </span>
-                )}
-              </div>
-              <BulletList items={asStringList(data.deliverables)} />
-            </div>
+      {phasesList.map((phase, idx) => (
+        <div key={idx} className="relative group">
+          {/* Timeline Dot */}
+          <div className="absolute -left-[31px] top-1.5 h-4 w-4 rounded-full border-2 border-primary bg-background flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
           </div>
-        );
-      })}
+
+          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-card to-background/50 p-5 shadow-sm transition-all duration-200 hover:border-primary/20">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border/30 pb-3 mb-3">
+              <div>
+                <span className="text-[9px] text-primary uppercase font-bold tracking-wider">
+                  Phase {idx + 1}
+                </span>
+                <h3 className="text-xs font-bold text-foreground">
+                  {phase.title}
+                </h3>
+              </div>
+              {phase.duration !== undefined && (
+                <span className="w-fit rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                  ⏱️ {formatPrimitive(phase.duration)}{' '}
+                  {typeof phase.duration === 'number' ||
+                  !isNaN(Number(phase.duration))
+                    ? 'weeks'
+                    : ''}
+                </span>
+              )}
+            </div>
+            <BulletList items={phase.deliverables} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-function renderCostEstimation(value: unknown) {
+function CostEstimationViewer({
+  value,
+  region,
+}: {
+  value: unknown;
+  region: string;
+}) {
   const cost = asRecord(value);
 
-  const formatCurrency = (val: any) => {
-    if (val === undefined || val === null) return 'TBD';
-    const str = String(val);
-    const num = Number(str.replace(/[^0-9.-]+/g, ''));
-    if (!isNaN(num) && num > 0) {
-      return `$${num.toLocaleString('en-US')}`;
+  // Choose default currency based on region name
+  const getInitialCurrency = (): 'USD' | 'INR' | 'EUR' | 'GBP' => {
+    const regLower = region.toLowerCase();
+    if (
+      regLower.includes('india') ||
+      regLower.includes('inr') ||
+      regLower.includes('rupee') ||
+      regLower.includes('₹')
+    ) {
+      return 'INR';
     }
-    return str.includes('$') ? str : `$${str}`;
+    if (
+      regLower.includes('europe') ||
+      regLower.includes('eur') ||
+      regLower.includes('germany') ||
+      regLower.includes('france') ||
+      regLower.includes('italy') ||
+      regLower.includes('spain')
+    ) {
+      return 'EUR';
+    }
+    if (
+      regLower.includes('uk') ||
+      regLower.includes('united kingdom') ||
+      regLower.includes('gbp') ||
+      regLower.includes('london') ||
+      regLower.includes('england')
+    ) {
+      return 'GBP';
+    }
+    return 'USD';
   };
 
-  const renderNestedObject = (obj: any): ReactNode => {
-    if (typeof obj !== 'object' || obj === null) {
-      const valStr = String(obj);
-      if (!isNaN(Number(valStr)) && Number(valStr) > 100)
-        return formatCurrency(valStr);
-      return valStr;
-    }
-    if (Array.isArray(obj)) {
-      return (
-        <ul className="list-disc pl-4 space-y-1">
-          {obj.map((item, idx) => (
-            <li key={idx}>{renderNestedObject(item)}</li>
-          ))}
-        </ul>
-      );
-    }
-    return (
-      <div className="space-y-1 mt-1">
-        {Object.entries(obj).map(([k, v]) => (
-          <div key={k} className="pl-2 border-l border-border/40 mb-1">
-            <span className="font-semibold text-muted-foreground capitalize text-[11px]">
-              {k.replace(/_/g, ' ')}:{' '}
-            </span>
-            <span className="text-foreground/90">{renderNestedObject(v)}</span>
-          </div>
-        ))}
-      </div>
-    );
+  const [selectedCurrency, setSelectedCurrency] = useState<
+    'USD' | 'INR' | 'EUR' | 'GBP'
+  >(getInitialCurrency);
+
+  const CURRENCIES = {
+    USD: { symbol: '$', rate: 1.0 },
+    INR: { symbol: '₹', rate: 83.5 },
+    EUR: { symbol: '€', rate: 0.92 },
+    GBP: { symbol: '£', rate: 0.79 },
   };
+
+  function parseAndConvert(
+    valStr: unknown,
+    targetCurrency: 'USD' | 'INR' | 'EUR' | 'GBP',
+  ): string {
+    if (valStr === null || valStr === undefined) return 'Not available';
+    const strVal = String(valStr).trim();
+
+    // 1. Detect base currency
+    let baseCurrency: 'USD' | 'INR' | 'EUR' | 'GBP' = 'USD';
+    const strLower = strVal.toLowerCase();
+    const regLower = region.toLowerCase();
+
+    if (
+      strLower.includes('₹') ||
+      strLower.includes('inr') ||
+      strLower.includes('rupee') ||
+      strLower.includes('lakh') ||
+      strLower.includes('crore')
+    ) {
+      baseCurrency = 'INR';
+    } else if (
+      strLower.includes('€') ||
+      strLower.includes('eur') ||
+      strLower.includes('euro')
+    ) {
+      baseCurrency = 'EUR';
+    } else if (
+      strLower.includes('£') ||
+      strLower.includes('gbp') ||
+      strLower.includes('pound')
+    ) {
+      baseCurrency = 'GBP';
+    } else {
+      // Fallback to region detection
+      if (
+        regLower.includes('india') ||
+        regLower.includes('inr') ||
+        regLower.includes('rupee') ||
+        regLower.includes('₹')
+      ) {
+        baseCurrency = 'INR';
+      } else if (
+        regLower.includes('europe') ||
+        regLower.includes('eur') ||
+        regLower.includes('germany') ||
+        regLower.includes('france') ||
+        regLower.includes('italy') ||
+        regLower.includes('spain')
+      ) {
+        baseCurrency = 'EUR';
+      } else if (
+        regLower.includes('uk') ||
+        regLower.includes('united kingdom') ||
+        regLower.includes('gbp') ||
+        regLower.includes('london') ||
+        regLower.includes('england')
+      ) {
+        baseCurrency = 'GBP';
+      }
+    }
+
+    // 2. Multi-currency translation rules
+    const formatNumberClean = (num: number): string => {
+      const rounded = Math.round(num * 100) / 100;
+      return String(rounded);
+    };
+
+    // Regex to match numbers with commas/dots, optionally followed by multiplier words
+    const pattern =
+      /([\d,]+(?:\.\d+)?)\s*(lakh|crore|million|billion|k|m)?\b/gi;
+
+    const result = strVal.replace(pattern, (match, numStr, unit) => {
+      const num = parseFloat(numStr.replace(/,/g, ''));
+      if (isNaN(num)) return match;
+
+      let multiplier = 1;
+      if (unit) {
+        const unitLower = unit.toLowerCase();
+        if (unitLower === 'lakh') {
+          multiplier = 100000;
+        } else if (unitLower === 'crore') {
+          multiplier = 10000000;
+        } else if (unitLower === 'k') {
+          multiplier = 1000;
+        } else if (unitLower === 'm' || unitLower === 'million') {
+          multiplier = 1000000;
+        } else if (unitLower === 'billion') {
+          multiplier = 1000000000;
+        }
+      }
+
+      const absoluteBaseVal = num * multiplier;
+      const baseRate = CURRENCIES[baseCurrency].rate;
+      const valInUsd = absoluteBaseVal / baseRate;
+
+      const targetRate = CURRENCIES[targetCurrency].rate;
+      const targetVal = valInUsd * targetRate;
+
+      const targetSymbol = CURRENCIES[targetCurrency].symbol;
+
+      if (targetCurrency === 'INR') {
+        if (targetVal >= 10000000) {
+          const crores = targetVal / 10000000;
+          return `${targetSymbol}${formatNumberClean(crores)} crore`;
+        } else if (targetVal >= 100000) {
+          const lakhs = targetVal / 100000;
+          return `${targetSymbol}${formatNumberClean(lakhs)} lakh`;
+        } else if (targetVal >= 1000) {
+          return `${targetSymbol}${formatNumberClean(targetVal / 1000)}k`;
+        } else {
+          return `${targetSymbol}${Math.round(targetVal).toLocaleString()}`;
+        }
+      } else {
+        if (targetVal >= 1000000) {
+          const millions = targetVal / 1000000;
+          return `${targetSymbol}${formatNumberClean(millions)}M`;
+        } else if (targetVal >= 1000) {
+          const k = targetVal / 1000;
+          return `${targetSymbol}${formatNumberClean(k)}k`;
+        } else {
+          return `${targetSymbol}${Math.round(targetVal).toLocaleString()}`;
+        }
+      }
+    });
+
+    let cleaned = result;
+    cleaned = cleaned.replace(/[$₹€£]\s*([$₹€£])/g, '$1');
+
+    if (targetCurrency === 'USD') {
+      cleaned = cleaned
+        .replace(/\b(inr|eur|gbp|rupees|euros|pounds)\b/gi, '')
+        .trim();
+    } else if (targetCurrency === 'INR') {
+      cleaned = cleaned
+        .replace(/\b(usd|eur|gbp|dollars|euros|pounds)\b/gi, '')
+        .trim();
+    } else if (targetCurrency === 'EUR') {
+      cleaned = cleaned
+        .replace(/\b(usd|inr|gbp|dollars|rupees|pounds)\b/gi, '')
+        .trim();
+    } else if (targetCurrency === 'GBP') {
+      cleaned = cleaned
+        .replace(/\b(usd|inr|eur|dollars|rupees|euros)\b/gi, '')
+        .trim();
+    }
+
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    return cleaned;
+  }
 
   return (
     <div className="space-y-6">
+      {/* Currency Selector Ribbon */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/15 pb-4">
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-5 w-5 text-emerald-500 shrink-0" />
+          <div>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block leading-none mb-1">
+              Cost & Budget Estimates
+            </span>
+            <span className="text-xs font-semibold text-foreground/75">
+              Optimized for:{' '}
+              <span className="text-primary font-bold">{region}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Switcher */}
+        <div className="flex items-center bg-secondary/40 border border-border/40 p-1 rounded-xl gap-0.5 self-start sm:self-auto shadow-inner">
+          {(Object.keys(CURRENCIES) as Array<keyof typeof CURRENCIES>).map(
+            (cur) => (
+              <button
+                key={cur}
+                onClick={() => setSelectedCurrency(cur)}
+                className={`px-3 py-1 text-[10px] font-bold rounded-lg uppercase tracking-wide transition-all ${
+                  selectedCurrency === cur
+                    ? 'bg-card text-foreground shadow-sm border border-border/20'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {cur}
+              </button>
+            ),
+          )}
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         {Object.entries(cost)
           .filter(
-            ([k, item]) =>
-              k !== 'major_cost_drivers' && item !== undefined && item !== null,
+            ([key, item]) =>
+              typeof item === 'object' &&
+              item !== null &&
+              !Array.isArray(item) &&
+              key !== 'major_cost_drivers',
           )
-          .map(([key, item]) => (
-            <div
-              key={key}
-              className="rounded-xl border border-border/50 bg-gradient-to-br from-card to-background p-4 shadow-sm"
-            >
-              <h3 className="mb-3 text-xs font-bold text-foreground uppercase tracking-tight border-b border-border/20 pb-2">
-                {humanizeKey(key)}
-              </h3>
-              <div className="text-sm leading-6 text-foreground">
-                {renderNestedObject(item)}
+          .map(([key, item]) => {
+            const rawItemObj = asRecord(item);
+            const convertedObj: Record<string, unknown> = {};
+            Object.entries(rawItemObj).forEach(([k, v]) => {
+              convertedObj[k] = parseAndConvert(v, selectedCurrency);
+            });
+
+            return (
+              <div
+                key={key}
+                className="rounded-xl border border-border/40 bg-card/35 p-5 hover:border-primary/20 hover:bg-card/45 transition-all duration-200"
+              >
+                <div className="flex items-center gap-2 mb-4 border-b border-border/20 pb-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest leading-none">
+                    {humanizeKey(key)}
+                  </h3>
+                </div>
+                <KeyValueGrid data={convertedObj} />
               </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
+
       {!!cost.major_cost_drivers && (
-        <div className="rounded-xl border border-border/50 bg-background/25 p-4 space-y-2">
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-tight flex items-center gap-1.5">
-            <Coins className="h-4 w-4 text-primary" />
-            Major Cost Drivers
-          </h3>
-          <BulletList items={asStringList(cost.major_cost_drivers)} />
+        <div className="rounded-xl border border-border/40 bg-card/35 p-5 hover:border-primary/20 hover:bg-card/45 transition-all duration-200 space-y-3">
+          <div className="flex items-center gap-2 border-b border-border/20 pb-2.5">
+            <Coins className="h-4 w-4 text-emerald-500 shrink-0" />
+            <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest leading-none">
+              Major Cost Drivers
+            </h3>
+          </div>
+          <ul className="space-y-2.5 pl-1.5 mt-2">
+            {asStringList(cost.major_cost_drivers).map((item, index) => {
+              const convertedItem = parseAndConvert(item, selectedCurrency);
+              return (
+                <li
+                  key={index}
+                  className="text-xs sm:text-sm text-foreground/80 leading-relaxed flex items-start gap-2.5"
+                >
+                  <span className="text-emerald-500 shrink-0 mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span>{convertedItem}</span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
     </div>
   );
 }
 
+function renderCostEstimation(value: unknown, region: string) {
+  return <CostEstimationViewer value={value} region={region} />;
+}
+
 function renderTeamRequirements(value: unknown) {
+  if (typeof value === 'string') {
+    return <MarkdownMini text={value} />;
+  }
   const team = asRecord(value);
-  const recommended = asRecordList(team.recommended_team);
-  const minimum = asStringList(team.minimum_team);
+  const recommendedTeamRaw =
+    team.recommended_team ??
+    team.recommended ??
+    team.roles ??
+    team.team_composition ??
+    team.composition;
+  const recommended = asRecordList(recommendedTeamRaw);
+
+  const minimumTeamRaw =
+    team.minimum_team ?? team.minimum ?? team.min_team ?? team.viable_size;
+  const minimum = asStringList(minimumTeamRaw);
+
+  if (recommended.length === 0 && minimum.length === 0) {
+    if (value) {
+      if (Array.isArray(value)) {
+        const roles = asRecordList(value);
+        if (roles.length > 0) {
+          const first = roles[0];
+          const hasRoleKey =
+            first.role ||
+            first.role_title ||
+            first.title ||
+            first.name ||
+            first.position;
+          if (hasRoleKey) {
+            return (
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-tight">
+                  Recommended Team Roles
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {roles.map((item, idx) => {
+                    const title =
+                      item.role ??
+                      item.role_title ??
+                      item.title ??
+                      item.name ??
+                      item.position;
+                    const desc =
+                      item.responsibilities ?? item.description ?? item.details;
+                    return (
+                      <div
+                        key={idx}
+                        className="rounded-xl border border-border bg-card p-4 space-y-2 hover:border-primary/10 transition-colors"
+                      >
+                        <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                          <span className="text-xs font-bold text-foreground">
+                            {formatPrimitive(title)}
+                          </span>
+                          <span className="rounded bg-primary/10 border border-primary/20 px-2 py-0.5 text-[9px] font-semibold text-primary uppercase">
+                            Required
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {formatPrimitive(desc)}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+        }
+      }
+      return (
+        <MarkdownMini
+          text={
+            typeof value === 'object'
+              ? JSON.stringify(value, null, 2)
+              : String(value)
+          }
+        />
+      );
+    }
+    return <p className="text-xs text-muted-foreground">Not available</p>;
+  }
 
   return (
     <div className="space-y-6">
@@ -1223,24 +1624,34 @@ function renderTeamRequirements(value: unknown) {
             Recommended Team Roles
           </h3>
           <div className="grid gap-4 sm:grid-cols-2">
-            {recommended.map((item, idx) => (
-              <div
-                key={idx}
-                className="rounded-xl border border-border bg-card p-4 space-y-2 hover:border-primary/10 transition-colors"
-              >
-                <div className="flex items-center justify-between border-b border-border/40 pb-2">
-                  <span className="text-xs font-bold text-foreground">
-                    {formatPrimitive(item.role)}
-                  </span>
-                  <span className="rounded bg-primary/10 border border-primary/20 px-2 py-0.5 text-[9px] font-semibold text-primary uppercase">
-                    Required
-                  </span>
+            {recommended.map((item, idx) => {
+              const title =
+                item.role ??
+                item.role_title ??
+                item.title ??
+                item.name ??
+                item.position;
+              const desc =
+                item.responsibilities ?? item.description ?? item.details;
+              return (
+                <div
+                  key={idx}
+                  className="rounded-xl border border-border bg-card p-4 space-y-2 hover:border-primary/10 transition-colors"
+                >
+                  <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                    <span className="text-xs font-bold text-foreground">
+                      {formatPrimitive(title)}
+                    </span>
+                    <span className="rounded bg-primary/10 border border-primary/20 px-2 py-0.5 text-[9px] font-semibold text-primary uppercase">
+                      Required
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {formatPrimitive(desc)}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {formatPrimitive(item.responsibilities)}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -1389,36 +1800,78 @@ function renderRiskAnalysis(value: unknown) {
   const risks = asRecord(value);
   return (
     <div className="grid gap-5 lg:grid-cols-3">
-      {Object.entries(risks).map(([key, list]) => (
-        <div key={key} className="space-y-4">
-          <h3 className="text-xs font-bold text-foreground uppercase border-b border-border/40 pb-2 tracking-tight">
-            {humanizeKey(key)}
-          </h3>
-          <div className="space-y-3">
-            {asRecordList(list).map((risk, index) => (
-              <div
-                key={index}
-                className="rounded-xl border border-amber-500/15 bg-amber-500/5 p-4 space-y-2.5 relative overflow-hidden"
-              >
-                <div className="absolute top-2.5 left-2.5 text-amber-500/20">
-                  <AlertCircle className="h-5 w-5" />
-                </div>
-                <div className="pl-6">
-                  <div className="text-xs font-bold text-foreground leading-relaxed">
-                    {formatPrimitive(risk.risk)}
+      {Object.entries(risks).map(([key, list]) => {
+        const keyLower = key.toLowerCase();
+        let headerIcon = (
+          <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
+        );
+        let hoverBorderClass = 'hover:border-amber-500/20';
+        let iconColorClass = 'text-amber-500';
+
+        if (keyLower.includes('technical')) {
+          headerIcon = <Cpu className="h-4 w-4 text-blue-500 shrink-0" />;
+          hoverBorderClass = 'hover:border-blue-500/25';
+          iconColorClass = 'text-blue-500';
+        } else if (keyLower.includes('market')) {
+          headerIcon = <Globe className="h-4 w-4 text-purple-500 shrink-0" />;
+          hoverBorderClass = 'hover:border-purple-500/25';
+          iconColorClass = 'text-purple-500';
+        } else if (keyLower.includes('business')) {
+          headerIcon = (
+            <TrendingUp className="h-4 w-4 text-orange-500 shrink-0" />
+          );
+          hoverBorderClass = 'hover:border-orange-500/25';
+          iconColorClass = 'text-orange-500';
+        }
+
+        return (
+          <div key={key} className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-border/20 pb-2 mb-3">
+              {headerIcon}
+              <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest leading-none">
+                {humanizeKey(key)}
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {asRecordList(list).map((risk, index) => {
+                const riskText = formatPrimitive(risk.risk);
+                const mitigationText = formatPrimitive(risk.mitigation);
+                if (!riskText && !mitigationText) return null;
+
+                return (
+                  <div
+                    key={index}
+                    className={`rounded-xl border border-border/40 bg-gradient-to-br from-card to-background/40 p-5 shadow-xs transition-all duration-200 ${hoverBorderClass} hover:bg-card/45 space-y-4`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle
+                        className={`h-4 w-4 ${iconColorClass} shrink-0 mt-0.5`}
+                      />
+                      <span className="text-xs sm:text-sm font-semibold text-foreground/90 leading-normal">
+                        {riskText}
+                      </span>
+                    </div>
+
+                    {mitigationText && (
+                      <div className="mt-3 bg-emerald-500/5 dark:bg-emerald-500/10 border-l-2 border-emerald-500/30 rounded-lg p-3 flex items-start gap-2.5">
+                        <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                        <div className="grow">
+                          <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 block mb-1">
+                            Mitigation Strategy
+                          </span>
+                          <p className="text-xs text-foreground/80 leading-relaxed">
+                            {mitigationText}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-2 text-xs leading-relaxed text-muted-foreground border-l-2 border-primary/30 pl-2">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-primary block mb-0.5">
-                      Mitigation
-                    </span>
-                    {formatPrimitive(risk.mitigation)}
-                  </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -1543,10 +1996,29 @@ function renderTechnicalArchitecture(value: unknown) {
 }
 
 function renderGroupedLists(value: unknown) {
+  if (typeof value === 'string') {
+    return <MarkdownMini text={value} />;
+  }
   const groups = asRecord(value);
+  const entries = Object.entries(groups);
+  if (entries.length === 0) {
+    if (value) {
+      return (
+        <MarkdownMini
+          text={
+            typeof value === 'object'
+              ? JSON.stringify(value, null, 2)
+              : String(value)
+          }
+        />
+      );
+    }
+    return <p className="text-xs text-muted-foreground">Not available</p>;
+  }
+
   return (
     <div className="grid gap-5 md:grid-cols-2">
-      {Object.entries(groups).map(([key, item]) => (
+      {entries.map(([key, item]) => (
         <div key={key}>
           <SectionList
             title={humanizeKey(key)}
@@ -1560,15 +2032,159 @@ function renderGroupedLists(value: unknown) {
   );
 }
 
-function renderBlueprintSection(key: string, value: unknown): ReactNode {
+function renderFinalVerdict(value: unknown) {
+  if (!value)
+    return <p className="text-xs text-muted-foreground">Not available</p>;
+
+  let decision = '';
+  let reasoning = '';
+  let score: number | undefined = undefined;
+
+  // Safely extract the fields, handling both object and string input formats
+  if (typeof value === 'object' && value !== null) {
+    const valObj = value as Record<string, unknown>;
+    decision = String(
+      valObj.build_now_or_not || valObj.decision || valObj.verdict || '',
+    );
+    reasoning = String(valObj.reasoning || valObj.verdict_reasoning || '');
+    if (valObj.mvp_confidence_score !== undefined) {
+      score = Number(valObj.mvp_confidence_score);
+    }
+  } else {
+    const text = String(value).trim();
+    if (text === 'undefined' || text === 'null' || text === '') {
+      return <p className="text-xs text-muted-foreground">Not available</p>;
+    }
+    // If it's a short string, assume it's just the decision, otherwise reasoning
+    if (text.length < 50) {
+      decision = text;
+    } else {
+      reasoning = text;
+    }
+  }
+
+  // Determine status classification
+  const statusText = (decision || reasoning || '').toLowerCase();
+  const isViable =
+    statusText.includes('viable') ||
+    statusText.includes('build now') ||
+    statusText.includes('strong') ||
+    statusText.includes('ready') ||
+    statusText.includes('recommend');
+  const isWarning =
+    statusText.includes('risk') ||
+    statusText.includes('concern') ||
+    statusText.includes('caution') ||
+    statusText.includes('validate') ||
+    statusText.includes('further');
+  const isNotRecommended =
+    statusText.includes('not recommend') ||
+    statusText.includes('avoid') ||
+    statusText.includes('stop');
+
+  let statusColor = 'emerald';
+  let statusLabel = decision || 'Build Now';
+  if (isNotRecommended) {
+    statusColor = 'rose';
+    statusLabel = decision || 'Not Recommended';
+  } else if (isWarning || !isViable) {
+    statusColor = 'amber';
+    statusLabel = decision || 'Validate Further';
+  }
+
+  // Visual classes mapped to the status color
+  let accentBorder = 'border-l-emerald-500';
+  let textColor = 'text-emerald-600 dark:text-emerald-400';
+  let badgeBg = 'bg-emerald-500/10 border-emerald-500/25';
+  let icon = <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0" />;
+
+  if (statusColor === 'rose') {
+    accentBorder = 'border-l-rose-500';
+    textColor = 'text-rose-600 dark:text-rose-400';
+    badgeBg = 'bg-rose-500/10 border-rose-500/25';
+    icon = <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0" />;
+  } else if (statusColor === 'amber') {
+    accentBorder = 'border-l-amber-500';
+    textColor = 'text-amber-600 dark:text-amber-400';
+    badgeBg = 'bg-amber-500/10 border-amber-500/25';
+    icon = <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />;
+  }
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-xl border border-border/40 border-l-[4px] ${accentBorder} bg-gradient-to-br from-card to-background p-6 shadow-sm hover:shadow-md hover:border-primary/10 transition-all duration-300`}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/20 pb-4 mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${badgeBg}`}>{icon}</div>
+          <div>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block leading-none mb-1">
+              Final Verdict Decision
+            </span>
+            <span className={`text-base font-bold tracking-wide ${textColor}`}>
+              {statusLabel}
+            </span>
+          </div>
+        </div>
+
+        {score !== undefined && !isNaN(score) && (
+          <div className="flex items-center gap-3 bg-card/65 rounded-xl p-3 border border-border/40 shadow-xs self-start sm:self-auto min-w-[140px]">
+            <div className="grow">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block leading-none mb-1.5">
+                Confidence
+              </span>
+              <span className="text-base font-black text-foreground">
+                {score}{' '}
+                <span className="text-xs font-normal text-muted-foreground">
+                  / 10
+                </span>
+              </span>
+            </div>
+            {/* Visual level track */}
+            <div className="w-12 h-2 bg-muted rounded-full overflow-hidden shrink-0">
+              <div
+                className={`h-full rounded-full ${
+                  statusColor === 'emerald'
+                    ? 'bg-emerald-500'
+                    : statusColor === 'amber'
+                      ? 'bg-amber-500'
+                      : 'bg-rose-500'
+                }`}
+                style={{ width: `${Math.min(100, score * 10)}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {reasoning && (
+        <div className="space-y-2">
+          <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest block leading-none mb-2">
+            Verdict Reasoning & Strategic Context
+          </span>
+          <p className="text-xs sm:text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap pl-1">
+            {reasoning}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function renderBlueprintSection(
+  key: string,
+  value: unknown,
+  region: string,
+): ReactNode {
   if (key === 'mvp_definition') return renderMvpDefinition(value);
   if (key === 'target_users') return renderTargetUsers(value);
   if (key === 'technical_architecture')
     return renderTechnicalArchitecture(value);
   if (key === 'development_roadmap') return renderRoadmap(value);
   if (key === 'team_requirements') return renderTeamRequirements(value);
-  if (key === 'cost_estimation') return renderCostEstimation(value);
+  if (key === 'cost_estimation') return renderCostEstimation(value, region);
   if (key === 'risk_analysis') return renderRiskAnalysis(value);
+  if (key === 'final_verdict') return renderFinalVerdict(value);
   if (
     [
       'security_and_compliance',
@@ -1607,9 +2223,11 @@ const BLUEPRINT_SECTION_DESCRIPTIONS: Record<string, string> = {
 function BlueprintReport({
   blueprint,
   onSectionChange,
+  region,
 }: {
   blueprint: BlueprintResult;
   onSectionChange?: (section: ActiveReportSection) => void;
+  region: string;
 }) {
   const orderedSections = BLUEPRINT_SECTION_ORDER.filter(
     (key) => blueprint[key] !== undefined,
@@ -1627,7 +2245,7 @@ function BlueprintReport({
       BLUEPRINT_SECTION_DESCRIPTIONS[key] ??
       'Additional generated report detail.',
     keywords: stringifyForSearch(value),
-    body: renderBlueprintSection(key, value),
+    body: renderBlueprintSection(key, value, region),
   }));
 
   return (
@@ -1642,9 +2260,11 @@ function BlueprintReport({
 function AnalysisDetails({
   analysis,
   onSectionChange,
+  isChatOpen,
 }: {
   analysis: AnalysisResult;
   onSectionChange?: (section: ActiveReportSection) => void;
+  isChatOpen: boolean;
 }) {
   const research = analysis.research_analysis;
   const scores = research?.dimensional_scores ?? {};
@@ -1655,28 +2275,34 @@ function AnalysisDetails({
       description: 'A quick read on how the idea performed.',
       keywords: stringifyForSearch(scores),
       body: (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div
+          className={`grid gap-4 ${
+            isChatOpen
+              ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5'
+              : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5'
+          }`}
+        >
           {Object.entries(SCORE_LABELS).map(([key, label]) => {
-            let rawVal = scores[key];
-            if (typeof rawVal === 'object' && rawVal !== null) {
-              rawVal = (rawVal as any).score ?? (rawVal as any).value ?? 0;
-            }
+            const rawVal = scores[key];
             const numVal =
               typeof rawVal === 'number'
                 ? rawVal
                 : parseFloat(String(rawVal)) || 0;
-            const displayVal = rawVal !== undefined ? rawVal : '—';
+            const displayVal = rawVal !== undefined ? rawVal : 'N/A';
 
+            let textColor = 'text-amber-600 dark:text-amber-400';
             let colorClass =
               'text-amber-500 bg-amber-500/10 border-amber-500/20';
             let meterColor = 'bg-amber-500';
             let shadowGlow = 'shadow-[0_0_12px_rgba(245,158,11,0.12)]';
             if (numVal >= 8) {
+              textColor = 'text-emerald-600 dark:text-emerald-400';
               colorClass =
                 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
               meterColor = 'bg-emerald-500';
               shadowGlow = 'shadow-[0_0_12px_rgba(16,185,129,0.12)]';
             } else if (numVal < 5 && numVal > 0) {
+              textColor = 'text-rose-600 dark:text-rose-400';
               colorClass = 'text-rose-500 bg-rose-500/10 border-rose-500/20';
               meterColor = 'bg-rose-500';
               shadowGlow = 'shadow-[0_0_12px_rgba(244,63,94,0.12)]';
@@ -1697,46 +2323,52 @@ function AnalysisDetails({
             return (
               <div
                 key={key}
-                className={`relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-b from-card/85 to-card/35 p-4 transition-all duration-300 hover:border-primary/30 hover:${shadowGlow} group`}
+                className={`relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-b from-card/85 to-card/35 p-4 transition-all duration-300 hover:border-primary/30 hover:${shadowGlow} group flex flex-col justify-between min-h-[145px]`}
               >
                 <div className="absolute -right-4 -bottom-4 w-12 h-12 rounded-full bg-primary/5 blur-xl group-hover:bg-primary/10 transition-colors" />
 
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate flex-1">
-                    {label}
-                  </div>
-                  <div
-                    className={`p-1.5 rounded-lg border ${colorClass} shrink-0`}
-                  >
-                    {scoreIcon}
-                  </div>
-                </div>
-
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl font-black font-mono text-foreground tracking-tight">
-                    {displayVal}
-                  </span>
-                  {rawVal !== undefined && (
-                    <span className="text-xs text-muted-foreground/50">
-                      /10
-                    </span>
-                  )}
-                </div>
-
-                {rawVal !== undefined && (
-                  <div className="space-y-1">
-                    <div className="w-full h-1.5 rounded-full bg-muted/60 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-1000 ${meterColor}`}
-                        style={{ width: `${numVal * 10}%` }}
-                      />
+                <div className="relative z-10 flex flex-col h-full justify-between gap-3 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div
+                      className={`p-1.5 rounded-lg border ${colorClass} shrink-0`}
+                    >
+                      {scoreIcon}
                     </div>
-                    <div className="flex justify-between text-[9px] font-bold text-muted-foreground/45">
-                      <span>Low</span>
-                      <span>High</span>
+                    <div className="flex items-baseline gap-0.5 text-right">
+                      <span
+                        className={`text-2xl font-black font-mono tracking-tight ${textColor}`}
+                      >
+                        {displayVal}
+                      </span>
+                      {rawVal !== undefined && (
+                        <span className="text-[10px] font-bold text-muted-foreground/50">
+                          /10
+                        </span>
+                      )}
                     </div>
                   </div>
-                )}
+
+                  <div className="space-y-2">
+                    <div className="text-[10px] font-bold text-muted-foreground tracking-wide leading-tight min-h-[28px] flex items-center break-words">
+                      {label}
+                    </div>
+
+                    {rawVal !== undefined && (
+                      <div className="space-y-1">
+                        <div className="w-full h-1.5 rounded-full bg-muted/60 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-1000 ${meterColor}`}
+                            style={{ width: `${numVal * 10}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[9px] font-bold text-muted-foreground/45">
+                          <span>Low</span>
+                          <span>High</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -2232,15 +2864,6 @@ Please return ONLY the modified answer itself, without any introductory or conve
   }, [analysis, phase1ReviewTouched]);
 
   useEffect(() => {
-    if (sessionData?.technicalAnswers) {
-      setAnswers((prev) => ({
-        ...sessionData.technicalAnswers,
-        ...prev,
-      }));
-    }
-  }, [sessionData?.technicalAnswers]);
-
-  useEffect(() => {
     if (phase !== 'technical') {
       setActiveQuestion(null);
     }
@@ -2253,7 +2876,6 @@ Please return ONLY the modified answer itself, without any introductory or conve
     if (!launchJob?.sessionId) return;
 
     let cancelled = false;
-    let intervalId: ReturnType<typeof setInterval> | undefined;
 
     const pollStatus = async () => {
       try {
@@ -2314,7 +2936,7 @@ Please return ONLY the modified answer itself, without any introductory or conve
     };
 
     pollStatus();
-    intervalId = setInterval(pollStatus, 2500);
+    const intervalId = setInterval(pollStatus, 2500);
 
     return () => {
       cancelled = true;
@@ -2411,6 +3033,7 @@ Please return ONLY the modified answer itself, without any introductory or conve
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-3">
           <p className="text-muted-foreground">Business account required</p>
+          <Button onClick={() => navigate('/login')}>Sign in</Button>
         </div>
       </div>
     );
@@ -2574,7 +3197,7 @@ Please return ONLY the modified text itself, without any introductory or convers
               }}
             >
               <Sparkles className="h-3 w-3" />
-              {isRefineOpen ? 'Close Refine' : 'Refine with AI'}
+              {isRefineOpen ? 'Close Refine' : 'Refine'}
             </Button>
           )}
         </div>
@@ -3091,12 +3714,16 @@ Please return ONLY the modified text itself, without any introductory or convers
             {sessionData?.projectTitle && (
               <>
                 <span className="text-border shrink-0">/</span>
-                <span
-                  className="text-sm text-muted-foreground truncate max-w-[500px] cursor-help"
-                  title={sessionData.projectTitle}
-                >
-                  {sessionData.projectTitle}
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-sm text-muted-foreground truncate max-w-[240px] cursor-help">
+                      {sessionData.projectTitle}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[320px] break-words">
+                    <p className="text-xs">{sessionData.projectTitle}</p>
+                  </TooltipContent>
+                </Tooltip>
               </>
             )}
           </div>
@@ -3285,22 +3912,22 @@ Please return ONLY the modified text itself, without any introductory or convers
                       </span>
                       {research?.final_verdict && (
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider shadow-sm ${
+                          className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${
                             research.final_verdict
                               .toLowerCase()
                               .includes('ready') ||
                             research.final_verdict
                               .toLowerCase()
                               .includes('viable')
-                              ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                              ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25'
                               : research.final_verdict
                                     .toLowerCase()
                                     .includes('scoping') ||
                                   research.final_verdict
                                     .toLowerCase()
                                     .includes('work')
-                                ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                                : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25'
+                                : 'bg-red-500/10 text-red-500 border border-red-500/25'
                           }`}
                         >
                           {research.final_verdict}
@@ -3311,16 +3938,9 @@ Please return ONLY the modified text itself, without any introductory or convers
                       <h3 className="text-2xl font-bold text-foreground">
                         {research?.final_verdict
                           ?.toLowerCase()
-                          .includes('ready') ||
-                        research?.final_verdict
-                          ?.toLowerCase()
                           .includes('viable')
                           ? 'Strong Potential'
-                          : research?.final_verdict
-                                ?.toLowerCase()
-                                .includes('scoping')
-                            ? 'Needs Refinement'
-                            : 'Needs Attention'}
+                          : 'Needs Refinement'}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {research?.verdict_reasoning ??
@@ -3354,15 +3974,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                             2 *
                             Math.PI *
                             40 *
-                            (1 -
-                              (typeof research?.overall_score === 'object' &&
-                              research.overall_score !== null
-                                ? Number(
-                                    (research.overall_score as any).score ??
-                                      (research.overall_score as any).value,
-                                  ) || 0
-                                : Number(research?.overall_score) || 0) /
-                                10)
+                            (1 - (research?.overall_score ?? 0) / 10)
                           }
                           strokeLinecap="round"
                           fill="transparent"
@@ -3370,13 +3982,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-2xl font-extrabold font-mono text-foreground leading-none">
-                          {typeof research?.overall_score === 'object' &&
-                          research.overall_score !== null
-                            ? Number(
-                                (research.overall_score as any).score ??
-                                  (research.overall_score as any).value,
-                              ) || '—'
-                            : Number(research?.overall_score) || '—'}
+                          {research?.overall_score ?? 'N/A'}
                         </span>
                         <span className="text-[10px] text-muted-foreground mt-0.5">
                           / 10
@@ -3442,7 +4048,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                         Confirm Phase 2 Inputs & Assumptions
                       </h2>
                       <p className="mt-1 max-w-2xl text-xs text-muted-foreground leading-relaxed">
-                        We've generated the business requirements based on your
+                        We&apos;ve generated the business requirements based on your
                         idea. Use the fields below to customize, adjust, or use
                         AI to refine specific values before generating the
                         technical blueprint.
@@ -3522,6 +4128,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                 <AnalysisDetails
                   analysis={analysis}
                   onSectionChange={setActiveReportSection}
+                  isChatOpen={isChatOpen}
                 />
 
                 <div className="flex items-center gap-3 pt-4 border-t border-border/40">
@@ -3624,9 +4231,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                                 }}
                               >
                                 <Sparkles className="h-3 w-3" />
-                                {isRefineOpen
-                                  ? 'Close Refine'
-                                  : 'Refine with AI'}
+                                {isRefineOpen ? 'Close Refine' : 'Refine'}
                               </Button>
                             )}
                           </div>
@@ -3797,9 +4402,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                                     }}
                                   >
                                     <Sparkles className="h-3 w-3" />
-                                    {isRefineOpen
-                                      ? 'Close Refine'
-                                      : 'Refine with AI'}
+                                    {isRefineOpen ? 'Close Refine' : 'Refine'}
                                   </Button>
                                 )}
                               </div>
@@ -3937,76 +4540,79 @@ Please return ONLY the modified text itself, without any introductory or convers
               />
             ) : (
               <div className="space-y-7 animate-in fade-in duration-300">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
+                <div className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/10 pb-4">
+                    <div className="text-xs text-primary font-medium uppercase tracking-wider">
                       Phase 3 output
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-3">
+                    <div className="flex flex-wrap gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        onClick={() => setPhase('analysis')}
+                        disabled={
+                          downloadingBlueprintPdf ||
+                          creatingRoom ||
+                          loadingRecommendations
+                        }
+                      >
+                        Edit Phase 2
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setPhase('technical')}
+                        disabled={
+                          downloadingBlueprintPdf ||
+                          creatingRoom ||
+                          loadingRecommendations
+                        }
+                      >
+                        Edit answers
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={downloadBlueprintPdf}
+                        disabled={
+                          downloadingBlueprintPdf ||
+                          creatingRoom ||
+                          loadingRecommendations
+                        }
+                      >
+                        {downloadingBlueprintPdf
+                          ? 'Preparing...'
+                          : 'Download PDF'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={enterRoomDashboard}
+                        disabled={creatingRoom || loadingRecommendations}
+                      >
+                        {creatingRoom ? 'Preparing room...' : 'Skip matches'}
+                      </Button>
+                      <Button
+                        onClick={generateTalentRecommendations}
+                        disabled={loadingRecommendations || creatingRoom}
+                      >
+                        {loadingRecommendations
+                          ? 'Finding talent...'
+                          : 'Find talent matches'}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 mt-1">
+                    <h1 className="text-3xl font-bold tracking-tight">
                       Business and development blueprint
                     </h1>
-                    <p className="text-muted-foreground max-w-2xl">
+                    <p className="text-muted-foreground max-w-4xl leading-relaxed text-sm">
                       This report uses the Phase 2 analysis plus the mandatory
                       and optional Phase 3 answers.
                     </p>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPhase('analysis')}
-                      disabled={
-                        downloadingBlueprintPdf ||
-                        creatingRoom ||
-                        loadingRecommendations
-                      }
-                    >
-                      Edit Phase 2
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setPhase('technical')}
-                      disabled={
-                        downloadingBlueprintPdf ||
-                        creatingRoom ||
-                        loadingRecommendations
-                      }
-                    >
-                      Edit answers
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={downloadBlueprintPdf}
-                      disabled={
-                        downloadingBlueprintPdf ||
-                        creatingRoom ||
-                        loadingRecommendations
-                      }
-                    >
-                      {downloadingBlueprintPdf
-                        ? 'Preparing...'
-                        : 'Download PDF'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={enterRoomDashboard}
-                      disabled={creatingRoom || loadingRecommendations}
-                    >
-                      {creatingRoom ? 'Preparing room...' : 'Skip matches'}
-                    </Button>
-                    <Button
-                      onClick={generateTalentRecommendations}
-                      disabled={loadingRecommendations || creatingRoom}
-                    >
-                      {loadingRecommendations
-                        ? 'Finding talent...'
-                        : 'Generate phase 4 matches'}
-                    </Button>
                   </div>
                 </div>
 
                 <BlueprintReport
                   blueprint={blueprint}
                   onSectionChange={setActiveReportSection}
+                  region={phase1Review.region}
                 />
               </div>
             ))}
@@ -4571,9 +5177,13 @@ Please return ONLY the modified text itself, without any introductory or convers
       {showBackToTop && (
         <Button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className={`fixed bottom-6 ${
-            phase !== 'idea' && !isChatOpen ? 'right-20' : 'right-6'
-          } h-12 w-12 rounded-full shadow-2xl flex items-center justify-center bg-card border border-border/80 text-foreground hover:bg-muted hover:scale-105 transition-all duration-200 z-50 animate-in fade-in zoom-in-50`}
+          className={`fixed h-12 w-12 rounded-full shadow-2xl flex items-center justify-center bg-card border border-border/80 text-foreground hover:bg-muted hover:scale-105 transition-all duration-200 z-50 animate-in fade-in zoom-in-50 ${
+            phase !== 'idea' && isChatOpen
+              ? 'bottom-6 left-6 md:left-auto md:right-[412px]'
+              : phase !== 'idea' && !isChatOpen
+                ? 'bottom-6 right-20'
+                : 'bottom-6 right-6'
+          }`}
           size="icon"
           variant="outline"
         >

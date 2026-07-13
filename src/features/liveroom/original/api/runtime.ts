@@ -562,6 +562,18 @@ export async function liveRoomApiFetch(
 
     const documentMatch = path.match(/^\/rooms\/([^/]+)\/documents\/([^/]+)$/);
     if (documentMatch && method === 'GET') {
+      try {
+        const response = await backend(
+          `/liveroom/rooms/${documentMatch[1]}/documents/${documentMatch[2]}`,
+          init,
+        );
+        if (response.ok) {
+          const data = await response.json().catch(() => ({}));
+          return jsonResponse(data);
+        }
+      } catch (err) {
+        console.error('Error fetching document from backend:', err);
+      }
       return jsonResponse({
         title: decodeURIComponent(documentMatch[2]).replace(/-/g, ' '),
         documentType: decodeURIComponent(documentMatch[2]),
@@ -660,7 +672,9 @@ export async function liveRoomApiFetch(
       return jsonResponse(data);
     }
 
-    const interviewStatus = path.match(/^\/rooms\/([^/]+)\/interviews\/([^/]+)$/);
+    const interviewStatus = path.match(
+      /^\/rooms\/([^/]+)\/interviews\/([^/]+)$/,
+    );
     if (interviewStatus && method === 'PATCH') {
       const body = await parseJson(init);
       const data = await backendJson(
@@ -735,6 +749,18 @@ export async function liveRoomApiFetch(
       );
     }
 
+    const aiDocPdf = path.match(/^\/ai\/documents\/([^/]+)\/pdf$/);
+    if (aiDocPdf) {
+      return backend(`/liveroom/documents/${aiDocPdf[1]}/pdf`, init).then(
+        async (res) => {
+          if (res.status === 404) {
+            return backend(`/liveroom/ai/documents/${aiDocPdf[1]}/pdf`, init);
+          }
+          return res;
+        },
+      );
+    }
+
     const roomZip = path.match(/^\/rooms\/([^/]+)\/documents-zip$/);
     if (roomZip) {
       return backend(`/liveroom/rooms/${roomZip[1]}/documents-zip`, init);
@@ -742,12 +768,9 @@ export async function liveRoomApiFetch(
 
     const roomDeleteMatch = path.match(/^\/rooms\/([^/]+)$/);
     if (roomDeleteMatch && method === 'DELETE') {
-      const data = await backendJson(
-        `/liveroom/rooms/${roomDeleteMatch[1]}`,
-        {
-          method: 'DELETE',
-        },
-      );
+      const data = await backendJson(`/liveroom/rooms/${roomDeleteMatch[1]}`, {
+        method: 'DELETE',
+      });
       return jsonResponse(data);
     }
 
@@ -760,12 +783,9 @@ export async function liveRoomApiFetch(
 
     const ndaSign = path.match(/^\/rooms\/([^/]+)\/nda\/sign$/);
     if (ndaSign && method === 'PUT') {
-      const data = await backendJson(
-        `/liveroom/rooms/${ndaSign[1]}/nda/sign`,
-        {
-          method: 'PUT',
-        },
-      );
+      const data = await backendJson(`/liveroom/rooms/${ndaSign[1]}/nda/sign`, {
+        method: 'PUT',
+      });
       return jsonResponse(data);
     }
 

@@ -20,6 +20,8 @@ import {
   MapPin,
   HelpCircle,
   DollarSign,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -27,14 +29,26 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   technical_deck: 'Technical Deck',
   bd_strategy: 'BD Strategy',
   sow: 'Statement of Work',
+  sow_document: 'Statement of Work',
   project_brief: 'Project Brief',
   idea_validation_report: 'Idea Validation Report',
+  business_validation: 'Idea Validation Report',
   business_requirement_document: 'Business Requirement Document',
   project_requirement_document: 'Project Requirement Document',
+  mvp_scope: 'MVP Scope Document',
   mvp_scope_document: 'MVP Scope Document',
+  technical_architecture: 'Technical Architecture Document',
   technical_architecture_document: 'Technical Architecture Document',
+  feature_list: 'Feature List Document',
   feature_list_document: 'Feature List Document',
   development_roadmap: 'Development Roadmap',
+  development_roadmap_document: 'Development Roadmap',
+  roadmap_budget: 'Development Roadmap',
+  freelancer_hiring_brief: 'Freelancer Hiring Brief',
+  freelancer_hiring_brief_document: 'Freelancer Hiring Brief',
+  business_blueprint: 'Business Blueprint',
+  full_business_blueprint: 'Business Blueprint',
+  nda: 'Mutual NDA Agreement',
 };
 
 interface GeneratedDoc {
@@ -47,12 +61,14 @@ interface GeneratedDoc {
 
 interface DocModalProps {
   doc: GeneratedDoc | null;
+  roomId?: string;
   onClose: () => void;
 }
 
-export function DocModal({ doc, onClose }: DocModalProps) {
+export function DocModal({ doc, roomId, onClose }: DocModalProps) {
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
     if (!doc) return;
@@ -95,19 +111,37 @@ export function DocModal({ doc, onClose }: DocModalProps) {
   };
 
   const downloadPdf = async () => {
-    if (!doc || !doc._id) return;
+    if (!doc) return;
+    const docId = doc._id || (doc as any).documentId;
+    const docType = doc.documentType || (doc as any).docType || '';
+    const source = (doc as any).source || 'standard';
+
+    const pdfUrl =
+      source === 'generated' && docId
+        ? `/api/ai/documents/${docId}/pdf`
+        : `/api/rooms/${roomId}/documents/${encodeURIComponent(docType)}/pdf`;
+
     setDownloadingPdf(true);
     try {
       const token = localStorage.getItem('dehix_token');
-      const res = await fetch(`/api/ai/documents/${doc._id}/pdf`, {
+      const res = await fetch(pdfUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('Failed to download PDF');
       const blob = await res.blob();
+      if (!res.ok) {
+        const text = await blob.text().catch(() => '');
+        throw new Error(
+          text ? JSON.parse(text).error : 'Failed to download PDF',
+        );
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${doc.title.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+
+      const cleanKey = (docType || '').toLowerCase().replace(/-/g, '_');
+      const canonicalTitle = DOC_TYPE_LABELS[cleanKey] || doc.title;
+      a.download = `${canonicalTitle.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -123,7 +157,7 @@ export function DocModal({ doc, onClose }: DocModalProps) {
   const label = DOC_TYPE_LABELS[doc.documentType] ?? doc.documentType;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md animate-fadeIn selection:bg-primary/25 selection:text-foreground dark:selection:text-white">
       {/* Header */}
       <div className="shrink-0 border-b border-border/40 bg-card/85 px-6 py-4 flex items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3 min-w-0">
@@ -152,6 +186,22 @@ export function DocModal({ doc, onClose }: DocModalProps) {
           </button>
 
           <button
+            onClick={() => setZoom((prev) => Math.min(prev + 0.1, 2))}
+            className="text-xs text-muted-foreground hover:text-foreground transition-all border border-border/50 rounded-md px-3 py-2 hover:bg-muted/50 inline-flex items-center gap-1.5 cursor-pointer font-medium bg-transparent"
+            title="Zoom In"
+          >
+            <ZoomIn className="h-3.5 w-3.5" />
+          </button>
+
+          <button
+            onClick={() => setZoom((prev) => Math.max(prev - 0.1, 0.5))}
+            className="text-xs text-muted-foreground hover:text-foreground transition-all border border-border/50 rounded-md px-3 py-2 hover:bg-muted/50 inline-flex items-center gap-1.5 cursor-pointer font-medium bg-transparent"
+            title="Zoom Out"
+          >
+            <ZoomOut className="h-3.5 w-3.5" />
+          </button>
+
+          <button
             onClick={download}
             className="text-xs text-muted-foreground hover:text-foreground transition-all border border-border/50 rounded-md px-3 py-2 hover:bg-muted/55 inline-flex items-center gap-1.5 cursor-pointer font-medium bg-transparent"
           >
@@ -159,7 +209,7 @@ export function DocModal({ doc, onClose }: DocModalProps) {
             Text
           </button>
 
-          {doc._id && (
+          {(doc._id || roomId) && (
             <button
               onClick={downloadPdf}
               disabled={downloadingPdf}
@@ -186,7 +236,10 @@ export function DocModal({ doc, onClose }: DocModalProps) {
 
       {/* Desktop workspace area: centered page on gray bg */}
       <div className="flex-1 overflow-y-auto bg-muted/40 dark:bg-muted/10 py-8 px-4 flex justify-center">
-        <div className="bg-card text-foreground shadow-xl border border-border/30 rounded-xl p-8 md:p-12 w-full max-w-3xl min-h-[1000px] flex flex-col justify-between">
+        <div
+          className="bg-card text-foreground shadow-xl border border-border/30 rounded-xl p-8 md:p-12 w-full max-w-3xl min-h-[1000px] flex flex-col justify-between transition-transform duration-200"
+          style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+        >
           {/* Paper Top Title Header */}
           <div className="border-b border-border/20 pb-6 mb-6">
             <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-muted-foreground tracking-wider uppercase">
@@ -653,12 +706,14 @@ function renderExecutiveSummary(execData: any) {
   );
 }
 
-function renderMvpScope(mvpData: any) {
-  if (!mvpData) return null;
-  const mustHaves = mvpData.must_have_features || [];
-  const shouldHaves = mvpData.should_have_features || [];
-  const futureFeatures = mvpData.future_features || [];
-  const excluded = mvpData.excluded_from_mvp || [];
+function renderMvpScope(data: any) {
+  if (!data) return null;
+  const mvpData = data.mvp_scope || data.mvp_scope_document || data;
+  const mustHaves = mvpData.must_have_features || mvpData.mustHaves || [];
+  const shouldHaves = mvpData.should_have_features || mvpData.shouldHaves || [];
+  const futureFeatures =
+    mvpData.future_features || mvpData.futureFeatures || [];
+  const excluded = mvpData.excluded_from_mvp || mvpData.excluded || [];
 
   return (
     <div className="space-y-6 text-foreground font-sans animate-fadeIn text-left">
@@ -1037,54 +1092,64 @@ function renderRoadmapBudget(
 
   return (
     <div className="space-y-6 text-foreground font-sans animate-fadeIn text-left">
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-primary/10 border border-primary/20 text-primary px-2.5 py-1 rounded-md mb-4">
-          Roadmap & Cost Estimation
-        </span>
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+          <DollarSign className="w-24 h-24 text-primary" />
+        </div>
 
         {/* Cost section */}
         {hasCost && (
-          <div className="space-y-4 mb-6">
-            <h3 className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-              <DollarSign className="h-4 w-4 text-primary" /> Cost Estimation &
-              Capital Requirement
-              {regionHint && (
-                <span className="ml-2 text-[9px] bg-muted px-2 py-0.5 rounded border border-border/50 text-foreground/70">
-                  Region: {regionHint}
-                </span>
-              )}
-            </h3>
+          <div className="space-y-6 mb-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary">
+                Cost & Capital Requirements
+              </span>
+              <h3 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-1.5">
+                Financial Resource Estimation
+                {regionHint && (
+                  <span className="text-[9px] bg-muted px-2 py-0.5 rounded border border-border/50 text-foreground/70 font-mono font-medium">
+                    Region: {regionHint}
+                  </span>
+                )}
+              </h3>
+            </div>
 
             {hasBudget && (
-              <div className="grid gap-3 grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
                 {[
                   {
                     key: 'minimum',
-                    label: 'Minimum Budget',
-                    color: 'border-blue-500/20 bg-blue-500/5',
+                    label: 'Minimum Capital Required',
+                    color:
+                      'border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-transparent hover:from-blue-500/15',
+                    accent: 'text-blue-500',
                     text: minBudget,
                   },
                   {
                     key: 'expected',
-                    label: 'Expected Budget',
-                    color: 'border-emerald-500/30 bg-emerald-500/5',
+                    label: 'Target Budget Expected',
+                    color:
+                      'border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 to-transparent hover:from-emerald-500/20',
+                    accent: 'text-emerald-500',
                     text: expectedBudget,
                   },
                   {
                     key: 'high_end',
-                    label: 'High-End Budget',
-                    color: 'border-purple-500/20 bg-purple-500/5',
+                    label: 'High-End Cushion Budget',
+                    color:
+                      'border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-transparent hover:from-purple-500/15',
+                    accent: 'text-purple-500',
                     text: highEndBudget,
                   },
                 ].map((item) => (
                   <div
                     key={item.key}
-                    className={`p-4 rounded-xl border ${item.color} text-center space-y-1`}
+                    className={`p-4 rounded-xl border ${item.color} flex flex-col justify-between gap-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}
                   >
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <span className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-wider leading-none">
                       {item.label}
                     </span>
-                    <div className="text-sm font-black text-foreground">
+                    <div className="text-xl font-black text-foreground tracking-tight">
                       {formatCurrency(item.text)}
                     </div>
                   </div>
@@ -1093,9 +1158,9 @@ function renderRoadmapBudget(
             )}
 
             {monthlyOps && (
-              <div className="pt-2">
-                <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-2">
-                  Estimated Monthly Operations
+              <div className="pt-2 space-y-2.5">
+                <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">
+                  Estimated Monthly Operations Burn Rate
                 </h4>
                 <div className="grid gap-3 grid-cols-3">
                   {Object.entries(monthlyOps).map(
@@ -1106,12 +1171,12 @@ function renderRoadmapBudget(
                       return (
                         <div
                           key={tier}
-                          className="p-3 border border-border bg-background/50 rounded-lg text-center"
+                          className="p-3 border border-border bg-background/50 rounded-xl text-center space-y-1 transition-all duration-150 hover:bg-background/80"
                         >
-                          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">
+                          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
                             {label}
                           </span>
-                          <div className="text-xs font-bold text-foreground mt-0.5">
+                          <div className="text-sm font-extrabold text-foreground tracking-tight">
                             {formatCurrency(value)}
                           </div>
                         </div>
@@ -1124,17 +1189,23 @@ function renderRoadmapBudget(
 
             {costData.major_cost_drivers &&
               costData.major_cost_drivers.length > 0 && (
-                <div className="pt-2">
-                  <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-2">
-                    Key Cost Drivers
+                <div className="pt-2 space-y-3">
+                  <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">
+                    Key Capital Cost Drivers
                   </h4>
-                  <ul className="list-disc pl-4 space-y-1 text-xs text-foreground/80">
+                  <div className="grid gap-2 sm:grid-cols-2">
                     {costData.major_cost_drivers.map(
                       (driver: string, idx: number) => (
-                        <li key={idx}>{driver}</li>
+                        <div
+                          key={idx}
+                          className="flex items-start gap-2.5 p-3 rounded-xl border border-border/55 bg-muted/20 text-xs text-foreground/85 leading-relaxed transition-all duration-150 hover:bg-muted/30"
+                        >
+                          <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>{driver}</span>
+                        </div>
                       ),
                     )}
-                  </ul>
+                  </div>
                 </div>
               )}
           </div>
@@ -1142,13 +1213,18 @@ function renderRoadmapBudget(
 
         {/* Roadmap section */}
         {hasRoadmap && (
-          <div className="pt-6 border-t border-border/40 space-y-4">
-            <h3 className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-              <Clock className="h-4 w-4 text-primary" /> Implementation Timeline
-              Roadmap
-            </h3>
+          <div className="pt-6 border-t border-border/40 space-y-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary">
+                Execution roadmap
+              </span>
+              <h3 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-primary" /> Delivery & Timeline
+                Schedule
+              </h3>
+            </div>
 
-            <div className="space-y-4 relative pl-4 border-l border-border/60">
+            <div className="space-y-6 relative pl-5 border-l border-border/60 ml-2">
               {Object.entries(roadmapData).map(
                 ([phaseKey, phaseVal]: [string, any]) => {
                   const phaseTitle = phaseKey
@@ -1158,25 +1234,33 @@ function renderRoadmapBudget(
                   const deliverables = phaseVal.deliverables || [];
 
                   return (
-                    <div key={phaseKey} className="relative space-y-1">
+                    <div key={phaseKey} className="relative space-y-2">
                       {/* Circle marker */}
-                      <div className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary border-2 border-background" />
+                      <div className="absolute -left-[26px] top-1 w-3 h-3 rounded-full bg-primary border-2 border-background shadow-sm" />
 
-                      <div className="flex flex-wrap items-baseline gap-2">
-                        <h4 className="text-xs font-black text-foreground">
+                      <div className="flex flex-wrap items-baseline gap-2.5">
+                        <h4 className="text-xs font-black text-foreground tracking-wide">
                           {phaseTitle}
                         </h4>
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
                           {duration}
                         </span>
                       </div>
 
                       {deliverables.length > 0 && (
-                        <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-muted-foreground leading-relaxed">
+                        <div className="grid gap-1.5 sm:grid-cols-2">
                           {deliverables.map((del: string, dIdx: number) => (
-                            <li key={dIdx}>{del}</li>
+                            <div
+                              key={dIdx}
+                              className="flex items-start gap-2 text-[11px] text-muted-foreground leading-relaxed p-2 rounded-lg bg-muted/10 border border-border/30 hover:bg-muted/20 transition-all duration-100"
+                            >
+                              <span className="text-primary font-bold mt-0.5">
+                                •
+                              </span>
+                              <span>{del}</span>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       )}
                     </div>
                   );
@@ -1190,6 +1274,286 @@ function renderRoadmapBudget(
   );
 }
 
+function renderCostEstimationCustom(costVal: any) {
+  if (!costVal) return null;
+
+  const formatCurrency = (val: any) => {
+    if (val === undefined || val === null) return 'TBD';
+    const num = Number(String(val).replace(/[^0-9.-]+/g, ''));
+    if (!isNaN(num) && num > 0) {
+      return `$${num.toLocaleString('en-US')}`;
+    }
+    return String(val);
+  };
+
+  // 1. If it's an object, render it as structured metrics
+  if (typeof costVal === 'object' && costVal !== null) {
+    const timeline = costVal.timeline_weeks_estimate;
+    const budgetRange = costVal.total_mvp_budget_range_usd;
+    const roles = costVal.roles_required;
+    const assumptions = costVal.cost_assumptions;
+
+    const isBackendSchema =
+      timeline !== undefined ||
+      budgetRange !== undefined ||
+      roles !== undefined ||
+      assumptions !== undefined;
+
+    if (isBackendSchema) {
+      const minVal = budgetRange?.min;
+      const maxVal = budgetRange?.max;
+
+      return (
+        <div className="space-y-5 text-left font-sans text-xs">
+          {/* Timeline & Budget Overview */}
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+            {/* Budget Range */}
+            {(minVal !== undefined || maxVal !== undefined) && (
+              <div className="p-4 border border-emerald-500/25 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-xl flex flex-col justify-between gap-1 shadow-sm">
+                <span className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest leading-none">
+                  Est. MVP Budget Range
+                </span>
+                <div className="text-lg font-black text-foreground tracking-tight">
+                  {minVal !== undefined ? formatCurrency(minVal) : 'TBD'} –{' '}
+                  {maxVal !== undefined ? formatCurrency(maxVal) : 'TBD'}
+                </div>
+              </div>
+            )}
+
+            {/* Timeline Estimate */}
+            {timeline !== undefined && (
+              <div className="p-4 border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent rounded-xl flex flex-col justify-between gap-1 shadow-sm">
+                <span className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest leading-none">
+                  Estimated Delivery
+                </span>
+                <div className="text-lg font-black text-foreground tracking-tight">
+                  {timeline} {timeline === 1 ? 'Week' : 'Weeks'}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Roles Required */}
+          {Array.isArray(roles) && roles.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground block">
+                Required Talent & Roles
+              </span>
+              <div className="grid gap-2">
+                {roles.map((r: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="p-3 border border-border/50 bg-background/50 rounded-xl flex flex-wrap items-center justify-between gap-2 hover:bg-muted/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      <span className="font-bold text-foreground">
+                        {r.role_title}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                      {r.estimated_hours !== undefined && (
+                        <span>
+                          <strong className="text-foreground">
+                            {r.estimated_hours}
+                          </strong>{' '}
+                          hrs
+                        </span>
+                      )}
+                      {r.region_hourly_rate_usd !== undefined && (
+                        <span className="px-2 py-0.5 rounded bg-muted border border-border/40 text-foreground/80 font-mono">
+                          {formatCurrency(r.region_hourly_rate_usd)}/hr
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Cost Assumptions */}
+          {assumptions && (
+            <div className="space-y-2">
+              <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground block">
+                Key Budget Assumptions
+              </span>
+              <div className="p-4 bg-muted/20 border border-border/40 rounded-xl leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                {assumptions}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const min = costVal.minimum || costVal.min || costVal.mvp_budget_minimum;
+    const expected =
+      costVal.expected || costVal.value || costVal.mvp_budget_expected;
+    const high = costVal.high_end || costVal.max || costVal.mvp_budget_high_end;
+    const drivers = costVal.major_cost_drivers || costVal.cost_drivers || [];
+
+    if (min || expected || high || drivers.length > 0) {
+      return (
+        <div className="space-y-4 text-left font-sans text-xs">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+            {min && (
+              <div className="p-3.5 border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent rounded-xl">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                  Min Capital
+                </span>
+                <span className="text-base font-black text-foreground">
+                  {formatCurrency(min)}
+                </span>
+              </div>
+            )}
+            {expected && (
+              <div className="p-3.5 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-xl">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                  Expected Budget
+                </span>
+                <span className="text-base font-black text-foreground">
+                  {formatCurrency(expected)}
+                </span>
+              </div>
+            )}
+            {high && (
+              <div className="p-3.5 border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent rounded-xl">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                  High-End Cushion
+                </span>
+                <span className="text-base font-black text-foreground">
+                  {formatCurrency(high)}
+                </span>
+              </div>
+            )}
+          </div>
+          {drivers.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted-foreground block">
+                Cost Drivers
+              </span>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {drivers.map((d: string, idx: number) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 p-2.5 rounded-lg border border-border/50 bg-muted/20 text-xs"
+                  >
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{d}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Fallback: render generic object keys cleanly to prevent [object Object]
+    return (
+      <div className="grid gap-3 sm:grid-cols-2 text-left font-sans text-xs">
+        {Object.entries(costVal).map(([k, v]) => {
+          const title = k
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (c) => c.toUpperCase());
+
+          let contentNode: ReactNode = '';
+          if (Array.isArray(v)) {
+            contentNode = (
+              <ul className="list-disc pl-4 space-y-1 mt-1 text-[11px] text-muted-foreground">
+                {v.map((item, idx) => (
+                  <li key={idx}>{String(item)}</li>
+                ))}
+              </ul>
+            );
+          } else if (typeof v === 'object' && v !== null) {
+            contentNode = (
+              <pre className="text-[10px] font-mono p-2 bg-muted rounded overflow-x-auto">
+                {JSON.stringify(v, null, 2)}
+              </pre>
+            );
+          } else {
+            contentNode = (
+              <p className="text-xs text-foreground/85 mt-1">{String(v)}</p>
+            );
+          }
+
+          return (
+            <div
+              key={k}
+              className="p-4 border border-border/50 bg-muted/10 rounded-xl space-y-1 hover:bg-muted/20 transition-all duration-150 shadow-sm"
+            >
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                {title}
+              </span>
+              {contentNode}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // 2. If it's a string, parse and render it beautifully
+  const text = String(costVal);
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  return (
+    <div className="space-y-3.5 text-left font-sans text-xs">
+      {lines.map((line, idx) => {
+        const isBullet =
+          line.startsWith('-') || line.startsWith('*') || /^\d+\./.test(line);
+        const cleanLine = line
+          .replace(/^[-*•]\s*/, '')
+          .replace(/^\d+\.\s*/, '');
+
+        const moneyRegex = /\$[0-9,]+(\s*-\s*\$[0-9,]+)?/g;
+        const matches = cleanLine.match(moneyRegex);
+
+        let renderedText: ReactNode = cleanLine;
+        if (matches && matches.length > 0) {
+          const firstMatch = matches[0];
+          const textParts = cleanLine.split(firstMatch);
+          renderedText = (
+            <span>
+              {textParts[0]}
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
+                {firstMatch}
+              </span>
+              {textParts[1]}
+            </span>
+          );
+        }
+
+        if (isBullet) {
+          return (
+            <div
+              key={idx}
+              className="flex items-start gap-2.5 p-3 rounded-xl border border-border/50 bg-muted/20 text-xs text-foreground/80 leading-relaxed transition-all duration-150 hover:bg-muted/30"
+            >
+              <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+              <div className="flex-1">{renderedText}</div>
+            </div>
+          );
+        }
+
+        return (
+          <p
+            key={idx}
+            className="text-xs text-foreground/85 leading-relaxed text-justify bg-card border border-border/30 rounded-xl p-3.5 shadow-inner"
+          >
+            {renderedText}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 function JsonDocumentRenderer({
   data,
   documentType,
@@ -1198,10 +1562,13 @@ function JsonDocumentRenderer({
   documentType?: string;
 }) {
   const [activeTab, setActiveTab] = useState('overview');
+  const normalizedDocType = (documentType || '')
+    .toLowerCase()
+    .replace(/-/g, '_');
   const isAnalysis =
     data.idea_summary !== undefined ||
     data.research_analysis !== undefined ||
-    documentType === 'business_validation';
+    normalizedDocType === 'business_validation';
 
   if (isAnalysis) {
     const research = data.research_analysis ?? {};
@@ -1528,9 +1895,11 @@ function JsonDocumentRenderer({
                       {title}
                     </h4>
                     <div className="text-xs text-foreground/80 leading-relaxed text-justify whitespace-pre-line">
-                      {typeof textContent === 'object'
-                        ? renderNestedObject(textContent)
-                        : String(textContent)}
+                      {key === 'cost_estimation'
+                        ? renderCostEstimationCustom(textContent)
+                        : typeof textContent === 'object'
+                          ? renderNestedObject(textContent)
+                          : String(textContent)}
                     </div>
                   </div>
                 );
@@ -1605,32 +1974,49 @@ function JsonDocumentRenderer({
 
   // 1. Check if it's the full business blueprint
   const isFullBlueprint =
-    documentType === 'business_blueprint' ||
-    documentType === 'full_business_blueprint' ||
+    normalizedDocType === 'business_blueprint' ||
+    normalizedDocType === 'full_business_blueprint' ||
     data.executive_summary !== undefined;
 
   if (isFullBlueprint) {
     const tabs = [
-      { id: 'overview', label: 'Executive Summary & Strategy' },
-      { id: 'scope', label: 'MVP Features & Scope' },
-      { id: 'architecture', label: 'Technical Architecture' },
-      { id: 'roadmap', label: 'Roadmap, Cost & Team' },
+      {
+        id: 'overview',
+        label: 'Overview & Strategy',
+        icon: <Sparkles className="h-3.5 w-3.5" />,
+      },
+      {
+        id: 'scope',
+        label: 'MVP Scope',
+        icon: <Layers className="h-3.5 w-3.5" />,
+      },
+      {
+        id: 'architecture',
+        label: 'Architecture',
+        icon: <FileText className="h-3.5 w-3.5" />,
+      },
+      {
+        id: 'roadmap',
+        label: 'Roadmap & Budget',
+        icon: <TrendingUp className="h-3.5 w-3.5" />,
+      },
     ];
 
     return (
       <div className="space-y-6 text-foreground font-sans animate-fadeIn text-left">
         {/* Navigation Tabs */}
-        <div className="flex border-b border-border/40 overflow-x-auto scrollbar-none mb-6">
+        <div className="flex gap-2 p-1.5 bg-muted/60 dark:bg-muted/30 border border-border/40 rounded-xl overflow-x-auto scrollbar-none mb-6">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 text-xs font-bold whitespace-nowrap border-b-2 transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold whitespace-nowrap rounded-lg transition-all active:scale-[0.98] ${
                 activeTab === tab.id
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-[1.02]'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
               }`}
             >
+              {tab.icon}
               {tab.label}
             </button>
           ))}
@@ -1855,30 +2241,46 @@ function JsonDocumentRenderer({
   }
 
   // 2. Individual sub-documents routing
-  if (documentType === 'executive_summary' || data.idea_name !== undefined) {
+  if (normalizedDocType === 'nda') {
+    return renderNda(data);
+  }
+
+  if (
+    normalizedDocType === 'executive_summary' ||
+    data.idea_name !== undefined
+  ) {
     return renderExecutiveSummary(data);
   }
 
-  if (documentType === 'mvp_scope' || data.must_have_features !== undefined) {
+  if (
+    normalizedDocType === 'mvp_scope' ||
+    normalizedDocType === 'mvp_scope_document' ||
+    data.must_have_features !== undefined ||
+    (data.mvp_scope && data.mvp_scope.must_have_features !== undefined)
+  ) {
     return renderMvpScope(data);
   }
 
   if (
-    documentType === 'technical_architecture' ||
+    normalizedDocType === 'technical_architecture' ||
+    normalizedDocType === 'technical_architecture_document' ||
     data.recommended_stack !== undefined
   ) {
     return renderTechnicalArchitecture(data);
   }
 
   if (
-    documentType === 'freelancer_hiring_brief' ||
+    normalizedDocType === 'freelancer_hiring_brief' ||
+    normalizedDocType === 'freelancer_hiring_brief_document' ||
     data.recommended_team !== undefined
   ) {
     return renderFreelancerHiringBrief(data);
   }
 
   if (
-    documentType === 'roadmap_budget' ||
+    normalizedDocType === 'roadmap_budget' ||
+    normalizedDocType === 'development_roadmap' ||
+    normalizedDocType === 'development_roadmap_document' ||
     data.development_roadmap !== undefined ||
     data.cost_estimation !== undefined ||
     data.cost_estimation_usd !== undefined
@@ -2222,4 +2624,165 @@ function decodeJsonString(str: string): string {
     .replace(/\\n/g, '\n')
     .replace(/\\t/g, '\t')
     .replace(/\\\\/g, '\\');
+}
+
+function renderNda(ndaData: any) {
+  if (!ndaData) return null;
+  const intro = ndaData.introduction || '';
+  const roleInfo = ndaData.role_and_responsibilities || '';
+  const scope = ndaData.scope_of_work || '';
+  const rate = ndaData.financial_compensation || '';
+  const milestones = ndaData.milestones || [];
+  const confidentiality = ndaData.confidentiality_clause || '';
+  const ipClause = ndaData.intellectual_property_clause || '';
+  const law = ndaData.governing_law || '';
+
+  return (
+    <div className="max-w-2xl mx-auto my-4 p-6 sm:p-10 text-foreground border-4 border-double border-border rounded-xl select-text font-serif text-justify text-xs leading-relaxed tracking-wide space-y-6">
+      {/* Formal Header Banner */}
+      <div className="text-center space-y-3 pb-6 border-b border-border">
+        <h2 className="text-xl font-bold tracking-tight uppercase">
+          Mutual Non-Disclosure & IP Assignment Agreement
+        </h2>
+        <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+          DEHIX LiveRoom Platform · Legal Binding Instrument
+        </p>
+      </div>
+
+      {/* Intro */}
+      {intro && <p className="first-line:pl-6 leading-relaxed">{intro}</p>}
+
+      {/* Section 1: Engagement & Role */}
+      {(roleInfo || scope) && (
+        <div className="space-y-2">
+          <h3 className="font-bold text-sm uppercase tracking-wide border-b border-border/40 pb-0.5">
+            1. Engagement & Scope of Work
+          </h3>
+          {roleInfo && <p>{roleInfo}</p>}
+          {scope && (
+            <div className="p-4 border border-border bg-muted/10 rounded-lg my-2 font-sans text-[11px] text-muted-foreground text-left">
+              <span className="font-bold block text-[9px] uppercase tracking-wider text-foreground mb-1">
+                Scope Summary Details
+              </span>
+              <p className="leading-relaxed">{scope}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Section 2: Compensation & Milestones */}
+      {(rate || (Array.isArray(milestones) && milestones.length > 0)) && (
+        <div className="space-y-2">
+          <h3 className="font-bold text-sm uppercase tracking-wide border-b border-border/40 pb-0.5">
+            2. Compensation & Milestone Disbursements
+          </h3>
+          {rate && (
+            <p>
+              The Disclosing Party agrees to compensate the Receiving Party as
+              follows: <strong>{rate}</strong>.
+            </p>
+          )}
+
+          {Array.isArray(milestones) && milestones.length > 0 && (
+            <div className="mt-3 space-y-2 font-sans text-left">
+              <span className="font-bold block text-[9px] uppercase tracking-wider text-muted-foreground">
+                Milestone Schedule
+              </span>
+              <div className="grid gap-2">
+                {milestones.map((m: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="p-3 border border-border/50 bg-muted/5 rounded-lg flex justify-between items-start gap-4"
+                  >
+                    <div className="space-y-0.5">
+                      <div className="text-[11px] font-bold text-foreground">
+                        Milestone #{m.number || idx + 1}: {m.title}
+                      </div>
+                      {m.description && (
+                        <div className="text-[10px] text-muted-foreground leading-snug">
+                          {m.description}
+                        </div>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">
+                      {m.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Section 3: Confidentiality */}
+      {confidentiality && (
+        <div className="space-y-2">
+          <h3 className="font-bold text-sm uppercase tracking-wide border-b border-border/40 pb-0.5">
+            3. Confidentiality Obligations
+          </h3>
+          <p>{confidentiality}</p>
+        </div>
+      )}
+
+      {/* Section 4: IP Assignment */}
+      {ipClause && (
+        <div className="space-y-2">
+          <h3 className="font-bold text-sm uppercase tracking-wide border-b border-border/40 pb-0.5">
+            4. Intellectual Property Assignment
+          </h3>
+          <p>{ipClause}</p>
+        </div>
+      )}
+
+      {/* Section 5: Governing Law */}
+      {law && (
+        <div className="space-y-2">
+          <h3 className="font-bold text-sm uppercase tracking-wide border-b border-border/40 pb-0.5">
+            5. Governing Law & Jurisdiction
+          </h3>
+          <p>{law}</p>
+        </div>
+      )}
+
+      {/* Signature Section */}
+      <div className="border-t border-border pt-8 mt-12 grid gap-6 sm:grid-cols-2 text-left font-sans text-[11px]">
+        {/* Disclosing Party Signature */}
+        <div className="p-4 border border-border bg-muted/5 rounded-lg space-y-3 relative overflow-hidden">
+          <div className="space-y-0.5">
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+              Disclosing Party (Client)
+            </span>
+            <div className="font-bold text-foreground">
+              Authorized representative
+            </div>
+          </div>
+          <div className="pt-3 border-t border-border/20 text-[9px] text-muted-foreground font-mono space-y-0.5">
+            <div className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+              <CheckCircle className="h-3.5 w-3.5" /> E-Signed via DEHIX Secure
+            </div>
+            <div>Auth Key: DHX-DIS-VERIFIED</div>
+          </div>
+        </div>
+
+        {/* Receiving Party Signature */}
+        <div className="p-4 border border-border bg-muted/5 rounded-lg space-y-3 relative overflow-hidden">
+          <div className="space-y-0.5">
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+              Receiving Party (Talent)
+            </span>
+            <div className="font-bold text-foreground">
+              Independent Contractor
+            </div>
+          </div>
+          <div className="pt-3 border-t border-border/20 text-[9px] text-muted-foreground font-mono space-y-0.5">
+            <div className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+              <CheckCircle className="h-3.5 w-3.5" /> E-Signed via DEHIX Secure
+            </div>
+            <div>Auth Key: DHX-REC-VERIFIED</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
