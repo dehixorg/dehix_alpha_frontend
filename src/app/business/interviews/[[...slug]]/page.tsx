@@ -48,6 +48,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
+import { useBusinessInterviewsTour } from '@/components/tour/business/useBusinessInterviewsTour';
 
 interface Meeting {
   id: string;
@@ -279,6 +280,7 @@ export default function BusinessInterviewsPage() {
   const [selectedBidInterviewId, setSelectedBidInterviewId] = useState<
     string | null
   >(null);
+  useBusinessInterviewsTour(!loading);
 
   useEffect(() => {
     if (!['current', 'bids', 'history'].includes(slug)) {
@@ -625,6 +627,7 @@ export default function BusinessInterviewsPage() {
                     value={slug}
                     onValueChange={handleTabChange}
                     className="w-full"
+                    data-tour="biz-interviews-tabs"
                   >
                     <div className="border-b px-2 sm:px-6">
                       <TabsList className="bg-transparent h-12 w-full justify-start p-0">
@@ -735,7 +738,7 @@ export default function BusinessInterviewsPage() {
                           </div>
                         </div>
                       ) : (
-                        <>
+                        <div data-tour="biz-interviews-list">
                           {/* Content */}
                           {viewType === 'list' ? (
                             filteredMeetings.length === 0 ? (
@@ -850,7 +853,7 @@ export default function BusinessInterviewsPage() {
                               })}
                             </Accordion>
                           )}
-                        </>
+                        </div>
                       )}
                     </div>
                   </Tabs>

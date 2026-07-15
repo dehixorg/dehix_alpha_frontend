@@ -47,6 +47,7 @@ export type TourTarget =
   | 'business-kyc'
   | 'public-profile'
   | 'freelancer-profile-view'
+  | 'business-interviews'
   | null;
 
 export type TourState = {

@@ -6,6 +6,7 @@ import TalentLayout from '@/components/marketComponents/TalentLayout';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { FreelancerApplication } from '@/types/talent';
 import { useToast } from '@/components/ui/use-toast';
+import { useBusinessTalentTour } from '@/components/tour/business/useBusinessTalentTour';
 
 interface HireTalentItem {
   _id: string;
@@ -35,6 +36,7 @@ interface HireTalentItem {
 export default function Page() {
   const searchParams = useSearchParams();
   const statusParam = (searchParams.get('status') || '').toLowerCase();
+  useBusinessTalentTour(true);
 
   const allowed = new Set([
     'invited',
