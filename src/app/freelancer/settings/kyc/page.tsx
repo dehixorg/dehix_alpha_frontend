@@ -6,6 +6,7 @@ import React, { Fragment } from 'react';
 import FreelancerSettingsLayout from '../../../../components/layout/FreelancerSettingsLayout';
 
 import { RootState } from '@/lib/store';
+import { useKycTour } from '@/components/tour/business-profile/useKycTour';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 
@@ -90,6 +91,7 @@ const KYCForm = dynamic(() => import('@/components/form/kycFreelancerForm'), {
 
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);
+  useKycTour(true);
 
   return (
     <FreelancerSettingsLayout

@@ -340,7 +340,7 @@ export function LeaderboardTable({
         </CardContent>
       </Card>
       {/* Leaderboard Table */}
-      <ScrollArea className="rounded-xl border">
+      <ScrollArea className="rounded-xl border" data-tour="lb-table">
         <Table>
           <TableHeader className="sticky top-0 bg-gradient">
             <TableRow>

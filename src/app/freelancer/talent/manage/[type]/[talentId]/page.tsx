@@ -28,12 +28,14 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import EmptyState from '@/components/shared/EmptyState';
 import ApplicationCard from '@/components/freelancer/talent/ApplicationCard';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
+import { useManageTalentTour } from '@/components/tour/freelancer/useManageTalentTour';
 
 export default function ManageTalentPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
+  useManageTalentTour(!loading);
   const [talents, setTalents] = useState<
     Array<{ id: string; label: string; type: 'SKILL' | 'DOMAIN' }>
   >([]);
@@ -301,7 +303,10 @@ export default function ManageTalentPage() {
                 </div>
               </div>
 
-              <div className="w-full sm:w-72 md:w-72">
+              <div
+                className="w-full sm:w-72 md:w-72"
+                data-tour="manage-talent-dropdown"
+              >
                 <Select
                   value={selectedValue}
                   onValueChange={handleTalentChange}
@@ -345,6 +350,7 @@ export default function ManageTalentPage() {
                   )
                 }
                 className="w-full"
+                data-tour="manage-talent-tabs"
               >
                 <div className="border-b px-4 sm:px-6">
                   <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
@@ -387,29 +393,31 @@ export default function ManageTalentPage() {
                   </TabsList>
                 </div>
 
-                <TabsContent value="applied" className="m-0 p-4 sm:p-6">
-                  {renderApplicationCards()}
-                </TabsContent>
+                <div data-tour="manage-talent-list">
+                  <TabsContent value="applied" className="m-0 p-4 sm:p-6">
+                    {renderApplicationCards()}
+                  </TabsContent>
 
-                <TabsContent value="selected" className="m-0 p-4 sm:p-6">
-                  {renderApplicationCards()}
-                </TabsContent>
+                  <TabsContent value="selected" className="m-0 p-4 sm:p-6">
+                    {renderApplicationCards()}
+                  </TabsContent>
 
-                <TabsContent value="invited" className="m-0 p-4 sm:p-6">
-                  {renderApplicationCards()}
-                </TabsContent>
+                  <TabsContent value="invited" className="m-0 p-4 sm:p-6">
+                    {renderApplicationCards()}
+                  </TabsContent>
 
-                <TabsContent value="lobby" className="m-0 p-4 sm:p-6">
-                  {renderApplicationCards()}
-                </TabsContent>
+                  <TabsContent value="lobby" className="m-0 p-4 sm:p-6">
+                    {renderApplicationCards()}
+                  </TabsContent>
 
-                <TabsContent value="interview" className="m-0 p-4 sm:p-6">
-                  {renderApplicationCards()}
-                </TabsContent>
+                  <TabsContent value="interview" className="m-0 p-4 sm:p-6">
+                    {renderApplicationCards()}
+                  </TabsContent>
 
-                <TabsContent value="rejected" className="m-0 p-4 sm:p-6">
-                  {renderApplicationCards()}
-                </TabsContent>
+                  <TabsContent value="rejected" className="m-0 p-4 sm:p-6">
+                    {renderApplicationCards()}
+                  </TabsContent>
+                </div>
               </Tabs>
             </CardContent>
           </Card>

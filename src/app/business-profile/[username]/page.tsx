@@ -24,6 +24,7 @@ import { RootState } from '@/lib/store';
 import { ProjectCard } from '@/components/cards/projectCard';
 import EmptyState from '@/components/shared/EmptyState';
 import { Badge } from '@/components/ui/badge';
+import { useBusinessProfileViewTour } from '@/components/tour/shared/useBusinessProfileViewTour';
 
 interface UserProfile {
   _id: string;
@@ -43,6 +44,7 @@ export default function BusinessProfile() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [businessId, setBusinessId] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  useBusinessProfileViewTour(!loading);
 
   const user = useSelector((state: RootState) => state.user);
   const isFreelancer =
@@ -176,7 +178,10 @@ export default function BusinessProfile() {
               )}
             </Card>
             {/* Projects List */}
-            <Card className="w-full max-w-4xl shadow-lg mt-6">
+            <Card
+              className="w-full max-w-4xl shadow-lg mt-6"
+              data-tour="biz-profile-view-projects"
+            >
               <CardHeader className="bg-green-500/5 dark:bg-green-500/10 border-b border-border py-4">
                 <CardTitle className="text-md font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
                   <Code className="h-5 w-5" />
@@ -276,19 +281,21 @@ export default function BusinessProfile() {
               </CardContent>
             </Card>
           </Card>
-          <Button onClick={handleShare} className="mt-4">
-            Share Profile
-          </Button>
-          {user?.isLoggedIn && isFreelancer && (
-            <Button
-              onClick={handleChatWithBusiness}
-              className="mt-4 flex items-center gap-2"
-              variant="outline"
-            >
-              <MessageSquare className="h-4 w-4" />
-              Chat with Business
+          <div className="flex gap-2" data-tour="biz-profile-view-actions">
+            <Button onClick={handleShare} className="mt-4">
+              Share Profile
             </Button>
-          )}
+            {user?.isLoggedIn && isFreelancer && (
+              <Button
+                onClick={handleChatWithBusiness}
+                className="mt-4 flex items-center gap-2"
+                variant="outline"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Chat with Business
+              </Button>
+            )}
+          </div>
         </main>
       </div>
     </div>

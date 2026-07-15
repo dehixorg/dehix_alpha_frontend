@@ -48,6 +48,10 @@ export type TourTarget =
   | 'public-profile'
   | 'freelancer-profile-view'
   | 'business-interviews'
+  | 'business-profile-view'
+  | 'consultancy'
+  | 'single-profile-edit'
+  | 'manage-talent'
   | null;
 
 export type TourState = {
