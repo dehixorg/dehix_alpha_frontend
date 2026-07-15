@@ -54,9 +54,9 @@ export function useSettingsTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'settings-sidebar',
-      title: 'Settings Navigation',
-      text: 'Use this sidebar to manage your business settings, compliance, and reports.',
+      id: 'settings-sidebar-intro',
+      title: '📁 Business Settings Navigation',
+      text: 'Welcome to your Company Settings Dashboard. Use this sidebar menu to update your business profile details, verify your corporate KYC compliance, review financial invoice logs, or file tickets with our administrative team.',
       attachTo: {
         element: '[data-tour="sidebar"]',
         on: 'right',
@@ -79,8 +79,8 @@ export function useSettingsTour(isReady: boolean) {
 
     tour.addStep({
       id: 'settings-business-info',
-      title: 'Business Information',
-      text: 'Update your company details and basic information used across the platform.',
+      title: '🏢 Business Info Configuration',
+      text: 'Start here to update basic company details: select size ranges, verify external websites, link LinkedIn profiles, and write description briefs for developer audiences.',
       attachTo: {
         element: '[data-tour="settings-business-info"]',
         on: 'right',
@@ -94,8 +94,8 @@ export function useSettingsTour(isReady: boolean) {
 
     tour.addStep({
       id: 'settings-kyc',
-      title: 'Compliance & Verification',
-      text: 'Complete verification to enable full access to platform features.',
+      title: '🆔 Compliance & KYC Verification',
+      text: 'Mandatory verification portal for business profiles. Completing KYC unlocks invoice payouts, premium talent invitation options, and adds verified badges.',
       attachTo: {
         element: '[data-tour="settings-kyc"]',
         on: 'right',
@@ -109,8 +109,8 @@ export function useSettingsTour(isReady: boolean) {
 
     tour.addStep({
       id: 'settings-transactions',
-      title: 'Transactions',
-      text: 'View invoices, payments, and financial records related to your projects.',
+      title: '💳 Financial Ledger & Invoicing',
+      text: 'Review corporate balance histories, connects purchases, outstanding freelancer milestones, and export CSV tax receipts.',
       attachTo: {
         element: '[data-tour="settings-transactions"]',
         on: 'right',
@@ -124,8 +124,8 @@ export function useSettingsTour(isReady: boolean) {
 
     tour.addStep({
       id: 'settings-feedback',
-      title: 'Feedback',
-      text: 'Share your experience and help us improve the platform.',
+      title: '✍️ Submit Platform Feedback',
+      text: 'Report UI glitches, request features, or send bug logs directly to the developer team.',
       attachTo: {
         element: '[data-tour="settings-feedback"]',
         on: 'right',
@@ -139,8 +139,8 @@ export function useSettingsTour(isReady: boolean) {
 
     tour.addStep({
       id: 'settings-reports',
-      title: 'Reports & Issues',
-      text: 'Access reports and important updates related to your account and projects.',
+      title: '📁 Support & Dispute Center',
+      text: 'Raise formal project milestone disputes, coordinate contract revisions, or report compliance violations.',
       attachTo: {
         element: '[data-tour="settings-reports"]',
         on: 'right',
@@ -149,7 +149,7 @@ export function useSettingsTour(isReady: boolean) {
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

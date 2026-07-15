@@ -54,15 +54,44 @@ export function useFeedbackTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'feedback',
-      title: 'Feedback',
-      text: 'Submit your feedback here.',
-      scrollTo: false,
+      id: 'feedback-intro',
+      title: '✍️ Submit Platform Feedback',
+      text: 'Welcome to the Feedback Form. We are dedicated to constantly refining your experience on Dehix. Use this form to report bugs, suggest user interface changes, or submit ideas for new features.',
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'feedback-type',
+      title: '📂 Feedback Categorization',
+      text: 'Select your feedback type (e.g. Bug Report, Feature Suggestion, UI/UX, Performance). Categorizing your feedback ensures it is routed directly to the appropriate developer queue.',
+      attachTo: { element: '[data-tour="feedback"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'feedback-fields',
+      title: '📝 Subject & Details Input',
+      text: 'Enter a concise subject line followed by a comprehensive description. For bug submissions, please list step-by-step instructions on how to reproduce the issue.',
+      attachTo: { element: '[data-tour="feedback"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

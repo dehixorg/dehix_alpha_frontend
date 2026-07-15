@@ -18,6 +18,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
 import EmptyState from '@/components/shared/EmptyState';
+import { useLevelTour } from '@/components/tour/freelancer-profile/useLevelTour';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -257,6 +258,7 @@ export default function LevelsAndBadgesPage() {
   // State for toggling eligible badges
   const [showEligibleOnly, setShowEligibleOnly] = useState(false);
   const [currentLevel, setCurrentLevel] = useState<LevelItem | null>(null);
+  useLevelTour(true);
   const [allLevels, setAllLevels] = useState<LevelItem[]>([]);
   const [allBadgesFromInfo, setAllBadgesFromInfo] = useState<BadgeItem[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<BadgeItem[]>([]);
@@ -703,368 +705,256 @@ export default function LevelsAndBadgesPage() {
       ]}
       isKycCheck={true}
     >
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Levels & Badges</h1>
-          <p className="text-muted-foreground">
-            Track your progress and earn rewards as you complete tasks and level
-            up
-          </p>
-        </div>
-        {currentLevel && (
-          <Button
-            onClick={handleLevelUp}
-            disabled={levelUpMutation.isPending}
-            className="h-10"
-          >
-            {levelUpMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Leveling Up...
-              </>
-            ) : (
-              'Level Up!'
-            )}
-          </Button>
-        )}
-      </div>
-
-      {/* Levels Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">Your Level</h2>
+      <div data-tour="level-badges" className="space-y-6">
+        <div className="flex items-center justify-between space-y-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Levels & Badges
+            </h1>
+            <p className="text-muted-foreground">
+              Track your progress and earn rewards as you complete tasks and
+              level up
+            </p>
+          </div>
           {currentLevel && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Trophy className="h-4 w-4" />
-              <span>
-                Level{' '}
-                {getDisplayLevelNumber(
-                  currentLevel._id || currentLevel.level_id,
-                )}
-              </span>
-            </div>
+            <Button
+              onClick={handleLevelUp}
+              disabled={levelUpMutation.isPending}
+              className="h-10"
+            >
+              {levelUpMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Leveling Up...
+                </>
+              ) : (
+                'Level Up!'
+              )}
+            </Button>
           )}
         </div>
 
-        {sortedLevels.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {sortedLevels.map((level) => {
-              const levelId = level._id || level.level_id || '';
-              const levelNum = level.levelNumber ?? 0;
-              const isCurrentLevel = levelNum === currentLevelNumber;
-              const isNextLevel = levelNum === currentLevelNumber + 1;
-              const isFutureLevel = levelNum > currentLevelNumber + 1;
-              const levelStatus = getLevelStatus(level);
-
-              return (
-                <Card
-                  key={levelId}
-                  className={`relative overflow-hidden ${
-                    isCurrentLevel ? 'border-primary' : ''
-                  }`}
-                >
-                  <CardHeader className="space-y-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <CardTitle className="text-lg">
-                            {level.name}
-                          </CardTitle>
-                          <Badge
-                            variant="outline"
-                            className={isCurrentLevel ? 'border-primary' : ''}
-                          >
-                            Level {level.levelNumber ?? '?'}
-                          </Badge>
-                        </div>
-                        {level.description && (
-                          <CardDescription className="mt-1">
-                            {level.description}
-                          </CardDescription>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {levelStatus === 'completed' ? (
-                          <Badge className="bg-green-500/10 text-green-700 hover:bg-green-500/10">
-                            <Check className="mr-1 h-3 w-3" />
-                            Completed
-                          </Badge>
-                        ) : levelStatus === 'current' ? (
-                          <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
-                            <Crown className="mr-1 h-3 w-3" />
-                            Current Level
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline">
-                            <Lock className="mr-1 h-3 w-3" />
-                            Locked
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {level.rewardMultiplier && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                          <Gift className="h-4 w-4" />
-                          <span>
-                            {level.rewardMultiplier}x Reward Multiplier
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Earn {level.rewardMultiplier}x more rewards on all
-                          completed tasks
-                        </p>
-                      </div>
-                    )}
-
-                    {(isNextLevel || isFutureLevel) && level.criteria && (
-                      <div className="space-y-1 border-t pt-3 text-xs text-muted-foreground">
-                        <div className="font-medium">Requirements:</div>
-                        <ul className="list-disc list-inside space-y-0.5">
-                          {level.criteria.minProjectApplications != null &&
-                            level.criteria.minProjectApplications > 0 && (
-                              <li>
-                                Apply to {level.criteria.minProjectApplications}{' '}
-                                projects
-                              </li>
-                            )}
-                          {level.criteria.minBids != null &&
-                            level.criteria.minBids > 0 && (
-                              <li>
-                                Place at least {level.criteria.minBids} bids
-                              </li>
-                            )}
-                          {level.criteria.minLongestStreak != null &&
-                            level.criteria.minLongestStreak > 0 && (
-                              <li>
-                                Reach a {level.criteria.minLongestStreak}-day
-                                streak
-                              </li>
-                            )}
-                          {level.criteria.minVerifiedDehixTalent != null &&
-                            level.criteria.minVerifiedDehixTalent > 0 && (
-                              <li>
-                                Verify {level.criteria.minVerifiedDehixTalent}{' '}
-                                Dehix talent(s)
-                              </li>
-                            )}
-                          {level.criteria.minVerifiedInterviewTalents != null &&
-                            level.criteria.minVerifiedInterviewTalents > 0 && (
-                              <li>
-                                Verify{' '}
-                                {level.criteria.minVerifiedInterviewTalents}{' '}
-                                interview talent(s)
-                              </li>
-                            )}
-                          {level.criteria.minInterviewsTaken != null &&
-                            level.criteria.minInterviewsTaken > 0 && (
-                              <li>
-                                Complete {level.criteria.minInterviewsTaken}{' '}
-                                interviews
-                              </li>
-                            )}
-                          {level.criteria.minTalentHiring != null &&
-                            level.criteria.minTalentHiring > 0 && (
-                              <li>
-                                Hire {level.criteria.minTalentHiring} talent(s)
-                              </li>
-                            )}
-                          {level.criteria.requiresVerifiedProfile && (
-                            <li>Complete profile verification</li>
-                          )}
-                          {level.criteria.requiresOracle && (
-                            <li>Complete Oracle verification</li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+        {/* Levels Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold tracking-tight">Your Level</h2>
+            {currentLevel && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Trophy className="h-4 w-4" />
+                <span>
+                  Level{' '}
+                  {getDisplayLevelNumber(
+                    currentLevel._id || currentLevel.level_id,
+                  )}
+                </span>
+              </div>
+            )}
           </div>
-        ) : (
-          <EmptyState
-            className="py-12"
-            title="No levels available"
-            description="Levels will appear here once they are configured."
-            Icon={Trophy}
-          />
-        )}
-      </div>
 
-      {/* Badges Section */}
-      <Tabs defaultValue="collected" className="w-full">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList>
-            <TabsTrigger value="collected">
-              Collected Badges ({collectedBadges.length})
-            </TabsTrigger>
-            <TabsTrigger value="all">
-              All Badges ({allBadges.length})
-            </TabsTrigger>
-          </TabsList>
+          {sortedLevels.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {sortedLevels.map((level) => {
+                const levelId = level._id || level.level_id || '';
+                const levelNum = level.levelNumber ?? 0;
+                const isCurrentLevel = levelNum === currentLevelNumber;
+                const isNextLevel = levelNum === currentLevelNumber + 1;
+                const isFutureLevel = levelNum > currentLevelNumber + 1;
+                const levelStatus = getLevelStatus(level);
+
+                return (
+                  <Card
+                    key={levelId}
+                    className={`relative overflow-hidden ${
+                      isCurrentLevel ? 'border-primary' : ''
+                    }`}
+                  >
+                    <CardHeader className="space-y-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <CardTitle className="text-lg">
+                              {level.name}
+                            </CardTitle>
+                            <Badge
+                              variant="outline"
+                              className={isCurrentLevel ? 'border-primary' : ''}
+                            >
+                              Level {level.levelNumber ?? '?'}
+                            </Badge>
+                          </div>
+                          {level.description && (
+                            <CardDescription className="mt-1">
+                              {level.description}
+                            </CardDescription>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {levelStatus === 'completed' ? (
+                            <Badge className="bg-green-500/10 text-green-700 hover:bg-green-500/10">
+                              <Check className="mr-1 h-3 w-3" />
+                              Completed
+                            </Badge>
+                          ) : levelStatus === 'current' ? (
+                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
+                              <Crown className="mr-1 h-3 w-3" />
+                              Current Level
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">
+                              <Lock className="mr-1 h-3 w-3" />
+                              Locked
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {level.rewardMultiplier && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                            <Gift className="h-4 w-4" />
+                            <span>
+                              {level.rewardMultiplier}x Reward Multiplier
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Earn {level.rewardMultiplier}x more rewards on all
+                            completed tasks
+                          </p>
+                        </div>
+                      )}
+
+                      {(isNextLevel || isFutureLevel) && level.criteria && (
+                        <div className="space-y-1 border-t pt-3 text-xs text-muted-foreground">
+                          <div className="font-medium">Requirements:</div>
+                          <ul className="list-disc list-inside space-y-0.5">
+                            {level.criteria.minProjectApplications != null &&
+                              level.criteria.minProjectApplications > 0 && (
+                                <li>
+                                  Apply to{' '}
+                                  {level.criteria.minProjectApplications}{' '}
+                                  projects
+                                </li>
+                              )}
+                            {level.criteria.minBids != null &&
+                              level.criteria.minBids > 0 && (
+                                <li>
+                                  Place at least {level.criteria.minBids} bids
+                                </li>
+                              )}
+                            {level.criteria.minLongestStreak != null &&
+                              level.criteria.minLongestStreak > 0 && (
+                                <li>
+                                  Reach a {level.criteria.minLongestStreak}-day
+                                  streak
+                                </li>
+                              )}
+                            {level.criteria.minVerifiedDehixTalent != null &&
+                              level.criteria.minVerifiedDehixTalent > 0 && (
+                                <li>
+                                  Verify {level.criteria.minVerifiedDehixTalent}{' '}
+                                  Dehix talent(s)
+                                </li>
+                              )}
+                            {level.criteria.minVerifiedInterviewTalents !=
+                              null &&
+                              level.criteria.minVerifiedInterviewTalents >
+                                0 && (
+                                <li>
+                                  Verify{' '}
+                                  {level.criteria.minVerifiedInterviewTalents}{' '}
+                                  interview talent(s)
+                                </li>
+                              )}
+                            {level.criteria.minInterviewsTaken != null &&
+                              level.criteria.minInterviewsTaken > 0 && (
+                                <li>
+                                  Complete {level.criteria.minInterviewsTaken}{' '}
+                                  interviews
+                                </li>
+                              )}
+                            {level.criteria.minTalentHiring != null &&
+                              level.criteria.minTalentHiring > 0 && (
+                                <li>
+                                  Hire {level.criteria.minTalentHiring}{' '}
+                                  talent(s)
+                                </li>
+                              )}
+                            {level.criteria.requiresVerifiedProfile && (
+                              <li>Complete profile verification</li>
+                            )}
+                            {level.criteria.requiresOracle && (
+                              <li>Complete Oracle verification</li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState
+              className="py-12"
+              title="No levels available"
+              description="Levels will appear here once they are configured."
+              Icon={Trophy}
+            />
+          )}
         </div>
 
-        {/* Collected Badges Tab */}
-        <TabsContent value="collected">
-          <Card className="max-w-full">
-            <CardHeader>
-              <div className="space-y-1">
-                <CardTitle className="text-base">Collected Badges</CardTitle>
-                <CardDescription>
-                  Badges you have earned through your achievements
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="max-w-full">
-              {collectedBadges.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {collectedBadges.map((badge) => {
-                    const badgeId = badge.badge_id || '';
+        {/* Badges Section */}
+        <Tabs defaultValue="collected" className="w-full">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <TabsList>
+              <TabsTrigger value="collected">
+                Collected Badges ({collectedBadges.length})
+              </TabsTrigger>
+              <TabsTrigger value="all">
+                All Badges ({allBadges.length})
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-                    return (
-                      <div
-                        key={badgeId}
-                        className="min-w-0 transition-all duration-200"
-                      >
-                        <Card className="h-full border-green-500/30">
-                          <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0 flex-1">
-                                <CardTitle className="text-sm break-words">
-                                  {badge.name}
-                                </CardTitle>
-                                {badge.earnedAt && (
-                                  <CardDescription className="text-xs">
-                                    Earned on{' '}
-                                    {new Date(
-                                      badge.earnedAt,
-                                    ).toLocaleDateString()}
-                                  </CardDescription>
-                                )}
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className="flex-shrink-0 border-green-500 text-green-600"
-                              >
-                                <Check className="mr-1 h-3 w-3" />
-                                Earned
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0 space-y-3">
-                            {badge.imageUrl ? (
-                              <div className="flex justify-center">
-                                <div className="relative h-24 w-24">
-                                  <Image
-                                    src={badge.imageUrl}
-                                    alt={badge.name}
-                                    fill
-                                    className="object-contain"
-                                  />
+          {/* Collected Badges Tab */}
+          <TabsContent value="collected">
+            <Card className="max-w-full">
+              <CardHeader>
+                <div className="space-y-1">
+                  <CardTitle className="text-base">Collected Badges</CardTitle>
+                  <CardDescription>
+                    Badges you have earned through your achievements
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="max-w-full">
+                {collectedBadges.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {collectedBadges.map((badge) => {
+                      const badgeId = badge.badge_id || '';
+
+                      return (
+                        <div
+                          key={badgeId}
+                          className="min-w-0 transition-all duration-200"
+                        >
+                          <Card className="h-full border-green-500/30">
+                            <CardHeader className="pb-2">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <CardTitle className="text-sm break-words">
+                                    {badge.name}
+                                  </CardTitle>
+                                  {badge.earnedAt && (
+                                    <CardDescription className="text-xs">
+                                      Earned on{' '}
+                                      {new Date(
+                                        badge.earnedAt,
+                                      ).toLocaleDateString()}
+                                    </CardDescription>
+                                  )}
                                 </div>
-                              </div>
-                            ) : (
-                              <div className="flex h-24 w-full items-center justify-center rounded-md bg-muted">
-                                <Award className="h-12 w-12 text-muted-foreground" />
-                              </div>
-                            )}
-
-                            {badge.description && (
-                              <p className="text-sm text-muted-foreground break-words">
-                                {badge.description}
-                              </p>
-                            )}
-
-                            {badge.baseReward && badge.baseReward > 0 && (
-                              <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                                <Gift className="h-4 w-4" />
-                                <span>Reward: {badge.baseReward} Connects</span>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="py-12">
-                  <EmptyState
-                    title="No badges collected yet"
-                    description="Start completing tasks and check your eligibility to earn badges."
-                    Icon={Award}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* All Badges Tab */}
-        <TabsContent value="all">
-          <Card className="max-w-full">
-            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <div className="space-y-1">
-                <CardTitle className="text-base">All Badges</CardTitle>
-                <CardDescription>
-                  Earn badges by completing achievements and leveling up
-                </CardDescription>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="show-eligible-only"
-                  checked={showEligibleOnly}
-                  onCheckedChange={setShowEligibleOnly}
-                />
-                <label
-                  htmlFor="show-eligible-only"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Show eligible only
-                </label>
-              </div>
-            </CardHeader>
-            <CardContent className="max-w-full">
-              {allBadges.length > 0 &&
-              allBadges.every((b) => isBadgeEarned(b.badge_id!)) ? (
-                <div className="py-12">
-                  <EmptyState
-                    title="All badges claimed!"
-                    description="Congratulations! You have already claimed all the badges available. Check back later for new badges."
-                    Icon={Trophy}
-                  />
-                </div>
-              ) : filteredBadges.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {filteredBadges.map((badge) => {
-                    const badgeId = badge.badge_id || '';
-                    const isEarned = isBadgeEarned(badgeId);
-                    const eligibility = eligibilityChecks[badgeId];
-                    const isChecking = checkingEligibility[badgeId];
-
-                    return (
-                      <div
-                        key={badgeId}
-                        className={`min-w-0 transition-all duration-200 ${
-                          !isEarned ? 'ring-2 ring-primary/30 rounded-lg' : ''
-                        }`}
-                      >
-                        <Card className="h-full">
-                          <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0 flex-1">
-                                <CardTitle className="text-sm break-words">
-                                  {badge.name}
-                                </CardTitle>
-                                <CardDescription className="text-xs">
-                                  {badge.description || ''}
-                                </CardDescription>
-                              </div>
-                              {isEarned ? (
                                 <Badge
                                   variant="outline"
                                   className="flex-shrink-0 border-green-500 text-green-600"
@@ -1072,205 +962,340 @@ export default function LevelsAndBadgesPage() {
                                   <Check className="mr-1 h-3 w-3" />
                                   Earned
                                 </Badge>
-                              ) : (
-                                <Badge
-                                  variant="outline"
-                                  className="flex-shrink-0"
-                                >
-                                  <Medal className="mr-1 h-3 w-3" />
-                                  Available
-                                </Badge>
-                              )}
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0 space-y-3">
-                            {/* Display badge image if available */}
-                            {badge.imageUrl ? (
-                              <div className="flex justify-center">
-                                <div className="relative h-24 w-24">
-                                  <Image
-                                    src={badge.imageUrl}
-                                    alt={badge.name}
-                                    fill
-                                    className={`object-contain ${
-                                      !isEarned ? 'opacity-40' : ''
-                                    }`}
-                                  />
+                              </div>
+                            </CardHeader>
+                            <CardContent className="pt-0 space-y-3">
+                              {badge.imageUrl ? (
+                                <div className="flex justify-center">
+                                  <div className="relative h-24 w-24">
+                                    <Image
+                                      src={badge.imageUrl}
+                                      alt={badge.name}
+                                      fill
+                                      className="object-contain"
+                                    />
+                                  </div>
                                 </div>
-                              </div>
-                            ) : (
-                              <div
-                                className={`flex h-24 w-full items-center justify-center rounded-md bg-muted ${
-                                  !isEarned ? 'opacity-40' : ''
-                                }`}
-                              >
-                                <Award className="h-12 w-12 text-muted-foreground" />
-                              </div>
-                            )}
+                              ) : (
+                                <div className="flex h-24 w-full items-center justify-center rounded-md bg-muted">
+                                  <Award className="h-12 w-12 text-muted-foreground" />
+                                </div>
+                              )}
 
-                            {/* Badge description */}
-                            {badge.description && (
-                              <p className="text-sm text-muted-foreground break-words">
-                                {badge.description}
-                              </p>
-                            )}
+                              {badge.description && (
+                                <p className="text-sm text-muted-foreground break-words">
+                                  {badge.description}
+                                </p>
+                              )}
 
-                            {/* Reward info */}
-                            {badge.baseReward && badge.baseReward > 0 && (
-                              <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                                <Gift className="h-4 w-4" />
-                                <span>Reward: {badge.baseReward} Connects</span>
+                              {badge.baseReward && badge.baseReward > 0 && (
+                                <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                                  <Gift className="h-4 w-4" />
+                                  <span>
+                                    Reward: {badge.baseReward} Connects
+                                  </span>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-12">
+                    <EmptyState
+                      title="No badges collected yet"
+                      description="Start completing tasks and check your eligibility to earn badges."
+                      Icon={Award}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* All Badges Tab */}
+          <TabsContent value="all">
+            <Card className="max-w-full">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+                <div className="space-y-1">
+                  <CardTitle className="text-base">All Badges</CardTitle>
+                  <CardDescription>
+                    Earn badges by completing achievements and leveling up
+                  </CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="show-eligible-only"
+                    checked={showEligibleOnly}
+                    onCheckedChange={setShowEligibleOnly}
+                  />
+                  <label
+                    htmlFor="show-eligible-only"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Show eligible only
+                  </label>
+                </div>
+              </CardHeader>
+              <CardContent className="max-w-full">
+                {allBadges.length > 0 &&
+                allBadges.every((b) => isBadgeEarned(b.badge_id!)) ? (
+                  <div className="py-12">
+                    <EmptyState
+                      title="All badges claimed!"
+                      description="Congratulations! You have already claimed all the badges available. Check back later for new badges."
+                      Icon={Trophy}
+                    />
+                  </div>
+                ) : filteredBadges.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {filteredBadges.map((badge) => {
+                      const badgeId = badge.badge_id || '';
+                      const isEarned = isBadgeEarned(badgeId);
+                      const eligibility = eligibilityChecks[badgeId];
+                      const isChecking = checkingEligibility[badgeId];
+
+                      return (
+                        <div
+                          key={badgeId}
+                          className={`min-w-0 transition-all duration-200 ${
+                            !isEarned ? 'ring-2 ring-primary/30 rounded-lg' : ''
+                          }`}
+                        >
+                          <Card className="h-full">
+                            <CardHeader className="pb-2">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <CardTitle className="text-sm break-words">
+                                    {badge.name}
+                                  </CardTitle>
+                                  <CardDescription className="text-xs">
+                                    {badge.description || ''}
+                                  </CardDescription>
+                                </div>
+                                {isEarned ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="flex-shrink-0 border-green-500 text-green-600"
+                                  >
+                                    <Check className="mr-1 h-3 w-3" />
+                                    Earned
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="outline"
+                                    className="flex-shrink-0"
+                                  >
+                                    <Medal className="mr-1 h-3 w-3" />
+                                    Available
+                                  </Badge>
+                                )}
                               </div>
-                            )}
-
-                            {/* Action buttons - only for unearned badges */}
-                            {!isEarned && (
-                              <div className="space-y-2">
-                                <Button
-                                  onClick={() =>
-                                    handleCheckEligibility(badgeId)
-                                  }
-                                  disabled={isChecking}
-                                  variant="outline"
-                                  size="sm"
-                                  className="w-full"
+                            </CardHeader>
+                            <CardContent className="pt-0 space-y-3">
+                              {/* Display badge image if available */}
+                              {badge.imageUrl ? (
+                                <div className="flex justify-center">
+                                  <div className="relative h-24 w-24">
+                                    <Image
+                                      src={badge.imageUrl}
+                                      alt={badge.name}
+                                      fill
+                                      className={`object-contain ${
+                                        !isEarned ? 'opacity-40' : ''
+                                      }`}
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div
+                                  className={`flex h-24 w-full items-center justify-center rounded-md bg-muted ${
+                                    !isEarned ? 'opacity-40' : ''
+                                  }`}
                                 >
-                                  {isChecking ? (
-                                    <>
-                                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                      Checking...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Info className="mr-2 h-3 w-3" />
-                                      Check Eligibility
-                                    </>
-                                  )}
-                                </Button>
-                                {eligibility?.eligible && (
+                                  <Award className="h-12 w-12 text-muted-foreground" />
+                                </div>
+                              )}
+
+                              {/* Badge description */}
+                              {badge.description && (
+                                <p className="text-sm text-muted-foreground break-words">
+                                  {badge.description}
+                                </p>
+                              )}
+
+                              {/* Reward info */}
+                              {badge.baseReward && badge.baseReward > 0 && (
+                                <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                                  <Gift className="h-4 w-4" />
+                                  <span>
+                                    Reward: {badge.baseReward} Connects
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Action buttons - only for unearned badges */}
+                              {!isEarned && (
+                                <div className="space-y-2">
                                   <Button
-                                    onClick={() => handleClaimBadge(badgeId)}
-                                    disabled={claimBadgeMutation.isPending}
+                                    onClick={() =>
+                                      handleCheckEligibility(badgeId)
+                                    }
+                                    disabled={isChecking}
+                                    variant="outline"
                                     size="sm"
                                     className="w-full"
                                   >
-                                    {claimBadgeMutation.isPending ? (
+                                    {isChecking ? (
                                       <>
                                         <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                        Claiming...
+                                        Checking...
                                       </>
                                     ) : (
-                                      'Claim Badge'
+                                      <>
+                                        <Info className="mr-2 h-3 w-3" />
+                                        Check Eligibility
+                                      </>
                                     )}
                                   </Button>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Earned date for earned badges */}
-                            {isEarned && badge.earnedAt && (
-                              <p className="text-xs text-green-600 dark:text-green-400">
-                                Earned on{' '}
-                                {new Date(badge.earnedAt).toLocaleDateString()}
-                              </p>
-                            )}
-
-                            {/* Requirements for unearned badges */}
-                            {!isEarned && badge.criteria && (
-                              <div className="text-xs text-muted-foreground space-y-1 border-t pt-2">
-                                <div className="font-medium">Requirements:</div>
-                                <ul className="list-disc list-inside space-y-0.5">
-                                  {badge.criteria.minProjectApplications !=
-                                    null &&
-                                    badge.criteria.minProjectApplications >
-                                      0 && (
-                                      <li>
-                                        Apply to{' '}
-                                        {badge.criteria.minProjectApplications}{' '}
-                                        projects
-                                      </li>
-                                    )}
-                                  {badge.criteria.minBids != null &&
-                                    badge.criteria.minBids > 0 && (
-                                      <li>
-                                        Place at least {badge.criteria.minBids}{' '}
-                                        bids
-                                      </li>
-                                    )}
-                                  {badge.criteria.minLongestStreak != null &&
-                                    badge.criteria.minLongestStreak > 0 && (
-                                      <li>
-                                        Reach a{' '}
-                                        {badge.criteria.minLongestStreak}-day
-                                        streak
-                                      </li>
-                                    )}
-                                  {badge.criteria.minVerifiedDehixTalent !=
-                                    null &&
-                                    badge.criteria.minVerifiedDehixTalent >
-                                      0 && (
-                                      <li>
-                                        Verify{' '}
-                                        {badge.criteria.minVerifiedDehixTalent}{' '}
-                                        Dehix talent(s)
-                                      </li>
-                                    )}
-                                  {badge.criteria.minVerifiedInterviewTalents !=
-                                    null &&
-                                    badge.criteria.minVerifiedInterviewTalents >
-                                      0 && (
-                                      <li>
-                                        Verify{' '}
-                                        {
-                                          badge.criteria
-                                            .minVerifiedInterviewTalents
-                                        }{' '}
-                                        interview talent(s)
-                                      </li>
-                                    )}
-                                  {badge.criteria.minInterviewsTaken != null &&
-                                    badge.criteria.minInterviewsTaken > 0 && (
-                                      <li>
-                                        Complete{' '}
-                                        {badge.criteria.minInterviewsTaken}{' '}
-                                        interviews
-                                      </li>
-                                    )}
-                                  {badge.criteria.minTalentHiring != null &&
-                                    badge.criteria.minTalentHiring > 0 && (
-                                      <li>
-                                        Hire {badge.criteria.minTalentHiring}{' '}
-                                        talent(s)
-                                      </li>
-                                    )}
-                                  {badge.criteria.requiresVerifiedProfile && (
-                                    <li>Complete profile verification</li>
+                                  {eligibility?.eligible && (
+                                    <Button
+                                      onClick={() => handleClaimBadge(badgeId)}
+                                      disabled={claimBadgeMutation.isPending}
+                                      size="sm"
+                                      className="w-full"
+                                    >
+                                      {claimBadgeMutation.isPending ? (
+                                        <>
+                                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                          Claiming...
+                                        </>
+                                      ) : (
+                                        'Claim Badge'
+                                      )}
+                                    </Button>
                                   )}
-                                  {badge.criteria.requiresOracle && (
-                                    <li>Complete Oracle verification</li>
-                                  )}
-                                </ul>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="py-12">
-                  <EmptyState
-                    title="No badges to show"
-                    description="Complete more tasks to unlock badges and level up your profile."
-                    Icon={Award}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                                </div>
+                              )}
+
+                              {/* Earned date for earned badges */}
+                              {isEarned && badge.earnedAt && (
+                                <p className="text-xs text-green-600 dark:text-green-400">
+                                  Earned on{' '}
+                                  {new Date(
+                                    badge.earnedAt,
+                                  ).toLocaleDateString()}
+                                </p>
+                              )}
+
+                              {/* Requirements for unearned badges */}
+                              {!isEarned && badge.criteria && (
+                                <div className="text-xs text-muted-foreground space-y-1 border-t pt-2">
+                                  <div className="font-medium">
+                                    Requirements:
+                                  </div>
+                                  <ul className="list-disc list-inside space-y-0.5">
+                                    {badge.criteria.minProjectApplications !=
+                                      null &&
+                                      badge.criteria.minProjectApplications >
+                                        0 && (
+                                        <li>
+                                          Apply to{' '}
+                                          {
+                                            badge.criteria
+                                              .minProjectApplications
+                                          }{' '}
+                                          projects
+                                        </li>
+                                      )}
+                                    {badge.criteria.minBids != null &&
+                                      badge.criteria.minBids > 0 && (
+                                        <li>
+                                          Place at least{' '}
+                                          {badge.criteria.minBids} bids
+                                        </li>
+                                      )}
+                                    {badge.criteria.minLongestStreak != null &&
+                                      badge.criteria.minLongestStreak > 0 && (
+                                        <li>
+                                          Reach a{' '}
+                                          {badge.criteria.minLongestStreak}-day
+                                          streak
+                                        </li>
+                                      )}
+                                    {badge.criteria.minVerifiedDehixTalent !=
+                                      null &&
+                                      badge.criteria.minVerifiedDehixTalent >
+                                        0 && (
+                                        <li>
+                                          Verify{' '}
+                                          {
+                                            badge.criteria
+                                              .minVerifiedDehixTalent
+                                          }{' '}
+                                          Dehix talent(s)
+                                        </li>
+                                      )}
+                                    {badge.criteria
+                                      .minVerifiedInterviewTalents != null &&
+                                      badge.criteria
+                                        .minVerifiedInterviewTalents > 0 && (
+                                        <li>
+                                          Verify{' '}
+                                          {
+                                            badge.criteria
+                                              .minVerifiedInterviewTalents
+                                          }{' '}
+                                          interview talent(s)
+                                        </li>
+                                      )}
+                                    {badge.criteria.minInterviewsTaken !=
+                                      null &&
+                                      badge.criteria.minInterviewsTaken > 0 && (
+                                        <li>
+                                          Complete{' '}
+                                          {badge.criteria.minInterviewsTaken}{' '}
+                                          interviews
+                                        </li>
+                                      )}
+                                    {badge.criteria.minTalentHiring != null &&
+                                      badge.criteria.minTalentHiring > 0 && (
+                                        <li>
+                                          Hire {badge.criteria.minTalentHiring}{' '}
+                                          talent(s)
+                                        </li>
+                                      )}
+                                    {badge.criteria.requiresVerifiedProfile && (
+                                      <li>Complete profile verification</li>
+                                    )}
+                                    {badge.criteria.requiresOracle && (
+                                      <li>Complete Oracle verification</li>
+                                    )}
+                                  </ul>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-12">
+                    <EmptyState
+                      title="No badges to show"
+                      description="Complete more tasks to unlock badges and level up your profile."
+                      Icon={Award}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </FreelancerSettingsLayout>
   );
 }

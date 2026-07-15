@@ -11,12 +11,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import EmptyState from '@/components/shared/EmptyState';
 import NotesLayout from '@/components/layout/NotesLayout';
+import { useNotesTour } from '@/components/tour/shared/useNotesTour';
 
 const Page = () => {
   const user = useSelector((state: any) => state.user);
   const userId = user.uid;
 
   const { archive, isLoading, fetchNotes, setArchive } = useFetchNotes(userId);
+  useNotesTour(!isLoading);
 
   useEffect(() => {
     if (!userId) return;
@@ -41,7 +43,7 @@ const Page = () => {
           description="Your archived notes live here"
           icon={<Archive className="h-5 w-5 text-muted-foreground" />}
         />
-        <div className="p-4 sm:p-6">
+        <div className="p-4 sm:p-6" data-tour="notes-list">
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {Array.from({ length: 8 }).map((_, i) => (

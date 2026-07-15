@@ -10,10 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import EmptyState from '@/components/shared/EmptyState';
 import NotesLayout from '@/components/layout/NotesLayout';
+import { useNotesTour } from '@/components/tour/shared/useNotesTour';
 
 const TrashPage = () => {
   const userId = useSelector((state: any) => state.user?.uid);
   const { trash, setTrash, isLoading, fetchNotes } = useFetchNotes(userId);
+  useNotesTour(!isLoading);
 
   useEffect(() => {
     if (!userId) return;
@@ -38,7 +40,7 @@ const TrashPage = () => {
           description="Deleted notes appear here before permanent removal"
           icon={<Trash2 className="h-5 w-5 text-muted-foreground" />}
         />
-        <div className="p-4 sm:p-6">
+        <div className="p-4 sm:p-6" data-tour="notes-list">
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {Array.from({ length: 8 }).map((_, i) => (

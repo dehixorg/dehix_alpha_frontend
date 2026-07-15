@@ -54,16 +54,45 @@ export function useProfilesTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'profiles-center',
-      title: 'Profile Center',
-      text: 'Create and manage profiles to showcase your expertise.',
-      // attachTo: { element: '[data-tour="profiles-center"]', on: 'top' },
+      id: 'profiles-center-intro',
+      title: '📁 Profiles Center',
+      text: 'Welcome to your Profiles Center. Dehix supports creating multiple specialized roles (sub-profiles) under a single account. For example, you can maintain one profile for Web3 smart contract audits and another for React dashboard development.',
       when: withProgress(tour),
       scrollTo: false,
       buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'profiles-tabs-step',
+      title: '📂 Role Type Categorizations',
+      text: 'Use these tabs to switch between your specialized setups: "Overview" shows general profile statistics, "Freelancer" displays your active contract-based profiles, and "Consultant" lists your active hourly consultation listings.',
+      attachTo: { element: '[data-tour="profiles-center"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'profiles-create-step',
+      title: '➕ Create Sub-Profiles',
+      text: 'Click the "+" button or "Create Freelancer Profile" link to open the configuration dialog. You will be prompted to enter specialized titles, hourly rate limits, GitHub connections, and assign specific experiences and educational histories.',
+      attachTo: { element: '[data-tour="profiles-center"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

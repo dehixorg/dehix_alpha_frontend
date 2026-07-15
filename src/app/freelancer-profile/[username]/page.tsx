@@ -36,6 +36,7 @@ import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import EmptyState from '@/components/shared/EmptyState';
 import { RootState, useAppSelector } from '@/lib/store';
 import InviteFreelancerDialog from '@/components/dialogs/InviteFreelancerDialog';
+import { useFreelancerProfileViewTour } from '@/components/tour/shared/useFreelancerProfileViewTour';
 
 interface Skill {
   _id: string;
@@ -121,6 +122,7 @@ const FreelancerProfile = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [hireLoading, setHireLoading] = useState(false);
   const user = useSelector((state: RootState) => state.user);
+  useFreelancerProfileViewTour(!loading);
 
   // Invite dialog state (for business users)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
@@ -589,7 +591,10 @@ const FreelancerProfile = () => {
                     </div>
                   </div>
                   {!isFreelancer && user?.isLoggedIn && (
-                    <div className="w-full sm:w-auto flex flex-wrap gap-2">
+                    <div
+                      className="w-full sm:w-auto flex flex-wrap gap-2"
+                      data-tour="profile-view-actions"
+                    >
                       {isBusiness && (
                         <Button
                           variant="outline"
@@ -620,7 +625,10 @@ const FreelancerProfile = () => {
             </Card>
 
             {/* Skills & Domains */}
-            <Card className="mb-6 overflow-hidden border border-border shadow-md">
+            <Card
+              className="mb-6 overflow-hidden border border-border shadow-md"
+              data-tour="profile-view-skills"
+            >
               <CardHeader className="bg-primary/5 border-b border-border py-4">
                 <CardTitle className="text-md font-semibold text-primary flex items-center gap-2">
                   <Award className="h-5 w-5" />
@@ -701,7 +709,10 @@ const FreelancerProfile = () => {
             </Card>
 
             {/* Projects */}
-            <Card className="mb-6 overflow-hidden border border-border shadow-md">
+            <Card
+              className="mb-6 overflow-hidden border border-border shadow-md"
+              data-tour="profile-view-projects"
+            >
               <CardHeader className="bg-green-500/5 dark:bg-green-500/10 border-b border-border py-4">
                 <CardTitle className="text-md font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
                   <Code className="h-5 w-5" />

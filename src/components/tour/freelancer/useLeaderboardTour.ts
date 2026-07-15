@@ -55,12 +55,61 @@ export function useLeaderboardTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'leaderboard',
-      title: 'Leaderboard',
+      id: 'leaderboard-header',
+      title: '🏆 Dehix Talent Leaderboard',
       scrollTo: false,
-      text: 'This leaderboard shows rankings based on performance.',
+      text: "Welcome to the Dehix Rankings. This leaderboard highlights our community's top contributors. Rankings are calculated based on total contracts completed, peer evaluations, code contribution metrics, and active levels.",
+      attachTo: { element: '[data-tour="leaderboard"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        {
+          text: 'Next',
+          action: tour.next,
+        },
+      ],
+    });
+
+    tour.addStep({
+      id: 'lb-podium-step',
+      title: '🥇 Top Performers Podium',
+      scrollTo: false,
+      text: 'The top three podium columns display the current leaders for the active time period. You can hover on their cards to inspect their primary development domains and top achievements.',
+      attachTo: { element: '[data-tour="lb-podium"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'lb-table-step',
+      title: '📋 Detailed Ranking Table',
+      scrollTo: false,
+      text: "Scroll through the paginated rankings table to see other participants. Each row displays the developer's current rank status, level badge, experience profile, total score, and peer ratings.",
+      attachTo: { element: '[data-tour="lb-table"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'lb-user-rank-step',
+      title: '⭐ Your Ranking Status',
+      text: 'This sticky widget displays your exact placement, experience points (XP), and progress relative to the rest of the community. Participate in more reviews or complete contracts to boost your positioning here!',
+      attachTo: { element: '[data-tour="lb-user-rank"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
         {
           text: 'Got it',
           action: () => {

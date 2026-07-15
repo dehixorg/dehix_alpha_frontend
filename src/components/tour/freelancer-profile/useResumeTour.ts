@@ -54,16 +54,33 @@ export function useResumeTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'resume',
-      title: 'Resume',
-      text: 'Upload your resume.',
+      id: 'resume-intro',
+      title: '📄 Interactive Resume Builder',
+      text: 'Welcome to your Resume Center. Instead of manually uploading PDFs, you can use our dynamic editor to generate clean resume files using your profile achievements, work history, and skills list.',
       scrollTo: false,
-      // attachTo: { element: '[data-tour="resume"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'resume-actions-step',
+      title: '📁 Resume Layout & Exports',
+      text: 'You can create multiple resume versions matching different tech stacks. Features allow you to select custom template styles, preview the final layout live, download compiled PDF files, or copy direct sharing links.',
+      attachTo: { element: '[data-tour="resume"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());
