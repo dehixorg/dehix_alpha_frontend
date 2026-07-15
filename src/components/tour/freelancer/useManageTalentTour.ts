@@ -75,7 +75,10 @@ export function useManageTalentTour(isReady: boolean) {
       id: 'manage-talent-dropdown',
       title: '🛠️ Switch Skill/Domain Profile',
       text: 'Click this select box to switch between your active talent categories. This dynamically reloads the application pipeline list below for the chosen topic.',
-      attachTo: { element: '[data-tour="manage-talent-dropdown"]', on: 'bottom' },
+      attachTo: {
+        element: '[data-tour="manage-talent-dropdown"]',
+        on: 'bottom',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },

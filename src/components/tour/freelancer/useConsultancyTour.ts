@@ -111,7 +111,10 @@ export function useConsultancyTour(isReady: boolean) {
       id: 'consultancy-invitations',
       title: '✉️ Inbound Booking Invitations',
       text: 'Check pending consultation requests from organizations. Here you can accept, renegotiate, or reject booking bids.',
-      attachTo: { element: '[data-tour="consultancy-invitations"]', on: 'left' },
+      attachTo: {
+        element: '[data-tour="consultancy-invitations"]',
+        on: 'left',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
