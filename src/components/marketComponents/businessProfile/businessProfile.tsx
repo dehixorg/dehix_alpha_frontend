@@ -90,7 +90,7 @@ const BusinessProfile: React.FC = () => {
           <p className="text-xs">Connects</p>
         </div>
         <Separator orientation="vertical" className="h-6 bg-gray-400" />
-        <div className="text-center">
+        <div className="text-center" data-tour="biz-profile-view-projects">
           <p className="text-xl font-semibold">
             {profileData.ProjectList.length}
           </p>

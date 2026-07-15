@@ -141,9 +141,9 @@ export function useSingleProfileEditTour(isReady: boolean) {
     if (target !== 'single-profile-edit') return;
 
     if (
-      el('[data-tour="profile-edit-rate"]') ||
-      el('[data-tour="profile-edit-git"]') ||
-      el('[data-tour="profile-edit-portfolio"]') ||
+      el('[data-tour="profile-edit-rate"]') &&
+      el('[data-tour="profile-edit-git"]') &&
+      el('[data-tour="profile-edit-portfolio"]') &&
       el('[data-tour="profile-edit-save"]')
     ) {
       tourRef.current?.start();

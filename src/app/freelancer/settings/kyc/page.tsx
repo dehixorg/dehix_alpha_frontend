@@ -6,7 +6,7 @@ import React, { Fragment } from 'react';
 import FreelancerSettingsLayout from '../../../../components/layout/FreelancerSettingsLayout';
 
 import { RootState } from '@/lib/store';
-import { useKycTour } from '@/components/tour/business-profile/useKycTour';
+import { useKycTour } from '@/components/tour/freelancer-profile/useKycTour';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 

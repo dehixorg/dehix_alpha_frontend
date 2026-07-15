@@ -73,10 +73,10 @@ export default function ProfileDetailPage() {
   const router = useRouter();
   const params = useParams();
   const profileId = params.profileId as string;
-  useSingleProfileEditTour(!isLoading);
 
   const [profile, setProfile] = useState<FreelancerProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  useSingleProfileEditTour(!isLoading);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editingProfileData, setEditingProfileData] = useState<any>({});
   const [skillsOptions, setSkillsOptions] = useState<any[]>([]);

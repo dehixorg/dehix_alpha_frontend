@@ -36,7 +36,6 @@ interface HireTalentItem {
 export default function Page() {
   const searchParams = useSearchParams();
   const statusParam = (searchParams.get('status') || '').toLowerCase();
-  useBusinessTalentTour(true);
 
   const allowed = new Set([
     'invited',
@@ -82,6 +81,7 @@ export default function Page() {
     FreelancerApplication[]
   >([]);
   const [loading, setLoading] = useState(true);
+  useBusinessTalentTour(!loading);
   const [refreshKey, setRefreshKey] = useState(0);
   const { toast } = useToast();
 

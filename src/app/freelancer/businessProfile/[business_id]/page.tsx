@@ -130,7 +130,10 @@ export default function BusinessProfile() {
                 )}
               </CardContent>
             </Card>
-            <Card className="w-full max-w-4xl shadow-lg">
+            <Card
+              className="w-full max-w-4xl shadow-lg"
+              data-tour="biz-profile-view-actions"
+            >
               <CardHeader>
                 <CardTitle>Contact Information</CardTitle>
               </CardHeader>
@@ -171,11 +174,9 @@ export default function BusinessProfile() {
               </CardContent>
             </Card>
           </Card>
-          <div data-tour="biz-profile-view-actions">
-            <Button onClick={handleShare} className="mt-4">
-              Share Profile
-            </Button>
-          </div>
+          <Button onClick={handleShare} className="mt-4">
+            Share Profile
+          </Button>
         </main>
       </div>
     </div>

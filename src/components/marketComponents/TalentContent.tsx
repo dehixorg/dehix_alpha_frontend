@@ -485,6 +485,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-2"
+                    data-tour="business-talent-filter"
                   >
                     <Sliders className="h-4 w-4" />
                     <span>Filters</span>

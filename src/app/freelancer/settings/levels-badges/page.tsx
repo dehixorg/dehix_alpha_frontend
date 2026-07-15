@@ -258,7 +258,6 @@ export default function LevelsAndBadgesPage() {
   // State for toggling eligible badges
   const [showEligibleOnly, setShowEligibleOnly] = useState(false);
   const [currentLevel, setCurrentLevel] = useState<LevelItem | null>(null);
-  useLevelTour(true);
   const [allLevels, setAllLevels] = useState<LevelItem[]>([]);
   const [allBadgesFromInfo, setAllBadgesFromInfo] = useState<BadgeItem[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<BadgeItem[]>([]);
@@ -529,6 +528,8 @@ export default function LevelsAndBadgesPage() {
     queryKey: ['gamification-status'],
     queryFn: fetchStatus,
   });
+
+  useLevelTour(!(statusLoading || infoLoading));
 
   // Set current level and earned badges when status data changes
   useEffect(() => {

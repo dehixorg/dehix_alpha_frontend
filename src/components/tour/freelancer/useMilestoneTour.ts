@@ -36,6 +36,7 @@ function withProgress(tour: Tour) {
 export function useMilestoneTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
+  const user = useSelector((s: RootState) => s.user);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -53,6 +54,9 @@ export function useMilestoneTour(isReady: boolean) {
 
     tour.on('cancel', () => dispatch(clearTour()));
     tour.on('complete', () => dispatch(clearTour()));
+
+    const isBusiness =
+      user?.userType === 'business' || user?.type === 'business';
 
     tour.addStep({
       id: 'milestones-intro',
@@ -86,7 +90,9 @@ export function useMilestoneTour(isReady: boolean) {
     tour.addStep({
       id: 'milestones-stories',
       title: '📝 Stories & Sub-tasks Panel',
-      text: "This section details the selected milestone's requirements. Each story card breaks down into actionable developer sub-tasks. You can assign tasks to yourself, track status checkmarks, update code deliverables links, and submit completed features for client review.",
+      text: isBusiness
+        ? "This section details the selected milestone's requirements. Each story card breaks down into actionable developer sub-tasks. You can track progress checkmarks, review submitted code deliverables links, and approve completed features for payout release."
+        : "This section details the selected milestone's requirements. Each story card breaks down into actionable developer sub-tasks. You can assign tasks to yourself, track status checkmarks, update code deliverables links, and submit completed features for client review.",
       attachTo: { element: '[data-tour="milestone-stories"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
@@ -120,7 +126,7 @@ export function useMilestoneTour(isReady: boolean) {
       tourRef.current = null;
       dispatch(clearTour());
     };
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   useEffect(() => {
     if (!trigger) return;

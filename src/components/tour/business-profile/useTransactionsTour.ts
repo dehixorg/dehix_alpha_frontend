@@ -57,7 +57,13 @@ export function useTransactionsTour(isReady: boolean) {
       scrollTo: false,
       when: withProgress(tour),
       buttons: [
-        { text: 'Back', action: tour.back },
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
         { text: 'Next', action: tour.next },
       ],
     });

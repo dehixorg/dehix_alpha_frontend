@@ -35,12 +35,12 @@ export default function ManageTalentPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
-  useManageTalentTour(!loading);
   const [talents, setTalents] = useState<
     Array<{ id: string; label: string; type: 'SKILL' | 'DOMAIN' }>
   >([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  useManageTalentTour(!loading);
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeStatus, setActiveStatus] = useState<
     'APPLIED' | 'SELECTED' | 'REJECTED' | 'INVITED' | 'LOBBY' | 'INTERVIEW'

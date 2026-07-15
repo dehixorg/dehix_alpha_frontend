@@ -166,7 +166,6 @@ const fetchStreakRewards = async (): Promise<StreakReward[]> => {
 
 export default function StreakPage() {
   const user = useSelector((state: RootState) => state.user);
-  useStreakTour(true);
   const [claimingMilestone, setClaimingMilestone] = useState<number | null>(
     null,
   );
@@ -195,6 +194,8 @@ export default function StreakPage() {
     queryFn: fetchStreakRewards,
     staleTime: 1000 * 60 * 5,
   });
+
+  useStreakTour(!(!user.uid || isLoading || isLoadingRewards));
 
   const claimRewardMutation = useMutation({
     mutationFn: (milestone?: number) => claimStreakReward(milestone),
