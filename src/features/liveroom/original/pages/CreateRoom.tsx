@@ -188,6 +188,7 @@ type TalentRecommendationReport = {
   roleCount: number;
   recommendedTeams?: RoleRecommendationGroup[];
   recommendations: TalentRecommendation[];
+  manualFreelancers?: TalentRecommendation[];
 };
 
 type ChatMessage = {
@@ -2686,6 +2687,7 @@ export default function CreateRoom() {
   const [selectedTalentKeys, setSelectedTalentKeys] = useState<
     Record<string, boolean>
   >({});
+  const [talentMatchingTab, setTalentMatchingTab] = useState<'ai' | 'manual'>('ai');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
@@ -3531,6 +3533,9 @@ Please return ONLY the modified text itself, without any introductory or convers
         recommendations: Array.isArray(data.recommendations)
           ? data.recommendations
           : [],
+        manualFreelancers: Array.isArray(data.manualFreelancers)
+          ? data.manualFreelancers
+          : [],
       };
       setTalentRecommendationReport(report);
       setSelectedTalentKeys(buildDefaultSelectedTalentKeys(report));
@@ -3544,8 +3549,18 @@ Please return ONLY the modified text itself, without any introductory or convers
     }
   };
 
-  const recommendationKey = (recommendation: TalentRecommendation) =>
-    `${recommendation.talentId}:${recommendation.matchedRole.roleTitle}`;
+  const recommendationKey = (recommendation: TalentRecommendation, mode?: 'ai' | 'manual') => {
+    const prefix = mode || (talentMatchingTab === 'ai' ? 'ai' : 'manual');
+    return `${prefix}:${recommendation.talentId}:${recommendation.matchedRole.roleTitle}`;
+  };
+
+  const toggleTalentSelection = (recommendation: TalentRecommendation, mode?: 'ai' | 'manual') => {
+    const key = recommendationKey(recommendation, mode);
+    setSelectedTalentKeys((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   const buildDefaultSelectedTalentKeys = (
     report: TalentRecommendationReport,
@@ -3595,7 +3610,7 @@ Please return ONLY the modified text itself, without any introductory or convers
         ) ?? ordered[0];
       if (!selected) continue;
       alreadyPickedTalentIds.add(String(selected.talentId));
-      defaults[recommendationKey(selected)] = true;
+      defaults[recommendationKey(selected, 'ai')] = true;
     }
     return defaults;
   };
@@ -3631,11 +3646,46 @@ Please return ONLY the modified text itself, without any introductory or convers
           )
         : [];
 
+  const groupedManualTeams: RoleRecommendationGroup[] =
+    talentRecommendationReport?.manualFreelancers
+      ? Object.values(
+          talentRecommendationReport.manualFreelancers.reduce<
+            Record<string, RoleRecommendationGroup>
+          >((groups, recommendation) => {
+            const key = recommendation.matchedRole.roleTitle;
+            if (!groups[key]) {
+              groups[key] = {
+                role: recommendation.matchedRole,
+                availableMatches: [],
+                unavailableMatches: [],
+                topMatches: [],
+              };
+            }
+            groups[key].topMatches.push(recommendation);
+            if (
+              (recommendation.user.availabilityRank ??
+                (recommendation.user.isOnline ? 4 : 0)) >= 2
+            ) {
+              groups[key].availableMatches.push(recommendation);
+            } else {
+              groups[key].unavailableMatches.push(recommendation);
+            }
+            return groups;
+          }, {}),
+        )
+      : [];
+
   const selectedTalentRecommendations = talentRecommendationReport
-    ? talentRecommendationReport.recommendations.filter(
-        (recommendation) =>
-          selectedTalentKeys[recommendationKey(recommendation)],
-      )
+    ? [
+        ...talentRecommendationReport.recommendations.filter(
+          (recommendation) =>
+            selectedTalentKeys[recommendationKey(recommendation, 'ai')],
+        ),
+        ...(talentRecommendationReport.manualFreelancers || []).filter(
+          (recommendation) =>
+            selectedTalentKeys[recommendationKey(recommendation, 'manual')],
+        ),
+      ]
     : [];
 
   const enterRoomDashboard = async () => {
@@ -4710,274 +4760,547 @@ Please return ONLY the modified text itself, without any introductory or convers
                   </div>
                 </div>
 
-                {talentRecommendationReport.recommendations.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-border/50 p-10 text-center">
-                    <h2 className="font-semibold mb-2">
-                      No verified talent matched yet
-                    </h2>
-                    <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                      The room can still be created. Once more verified talent
-                      credentials exist, this phase will rank them
-                      automatically.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {groupedRecommendationTeams.map((group) => (
-                      <section
-                        key={group.role.roleTitle}
-                        className="rounded-xl border border-border/50 bg-card p-5 space-y-4"
-                      >
-                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                          <div>
-                            <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
-                              Role match group
-                            </div>
-                            <h2 className="text-xl font-semibold">
-                              {group.role.roleTitle}
-                            </h2>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {group.role.skillDomain}
-                            </p>
-                            {group.role.keywords?.length ? (
-                              <div className="flex flex-wrap gap-1.5 mt-3">
-                                {group.role.keywords
-                                  .slice(0, 9)
-                                  .map((keyword) => (
-                                    <span
-                                      key={keyword}
-                                      className="text-[10px] border border-primary/20 bg-primary/10 text-primary rounded-full px-2 py-0.5"
-                                    >
-                                      {keyword}
-                                    </span>
-                                  ))}
-                              </div>
-                            ) : null}
-                          </div>
-                          <div className="text-xs text-muted-foreground md:text-right">
-                            <div>
-                              <span className="font-mono text-foreground">
-                                {group.availableMatches.length}
-                              </span>{' '}
-                              available
-                            </div>
-                            <div>
-                              <span className="font-mono text-foreground">
-                                {group.unavailableMatches.length}
-                              </span>{' '}
-                              not available rn
-                            </div>
-                          </div>
-                        </div>
+                <div className="flex border-b border-border/40 gap-4 mt-2">
+                  <button
+                    onClick={() => {
+                      setTalentMatchingTab('ai');
+                      if (talentRecommendationReport) {
+                        setSelectedTalentKeys(
+                          buildDefaultSelectedTalentKeys(
+                            talentRecommendationReport,
+                          ),
+                        );
+                      }
+                    }}
+                    className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all relative ${talentMatchingTab === 'ai' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                  >
+                    AI Suggested Freelancers
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTalentMatchingTab('manual');
+                      setSelectedTalentKeys({});
+                    }}
+                    className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all relative ${talentMatchingTab === 'manual' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Manual Selection List
+                  </button>
+                </div>
 
-                        {[
-                          ['Available first', group.availableMatches],
-                          ['Not available right now', group.unavailableMatches],
-                        ].map(([label, matches]) =>
-                          Array.isArray(matches) && matches.length > 0 ? (
-                            <div key={String(label)} className="space-y-3">
-                              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                {String(label)}
+                {talentMatchingTab === 'ai' ? (
+                  talentRecommendationReport.recommendations.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-border/50 p-10 text-center">
+                      <h2 className="font-semibold mb-2">
+                        No verified talent matched yet
+                      </h2>
+                      <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+                        The room can still be created. Once more verified talent
+                        credentials exist, this phase will rank them
+                        automatically.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {groupedRecommendationTeams.map((group) => (
+                        <section
+                          key={group.role.roleTitle}
+                          className="rounded-xl border border-border/50 bg-card p-5 space-y-4"
+                        >
+                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div>
+                              <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+                                Role match group
                               </div>
-                              <div className="grid gap-3">
-                                {matches.map((recommendation) => {
-                                  const key = recommendationKey(recommendation);
-                                  const selected = !!selectedTalentKeys[key];
-                                  return (
-                                    <div
-                                      key={key}
-                                      className={`rounded-xl border p-4 transition-colors ${selected ? 'border-primary/50 bg-primary/10' : 'border-border/40 bg-background/35'}`}
-                                    >
-                                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                        <div className="flex items-start gap-3 min-w-0">
-                                          <button
-                                            onClick={() =>
-                                              setSelectedTalentKeys((prev) => ({
-                                                ...prev,
-                                                [key]: !prev[key],
-                                              }))
-                                            }
-                                            className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60'}`}
-                                            title="Select talent"
-                                          >
-                                            {selected ? '✓' : ''}
-                                          </button>
-                                          <div className="w-11 h-11 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
-                                            <span className="text-primary font-bold">
-                                              {recommendation.user.name?.[0]?.toUpperCase() ??
-                                                'T'}
-                                            </span>
-                                          </div>
-                                          <div className="min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                              <h3 className="text-base font-semibold truncate">
-                                                {recommendation.user.name}
-                                              </h3>
-                                              <span
-                                                className={`text-[10px] rounded border px-2 py-0.5 ${(recommendation.user.availabilityRank ?? 0) >= 2 ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
-                                              >
-                                                {recommendation.user
-                                                  .availabilityLabel ??
-                                                  (recommendation.user.isOnline
-                                                    ? 'Available now'
-                                                    : 'Not available rn')}
+                              <h2 className="text-xl font-semibold">
+                                {group.role.roleTitle}
+                              </h2>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {group.role.skillDomain}
+                              </p>
+                              {group.role.keywords?.length ? (
+                                <div className="flex flex-wrap gap-1.5 mt-3">
+                                  {group.role.keywords
+                                    .slice(0, 9)
+                                    .map((keyword) => (
+                                      <span
+                                        key={keyword}
+                                        className="text-[10px] border border-primary/20 bg-primary/10 text-primary rounded-full px-2 py-0.5"
+                                      >
+                                        {keyword}
+                                      </span>
+                                    ))}
+                                </div>
+                              ) : null}
+                            </div>
+                            <div className="text-xs text-muted-foreground md:text-right">
+                              <div>
+                                <span className="font-mono text-foreground">
+                                  {group.availableMatches.length}
+                                </span>{' '}
+                                available
+                              </div>
+                              <div>
+                                <span className="font-mono text-foreground">
+                                  {group.unavailableMatches.length}
+                                </span>{' '}
+                                not available rn
+                              </div>
+                            </div>
+                          </div>
+
+                          {[
+                            ['Available first', group.availableMatches],
+                            ['Not available right now', group.unavailableMatches],
+                          ].map(([label, matches]) =>
+                            Array.isArray(matches) && matches.length > 0 ? (
+                              <div key={String(label)} className="space-y-3">
+                                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                  {String(label)}
+                                </div>
+                                <div className="grid gap-3">
+                                  {matches.map((recommendation) => {
+                                    const key = recommendationKey(recommendation, 'ai');
+                                    const selected = !!selectedTalentKeys[key];
+                                    return (
+                                      <div
+                                        key={key}
+                                        className={`rounded-xl border p-4 transition-colors ${selected ? 'border-primary/50 bg-primary/10' : 'border-border/40 bg-background/35'}`}
+                                      >
+                                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                          <div className="flex items-start gap-3 min-w-0">
+                                            <button
+                                              onClick={() => toggleTalentSelection(recommendation, 'ai')}
+                                              className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60'}`}
+                                              title="Select talent"
+                                            >
+                                              {selected ? '✓' : ''}
+                                            </button>
+                                            <div className="w-11 h-11 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                                              <span className="text-primary font-bold">
+                                                {recommendation.user.name?.[0]?.toUpperCase() ??
+                                                  'T'}
                                               </span>
-                                              {recommendation.user.location && (
-                                                <span className="text-[10px] rounded border border-border/40 px-2 py-0.5 text-muted-foreground">
-                                                  {recommendation.user.location}
+                                            </div>
+                                            <div className="min-w-0">
+                                              <div className="flex items-center gap-2 flex-wrap">
+                                                <h3 className="text-base font-semibold truncate">
+                                                  {recommendation.user.name}
+                                                </h3>
+                                                <span
+                                                  className={`text-[10px] rounded border px-2 py-0.5 ${(recommendation.user.availabilityRank ?? 0) >= 2 ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
+                                                >
+                                                  {recommendation.user
+                                                    .availabilityLabel ??
+                                                    (recommendation.user.isOnline
+                                                      ? 'Available now'
+                                                      : 'Not available rn')}
                                                 </span>
-                                              )}
-                                            </div>
-                                            <p className="text-sm text-primary mt-1">
-                                              {
-                                                recommendation.credential
-                                                  .skillDomain
-                                              }
-                                            </p>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                              L{recommendation.credential.level}{' '}
-                                              -{' '}
-                                              {
-                                                recommendation.credential
-                                                  .reputationScore
-                                              }{' '}
-                                              rep -{' '}
-                                              {
-                                                recommendation.credential
-                                                  .projectsCompleted
-                                              }{' '}
-                                              projects - GitHub{' '}
-                                              {
-                                                recommendation.credential
-                                                  .githubScore
-                                              }
-                                            </p>
-                                            {recommendation.matchedKeywords
-                                              ?.length ? (
-                                              <div className="flex flex-wrap gap-1.5 mt-3">
-                                                {recommendation.matchedKeywords
-                                                  .slice(0, 8)
-                                                  .map((keyword) => (
-                                                    <span
-                                                      key={keyword}
-                                                      className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded px-1.5 py-0.5"
-                                                    >
-                                                      {keyword}
-                                                    </span>
-                                                  ))}
+                                                {recommendation.user.location && (
+                                                  <span className="text-[10px] rounded border border-border/40 px-2 py-0.5 text-muted-foreground">
+                                                    {recommendation.user.location}
+                                                  </span>
+                                                )}
                                               </div>
-                                            ) : null}
-                                            {recommendation.missingKeywords
-                                              ?.length ? (
-                                              <p className="text-[10px] text-muted-foreground/70 mt-2">
-                                                Missing/weak:{' '}
-                                                {recommendation.missingKeywords
-                                                  .slice(0, 5)
-                                                  .join(', ')}
+                                              <p className="text-sm text-primary mt-1">
+                                                {
+                                                  recommendation.credential
+                                                    .skillDomain
+                                                }
                                               </p>
-                                            ) : null}
+                                              <p className="text-xs text-muted-foreground mt-1">
+                                                L{recommendation.credential.level}{' '}
+                                                -{' '}
+                                                {
+                                                  recommendation.credential
+                                                    .reputationScore
+                                                }{' '}
+                                                rep -{' '}
+                                                {
+                                                  recommendation.credential
+                                                    .projectsCompleted
+                                                }{' '}
+                                                projects - GitHub{' '}
+                                                {
+                                                  recommendation.credential
+                                                    .githubScore
+                                                }
+                                              </p>
+                                              {recommendation.matchedKeywords
+                                                ?.length ? (
+                                                <div className="flex flex-wrap gap-1.5 mt-3">
+                                                  {recommendation.matchedKeywords
+                                                    .slice(0, 8)
+                                                    .map((keyword) => (
+                                                      <span
+                                                        key={keyword}
+                                                        className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded px-1.5 py-0.5"
+                                                      >
+                                                        {keyword}
+                                                      </span>
+                                                    ))}
+                                                </div>
+                                              ) : null}
+                                              {recommendation.missingKeywords
+                                                ?.length ? (
+                                                <p className="text-[10px] text-muted-foreground/70 mt-2">
+                                                  Missing/weak:{' '}
+                                                  {recommendation.missingKeywords
+                                                    .slice(0, 5)
+                                                    .join(', ')}
+                                                </p>
+                                              ) : null}
+                                            </div>
                                           </div>
-                                        </div>
-                                        <div className="shrink-0 text-left lg:text-right space-y-2">
-                                          <div>
-                                            <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                                              Score
-                                            </div>
-                                            <div className="text-3xl font-bold font-mono text-primary">
-                                              {recommendation.finalScore}
-                                            </div>
-                                          </div>
-                                          <div className="text-xs text-muted-foreground">
+                                          <div className="shrink-0 text-left lg:text-right space-y-2">
                                             <div>
-                                              $
-                                              {
-                                                recommendation.estimatedHourlyRateUsd
-                                              }
-                                              /hr
+                                              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                                                Score
+                                              </div>
+                                              <div className="text-3xl font-bold font-mono text-primary">
+                                                {recommendation.finalScore}
+                                              </div>
                                             </div>
-                                            <div>
-                                              {formatCurrency(
-                                                recommendation.weeklyRateUsd ??
-                                                  recommendation.estimatedHourlyRateUsd *
-                                                    40,
-                                              )}
-                                              /week
-                                            </div>
-                                            <div>
-                                              {formatCurrency(
-                                                recommendation.monthlyRateUsd ??
-                                                  (recommendation.weeklyRateUsd ??
+                                            <div className="text-xs text-muted-foreground">
+                                              <div>
+                                                $
+                                                {
+                                                  recommendation.estimatedHourlyRateUsd
+                                                }
+                                                /hr
+                                              </div>
+                                              <div>
+                                                {formatCurrency(
+                                                  recommendation.weeklyRateUsd ??
                                                     recommendation.estimatedHourlyRateUsd *
-                                                      40) * 4,
-                                              )}
-                                              /month
+                                                      40,
+                                                )}
+                                                /week
+                                              </div>
+                                              <div>
+                                                {formatCurrency(
+                                                  recommendation.monthlyRateUsd ??
+                                                    (recommendation.weeklyRateUsd ??
+                                                      recommendation.estimatedHourlyRateUsd *
+                                                        40) * 4,
+                                                )}
+                                                /month
+                                              </div>
+                                            </div>
+                                            <div className="flex gap-2 lg:justify-end">
+                                              <Button
+                                                size="sm"
+                                                variant={
+                                                  selected ? 'default' : 'outline'
+                                                }
+                                                onClick={() => toggleTalentSelection(recommendation, 'ai')}
+                                              >
+                                                {selected ? 'Selected' : 'Select'}
+                                              </Button>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() =>
+                                                  navigate(
+                                                    `/talent/profile/${recommendation.talentId}`,
+                                                  )
+                                                }
+                                              >
+                                                Profile
+                                              </Button>
                                             </div>
                                           </div>
-                                          <div className="flex gap-2 lg:justify-end">
-                                            <Button
-                                              size="sm"
-                                              variant={
-                                                selected ? 'default' : 'outline'
-                                              }
-                                              onClick={() =>
-                                                setSelectedTalentKeys(
-                                                  (prev) => ({
-                                                    ...prev,
-                                                    [key]: !prev[key],
-                                                  }),
-                                                )
-                                              }
-                                            >
-                                              {selected ? 'Selected' : 'Select'}
-                                            </Button>
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              onClick={() =>
-                                                navigate(
-                                                  `/talent/profile/${recommendation.talentId}`,
-                                                )
-                                              }
-                                            >
-                                              Profile
-                                            </Button>
-                                          </div>
+                                        </div>
+
+                                        <div className="grid gap-2 md:grid-cols-3 mt-4">
+                                          <ScorePill
+                                            label="Keyword match"
+                                            value={
+                                              recommendation.scoreBreakdown
+                                                .skillMatchScore
+                                            }
+                                          />
+                                          <ScorePill
+                                            label="Availability"
+                                            value={
+                                              recommendation.scoreBreakdown
+                                                .availabilityScore
+                                            }
+                                          />
+                                          <ScorePill
+                                            label="Budget fit"
+                                            value={
+                                              recommendation.scoreBreakdown
+                                                .budgetFitScore
+                                            }
+                                          />
                                         </div>
                                       </div>
-
-                                      <div className="grid gap-2 md:grid-cols-3 mt-4">
-                                        <ScorePill
-                                          label="Keyword match"
-                                          value={
-                                            recommendation.scoreBreakdown
-                                              .skillMatchScore
-                                          }
-                                        />
-                                        <ScorePill
-                                          label="Availability"
-                                          value={
-                                            recommendation.scoreBreakdown
-                                              .availabilityScore
-                                          }
-                                        />
-                                        <ScorePill
-                                          label="Budget fit"
-                                          value={
-                                            recommendation.scoreBreakdown
-                                              .budgetFitScore
-                                          }
-                                        />
-                                      </div>
-                                    </div>
-                                  );
-                                })}
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ) : null,
+                          )}
+                        </section>
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  (!talentRecommendationReport.manualFreelancers || talentRecommendationReport.manualFreelancers.length === 0) ? (
+                    <div className="rounded-xl border border-dashed border-border/50 p-10 text-center">
+                      <h2 className="font-semibold mb-2">
+                        No freelancers available
+                      </h2>
+                      <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+                        There are no active freelancers in the talent pool at this time.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="text-sm text-muted-foreground mb-2">
+                        Select freelancers manually to invite them to your LiveRoom.
+                      </div>
+                      {groupedManualTeams.map((group) => (
+                        <section
+                          key={group.role.roleTitle}
+                          className="rounded-xl border border-border/50 bg-card p-5 space-y-4"
+                        >
+                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div>
+                              <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+                                Role match group
+                              </div>
+                              <h2 className="text-xl font-semibold">
+                                {group.role.roleTitle}
+                              </h2>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {group.role.skillDomain}
+                              </p>
+                              {group.role.keywords?.length ? (
+                                <div className="flex flex-wrap gap-1.5 mt-3">
+                                  {group.role.keywords
+                                    .slice(0, 9)
+                                    .map((keyword) => (
+                                      <span
+                                        key={keyword}
+                                        className="text-[10px] border border-primary/20 bg-primary/10 text-primary rounded-full px-2 py-0.5"
+                                      >
+                                        {keyword}
+                                      </span>
+                                    ))}
+                                </div>
+                              ) : null}
+                            </div>
+                            <div className="text-xs text-muted-foreground md:text-right">
+                              <div>
+                                <span className="font-mono text-foreground">
+                                  {group.availableMatches.length}
+                                </span>{' '}
+                                available
+                              </div>
+                              <div>
+                                <span className="font-mono text-foreground">
+                                  {group.unavailableMatches.length}
+                                </span>{' '}
+                                not available rn
                               </div>
                             </div>
-                          ) : null,
-                        )}
-                      </section>
-                    ))}
-                  </div>
+                          </div>
+
+                          {[
+                            ['Available first', group.availableMatches],
+                            ['Not available right now', group.unavailableMatches],
+                          ].map(([label, matches]) =>
+                            Array.isArray(matches) && matches.length > 0 ? (
+                              <div key={String(label)} className="space-y-3">
+                                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                  {String(label)}
+                                </div>
+                                <div className="grid gap-3">
+                                  {matches.map((recommendation) => {
+                                    const key = recommendationKey(recommendation, 'manual');
+                                    const selected = !!selectedTalentKeys[key];
+                                    return (
+                                      <div
+                                        key={key}
+                                        className={`rounded-xl border p-4 transition-colors ${selected ? 'border-primary/50 bg-primary/10' : 'border-border/40 bg-background/35'}`}
+                                      >
+                                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                          <div className="flex items-start gap-3 min-w-0">
+                                            <button
+                                              onClick={() => toggleTalentSelection(recommendation, 'manual')}
+                                              className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60'}`}
+                                              title="Select talent"
+                                            >
+                                              {selected ? '✓' : ''}
+                                            </button>
+                                            <div className="w-11 h-11 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                                              <span className="text-primary font-bold">
+                                                {recommendation.user.name?.[0]?.toUpperCase() ??
+                                                  'T'}
+                                              </span>
+                                            </div>
+                                            <div className="min-w-0">
+                                              <div className="flex items-center gap-2 flex-wrap">
+                                                <h3 className="text-base font-semibold truncate">
+                                                  {recommendation.user.name}
+                                                </h3>
+                                                <span
+                                                  className={`text-[10px] rounded border px-2 py-0.5 ${(recommendation.user.availabilityRank ?? 0) >= 2 ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
+                                                >
+                                                  {recommendation.user
+                                                    .availabilityLabel ??
+                                                    (recommendation.user.isOnline
+                                                      ? 'Available now'
+                                                      : 'Not available rn')}
+                                                </span>
+                                                {recommendation.user.location && (
+                                                  <span className="text-[10px] rounded border border-border/40 px-2 py-0.5 text-muted-foreground">
+                                                    {recommendation.user.location}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <p className="text-sm text-primary mt-1">
+                                                {recommendation.credential.skillDomain}
+                                              </p>
+                                              <p className="text-xs text-muted-foreground mt-1">
+                                                L{recommendation.credential.level}{' '}
+                                                -{' '}
+                                                {
+                                                  recommendation.credential
+                                                    .reputationScore
+                                                }{' '}
+                                                rep -{' '}
+                                                {
+                                                  recommendation.credential
+                                                    .projectsCompleted
+                                                }{' '}
+                                                projects - GitHub{' '}
+                                                {
+                                                  recommendation.credential
+                                                    .githubScore
+                                                }
+                                              </p>
+                                              {recommendation.matchedKeywords
+                                                ?.length ? (
+                                                <div className="flex flex-wrap gap-1.5 mt-3">
+                                                  {recommendation.matchedKeywords
+                                                    .slice(0, 8)
+                                                    .map((keyword) => (
+                                                      <span
+                                                        key={keyword}
+                                                        className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded px-1.5 py-0.5"
+                                                      >
+                                                        {keyword}
+                                                      </span>
+                                                    ))}
+                                                </div>
+                                              ) : null}
+                                              {recommendation.missingKeywords
+                                                ?.length ? (
+                                                <p className="text-[10px] text-muted-foreground/70 mt-2">
+                                                  Missing/weak:{' '}
+                                                  {recommendation.missingKeywords
+                                                    .slice(0, 5)
+                                                    .join(', ')}
+                                                </p>
+                                              ) : null}
+                                            </div>
+                                          </div>
+                                          <div className="shrink-0 text-left lg:text-right space-y-2">
+                                            <div>
+                                              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                                                Score
+                                              </div>
+                                              <div className="text-3xl font-bold font-mono text-primary">
+                                                {recommendation.finalScore}
+                                              </div>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                              <div>
+                                                $
+                                                {
+                                                  recommendation.estimatedHourlyRateUsd
+                                                }
+                                                /hr
+                                              </div>
+                                              <div>
+                                                {formatCurrency(
+                                                  recommendation.weeklyRateUsd ??
+                                                    recommendation.estimatedHourlyRateUsd *
+                                                      40,
+                                                )}
+                                                /week
+                                              </div>
+                                              <div>
+                                                {formatCurrency(
+                                                  recommendation.monthlyRateUsd ??
+                                                    (recommendation.weeklyRateUsd ??
+                                                      recommendation.estimatedHourlyRateUsd *
+                                                        40) * 4,
+                                                )}
+                                                /month
+                                              </div>
+                                            </div>
+                                            <div className="flex gap-2 lg:justify-end">
+                                              <Button
+                                                size="sm"
+                                                variant={
+                                                  selected ? 'default' : 'outline'
+                                                }
+                                                onClick={() => toggleTalentSelection(recommendation, 'manual')}
+                                              >
+                                                {selected ? 'Selected' : 'Select'}
+                                              </Button>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() =>
+                                                  navigate(
+                                                    `/talent/profile/${recommendation.talentId}`,
+                                                  )
+                                                }
+                                              >
+                                                Profile
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <div className="grid gap-2 md:grid-cols-3 mt-4">
+                                          <ScorePill
+                                            label="Keyword match"
+                                            value={
+                                              recommendation.scoreBreakdown
+                                                .skillMatchScore
+                                            }
+                                          />
+                                          <ScorePill
+                                            label="Availability"
+                                            value={
+                                              recommendation.scoreBreakdown
+                                                .availabilityScore
+                                            }
+                                          />
+                                          <ScorePill
+                                            label="Budget fit"
+                                            value={
+                                              recommendation.scoreBreakdown
+                                                .budgetFitScore
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ) : null,
+                          )}
+                        </section>
+                      ))}
+                    </div>
+                  )
                 )}
               </div>
             ))}
